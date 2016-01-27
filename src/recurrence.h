@@ -24,13 +24,22 @@
 struct Transition;
 
 
+/**
+ * This class is the interface end to the recurrence solver PURRS,
+ * and allows calculating iterated cost and update
+ */
 class Recurrence
 {
 private:
 
 public:
     //Updates trans.update and trans.cost, but only if result is true, otherwise unchanged
-    static bool calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &rankfunc);
+    /**
+     * Tries to solve recurrences for the iterated update and cost.
+     * If successful, returns true and modifies trans to contain the iterated update and cost (using the given metering function as "iteration step")
+     * Otherwise, false is returned and trans is left unchanged
+     */
+    static bool calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &meterfunc);
 
 private:
     Recurrence(const ITRSProblem &itrs);
@@ -40,13 +49,32 @@ private:
      */
     bool calcIteratedUpdate(const UpdateMap &oldUpdate, const Expression &meterfunc, UpdateMap &newUpdate);
 
-    //returns true if everything was successful and cost was updated, otherwise nothing is changed
-    //! @note calcIteratedUpdate *must* be called before!
-    bool calcIteratedCost(const Expression &cost, const Expression &rankfunc, Expression &newCost);
+    /**
+     * Returns true iff iterated cost was calculated successfully and newCost has been set (with meterfunc as "iteration step")
+     * @note calcIteratedUpdate *must* be called before, as this relies on the recurrences found there
+     */
+    bool calcIteratedCost(const Expression &cost, const Expression &meterfunc, Expression &newCost);
 
 private:
+    /**
+     * Tries to find an order to calculate recurrence equations.
+     * If this is not possible, update is modified and addGuard is set (heuristically assume that all problematic variables have the same value)
+     * @return list indicating the order
+     */
     std::vector<VariableIndex> dependencyOrder(UpdateMap &update);
+
+    /**
+     * Tries to find a recurrence for the given update (target is the update's lhs).
+     * Note that all variables occuring in update must have been solved already.
+     * @return true if successful and result has been set
+     */
     bool findUpdateRecurrence(Expression update, ExprSymbol target, Expression &result);
+
+    /**
+     * Tries to find a recurrence for the given cost term.
+     * Note that all variables occuring in update must have been solved already.
+     * @return true if successful and result has been set
+     */
     bool findCostRecurrence(Expression cost, Expression &result);
 
 private:

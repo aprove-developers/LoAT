@@ -42,7 +42,6 @@ typedef std::map<VariableIndex,Expression> UpdateMap;
  */
 struct Rule {
     TermIndex lhsTerm, rhsTerm;
-//    std::vector<VariableIndex> lhsArgs;
     std::vector<Expression> rhsArgs;
     GuardList guard;
 };
@@ -75,10 +74,11 @@ public:
 
     /**
      * Creates a dummy ITRSProblem that contains just the given rule
-     * @note is not very robust and should _only_ be used for _testing_
+     * @note is not very robust and should _only_ be used for testing
      */
     static ITRSProblem dummyITRSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules);
 
+    //simple getters
     inline TermIndex getStartTerm() const { return startTerm; }
     inline Term getTerm(TermIndex idx) const { return terms[idx]; }
     inline TermIndex getTermCount() const { return terms.size(); }
@@ -113,12 +113,14 @@ public:
     void print(std::ostream &s) const;
 
 private:
+    //helpers for variable handling
     VariableIndex addVariable(std::string name);
     std::string getFreshName(std::string basename) const;
 
     //applies replacement map escapeSymbols to the given string (modified by reference)
     void substituteVarnames(std::string &line) const;
 
+    //used internally by the (not very cleanly written) parser
     void parseRule(std::map<std::string,TermIndex> &knownTerms,
                    std::map<std::string,VariableIndex> &knownVars,
                    const std::string &line);

@@ -30,9 +30,9 @@
 struct Transition;
 
 /**
- * Class to encapsulate the process of finding a ranking function for a given transition using Z3 and Farkas lemma
+ * Class to encapsulate the process of finding a metering function for a given transition using Z3 and Farkas lemma
  *
- * Central constraints for the ranking function f (G is guard, U is update, x the variables)
+ * Central constraints for the metering function f (G is guard, U is update, x the variables)
  *  (1)  (not G)   implies  f(x) <= 0
  *  (2)  G         implies  f(x) >= 1 (equivalent to f(x) > 0)
  *  (3)  (G and U) implies  f(x) <= f(x') + 1
@@ -40,27 +40,27 @@ struct Transition;
  * Farkas Lemma:
  *  Forall x: (A*x <= b implies c*x <= delta) can be rewritten as:
  *  Exists l: l >= 0, l^T * A = c^T, l^T * b <= delta.
- * We use x as the variables, A and b to represent guard/update, c as coefficients for the linear ranking polynomial.
+ * We use x as the variables, A and b to represent guard/update, c as coefficients for the linear metering polynomial.
  */
-class FarkasRankGenerator
+class FarkasMeterGenerator
 {
 public:
     /**
-     * Success: ranking function was found
+     * Success: metering function was found
      * Unbounded: the loop can be executed unbounded (there is no limiting guard)
      * Nonlinear: the problem is nonlinar and could not be substituted to a linear problem
      * ConflictVar: two variables are limiting the execution of the loop, we would need min(A,B) or max(A,B) to resolve
-     * Unsat: no ranking function was found (z3 unknown/unsat)
+     * Unsat: no metering function was found (z3 unknown/unsat)
      */
     enum Result { Success, Unbounded, Nonlinear, ConflictVar, Unsat };
 
     /**
-     * Try to find a ranking function for the given transition in the given ITRS
+     * Try to find a metering function for the given transition in the given ITRS
      * @param itrs the ITRSProblem instance, providing lists of all symbols
-     * @param t the Transition to find a ranking function for, NOTE: modified by instantiation
-     * @param result the resulting ranking function (output only)
+     * @param t the Transition to find a metering function for, NOTE: modified by instantiation
+     * @param result the resulting metering function (output only)
      * @param conflictVar if given, this is set if it would help to add A > B (or B > A) to the guard for variables A,B
-     * @return Success iff a ranking function was found and result was set, otherwise indicates type of failure
+     * @return Success iff a metering function was found and result was set, otherwise indicates type of failure
      *
      * @note the transition t might be modified (by freevar instantiation) only if the result is Success
      */
@@ -73,7 +73,7 @@ public:
     static bool prepareGuard(ITRSProblem &itrs, Transition &t);
 
 private:
-    FarkasRankGenerator(ITRSProblem &itrs, const Transition &t);
+    FarkasMeterGenerator(ITRSProblem &itrs, const Transition &t);
 
     /**
      * Some preprocessing steps as equality propagation and elimination by transitive closure
@@ -90,7 +90,7 @@ private:
 
     /**
      * Sets reducedGuard (member) to contain only the constraints from guard (member)
-     * which are relevant for the ranking function (contains an updated variable and isnt always true for the update)
+     * which are relevant for the metering function (contains an updated variable and isnt always true for the update)
      * (e.g. in n >= 0, i >= 0, i < n with i=i+1, the constraints n >= 0 and i >= 0 are not relevant)
      *
      * Sets irrelevantGuard (member) to contain exactly the contraints which were dropped for the reducedGuard.
@@ -98,12 +98,12 @@ private:
     void reduceGuard();
 
     /**
-     * Sets varlist and symbols (members) to contain the variables that might occur in the ranking function.
+     * Sets varlist and symbols (members) to contain the variables that might occur in the metering function.
      *
      * A variable is relevant iff
      *  a) it appears in reduced guard (and thus might influence the rank func)
      *  b) it appears on update rhs, where the lhs appears in any guard (indirect influence)
-     * In other cases, the variable is irrelevant for the ranking function.
+     * In other cases, the variable is irrelevant for the metering function.
      */
     void findRelevantVariables();
 
@@ -184,7 +184,7 @@ private:
     z3::expr genNonTrivial() const;
 
     /**
-     * Given the z3 model, builds the according linear ranking function and applies the reverse substitution nonlinearSubs
+     * Given the z3 model, builds the corresponding linear metering function and applies the reverse substitution nonlinearSubs
      */
     Expression buildResult(const z3::model &model) const;
 
@@ -228,12 +228,12 @@ private:
     mutable Z3VariableContext context;
 
     /**
-     * List of all variables that are relevant and thus occur in the ranking function
+     * List of all variables that are relevant and thus occur in the metering function
      */
     std::vector<VariableIndex> varlist;
 
     /**
-     * Z3 symbols for the ranking polynomial coefficients (absolute and per-variable)
+     * Z3 symbols for the metering polynomial coefficients (absolute and per-variable)
      * @note coefficients are only created for relevant variables
      */
     z3::expr coeff0;

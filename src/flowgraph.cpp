@@ -134,13 +134,13 @@ bool FlowGraph::reduceInitialTransitions() {
 }
 
 
-bool FlowGraph::contract() {
+bool FlowGraph::chainLinear() {
     Timing::Scope timer(Timing::Contract);
     assert(check(&nodes) == Graph::Valid);
-    Stats::addStep("FlowGraph::contract");
+    Stats::addStep("FlowGraph::chainLinear");
 
     set<NodeIndex> visited;
-    bool res = contractLinearPaths(initial,visited);
+    bool res = chainLinearPaths(initial,visited);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CONTRACT ===========\\ " << endl;
     print(cout);
@@ -150,13 +150,13 @@ bool FlowGraph::contract() {
     return res;
 }
 
-bool FlowGraph::contractBranches() {
+bool FlowGraph::chainBranches() {
     Timing::Scope timer(Timing::Branches);
     assert(check(&nodes) == Graph::Valid);
-    Stats::addStep("FlowGraph::contractBranches");
+    Stats::addStep("FlowGraph::chainBranches");
 
     set<NodeIndex> visited;
-    bool res = contractBranchedPaths(initial,visited);
+    bool res = chainBranchedPaths(initial,visited);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER BRANCH CONTRACT ===========\\ " << endl;
     print(cout);
@@ -224,7 +224,7 @@ nextouter:;
 }
 
 
-bool FlowGraph::isFullyContracted() const {
+bool FlowGraph::isFullyChained() const {
     //ensure that all transitions start from initial node
     for (NodeIndex node : nodes) {
         if (node == initial) continue;
@@ -298,7 +298,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
 }
 
 
-bool FlowGraph::contractTransitionData(Transition &trans, const Transition &followTrans) const {
+bool FlowGraph::chainTransitionData(Transition &trans, const Transition &followTrans) const {
     //build update replacement list
     GiNaC::exmap updateSubs;
     for (auto it : trans.update) {
@@ -359,7 +359,7 @@ bool FlowGraph::contractTransitionData(Transition &trans, const Transition &foll
 }
 
 
-bool FlowGraph::contractLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
+bool FlowGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
     if (visited.count(node) > 0) return false;
 
     bool modified = false;
@@ -375,7 +375,7 @@ bool FlowGraph::contractLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
             vector<TransIndex> dstOut = getTransFrom(dst);
             set<NodeIndex> dstPred = getPredecessors(dst);
             if (dstOut.size() == 1 && dstPred.size() == 1 && getTransFromTo(*dstPred.begin(),dst).size() == 1) {
-                if (contractTransitionData(getTransData(t),getTransData(dstOut[0]))) {
+                if (chainTransitionData(getTransData(t),getTransData(dstOut[0]))) {
                     changeTransTarget(t,getTransTarget(dstOut[0]));
                     removeNode(dst);
                     nodes.erase(dst);
@@ -390,14 +390,14 @@ bool FlowGraph::contractLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
 
     visited.insert(node);
     for (NodeIndex next : getSuccessors(node)) {
-        modified = contractLinearPaths(next,visited) || modified;
+        modified = chainLinearPaths(next,visited) || modified;
         if (Timeout::soft()) return modified;
     }
     return modified;
 }
 
 
-bool FlowGraph::contractBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
+bool FlowGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
     //avoid cycles even in branched mode. Contract a cycle to a selfloop and stop.
     if (visited.count(node) > 0) return false;
 
@@ -423,7 +423,7 @@ bool FlowGraph::contractBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
                 if (Timeout::soft()) break;
 
                 Transition data = getTransData(t);
-                if (contractTransitionData(data,getTransData(t2))) {
+                if (chainTransitionData(data,getTransData(t2))) {
                     addTrans(node,getTransTarget(t2),data);
                     Stats::add(Stats::ContractBranch);
                 } else {
@@ -446,7 +446,7 @@ bool FlowGraph::contractBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
     //this node cannot be contracted further, try its children
     visited.insert(node);
     for (NodeIndex next : getSuccessors(node)) {
-        modified = contractBranchedPaths(next,visited) || modified;
+        modified = chainBranchedPaths(next,visited) || modified;
         if (Timeout::soft()) return modified;
     }
 
@@ -486,13 +486,13 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
     //helper lambda
     auto try_rank = [&](Transition &data) -> bool {
         Expression rankfunc;
-        FarkasRankGenerator::Result res = FarkasRankGenerator::generate(itrs,data,rankfunc);
-        if (res == FarkasRankGenerator::Unbounded) {
+        FarkasMeterGenerator::Result res = FarkasMeterGenerator::generate(itrs,data,rankfunc);
+        if (res == FarkasMeterGenerator::Unbounded) {
             data.cost = Expression::Infty;
             data.update.clear(); //clear update, but keep guard!
             proofout << "  Found unbounded runtime when nesting loops," << endl;
             return true;
-        } else if (res == FarkasRankGenerator::Success) {
+        } else if (res == FarkasMeterGenerator::Success) {
             if (Recurrence::calcIterated(itrs,data,rankfunc)) {
                 Stats::add(Stats::SelfloopRanked);
                 debugGraph("Farkas nested loop ranked!");
@@ -536,14 +536,14 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
         Expression rankfunc;
         pair<VariableIndex,VariableIndex> conflictVar;
         Transition data = getTransData(tidx); //note: data possibly modified by instantiation in farkas
-        FarkasRankGenerator::Result result = FarkasRankGenerator::generate(itrs,data,rankfunc,&conflictVar);
+        FarkasMeterGenerator::Result result = FarkasMeterGenerator::generate(itrs,data,rankfunc,&conflictVar);
 
         //this is a second attempt for one selfloop, so ignore it if it was not successful
-        if (lopidx >= oldloopcount && result != FarkasRankGenerator::Unbounded && result != FarkasRankGenerator::Success) continue;
+        if (lopidx >= oldloopcount && result != FarkasMeterGenerator::Unbounded && result != FarkasMeterGenerator::Success) continue;
         if (lopidx >= oldloopcount) debugGraph("MinMax heuristic successful");
 
 #ifdef FARKAS_HEURISTIC_FOR_MINMAX
-        if (result == FarkasRankGenerator::ConflictVar) {
+        if (result == FarkasMeterGenerator::ConflictVar) {
             VariableIndex A,B;
             tie(A,B) = conflictVar;
 
@@ -558,12 +558,12 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
             loops.push_back(addTrans(node,node,dataBA));
 
             //ConflictVar is really just Unsat
-            result = FarkasRankGenerator::Unsat;
+            result = FarkasMeterGenerator::Unsat;
         }
 #endif
 
         for (int step=0; step < 2; ++step) {
-            if (result == FarkasRankGenerator::Unbounded) {
+            if (result == FarkasMeterGenerator::Unbounded) {
                 Stats::add(Stats::SelfloopInfinite);
                 debugGraph("Farkas unbounded!");
                 data.cost = Expression::Infty;
@@ -571,19 +571,19 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                 TransIndex newIdx = addTrans(node,outNode,data);
                 proofout << "  Self-Loop " << tidx << " has unbounded runtime, resulting in the new transition " << newIdx << "." << endl;
             }
-            else if (result == FarkasRankGenerator::Nonlinear) {
+            else if (result == FarkasMeterGenerator::Nonlinear) {
                 Stats::add(Stats::SelfloopNoRank);
                 debugGraph("Farkas nonlinear!");
                 add_empty = true;
                 addTrans(node,outNode,getTransData(tidx)); //keep old
             }
-            else if (result == FarkasRankGenerator::Unsat) {
+            else if (result == FarkasMeterGenerator::Unsat) {
                 Stats::add(Stats::SelfloopNoRank);
                 debugGraph("Farkas unsat!");
                 add_empty = true;
                 added_unranked.insert(addTrans(node,outNode,data)); //keep old, mark as unsat
             }
-            else if (result == FarkasRankGenerator::Success) {
+            else if (result == FarkasMeterGenerator::Success) {
                 debugGraph("RANK: " << rankfunc);
                 if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
                     //do not add to added_unranked, as this will probably not help with nested loops
@@ -600,16 +600,16 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                 }
             }
 
-            if (result != FarkasRankGenerator::Unsat) break;
+            if (result != FarkasMeterGenerator::Unsat) break;
 
 #ifdef FARKAS_TRY_ADDITIONAL_GUARD
             if (step >= 1) break;
             //try again after adding helpful constraints to the guard
-            if (FarkasRankGenerator::prepareGuard(itrs,data)) {
+            if (FarkasMeterGenerator::prepareGuard(itrs,data)) {
                 debugGraph("Farkas unsat try again after prepareGuard");
-                result = FarkasRankGenerator::generate(itrs,data,rankfunc);
+                result = FarkasMeterGenerator::generate(itrs,data,rankfunc);
             }
-            if (result != FarkasRankGenerator::Success && result != FarkasRankGenerator::Unbounded) break;
+            if (result != FarkasMeterGenerator::Success && result != FarkasMeterGenerator::Unbounded) break;
             //if this was successful, the original transition is still marked as unsat (for nested loops!)
 #else
             break;
@@ -638,7 +638,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
 
                 //inner loop first
                 Transition loop = getTransData(inner);
-                if (contractTransitionData(loop,getTransData(outer))) {
+                if (chainTransitionData(loop,getTransData(outer))) {
                     Complexity oldcpx = loop.cost.getComplexity();
                     if (try_rank(loop) && loop.cost.getComplexity() > oldcpx) {
                         proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
@@ -650,7 +650,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
 
                         //try one outer iteration first as well (this is costly, but nested loops are often quadratic!)
                         Transition pre = getTransData(outer);
-                        if (contractTransitionData(pre,loop)) {
+                        if (chainTransitionData(pre,loop)) {
                             TransIndex tnew = addTrans(node,outNode,pre);
                             added_nested.insert(tnew);
                             proofout << ", " << tnew;
@@ -661,7 +661,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
 
                 //outer loop first
                 loop = getTransData(outer);
-                if (contractTransitionData(loop,getTransData(inner))) {
+                if (chainTransitionData(loop,getTransData(inner))) {
                     Complexity oldcpx = loop.cost.getComplexity();
                     if (try_rank(loop) && loop.cost.getComplexity() > oldcpx) {
                         proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
@@ -673,7 +673,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
 
                         //try one inner iteration first as well (this is costly, but nested loops are often quadratic!)
                         Transition pre = getTransData(inner);
-                        if (contractTransitionData(pre,loop)) {
+                        if (chainTransitionData(pre,loop)) {
                             TransIndex tnew = addTrans(node,outNode,pre);
                             added_nested.insert(tnew);
                             proofout << ", " << tnew;
@@ -692,7 +692,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                 if (Timeout::soft()) goto timeout;
                 if (first == second) continue;
                 Transition chained = getTransData(first);
-                if (contractTransitionData(chained,getTransData(second))) {
+                if (chainTransitionData(chained,getTransData(second))) {
                     TransIndex newtrans = addTrans(node,outNode,chained);
                     added_nested.insert(newtrans);
                     changed = true;
@@ -889,7 +889,7 @@ RuntimeResult FlowGraph::getMaxPartialResult() {
             for (TransIndex first : getTransFromTo(initial,mid)) {
                 for (TransIndex second : getTransFrom(mid)) {
                     Transition data = getTransData(first);
-                    if (contractTransitionData(data,getTransData(second))) {
+                    if (chainTransitionData(data,getTransData(second))) {
                         addTrans(initial,getTransTarget(second),data);
                     }
                     removeTrans(second);

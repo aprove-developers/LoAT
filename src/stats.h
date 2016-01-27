@@ -21,6 +21,10 @@
 #include <string>
 #include <ostream>
 
+
+/**
+ * Simple functions to keep track of some statistics (i.e. how many loops were metered, how many chaining steps performed etc.).
+ */
 namespace Stats
 {
     enum StatAction { ContractLinear=0, ContractBranch, ContractUnsat, PruneRemove,

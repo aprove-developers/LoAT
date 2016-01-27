@@ -32,12 +32,16 @@
 class Z3VariableContext;
 class Expression;
 
+//Useful typedefs for readability
 typedef GiNaC::symbol ExprSymbol;
 typedef GiNaC::lst ExprList;
 typedef std::set<ExprSymbol, GiNaC::ex_is_less> ExprSymbolSet;
 typedef std::set<Expression, GiNaC::ex_is_less> ExpressionSet;
 
-//Complexity is a real number (num/denom)
+/**
+ * This class represents a runtime complexity.
+ * As we can now output sublinear runtimes (e.g. n^0.5), this is now a Real value.
+ */
 class Complexity {
     int numer,denom;
 public:

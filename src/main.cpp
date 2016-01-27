@@ -36,6 +36,10 @@ using namespace std;
 #include "timing.h"
 #include "timeout.h"
 
+
+/**
+ * Print the compile flags chosen in global.h
+ */
 void printConfig() {
     cout << "Compiled with configuration:" << endl;
 
@@ -129,6 +133,7 @@ int main(int argc, char *argv[]) {
     string filename;
     int timeout = 0;
 
+    // ### Parse command line flags ###
     int arg=0;
     while (++arg < argc) {
         if (strcmp("--help",argv[arg]) == 0) {
@@ -166,10 +171,11 @@ int main(int argc, char *argv[]) {
         cout << "Error: timeout must be at least 10 seconds" << endl;
         return 1;
     }
-
     if (timeout > 0) {
         Timeout::setTimeouts(timeout);
     }
+
+    // ### Start analyzing ###
 
     int dotStep=0;
     ofstream dotStream;
@@ -219,7 +225,7 @@ int main(int argc, char *argv[]) {
                     if (dotOutput) g.printDot(dotStream,dotStep++,"Loop");
                 }
                 if (Timeout::soft()) break;
-                if (g.contract()) {
+                if (g.chainLinear()) {
                     changed = true;
                     proofout << endl <<  "Applied simple chaining:" << endl;
                     g.printForProof();
@@ -229,8 +235,8 @@ int main(int argc, char *argv[]) {
             } while (changed);
             if (Timeout::soft()) break;
 
-            if (g.isFullyContracted()) break;
-            if (!g.contractBranches()) break; //break if nothing heamy results
+            if (g.isFullyChained()) break;
+            if (!g.chainBranches()) break; //break if nothing heamy results
             if (dotOutput) g.printDot(dotStream,dotStep++,"Branches");
 
             if (Timeout::soft()) break;
@@ -249,7 +255,7 @@ int main(int argc, char *argv[]) {
         g.printForProof();
         if (dotOutput) g.printDot(dotStream,dotStep++,"Final");
 
-        if (!g.isFullyContracted()) {
+        if (!g.isFullyChained()) {
             //handling for timeouts
             proofout << "This is only a partial result (probably due to a timeout), trying to find max complexity" << endl << endl;
             runtime = g.getMaxPartialResult();
@@ -267,6 +273,8 @@ int main(int argc, char *argv[]) {
         }
     }
     Timing::done(Timing::Total);
+
+    // ### Some nice proof output ###
 
     proofout << endl;
     proofout << "The final runtime is determined by this resulting transition:" << endl;

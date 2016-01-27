@@ -20,6 +20,11 @@
 
 #include <ostream>
 
+
+/**
+ * Simple functions to keep track of how much time each component took.
+ * This measures time for different actions (metering, chaining, preprocessing) as well as for the tools used (PURRS,Z3)
+ */
 namespace Timing
 {
     enum TimingAction { Total=0, FarkasTotal, FarkasLogic, Contract, Branches, Selfloops, Infinity, Z3, Purrs, Preprocess, Unknown };

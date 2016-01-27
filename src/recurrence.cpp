@@ -168,28 +168,28 @@ bool Recurrence::calcIteratedUpdate(const UpdateMap &oldUpdate, const Expression
 }
 
 
-bool Recurrence::calcIteratedCost(const Expression &cost, const Expression &rankfunc, Expression &newCost) {
+bool Recurrence::calcIteratedCost(const Expression &cost, const Expression &meterfunc, Expression &newCost) {
     //calculate the new cost sum
     Expression costRec;
     if (!findCostRecurrence(cost,costRec)) {
         return false;
     }
-    newCost = costRec.subs(ginacN == rankfunc);
+    newCost = costRec.subs(ginacN == meterfunc);
     return true;
 }
 
 
-bool Recurrence::calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &rankfunc) {
+bool Recurrence::calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &meterfunc) {
     Recurrence rec(itrs);
 
     UpdateMap newUpdate;
-    if (!rec.calcIteratedUpdate(trans.update,rankfunc,newUpdate)) {
+    if (!rec.calcIteratedUpdate(trans.update,meterfunc,newUpdate)) {
         debugPurrs("calcIterated: failed to calculate update recurrence");
         return false;
     }
 
     Expression newCost;
-    if (!rec.calcIteratedCost(trans.cost,rankfunc,newCost)) {
+    if (!rec.calcIteratedCost(trans.cost,meterfunc,newCost)) {
         debugPurrs("calcIterated: failed to calculate cost recurrence");
         return false;
     }

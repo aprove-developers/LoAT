@@ -21,6 +21,17 @@
 #include <chrono>
 typedef std::chrono::time_point<std::chrono::steady_clock> timeoutpoint;
 
+
+/**
+ * Methods to allow aborting early for some given timeout value.
+ * Currently, there are 3 timeouts derived from the given value:
+ *  - preprocessing: this can take a long time, so the initial preprocessing is limited to a few seconds
+ *  - soft: at this time, the normal logic is aborted to allow recovering at least a partial result
+ *  - hard: at this time, the recovering logic is aborted, to finish in time
+ *
+ * Note that there is absolutely no guarantee that the program will stop in time,
+ * but checks are done at reasonable places, so this should work in most cases.
+ */
 namespace Timeout {
     //calculates all relevant timeout points from this global timeout
     void setTimeouts(int seconds);

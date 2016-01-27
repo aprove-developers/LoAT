@@ -22,7 +22,7 @@
 #include "debug.h"
 
 /*
- * if defined, it is checked if the combined guard is SAT before each edge contraction
+ * if defined, it is checked if the combined guard is SAT before each chaining step
  * NOTE: as z3 cannot handle non-linear integer arithmetic well, there are a lot of false positives!
  */
 #define CONTRACT_CHECK_SAT
@@ -34,8 +34,8 @@
 #define CONTRACT_CHECK_SAT_APPROXIMATE
 
 /*
- * if defined, in case of unknown for the SAT check edges are still contracted if
- * the resulting cost is exponential
+ * if defined, in case of unknown for the SAT check edges are still chained if
+ * the resulting cost is exponential (z3 cannot handle exponentials)
  */
 #define CONTRACT_CHECK_EXP_OVER_UNKNOWN
 
@@ -53,9 +53,9 @@
 #define PRUNE_MAX_PARALLEL_TRANSITIONS 5
 
 /*
- * if defined, a preprocessing of the transition will always be performed before trying to rank a selfloop
+ * if defined, a preprocessing of the transition will always be performed before trying to meter a selfloop
  * NOTE: as the preprocessing is meant to be run rarely, this might have a performance impact
- * NOTE: currently, farkas does some simple preprocessing on its own anyway!
+ * NOTE: currently, the farkas code does some simple preprocessing on its own anyway!
  */
 #define SELFLOOPS_ALWAYS_SIMPLIFY
 
@@ -87,13 +87,13 @@
 //#define FARKAS_TRY_ADDITIONAL_GUARD
 
 /*
- * if defined, in case where we find no metering function with integer coefficients,
- * we invoke farkas again, searching for real coefficients.
- * NOTE: for soundness, we add the constraint "free == metering function" to the guard.
+ * if defined, real coefficients are allowed in metering functions.
+ * (this requires extending the transition's guard to ensure the result is always an integer)
  */
 #define FARKAS_ALLOW_REAL_COEFFS
 
-/* if defined, a simple heuristic is used that allows adding A > B and (for a copy of the transition) B > A
+/*
+ * if defined, a simple heuristic is used that allows adding A > B and (for a copy of the transition) B > A
  * to the guard in cases where the metering function would likely be of the form min(A,B) or max(A,B).
  * I.e. the loop's termination depends on two variables, and we do not know which limit is hit first,
  * thus add A > B rsp. B > A to make the problem solvable. Note that the heuristic is quite simple.
@@ -103,7 +103,6 @@
 /*
  * the maximum number of bounds that are tried for a single free variable,
  * when instantiation is applied in farkas code (this limit is there to prevent exponential complexity)
- * (i.e. when free variables are replaced by their bounds).
  */
 #define FREEVAR_INSTANTIATE_MAXBOUNDS 3
 
@@ -116,6 +115,7 @@
 
 /*
  * if defined, the final guard/cost is checked to ensure it has infintily many instances
+ * NOTE: this check is strongly required for soundness (should never be disabled anymore)
  */
 #define FINAL_INFINITY_CHECK
 

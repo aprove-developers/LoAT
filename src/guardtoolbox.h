@@ -41,15 +41,19 @@ namespace GuardToolbox {
      * E.g. x == 2y, x > z can be transformed into 2y > z.
      *
      * @param level Defines in which cases a propagation is performed:
+     * @param freevar Defines if replacing non-free variables by free variables is allowed
      * @param subs if given, this will be assigned the resulting substititon map
      * @param allowFunc if given, lambda must be true to propagate the given symbol
      *
-     * @note non-free variables are never replaced by terms containing free variables.
-     * Otherwise, for x==free, x might be removed, resulting in possible INF runtime, although free is bounded by x.
+     * @note is is ensured that substitutions of the form x/x^2 cannot happen
+     *
+     * @note replacing non-free variables by free variables is not sound for the runtime complexity
+     * (only if the free variable is somehow marked as bounded afterwards)
+     * Example: for x==free, x might be substituted by free, resulting in possible INF runtime, although free was in fact bounded by x.
      *
      * NoCoefficients: the eliminated variable (x above) must have no coefficient (i.e. 1)
-     * LinearCoefficients: a numeric coefficient is allowed
-     * Nonlinear: Allow non-numeric coefficients (e.g. x*y == 2y^2 --> x == 2y), NOT SOUND!
+     * LinearCoefficients: a numeric coefficient is allowed, NOT SOUND IN MOST CASES!
+     * Nonlinear: Allow non-numeric coefficients (e.g. x*y == 2y^2 --> x == 2y), NOT SOUND IN ALMOST ALL CASES!
      *
      * @return true if any progpagation was performed.
      */

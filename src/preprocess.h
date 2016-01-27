@@ -22,6 +22,9 @@
 
 struct Transition;
 
+/**
+ * Methods useful for preprocessing / simplifying the transitions
+ */
 namespace Preprocess
 {
     /**

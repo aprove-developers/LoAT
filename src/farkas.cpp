@@ -33,7 +33,7 @@
 using namespace std;
 
 
-FarkasRankGenerator::FarkasRankGenerator(ITRSProblem &itrs, const Transition &t)
+FarkasMeterGenerator::FarkasMeterGenerator(ITRSProblem &itrs, const Transition &t)
     : itrs(itrs), update(t.update), guard(t.guard),
       coeff0(context.getFreshVariable("c",Z3VariableContext::Real))
 {}
@@ -41,7 +41,7 @@ FarkasRankGenerator::FarkasRankGenerator(ITRSProblem &itrs, const Transition &t)
 
 /* ### Preprocessing to eliminate free var ### */
 
-void FarkasRankGenerator::preprocessFreevars() {
+void FarkasMeterGenerator::preprocessFreevars() {
     //equalities might be helpful to remove free variables
     GuardToolbox::findEqualities(guard);
 
@@ -92,7 +92,7 @@ void FarkasRankGenerator::preprocessFreevars() {
 /* ### Filter relevant constarints/variables ### */
 
 
-bool FarkasRankGenerator::makeRelationalGuard() {
+bool FarkasMeterGenerator::makeRelationalGuard() {
     vector<Expression> newGuard;
     for (Expression term : guard) {
         if (term.info(GiNaC::info_flags::relation_not_equal)) return false; //not allowed
@@ -108,7 +108,7 @@ bool FarkasRankGenerator::makeRelationalGuard() {
 }
 
 
-void FarkasRankGenerator::reduceGuard() {
+void FarkasMeterGenerator::reduceGuard() {
     reducedGuard.clear();
     irrelevantGuard.clear();
 
@@ -155,7 +155,7 @@ void FarkasRankGenerator::reduceGuard() {
 }
 
 
-void FarkasRankGenerator::findRelevantVariables() {
+void FarkasMeterGenerator::findRelevantVariables() {
     varlist.clear();
     set<VariableIndex> added;
 
@@ -198,12 +198,12 @@ void FarkasRankGenerator::findRelevantVariables() {
 }
 
 
-bool FarkasRankGenerator::isRelevantVariable(VariableIndex vi) const {
+bool FarkasMeterGenerator::isRelevantVariable(VariableIndex vi) const {
     return std::find(varlist.begin(),varlist.end(),vi) != varlist.end();
 }
 
 
-void FarkasRankGenerator::restrictToRelevantVariables() {
+void FarkasMeterGenerator::restrictToRelevantVariables() {
     auto contains_relevant = [&](const Expression &ex) {
         auto names = ex.getVariableNames();
         return std::any_of(names.begin(),names.end(),[&](const string &s){ return isRelevantVariable(itrs.getVarindex(s)); });
@@ -241,7 +241,7 @@ void FarkasRankGenerator::restrictToRelevantVariables() {
 }
 
 
-void FarkasRankGenerator::createCoefficients(Z3VariableContext::VariableType type) {
+void FarkasMeterGenerator::createCoefficients(Z3VariableContext::VariableType type) {
     coeffs.clear();
     for (int i=0; i < varlist.size(); ++i) {
         coeffs.push_back(context.getFreshVariable("c",type));
@@ -254,7 +254,7 @@ void FarkasRankGenerator::createCoefficients(Z3VariableContext::VariableType typ
 /* ### Make guard/update linear by substitution ### */
 
 
-bool FarkasRankGenerator::makeLinear(Expression &term, ExprList vars, ExprSymbolSet &subsVars, GiNaC::exmap &subsMap) {
+bool FarkasMeterGenerator::makeLinear(Expression &term, ExprList vars, ExprSymbolSet &subsVars, GiNaC::exmap &subsMap) {
     //term must be a polynomial
     if (!term.is_polynomial(vars)) return false;
 
@@ -303,7 +303,7 @@ bool FarkasRankGenerator::makeLinear(Expression &term, ExprList vars, ExprSymbol
     return true;
 }
 
-bool FarkasRankGenerator::makeLinearTransition() {
+bool FarkasMeterGenerator::makeLinearTransition() {
     ExprSymbolSet subsVars;
     GiNaC::exmap subsMap;
 
@@ -359,7 +359,7 @@ bool FarkasRankGenerator::makeLinearTransition() {
 /* ### Transform guard/update to "linear term <= constant" relations for Farkas ### */
 
 
-void FarkasRankGenerator::buildConstraints() {
+void FarkasMeterGenerator::buildConstraints() {
     constraints.guard.clear();
     constraints.guardUpdate.clear();
     constraints.irrelevantGuard.clear();
@@ -406,10 +406,10 @@ void FarkasRankGenerator::buildConstraints() {
 
 
 
-/* ### Apply Farkas Lemma to formulate the constraints for the ranking function ### */
+/* ### Apply Farkas Lemma to formulate the constraints for the metering function ### */
 
 
-z3::expr FarkasRankGenerator::applyFarkas(const vector<Expression> &constraints, const vector<ExprSymbol> &vars, const vector<z3::expr> &coeff, z3::expr c0, int delta) const {
+z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints, const vector<ExprSymbol> &vars, const vector<z3::expr> &coeff, z3::expr c0, int delta) const {
     assert(vars.size() == coeff.size());
 
 #ifdef DEBUG_FARKAS
@@ -434,7 +434,7 @@ z3::expr FarkasRankGenerator::applyFarkas(const vector<Expression> &constraints,
         varToCoeff.emplace(vars[i],coeff[i]);
     }
 
-    //search for additional variables used in constraints that do not belong to the resulting ranking function
+    //search for additional variables used in constraints that do not belong to the resulting metering function
     //NOTE: this is required for the representation A*x of the constraints
     ExprSymbolSet constraintSymbols;
     for (const Expression &ex : constraints) ex.collectVariables(constraintSymbols);
@@ -472,7 +472,7 @@ z3::expr FarkasRankGenerator::applyFarkas(const vector<Expression> &constraints,
 }
 
 
-z3::expr FarkasRankGenerator::genNotGuardImplication() const {
+z3::expr FarkasMeterGenerator::genNotGuardImplication() const {
     vector<z3::expr> res;
     vector<Expression> lhs = constraints.irrelevantGuard; //should not change soundness, but might improve performance
     for (Expression g : constraints.reducedGuard) {
@@ -484,7 +484,7 @@ z3::expr FarkasRankGenerator::genNotGuardImplication() const {
 }
 
 
-z3::expr FarkasRankGenerator::genGuardPositiveImplication(bool strict) const {
+z3::expr FarkasMeterGenerator::genGuardPositiveImplication(bool strict) const {
     //G => f(x) > 0
     //f(x) > 0  ==  -f(x) < 0  ==  -f(x) <= -1
     vector<z3::expr> negCoeff;
@@ -495,7 +495,7 @@ z3::expr FarkasRankGenerator::genGuardPositiveImplication(bool strict) const {
 }
 
 
-z3::expr FarkasRankGenerator::genUpdateImplication() const {
+z3::expr FarkasMeterGenerator::genUpdateImplication() const {
     //f(x)-f(x')  =>  x-x' for all primed x only, others can be left out (for efficiency!)
     vector<ExprSymbol> var;
     vector<z3::expr> coeff;
@@ -512,7 +512,7 @@ z3::expr FarkasRankGenerator::genUpdateImplication() const {
 }
 
 
-z3::expr FarkasRankGenerator::genNonTrivial() const {
+z3::expr FarkasMeterGenerator::genNonTrivial() const {
     vector<z3::expr> res;
     for (z3::expr c : coeffs) {
         res.push_back(c != 0);
@@ -525,7 +525,7 @@ z3::expr FarkasRankGenerator::genNonTrivial() const {
 /* ### Model interpretation and main function ### */
 
 
-Expression FarkasRankGenerator::buildResult(const z3::model &model) const {
+Expression FarkasMeterGenerator::buildResult(const z3::model &model) const {
     Expression result = Z3Toolbox::getRealFromModel(model,coeff0);
     for (int i=0; i < coeffs.size(); ++i) {
         result = result + Z3Toolbox::getRealFromModel(model,coeffs[i]) * symbols[i];
@@ -537,7 +537,7 @@ Expression FarkasRankGenerator::buildResult(const z3::model &model) const {
 }
 
 
-stack<GiNaC::exmap> FarkasRankGenerator::instantiateFreeVariables() const {
+stack<GiNaC::exmap> FarkasMeterGenerator::instantiateFreeVariables() const {
     if (FREEVAR_INSTANTIATE_MAXBOUNDS == 0) return stack<GiNaC::exmap>();
 
     //find free variables
@@ -595,11 +595,11 @@ stack<GiNaC::exmap> FarkasRankGenerator::instantiateFreeVariables() const {
 }
 
 
-bool FarkasRankGenerator::prepareGuard(ITRSProblem &itrs, Transition &t) {
+bool FarkasMeterGenerator::prepareGuard(ITRSProblem &itrs, Transition &t) {
     Timing::Scope timer1(Timing::FarkasTotal);
     Timing::Scope timer2(Timing::FarkasLogic);
     bool changed = false;
-    FarkasRankGenerator f(itrs,t);
+    FarkasMeterGenerator f(itrs,t);
     f.reduceGuard();
     f.findRelevantVariables();
     for (const auto &it : f.update) {
@@ -630,10 +630,10 @@ bool FarkasRankGenerator::prepareGuard(ITRSProblem &itrs, Transition &t) {
 }
 
 
-FarkasRankGenerator::Result FarkasRankGenerator::generate(ITRSProblem &itrs, Transition &t, Expression &result, pair<VariableIndex, VariableIndex> *conflictVar) {
+FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &itrs, Transition &t, Expression &result, pair<VariableIndex, VariableIndex> *conflictVar) {
     Timing::Scope timer(Timing::FarkasTotal);
     Timing::start(Timing::FarkasLogic);
-    FarkasRankGenerator f(itrs,t);
+    FarkasMeterGenerator f(itrs,t);
     debugFarkas("FARKAS Transition:" << t);
 
     //preprocessing
