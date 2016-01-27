@@ -1,4 +1,6 @@
-# Prerequisites #
+# Installation instructions
+
+## Prerequisites
 
 To compile LoAT, you will need the following libraries (and all their dependencies):
 
@@ -9,13 +11,13 @@ To compile LoAT, you will need the following libraries (and all their dependenci
 (the dependencies include: CLN, NTL, giac, gf2x, cgicc)
 
 
-# Static Binary #
+## Static Binary
 
 If you just want to try out LoAT, we also offer a precompiled static binary on our website
 (<http://aprove.informatik.rwth-aachen.de/eval/integerLower>) for convenience.
 
 
-# Compilation #
+## Compilation
 
 Please note that LoAT requires a C++11 compliant compiler (e.g. recent g++/clang++).
 There isn't really a build system for now, so just type:
@@ -37,7 +39,7 @@ You might want to run LoAT on the included examples (see `example` directory) to
 it works as expected. There are some options to play around with in `src/global.h`.
 
 
-# Useful Scripts #
+## Useful Scripts
 
 If you use the dot output (see `./loat --help`), you might want to use `dot2pdf.sh` (or
 `splitdot2pdf.sh`) which will convert the dot file to a single (or multiple) pdf files
