@@ -35,9 +35,10 @@ public:
 private:
     Recurrence(const ITRSProblem &itrs);
 
-    //returns true iff success and update was updated; otherwise false and everything is left unchanged
-    //! @note might modify update when the recurrence is too hard to solve otherwise (cannot be ordered)
-    bool calcIteratedUpdate(UpdateMap &update, const Expression &runtime, UpdateMap &newUpdate);
+    /**
+     * Returns true iff iterated update was calculated successfully and newUpdate has been set accordingly (with runtime as "iteration step")
+     */
+    bool calcIteratedUpdate(const UpdateMap &oldUpdate, const Expression &meterfunc, UpdateMap &newUpdate);
 
     //returns true if everything was successful and cost was updated, otherwise nothing is changed
     //! @note calcIteratedUpdate *must* be called before!

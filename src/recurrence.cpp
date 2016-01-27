@@ -138,9 +138,10 @@ bool Recurrence::findCostRecurrence(Expression cost, Expression &result) {
 }
 
 
-bool Recurrence::calcIteratedUpdate(UpdateMap &update, const Expression &runtime, UpdateMap &newUpdate) {
+bool Recurrence::calcIteratedUpdate(const UpdateMap &oldUpdate, const Expression &meterfunc, UpdateMap &newUpdate) {
     assert(newUpdate.empty());
 
+    UpdateMap update = oldUpdate; //might be changed by dependencyOrder, so copy here
     vector<VariableIndex> order = dependencyOrder(update);
     assert(order.size() == update.size());
 
@@ -160,7 +161,7 @@ bool Recurrence::calcIteratedUpdate(UpdateMap &update, const Expression &runtime
         knownPreRecurrences[target] = res.subs(ginacN == ginacN-1);
 
         //calcuate the final update using the loop's runtime
-        newUpdate[vi] = res.subs(ginacN == runtime);
+        newUpdate[vi] = res.subs(ginacN == meterfunc);
     }
 
     return true;
