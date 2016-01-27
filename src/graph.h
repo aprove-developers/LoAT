@@ -32,14 +32,18 @@ typedef int NodeIndex;
 typedef int TransIndex;
 
 
+/**
+ * A simple directed graph, with data associated to the transitions
+ */
 template <typename T>
 class Graph {
 public:
-//    const int NoTransition = -1;
-
-public:
     Graph() : nextIdx(0) {}
 
+    /**
+     * Add a new transition with the given associated data
+     * @return the index of the added transition
+     */
     TransIndex addTrans(NodeIndex from, NodeIndex to, T data) {
         assert(check() == Valid);
         TransIndex currIdx = nextIdx++;
@@ -109,6 +113,10 @@ public:
         return res;
     }
 
+    /**
+     * Changes the given transition to point to the given new target
+     * (no new transition is added, data is kept)
+     */
     void changeTransTarget(TransIndex trans, NodeIndex newTarget) {
         assert(check() == Valid);
         removeTransFromGraph(trans);
@@ -123,9 +131,11 @@ public:
         assert(check() == Valid);
     }
 
-    //splits node into one node for incoming trans (node) and a new node for outgoing trans (returned)
-    //NOTE: there is *no* connection between those two nodes after calling this
-    //NOTE: newOutgoing must be a new node
+    /**
+     * Splits the given node into two nodes, one for all incoming transitions (node) and one for all outgoing transitions (newOutgoing)
+     * @note newOutgoing *must* be a fresh node index
+     * @note afterwards, node has only incoming, newOutgoing only outgoing transitions and these two nodes are *not* connected to each other
+     */
     void splitNode(NodeIndex node, NodeIndex newOutgoing) {
         assert(check() == Valid);
         assert(outgoing.count(newOutgoing) == 0 && predecessor.count(newOutgoing) == 0);
@@ -177,37 +187,15 @@ public:
         assert(check() == Valid);
     }
 
-    //for debgging only
-    void dump(std::ostream &os) {
-        using namespace std;
-        os << "TRANSITIONS" << endl;
-        for (auto it : transitions) {
-            os << " " << it.first << ": " << it.second.from << " -> " << it.second.to << " | " << it.second.data << endl;
-        }
-        os << "OUTGOING" << endl;
-        for (auto it : outgoing) {
-            os << " " << it.first << ":";
-            for (auto it2 : it.second) {
-                os << " " << it2.first << " [";
-                for (auto trans : it2.second) os << trans << " ";
-                os << "] ";
-            }
-            os << endl;
-        }
-        os << "PREDECESSOR" << endl;
-        for (auto it : predecessor) {
-            os << " " << it.first << ":";
-            for (auto node : it.second) os << " " << node;
-            os << endl;
-        }
-    }
-
-
     enum CheckResult { Valid=0, InvalidNode, EmptyMapEntry, UnknownTrans, InvalidTrans, UnusedTrans, DuplicateTrans, InvalidPred, InvalidPredCount };
     int check(std::set<NodeIndex> *nodes = nullptr) const {
+#ifdef DEBUG_GRAPH
         int res = check_internal(nodes);
         if (res != 0) debugGraph("Graph ERROR: " << res);
         return res;
+#else
+        return Valid;
+#endif
     }
 
 private:
@@ -225,6 +213,9 @@ private:
         }
     }
 
+    /**
+     * Function to check the integrity of all datastructures (used for debugging and testing only)
+     */
     int check_internal(std::set<NodeIndex> *nodes) const {
         int edgecount = 0; //counting multi-edges once only
         std::set<TransIndex> seen;
@@ -261,7 +252,7 @@ private:
             }
         }
         if (cnt != edgecount) return InvalidPredCount;
-        return Valid; //finally
+        return Valid;
     }
 
 private:
