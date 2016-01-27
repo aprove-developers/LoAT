@@ -174,10 +174,11 @@ int InfiniteInstances::getExpSum(const MonomData &monom, const InftyCfg &cfg) {
     return res;
 }
 
-int InfiniteInstances::getFreeExpSum(const MonomData &monom, const InftyCfg &cfg) const {
+int InfiniteInstances::getUnboundedFreeExpSum(const MonomData &monom, const InftyCfg &cfg) const {
     int res = 0;
     for (int i=0; i < cfg.size(); ++i) {
-        if (!itrs.isFreeVar(itrs.getVarindex(symbols[i].get_name()))) continue;
+        if (!itrs.isFreeVar(itrs.getVarindex(symbols[i].get_name()))) continue; //not free
+        if (freeBoundedVars.count(symbols[i]) > 0) continue; //free, but bounded
         res += monom.getVarExp(i,cfg);
     }
     return res;
@@ -274,9 +275,9 @@ vector<int> InfiniteInstances::findRelevantMonoms(const PolynomData &polynom, co
 
     //first search for terms containing free variables, as they are unbounded by the input
     bool only_free = true;
-    int maxExp = getFreeExpSum(polynom[0],cfg);
+    int maxExp = getUnboundedFreeExpSum(polynom[0],cfg);
     for (int i=1; i < polynom.size(); ++i) {
-        maxExp = max(maxExp,getFreeExpSum(polynom[i],cfg));
+        maxExp = max(maxExp,getUnboundedFreeExpSum(polynom[i],cfg));
     }
 
     //if there are no such terms, interpret free variables as regular variables and search again
@@ -293,7 +294,7 @@ vector<int> InfiniteInstances::findRelevantMonoms(const PolynomData &polynom, co
 
     //return all monoms that have maximal exp sum
     for (int i=0; i < polynom.size(); ++i) {
-        if ((only_free ? getFreeExpSum(polynom[i],cfg) : getExpSum(polynom[i],cfg)) == maxExp)
+        if ((only_free ? getUnboundedFreeExpSum(polynom[i],cfg) : getExpSum(polynom[i],cfg)) == maxExp)
             res.push_back(i);
     }
     return res;

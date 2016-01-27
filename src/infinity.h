@@ -87,7 +87,7 @@ private:
 
     static int getInftyVarCount(const InftyCfg &cfg);
     static int getExpSum(const MonomData &monom, const InftyCfg &cfg);
-    int getFreeExpSum(const MonomData &monom, const InftyCfg &cfg) const; //same as getExpSum, but only take free vars into account
+    int getUnboundedFreeExpSum(const MonomData &monom, const InftyCfg &cfg) const; //same as getExpSum, but only take free vars into account
 
     int getVarCount() const { return symbols.size(); }
     InftyCfg getInitialConfig() const;
