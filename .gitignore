@@ -1,0 +1,21 @@
+#object files
+*.o
+
+#latex build files
+*.synctex.gz
+*.blg
+*.bbl
+*.aux
+*.pdf
+
+#vim
+*.swp
+
+#build targets
+loat
+src/loat
+src/koatToComplexity
+src/koatToT2
+
+#logging directory
+benchlog

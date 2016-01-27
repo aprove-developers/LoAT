@@ -1,0 +1,123 @@
+/*  This file is part of LoAT.
+ *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses>.
+ */
+
+#ifndef GLOBAL_H
+#define GLOBAL_H
+
+//enable debugging
+#include "debug.h"
+
+/*
+ * if defined, it is checked if the combined guard is SAT before each edge contraction
+ * NOTE: as z3 cannot handle non-linear integer arithmetic well, there are a lot of false positives!
+ */
+#define CONTRACT_CHECK_SAT
+
+/*
+ * if defined, in case of unknown for the SAT check an approximate (not 100% sound) check is done
+ * (currently, this is done by treating all variables/constants as reals instead of integers)
+ */
+#define CONTRACT_CHECK_SAT_APPROXIMATE
+
+/*
+ * if defined, in case of unknown for the SAT check edges are still contracted if
+ * the resulting cost is exponential
+ */
+#define CONTRACT_CHECK_EXP_OVER_UNKNOWN
+
+/*
+ * if defined, the number of transitions is heuristically recuded (see below)
+ * after every branch contraction step (which usually creates many new transitions)
+ */
+#define PRUNING_ENABLE
+
+/*
+ * Allow not more than this amount of parallel transitions (i.e. between the same two nodes)
+ * If there are more, we apply pruning and remove the ones with the lowest cost [GREEDY!]
+ * (note that we currently use the Infinity check here, to not be mistaken by high costs, which are effectively constant)
+ */
+#define PRUNE_MAX_PARALLEL_TRANSITIONS 5
+
+/*
+ * if defined, a preprocessing of the transition will always be performed before trying to rank a selfloop
+ * NOTE: as the preprocessing is meant to be run rarely, this might have a performance impact
+ * NOTE: currently, farkas does some simple preprocessing on its own anyway!
+ */
+#define SELFLOOPS_ALWAYS_SIMPLIFY
+
+/*
+ * if defined, for every loop elimination an empty transition is added, modelling the choice
+ * to not execute any of the parallel selfloops at all
+ */
+//#define SELFLOOP_ALLOW_ZEROEXEC
+
+/*
+ * this defines the nesting iterations when eliminating selfloops, i.e.
+ * how often the successfully nested loops are tried to be nested again
+ * NOTE: nesting is always aborted if no new nested loops are created
+ */
+#define NESTING_MAX_ITERATIONS 3
+
+/*
+ * if defined, ranked selfloops are chained (if possible).
+ * This increases time and branches, but might be valuable in certain examples.
+ * (e.g. if you first want to take one path, then the second one through a single loop body)
+ */
+//#define NESTING_CHAIN_RANKED
+
+/*
+ * if defined, in case of an unsat result from farkas, some additional constraints are added to the guard
+ * (similar to chaining, but without modifying the update).
+ * NOTE: this might help for some loops (with constant update rhs), but also increases time and branching
+ */
+//#define FARKAS_TRY_ADDITIONAL_GUARD
+
+/*
+ * if defined, in case where we find no metering function with integer coefficients,
+ * we invoke farkas again, searching for real coefficients.
+ * NOTE: for soundness, we add the constraint "free == metering function" to the guard.
+ */
+#define FARKAS_ALLOW_REAL_COEFFS
+
+/* if defined, a simple heuristic is used that allows adding A > B and (for a copy of the transition) B > A
+ * to the guard in cases where the metering function would likely be of the form min(A,B) or max(A,B).
+ * I.e. the loop's termination depends on two variables, and we do not know which limit is hit first,
+ * thus add A > B rsp. B > A to make the problem solvable. Note that the heuristic is quite simple.
+ */
+#define FARKAS_HEURISTIC_FOR_MINMAX
+
+/*
+ * the maximum number of bounds that are tried for a single free variable,
+ * when instantiation is applied in farkas code (this limit is there to prevent exponential complexity)
+ * (i.e. when free variables are replaced by their bounds).
+ */
+#define FREEVAR_INSTANTIATE_MAXBOUNDS 3
+
+/*
+ * the max exponent n up to which a power of the form expr^n is rewritten as multiplication.
+ * (z3 does not support exponents well, while multiplication works with bit-blasting)
+ * NOTE: increasing this might make z3 run extremely long on certain examples
+ */
+#define Z3_MAX_EXPONENT 5
+
+/*
+ * if defined, the final guard/cost is checked to ensure it has infintily many instances
+ */
+#define FINAL_INFINITY_CHECK
+
+
+#endif //GLOBAL_H
