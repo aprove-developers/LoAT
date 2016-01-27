@@ -1,9 +1,9 @@
 # LoAT
 
-LoAT (**L**ower bounds **A**nalysis **T**ool) is a tool to automatically analyze lower bounds on the worst-case runtime complexity of integer programs (i.e. integer transition systems).
+LoAT (**L**ower bounds **A**nalysis **T**ool) is a tool to automatically infer lower bounds on the worst-case runtime complexity of integer programs (i.e. integer transition systems).
 
-LoAT has been inspired by [KoAT](<https://github.com/s-falke/kittel-koat/>) and uses a variation of ranking functions for lower bounds in combination with recurrence solving to proof lower bounds. The tool is
-based on the recurrence solver [PURRS](http://www.cs.unipr.it/purrs/) and the SMT solver [Z3](https://github.com/Z3Prover/z3/).
+LoAT has been inspired by [KoAT](<https://github.com/s-falke/kittel-koat/>) and uses a variation of ranking functions in combination with recurrence solving to prove lower bounds.
+The tool is based on the recurrence solver [PURRS](http://www.cs.unipr.it/purrs/) and the SMT solver [Z3](https://github.com/Z3Prover/z3/).
 
 
 ## Paper
