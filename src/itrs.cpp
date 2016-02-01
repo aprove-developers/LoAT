@@ -106,6 +106,7 @@ static void parseFunapp(const string &line, string &fun, vector<string> &args) {
 void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIndex> &knownVars, const string &line) {
     debugParser("parsing rule: " << line);
     Rule rule;
+    rule.cost = Expression(1); //default, if not specified
 
     auto getTermIndex = [&](const string &s) -> TermIndex {
         if (knownTerms.find(s) == knownTerms.end()) {
@@ -134,15 +135,27 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
         return added;
     };
 
-    /* split string into lhs, rhs, guard */
-    string::size_type pos = line.find("->");
-    if (pos == string::npos) throw ITRSProblem::FileError("Invalid rule, -> missing: "+line);
-
-    string lhs = line.substr(0,pos);
+    /* split string into lhs, rhs (and possibly cost in between) */
+    string lhs,rhs,cost;
+    string::size_type pos = line.find("-{");
+    if (pos != string::npos) {
+        //-{ cost }> sytnax
+        auto endpos = line.find("}>");
+        if (endpos == string::npos) throw ITRSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
+        cost = line.substr(pos+2,endpos-(pos+2));
+        lhs = line.substr(0,pos);
+        rhs = line.substr(endpos+2);
+    } else {
+        //default -> syntax (leave cost string empty)
+        pos = line.find("->");
+        if (pos == string::npos) throw ITRSProblem::FileError("Invalid rule, -> missing: "+line);
+        lhs = line.substr(0,pos);
+        rhs = line.substr(pos+2);
+    }
     trim(lhs);
 
+    /* split rhs into rhs funapp and guard */
     string guard;
-    string rhs = line.substr(pos+2);
     if ((pos = rhs.find("[")) != string::npos) {
         guard = rhs.substr(pos+1,rhs.length()-1-(pos+1));
         trim(guard);
@@ -209,13 +222,23 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
         argterm.collectVariables(rhsSymbols);
         rule.rhsArgs.push_back(argterm);
     }
+
+    /* cost */
+    if (!cost.empty()) {
+        substituteVarnames(cost);
+        if (cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        rule.cost = Expression::fromString(cost,this->varSymbolList).subs(symbolSubs);
+        if (!rule.cost.is_polynomial(this->varSymbolList)) throw ITRSProblem::FileError("Non polynomial cost in the input");
+        rule.cost.collectVariables(rhsSymbols);
+    }
+
     //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
     if (replaceUnboundedWithFresh(rhsSymbols)) {
         for (Expression &argExpr : rule.rhsArgs) {
             argExpr = argExpr.subs(symbolSubs);
         }
+        rule.cost = rule.cost.subs(symbolSubs);
     }
-
 
     /* guard */
     ExprSymbolSet guardSymbols;

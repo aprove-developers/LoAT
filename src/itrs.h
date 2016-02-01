@@ -44,6 +44,7 @@ struct Rule {
     TermIndex lhsTerm, rhsTerm;
     std::vector<Expression> rhsArgs;
     GuardList guard;
+    Expression cost;
 };
 
 /**

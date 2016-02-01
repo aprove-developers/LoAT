@@ -75,6 +75,7 @@ void FlowGraph::addRule(const Rule &rule) {
     NodeIndex src = (NodeIndex) rule.lhsTerm;
     NodeIndex dst = (NodeIndex) rule.rhsTerm;
     trans.guard = rule.guard;
+    trans.cost = rule.cost;
 
     const Term &targetTerm = itrs.getTerm(rule.rhsTerm);
     assert(targetTerm.args.size() == rule.rhsArgs.size());
