@@ -13,7 +13,7 @@ LDFLAGS_STATIC = -lpurrs -lginac -lcln -lntl -lz3 -lgmp -lgomp -lpthread $(LINK_
 
 SRCDIR = src
 
-.PHONY: clean cleanstatic all
+.PHONY: clean cleanstatic all loat static koatToT2 koatToComplexity
 
 all: loat
 
