@@ -22,6 +22,7 @@
 #include "z3toolbox.h"
 #include "farkas.h"
 #include "infinity.h"
+#include "asymptotic/asymptoticbound.h"
 
 #include "debug.h"
 #include "stats.h"
@@ -261,6 +262,8 @@ RuntimeResult FlowGraph::getMaxRuntime() {
 #endif
         //avoid infinity checks that cannot improve the result
         if (oldCpx <= res.cpx) continue;
+
+        AsymptoticBound::determineComplexity(getTransData(trans).guard, getTransData(trans).cost);
 
         //check if this transition allows infinitely many guards
         debugGraph(endl << "INFINITY CHECK");
