@@ -15,11 +15,15 @@ public:
 
     typedef std::pair<Expression, InftyDir> InftyExpression;
 
-    LimitProblem(const GuardList &normalizedGuard,const Expression &cost);
+    LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
+
+    void removeConstant(int i); // (B)
+    void removePolynomial(int i); // (D)
 
     bool isSolved() const;
 
 private:
+    LimitProblem(const std::vector<InftyExpression> &exps, int removeIndex);
     std::vector<InftyExpression> expressions;
 
 private:

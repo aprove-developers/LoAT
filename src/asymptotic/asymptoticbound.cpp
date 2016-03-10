@@ -10,6 +10,7 @@ AsymptoticBound::AsymptoticBound(GuardList guard, Expression cost)
     assert(GuardToolbox::isValidGuard(guard));
 }
 
+
 void AsymptoticBound::normalizeGuard() {
     debugAsymptoticBound("Normalizing guard.");
 
@@ -37,6 +38,7 @@ void AsymptoticBound::normalizeGuard() {
     debugAsymptoticBound("");
 }
 
+
 void AsymptoticBound::dumpGuard(const std::string &description) const {
 #ifdef DEBUG_INFINITY
     std::cout << description << ": ";
@@ -46,6 +48,7 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
     std::cout << std::endl;
 #endif
 }
+
 
 void AsymptoticBound::determineComplexity(const GuardList &guard, const Expression &cost) {
     AsymptoticBound asymptoticBound(guard, cost);
@@ -58,5 +61,9 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
 
     LimitProblem limitProblem(asymptoticBound.normalizedGuard, cost);
 
-    LimitProblem limitProblem2(GuardList(), asymptoticBound.normalizedGuard.front().lhs());
+    limitProblem.removeConstant(1);
+
+    limitProblem.removePolynomial(1);
+
+    limitProblem.removePolynomial(2);
 }
