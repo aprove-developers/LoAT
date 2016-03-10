@@ -121,6 +121,12 @@ namespace GuardToolbox {
 
 
     /**
+     * Returns true iff term is a <,<=,>=,> relational with 2 arguments (not == or !=)
+     */
+    bool isNormalizedInequality(const Expression &term);
+
+
+    /**
      * Returns true iff term contains a free variable (note that this is possibly not very efficient)
      */
     bool containsFreeVar(const ITRSProblem &itrs, const Expression &term);
@@ -143,6 +149,18 @@ namespace GuardToolbox {
      * Given a valid inequality, transforms it into only using the <= operator
      */
     Expression makeLessEqual(Expression term);
+
+
+    /**
+     * Given a valid inequality, transforms it into only using the > operator
+     */
+    Expression makeGreater(Expression term);
+
+
+    /**
+     * Given a valid inequality, transforms it into only using the > operator
+     */
+    Expression normalize(Expression term);
 
 
     /**

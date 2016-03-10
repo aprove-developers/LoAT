@@ -54,6 +54,11 @@ bool GuardToolbox::isValidInequality(const Expression &term) {
 }
 
 
+bool GuardToolbox::isNormalizedInequality(const Expression &term) {
+    return term.info(GiNaC::info_flags::relation_greater) && term.rhs().is_zero();
+}
+
+
 Expression GuardToolbox::replaceLhsRhs(const Expression &term, Expression lhs, Expression rhs) {
     assert(isValidInequality(term));
     if (term.info(GiNaC::info_flags::relation_less)) return lhs < rhs;
@@ -95,6 +100,37 @@ Expression GuardToolbox::makeLessEqual(Expression term) {
 
     assert(term.info(GiNaC::info_flags::relation_less_or_equal));
     return term;
+}
+
+
+Expression GuardToolbox::makeGreater(Expression term) {
+    assert(isValidInequality(term));
+
+    //flip < or <=
+    if (term.info(GiNaC::info_flags::relation_less)) {
+        term = term.rhs() > term.lhs();
+    } else if (term.info(GiNaC::info_flags::relation_less_or_equal)) {
+        term = term.rhs() >= term.lhs();
+    }
+
+    //change >= to >, assuming integer arithmetic
+    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
+        term = (term.lhs() + 1) > term.rhs();
+    }
+
+    assert(term.info(GiNaC::info_flags::relation_greater));
+    return term;
+}
+
+
+Expression GuardToolbox::normalize(Expression term) {
+    assert(isValidInequality(term));
+
+    Expression greater = makeGreater(term);
+    Expression normalized = (greater.lhs() - greater.rhs()) > 0;
+
+    assert(isNormalizedInequality(normalized));
+    return normalized;
 }
 
 
