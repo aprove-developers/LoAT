@@ -66,4 +66,41 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
     limitProblem.removePolynomial(1);
 
     limitProblem.removePolynomial(2);
+
+    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_CONS);
+
+    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_CONS);
+
+    limitProblem.applyLimitVector(2, 0, LimitProblem::InftyDir::POS_CONS,
+                                  LimitProblem::InftyDir::POS_CONS,
+                                  LimitProblem::InftyDir::POS_CONS);
+
+    limitProblem.applyLimitVector(3, 0, LimitProblem::InftyDir::POS_CONS,
+                                  LimitProblem::InftyDir::POS_CONS,
+                                  LimitProblem::InftyDir::POS_CONS);
+
+    limitProblem.removeConstant(3);
+    limitProblem.removeConstant(3);
+    limitProblem.removeConstant(3);
+    limitProblem.removeConstant(3);
+
+    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF);
+
+    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF);
+
+    limitProblem.applyLimitVector(4, 0, LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF);
+
+    limitProblem.applyLimitVector(5, 0, LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF,
+                                  LimitProblem::InftyDir::POS_INF);
 }

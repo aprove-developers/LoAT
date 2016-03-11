@@ -17,8 +17,10 @@ public:
 
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
-    void removeConstant(int i); // (B)
-    void removePolynomial(int i); // (D)
+    void applyLimitVector(int index, int pos, InftyDir lvType,
+                          InftyDir first, InftyDir second);
+    void removeConstant(int index); // (B)
+    void removePolynomial(int index); // (D)
 
     bool isSolved() const;
 
