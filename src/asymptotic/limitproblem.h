@@ -1,39 +1,59 @@
 #ifndef LIMITPROBLEM_H
 #define LIMITPROBLEM_H
 
-#include <vector>
+#include <set>
 #include <utility>
 
+#include "exceptions.h"
 #include "expression.h"
 #include "guardtoolbox.h"
 
-//TODO doc
+
+enum InftyDirection { POS_INF, NEG_INF, POS_CONS, NEG_CONS, POS };
+
+class InftyExpression : public Expression {
+public:
+
+    InftyExpression(InftyDirection dir = POS);
+    InftyExpression(const GiNaC::basic &other, InftyDirection dir = POS);
+    InftyExpression(const GiNaC::ex &other, InftyDirection dir = POS);
+
+    void setDirection(InftyDirection dir);
+    InftyDirection getDirection() const;
+
+private:
+    InftyDirection direction;
+};
+
+typedef std::set<InftyExpression, GiNaC::ex_is_less> InftyExpressionSet;
+
+EXCEPTION(LimitProblemIsContradictoryException, CustomException);
+
 class LimitProblem {
 public:
-    enum InftyDir { POS_INF, NEG_INF, POS_CONS, NEG_CONS, POS };
-    static const char* InftyDirNames[];
-
-    typedef std::pair<Expression, InftyDir> InftyExpression;
-
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
-    void applyLimitVector(int index, int pos, InftyDir lvType,
-                          InftyDir first, InftyDir second);
-    void removeConstant(int index); // (B)
-    void removePolynomial(int index); // (D)
+    void add(const InftyExpression &ex);
+
+    InftyExpressionSet::const_iterator cbegin() const;
+    InftyExpressionSet::const_iterator cend() const;
+
+    /*void applyLimitVector(int index, int pos, InftyDir lvType, // (A)
+                          InftyDir first, InftyDir second);*/
+    void removeConstant(const InftyExpressionSet::const_iterator &it); // (B)
+    void trimPolynomial(const InftyExpressionSet::const_iterator &it); // (D)
 
     bool isSolved() const;
 
 private:
-    LimitProblem(const std::vector<InftyExpression> &exps, int removeIndex);
-    std::vector<InftyExpression> expressions;
+    InftyExpressionSet set;
 
 private:
     //debug dumping
     void dump(const std::string &description) const;
 
 public:
-    static LimitProblem solve(const LimitProblem &problem);
+    static void solve(LimitProblem &problem);
 };
 
 #endif //LIMITPROBLEM_H

@@ -55,7 +55,9 @@ bool GuardToolbox::isValidInequality(const Expression &term) {
 
 
 bool GuardToolbox::isNormalizedInequality(const Expression &term) {
-    return term.info(GiNaC::info_flags::relation_greater) && term.rhs().is_zero();
+    return isValidInequality(term)
+           && term.info(GiNaC::info_flags::relation_greater)
+           && term.rhs().is_zero();
 }
 
 

@@ -4,22 +4,81 @@
 
 using namespace GiNaC;
 
-const char* LimitProblem::InftyDirNames[] = { "+", "-", "+!", "-!", "+/+!"};
+const char* InftyDirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
+
+
+InftyExpression::InftyExpression(InftyDirection dir)
+    : Expression() {
+    setDirection(dir);
+}
+
+
+InftyExpression::InftyExpression(const GiNaC::basic &other, InftyDirection dir)
+    : Expression(other) {
+    setDirection(dir);
+}
+
+
+InftyExpression::InftyExpression(const GiNaC::ex &other, InftyDirection dir)
+    : Expression(other) {
+    setDirection(dir);
+}
+
+
+void InftyExpression::setDirection(InftyDirection dir) {
+    direction = dir;
+}
+
+
+InftyDirection InftyExpression::getDirection() const {
+    return direction;
+}
+
 
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost) {
     for (const Expression &ex : normalizedGuard) {
         assert(GuardToolbox::isNormalizedInequality(ex));
 
-        expressions.push_back(InftyExpression(ex.lhs(), POS));
+        add(InftyExpression(ex.lhs()));
     }
 
     assert(!is_a<relational>(cost));
-    expressions.push_back(InftyExpression(cost, POS_INF));
+    add(InftyExpression(cost, InftyDirection::POS_INF));
 
     dump("Created initial limit problem");
 }
 
 
+void LimitProblem::add(const InftyExpression &ex) {
+    InftyExpressionSet::iterator it = set.find(ex);
+
+    if (it == set.end()) {
+        set.insert(ex);
+    } else {
+        if (it->getDirection() != ex.getDirection()) {
+            if (it->getDirection() == POS &&
+                (ex.getDirection() == POS_INF || ex.getDirection() == POS_CONS)) {
+                set.erase(it);
+                set.insert(ex);
+
+            } else {
+                throw LimitProblemIsContradictoryException();
+            }
+        }
+    }
+}
+
+
+InftyExpressionSet::iterator LimitProblem::cbegin() const {
+    return set.cbegin();
+}
+
+
+InftyExpressionSet::iterator LimitProblem::cend() const {
+    return set.cend();
+}
+
+/*
 void LimitProblem::applyLimitVector(int index, int pos, InftyDir lvType,
                                     InftyDir first, InftyDir second) {
     assert(index >= 0 && index < expressions.size());
@@ -46,10 +105,6 @@ void LimitProblem::applyLimitVector(int index, int pos, InftyDir lvType,
         debugLimitProblem(ex << " is an addition");
         firstExp = numeric(0);
         secondExp = numeric(0);
-
-        for (int i = 0; i < ex.nops(); ++i) {
-            debugLimitProblem(i << ": " << ex.op(i));
-        }
 
         for (int i = 0; i <= pos; ++i) {
             firstExp += ex.op(i);
@@ -94,46 +149,40 @@ void LimitProblem::applyLimitVector(int index, int pos, InftyDir lvType,
     expressions.push_back(InftyExpression(secondExp, second));
 
     dump("resulting limit problem");
-}
+}*/
 
 
-void LimitProblem::removeConstant(int index) {
-    assert(index >= 0 && index < expressions.size());
+void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
+    InftyDirection dir = it->getDirection();
 
-    Expression ex = expressions[index].first;
-    InftyDir dir = expressions[index].second;
-
-    assert(ex.info(info_flags::integer));
-    numeric num = ex_to<numeric>(ex);
+    assert(it->info(info_flags::integer));
+    numeric num = ex_to<numeric>(*it);
     assert((num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS));
 
-    debugLimitProblem("applying transformation rule (B), deleting " << ex
-                      << " (" << InftyDirNames[dir] << ")");
+    debugLimitProblem("applying transformation rule (B), deleting " << *it
+                      << " (" << InftyDirectionNames[dir] << ")");
 
-    expressions.erase(expressions.begin() + index);
+    set.erase(it);
 
     dump("resulting limit problem");
 }
 
 
-void LimitProblem::removePolynomial(int index) {
-    assert(index >= 0 && index < expressions.size());
+void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) {
+    ExprSymbolSet variables = it->getVariables();
 
-    Expression ex = expressions[index].first;
-    InftyDir dir = expressions[index].second;
-
-    ExprSymbolSet variables = ex.getVariables();
-
-    // ex has to be a univariate polynomial
-    assert(ex.info(info_flags::polynomial));
+    // the expression has to be a univariate polynomial
+    assert(it->info(info_flags::polynomial));
     assert(variables.size() == 1);
+
+    InftyDirection dir = it->getDirection();
     assert((dir == POS) || (dir == POS_INF) || (dir == NEG_INF));
 
     ExprSymbol var = *variables.begin();
 
-    Expression expanded = ex.expand();
-    debugLimitProblem("expanded " << ex << " to " << expanded);
+    Expression expanded = it->expand();
+    debugLimitProblem("expanded " << *it << " to " << expanded);
 
     if (is_a<add>(expanded)) {
         Expression leadingTerm = expanded.lcoeff(var) * pow(var, expanded.degree(var));
@@ -142,16 +191,17 @@ void LimitProblem::removePolynomial(int index) {
 
         if (dir == POS) {
             // Fix the direction of the expression
-            expressions[index].second = POS_INF;
+            dir = POS_INF;
         }
-        expressions[index].first = leadingTerm;
 
-        debugLimitProblem("applying transformation rule (D), replacing " << ex
-                      << " (" << InftyDirNames[dir] << ") by "
-                      << leadingTerm << " (" << InftyDirNames[expressions[index].second] << ")");
+        debugLimitProblem("applying transformation rule (D), replacing " << *it
+                      << " (" << InftyDirectionNames[it->getDirection()] << ") by "
+                      << leadingTerm << " (" << InftyDirectionNames[dir] << ")");
 
+        set.erase(it);
+        set.insert(InftyExpression(leadingTerm, dir));
     } else {
-        debugLimitProblem(ex << "is already a monom");
+        debugLimitProblem(*it << "is already a monom");
     }
 
     dump("resulting limit problem");
@@ -160,44 +210,26 @@ void LimitProblem::removePolynomial(int index) {
 
 bool LimitProblem::isSolved() const {
     // Check if an expression is not a variable
-    for (const InftyExpression &ex : expressions) {
-        if (!is_a<symbol>(ex.first)) {
-            debugLimitProblem(ex.first << " is not a variable");
+    for (const InftyExpression &ex : set) {
+        if (!is_a<symbol>(ex)) {
+            debugLimitProblem(ex << " is not a variable");
 
             return false;
         }
     }
 
-    // Check if there is a variable with two different directions
-    for (int i = 0; i < expressions.size(); i++) {
-        for (int j = i + 1; j < expressions.size(); j++) {
-            if (expressions[i].second != expressions[j].second
-                && expressions[i].first.compare(expressions[j].first) == 0) {
-                return false;
-            }
-        }
-    }
-
+    // Since the infinity expressions are compared using GiNaC::ex_is_less,
+    // the directions do not affect the comparison.
+    // Therefore, there cannot be a single variable with different directions.
     return true;
-}
-
-
-LimitProblem::LimitProblem(const std::vector<InftyExpression> &exps, int removeIndex) {
-    assert(removeIndex >= 0 && removeIndex < exps.size());
-
-    for (int i = 0; i < exps.size(); ++i) {
-        if (i != removeIndex) {
-            expressions.push_back(exps[i]);
-        }
-    }
 }
 
 
 void LimitProblem::dump(const std::string &description) const {
 #ifdef DEBUG_LIMIT_PROBLEMS
     std::cout << description << ":" << std::endl;
-    for (auto ex : expressions) {
-        std::cout << ex.first << " (" << InftyDirNames[ex.second] << "), ";
+    for (auto ex : set) {
+        std::cout << ex << " (" << InftyDirectionNames[ex.getDirection()] << "), ";
     }
     std::cout << std::endl;
 
@@ -206,5 +238,5 @@ void LimitProblem::dump(const std::string &description) const {
 #endif
 }
 
-LimitProblem LimitProblem::solve(const LimitProblem &problem) {
+void LimitProblem::solve(LimitProblem &problem) {
 }

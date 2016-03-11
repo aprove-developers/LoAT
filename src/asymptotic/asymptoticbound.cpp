@@ -61,9 +61,11 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
 
     LimitProblem limitProblem(asymptoticBound.normalizedGuard, cost);
 
-    limitProblem.removeConstant(1);
+    InftyExpressionSet::const_iterator it = limitProblem.cbegin();
 
-    limitProblem.removePolynomial(1);
+    limitProblem.removeConstant(it);
+
+    /*limitProblem.removePolynomial(1);
 
     limitProblem.removePolynomial(2);
 
@@ -102,5 +104,5 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
 
     limitProblem.applyLimitVector(5, 0, LimitProblem::InftyDir::POS_INF,
                                   LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF);
+                                  LimitProblem::InftyDir::POS_INF);*/
 }
