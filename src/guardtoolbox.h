@@ -146,21 +146,28 @@ namespace GuardToolbox {
 
 
     /**
-     * Given a valid inequality, transforms it into only using the <= operator
+     * Given a valid inequality, transforms it into one only using the <= operator
      */
     Expression makeLessEqual(Expression term);
 
 
     /**
-     * Given a valid inequality, transforms it into only using the > operator
+     * Given a valid inequality, transforms it into one only using the > operator
      */
     Expression makeGreater(Expression term);
 
 
     /**
-     * Given a valid inequality, transforms it into only using the > operator
+     * Given a valid inequality, transforms it into one of the form lhs > 0
      */
     Expression normalize(Expression term);
+
+    /**
+     * Given a valid inequality using the operator > or >=,
+     * transforms it into one using the operator < or <=.
+     * Does not change equations or inequalities using the operator < or <=.
+     */
+    Expression turnToLess(Expression term);
 
 
     /**

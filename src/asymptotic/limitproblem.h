@@ -31,6 +31,7 @@ EXCEPTION(LimitProblemIsContradictoryException, CustomException);
 
 class LimitProblem {
 public:
+    LimitProblem();
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
     void addExpression(const InftyExpression &ex);
@@ -41,9 +42,11 @@ public:
     void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos, // (A)
                           InftyDirection lvType, InftyDirection first, InftyDirection second);
     void removeConstant(const InftyExpressionSet::const_iterator &it); // (B)
+    void substitute(const GiNaC::exmap &sub); // (C)
     void trimPolynomial(const InftyExpressionSet::const_iterator &it); // (D)
 
     bool isSolved() const;
+    GiNaC::exmap getSolution() const;
 
 private:
     InftyExpressionSet set;

@@ -4,7 +4,6 @@
 #include <ginac/ginac.h>
 
 #include "guardtoolbox.h"
-#include "asymptotic/limitproblem.h"
 
 using namespace GiNaC;
 
@@ -17,8 +16,9 @@ AsymptoticBound::AsymptoticBound(GuardList guard, Expression cost)
 void AsymptoticBound::normalizeGuard() {
     debugAsymptoticBound("Normalizing guard.");
 
-    for (Expression &ex : guard) {
-        assert(GiNaC::is_a<GiNaC::relational>(ex));
+    for (const Expression &ex : guard) {
+        assert(ex.info(info_flags::relation_equal)
+               || GuardToolbox::isValidInequality(ex));
 
         if (ex.info(info_flags::relation_equal)) {
             // Split equality
@@ -42,8 +42,58 @@ void AsymptoticBound::normalizeGuard() {
 }
 
 
+void AsymptoticBound::createInitialLimitProblem() {
+    limitProblem = LimitProblem(normalizedGuard, cost);
+}
+
+
+void AsymptoticBound::propagateBounds() {
+    debugAsymptoticBound("Propagating bounds.");
+
+    for (const Expression &ex : guard) {
+        assert(ex.info(info_flags::relation_equal)
+               || GuardToolbox::isValidInequality(ex));
+
+        if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
+            Expression exT = GuardToolbox::turnToLess(ex);
+
+            Expression l, r;
+            bool swap = is_a<symbol>(exT.rhs());
+            if (swap) {
+                l = exT.rhs();
+                r = exT.lhs();
+            } else {
+                l = exT.lhs();
+                r = exT.rhs();
+            }
+
+
+            if (!r.has(l) && !(!exT.info(info_flags::relation_equal) && is_a<numeric>(r))) {
+                if (exT.info(info_flags::relation_less) && !swap) { // exT: x = l < r
+                    r = r - 1;
+                } else if (exT.info(info_flags::relation_less) && swap) { // exT: r < l = x
+                    r = r + 1;
+                }
+
+                exmap sub;
+                sub.insert(std::make_pair(l, r));
+
+                limitProblem.substitute(sub);
+
+                substitutions.push_back(sub);
+            }
+        }
+    }
+}
+
+
+void AsymptoticBound::dumpCost(const std::string &description) const {
+    debugAsymptoticBound(description << ": " << cost);
+}
+
+
 void AsymptoticBound::dumpGuard(const std::string &description) const {
-#ifdef DEBUG_INFINITY
+#ifdef DEBUG_ASYMPTOTIC_BOUNDS
     std::cout << description << ": ";
     for (auto ex : guard) {
         std::cout << ex << " ";
@@ -54,20 +104,22 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 
 
 void AsymptoticBound::determineComplexity(const GuardList &guard, const Expression &cost) {
-    AsymptoticBound asymptoticBound(guard, cost);
-
     debugAsymptoticBound("Analyzing asymptotic bound.");
+
+    AsymptoticBound asymptoticBound(guard, cost);
     asymptoticBound.dumpGuard("guard");
-    debugAsymptoticBound("cost: " << cost << std::endl);
+    asymptoticBound.dumpCost("cost");
+    debugAsymptoticBound("");
 
     asymptoticBound.normalizeGuard();
+    asymptoticBound.createInitialLimitProblem();
+    asymptoticBound.propagateBounds();
 
-    LimitProblem limitProblem(asymptoticBound.normalizedGuard, cost);
-
+    LimitProblem &limitProblem = asymptoticBound.limitProblem;
     InftyExpressionSet::const_iterator it;
     std::vector<InftyExpressionSet::const_iterator> its;
 
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+    /*for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::integer)) {
             its.push_back(it);
         }
@@ -196,4 +248,7 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
                                   InftyDirection::POS_INF);
     }
 
+    Expression sol = cost.subs(limitProblem.getSolution());
+
+    debugAsymptoticBound(sol.expand());*/
 }

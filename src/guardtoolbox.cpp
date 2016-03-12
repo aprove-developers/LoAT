@@ -136,6 +136,20 @@ Expression GuardToolbox::normalize(Expression term) {
 }
 
 
+Expression GuardToolbox::turnToLess(Expression term) {
+    assert(term.info(GiNaC::info_flags::relation_equal)
+           || isValidInequality(term));
+
+    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
+        term = term.rhs() <= term.lhs();
+    } else if (term.info(GiNaC::info_flags::relation_greater)) {
+        term = term.rhs() < term.lhs();
+    }
+
+    return term;
+}
+
+
 Expression GuardToolbox::splitVariablesAndConstants(const Expression &term) {
     assert(isValidInequality(term));
     assert(term.info(GiNaC::info_flags::relation_less_or_equal));

@@ -34,6 +34,9 @@ InftyDirection InftyExpression::getDirection() const {
 }
 
 
+LimitProblem::LimitProblem() {
+}
+
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost) {
     for (const Expression &ex : normalizedGuard) {
         assert(GuardToolbox::isNormalizedInequality(ex));
@@ -60,7 +63,8 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
                 set.erase(it);
                 set.insert(ex);
 
-            } else {
+            } else if (!(ex.getDirection() == POS &&
+                         (it->getDirection() == POS_INF || it->getDirection() == POS_CONS))) {
                 throw LimitProblemIsContradictoryException();
             }
         }
@@ -165,6 +169,23 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
 }
 
 
+void LimitProblem::substitute(const GiNaC::exmap &sub) {
+    for (auto s : sub) {
+        assert(!s.second.has(s.first));
+    }
+
+    debugLimitProblem("applying transformation rule (C) using substitution " << sub);
+
+    InftyExpressionSet oldSet = set;
+    set.clear();
+    for (const InftyExpression &ex : oldSet) {
+        addExpression(InftyExpression(ex.subs(sub), ex.getDirection()));
+    }
+
+    dump("resulting limit problem");
+}
+
+
 void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) {
     ExprSymbolSet variables = it->getVariables();
 
@@ -221,6 +242,33 @@ bool LimitProblem::isSolved() const {
     return true;
 }
 
+
+exmap LimitProblem::getSolution() const {
+    assert(isSolved());
+
+    exmap solution;
+    symbol n("n");
+    for (const InftyExpression &ex : set) {
+
+        switch (ex.getDirection()) {
+            case POS:
+            case POS_INF:
+                solution.insert(std::make_pair(ex, n));
+                break;
+            case NEG_INF:
+                solution.insert(std::make_pair(ex, -n));
+                break;
+            case POS_CONS:
+                solution.insert(std::make_pair(ex, numeric(1)));
+                break;
+            case NEG_CONS:
+                solution.insert(std::make_pair(ex, numeric(-1)));
+                break;
+        }
+    }
+
+    return solution;
+}
 
 void LimitProblem::dump(const std::string &description) const {
 #ifdef DEBUG_LIMIT_PROBLEMS
