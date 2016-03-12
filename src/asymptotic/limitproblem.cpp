@@ -7,8 +7,7 @@ using namespace GiNaC;
 const char* InftyDirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
 
-InftyExpression::InftyExpression(InftyDirection dir)
-    : Expression() {
+InftyExpression::InftyExpression(InftyDirection dir) {
     setDirection(dir);
 }
 
@@ -39,17 +38,17 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
     for (const Expression &ex : normalizedGuard) {
         assert(GuardToolbox::isNormalizedInequality(ex));
 
-        add(InftyExpression(ex.lhs()));
+        addExpression(InftyExpression(ex.lhs()));
     }
 
     assert(!is_a<relational>(cost));
-    add(InftyExpression(cost, InftyDirection::POS_INF));
+    addExpression(InftyExpression(cost, InftyDirection::POS_INF));
 
     dump("Created initial limit problem");
 }
 
 
-void LimitProblem::add(const InftyExpression &ex) {
+void LimitProblem::addExpression(const InftyExpression &ex) {
     InftyExpressionSet::iterator it = set.find(ex);
 
     if (it == set.end()) {
@@ -78,78 +77,75 @@ InftyExpressionSet::iterator LimitProblem::cend() const {
     return set.cend();
 }
 
-/*
-void LimitProblem::applyLimitVector(int index, int pos, InftyDir lvType,
-                                    InftyDir first, InftyDir second) {
-    assert(index >= 0 && index < expressions.size());
 
-    Expression ex = expressions[index].first;
-    InftyDir dir = expressions[index].second;
+void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
+                                    InftyDirection lvType, InftyDirection first, InftyDirection second) {
+    InftyDirection dir = it->getDirection();
 
-    if (ex.nops() > 0) {
-        assert(pos >= 0 && pos < ex.nops());
+    if (it->nops() > 0) {
+        assert(pos >= 0 && pos < it->nops());
     }
     assert(dir == lvType || (dir == POS && (lvType == POS_INF || lvType == POS_CONS)));
 
-    for (int i = 0; i < ex.nops(); i++) {
-        debugLimitProblem("op(" << i << "): " << ex.op(i));
+    for (int i = 0; i < it->nops(); i++) {
+        debugLimitProblem("op(" << i << "): " << it->op(i));
     }
 
     Expression firstExp, secondExp;
-    if (ex.info(info_flags::rational)) {
-        debugLimitProblem(ex << " is a rational");
-        firstExp = ex.numer();
-        secondExp = ex.denom();
+    if (it->info(info_flags::rational)) {
+        debugLimitProblem(*it << " is a rational");
+        firstExp = it->numer();
+        secondExp = it->denom();
 
-    } else if (is_a<add>(ex)) {
-        debugLimitProblem(ex << " is an addition");
+    } else if (is_a<add>(*it)) {
+        debugLimitProblem(*it << " is an addition");
         firstExp = numeric(0);
         secondExp = numeric(0);
 
         for (int i = 0; i <= pos; ++i) {
-            firstExp += ex.op(i);
+            firstExp += it->op(i);
         }
-        for (int i = pos + 1; i < ex.nops(); ++i) {
-            secondExp += ex.op(i);
+        for (int i = pos + 1; i < it->nops(); ++i) {
+            secondExp += it->op(i);
         }
 
-    } else if (is_a<mul>(ex)) {
-        debugLimitProblem(ex << " is a multiplication");
+    } else if (is_a<mul>(*it)) {
+        debugLimitProblem(*it << " is a multiplication");
         firstExp = numeric(1);
         secondExp = numeric(1);
 
         for (int i = 0; i <= pos; ++i) {
-            firstExp *= ex.op(i);
+            firstExp *= it->op(i);
         }
-        for (int i = pos + 1; i < ex.nops(); ++i) {
-            secondExp *= ex.op(i);
+        for (int i = pos + 1; i < it->nops(); ++i) {
+            secondExp *= it->op(i);
         }
 
-    } else if (is_a<power>(ex)) {
-        debugLimitProblem(ex << " is a power");
-        Expression base = ex.op(0);
-        Expression power = ex.op(1);
-        assert(power.info(info_flags::integer) && power.info(info_flags::positive));
+    } else if (is_a<power>(*it)) {
+        debugLimitProblem(*it << " is a power");
+        Expression base = it->op(0);
+        Expression power = it->op(1);
+        assert(power.info(info_flags::integer) && (power - 1).info(info_flags::positive));
 
         firstExp = pow(base, pos + 1);
         secondExp = pow(base, power - pos - 1);
 
     } else {
-        debugLimitProblem(ex << " is neither a rational, an addition, a multiplication nor a power");
+        debugLimitProblem(*it << " is neither a rational, an addition, a multiplication nor a power");
         assert(false);
     }
 
-    debugLimitProblem("applying transformation rule (A), replacing " << ex
-                      << " (" << InftyDirNames[dir] << ") by "
-                      << firstExp << " (" << InftyDirNames[first] << ") and "
-                      << secondExp << " (" << InftyDirNames[second] << ")");
+    debugLimitProblem("applying transformation rule (A), replacing " << *it
+                      << " (" << InftyDirectionNames[dir] << ") by "
+                      << firstExp << " (" << InftyDirectionNames[first] << ") and "
+                      << secondExp << " (" << InftyDirectionNames[second] << ")");
 
-    expressions.erase(expressions.begin() + index);
-    expressions.push_back(InftyExpression(firstExp, first));
-    expressions.push_back(InftyExpression(secondExp, second));
+    set.erase(it);
+    addExpression(InftyExpression(firstExp, first));
+    addExpression(InftyExpression(secondExp, second));
 
     dump("resulting limit problem");
-}*/
+}
 
 
 void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
@@ -184,6 +180,7 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
     Expression expanded = it->expand();
     debugLimitProblem("expanded " << *it << " to " << expanded);
 
+
     if (is_a<add>(expanded)) {
         Expression leadingTerm = expanded.lcoeff(var) * pow(var, expanded.degree(var));
 
@@ -199,9 +196,9 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
                       << leadingTerm << " (" << InftyDirectionNames[dir] << ")");
 
         set.erase(it);
-        set.insert(InftyExpression(leadingTerm, dir));
+        addExpression(InftyExpression(leadingTerm, dir));
     } else {
-        debugLimitProblem(*it << "is already a monom");
+        debugLimitProblem(*it << " is already a monom");
     }
 
     dump("resulting limit problem");

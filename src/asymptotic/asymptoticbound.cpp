@@ -1,5 +1,8 @@
 #include "asymptoticbound.h"
 
+#include <vector>
+#include <ginac/ginac.h>
+
 #include "guardtoolbox.h"
 #include "asymptotic/limitproblem.h"
 
@@ -61,48 +64,136 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
 
     LimitProblem limitProblem(asymptoticBound.normalizedGuard, cost);
 
-    InftyExpressionSet::const_iterator it = limitProblem.cbegin();
+    InftyExpressionSet::const_iterator it;
+    std::vector<InftyExpressionSet::const_iterator> its;
 
-    limitProblem.removeConstant(it);
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (it->info(info_flags::integer)) {
+            its.push_back(it);
+        }
+    }
 
-    /*limitProblem.removePolynomial(1);
+    for (auto i : its) {
+        limitProblem.removeConstant(i);
+    }
 
-    limitProblem.removePolynomial(2);
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (it->info(info_flags::polynomial)) {
+            its.push_back(it);
+        }
+    }
 
-    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_CONS);
+    for (auto i : its) {
+        limitProblem.trimPolynomial(i);
+    }
 
-    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_CONS);
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (it->info(info_flags::polynomial)) {
+            its.push_back(it);
+        }
+    }
 
-    limitProblem.applyLimitVector(2, 0, LimitProblem::InftyDir::POS_CONS,
-                                  LimitProblem::InftyDir::POS_CONS,
-                                  LimitProblem::InftyDir::POS_CONS);
+    for (auto i : its) {
+        limitProblem.trimPolynomial(i);
+    }
 
-    limitProblem.applyLimitVector(3, 0, LimitProblem::InftyDir::POS_CONS,
-                                  LimitProblem::InftyDir::POS_CONS,
-                                  LimitProblem::InftyDir::POS_CONS);
 
-    limitProblem.removeConstant(3);
-    limitProblem.removeConstant(3);
-    limitProblem.removeConstant(3);
-    limitProblem.removeConstant(3);
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
 
-    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF);
+        ExprSymbolSet variables = it->getVariables();
 
-    limitProblem.applyLimitVector(1, 0, LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF);
+        ExprSymbol var = *variables.begin();
+        if (it->info(info_flags::polynomial) && !(it->lcoeff(var).info(info_flags::integer))) {
+            its.push_back(it);
+        }
+    }
 
-    limitProblem.applyLimitVector(4, 0, LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF);
+    for (auto i : its) {
+        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF,
+                                  InftyDirection::POS_CONS);
+    }
 
-    limitProblem.applyLimitVector(5, 0, LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF,
-                                  LimitProblem::InftyDir::POS_INF);*/
+
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (it->info(info_flags::rational)) {
+            its.push_back(it);
+        }
+    }
+
+    for (auto i : its) {
+        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_CONS,
+                                  InftyDirection::POS_CONS,
+                                  InftyDirection::POS_CONS);
+    }
+
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (it->info(info_flags::integer)) {
+            its.push_back(it);
+        }
+    }
+
+    for (auto i : its) {
+        limitProblem.removeConstant(i);
+    }
+
+
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+
+        ExprSymbolSet variables = it->getVariables();
+
+        ExprSymbol var = *variables.begin();
+        if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
+            its.push_back(it);
+        }
+    }
+
+    for (auto i : its) {
+        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF);
+    }
+
+
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+
+        ExprSymbolSet variables = it->getVariables();
+
+        ExprSymbol var = *variables.begin();
+        if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
+            its.push_back(it);
+        }
+    }
+
+    for (auto i : its) {
+        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF);
+    }
+
+
+    its.clear();
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+
+        ExprSymbolSet variables = it->getVariables();
+
+        ExprSymbol var = *variables.begin();
+        if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
+            its.push_back(it);
+        }
+    }
+
+    for (auto i : its) {
+        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF,
+                                  InftyDirection::POS_INF);
+    }
+
 }

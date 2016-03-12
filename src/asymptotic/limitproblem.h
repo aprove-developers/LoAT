@@ -33,13 +33,13 @@ class LimitProblem {
 public:
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
-    void add(const InftyExpression &ex);
+    void addExpression(const InftyExpression &ex);
 
     InftyExpressionSet::const_iterator cbegin() const;
     InftyExpressionSet::const_iterator cend() const;
 
-    /*void applyLimitVector(int index, int pos, InftyDir lvType, // (A)
-                          InftyDir first, InftyDir second);*/
+    void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos, // (A)
+                          InftyDirection lvType, InftyDirection first, InftyDirection second);
     void removeConstant(const InftyExpressionSet::const_iterator &it); // (B)
     void trimPolynomial(const InftyExpressionSet::const_iterator &it); // (D)
 
