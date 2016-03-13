@@ -47,9 +47,11 @@ public:
 
     bool isSolved() const;
     GiNaC::exmap getSolution() const;
+    ExprSymbol getN() const;
 
 private:
     InftyExpressionSet set;
+    ExprSymbol variableN;
 
 private:
     //debug dumping

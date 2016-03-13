@@ -34,10 +34,12 @@ InftyDirection InftyExpression::getDirection() const {
 }
 
 
-LimitProblem::LimitProblem() {
+LimitProblem::LimitProblem()
+    : variableN("n") {
 }
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost) {
+LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
+    : variableN("n") {
     for (const Expression &ex : normalizedGuard) {
         assert(GuardToolbox::isNormalizedInequality(ex));
 
@@ -243,20 +245,19 @@ bool LimitProblem::isSolved() const {
 }
 
 
-exmap LimitProblem::getSolution() const {
+GiNaC::exmap LimitProblem::getSolution() const {
     assert(isSolved());
 
     exmap solution;
-    symbol n("n");
     for (const InftyExpression &ex : set) {
 
         switch (ex.getDirection()) {
             case POS:
             case POS_INF:
-                solution.insert(std::make_pair(ex, n));
+                solution.insert(std::make_pair(ex, variableN));
                 break;
             case NEG_INF:
-                solution.insert(std::make_pair(ex, -n));
+                solution.insert(std::make_pair(ex, -variableN));
                 break;
             case POS_CONS:
                 solution.insert(std::make_pair(ex, numeric(1)));
@@ -268,6 +269,11 @@ exmap LimitProblem::getSolution() const {
     }
 
     return solution;
+}
+
+
+ExprSymbol LimitProblem::getN() const {
+    return variableN;
 }
 
 void LimitProblem::dump(const std::string &description) const {

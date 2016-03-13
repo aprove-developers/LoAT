@@ -356,9 +356,18 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
 }
 
 
+GiNaC::exmap GuardToolbox::composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g) {
+    GiNaC::exmap substitution;
 
+    for (auto pair : g) {
+        substitution.insert(std::make_pair(pair.first, pair.second.subs(f)));
+    }
 
+    for (auto pair : f) {
+        if (substitution.count(pair.first) == 0) {
+            substitution.insert(pair);
+        }
+    }
 
-
-
-
+    return substitution;
+}

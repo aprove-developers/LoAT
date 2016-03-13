@@ -188,6 +188,11 @@ namespace GuardToolbox {
      * or if lhs and rhs are the same (e.g. 0 <= 0 or 42 <= 127 or x <= x)
      */
     bool isTrivialInequality(const Expression &term);
+
+    /**
+     *
+     */
+    GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
 }
 
 #endif // GUARDTOOLBOX_H

@@ -3,6 +3,7 @@
 #include <vector>
 #include <ginac/ginac.h>
 
+#include "expression.h"
 #include "guardtoolbox.h"
 
 using namespace GiNaC;
@@ -48,6 +49,7 @@ void AsymptoticBound::createInitialLimitProblem() {
 
 
 void AsymptoticBound::propagateBounds() {
+    // TODO: Improve
     debugAsymptoticBound("Propagating bounds.");
 
     for (const Expression &ex : guard) {
@@ -65,6 +67,10 @@ void AsymptoticBound::propagateBounds() {
             } else {
                 l = exT.lhs();
                 r = exT.rhs();
+            }
+
+            if (!r.info(info_flags::polynomial)) {
+                continue;
             }
 
 
@@ -86,6 +92,70 @@ void AsymptoticBound::propagateBounds() {
     }
 }
 
+void AsymptoticBound::calcSolution() {
+    debugAsymptoticBound("Calculating solution for the initial limit problem.");
+    assert(limitProblem.isSolved());
+
+
+    solution.clear();
+    for (const exmap &sub : substitutions) {
+        solution = GuardToolbox::composeSubs(sub, solution);
+        debugAsymptoticBound("substitution: " << sub);
+    }
+
+    debugAsymptoticBound("solution for the solved limit problem: " << limitProblem.getSolution());
+    solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
+    debugAsymptoticBound("resulting solution: " << solution << std::endl);
+}
+
+
+void AsymptoticBound::findUpperBoundforSolution() {
+    debugAsymptoticBound("Finding upper bound for the solution.");
+
+    ExprSymbol n = limitProblem.getN();
+    upperBound = 0;
+    for (auto pair : solution) {
+        assert(is_a<symbol>(pair.first));
+        Expression sub = pair.second;
+        assert(sub.is_polynomial(n));
+        assert(sub.getVariables().size() <= 1);
+
+        Expression expanded = sub.expand();
+        int d = expanded.degree(n);
+        debugAsymptoticBound(pair.first << "==" << expanded << ", degree: " << d);
+
+        if (d > upperBound) {
+            upperBound = d;
+        }
+    }
+    assert(upperBound > 0);
+
+    debugAsymptoticBound("O(" << n << "^" << upperBound << ")" << std::endl);
+}
+
+
+void AsymptoticBound::findLowerBoundforSolvedCost() {
+    debugAsymptoticBound("Finding lower bound for the solved cost.");
+
+    Expression solvedCost = cost.subs(solution);
+
+    ExprSymbol n = limitProblem.getN();
+    if (solvedCost.info(info_flags::polynomial)) {
+        assert(solvedCost.is_polynomial(n));
+        assert(solvedCost.getVariables().size() <= 1);
+
+        Expression expanded = solvedCost.expand();
+        int d = expanded.degree(n);
+        debugAsymptoticBound("solved cost: " << expanded << ", degree: " << d);
+        lowerBound = d;
+
+    } else {
+        assert(false); // TODO
+    }
+
+    debugAsymptoticBound("Omega(" << n << "^" << lowerBound << ")" << std::endl);
+}
+
 
 void AsymptoticBound::dumpCost(const std::string &description) const {
     debugAsymptoticBound(description << ": " << cost);
@@ -103,7 +173,7 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 }
 
 
-void AsymptoticBound::determineComplexity(const GuardList &guard, const Expression &cost) {
+InfiniteInstances::Result AsymptoticBound::determineComplexity(const GuardList &guard, const Expression &cost) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     AsymptoticBound asymptoticBound(guard, cost);
@@ -119,7 +189,7 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
     InftyExpressionSet::const_iterator it;
     std::vector<InftyExpressionSet::const_iterator> its;
 
-    /*for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::integer)) {
             its.push_back(it);
         }
@@ -140,7 +210,7 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
         limitProblem.trimPolynomial(i);
     }
 
-    its.clear();
+    /*its.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::polynomial)) {
             its.push_back(it);
@@ -246,9 +316,15 @@ void AsymptoticBound::determineComplexity(const GuardList &guard, const Expressi
         limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
                                   InftyDirection::POS_INF,
                                   InftyDirection::POS_INF);
-    }
+    }*/
 
-    Expression sol = cost.subs(limitProblem.getSolution());
+    asymptoticBound.calcSolution();
+    asymptoticBound.findUpperBoundforSolution();
+    asymptoticBound.findLowerBoundforSolvedCost();
 
-    debugAsymptoticBound(sol.expand());*/
+    Complexity cplx(asymptoticBound.lowerBound, asymptoticBound.upperBound);
+
+    return InfiniteInstances::Result(cplx, asymptoticBound.upperBound > 1,
+                                     asymptoticBound.cost.subs(asymptoticBound.solution), 0,
+                                     "Solved the initial limit problem.");
 }
