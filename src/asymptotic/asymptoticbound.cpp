@@ -145,9 +145,6 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
     Expression solvedCost = cost.subs(solution);
 
     ExprSymbol n = limitProblem.getN();
-
-    solvedCost = pow(n, 5) + pow(2, n) + pow(3, n) + pow(n, 4) + pow(5, pow(n, 2)) + pow(2, n);
-
     if (solvedCost.info(info_flags::polynomial)) {
         assert(solvedCost.is_polynomial(n));
         assert(solvedCost.getVariables().size() <= 1);
@@ -165,28 +162,23 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
         Expression expanded = solvedCost.expand();
         debugAsymptoticBound("solved cost: " << expanded);
 
-        if (is_a<add>(expanded)) {
-            for (int i = 0; i < expanded.nops(); ++i) {
-                if (!expanded.op(i).info(info_flags::polynomial)) {
-                    nonPolynomial.push_back(expanded.op(i));
-                }
-            }
-        } else {
-            nonPolynomial.push_back(expanded);
-        }
+        Expression powerPattern = pow(wild(1), wild(2));
+        std::set<ex, ex_is_less> powers;
+        assert(expanded.find(powerPattern, powers));
 
         lowerBound = 1;
-        for (const Expression &ex : nonPolynomial) {
-            debugAsymptoticBound("non-polynomial: " << ex);
-            assert(is_a<power>(ex));
-            assert(ex.op(1).is_polynomial(n));
-            assert(ex.op(0).info(info_flags::integer));
-            assert(ex.op(0).info(info_flags::positive));
+        for (const Expression &ex : powers) {
+            if (ex.op(1).has(n)) {
+                debugAsymptoticBound("power: " << ex);
+                assert(ex.op(1).is_polynomial(n));
+                assert(ex.op(0).info(info_flags::integer));
+                assert(ex.op(0).info(info_flags::positive));
 
-            int base =  ex_to<numeric>(ex.op(0)).to_int();
-            debugAsymptoticBound("base: " << base);
-            if (base > lowerBound) {
-                lowerBound = base;
+                int base =  ex_to<numeric>(ex.op(0)).to_int();
+                debugAsymptoticBound("base: " << base);
+                if (base > lowerBound) {
+                    lowerBound = base;
+                }
             }
         }
         assert(lowerBound > 1);
