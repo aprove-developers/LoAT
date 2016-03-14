@@ -228,6 +228,56 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
 }
 
 
+void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterator &it) {
+    assert(it->getDirection() == POS_INF);
+
+    debugLimitProblem("expression: " << *it);
+
+    ExprSymbolSet variables = it->getVariables();
+    assert(variables.size() == 1);
+    ExprSymbol x = *variables.cbegin();
+
+    Expression powerInExp;
+    if (is_a<add>(*it)) {
+        for (int i = 0; i < it->nops(); ++i) {
+            Expression summand = it->op(i);
+            if (is_a<power>(summand) && summand.op(1).has(x)) {
+                powerInExp = summand;
+                break;
+            }
+        }
+
+    } else {
+        powerInExp = *it;
+    }
+    debugLimitProblem("polynomial power: " << powerInExp);
+    assert(is_a<power>(powerInExp));
+
+    Expression b = *it - powerInExp;
+    debugLimitProblem("b: " << b);
+    assert(b.is_polynomial(x));
+
+    Expression a = powerInExp.op(0);
+    Expression e = powerInExp.op(1);
+
+    debugLimitProblem("a: " << a << ", e: " << e);
+
+    assert(a.is_polynomial(x));
+    assert(e.is_polynomial(x));
+
+    debugLimitProblem("applying transformation rule (E), replacing " << *it
+                      << " (" << InftyDirectionNames[it->getDirection()] << ") by "
+                      << (a - 1) << " (" << InftyDirectionNames[POS] << ") and "
+                      << e << " (" << InftyDirectionNames[POS_INF] << ")");
+
+    set.erase(it);
+    addExpression(InftyExpression(a - 1, POS));
+    addExpression(InftyExpression(e, POS_INF));
+
+    dump("resulting limit problem");
+}
+
+
 bool LimitProblem::isSolved() const {
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {

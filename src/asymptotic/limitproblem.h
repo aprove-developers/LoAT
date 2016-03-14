@@ -39,11 +39,17 @@ public:
     InftyExpressionSet::const_iterator cbegin() const;
     InftyExpressionSet::const_iterator cend() const;
 
-    void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos, // (A)
+    // (A)
+    void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
                           InftyDirection lvType, InftyDirection first, InftyDirection second);
-    void removeConstant(const InftyExpressionSet::const_iterator &it); // (B)
-    void substitute(const GiNaC::exmap &sub); // (C)
-    void trimPolynomial(const InftyExpressionSet::const_iterator &it); // (D)
+    // (B)
+    void removeConstant(const InftyExpressionSet::const_iterator &it);
+    // (C)
+    void substitute(const GiNaC::exmap &sub);
+    // (D)
+    void trimPolynomial(const InftyExpressionSet::const_iterator &it);
+    // (E)
+    void reducePolynomialPower(const InftyExpressionSet::const_iterator &it);
 
     bool isSolved() const;
     GiNaC::exmap getSolution() const;

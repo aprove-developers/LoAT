@@ -181,7 +181,14 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
-    AsymptoticBound asymptoticBound(its, guard, cost);
+    ExprSymbol x("x");
+    Expression exp = pow((pow(x, 3) + pow(x, 2) + x), pow(x, 2) + x) + pow(x, 2) + pow(x, 5);
+
+    LimitProblem limitProblem = LimitProblem(GuardList(), exp);
+
+    limitProblem.reducePolynomialPower(limitProblem.cbegin());
+
+    /*AsymptoticBound asymptoticBound(its, guard, cost);
     asymptoticBound.dumpGuard("guard");
     asymptoticBound.dumpCost("cost");
     debugAsymptoticBound("");
@@ -213,7 +220,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
 
     for (auto i : iters) {
         limitProblem.trimPolynomial(i);
-    }
+    }*/
 
     /*iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
@@ -323,7 +330,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
                                   InftyDirection::POS_INF);
     }*/
 
-    asymptoticBound.calcSolution();
+    /*asymptoticBound.calcSolution();
     asymptoticBound.findUpperBoundforSolution();
     asymptoticBound.findLowerBoundforSolvedCost();
 
@@ -331,5 +338,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
 
     return InfiniteInstances::Result(cplx, asymptoticBound.upperBound > 1,
                                      asymptoticBound.cost.subs(asymptoticBound.solution), 0,
-                                     "Solved the initial limit problem.");
+                                     "Solved the initial limit problem.");*/
+
+    return InfiniteInstances::Result(Expression::ComplexNone, false, Expression(), 0, "foo");
 }
