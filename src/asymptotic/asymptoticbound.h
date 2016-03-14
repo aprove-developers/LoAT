@@ -6,11 +6,12 @@
 
 #include "guardtoolbox.h"
 #include "infinity.h"
+#include "itrs.h"
 #include "asymptotic/limitproblem.h"
 
 class AsymptoticBound {
 private:
-    AsymptoticBound(GuardList guard, Expression cost);
+    AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost);
 
     void normalizeGuard();
     void createInitialLimitProblem();
@@ -24,6 +25,7 @@ private:
     void dumpGuard(const std::string &description) const;
 
 private:
+    const ITRSProblem its;
     const GuardList guard;
     const Expression cost;
     GuardList normalizedGuard;
@@ -35,7 +37,7 @@ private:
     int lowerBound;
 
 public:
-    static InfiniteInstances::Result determineComplexity(const GuardList &guard, const Expression &cost);
+    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost);
 };
 
 #endif //ASYMPTOTICBOUND_H

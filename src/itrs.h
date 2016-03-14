@@ -91,6 +91,7 @@ public:
 
     inline const std::set<VariableIndex>& getFreeVars() const { return freeVars; }
     inline bool isFreeVar(VariableIndex idx) const { return freeVars.count(idx) > 0; }
+    bool isFreeVar(const ExprSymbol &var) const;
 
     inline ExprSymbol getGinacSymbol(VariableIndex idx) const { return varSymbols[idx]; }
     inline ExprList getGinacVarList() const { return varSymbolList; }

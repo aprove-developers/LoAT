@@ -8,8 +8,8 @@
 
 using namespace GiNaC;
 
-AsymptoticBound::AsymptoticBound(GuardList guard, Expression cost)
-    : guard(guard), cost(cost) {
+AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost)
+    : its(its), guard(guard), cost(cost) {
     assert(GuardToolbox::isValidGuard(guard));
 }
 
@@ -116,16 +116,21 @@ void AsymptoticBound::findUpperBoundforSolution() {
     upperBound = 0;
     for (auto pair : solution) {
         assert(is_a<symbol>(pair.first));
-        Expression sub = pair.second;
-        assert(sub.is_polynomial(n));
-        assert(sub.getVariables().size() <= 1);
 
-        Expression expanded = sub.expand();
-        int d = expanded.degree(n);
-        debugAsymptoticBound(pair.first << "==" << expanded << ", degree: " << d);
+        if (!its.isFreeVar(ex_to<symbol>(pair.first))) {
+            Expression sub = pair.second;
+            assert(sub.is_polynomial(n));
+            assert(sub.getVariables().size() <= 1);
 
-        if (d > upperBound) {
-            upperBound = d;
+            Expression expanded = sub.expand();
+            int d = expanded.degree(n);
+            debugAsymptoticBound(pair.first << "==" << expanded << ", degree: " << d);
+
+            if (d > upperBound) {
+                upperBound = d;
+            }
+        } else {
+            debugAsymptoticBound(pair.first << " is not a program variable");
         }
     }
     assert(upperBound > 0);
@@ -173,10 +178,10 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 }
 
 
-InfiniteInstances::Result AsymptoticBound::determineComplexity(const GuardList &guard, const Expression &cost) {
+InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
-    AsymptoticBound asymptoticBound(guard, cost);
+    AsymptoticBound asymptoticBound(its, guard, cost);
     asymptoticBound.dumpGuard("guard");
     asymptoticBound.dumpCost("cost");
     debugAsymptoticBound("");
@@ -187,132 +192,132 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const GuardList &
 
     LimitProblem &limitProblem = asymptoticBound.limitProblem;
     InftyExpressionSet::const_iterator it;
-    std::vector<InftyExpressionSet::const_iterator> its;
+    std::vector<InftyExpressionSet::const_iterator> iters;
 
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::integer)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.removeConstant(i);
     }
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::polynomial)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.trimPolynomial(i);
     }
 
-    /*its.clear();
+    /*iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::polynomial)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.trimPolynomial(i);
     }
 
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
 
         ExprSymbolSet variables = it->getVariables();
 
         ExprSymbol var = *variables.begin();
         if (it->info(info_flags::polynomial) && !(it->lcoeff(var).info(info_flags::integer))) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
                                   InftyDirection::POS_INF,
                                   InftyDirection::POS_CONS);
     }
 
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::rational)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.applyLimitVector(i, 0, InftyDirection::POS_CONS,
                                   InftyDirection::POS_CONS,
                                   InftyDirection::POS_CONS);
     }
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::integer)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.removeConstant(i);
     }
 
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
 
         ExprSymbolSet variables = it->getVariables();
 
         ExprSymbol var = *variables.begin();
         if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
                                   InftyDirection::POS_INF,
                                   InftyDirection::POS_INF);
     }
 
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
 
         ExprSymbolSet variables = it->getVariables();
 
         ExprSymbol var = *variables.begin();
         if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
                                   InftyDirection::POS_INF,
                                   InftyDirection::POS_INF);
     }
 
 
-    its.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
 
         ExprSymbolSet variables = it->getVariables();
 
         ExprSymbol var = *variables.begin();
         if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
-            its.push_back(it);
+            iters.push_back(it);
         }
     }
 
-    for (auto i : its) {
+    for (auto i : iters) {
         limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
                                   InftyDirection::POS_INF,
                                   InftyDirection::POS_INF);

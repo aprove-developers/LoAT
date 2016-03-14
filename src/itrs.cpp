@@ -443,6 +443,17 @@ string ITRSProblem::getFreshName(string basename) const {
 }
 
 
+bool ITRSProblem::isFreeVar(const ExprSymbol &var) const {
+    for (VariableIndex i : freeVars) {
+        if (var == getGinacSymbol(i)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 VariableIndex ITRSProblem::addFreshVariable(string basename, bool free) {
     VariableIndex v = addVariable(getFreshName(basename));
     if (free) freeVars.insert(v);

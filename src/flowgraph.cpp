@@ -263,7 +263,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
         //avoid infinity checks that cannot improve the result
         if (oldCpx <= res.cpx) continue;
 
-        auto checkRes = AsymptoticBound::determineComplexity(getTransData(trans).guard, getTransData(trans).cost);
+        auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost);
 
         //check if this transition allows infinitely many guards
         debugGraph(endl << "INFINITY CHECK");
