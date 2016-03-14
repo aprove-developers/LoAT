@@ -55,16 +55,15 @@ public:
     GiNaC::exmap getSolution() const;
     ExprSymbol getN() const;
 
+    bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);
+    bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);
+
 private:
     InftyExpressionSet set;
     ExprSymbol variableN;
 
-private:
     //debug dumping
     void dump(const std::string &description) const;
-
-public:
-    static void solve(LimitProblem &problem);
 };
 
 #endif //LIMITPROBLEM_H

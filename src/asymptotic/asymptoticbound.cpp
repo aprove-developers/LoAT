@@ -189,6 +189,34 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
 }
 
 
+bool AsymptoticBound::solveLimitProblem() {
+    bool changed = true;
+    while (changed) {
+        changed = false;
+
+        InftyExpressionSet::const_iterator it = limitProblem.cbegin();
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (limitProblem.removeConstantIsApplicable(it)) {
+                limitProblem.removeConstant(it);
+                changed = true;
+                break;
+            }
+
+            if (limitProblem.trimPolynomialIsApplicable(it)) {
+                limitProblem.trimPolynomial(it);
+                changed = true;
+                break;
+            }
+        }
+        if (changed) {
+            continue;
+        }
+    }
+
+    return limitProblem.isSolved();
+}
+
+
 Complexity AsymptoticBound::getComplexity() {
     debugAsymptoticBound("Calculating complexity.");
 
@@ -236,140 +264,9 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
 
-    LimitProblem &limitProblem = asymptoticBound.limitProblem;
-    InftyExpressionSet::const_iterator it;
-    std::vector<InftyExpressionSet::const_iterator> iters;
+    if (asymptoticBound.solveLimitProblem()) {
+        debugAsymptoticBound("Solved the initial limit problem.");
 
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (it->info(info_flags::integer)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.removeConstant(i);
-    }
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (it->info(info_flags::polynomial)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.trimPolynomial(i);
-    }
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (it->info(info_flags::polynomial)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.trimPolynomial(i);
-    }
-
-
-    /*iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-
-        ExprSymbolSet variables = it->getVariables();
-
-        ExprSymbol var = *variables.begin();
-        if (it->info(info_flags::polynomial) && !(it->lcoeff(var).info(info_flags::integer))) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF,
-                                  InftyDirection::POS_CONS);
-    }
-
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (it->info(info_flags::rational)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_CONS,
-                                  InftyDirection::POS_CONS,
-                                  InftyDirection::POS_CONS);
-    }
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (it->info(info_flags::integer)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.removeConstant(i);
-    }
-
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-
-        ExprSymbolSet variables = it->getVariables();
-
-        ExprSymbol var = *variables.begin();
-        if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF);
-    }
-
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-
-        ExprSymbolSet variables = it->getVariables();
-
-        ExprSymbol var = *variables.begin();
-        if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF);
-    }
-
-
-    iters.clear();
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-
-        ExprSymbolSet variables = it->getVariables();
-
-        ExprSymbol var = *variables.begin();
-        if (is_a<power>(*it) && (it->op(1) - 1).info(info_flags::positive)) {
-            iters.push_back(it);
-        }
-    }
-
-    for (auto i : iters) {
-        limitProblem.applyLimitVector(i, 0, InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF,
-                                  InftyDirection::POS_INF);
-    }*/
-
-    if (limitProblem.isSolved()) {
         asymptoticBound.calcSolution();
         asymptoticBound.findUpperBoundforSolution();
         asymptoticBound.findLowerBoundforSolvedCost();
@@ -379,6 +276,8 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
                                          asymptoticBound.cost.subs(asymptoticBound.solution),
                                          0, "Solved the initial limit problem.");
     } else {
+        debugAsymptoticBound("Could not solve the initial limit problem.");
+
         return InfiniteInstances::Result(Expression::ComplexNone,
                                          "Could not solve the initial limit problem.");
     }

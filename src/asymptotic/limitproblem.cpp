@@ -326,6 +326,37 @@ ExprSymbol LimitProblem::getN() const {
     return variableN;
 }
 
+
+bool LimitProblem::removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it) {
+    if (!it->info(info_flags::integer)) {
+        return false;
+    }
+
+    numeric num = ex_to<numeric>(*it);
+    InftyDirection dir = it->getDirection();
+
+    return (num.is_positive() && (dir == POS_CONS || dir == POS))
+           || (num.is_negative() && dir == NEG_CONS);
+}
+
+
+bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it) {
+    ExprSymbolSet variables = it->getVariables();
+
+    if (!it->info(info_flags::polynomial) || !(variables.size() == 1)) {
+        return false;
+    }
+
+    InftyDirection dir = it->getDirection();
+    if (!((dir == POS) || (dir == POS_INF) || (dir == NEG_INF))) {
+        return false;
+    }
+
+    // Check if it is a monom
+    return is_a<add>(it->expand());
+}
+
+
 void LimitProblem::dump(const std::string &description) const {
 #ifdef DEBUG_LIMIT_PROBLEMS
     std::cout << description << ":" << std::endl;
@@ -337,7 +368,4 @@ void LimitProblem::dump(const std::string &description) const {
     std::cout << "the problem is " << (isSolved() ? "solved" : "not solved")
               << std::endl << std::endl;
 #endif
-}
-
-void LimitProblem::solve(LimitProblem &problem) {
 }
