@@ -145,6 +145,9 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
     Expression solvedCost = cost.subs(solution);
 
     ExprSymbol n = limitProblem.getN();
+
+    solvedCost = pow(n, 5) + pow(2, n) + pow(3, n) + pow(n, 4) + pow(5, pow(n, 2)) + pow(2, n);
+
     if (solvedCost.info(info_flags::polynomial)) {
         assert(solvedCost.is_polynomial(n));
         assert(solvedCost.getVariables().size() <= 1);
@@ -153,12 +156,63 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
         int d = expanded.degree(n);
         debugAsymptoticBound("solved cost: " << expanded << ", degree: " << d);
         lowerBound = d;
+        lowerBoundIsExponential = false;
+
+        debugAsymptoticBound("Omega(" << n << "^" << lowerBound << ")" << std::endl);
 
     } else {
-        assert(false); // TODO
-    }
+        std::vector<Expression> nonPolynomial;
+        Expression expanded = solvedCost.expand();
+        debugAsymptoticBound("solved cost: " << expanded);
 
-    debugAsymptoticBound("Omega(" << n << "^" << lowerBound << ")" << std::endl);
+        if (is_a<add>(expanded)) {
+            for (int i = 0; i < expanded.nops(); ++i) {
+                if (!expanded.op(i).info(info_flags::polynomial)) {
+                    nonPolynomial.push_back(expanded.op(i));
+                }
+            }
+        } else {
+            nonPolynomial.push_back(expanded);
+        }
+
+        lowerBound = 1;
+        for (const Expression &ex : nonPolynomial) {
+            debugAsymptoticBound("non-polynomial: " << ex);
+            assert(is_a<power>(ex));
+            assert(ex.op(1).is_polynomial(n));
+            assert(ex.op(0).info(info_flags::integer));
+            assert(ex.op(0).info(info_flags::positive));
+
+            int base =  ex_to<numeric>(ex.op(0)).to_int();
+            debugAsymptoticBound("base: " << base);
+            if (base > lowerBound) {
+                lowerBound = base;
+            }
+        }
+        assert(lowerBound > 1);
+        lowerBoundIsExponential = true;
+
+        debugAsymptoticBound("Omega(" << lowerBound << "^" << n << ")" << std::endl);
+    }
+}
+
+
+Complexity AsymptoticBound::getComplexity() {
+    debugAsymptoticBound("Calculating complexity.");
+
+    ExprSymbol n = limitProblem.getN();
+    if (lowerBoundIsExponential) {
+        debugAsymptoticBound("Omega(" << lowerBound << "^"
+                             << "(" << n << "^"
+                             << "(1/" << upperBound << ")" << ")" << ")" << std::endl);
+
+        return Expression::ComplexExp;
+    } else {
+        debugAsymptoticBound("Omega(" << n << "^"
+                             << "(" << lowerBound << "/" << upperBound << ")" << ")" << std::endl);
+
+        return Complexity(lowerBound, upperBound);
+    }
 }
 
 
@@ -181,14 +235,7 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
-    ExprSymbol x("x");
-    Expression exp = pow((pow(x, 3) + pow(x, 2) + x), pow(x, 2) + x) + pow(x, 2) + pow(x, 5);
-
-    LimitProblem limitProblem = LimitProblem(GuardList(), exp);
-
-    limitProblem.reducePolynomialPower(limitProblem.cbegin());
-
-    /*AsymptoticBound asymptoticBound(its, guard, cost);
+    AsymptoticBound asymptoticBound(its, guard, cost);
     asymptoticBound.dumpGuard("guard");
     asymptoticBound.dumpCost("cost");
     debugAsymptoticBound("");
@@ -220,9 +267,9 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
 
     for (auto i : iters) {
         limitProblem.trimPolynomial(i);
-    }*/
+    }
 
-    /*iters.clear();
+    iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
         if (it->info(info_flags::polynomial)) {
             iters.push_back(it);
@@ -234,7 +281,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     }
 
 
-    iters.clear();
+    /*iters.clear();
     for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
 
         ExprSymbolSet variables = it->getVariables();
@@ -330,15 +377,17 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
                                   InftyDirection::POS_INF);
     }*/
 
-    /*asymptoticBound.calcSolution();
-    asymptoticBound.findUpperBoundforSolution();
-    asymptoticBound.findLowerBoundforSolvedCost();
+    if (limitProblem.isSolved()) {
+        asymptoticBound.calcSolution();
+        asymptoticBound.findUpperBoundforSolution();
+        asymptoticBound.findLowerBoundforSolvedCost();
 
-    Complexity cplx(asymptoticBound.lowerBound, asymptoticBound.upperBound);
-
-    return InfiniteInstances::Result(cplx, asymptoticBound.upperBound > 1,
-                                     asymptoticBound.cost.subs(asymptoticBound.solution), 0,
-                                     "Solved the initial limit problem.");*/
-
-    return InfiniteInstances::Result(Expression::ComplexNone, false, Expression(), 0, "foo");
+        return InfiniteInstances::Result(asymptoticBound.getComplexity(),
+                                         asymptoticBound.upperBound > 1,
+                                         asymptoticBound.cost.subs(asymptoticBound.solution),
+                                         0, "Solved the initial limit problem.");
+    } else {
+        return InfiniteInstances::Result(Expression::ComplexNone,
+                                         "Could not solve the initial limit problem.");
+    }
 }

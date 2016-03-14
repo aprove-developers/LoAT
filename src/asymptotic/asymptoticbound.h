@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "expression.h"
 #include "guardtoolbox.h"
 #include "infinity.h"
 #include "itrs.h"
@@ -19,6 +20,7 @@ private:
     void calcSolution();
     void findUpperBoundforSolution();
     void findLowerBoundforSolvedCost();
+    Complexity getComplexity();
 
     //debug dumping
     void dumpCost(const std::string &description) const;
@@ -35,6 +37,7 @@ private:
     GiNaC::exmap solution;
     int upperBound;
     int lowerBound;
+    bool lowerBoundIsExponential;
 
 public:
     static InfiniteInstances::Result determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost);
