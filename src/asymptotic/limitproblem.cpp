@@ -8,6 +8,29 @@ const char* InftyDirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
 // limit vectors for addition
 const std::vector<LimitVector> LimitVector::Addition = {
+    // increasing limit vectors
+    LimitVector(POS_INF, POS_INF, POS_INF),
+    LimitVector(POS_INF, POS_INF, POS_CONS),
+    LimitVector(POS_INF, POS_CONS, POS_INF),
+    LimitVector(POS_INF, POS_INF, NEG_CONS),
+    LimitVector(POS_INF, NEG_CONS, POS_INF),
+
+    // decreasing limit vectors
+    LimitVector(NEG_INF, NEG_INF, NEG_INF),
+    LimitVector(NEG_INF, NEG_INF, NEG_CONS),
+    LimitVector(NEG_INF, NEG_CONS, NEG_INF),
+    LimitVector(NEG_INF, NEG_INF, POS_CONS),
+    LimitVector(NEG_INF, POS_CONS, NEG_INF),
+
+    // positive limit vectors
+    LimitVector(POS_CONS, POS_CONS, POS_CONS),
+    LimitVector(POS_CONS, POS_CONS, NEG_CONS),
+    LimitVector(POS_CONS, NEG_CONS, POS_CONS),
+
+    // negative limit vectors
+    LimitVector(NEG_CONS, NEG_CONS, NEG_CONS),
+    LimitVector(NEG_CONS, NEG_CONS, POS_CONS),
+    LimitVector(NEG_CONS, POS_CONS, NEG_CONS)
 };
 
 // limit vectors for multiplication
@@ -15,13 +38,45 @@ const std::vector<LimitVector> LimitVector::Multiplication = {
     // increasing limit vectors
     LimitVector(POS_INF, POS_INF, POS_INF),
     LimitVector(POS_INF, POS_INF, POS_CONS),
-    LimitVector(POS_INF, POS_CONS, POS_INF)
+    LimitVector(POS_INF, POS_CONS, POS_INF),
+    LimitVector(POS_INF, NEG_INF, NEG_INF),
+    LimitVector(POS_INF, NEG_INF, NEG_CONS),
+    LimitVector(POS_INF, NEG_CONS, NEG_INF),
+
+    // decreasing limit vectors
+    LimitVector(NEG_INF, NEG_INF, POS_INF),
+    LimitVector(NEG_INF, POS_INF, NEG_INF),
+    LimitVector(NEG_INF, NEG_INF, POS_CONS),
+    LimitVector(NEG_INF, POS_CONS, NEG_INF),
+    LimitVector(NEG_INF, POS_INF, NEG_CONS),
+    LimitVector(NEG_INF, NEG_CONS, POS_INF),
+
+    // positive limit vectors
+    LimitVector(POS_CONS, POS_CONS, POS_CONS),
+    LimitVector(POS_CONS, NEG_CONS, NEG_CONS),
+
+    // negative limit vectors
+    LimitVector(NEG_CONS, POS_CONS, NEG_CONS),
+    LimitVector(NEG_CONS, NEG_CONS, POS_CONS)
 };
 
 // limit vectors for division
 const std::vector<LimitVector> LimitVector::Division = {
+    // increasing limit vectors
+    LimitVector(POS_INF, POS_INF, POS_CONS),
+    LimitVector(POS_INF, NEG_INF, NEG_CONS),
+
+    // decreasing limit vectors
+    LimitVector(NEG_INF, NEG_INF, POS_CONS),
+    LimitVector(NEG_INF, POS_INF, NEG_CONS),
+
     // positive limit vectors
     LimitVector(POS_CONS, POS_CONS, POS_CONS),
+    LimitVector(POS_CONS, NEG_CONS, NEG_CONS),
+
+    // negative limit vectors
+    LimitVector(NEG_CONS, NEG_CONS, POS_CONS),
+    LimitVector(NEG_CONS, POS_CONS, NEG_CONS)
 };
 
 LimitVector::LimitVector(InftyDirection type, InftyDirection first, InftyDirection second)
