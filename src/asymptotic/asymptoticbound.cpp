@@ -218,7 +218,7 @@ bool AsymptoticBound::solveLimitProblem() {
 
         // Third highest priority
         for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-            if (it->getVariables().size() == 1 && tryApplyingLimitVector(it)) {
+            if (it->getVariables().size() <= 1 && tryApplyingLimitVector(it)) {
                 goto start;
             }
         }
