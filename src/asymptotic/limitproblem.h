@@ -1,6 +1,7 @@
 #ifndef LIMITPROBLEM_H
 #define LIMITPROBLEM_H
 
+#include <ostream>
 #include <set>
 #include <utility>
 
@@ -31,6 +32,8 @@ private:
     const InftyDirection second;
 };
 
+std::ostream& operator<<(std::ostream &, const LimitVector &);
+
 class InftyExpression : public Expression {
 public:
 
@@ -41,8 +44,11 @@ public:
     void setDirection(InftyDirection dir);
     InftyDirection getDirection() const;
 
+    void dump(const std::string &description) const;
+
 private:
     InftyDirection direction;
+
 };
 
 typedef std::set<InftyExpression, GiNaC::ex_is_less> InftyExpressionSet;
@@ -65,7 +71,7 @@ public:
     // (B)
     void removeConstant(const InftyExpressionSet::const_iterator &it);
     // (C)
-    void substitute(const GiNaC::exmap &sub);
+    void substitute(const GiNaC::exmap &sub, int substitutionIndex);
     // (D)
     void trimPolynomial(const InftyExpressionSet::const_iterator &it);
     // (E)
@@ -74,17 +80,20 @@ public:
     bool isSolved() const;
     GiNaC::exmap getSolution() const;
     ExprSymbol getN() const;
+    const std::vector<int>& getSubstitutions();
+    InftyExpressionSet::const_iterator find(const InftyExpression &ex);
 
     bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
 
+    //debug dumping
+    void dump(const std::string &description) const;
+
 private:
     InftyExpressionSet set;
     ExprSymbol variableN;
-
-    //debug dumping
-    void dump(const std::string &description) const;
+    std::vector<int> substitutions;
 };
 
 #endif //LIMITPROBLEM_H

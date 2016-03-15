@@ -44,7 +44,7 @@ void AsymptoticBound::normalizeGuard() {
 
 
 void AsymptoticBound::createInitialLimitProblem() {
-    limitProblem = LimitProblem(normalizedGuard, cost);
+    limitProblems.push_back(LimitProblem(normalizedGuard, cost));
 }
 
 
@@ -83,10 +83,9 @@ void AsymptoticBound::propagateBounds() {
 
                 exmap sub;
                 sub.insert(std::make_pair(l, r));
-
-                limitProblem.substitute(sub);
-
                 substitutions.push_back(sub);
+
+                limitProblems.begin()->substitute(sub, substitutions.size() - 1);
             }
         }
     }
@@ -94,17 +93,19 @@ void AsymptoticBound::propagateBounds() {
 
 void AsymptoticBound::calcSolution() {
     debugAsymptoticBound("Calculating solution for the initial limit problem.");
-    assert(limitProblem.isSolved());
+    assert(solvedLimitProblem.isSolved());
 
 
     solution.clear();
-    for (const exmap &sub : substitutions) {
+    for (int index : solvedLimitProblem.getSubstitutions()) {
+        const exmap &sub = substitutions[index];
+
         solution = GuardToolbox::composeSubs(sub, solution);
         debugAsymptoticBound("substitution: " << sub);
     }
 
-    debugAsymptoticBound("solution for the solved limit problem: " << limitProblem.getSolution());
-    solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
+    debugAsymptoticBound("solution for the solved limit problem: " << solvedLimitProblem.getSolution());
+    solution = GuardToolbox::composeSubs(solvedLimitProblem.getSolution(), solution);
     debugAsymptoticBound("resulting solution: " << solution << std::endl);
 }
 
@@ -112,7 +113,7 @@ void AsymptoticBound::calcSolution() {
 void AsymptoticBound::findUpperBoundforSolution() {
     debugAsymptoticBound("Finding upper bound for the solution.");
 
-    ExprSymbol n = limitProblem.getN();
+    ExprSymbol n = solvedLimitProblem.getN();
     upperBound = 0;
     for (auto pair : solution) {
         assert(is_a<symbol>(pair.first));
@@ -144,7 +145,7 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
 
     Expression solvedCost = cost.subs(solution);
 
-    ExprSymbol n = limitProblem.getN();
+    ExprSymbol n = solvedLimitProblem.getN();
     if (solvedCost.info(info_flags::polynomial)) {
         assert(solvedCost.is_polynomial(n));
         assert(solvedCost.getVariables().size() <= 1);
@@ -193,70 +194,57 @@ bool AsymptoticBound::solveLimitProblem() {
     InftyExpressionSet::const_iterator it;
 
     start:
-    // Highest priority
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (limitProblem.removeConstantIsApplicable(it)) {
-            limitProblem.removeConstant(it);
-            goto start;
-        }
+    if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
+        LimitProblem &limitProblem = limitProblems.back();
+        limitProblem.dump("Currently handling");
 
-        if (limitProblem.trimPolynomialIsApplicable(it)) {
-            limitProblem.trimPolynomial(it);
-            goto start;
-        }
-    }
+        // Highest priority
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (tryRemovingConstant(it)) {
+                goto start;
+            }
 
-    // Second highest priority
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (limitProblem.reducePolynomialPowerIsApplicable(it)) {
-            limitProblem.reducePolynomialPower(it);
-            goto start;
-        }
-    }
-
-    // Third highest priority
-    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-        if (it->getVariables().size() == 1) {
-            if (it->isProperRational()) {
-                for (const LimitVector &lv : LimitVector::Division) {
-                    if (lv.isApplicable(it->getDirection())) {
-                        limitProblem.applyLimitVector(it, 0, lv);
-                        goto start;
-                    }
-                }
-            } else if (is_a<add>(*it)) {
-                for (const LimitVector &lv : LimitVector::Addition) {
-                    if (lv.isApplicable(it->getDirection())) {
-                        limitProblem.applyLimitVector(it, 0, lv);
-                        goto start;
-                    }
-                }
-            } else if (is_a<mul>(*it)) {
-                for (const LimitVector &lv : LimitVector::Multiplication) {
-                    if (lv.isApplicable(it->getDirection())) {
-                        limitProblem.applyLimitVector(it, 0, lv);
-                        goto start;
-                    }
-                }
-            } else if (it->isProperNaturalPower()) {
-                for (const LimitVector &lv : LimitVector::Multiplication) {
-                    if (lv.isApplicable(it->getDirection())) {
-                        limitProblem.applyLimitVector(it, 0, lv);
-                        goto start;
-                    }
-                }
+            if (tryTrimmingPolynomial(it)) {
+                goto start;
             }
         }
+
+        // Second highest priority
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (tryReducingPolynomialPower(it)) {
+                goto start;
+            }
+        }
+
+        // Third highest priority
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (it->getVariables().size() == 1 && tryApplyingLimitVector(it)) {
+                goto start;
+            }
+        }
+
     }
 
-    return limitProblem.isSolved();
+    if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
+        limitProblems.back().dump("I don't know how to continue, throwing away");
+        limitProblems.pop_back();
+        goto start;
+    }
+
+    if (limitProblems.size() == 0) {
+        return false;
+    }
+
+    solvedLimitProblem = limitProblems.back();
+
+    return solvedLimitProblem.isSolved();
 }
 
 
 Complexity AsymptoticBound::getComplexity() {
     debugAsymptoticBound("Calculating complexity.");
 
-    ExprSymbol n = limitProblem.getN();
+    ExprSymbol n = solvedLimitProblem.getN();
     if (lowerBoundIsExponential) {
         debugAsymptoticBound("Omega(" << lowerBound << "^"
                              << "(" << n << "^"
@@ -285,6 +273,134 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
     }
     std::cout << std::endl;
 #endif
+}
+
+
+bool AsymptoticBound::tryRemovingConstant(const InftyExpressionSet::const_iterator &it) {
+    LimitProblem &limitProblem = limitProblems.back();
+
+    if (limitProblem.removeConstantIsApplicable(it)) {
+        try {
+            limitProblem.removeConstant(it);
+        } catch (const LimitProblemIsContradictoryException &e) {
+            debugAsymptoticBound(e.what());
+            limitProblems.pop_back();
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it) {
+    LimitProblem &limitProblem = limitProblems.back();
+
+    if (limitProblem.trimPolynomialIsApplicable(it)) {
+        try {
+            limitProblem.trimPolynomial(it);
+        } catch (const LimitProblemIsContradictoryException &e) {
+            debugAsymptoticBound(e.what());
+            limitProblems.pop_back();
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it) {
+    LimitProblem &limitProblem = limitProblems.back();
+
+    if (limitProblem.reducePolynomialPowerIsApplicable(it)) {
+        try {
+            limitProblem.reducePolynomialPower(it);
+        } catch (const LimitProblemIsContradictoryException &e) {
+            debugAsymptoticBound(e.what());
+            limitProblems.pop_back();
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it) {
+    LimitProblem &limitProblem = limitProblems.back();
+
+    std::vector<LimitVector> toApply;
+
+    if (it->isProperRational()) {
+        for (const LimitVector &lv : LimitVector::Division) {
+            if (lv.isApplicable(it->getDirection())) {
+                toApply.push_back(lv);
+            }
+        }
+    } else if (is_a<add>(*it)) {
+        for (const LimitVector &lv : LimitVector::Addition) {
+            if (lv.isApplicable(it->getDirection())) {
+                toApply.push_back(lv);
+            }
+        }
+    } else if (is_a<mul>(*it)) {
+        for (const LimitVector &lv : LimitVector::Multiplication) {
+            if (lv.isApplicable(it->getDirection())) {
+                toApply.push_back(lv);
+            }
+        }
+    } else if (it->isProperNaturalPower()) {
+        for (const LimitVector &lv : LimitVector::Multiplication) {
+            if (lv.isApplicable(it->getDirection())) {
+                toApply.push_back(lv);
+            }
+        }
+    }
+
+    it->dump("expression");
+    debugAsymptoticBound("applicable limit vectors:");
+    for (const LimitVector &lv : toApply) {
+        debugAsymptoticBound(lv);
+    }
+    debugAsymptoticBound("");
+
+    if (toApply.size() > 0) {
+        if (toApply.size() == 1) {
+            try {
+                limitProblem.applyLimitVector(it, 0, toApply.front());
+            } catch (const LimitProblemIsContradictoryException &e) {
+                debugAsymptoticBound(e.what());
+                limitProblems.pop_back();
+            }
+
+        } else {
+            LimitProblem copy = limitProblem;
+            InftyExpressionSet::const_iterator copyIt = copy.find(*it);
+            limitProblems.pop_back();
+
+            for (const LimitVector &lv : toApply) {
+                limitProblems.push_back(copy);
+                InftyExpressionSet::const_iterator backIt = limitProblems.back().find(*copyIt);
+
+                try {
+                    limitProblems.back().applyLimitVector(backIt, 0, lv);
+                } catch (const LimitProblemIsContradictoryException &e) {
+                    debugAsymptoticBound(e.what());
+                    limitProblems.pop_back();
+                }
+
+            }
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+
 }
 
 

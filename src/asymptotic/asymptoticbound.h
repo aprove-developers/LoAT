@@ -28,13 +28,20 @@ private:
     void dumpGuard(const std::string &description) const;
 
 private:
+    bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
+    bool tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it);
+    bool tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it);
+    bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
+
+private:
     const ITRSProblem its;
     const GuardList guard;
     const Expression cost;
     GuardList normalizedGuard;
 
-    LimitProblem limitProblem;
+    std::vector<LimitProblem> limitProblems;
     std::vector<GiNaC::exmap> substitutions;
+    LimitProblem solvedLimitProblem;
     GiNaC::exmap solution;
     int upperBound;
     int lowerBound;

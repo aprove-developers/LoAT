@@ -6,7 +6,6 @@ using namespace GiNaC;
 
 const char* InftyDirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
-
 // limit vectors for addition
 const std::vector<LimitVector> LimitVector::Addition = {
 };
@@ -53,6 +52,15 @@ bool LimitVector::isApplicable(InftyDirection dir) const {
 }
 
 
+std::ostream& operator<<(std::ostream &os, const LimitVector &lv) {
+    os << InftyDirectionNames[lv.getType()] << " limit vector "
+       << "(" << InftyDirectionNames[lv.getFirst()] << ","
+       << InftyDirectionNames[lv.getSecond()] << ")";
+
+    return os;
+}
+
+
 InftyExpression::InftyExpression(InftyDirection dir) {
     setDirection(dir);
 }
@@ -77,6 +85,14 @@ void InftyExpression::setDirection(InftyDirection dir) {
 
 InftyDirection InftyExpression::getDirection() const {
     return direction;
+}
+
+
+void InftyExpression::dump(const std::string &description) const {
+#ifdef DEBUG_LIMIT_PROBLEMS
+    std::cout << description << ": " << *this << " ("
+              << InftyDirectionNames[getDirection()] << ")" << std::endl;
+#endif
 }
 
 
@@ -183,14 +199,15 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
 
     } else {
         debugLimitProblem(*it << " is neither a proper rational, an addition,"
-                          << "a multiplication, nor a proper natural power");
+                          << " a multiplication, nor a proper natural power");
         assert(false);
     }
 
     debugLimitProblem("applying transformation rule (A), replacing " << *it
                       << " (" << InftyDirectionNames[dir] << ") by "
                       << firstExp << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
-                      << secondExp << " (" << InftyDirectionNames[lv.getSecond()] << ")");
+                      << secondExp << " (" << InftyDirectionNames[lv.getSecond()] << ")"
+                      << " using " << lv);
 
     set.erase(it);
     addExpression(InftyExpression(firstExp, lv.getFirst()));
@@ -217,7 +234,7 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
 }
 
 
-void LimitProblem::substitute(const GiNaC::exmap &sub) {
+void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
     for (auto s : sub) {
         assert(!s.second.has(s.first));
     }
@@ -229,6 +246,8 @@ void LimitProblem::substitute(const GiNaC::exmap &sub) {
     for (const InftyExpression &ex : oldSet) {
         addExpression(InftyExpression(ex.subs(sub), ex.getDirection()));
     }
+
+    substitutions.push_back(substitutionIndex);
 
     dump("resulting limit problem");
 }
@@ -371,6 +390,16 @@ GiNaC::exmap LimitProblem::getSolution() const {
 
 ExprSymbol LimitProblem::getN() const {
     return variableN;
+}
+
+
+const std::vector<int>& LimitProblem::getSubstitutions() {
+    return substitutions;
+}
+
+
+InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex) {
+    return set.find(ex);
 }
 
 
