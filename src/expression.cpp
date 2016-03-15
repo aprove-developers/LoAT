@@ -190,6 +190,26 @@ bool Expression::isLinear(const GiNaC::lst &vars) const {
 }
 
 
+bool Expression::isProperRational() const {
+    return this->info(GiNaC::info_flags::rational)
+           && !this->info(GiNaC::info_flags::integer);
+}
+
+
+bool Expression::isProperNaturalPower() const {
+    if (!GiNaC::is_a<GiNaC::power>(*this)) {
+        return false;
+    }
+
+    GiNaC::ex power = this->op(1);
+    if (!power.info(GiNaC::info_flags::integer)) {
+        return false;
+    }
+
+    return GiNaC::ex_to<GiNaC::numeric>(power) > GiNaC::numeric(1);
+}
+
+
 int Expression::getMaxDegree(const GiNaC::lst &vars) const {
     assert(this->is_polynomial(vars));
 

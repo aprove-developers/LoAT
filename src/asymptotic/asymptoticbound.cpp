@@ -190,26 +190,62 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
 
 
 bool AsymptoticBound::solveLimitProblem() {
-    bool changed = true;
-    while (changed) {
-        changed = false;
+    InftyExpressionSet::const_iterator it;
 
-        InftyExpressionSet::const_iterator it = limitProblem.cbegin();
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
-            if (limitProblem.removeConstantIsApplicable(it)) {
-                limitProblem.removeConstant(it);
-                changed = true;
-                break;
-            }
-
-            if (limitProblem.trimPolynomialIsApplicable(it)) {
-                limitProblem.trimPolynomial(it);
-                changed = true;
-                break;
-            }
+    start:
+    // Highest priority
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (limitProblem.removeConstantIsApplicable(it)) {
+            limitProblem.removeConstant(it);
+            goto start;
         }
-        if (changed) {
-            continue;
+
+        if (limitProblem.trimPolynomialIsApplicable(it)) {
+            limitProblem.trimPolynomial(it);
+            goto start;
+        }
+    }
+
+    // Second highest priority
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (limitProblem.reducePolynomialPowerIsApplicable(it)) {
+            limitProblem.reducePolynomialPower(it);
+            goto start;
+        }
+    }
+
+    // Third highest priority
+    for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        if (it->getVariables().size() == 1) {
+            if (it->isProperRational()) {
+                for (const LimitVector &lv : LimitVector::Division) {
+                    if (lv.isApplicable(it->getDirection())) {
+                        limitProblem.applyLimitVector(it, 0, lv);
+                        goto start;
+                    }
+                }
+            } else if (is_a<add>(*it)) {
+                for (const LimitVector &lv : LimitVector::Addition) {
+                    if (lv.isApplicable(it->getDirection())) {
+                        limitProblem.applyLimitVector(it, 0, lv);
+                        goto start;
+                    }
+                }
+            } else if (is_a<mul>(*it)) {
+                for (const LimitVector &lv : LimitVector::Multiplication) {
+                    if (lv.isApplicable(it->getDirection())) {
+                        limitProblem.applyLimitVector(it, 0, lv);
+                        goto start;
+                    }
+                }
+            } else if (it->isProperNaturalPower()) {
+                for (const LimitVector &lv : LimitVector::Multiplication) {
+                    if (lv.isApplicable(it->getDirection())) {
+                        limitProblem.applyLimitVector(it, 0, lv);
+                        goto start;
+                    }
+                }
+            }
         }
     }
 

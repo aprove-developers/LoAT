@@ -9,7 +9,27 @@
 #include "guardtoolbox.h"
 
 
-enum InftyDirection { POS_INF, NEG_INF, POS_CONS, NEG_CONS, POS };
+enum InftyDirection { POS_INF = 0, NEG_INF, POS_CONS, NEG_CONS, POS };
+
+class LimitVector {
+public:
+    LimitVector(InftyDirection type, InftyDirection first, InftyDirection second);
+
+    InftyDirection getType() const;
+    InftyDirection getFirst() const;
+    InftyDirection getSecond() const;
+
+    bool isApplicable(InftyDirection dir) const;
+
+    static const std::vector<LimitVector> Addition;
+    static const std::vector<LimitVector> Multiplication;
+    static const std::vector<LimitVector> Division;
+
+private:
+    const InftyDirection type;
+    const InftyDirection first;
+    const InftyDirection second;
+};
 
 class InftyExpression : public Expression {
 public:
@@ -41,7 +61,7 @@ public:
 
     // (A)
     void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
-                          InftyDirection lvType, InftyDirection first, InftyDirection second);
+                          const LimitVector &lv);
     // (B)
     void removeConstant(const InftyExpressionSet::const_iterator &it);
     // (C)
@@ -57,6 +77,7 @@ public:
 
     bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);
+    bool reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
 
 private:
     InftyExpressionSet set;

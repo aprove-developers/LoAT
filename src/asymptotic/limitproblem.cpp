@@ -7,6 +7,52 @@ using namespace GiNaC;
 const char* InftyDirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
 
+// limit vectors for addition
+const std::vector<LimitVector> LimitVector::Addition = {
+};
+
+// limit vectors for multiplication
+const std::vector<LimitVector> LimitVector::Multiplication = {
+    // increasing limit vectors
+    LimitVector(POS_INF, POS_INF, POS_INF),
+    LimitVector(POS_INF, POS_INF, POS_CONS),
+    LimitVector(POS_INF, POS_CONS, POS_INF)
+};
+
+// limit vectors for division
+const std::vector<LimitVector> LimitVector::Division = {
+    // positive limit vectors
+    LimitVector(POS_CONS, POS_CONS, POS_CONS),
+};
+
+LimitVector::LimitVector(InftyDirection type, InftyDirection first, InftyDirection second)
+    : type(type), first(first), second(second) {
+    assert(type != POS && first != POS && second != POS);
+}
+
+
+InftyDirection LimitVector::getType() const {
+    return type;
+}
+
+
+InftyDirection LimitVector::getFirst() const {
+    return first;
+}
+
+
+InftyDirection LimitVector::getSecond() const {
+    return second;
+}
+
+
+bool LimitVector::isApplicable(InftyDirection dir) const {
+    return  (dir == getType())
+            || (dir == POS && (getType() == POS_INF
+                               || getType() == POS_CONS));
+}
+
+
 InftyExpression::InftyExpression(InftyDirection dir) {
     setDirection(dir);
 }
@@ -85,21 +131,21 @@ InftyExpressionSet::iterator LimitProblem::cend() const {
 
 
 void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
-                                    InftyDirection lvType, InftyDirection first, InftyDirection second) {
+                                    const LimitVector &lv) {
     InftyDirection dir = it->getDirection();
 
     if (it->nops() > 0) {
         assert(pos >= 0 && pos < it->nops());
     }
-    assert(dir == lvType || (dir == POS && (lvType == POS_INF || lvType == POS_CONS)));
+    assert(lv.isApplicable(dir));
 
     for (int i = 0; i < it->nops(); i++) {
         debugLimitProblem("op(" << i << "): " << it->op(i));
     }
 
     Expression firstExp, secondExp;
-    if (it->info(info_flags::rational)) {
-        debugLimitProblem(*it << " is a rational");
+    if (it->isProperRational()) {
+        debugLimitProblem(*it << " is a proper rational");
         firstExp = it->numer();
         secondExp = it->denom();
 
@@ -127,28 +173,28 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
             secondExp *= it->op(i);
         }
 
-    } else if (is_a<power>(*it)) {
-        debugLimitProblem(*it << " is a power");
+    } else if (it->isProperNaturalPower()) {
+        debugLimitProblem(*it << " is a proper natural power");
         Expression base = it->op(0);
         Expression power = it->op(1);
-        assert(power.info(info_flags::integer) && (power - 1).info(info_flags::positive));
 
         firstExp = pow(base, pos + 1);
         secondExp = pow(base, power - pos - 1);
 
     } else {
-        debugLimitProblem(*it << " is neither a rational, an addition, a multiplication nor a power");
+        debugLimitProblem(*it << " is neither a proper rational, an addition,"
+                          << "a multiplication, nor a proper natural power");
         assert(false);
     }
 
     debugLimitProblem("applying transformation rule (A), replacing " << *it
                       << " (" << InftyDirectionNames[dir] << ") by "
-                      << firstExp << " (" << InftyDirectionNames[first] << ") and "
-                      << secondExp << " (" << InftyDirectionNames[second] << ")");
+                      << firstExp << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
+                      << secondExp << " (" << InftyDirectionNames[lv.getSecond()] << ")");
 
     set.erase(it);
-    addExpression(InftyExpression(firstExp, first));
-    addExpression(InftyExpression(secondExp, second));
+    addExpression(InftyExpression(firstExp, lv.getFirst()));
+    addExpression(InftyExpression(secondExp, lv.getSecond()));
 
     dump("resulting limit problem");
 }
@@ -229,7 +275,7 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
 
 
 void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterator &it) {
-    assert(it->getDirection() == POS_INF);
+    assert(it->getDirection() == POS_INF || it->getDirection() == POS);
 
     debugLimitProblem("expression: " << *it);
 
@@ -264,6 +310,7 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
 
     assert(a.is_polynomial(x));
     assert(e.is_polynomial(x));
+    assert(e.has(x));
 
     debugLimitProblem("applying transformation rule (E), replacing " << *it
                       << " (" << InftyDirectionNames[it->getDirection()] << ") by "
@@ -354,6 +401,54 @@ bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_it
 
     // Check if it is a monom
     return is_a<add>(it->expand());
+}
+
+
+bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it) {
+    if (!(it->getDirection() == POS_INF || it->getDirection() == POS)) {
+        return false;
+    }
+
+    ExprSymbolSet variables = it->getVariables();
+
+    if (variables.size() != 1) {
+        return false;
+    }
+
+    ExprSymbol x = *variables.cbegin();
+
+    Expression powerInExp;
+    if (is_a<add>(*it)) {
+        for (int i = 0; i < it->nops(); ++i) {
+            Expression summand = it->op(i);
+            if (is_a<power>(summand) && summand.op(1).has(x)) {
+                powerInExp = summand;
+                break;
+            }
+        }
+
+    } else {
+        powerInExp = *it;
+    }
+
+    if (!is_a<power>(powerInExp)) {
+        return false;
+    }
+
+    Expression b = *it - powerInExp;
+
+    if (!b.is_polynomial(x)) {
+        return false;
+    }
+
+    Expression a = powerInExp.op(0);
+    Expression e = powerInExp.op(1);
+
+    if (!(a.is_polynomial(x) && e.is_polynomial(x))) {
+        return false;
+    }
+
+    return e.has(x);
 }
 
 

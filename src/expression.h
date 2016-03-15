@@ -133,6 +133,18 @@ public:
     bool isLinear(const GiNaC::lst &vars) const;
 
     /**
+     * Returns true iff this expression is a proper rational number,
+     * i.e., a rational number that is not an integer.
+     */
+    bool isProperRational() const;
+
+    /**
+     * Returns true iff this expression is a proper natural power,
+     * i.e., of the form expresion^n for some natural n >= 2.
+     */
+    bool isProperNaturalPower() const;
+
+    /**
      * Returns the highest degree of any of the given variables in this polynomial expression
      * @note this must be polynomial in vars!
      */
