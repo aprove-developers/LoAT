@@ -191,6 +191,11 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
             }
         }
     }
+
+    if ((ex.getDirection() == POS_INF || ex.getDirection() == NEG_INF)
+        && is_a<numeric>(ex)) {
+        throw LimitProblemIsUnsolvableException();
+    }
 }
 
 
@@ -478,14 +483,6 @@ std::vector<Expression> LimitProblem::getQuery() {
 
 
 bool LimitProblem::isUnsat() {
-    InftyExpressionSet::const_iterator it;
-    for (it = cbegin(); it != cend(); ++it) {
-        if ((it->getDirection() == POS_INF || it->getDirection() == NEG_INF)
-            && is_a<numeric>(*it)) {
-            return true;
-        }
-    }
-
     return Z3Toolbox::checkExpressionsSAT(getQuery()) == z3::unsat;
 }
 

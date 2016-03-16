@@ -53,7 +53,9 @@ private:
 
 typedef std::set<InftyExpression, GiNaC::ex_is_less> InftyExpressionSet;
 
-EXCEPTION(LimitProblemIsContradictoryException, CustomException);
+EXCEPTION(LimitProblemException, CustomException);
+EXCEPTION(LimitProblemIsContradictoryException, LimitProblemException);
+EXCEPTION(LimitProblemIsUnsolvableException, LimitProblemException);
 
 class LimitProblem {
 public:
