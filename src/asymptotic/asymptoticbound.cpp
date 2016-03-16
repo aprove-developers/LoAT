@@ -232,6 +232,13 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
+        // Fifth highest priority
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (tryApplyingLimitVector(it)) {
+                goto start;
+            }
+        }
+
     }
 
     if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
