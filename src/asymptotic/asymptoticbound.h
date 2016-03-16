@@ -20,6 +20,7 @@ private:
     void calcSolution();
     void findUpperBoundforSolution();
     void findLowerBoundforSolvedCost();
+    void removeUnsatProblems();
     bool solveLimitProblem();
     Complexity getComplexity();
 

@@ -82,6 +82,8 @@ public:
     ExprSymbol getN() const;
     const std::vector<int>& getSubstitutions();
     InftyExpressionSet::const_iterator find(const InftyExpression &ex);
+    std::vector<Expression> getQuery();
+    bool isUnsat();
 
     bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);

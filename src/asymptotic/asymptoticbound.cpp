@@ -110,25 +110,40 @@ void AsymptoticBound::propagateBounds() {
         }
     }
 
-    assert(substitutions.size() <= sizeof(unsigned int));
-    unsigned int combination;
-    unsigned int to = (1 << substitutions.size()) - 1;
+    if (substitutions.size() < sizeof(unsigned int) * 8) {
+        unsigned int combination;
+        unsigned int to = (1 << substitutions.size()) - 1;
 
-    for (combination = 1; combination <= to; combination++) {
+        for (combination = 1; combination <= to; combination++) {
+            limitProblems.push_back(limitProblems.front());
+            LimitProblem &limitProblem = limitProblems.back();
+
+            debugAsymptoticBound("combination of substitutions:");
+            for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
+                if (combination & (1 << bitPos)) {
+                    try {
+                        debugAsymptoticBound("substitution: " << substitutions[bitPos]);
+                        limitProblem.substitute(substitutions[bitPos], bitPos);
+                    } catch (const LimitProblemIsContradictoryException &e) {
+                        debugAsymptoticBound(e.what());
+                        limitProblems.pop_back();
+                        break;
+                    }
+                }
+            }
+        }
+
+    } else {
         limitProblems.push_back(limitProblems.front());
         LimitProblem &limitProblem = limitProblems.back();
 
-        debugAsymptoticBound("combination of substitutions:");
-        for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
-            if (combination & (1 << bitPos)) {
-                try {
-                    debugAsymptoticBound("substitution: " << substitutions[bitPos]);
-                    limitProblem.substitute(substitutions[bitPos], bitPos);
-                } catch (const LimitProblemIsContradictoryException &e) {
-                    debugAsymptoticBound(e.what());
-                    limitProblems.pop_back();
-                    break;
-                }
+        for (int i = 0; i < substitutions.size(); ++i) {
+            try {
+                limitProblem.substitute(substitutions[i], i);
+            } catch (const LimitProblemIsContradictoryException &e) {
+                debugAsymptoticBound(e.what());
+                limitProblems.pop_back();
+                break;
             }
         }
     }
@@ -229,6 +244,15 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
         lowerBoundIsExponential = true;
 
         debugAsymptoticBound("Omega(" << lowerBound << "^" << n << ")" << std::endl);
+    }
+}
+
+void AsymptoticBound::removeUnsatProblems() {
+    for (int i = limitProblems.size() - 1; i >= 0; --i) {
+        if (limitProblems[i].isUnsat()) {
+            limitProblems[i].dump("unsat");
+            limitProblems.erase(limitProblems.begin() + i);
+        }
     }
 }
 
@@ -359,6 +383,11 @@ bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iter
     if (limitProblem.trimPolynomialIsApplicable(it)) {
         try {
             limitProblem.trimPolynomial(it);
+
+            if (limitProblem.isUnsat()) {
+                limitProblems.pop_back();
+            }
+
         } catch (const LimitProblemIsContradictoryException &e) {
             debugAsymptoticBound(e.what());
             limitProblems.pop_back();
@@ -377,6 +406,11 @@ bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const
     if (limitProblem.reducePolynomialPowerIsApplicable(it)) {
         try {
             limitProblem.reducePolynomialPower(it);
+
+            if (limitProblem.isUnsat()) {
+                limitProblems.pop_back();
+            }
+
         } catch (const LimitProblemIsContradictoryException &e) {
             debugAsymptoticBound(e.what());
             limitProblems.pop_back();
@@ -431,6 +465,11 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         if (toApply.size() == 1) {
             try {
                 limitProblem.applyLimitVector(it, 0, toApply.front());
+
+                if (limitProblem.isUnsat()) {
+                    limitProblems.pop_back();
+                }
+
             } catch (const LimitProblemIsContradictoryException &e) {
                 debugAsymptoticBound(e.what());
                 limitProblems.pop_back();
@@ -447,6 +486,10 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 
                 try {
                     limitProblems.back().applyLimitVector(backIt, 0, lv);
+
+                    if (limitProblems.back().isUnsat()) {
+                        limitProblems.pop_back();
+                    }
                 } catch (const LimitProblemIsContradictoryException &e) {
                     debugAsymptoticBound(e.what());
                     limitProblems.pop_back();
@@ -468,21 +511,11 @@ bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_i
 
     InftyDirection dir = it->getDirection();
     if (is_a<symbol>(*it) && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-        std::vector<Expression> query;
-
-        InftyExpressionSet::const_iterator i;
-        for (i = limitProblem.cbegin(); i != limitProblem.cend(); ++i) {
-            if (i->getDirection() == NEG_INF || i->getDirection() == NEG_CONS) {
-                query.push_back(*i < 0);
-            } else {
-                query.push_back(*i > 0);
-            }
-        }
 
         Z3VariableContext context;
         z3::model model(context,Z3_model());
         z3::check_result result;
-        result = Z3Toolbox::checkExpressionsSAT(query, context, &model);
+        result = Z3Toolbox::checkExpressionsSAT(limitProblem.getQuery(), context, &model);
 
         if (result == z3::unsat) {
             limitProblem.dump("Z3: limit problem is unsat, throwing away");
@@ -526,6 +559,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
+    asymptoticBound.removeUnsatProblems();
 
     if (asymptoticBound.solveLimitProblem()) {
         debugAsymptoticBound("Solved the initial limit problem.");

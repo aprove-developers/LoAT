@@ -1,6 +1,9 @@
 #include "limitproblem.h"
 
+#include <z3++.h>
+
 #include "debug.h"
+#include "z3toolbox.h"
 
 using namespace GiNaC;
 
@@ -455,6 +458,27 @@ const std::vector<int>& LimitProblem::getSubstitutions() {
 
 InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex) {
     return set.find(ex);
+}
+
+
+std::vector<Expression> LimitProblem::getQuery() {
+    std::vector<Expression> query;
+
+    InftyExpressionSet::const_iterator i;
+    for (i = cbegin(); i != cend(); ++i) {
+        if (i->getDirection() == NEG_INF || i->getDirection() == NEG_CONS) {
+            query.push_back(i->expand() < 0);
+        } else {
+            query.push_back(i->expand() > 0);
+        }
+    }
+
+    return query;
+}
+
+
+bool LimitProblem::isUnsat() {
+    return Z3Toolbox::checkExpressionsSAT(getQuery()) == z3::unsat;
 }
 
 
