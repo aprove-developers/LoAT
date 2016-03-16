@@ -51,43 +51,84 @@ void AsymptoticBound::createInitialLimitProblem() {
 
 
 void AsymptoticBound::propagateBounds() {
-    // TODO: Improve
     debugAsymptoticBound("Propagating bounds.");
+
+    assert(substitutions.size() == 0);
+    assert(limitProblems.size() == 1);
 
     for (const Expression &ex : guard) {
         assert(ex.info(info_flags::relation_equal)
                || GuardToolbox::isValidInequality(ex));
 
-        if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
-            Expression exT = GuardToolbox::turnToLess(ex);
-
-            Expression l, r;
-            bool swap = is_a<symbol>(exT.rhs());
-            if (swap) {
-                l = exT.rhs();
-                r = exT.lhs();
-            } else {
-                l = exT.lhs();
-                r = exT.rhs();
-            }
-
-            if (!r.info(info_flags::polynomial)) {
+        if (ex.info(info_flags::relation_equal)) {
+            Expression target = ex.rhs() - ex.lhs();
+            if (!target.info(info_flags::polynomial)) {
                 continue;
             }
 
-
-            if (!r.has(l) && !(!exT.info(info_flags::relation_equal) && is_a<numeric>(r))) {
-                if (exT.info(info_flags::relation_less) && !swap) { // exT: x = l < r
-                    r = r - 1;
-                } else if (exT.info(info_flags::relation_less) && swap) { // exT: r < l = x
-                    r = r + 1;
+            //check if equation can be solved for any single variable
+            for (const ExprSymbol &var : target.getVariables()) {
+                //solve target for var (result is in target)
+                if (!GuardToolbox::solveTermFor(target, var, GuardToolbox::PropagationLevel::NoCoefficients)) {
+                    continue;
                 }
 
                 exmap sub;
-                sub.insert(std::make_pair(l, r));
+                sub.insert(std::make_pair(var, target));
                 substitutions.push_back(sub);
 
-                limitProblems.begin()->substitute(sub, substitutions.size() - 1);
+                debugAsymptoticBound("substitution: " << sub);
+            }
+        } else {
+            if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
+                Expression exT = GuardToolbox::turnToLess(ex);
+
+                Expression l, r;
+                bool swap = is_a<symbol>(exT.rhs());
+                if (swap) {
+                    l = exT.rhs();
+                    r = exT.lhs();
+                } else {
+                    l = exT.lhs();
+                    r = exT.rhs();
+                }
+
+                if (r.info(info_flags::polynomial) && !r.has(l)) {
+                    if (exT.info(info_flags::relation_less) && !swap) { // exT: x = l < r
+                        r = r - 1;
+                    } else if (exT.info(info_flags::relation_less) && swap) { // exT: r < l = x
+                        r = r + 1;
+                    }
+
+                    exmap sub;
+                    sub.insert(std::make_pair(l, r));
+                    substitutions.push_back(sub);
+
+                    debugAsymptoticBound("substitution: " << sub);
+                }
+            }
+        }
+    }
+
+    assert(substitutions.size() <= sizeof(unsigned int));
+    unsigned int combination;
+    unsigned int to = (1 << substitutions.size()) - 1;
+
+    for (combination = 1; combination <= to; combination++) {
+        limitProblems.push_back(limitProblems.front());
+        LimitProblem &limitProblem = limitProblems.back();
+
+        debugAsymptoticBound("combination of substitutions:");
+        for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
+            if (combination & (1 << bitPos)) {
+                try {
+                    debugAsymptoticBound("substitution: " << substitutions[bitPos]);
+                    limitProblem.substitute(substitutions[bitPos], bitPos);
+                } catch (const LimitProblemIsContradictoryException &e) {
+                    debugAsymptoticBound(e.what());
+                    limitProblems.pop_back();
+                    break;
+                }
             }
         }
     }
@@ -193,6 +234,8 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
 
 
 bool AsymptoticBound::solveLimitProblem() {
+    debugAsymptoticBound("Trying to solve the initial limit problems.");
+
     InftyExpressionSet::const_iterator it;
 
     start:
