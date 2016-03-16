@@ -2,9 +2,11 @@
 
 #include <vector>
 #include <ginac/ginac.h>
+#include <z3++.h>
 
 #include "expression.h"
 #include "guardtoolbox.h"
+#include "z3toolbox.h"
 
 using namespace GiNaC;
 
@@ -223,6 +225,13 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
+        // Fourth highest priority
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (tryInstantiatingVariable(it)) {
+                goto start;
+            }
+        }
+
     }
 
     if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
@@ -401,6 +410,58 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         return false;
     }
 
+}
+
+
+bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_iterator &it) {
+    LimitProblem &limitProblem = limitProblems.back();
+
+    InftyDirection dir = it->getDirection();
+    if (is_a<symbol>(*it) && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
+        std::vector<Expression> query;
+
+        InftyExpressionSet::const_iterator i;
+        for (i = limitProblem.cbegin(); i != limitProblem.cend(); ++i) {
+            if (i->getDirection() == NEG_INF || i->getDirection() == NEG_CONS) {
+                query.push_back(*i < 0);
+            } else {
+                query.push_back(*i > 0);
+            }
+        }
+
+        Z3VariableContext context;
+        z3::model model(context,Z3_model());
+        z3::check_result result;
+        result = Z3Toolbox::checkExpressionsSAT(query, context, &model);
+
+        if (result == z3::unsat) {
+            limitProblem.dump("Z3: limit problem is unsat, throwing away");
+            limitProblems.pop_back();
+
+        } else if (result == z3::sat) {
+            limitProblem.dump("Z3: limit problem is sat");
+            Expression rational = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(*it, context));
+
+            exmap sub;
+            sub.insert(std::make_pair(*it, rational));
+            substitutions.push_back(sub);
+
+            try {
+                limitProblem.substitute(sub, substitutions.size() - 1);
+            } catch (const LimitProblemIsContradictoryException &e) {
+                debugAsymptoticBound(e.what());
+                limitProblems.pop_back();
+            }
+
+        } else {
+            limitProblem.dump("Z3: limit problem is unknown");
+            return false;
+        }
+
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
