@@ -451,7 +451,7 @@ ExprSymbol LimitProblem::getN() const {
 }
 
 
-const std::vector<int>& LimitProblem::getSubstitutions() {
+const std::vector<int>& LimitProblem::getSubstitutions() const {
     return substitutions;
 }
 
@@ -464,12 +464,12 @@ InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex)
 std::vector<Expression> LimitProblem::getQuery() {
     std::vector<Expression> query;
 
-    InftyExpressionSet::const_iterator i;
-    for (i = cbegin(); i != cend(); ++i) {
-        if (i->getDirection() == NEG_INF || i->getDirection() == NEG_CONS) {
-            query.push_back(i->expand() < 0);
+    InftyExpressionSet::const_iterator it;
+    for (it = cbegin(); it != cend(); ++it) {
+        if (it->getDirection() == NEG_INF || it->getDirection() == NEG_CONS) {
+            query.push_back(it->expand() < 0);
         } else {
-            query.push_back(i->expand() > 0);
+            query.push_back(it->expand() > 0);
         }
     }
 
@@ -478,6 +478,14 @@ std::vector<Expression> LimitProblem::getQuery() {
 
 
 bool LimitProblem::isUnsat() {
+    InftyExpressionSet::const_iterator it;
+    for (it = cbegin(); it != cend(); ++it) {
+        if ((it->getDirection() == POS_INF || it->getDirection() == NEG_INF)
+            && is_a<numeric>(*it)) {
+            return true;
+        }
+    }
+
     return Z3Toolbox::checkExpressionsSAT(getQuery()) == z3::unsat;
 }
 

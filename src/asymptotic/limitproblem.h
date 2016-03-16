@@ -80,7 +80,7 @@ public:
     bool isSolved() const;
     GiNaC::exmap getSolution() const;
     ExprSymbol getN() const;
-    const std::vector<int>& getSubstitutions();
+    const std::vector<int>& getSubstitutions() const;
     InftyExpressionSet::const_iterator find(const InftyExpression &ex);
     std::vector<Expression> getQuery();
     bool isUnsat();

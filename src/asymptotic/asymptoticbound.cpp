@@ -149,30 +149,31 @@ void AsymptoticBound::propagateBounds() {
     }
 }
 
-void AsymptoticBound::calcSolution() {
+GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     debugAsymptoticBound("Calculating solution for the initial limit problem.");
-    assert(solvedLimitProblem.isSolved());
+    assert(limitProblem.isSolved());
 
-
-    solution.clear();
-    for (int index : solvedLimitProblem.getSubstitutions()) {
+    exmap solution;
+    for (int index : limitProblem.getSubstitutions()) {
         const exmap &sub = substitutions[index];
 
         solution = GuardToolbox::composeSubs(sub, solution);
         debugAsymptoticBound("substitution: " << sub);
     }
 
-    debugAsymptoticBound("solution for the solved limit problem: " << solvedLimitProblem.getSolution());
-    solution = GuardToolbox::composeSubs(solvedLimitProblem.getSolution(), solution);
+    debugAsymptoticBound("solution for the solved limit problem: " << limitProblem.getSolution());
+    solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
     debugAsymptoticBound("resulting solution: " << solution << std::endl);
+
+    return solution;
 }
 
 
-void AsymptoticBound::findUpperBoundforSolution() {
+int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution) {
     debugAsymptoticBound("Finding upper bound for the solution.");
 
-    ExprSymbol n = solvedLimitProblem.getN();
-    upperBound = 0;
+    ExprSymbol n = limitProblem.getN();
+    int upperBound = 0;
     for (auto pair : solution) {
         assert(is_a<symbol>(pair.first));
 
@@ -195,15 +196,18 @@ void AsymptoticBound::findUpperBoundforSolution() {
     assert(upperBound > 0);
 
     debugAsymptoticBound("O(" << n << "^" << upperBound << ")" << std::endl);
+
+    return upperBound;
 }
 
 
-void AsymptoticBound::findLowerBoundforSolvedCost() {
+int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution) {
     debugAsymptoticBound("Finding lower bound for the solved cost.");
 
     Expression solvedCost = cost.subs(solution);
 
-    ExprSymbol n = solvedLimitProblem.getN();
+    int lowerBound;
+    ExprSymbol n = limitProblem.getN();
     if (solvedCost.info(info_flags::polynomial)) {
         assert(solvedCost.is_polynomial(n));
         assert(solvedCost.getVariables().size() <= 1);
@@ -212,7 +216,6 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
         int d = expanded.degree(n);
         debugAsymptoticBound("solved cost: " << expanded << ", degree: " << d);
         lowerBound = d;
-        lowerBoundIsExponential = false;
 
         debugAsymptoticBound("Omega(" << n << "^" << lowerBound << ")" << std::endl);
 
@@ -241,10 +244,12 @@ void AsymptoticBound::findLowerBoundforSolvedCost() {
             }
         }
         assert(lowerBound > 1);
-        lowerBoundIsExponential = true;
+        lowerBound = -lowerBound;
 
         debugAsymptoticBound("Omega(" << lowerBound << "^" << n << ")" << std::endl);
     }
+
+    return lowerBound;
 }
 
 void AsymptoticBound::removeUnsatProblems() {
@@ -308,6 +313,12 @@ bool AsymptoticBound::solveLimitProblem() {
 
     }
 
+    //if (limitProblems.size() > 0 && limitProblems.back().isSolved()) {
+    //    solvedLimitProblems.push_back(limitProblems.back());
+    //    limitProblems.pop_back();
+    //    goto start;
+    //}
+
     if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
         limitProblems.back().dump("I don't know how to continue, throwing away");
         limitProblems.pop_back();
@@ -318,18 +329,21 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    solvedLimitProblem = limitProblems.back();
-
-    return solvedLimitProblem.isSolved();
+    solvedLimitProblems.push_back(limitProblems.back());
+    return true;
 }
 
 
-Complexity AsymptoticBound::getComplexity() {
+Complexity AsymptoticBound::getComplexity(const LimitProblem &limitProblem) {
+    GiNaC::exmap solution = calcSolution(limitProblem);
+    int upperBound = findUpperBoundforSolution(limitProblem, solution);
+    int lowerBound = findLowerBoundforSolvedCost(limitProblem, solution);
+
     debugAsymptoticBound("Calculating complexity.");
 
-    ExprSymbol n = solvedLimitProblem.getN();
-    if (lowerBoundIsExponential) {
-        debugAsymptoticBound("Omega(" << lowerBound << "^"
+    ExprSymbol n = limitProblem.getN();
+    if (lowerBound < 0) { // lower bound is exponential
+        debugAsymptoticBound("Omega(" << -lowerBound << "^"
                              << "(" << n << "^"
                              << "(1/" << upperBound << ")" << ")" << ")" << std::endl);
 
@@ -340,6 +354,23 @@ Complexity AsymptoticBound::getComplexity() {
 
         return Complexity(lowerBound, upperBound);
     }
+}
+
+
+Complexity AsymptoticBound::getBestComplexity() {
+    Complexity cplx = Expression::ComplexNone;
+
+    for (const LimitProblem &limitProblem : solvedLimitProblems) {
+        Complexity newCplx = getComplexity(limitProblem);
+
+        if (newCplx > cplx) {
+            cplx = newCplx;
+            solutionBestCplx = calcSolution(limitProblem);
+            upperBoundBestCplx = findUpperBoundforSolution(limitProblem, solutionBestCplx);
+        }
+    }
+
+    return cplx;
 }
 
 
@@ -564,13 +595,11 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     if (asymptoticBound.solveLimitProblem()) {
         debugAsymptoticBound("Solved the initial limit problem.");
 
-        asymptoticBound.calcSolution();
-        asymptoticBound.findUpperBoundforSolution();
-        asymptoticBound.findLowerBoundforSolvedCost();
+        debugAsymptoticBound(asymptoticBound.solvedLimitProblems.size() << " solved problems");
 
-        return InfiniteInstances::Result(asymptoticBound.getComplexity(),
-                                         asymptoticBound.upperBound > 1,
-                                         asymptoticBound.cost.subs(asymptoticBound.solution),
+        return InfiniteInstances::Result(asymptoticBound.getBestComplexity(),
+                                         asymptoticBound.upperBoundBestCplx > 1,
+                                         asymptoticBound.cost.subs(asymptoticBound.solutionBestCplx),
                                          0, "Solved the initial limit problem.");
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem.");

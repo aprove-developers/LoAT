@@ -17,12 +17,13 @@ private:
     void normalizeGuard();
     void createInitialLimitProblem();
     void propagateBounds();
-    void calcSolution();
-    void findUpperBoundforSolution();
-    void findLowerBoundforSolvedCost();
+    GiNaC::exmap calcSolution(const LimitProblem &limitProblem);
+    int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
+    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     void removeUnsatProblems();
     bool solveLimitProblem();
-    Complexity getComplexity();
+    Complexity getComplexity(const LimitProblem &limitProblem);
+    Complexity getBestComplexity();
 
     //debug dumping
     void dumpCost(const std::string &description) const;
@@ -42,12 +43,10 @@ private:
     GuardList normalizedGuard;
 
     std::vector<LimitProblem> limitProblems;
+    std::vector<LimitProblem> solvedLimitProblems;
     std::vector<GiNaC::exmap> substitutions;
-    LimitProblem solvedLimitProblem;
-    GiNaC::exmap solution;
-    int upperBound;
-    int lowerBound;
-    bool lowerBoundIsExponential;
+    GiNaC::exmap solutionBestCplx;
+    int upperBoundBestCplx;
 
 public:
     static InfiniteInstances::Result determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost);
