@@ -387,6 +387,7 @@ Complexity AsymptoticBound::getBestComplexity() {
 
 bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     debugAsymptoticBound("Checking solution for adequateness.");
+    assert(limitProblem.isSolved());
 
     exmap solution = calcSolution(limitProblem);
     Expression solvedCost = cost.subs(solution);
