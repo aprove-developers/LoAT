@@ -196,6 +196,11 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
         && is_a<numeric>(ex)) {
         throw LimitProblemIsUnsolvableException();
     }
+
+    if ((ex.getDirection() == POS_CONS && is_a<numeric>(ex) && (ex.info(info_flags::negative) || ex.is_zero()))
+        || (ex.getDirection() == NEG_CONS && is_a<numeric>(ex) && ex.info(info_flags::nonnegative))) {
+        throw LimitProblemIsUnsolvableException();
+    }
 }
 
 

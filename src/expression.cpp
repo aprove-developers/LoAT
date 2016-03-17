@@ -210,6 +210,24 @@ bool Expression::isProperNaturalPower() const {
 }
 
 
+int Expression::getMaxDegree() const {
+    assert(info(GiNaC::info_flags::polynomial));
+
+    int res = 0;
+    for (auto var : getVariables()) {
+        if (is_polynomial(var)) {
+            int deg = degree(var);
+
+            if (deg > res) {
+                res = deg;
+            }
+        }
+    }
+
+    return res;
+}
+
+
 int Expression::getMaxDegree(const GiNaC::lst &vars) const {
     assert(this->is_polynomial(vars));
 

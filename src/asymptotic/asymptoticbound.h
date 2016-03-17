@@ -24,6 +24,7 @@ private:
     bool solveLimitProblem();
     Complexity getComplexity(const LimitProblem &limitProblem);
     Complexity getBestComplexity();
+    bool isAdequateSolution(const LimitProblem &limitProblem);
 
     //debug dumping
     void dumpCost(const std::string &description) const;

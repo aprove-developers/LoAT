@@ -145,6 +145,11 @@ public:
     bool isProperNaturalPower() const;
 
     /**
+     * Returns the highest degree of any variable in this polynomial expression
+     */
+    int getMaxDegree() const;
+
+    /**
      * Returns the highest degree of any of the given variables in this polynomial expression
      * @note this must be polynomial in vars!
      */

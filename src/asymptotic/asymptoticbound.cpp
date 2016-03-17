@@ -320,24 +320,28 @@ bool AsymptoticBound::solveLimitProblem() {
 
     }
 
-    //if (limitProblems.size() > 0 && limitProblems.back().isSolved()) {
-    //    solvedLimitProblems.push_back(limitProblems.back());
-    //    limitProblems.pop_back();
-    //    goto start;
-    //}
 
-    if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
-        limitProblems.back().dump("I don't know how to continue, throwing away");
-        limitProblems.pop_back();
-        goto start;
+
+    if (limitProblems.size() > 0) {
+        if (limitProblems.back().isSolved()) {
+            solvedLimitProblems.push_back(limitProblems.back());
+            limitProblems.pop_back();
+
+            if (isAdequateSolution(solvedLimitProblems.back())) {
+                return true;
+            } else {
+                debugAsymptoticBound("Found non-adequate solution.");
+                goto start;
+            }
+
+        } else {
+            limitProblems.back().dump("I don't know how to continue, throwing away");
+            limitProblems.pop_back();
+            goto start;
+        }
+    } else {
+        return solvedLimitProblems.size() > 0;
     }
-
-    if (limitProblems.size() == 0) {
-        return false;
-    }
-
-    solvedLimitProblems.push_back(limitProblems.back());
-    return true;
 }
 
 
@@ -378,6 +382,29 @@ Complexity AsymptoticBound::getBestComplexity() {
     }
 
     return cplx;
+}
+
+
+bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
+    debugAsymptoticBound("Checking solution for adequateness.");
+
+    exmap solution = calcSolution(limitProblem);
+    Expression solvedCost = cost.subs(solution);
+    ExprSymbol n = limitProblem.getN();
+    debugAsymptoticBound("solved cost: " << solvedCost << ", cost: " << cost);
+
+    if (solvedCost.is_polynomial(n)) {
+        if (!cost.info(info_flags::polynomial)) {
+            return false;
+        }
+
+        if (cost.getMaxDegree() > solvedCost.degree(n)) {
+            return false;
+        }
+
+    }
+
+    return true;
 }
 
 
