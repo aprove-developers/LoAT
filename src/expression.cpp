@@ -147,6 +147,23 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
     unreachable();
 }
 
+bool Expression::findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const {
+    bool anyFound = false;
+
+    if (match(pattern)) {
+        found.insert(*this);
+        anyFound = true;
+    }
+
+    for (size_t i = 0; i < nops(); i++) {
+        if (Expression(op(i)).findAll(pattern, found)) {
+            anyFound = true;
+        }
+    }
+
+    return anyFound;
+}
+
 
 bool Expression::equalsVariable(const GiNaC::symbol &var) const {
     return this->compare(var) == 0;

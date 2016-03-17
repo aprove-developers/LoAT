@@ -34,6 +34,7 @@ private:
     bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
     bool tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it);
     bool tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it);
+    bool tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
     bool tryInstantiatingVariable(const InftyExpressionSet::const_iterator &it);
 

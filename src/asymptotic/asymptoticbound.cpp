@@ -232,13 +232,13 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
         Expression powerPattern = pow(wild(1), wild(2));
         std::set<ex, ex_is_less> powers;
-        assert(expanded.find(powerPattern, powers));
+        assert(expanded.findAll(powerPattern, powers));
 
         lowerBound = 1;
         for (const Expression &ex : powers) {
-            if (ex.op(1).has(n)) {
-                debugAsymptoticBound("power: " << ex);
-                assert(ex.op(1).is_polynomial(n));
+            debugAsymptoticBound("power: " << ex);
+
+            if (ex.op(1).has(n) && ex.op(1).is_polynomial(n)) {
                 assert(ex.op(0).info(info_flags::integer));
                 assert(ex.op(0).info(info_flags::positive));
 
@@ -250,9 +250,10 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
             }
         }
         assert(lowerBound > 1);
-        lowerBound = -lowerBound;
 
         debugAsymptoticBound("Omega(" << lowerBound << "^" << n << ")" << std::endl);
+
+        lowerBound = -lowerBound;
     }
 
     return lowerBound;
@@ -289,28 +290,30 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
-        // Second highest priority
         for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
             if (tryReducingPolynomialPower(it)) {
                 goto start;
             }
         }
 
-        // Third highest priority
+        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+            if (tryReducingGeneralPower(it)) {
+                goto start;
+            }
+        }
+
         for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
             if (it->getVariables().size() <= 1 && tryApplyingLimitVector(it)) {
                 goto start;
             }
         }
 
-        // Fourth highest priority
         for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
             if (tryInstantiatingVariable(it)) {
                 goto start;
             }
         }
 
-        // Fifth highest priority
         for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
             if (tryApplyingLimitVector(it)) {
                 goto start;
@@ -475,6 +478,29 @@ bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const
     if (limitProblem.reducePolynomialPowerIsApplicable(it)) {
         try {
             limitProblem.reducePolynomialPower(it);
+
+            if (limitProblem.isUnsat()) {
+                limitProblems.pop_back();
+            }
+
+        } catch (const LimitProblemException &e) {
+            debugAsymptoticBound(e.what());
+            limitProblems.pop_back();
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool AsymptoticBound::tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it) {
+    LimitProblem &limitProblem = limitProblems.back();
+
+    if (limitProblem.reduceGeneralPowerIsApplicable(it)) {
+        try {
+            limitProblem.reduceGeneralPower(it);
 
             if (limitProblem.isUnsat()) {
                 limitProblems.pop_back();

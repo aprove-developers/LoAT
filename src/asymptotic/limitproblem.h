@@ -78,6 +78,8 @@ public:
     void trimPolynomial(const InftyExpressionSet::const_iterator &it);
     // (E)
     void reducePolynomialPower(const InftyExpressionSet::const_iterator &it);
+    // (F)
+    void reduceGeneralPower(const InftyExpressionSet::const_iterator &it);
 
     bool isSolved() const;
     GiNaC::exmap getSolution() const;
@@ -90,6 +92,7 @@ public:
     bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
+    bool reduceGeneralPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
 
     //debug dumping
     void dump(const std::string &description) const;

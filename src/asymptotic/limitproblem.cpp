@@ -412,6 +412,51 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
 }
 
 
+void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &it) {
+    assert(it->getDirection() == POS_INF || it->getDirection() == POS);
+
+    debugLimitProblem("expression: " << *it);
+
+    Expression powerInExp;
+    if (is_a<add>(*it)) {
+        for (int i = 0; i < it->nops(); ++i) {
+            Expression summand = it->op(i);
+            if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
+                                         || summand.getVariables().size() > 1)) {
+                powerInExp = summand;
+                break;
+            }
+        }
+
+    } else {
+        powerInExp = *it;
+    }
+    debugLimitProblem("general power: " << powerInExp);
+    assert(is_a<power>(powerInExp));
+    assert(!powerInExp.op(1).info(info_flags::polynomial)
+           || powerInExp.getVariables().size() > 1);
+
+    Expression b = *it - powerInExp;
+    debugLimitProblem("b: " << b);
+
+    Expression a = powerInExp.op(0);
+    Expression e = powerInExp.op(1);
+
+    debugLimitProblem("a: " << a << ", e: " << e);
+
+    debugLimitProblem("applying transformation rule (F), replacing " << *it
+                      << " (" << InftyDirectionNames[it->getDirection()] << ") by "
+                      << (a - 1) << " (" << InftyDirectionNames[POS] << ") and "
+                      << (e + b) << " (" << InftyDirectionNames[POS_INF] << ")");
+
+    set.erase(it);
+    addExpression(InftyExpression(a - 1, POS));
+    addExpression(InftyExpression(e + b, POS_INF));
+
+    dump("resulting limit problem");
+}
+
+
 bool LimitProblem::isSolved() const {
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {
@@ -567,6 +612,31 @@ bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::c
     }
 
     return e.has(x);
+}
+
+
+bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::const_iterator &it) {
+    if (!(it->getDirection() == POS_INF || it->getDirection() == POS)) {
+        return false;
+    }
+
+    Expression powerInExp;
+    if (is_a<add>(*it)) {
+        for (int i = 0; i < it->nops(); ++i) {
+            Expression summand = it->op(i);
+            if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
+                                         || summand.getVariables().size() > 1)) {
+                powerInExp = summand;
+                break;
+            }
+        }
+
+    } else {
+        powerInExp = *it;
+    }
+
+    return is_a<power>(powerInExp) && (!powerInExp.op(1).info(info_flags::polynomial)
+                                       || powerInExp.getVariables().size() > 1);
 }
 
 

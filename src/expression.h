@@ -117,6 +117,8 @@ public:
 #endif
     }
 
+    bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;
+
     /**
      * Returns true iff this expression is the given variable (or with trivial arithmetic, which is resolved by GiNaC)
      */
