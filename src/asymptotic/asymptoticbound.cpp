@@ -411,6 +411,15 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
 
     }
 
+    for (auto pair : solution) {
+        assert(is_a<symbol>(pair.first));
+
+        if (its.isFreeVar(ex_to<symbol>(pair.first))
+            && is_a<numeric>(pair.second)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
