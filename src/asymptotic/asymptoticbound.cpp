@@ -200,7 +200,6 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
             debugAsymptoticBound(pair.first << " is not a program variable");
         }
     }
-    assert(upperBound > 0);
 
     debugAsymptoticBound("O(" << n << "^" << upperBound << ")" << std::endl);
 
@@ -348,6 +347,10 @@ bool AsymptoticBound::solveLimitProblem() {
 Complexity AsymptoticBound::getComplexity(const LimitProblem &limitProblem) {
     GiNaC::exmap solution = calcSolution(limitProblem);
     int upperBound = findUpperBoundforSolution(limitProblem, solution);
+    if (upperBound == 0) {
+        return Expression::ComplexInfty;
+    }
+
     int lowerBound = findLowerBoundforSolvedCost(limitProblem, solution);
 
     debugAsymptoticBound("Calculating complexity.");
@@ -616,6 +619,23 @@ bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_i
 
 InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
+
+    Expression expandedCost = cost.expand();
+    Expression useCost = cost;
+    //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
+    if (expandedCost.has(Expression::Infty)) {
+        Expression inftyCoeff = expandedCost.coeff(Expression::Infty);
+
+        GuardList query = guard;
+        query.push_back(inftyCoeff > 0);
+
+        if (Z3Toolbox::checkExpressionsSAT(query) == z3::sat) {
+            return InfiniteInstances::Result(Expression::ComplexInfty, false, Expression::Infty, 0, "INF coeff sat");
+
+        }
+
+        useCost = cost.subs(Expression::Infty == 0); //remove INF symbol if INF cost cannot be proved
+    }
 
     AsymptoticBound asymptoticBound(its, guard, cost);
     asymptoticBound.dumpGuard("guard");
