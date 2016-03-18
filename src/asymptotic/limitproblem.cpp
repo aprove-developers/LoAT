@@ -547,7 +547,7 @@ bool LimitProblem::isUnsolvable() const {
 
 
 void LimitProblem::checkUnsat() {
-    if (isUnsat()) {
+    if (!unsolvable && isUnsat()) {
         unsolvable = true;
     }
 }
@@ -669,7 +669,7 @@ void LimitProblem::dump(const std::string &description) const {
     }
     std::cout << std::endl;
 
-    std::cout << "the problem is " << (isSolved() ? "solved" : "not solved")
+    std::cout << "the problem is " << (isUnsolvable() ? "unsolvable" : (isSolved() ? "solved" : "not solved"))
               << std::endl << std::endl;
 #endif
 }

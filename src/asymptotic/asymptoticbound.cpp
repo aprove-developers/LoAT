@@ -133,6 +133,10 @@ void AsymptoticBound::propagateBounds() {
             }
 
             limitProblem.checkUnsat();
+
+            if (limitProblem.isUnsolvable()) {
+                limitProblems.pop_back();
+            }
         }
 
     }
@@ -150,6 +154,10 @@ void AsymptoticBound::propagateBounds() {
     }
 
     limitProblem.checkUnsat();
+
+    if (limitProblem.isUnsolvable()) {
+        limitProblems.pop_back();
+    }
 }
 
 GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
@@ -558,6 +566,10 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 
             copy.applyLimitVector(copyIt, 0, toApply[i]);
             copy.checkUnsat();
+
+            if (copy.isUnsolvable()) {
+                limitProblems.pop_back();
+            }
         }
 
         currentLP.applyLimitVector(it, 0, toApply.back());
