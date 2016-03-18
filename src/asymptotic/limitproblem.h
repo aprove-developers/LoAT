@@ -72,6 +72,8 @@ public:
     // (A)
     void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
                           const LimitVector &lv);
+    void applyLimitVectorAdvanced(const InftyExpressionSet::const_iterator &it, Expression l, Expression r,
+                          const LimitVector &lv);
     // (B)
     void removeConstant(const InftyExpressionSet::const_iterator &it);
     // (C)

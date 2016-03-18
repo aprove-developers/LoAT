@@ -114,6 +114,11 @@
 #define Z3_MAX_EXPONENT 5
 
 /*
+ * timeout for z3 in ms
+ */
+#define Z3_CHECK_TIMEOUT 1000u
+
+/*
  * if defined, the final guard/cost is checked to ensure it has infintily many instances
  * NOTE: this check is strongly required for soundness (should never be disabled anymore)
  */

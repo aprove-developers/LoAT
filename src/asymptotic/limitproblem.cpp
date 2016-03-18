@@ -325,6 +325,26 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
 }
 
 
+void LimitProblem::applyLimitVectorAdvanced(const InftyExpressionSet::const_iterator &it, Expression l, Expression r,
+                                    const LimitVector &lv) {
+    InftyDirection dir = it->getDirection();
+
+    assert(lv.isApplicable(dir));
+
+    debugLimitProblem("applying transformation rule (A) (advanced), replacing " << *it
+                      << " (" << InftyDirectionNames[dir] << ") by "
+                      << l << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
+                      << r << " (" << InftyDirectionNames[lv.getSecond()] << ")"
+                      << " using " << lv);
+
+    set.erase(it);
+    addExpression(InftyExpression(l, lv.getFirst()));
+    addExpression(InftyExpression(r, lv.getSecond()));
+
+    dump("resulting limit problem");
+}
+
+
 void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
     InftyDirection dir = it->getDirection();
 

@@ -332,6 +332,12 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
+            if (it->getVariables().size() >= 2 && tryApplyingLimitVectorSmartly(it)) {
+                goto start;
+            }
+        }
+
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryApplyingLimitVector(it)) {
                 goto start;
             }
@@ -581,6 +587,113 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         }
 
         currentLP.applyLimitVector(it, 0, toApply.back());
+        currentLP.checkUnsat();
+
+        return true;
+    } else {
+        return false;
+    }
+
+}
+
+
+bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it) {
+    std::vector<LimitVector> toApply;
+
+    if (!(is_a<add>(*it) || is_a<mul>(*it))) {
+        return false;
+    }
+
+    std::vector<Expression> ops(it->begin(), it->end());
+
+    ExprSymbolSet minVars = ops[0].getVariables();
+    for (int i = 1; i < it->nops(); ++i) {
+        ExprSymbolSet vars = std::move(ops[i].getVariables());
+        if (vars.size() < minVars.size()) {
+            minVars = std::move(vars);
+        }
+    }
+
+    debugAsymptoticBound("minVars: ");
+    for (const ExprSymbol &var : minVars) {
+        debugAsymptoticBound(var);
+    }
+
+    Expression l, r;
+    if (is_a<add>(*it)) {
+        l = numeric(0);
+        r = numeric(0);
+        for (int i = 0; i < it->nops(); ++i) {
+            if (ops[i].getVariables() == minVars) {
+                l += ops[i];
+            } else {
+                r += ops[i];
+            }
+        }
+
+        if (l.is_zero() || r.is_zero()) {
+            return false;
+        }
+
+        for (const LimitVector &lv : LimitVector::Addition) {
+            if (lv.isApplicable(it->getDirection())) {
+                toApply.push_back(lv);
+            }
+        }
+    } else {
+        l = numeric(1);
+        r = numeric(1);
+        for (int i = 0; i < it->nops(); ++i) {
+            if (ops[i].getVariables() == minVars) {
+                l *= ops[i];
+            } else {
+                r *= ops[i];
+            }
+        }
+
+        if (l == numeric(1) || r == numeric(1)) {
+            return false;
+        }
+
+        for (const LimitVector &lv : LimitVector::Multiplication) {
+            if (lv.isApplicable(it->getDirection())) {
+                toApply.push_back(lv);
+            }
+        }
+    }
+
+    it->dump("expression");
+    debugAsymptoticBound("l: " << l);
+    debugAsymptoticBound("r: " << r);
+    debugAsymptoticBound("applicable limit vectors (smart):");
+    for (const LimitVector &lv : toApply) {
+        debugAsymptoticBound(lv);
+    }
+    debugAsymptoticBound("");
+
+    for (const LimitVector &lv : toApply) {
+        if (lv.getType() == POS_INF) {
+            createBacktrackingPoint(it, POS_CONS);
+        } else if (lv.getType() == POS_CONS) {
+            createBacktrackingPoint(it, POS_INF);
+        }
+    }
+
+    if (!toApply.empty()) {
+        for (int i = 0; i < toApply.size() - 1; ++i) {
+            limitProblems.push_back(currentLP);
+            LimitProblem &copy = limitProblems.back();
+            auto copyIt = copy.find(*it);
+
+            copy.applyLimitVectorAdvanced(copyIt, l, r, toApply[i]);
+            copy.checkUnsat();
+
+            if (copy.isUnsolvable()) {
+                limitProblems.pop_back();
+            }
+        }
+
+        currentLP.applyLimitVectorAdvanced(it, l, r, toApply.back());
         currentLP.checkUnsat();
 
         return true;

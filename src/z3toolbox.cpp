@@ -119,6 +119,9 @@ z3::check_result Z3Toolbox::checkExpressionsSAT(const vector<Expression> &list, 
     z3::expr target = concatExpressions(context,exprvec,ConcatAnd);
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(target);
     z3::check_result z3res = solver.check();
     debugZ3(solver,z3res,"checkExprSAT");
