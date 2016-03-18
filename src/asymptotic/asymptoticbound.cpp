@@ -54,6 +54,10 @@ void AsymptoticBound::propagateBounds() {
 
     assert(substitutions.size() == 0);
 
+    if (currentLP.isUnsolvable()) {
+        return;
+    }
+
     for (const Expression &ex : guard) {
         assert(ex.info(info_flags::relation_equal)
                || GuardToolbox::isValidInequality(ex));
@@ -110,6 +114,10 @@ void AsymptoticBound::propagateBounds() {
 
     limitProblems.push_back(currentLP);
     limitProblems.back().checkUnsat();
+
+    if (limitProblems.back().isUnsolvable()) {
+        limitProblems.pop_back();
+    }
 
     if (substitutions.size() < sizeof(unsigned int) * 8) {
         unsigned int combination;
@@ -280,7 +288,7 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    currentLP = limitProblems.back();
+    currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
 
     start:
@@ -351,7 +359,7 @@ bool AsymptoticBound::solveLimitProblem() {
         return !solvedLimitProblems.empty();
 
     } else {
-        currentLP = limitProblems.back();
+        currentLP = std::move(limitProblems.back());
         limitProblems.pop_back();
         goto start;
     }

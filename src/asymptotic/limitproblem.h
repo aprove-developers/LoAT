@@ -58,6 +58,12 @@ public:
     LimitProblem();
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
+    LimitProblem(const LimitProblem &other);
+    LimitProblem& operator=(const LimitProblem &other);
+
+    LimitProblem(LimitProblem &&other);
+    LimitProblem& operator=(LimitProblem &&other);
+
     void addExpression(const InftyExpression &ex);
 
     InftyExpressionSet::const_iterator cbegin() const;

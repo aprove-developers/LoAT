@@ -173,6 +173,46 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 }
 
 
+LimitProblem::LimitProblem(const LimitProblem &other)
+    : set(other.set),
+      variableN(other.variableN),
+      substitutions(other.substitutions),
+      unsolvable(other.unsolvable) {
+}
+
+
+LimitProblem& LimitProblem::operator=(const LimitProblem &other) {
+    if (this != &other) {
+        set = other.set;
+        variableN = other.variableN;
+        substitutions = other.substitutions;
+        unsolvable = other.unsolvable;
+    }
+
+    return *this;
+}
+
+
+LimitProblem::LimitProblem(LimitProblem &&other)
+    : set(std::move(other.set)),
+      variableN(other.variableN),
+      substitutions(std::move(other.substitutions)),
+      unsolvable(other.unsolvable) {
+}
+
+
+LimitProblem& LimitProblem::operator=(LimitProblem &&other) {
+    if (this != &other) {
+        set = std::move(other.set);
+        variableN = other.variableN;
+        substitutions = std::move(other.substitutions);
+        unsolvable = other.unsolvable;
+    }
+
+    return *this;
+}
+
+
 void LimitProblem::addExpression(const InftyExpression &ex) {
     InftyExpressionSet::iterator it = set.find(ex);
 
