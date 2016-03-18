@@ -46,13 +46,8 @@ void AsymptoticBound::normalizeGuard() {
 
 
 void AsymptoticBound::createInitialLimitProblem() {
-    try {
-        limitProblems.push_back(LimitProblem(normalizedGuard, cost));
-    } catch (const LimitProblemException &e) {
-        debugAsymptoticBound(e.what());
-    }
+    currentLP = LimitProblem(normalizedGuard, cost);
 }
-
 
 void AsymptoticBound::propagateBounds() {
     debugAsymptoticBound("Propagating bounds.");
@@ -113,47 +108,48 @@ void AsymptoticBound::propagateBounds() {
         }
     }
 
-    if (limitProblems.size() > 0) {
-        assert(limitProblems.size() == 1);
+    limitProblems.push_back(currentLP);
+    limitProblems.back().checkUnsat();
 
-        if (substitutions.size() < sizeof(unsigned int) * 8) {
-            unsigned int combination;
-            unsigned int to = (1 << substitutions.size()) - 1;
+    if (substitutions.size() < sizeof(unsigned int) * 8) {
+        unsigned int combination;
+        unsigned int to = (1 << substitutions.size()) - 1;
 
-            for (combination = 1; combination <= to; combination++) {
-                limitProblems.push_back(limitProblems.front());
-                LimitProblem &limitProblem = limitProblems.back();
-
-                debugAsymptoticBound("combination of substitutions:");
-                for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
-                    if (combination & (1 << bitPos)) {
-                        try {
-                            debugAsymptoticBound("substitution: " << substitutions[bitPos]);
-                            limitProblem.substitute(substitutions[bitPos], bitPos);
-                        } catch (const LimitProblemException &e) {
-                            debugAsymptoticBound(e.what());
-                            limitProblems.pop_back();
-                            break;
-                        }
-                    }
-                }
-            }
-
-        } else {
-            limitProblems.push_back(limitProblems.front());
+        for (combination = 1; combination < to; combination++) {
+            limitProblems.push_back(currentLP);
             LimitProblem &limitProblem = limitProblems.back();
 
-            for (int i = 0; i < substitutions.size(); ++i) {
-                try {
-                    limitProblem.substitute(substitutions[i], i);
-                } catch (const LimitProblemException &e) {
-                    debugAsymptoticBound(e.what());
-                    limitProblems.pop_back();
-                    break;
+            debugAsymptoticBound("combination of substitutions:");
+            for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
+                if (combination & (1 << bitPos)) {
+                    debugAsymptoticBound(substitutions[bitPos]);
                 }
             }
+
+            for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
+                if (combination & (1 << bitPos)) {
+                    limitProblem.substitute(substitutions[bitPos], bitPos);
+                }
+            }
+
+            limitProblem.checkUnsat();
         }
+
     }
+
+    limitProblems.push_back(currentLP);
+    LimitProblem &limitProblem = limitProblems.back();
+
+    debugAsymptoticBound("combination of substitutions:");
+    for (int i = 0; i < substitutions.size(); ++i) {
+        debugAsymptoticBound(substitutions[i]);
+    }
+
+    for (int i = 0; i < substitutions.size(); ++i) {
+        limitProblem.substitute(substitutions[i], i);
+    }
+
+    limitProblem.checkUnsat();
 }
 
 GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
@@ -272,15 +268,20 @@ void AsymptoticBound::removeUnsatProblems() {
 bool AsymptoticBound::solveLimitProblem() {
     debugAsymptoticBound("Trying to solve the initial limit problems.");
 
-    InftyExpressionSet::const_iterator it;
+    if (limitProblems.empty()) {
+        return false;
+    }
+
+    currentLP = limitProblems.back();
+    limitProblems.pop_back();
 
     start:
-    if (limitProblems.size() > 0 && !limitProblems.back().isSolved()) {
-        LimitProblem &limitProblem = limitProblems.back();
-        limitProblem.dump("Currently handling");
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
+        currentLP.dump("Currently handling");
 
-        // Highest priority
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        InftyExpressionSet::const_iterator it;
+
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryRemovingConstant(it)) {
                 goto start;
             }
@@ -290,31 +291,31 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryReducingPolynomialPower(it)) {
                 goto start;
             }
         }
 
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryReducingGeneralPower(it)) {
                 goto start;
             }
         }
 
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (it->getVariables().size() <= 1 && tryApplyingLimitVector(it)) {
                 goto start;
             }
         }
 
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryInstantiatingVariable(it)) {
                 goto start;
             }
         }
 
-        for (it = limitProblem.cbegin(); it != limitProblem.cend(); ++it) {
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryApplyingLimitVector(it)) {
                 goto start;
             }
@@ -322,27 +323,29 @@ bool AsymptoticBound::solveLimitProblem() {
 
     }
 
+    if (currentLP.isUnsolvable()) {
+        currentLP.dump("Limit problem is unsolvable, throwing away");
 
+    } else if (currentLP.isSolved()) {
+        solvedLimitProblems.push_back(currentLP);
 
-    if (limitProblems.size() > 0) {
-        if (limitProblems.back().isSolved()) {
-            solvedLimitProblems.push_back(limitProblems.back());
-            limitProblems.pop_back();
-
-            if (isAdequateSolution(solvedLimitProblems.back())) {
-                return true;
-            } else {
-                debugAsymptoticBound("Found non-adequate solution.");
-                goto start;
-            }
-
+        if (isAdequateSolution(currentLP)) {
+            return true;
         } else {
-            limitProblems.back().dump("I don't know how to continue, throwing away");
-            limitProblems.pop_back();
-            goto start;
+            debugAsymptoticBound("Found non-adequate solution.");
         }
+
     } else {
-        return solvedLimitProblems.size() > 0;
+        currentLP.dump("I don't know how to continue, throwing away");
+    }
+
+    if (limitProblems.empty()) {
+        return !solvedLimitProblems.empty();
+
+    } else {
+        currentLP = limitProblems.back();
+        limitProblems.pop_back();
+        goto start;
     }
 }
 
@@ -440,18 +443,21 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 }
 
 
+void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, InftyDirection dir) {
+    assert(dir == POS_INF || dir == POS_CONS);
+
+    if (it->getDirection() == POS) {
+        limitProblems.push_back(currentLP);
+        limitProblems.back().addExpression(InftyExpression(*it, dir));
+    }
+}
+
+
 bool AsymptoticBound::tryRemovingConstant(const InftyExpressionSet::const_iterator &it) {
-    LimitProblem &limitProblem = limitProblems.back();
-
-    if (limitProblem.removeConstantIsApplicable(it)) {
-        try {
-            limitProblem.removeConstant(it);
-        } catch (const LimitProblemException &e) {
-            debugAsymptoticBound(e.what());
-            limitProblems.pop_back();
-        }
-
+    if (currentLP.removeConstantIsApplicable(it)) {
+        currentLP.removeConstant(it);
         return true;
+
     } else {
         return false;
     }
@@ -459,20 +465,11 @@ bool AsymptoticBound::tryRemovingConstant(const InftyExpressionSet::const_iterat
 
 
 bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it) {
-    LimitProblem &limitProblem = limitProblems.back();
+    if (currentLP.trimPolynomialIsApplicable(it)) {
+        //createBacktrackingPoint(it, POS_CONS);
 
-    if (limitProblem.trimPolynomialIsApplicable(it)) {
-        try {
-            limitProblem.trimPolynomial(it);
-
-            if (limitProblem.isUnsat()) {
-                limitProblems.pop_back();
-            }
-
-        } catch (const LimitProblemException &e) {
-            debugAsymptoticBound(e.what());
-            limitProblems.pop_back();
-        }
+        currentLP.trimPolynomial(it);
+        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -482,20 +479,11 @@ bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iter
 
 
 bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it) {
-    LimitProblem &limitProblem = limitProblems.back();
+    if (currentLP.reducePolynomialPowerIsApplicable(it)) {
+        //createBacktrackingPoint(it, POS_CONS);
 
-    if (limitProblem.reducePolynomialPowerIsApplicable(it)) {
-        try {
-            limitProblem.reducePolynomialPower(it);
-
-            if (limitProblem.isUnsat()) {
-                limitProblems.pop_back();
-            }
-
-        } catch (const LimitProblemException &e) {
-            debugAsymptoticBound(e.what());
-            limitProblems.pop_back();
-        }
+        currentLP.reducePolynomialPower(it);
+        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -505,20 +493,11 @@ bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const
 
 
 bool AsymptoticBound::tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it) {
-    LimitProblem &limitProblem = limitProblems.back();
+    if (currentLP.reduceGeneralPowerIsApplicable(it)) {
+        //createBacktrackingPoint(it, POS_CONS);
 
-    if (limitProblem.reduceGeneralPowerIsApplicable(it)) {
-        try {
-            limitProblem.reduceGeneralPower(it);
-
-            if (limitProblem.isUnsat()) {
-                limitProblems.pop_back();
-            }
-
-        } catch (const LimitProblemException &e) {
-            debugAsymptoticBound(e.what());
-            limitProblems.pop_back();
-        }
+        currentLP.reduceGeneralPower(it);
+        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -528,8 +507,6 @@ bool AsymptoticBound::tryReducingGeneralPower(const InftyExpressionSet::const_it
 
 
 bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it) {
-    LimitProblem &limitProblem = limitProblems.back();
-
     std::vector<LimitVector> toApply;
 
     if (it->isProperRational()) {
@@ -565,42 +542,26 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
     }
     debugAsymptoticBound("");
 
-    if (toApply.size() > 0) {
-        if (toApply.size() == 1) {
-            try {
-                limitProblem.applyLimitVector(it, 0, toApply.front());
-
-                if (limitProblem.isUnsat()) {
-                    limitProblems.pop_back();
-                }
-
-            } catch (const LimitProblemException &e) {
-                debugAsymptoticBound(e.what());
-                limitProblems.pop_back();
-            }
-
-        } else {
-            LimitProblem copy = limitProblem;
-            InftyExpressionSet::const_iterator copyIt = copy.find(*it);
-            limitProblems.pop_back();
-
-            for (const LimitVector &lv : toApply) {
-                limitProblems.push_back(copy);
-                InftyExpressionSet::const_iterator backIt = limitProblems.back().find(*copyIt);
-
-                try {
-                    limitProblems.back().applyLimitVector(backIt, 0, lv);
-
-                    if (limitProblems.back().isUnsat()) {
-                        limitProblems.pop_back();
-                    }
-                } catch (const LimitProblemException &e) {
-                    debugAsymptoticBound(e.what());
-                    limitProblems.pop_back();
-                }
-
-            }
+    for (const LimitVector &lv : toApply) {
+        if (lv.getType() == POS_INF) {
+            //createBacktrackingPoint(it, POS_CONS);
+        } else if (lv.getType() == POS_CONS) {
+            //createBacktrackingPoint(it, POS_INF);
         }
+    }
+
+    if (!toApply.empty()) {
+        for (int i = 0; i < toApply.size() - 1; ++i) {
+            limitProblems.push_back(currentLP);
+            LimitProblem &copy = limitProblems.back();
+            auto copyIt = copy.find(*it);
+
+            copy.applyLimitVector(copyIt, 0, toApply[i]);
+            copy.checkUnsat();
+        }
+
+        currentLP.applyLimitVector(it, 0, toApply.back());
+        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -611,37 +572,31 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 
 
 bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_iterator &it) {
-    LimitProblem &limitProblem = limitProblems.back();
-
     InftyDirection dir = it->getDirection();
     if (is_a<symbol>(*it) && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
 
         Z3VariableContext context;
-        z3::model model(context,Z3_model());
+        z3::model model(context, Z3_model());
         z3::check_result result;
-        result = Z3Toolbox::checkExpressionsSAT(limitProblem.getQuery(), context, &model);
+        result = Z3Toolbox::checkExpressionsSAT(currentLP.getQuery(), context, &model);
 
         if (result == z3::unsat) {
-            limitProblem.dump("Z3: limit problem is unsat, throwing away");
-            limitProblems.pop_back();
+            currentLP.dump("Z3: limit problem is unsat");
+            currentLP.setUnsolvable();
 
         } else if (result == z3::sat) {
-            limitProblem.dump("Z3: limit problem is sat");
+            currentLP.dump("Z3: limit problem is sat");
             Expression rational = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(*it, context));
 
             exmap sub;
             sub.insert(std::make_pair(*it, rational));
             substitutions.push_back(sub);
 
-            try {
-                limitProblem.substitute(sub, substitutions.size() - 1);
-            } catch (const LimitProblemException &e) {
-                debugAsymptoticBound(e.what());
-                limitProblems.pop_back();
-            }
+            //createBacktrackingPoint(it, POS_INF);
+            currentLP.substitute(sub, substitutions.size() - 1);
 
         } else {
-            limitProblem.dump("Z3: limit problem is unknown");
+            currentLP.dump("Z3: limit problem is unknown");
             return false;
         }
 

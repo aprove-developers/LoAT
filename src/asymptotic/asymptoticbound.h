@@ -31,6 +31,7 @@ private:
     void dumpGuard(const std::string &description) const;
 
 private:
+    void createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, InftyDirection dir);
     bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
     bool tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it);
     bool tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it);
@@ -46,6 +47,7 @@ private:
 
     std::vector<LimitProblem> limitProblems;
     std::vector<LimitProblem> solvedLimitProblems;
+    LimitProblem currentLP;
     std::vector<GiNaC::exmap> substitutions;
     GiNaC::exmap solutionBestCplx;
     int upperBoundBestCplx;

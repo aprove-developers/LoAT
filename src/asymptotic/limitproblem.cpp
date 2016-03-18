@@ -155,11 +155,11 @@ void InftyExpression::dump(const std::string &description) const {
 
 
 LimitProblem::LimitProblem()
-    : variableN("n") {
+    : variableN("n"), unsolvable(false) {
 }
 
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
-    : variableN("n") {
+    : variableN("n"), unsolvable(false) {
     for (const Expression &ex : normalizedGuard) {
         assert(GuardToolbox::isNormalizedInequality(ex));
 
@@ -187,19 +187,19 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
 
             } else if (!(ex.getDirection() == POS &&
                          (it->getDirection() == POS_INF || it->getDirection() == POS_CONS))) {
-                throw LimitProblemIsContradictoryException();
+                unsolvable = true;
             }
         }
     }
 
     if ((ex.getDirection() == POS_INF || ex.getDirection() == NEG_INF)
         && is_a<numeric>(ex)) {
-        throw LimitProblemIsUnsolvableException();
+        unsolvable = true;
     }
 
     if ((ex.getDirection() == POS_CONS && is_a<numeric>(ex) && (ex.info(info_flags::negative) || ex.is_zero()))
         || (ex.getDirection() == NEG_CONS && is_a<numeric>(ex) && ex.info(info_flags::nonnegative))) {
-        throw LimitProblemIsUnsolvableException();
+        unsolvable = true;
     }
 }
 
@@ -458,6 +458,10 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
 
 
 bool LimitProblem::isSolved() const {
+    if (isUnsolvable()) {
+        return false;
+    }
+
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {
         if (!is_a<symbol>(ex)) {
@@ -534,6 +538,23 @@ std::vector<Expression> LimitProblem::getQuery() {
 
 bool LimitProblem::isUnsat() {
     return Z3Toolbox::checkExpressionsSAT(getQuery()) == z3::unsat;
+}
+
+
+bool LimitProblem::isUnsolvable() const {
+    return unsolvable;
+}
+
+
+void LimitProblem::checkUnsat() {
+    if (isUnsat()) {
+        unsolvable = true;
+    }
+}
+
+
+void LimitProblem::setUnsolvable() {
+    unsolvable = true;
 }
 
 

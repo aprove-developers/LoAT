@@ -53,10 +53,6 @@ private:
 
 typedef std::set<InftyExpression, GiNaC::ex_is_less> InftyExpressionSet;
 
-EXCEPTION(LimitProblemException, CustomException);
-EXCEPTION(LimitProblemIsContradictoryException, LimitProblemException);
-EXCEPTION(LimitProblemIsUnsolvableException, LimitProblemException);
-
 class LimitProblem {
 public:
     LimitProblem();
@@ -88,6 +84,9 @@ public:
     InftyExpressionSet::const_iterator find(const InftyExpression &ex);
     std::vector<Expression> getQuery();
     bool isUnsat();
+    bool isUnsolvable() const;
+    void checkUnsat();
+    void setUnsolvable();
 
     bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);
     bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);
@@ -101,6 +100,7 @@ private:
     InftyExpressionSet set;
     ExprSymbol variableN;
     std::vector<int> substitutions;
+    bool unsolvable;
 };
 
 #endif //LIMITPROBLEM_H
