@@ -474,7 +474,7 @@ bool AsymptoticBound::tryRemovingConstant(const InftyExpressionSet::const_iterat
 
 bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.trimPolynomialIsApplicable(it)) {
-        //createBacktrackingPoint(it, POS_CONS);
+        createBacktrackingPoint(it, POS_CONS);
 
         currentLP.trimPolynomial(it);
         currentLP.checkUnsat();
@@ -488,7 +488,7 @@ bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iter
 
 bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.reducePolynomialPowerIsApplicable(it)) {
-        //createBacktrackingPoint(it, POS_CONS);
+        createBacktrackingPoint(it, POS_CONS);
 
         currentLP.reducePolynomialPower(it);
         currentLP.checkUnsat();
@@ -502,7 +502,7 @@ bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const
 
 bool AsymptoticBound::tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.reduceGeneralPowerIsApplicable(it)) {
-        //createBacktrackingPoint(it, POS_CONS);
+        createBacktrackingPoint(it, POS_CONS);
 
         currentLP.reduceGeneralPower(it);
         currentLP.checkUnsat();
@@ -552,9 +552,9 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 
     for (const LimitVector &lv : toApply) {
         if (lv.getType() == POS_INF) {
-            //createBacktrackingPoint(it, POS_CONS);
+            createBacktrackingPoint(it, POS_CONS);
         } else if (lv.getType() == POS_CONS) {
-            //createBacktrackingPoint(it, POS_INF);
+            createBacktrackingPoint(it, POS_INF);
         }
     }
 
@@ -604,7 +604,7 @@ bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_i
             sub.insert(std::make_pair(*it, rational));
             substitutions.push_back(sub);
 
-            //createBacktrackingPoint(it, POS_INF);
+            createBacktrackingPoint(it, POS_INF);
             currentLP.substitute(sub, substitutions.size() - 1);
 
         } else {
