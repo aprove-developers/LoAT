@@ -417,6 +417,16 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     debugAsymptoticBound("Checking solution for adequateness.");
     assert(limitProblem.isSolved());
 
+    Complexity cplx = getComplexity(limitProblem);
+
+    if (cplx == Expression::ComplexInfty) {
+        return true;
+    }
+
+    if (cost.getComplexity()  > cplx) {
+        return false;
+    }
+
     exmap solution = calcSolution(limitProblem);
     Expression solvedCost = cost.subs(solution);
     ExprSymbol n = limitProblem.getN();
