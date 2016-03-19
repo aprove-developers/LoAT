@@ -93,7 +93,6 @@ public:
     std::vector<Expression> getQuery();
     bool isUnsat();
     bool isUnsolvable() const;
-    void checkUnsat();
     void setUnsolvable();
 
     bool removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it);

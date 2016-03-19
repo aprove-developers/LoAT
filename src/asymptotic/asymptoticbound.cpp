@@ -113,7 +113,6 @@ void AsymptoticBound::propagateBounds() {
     }
 
     limitProblems.push_back(currentLP);
-    limitProblems.back().checkUnsat();
 
     if (limitProblems.back().isUnsolvable()) {
         limitProblems.pop_back();
@@ -140,8 +139,6 @@ void AsymptoticBound::propagateBounds() {
                 }
             }
 
-            limitProblem.checkUnsat();
-
             if (limitProblem.isUnsolvable()) {
                 limitProblems.pop_back();
             }
@@ -160,8 +157,6 @@ void AsymptoticBound::propagateBounds() {
     for (int i = 0; i < substitutions.size(); ++i) {
         limitProblem.substitute(substitutions[i], i);
     }
-
-    limitProblem.checkUnsat();
 
     if (limitProblem.isUnsolvable()) {
         limitProblems.pop_back();
@@ -301,7 +296,9 @@ bool AsymptoticBound::solveLimitProblem() {
             if (tryRemovingConstant(it)) {
                 goto start;
             }
+        }
 
+        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryTrimmingPolynomial(it)) {
                 goto start;
             }
@@ -491,7 +488,6 @@ bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iter
         createBacktrackingPoint(it, POS_CONS);
 
         currentLP.trimPolynomial(it);
-        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -505,7 +501,6 @@ bool AsymptoticBound::tryReducingPolynomialPower(const InftyExpressionSet::const
         createBacktrackingPoint(it, POS_CONS);
 
         currentLP.reducePolynomialPower(it);
-        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -519,7 +514,6 @@ bool AsymptoticBound::tryReducingGeneralPower(const InftyExpressionSet::const_it
         createBacktrackingPoint(it, POS_CONS);
 
         currentLP.reduceGeneralPower(it);
-        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -579,7 +573,6 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
             auto copyIt = copy.find(*it);
 
             copy.applyLimitVector(copyIt, 0, toApply[i]);
-            copy.checkUnsat();
 
             if (copy.isUnsolvable()) {
                 limitProblems.pop_back();
@@ -587,7 +580,6 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         }
 
         currentLP.applyLimitVector(it, 0, toApply.back());
-        currentLP.checkUnsat();
 
         return true;
     } else {
@@ -686,7 +678,6 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
             auto copyIt = copy.find(*it);
 
             copy.applyLimitVectorAdvanced(copyIt, l, r, toApply[i]);
-            copy.checkUnsat();
 
             if (copy.isUnsolvable()) {
                 limitProblems.pop_back();
@@ -694,7 +685,6 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
         }
 
         currentLP.applyLimitVectorAdvanced(it, l, r, toApply.back());
-        currentLP.checkUnsat();
 
         return true;
     } else {

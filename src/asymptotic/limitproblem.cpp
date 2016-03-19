@@ -237,7 +237,7 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
         unsolvable = true;
     }
 
-    if ((ex.getDirection() == POS_CONS && is_a<numeric>(ex) && (ex.info(info_flags::negative) || ex.is_zero()))
+    if (((ex.getDirection() == POS_CONS || ex.getDirection() == POS) && is_a<numeric>(ex) && (ex.info(info_flags::negative) || ex.is_zero()))
         || (ex.getDirection() == NEG_CONS && is_a<numeric>(ex) && ex.info(info_flags::nonnegative))) {
         unsolvable = true;
     }
@@ -525,7 +525,7 @@ bool LimitProblem::isSolved() const {
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {
         if (!is_a<symbol>(ex)) {
-            debugLimitProblem(ex << " is not a variable");
+            //debugLimitProblem(ex << " is not a variable");
 
             return false;
         }
@@ -604,14 +604,6 @@ bool LimitProblem::isUnsat() {
 bool LimitProblem::isUnsolvable() const {
     return unsolvable;
 }
-
-
-void LimitProblem::checkUnsat() {
-    if (!unsolvable && isUnsat()) {
-        unsolvable = true;
-    }
-}
-
 
 void LimitProblem::setUnsolvable() {
     unsolvable = true;
