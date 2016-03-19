@@ -27,13 +27,9 @@ const std::vector<LimitVector> LimitVector::Addition = {
 
     // positive limit vectors
     LimitVector(POS_CONS, POS_CONS, POS_CONS),
-    LimitVector(POS_CONS, POS_CONS, NEG_CONS),
-    LimitVector(POS_CONS, NEG_CONS, POS_CONS),
 
     // negative limit vectors
-    LimitVector(NEG_CONS, NEG_CONS, NEG_CONS),
-    LimitVector(NEG_CONS, NEG_CONS, POS_CONS),
-    LimitVector(NEG_CONS, POS_CONS, NEG_CONS)
+    LimitVector(NEG_CONS, NEG_CONS, NEG_CONS)
 };
 
 // limit vectors for multiplication
