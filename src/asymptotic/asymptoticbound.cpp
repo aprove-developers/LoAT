@@ -1,5 +1,6 @@
 #include "asymptoticbound.h"
 
+#include <iterator>
 #include <vector>
 #include <ginac/ginac.h>
 #include <z3++.h>
@@ -302,6 +303,10 @@ bool AsymptoticBound::solveLimitProblem() {
             if (tryTrimmingPolynomial(it)) {
                 goto start;
             }
+        }
+
+        if (trySubstitutingVariable()) {
+            goto start;
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
@@ -737,6 +742,38 @@ bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_i
     } else {
         return false;
     }
+}
+
+bool AsymptoticBound::trySubstitutingVariable() {
+    InftyExpressionSet::const_iterator it, it2;
+    for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
+        if (is_a<symbol>(*it)) {
+            for (it2 = std::next(it); it2 != currentLP.cend(); ++it2) {
+                if (is_a<symbol>(*it2)) {
+                    InftyDirection dir = it->getDirection();
+                    InftyDirection dir2 = it2->getDirection();
+
+                    if (((dir == POS || dir == POS_INF) && (dir2 == POS || dir2 == POS_INF))
+                        || (dir == NEG_INF && dir2 == NEG_INF)) {
+                        assert(*it != *it2);
+                        debugAsymptoticBound("substituting variable " << *it << " by " << *it2);
+
+                        exmap sub;
+                        sub.insert(std::make_pair(*it, *it2));
+                        substitutions.push_back(sub);
+
+                        createBacktrackingPoint(it, POS_CONS);
+                        createBacktrackingPoint(it2, POS_CONS);
+                        currentLP.substitute(sub, substitutions.size() - 1);
+
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 

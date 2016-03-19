@@ -116,7 +116,7 @@
 /*
  * timeout for z3 in ms
  */
-#define Z3_CHECK_TIMEOUT 1000u
+#define Z3_CHECK_TIMEOUT 100u
 
 /*
  * if defined, the final guard/cost is checked to ensure it has infintily many instances

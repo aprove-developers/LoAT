@@ -365,8 +365,8 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
 
     debugLimitProblem("applying transformation rule (C) using substitution " << sub);
 
-    InftyExpressionSet oldSet = set;
-    set.clear();
+    InftyExpressionSet oldSet;
+    oldSet.swap(set);
     for (const InftyExpression &ex : oldSet) {
         addExpression(InftyExpression(ex.subs(sub), ex.getDirection()));
     }
