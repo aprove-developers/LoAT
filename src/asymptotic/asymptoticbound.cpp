@@ -12,8 +12,8 @@
 
 using namespace GiNaC;
 
-AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost)
-    : its(its), guard(guard), cost(cost) {
+AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck)
+    : its(its), guard(guard), cost(cost), finalCheck(finalCheck) {
     assert(GuardToolbox::isValidGuard(guard));
 }
 
@@ -171,7 +171,7 @@ void AsymptoticBound::propagateBounds() {
 
 
     int numOfSubstitutions = substitutions.size() - numOfEquations;
-    if (numOfSubstitutions <= 10) { // must be smaller than 32
+    if (finalCheck && numOfSubstitutions <= 10) { // must be smaller than 32
         unsigned int combination;
         unsigned int to = (1 << numOfSubstitutions) - 1;
 
@@ -374,7 +374,7 @@ bool AsymptoticBound::solveLimitProblem() {
     limitProblems.pop_back();
 
     start:
-    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !Timeout::soft()) {
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
         currentLP.dump("Currently handling");
 
         InftyExpressionSet::const_iterator it;
@@ -447,7 +447,7 @@ bool AsymptoticBound::solveLimitProblem() {
         currentLP.dump("I don't know how to continue, throwing away");
     }
 
-    if (limitProblems.empty() || Timeout::soft()) {
+    if (limitProblems.empty()) {
         return !solvedLimitProblems.empty();
 
     } else {
@@ -567,7 +567,7 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, InftyDirection dir) {
     assert(dir == POS_INF || dir == POS_CONS);
 
-    if (it->getDirection() == POS) {
+    if (finalCheck && it->getDirection() == POS) {
         limitProblems.push_back(currentLP);
         limitProblems.back().addExpression(InftyExpression(*it, dir));
 
@@ -871,7 +871,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
 }
 
 
-InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost) {
+InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost, bool finalCheck) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     Expression expandedCost = cost.expand();
@@ -891,7 +891,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         useCost = cost.subs(Expression::Infty == 0); //remove INF symbol if INF cost cannot be proved
     }
 
-    AsymptoticBound asymptoticBound(its, guard, cost);
+    AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
     asymptoticBound.dumpGuard("guard");
     asymptoticBound.dumpCost("cost");
     debugAsymptoticBound("");

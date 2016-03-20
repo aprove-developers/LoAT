@@ -265,7 +265,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
 
         //check if this transition allows infinitely many guards
         debugGraph(endl << "INFINITY CHECK");
-        auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost);
+        auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, true);
         debugGraph("RES: " << checkRes.cpx << " because: " << checkRes.reason);
         if (checkRes.cpx == Expression::ComplexNone) {
             debugGraph("INFINITY: FAIL");
@@ -761,7 +761,7 @@ bool FlowGraph::pruneTransitions() {
                     TransIndex trans = parallel[idx];
                     Transition data = getTransData(trans);
 
-                    auto res = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost);;
+                    auto res = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, false);
                     queue.push(make_tuple(trans,res.cpx,res.inftyVars));
                 }
 
@@ -872,7 +872,7 @@ RuntimeResult FlowGraph::getMaxPartialResult() {
             const Transition &data = getTransData(trans);
             if (data.cost.getComplexity() <= max(res.cpx,Complexity(0))) continue;
 
-            auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost);
+            auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, true);
             if (checkRes.cpx > res.cpx) {
                 proofout << "Found new complexity " << Expression::complexityString(checkRes.cpx) << ", because: " << checkRes.reason << "." << endl << endl;
                 res.cpx = checkRes.cpx;

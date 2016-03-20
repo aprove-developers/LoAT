@@ -12,7 +12,7 @@
 
 class AsymptoticBound {
 private:
-    AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost);
+    AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck);
 
     void normalizeGuard();
     void createInitialLimitProblem();
@@ -53,9 +53,10 @@ private:
     std::vector<GiNaC::exmap> substitutions;
     GiNaC::exmap solutionBestCplx;
     int upperBoundBestCplx;
+    bool finalCheck;
 
 public:
-    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost);
+    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost, bool finalCheck);
 };
 
 #endif //ASYMPTOTICBOUND_H
