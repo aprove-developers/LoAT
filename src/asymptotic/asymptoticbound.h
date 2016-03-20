@@ -38,7 +38,7 @@ private:
     bool tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it);
-    bool tryInstantiatingVariable(const InftyExpressionSet::const_iterator &it);
+    bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
 
 private:

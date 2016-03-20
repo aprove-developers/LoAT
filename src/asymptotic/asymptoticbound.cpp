@@ -7,6 +7,7 @@
 
 #include "expression.h"
 #include "guardtoolbox.h"
+#include "timeout.h"
 #include "z3toolbox.h"
 
 using namespace GiNaC;
@@ -373,7 +374,7 @@ bool AsymptoticBound::solveLimitProblem() {
     limitProblems.pop_back();
 
     start:
-    if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !Timeout::soft()) {
         currentLP.dump("Currently handling");
 
         InftyExpressionSet::const_iterator it;
@@ -406,10 +407,8 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
-        for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-            if (tryInstantiatingVariable(it)) {
-                goto start;
-            }
+        if (tryInstantiatingVariable()) {
+            goto start;
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
@@ -448,7 +447,7 @@ bool AsymptoticBound::solveLimitProblem() {
         currentLP.dump("I don't know how to continue, throwing away");
     }
 
-    if (limitProblems.empty()) {
+    if (limitProblems.empty() || Timeout::soft()) {
         return !solvedLimitProblems.empty();
 
     } else {
@@ -799,41 +798,43 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 }
 
 
-bool AsymptoticBound::tryInstantiatingVariable(const InftyExpressionSet::const_iterator &it) {
-    ExprSymbolSet vars = std::move(it->getVariables());
-    InftyDirection dir = it->getDirection();
+bool AsymptoticBound::tryInstantiatingVariable() {
+    for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
+        ExprSymbolSet vars = std::move(it->getVariables());
+        InftyDirection dir = it->getDirection();
 
-    if (vars.size() == 1 && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-        Z3VariableContext context;
-        z3::model model(context, Z3_model());
-        z3::check_result result;
-        result = Z3Toolbox::checkExpressionsSAT(currentLP.getQuery(), context, &model);
+        if (vars.size() == 1 && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
+            Z3VariableContext context;
+            z3::model model(context, Z3_model());
+            z3::check_result result;
+            result = Z3Toolbox::checkExpressionsSAT(currentLP.getQuery(), context, &model);
 
-        if (result == z3::unsat) {
-            currentLP.dump("Z3: limit problem is unsat");
-            currentLP.setUnsolvable();
+            if (result == z3::unsat) {
+                currentLP.dump("Z3: limit problem is unsat");
+                currentLP.setUnsolvable();
 
-        } else if (result == z3::sat) {
-            ExprSymbol var = *vars.begin();
+            } else if (result == z3::sat) {
+                ExprSymbol var = *vars.begin();
 
-            currentLP.dump("Z3: limit problem is sat");
-            Expression rational = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
+                currentLP.dump("Z3: limit problem is sat");
+                Expression rational = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
 
-            exmap sub;
-            sub.insert(std::make_pair(var, rational));
-            substitutions.push_back(sub);
+                exmap sub;
+                sub.insert(std::make_pair(var, rational));
+                substitutions.push_back(sub);
 
-            createBacktrackingPoint(it, POS_INF);
-            currentLP.substitute(sub, substitutions.size() - 1);
+                createBacktrackingPoint(it, POS_INF);
+                currentLP.substitute(sub, substitutions.size() - 1);
 
+            } else {
+                currentLP.dump("Z3: limit problem is unknown");
+                return false;
+            }
+
+            return true;
         } else {
-            currentLP.dump("Z3: limit problem is unknown");
             return false;
         }
-
-        return true;
-    } else {
-        return false;
     }
 }
 
