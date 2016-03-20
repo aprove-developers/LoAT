@@ -59,7 +59,6 @@ void AsymptoticBound::propagateBounds() {
         return;
     }
 
-    std::vector<std::pair<exmap,int>> equations;
     for (const Expression &ex : guard) {
         assert(ex.info(info_flags::relation_equal)
                || GuardToolbox::isValidInequality(ex));
@@ -70,7 +69,26 @@ void AsymptoticBound::propagateBounds() {
                 continue;
             }
 
-            //check if equation can be solved for any single variable
+            debugAsymptoticBound("equation: " << ex);
+            debugAsymptoticBound("target: " << target);
+
+            //check if equation can be solved for a single variable
+            for (const ExprSymbol &var : target.getVariables()) {
+                //solve target for var (result is in target)
+                if (its.isFreeVar(var) || !GuardToolbox::solveTermFor(target, var, GuardToolbox::PropagationLevel::NoCoefficients)) {
+                    continue;
+                }
+
+                exmap sub;
+                sub.insert(std::make_pair(var, target));
+                substitutions.push_back(sub);
+
+                debugAsymptoticBound("substitution (equation): " << sub);
+                goto end;
+            }
+
+
+            //check if equation can be solved for a single variable
             for (const ExprSymbol &var : target.getVariables()) {
                 //solve target for var (result is in target)
                 if (!GuardToolbox::solveTermFor(target, var, GuardToolbox::PropagationLevel::NoCoefficients)) {
@@ -80,11 +98,34 @@ void AsymptoticBound::propagateBounds() {
                 exmap sub;
                 sub.insert(std::make_pair(var, target));
                 substitutions.push_back(sub);
-                equations.push_back(std::make_pair(sub, substitutions.size() - 1));
 
-                debugAsymptoticBound("substitution: " << sub);
+                debugAsymptoticBound("substitution (equation): " << sub);
+                goto end;
             }
-        } else {
+
+
+            end:;
+        }
+    }
+
+    for (int i = 0; i < substitutions.size(); ++i) {
+        debugAsymptoticBound("equation: " << substitutions[i]);
+    }
+
+    for (int i = 0; i < substitutions.size(); ++i) {
+        currentLP.substitute(substitutions[i], i);
+    }
+
+    if (currentLP.isUnsolvable()) {
+        return;
+    }
+
+    int numOfEquations = substitutions.size();
+
+    for (const Expression &ex : guard) {
+        assert(ex.info(info_flags::relation_equal)
+               || GuardToolbox::isValidInequality(ex));
+        if (!ex.info(info_flags::relation_equal)) {
             if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
                 Expression exT = GuardToolbox::turnToLess(ex);
 
@@ -96,6 +137,18 @@ void AsymptoticBound::propagateBounds() {
                 } else {
                     l = exT.lhs();
                     r = exT.rhs();
+                }
+
+                bool isInLimitProblem = false;
+                for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
+                    if (it->has(l)) {
+                        isInLimitProblem = true;
+                    }
+                }
+
+                if (!isInLimitProblem) {
+                    debugAsymptoticBound(l << "is not in the lp");
+                    continue;
                 }
 
                 if (r.info(info_flags::polynomial) && !r.has(l)) {
@@ -115,24 +168,26 @@ void AsymptoticBound::propagateBounds() {
         }
     }
 
-    if (substitutions.size() <= 10) { // must be smaller than 32
+
+    int numOfSubstitutions = substitutions.size() - numOfEquations;
+    if (numOfSubstitutions <= 10) { // must be smaller than 32
         unsigned int combination;
-        unsigned int to = (1 << substitutions.size()) - 1;
+        unsigned int to = (1 << numOfSubstitutions) - 1;
 
         for (combination = 1; combination < to; combination++) {
             limitProblems.push_back(currentLP);
             LimitProblem &limitProblem = limitProblems.back();
 
             debugAsymptoticBound("combination of substitutions:");
-            for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
+            for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
                 if (combination & (1 << bitPos)) {
-                    debugAsymptoticBound(substitutions[bitPos]);
+                    debugAsymptoticBound(substitutions[numOfEquations + bitPos]);
                 }
             }
 
-            for (int bitPos = 0; bitPos < substitutions.size(); ++bitPos) {
+            for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
                 if (combination & (1 << bitPos)) {
-                    limitProblem.substitute(substitutions[bitPos], bitPos);
+                    limitProblem.substitute(substitutions[numOfEquations + bitPos], numOfEquations + bitPos);
                 }
             }
 
@@ -150,30 +205,14 @@ void AsymptoticBound::propagateBounds() {
     }
 
     limitProblems.push_back(currentLP);
-    LimitProblem &limitProblem = limitProblems.back();
-
-    debugAsymptoticBound("combination of substitutions (equations only):");
-    for (int i = 0; i < equations.size(); ++i) {
-        debugAsymptoticBound(equations[i].first);
-    }
-
-    for (int i = 0; i < equations.size(); ++i) {
-        limitProblem.substitute(equations[i].first, equations[i].second);
-    }
-
-    if (limitProblem.isUnsolvable()) {
-        limitProblems.pop_back();
-    }
-
-    limitProblems.push_back(currentLP);
     LimitProblem &limitProblem2 = limitProblems.back();
 
     debugAsymptoticBound("combination of substitutions:");
-    for (int i = 0; i < substitutions.size(); ++i) {
+    for (int i = numOfEquations; i < substitutions.size(); ++i) {
         debugAsymptoticBound(substitutions[i]);
     }
 
-    for (int i = 0; i < substitutions.size(); ++i) {
+    for (int i = numOfEquations; i < substitutions.size(); ++i) {
         limitProblem2.substitute(substitutions[i], i);
     }
 
