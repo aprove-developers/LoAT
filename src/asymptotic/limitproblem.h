@@ -101,12 +101,13 @@ public:
     bool reduceGeneralPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
 
     //debug dumping
-    void dump(const std::string &description) const;
+    void dump(const std::string &description);
 
-private:
+public:
     InftyExpressionSet set;
     ExprSymbol variableN;
     std::vector<int> substitutions;
+    std::vector<std::string> log;
     bool unsolvable;
 };
 

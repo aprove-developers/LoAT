@@ -1,6 +1,7 @@
 #include "limitproblem.h"
 
 #include <z3++.h>
+#include <sstream>
 
 #include "debug.h"
 #include "z3toolbox.h"
@@ -173,6 +174,7 @@ LimitProblem::LimitProblem(const LimitProblem &other)
     : set(other.set),
       variableN(other.variableN),
       substitutions(other.substitutions),
+      log(other.log),
       unsolvable(other.unsolvable) {
 }
 
@@ -182,6 +184,7 @@ LimitProblem& LimitProblem::operator=(const LimitProblem &other) {
         set = other.set;
         variableN = other.variableN;
         substitutions = other.substitutions;
+        log = other.log;
         unsolvable = other.unsolvable;
     }
 
@@ -193,6 +196,7 @@ LimitProblem::LimitProblem(LimitProblem &&other)
     : set(std::move(other.set)),
       variableN(other.variableN),
       substitutions(std::move(other.substitutions)),
+      log(std::move(other.log)),
       unsolvable(other.unsolvable) {
 }
 
@@ -202,6 +206,7 @@ LimitProblem& LimitProblem::operator=(LimitProblem &&other) {
         set = std::move(other.set);
         variableN = other.variableN;
         substitutions = std::move(other.substitutions);
+        log = std::move(other.log);
         unsolvable = other.unsolvable;
     }
 
@@ -307,11 +312,16 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
         assert(false);
     }
 
-    debugLimitProblem("applying transformation rule (A), replacing " << *it
+    std::ostringstream oss;
+
+    oss << "applying transformation rule (A), replacing " << *it
                       << " (" << InftyDirectionNames[dir] << ") by "
                       << firstExp << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
                       << secondExp << " (" << InftyDirectionNames[lv.getSecond()] << ")"
-                      << " using " << lv);
+                      << " using " << lv;
+
+    log.push_back(oss.str());
+    debugLimitProblem(oss.str());
 
     set.erase(it);
     addExpression(InftyExpression(firstExp, lv.getFirst()));
@@ -327,11 +337,16 @@ void LimitProblem::applyLimitVectorAdvanced(const InftyExpressionSet::const_iter
 
     assert(lv.isApplicable(dir));
 
-    debugLimitProblem("applying transformation rule (A) (advanced), replacing " << *it
+    std::ostringstream oss;
+
+    oss << "applying transformation rule (A) (advanced), replacing " << *it
                       << " (" << InftyDirectionNames[dir] << ") by "
                       << l << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
                       << r << " (" << InftyDirectionNames[lv.getSecond()] << ")"
-                      << " using " << lv);
+                      << " using " << lv;
+
+    log.push_back(oss.str());
+    debugLimitProblem(oss.str());
 
     set.erase(it);
     addExpression(InftyExpression(l, lv.getFirst()));
@@ -349,8 +364,12 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
     assert((num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS));
 
-    debugLimitProblem("applying transformation rule (B), deleting " << *it
-                      << " (" << InftyDirectionNames[dir] << ")");
+    std::ostringstream oss;
+    oss << "applying transformation rule (B), deleting " << *it
+                      << " (" << InftyDirectionNames[dir] << ")";
+
+    log.push_back(oss.str());
+    debugLimitProblem(oss.str());
 
     set.erase(it);
 
@@ -363,7 +382,11 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
         assert(!s.second.has(s.first));
     }
 
-    debugLimitProblem("applying transformation rule (C) using substitution " << sub);
+    std::ostringstream oss;
+    oss << "applying transformation rule (C) using substitution " << sub;
+
+    log.push_back(oss.str());
+    debugLimitProblem(oss.str());
 
     InftyExpressionSet oldSet;
     oldSet.swap(set);
@@ -403,9 +426,14 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
             dir = POS_INF;
         }
 
-        debugLimitProblem("applying transformation rule (D), replacing " << *it
+        std::ostringstream oss;
+
+        oss << "applying transformation rule (D), replacing " << *it
                       << " (" << InftyDirectionNames[it->getDirection()] << ") by "
-                      << leadingTerm << " (" << InftyDirectionNames[dir] << ")");
+                      << leadingTerm << " (" << InftyDirectionNames[dir] << ")";
+
+        log.push_back(oss.str());
+        debugLimitProblem(oss.str());
 
         set.erase(it);
         addExpression(InftyExpression(leadingTerm, dir));
@@ -455,10 +483,15 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
     assert(e.is_polynomial(x));
     assert(e.has(x));
 
-    debugLimitProblem("applying transformation rule (E), replacing " << *it
+    std::ostringstream oss;
+
+    oss << "applying transformation rule (E), replacing " << *it
                       << " (" << InftyDirectionNames[it->getDirection()] << ") by "
                       << (a - 1) << " (" << InftyDirectionNames[POS] << ") and "
-                      << e << " (" << InftyDirectionNames[POS_INF] << ")");
+                      << e << " (" << InftyDirectionNames[POS_INF] << ")";
+
+    log.push_back(oss.str());
+    debugLimitProblem(oss.str());
 
     set.erase(it);
     addExpression(InftyExpression(a - 1, POS));
@@ -500,10 +533,15 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
 
     debugLimitProblem("a: " << a << ", e: " << e);
 
-    debugLimitProblem("applying transformation rule (F), replacing " << *it
+    std::ostringstream oss;
+
+    oss << "applying transformation rule (F), replacing " << *it
                       << " (" << InftyDirectionNames[it->getDirection()] << ") by "
                       << (a - 1) << " (" << InftyDirectionNames[POS] << ") and "
-                      << (e + b) << " (" << InftyDirectionNames[POS_INF] << ")");
+                      << (e + b) << " (" << InftyDirectionNames[POS_INF] << ")";
+
+    log.push_back(oss.str());
+    debugLimitProblem(oss.str());
 
     set.erase(it);
     addExpression(InftyExpression(a - 1, POS));
@@ -709,15 +747,21 @@ bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::cons
 }
 
 
-void LimitProblem::dump(const std::string &description) const {
+void LimitProblem::dump(const std::string &description) {
 #ifdef DEBUG_LIMIT_PROBLEMS
-    std::cout << description << ":" << std::endl;
-    for (auto ex : set) {
-        std::cout << ex << " (" << InftyDirectionNames[ex.getDirection()] << "), ";
-    }
-    std::cout << std::endl;
+    std::ostringstream oss;
 
-    std::cout << "the problem is " << (isUnsolvable() ? "unsolvable" : (isSolved() ? "solved" : "not solved"))
+    oss << description << ":" << std::endl;
+    for (auto ex : set) {
+        oss << ex << " (" << InftyDirectionNames[ex.getDirection()] << "), ";
+    }
+    oss << std::endl;
+
+    oss << "the problem is " << (isUnsolvable() ? "unsolvable" : (isSolved() ? "solved" : "not solved"))
               << std::endl << std::endl;
+
+    std::cout << oss.str();
+
+    log.push_back(oss.str());
 #endif
 }
