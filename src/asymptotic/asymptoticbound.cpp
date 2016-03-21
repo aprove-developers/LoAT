@@ -12,7 +12,8 @@
 
 using namespace GiNaC;
 
-AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck)
+AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard,
+                                 Expression cost, bool finalCheck)
     : its(its), guard(guard), cost(cost), finalCheck(finalCheck) {
     assert(GuardToolbox::isValidGuard(guard));
 }
@@ -52,70 +53,56 @@ void AsymptoticBound::createInitialLimitProblem() {
     currentLP = LimitProblem(normalizedGuard, cost);
 
     debugLimitProblem(currentLP);
+    debugLimitProblem("");
 }
 
 void AsymptoticBound::propagateBounds() {
     debugAsymptoticBound("Propagating bounds.");
-
     assert(substitutions.size() == 0);
 
     if (currentLP.isUnsolvable()) {
         return;
     }
 
+    // build substitutions from equations
     for (const Expression &ex : guard) {
         assert(ex.info(info_flags::relation_equal)
                || GuardToolbox::isValidInequality(ex));
 
-        if (ex.info(info_flags::relation_equal)) {
-            Expression target = ex.rhs() - ex.lhs();
-            if (!target.info(info_flags::polynomial)) {
-                continue;
-            }
+        Expression target = ex.rhs() - ex.lhs();
+        if (ex.info(info_flags::relation_equal)
+            && target.info(info_flags::polynomial)) {
 
-            debugAsymptoticBound("equation: " << ex);
-            debugAsymptoticBound("target: " << target);
-
-            //check if equation can be solved for a single variable
-            for (const ExprSymbol &var : target.getVariables()) {
-                //solve target for var (result is in target)
-                if (its.isFreeVar(var) || !GuardToolbox::solveTermFor(target, var, GuardToolbox::PropagationLevel::NoCoefficients)) {
-                    continue;
+            std::vector<ExprSymbol> vars;
+            std::vector<ExprSymbol> tempVars;
+            for (const ExprSymbol & var : target.getVariables()) {
+                if (its.isFreeVar(var)) {
+                    tempVars.push_back(var);
+                } else {
+                    vars.push_back(var);
                 }
-
-                exmap sub;
-                sub.insert(std::make_pair(var, target));
-                substitutions.push_back(sub);
-
-                debugAsymptoticBound("substitution (equation): " << sub);
-                goto end;
             }
 
+            vars.insert(vars.begin(), tempVars.begin(), tempVars.end());
 
-            //check if equation can be solved for a single variable
-            for (const ExprSymbol &var : target.getVariables()) {
+            // check if equation can be solved for a single variable
+            // check program variables first
+            for (const ExprSymbol &var : vars) {
                 //solve target for var (result is in target)
-                if (!GuardToolbox::solveTermFor(target, var, GuardToolbox::PropagationLevel::NoCoefficients)) {
-                    continue;
+                if (GuardToolbox::solveTermFor(target, var,
+                                                GuardToolbox::PropagationLevel::NoCoefficients)) {
+                    exmap sub;
+                    sub.insert(std::make_pair(var, target));
+
+                    debugAsymptoticBound("substitution (equation): " << sub);
+                    substitutions.push_back(std::move(sub));
+                    break;
                 }
-
-                exmap sub;
-                sub.insert(std::make_pair(var, target));
-                substitutions.push_back(sub);
-
-                debugAsymptoticBound("substitution (equation): " << sub);
-                goto end;
             }
-
-
-            end:;
         }
     }
 
-    for (int i = 0; i < substitutions.size(); ++i) {
-        debugAsymptoticBound("equation: " << substitutions[i]);
-    }
-
+    // apply all substitutions resulting from equations
     for (int i = 0; i < substitutions.size(); ++i) {
         currentLP.substitute(substitutions[i], i);
     }
@@ -126,9 +113,8 @@ void AsymptoticBound::propagateBounds() {
 
     int numOfEquations = substitutions.size();
 
+    // build substitutions from inequalities
     for (const Expression &ex : guard) {
-        assert(ex.info(info_flags::relation_equal)
-               || GuardToolbox::isValidInequality(ex));
         if (!ex.info(info_flags::relation_equal)) {
             if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
                 Expression exT = GuardToolbox::turnToLess(ex);
@@ -151,7 +137,7 @@ void AsymptoticBound::propagateBounds() {
                 }
 
                 if (!isInLimitProblem) {
-                    debugAsymptoticBound(l << "is not in the lp");
+                    debugAsymptoticBound(l << " is not in the limit problem");
                     continue;
                 }
 
@@ -164,15 +150,15 @@ void AsymptoticBound::propagateBounds() {
 
                     exmap sub;
                     sub.insert(std::make_pair(l, r));
-                    substitutions.push_back(sub);
 
-                    debugAsymptoticBound("substitution: " << sub);
+                    debugAsymptoticBound("substitution (inequality): " << sub);
+                    substitutions.push_back(std::move(sub));
                 }
             }
         }
     }
 
-
+    // build all possible combinations of substitutions (resulting from inequalites)
     int numOfSubstitutions = substitutions.size() - numOfEquations;
     if (finalCheck && numOfSubstitutions <= 10) { // must be smaller than 32
         unsigned int combination;
@@ -191,7 +177,8 @@ void AsymptoticBound::propagateBounds() {
 
             for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
                 if (combination & (1 << bitPos)) {
-                    limitProblem.substitute(substitutions[numOfEquations + bitPos], numOfEquations + bitPos);
+                    limitProblem.substitute(substitutions[numOfEquations + bitPos],
+                                            numOfEquations + bitPos);
                 }
             }
 
@@ -202,14 +189,16 @@ void AsymptoticBound::propagateBounds() {
 
     }
 
+    // no substitution (resulting from inequalies)
     limitProblems.push_back(currentLP);
 
     if (limitProblems.back().isUnsolvable()) {
         limitProblems.pop_back();
     }
 
+    // all substitutions (resulting from inequalies)
     limitProblems.push_back(currentLP);
-    LimitProblem &limitProblem2 = limitProblems.back();
+    LimitProblem &limitProblem = limitProblems.back();
 
     debugAsymptoticBound("combination of substitutions:");
     for (int i = numOfEquations; i < substitutions.size(); ++i) {
@@ -217,10 +206,10 @@ void AsymptoticBound::propagateBounds() {
     }
 
     for (int i = numOfEquations; i < substitutions.size(); ++i) {
-        limitProblem2.substitute(substitutions[i], i);
+        limitProblem.substitute(substitutions[i], i);
     }
 
-    if (limitProblem2.isUnsolvable()) {
+    if (limitProblem.isUnsolvable()) {
         limitProblems.pop_back();
     }
 }
@@ -233,16 +222,19 @@ GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     for (int index : limitProblem.getSubstitutions()) {
         const exmap &sub = substitutions[index];
 
-        solution = GuardToolbox::composeSubs(sub, solution);
+        solution = std::move(GuardToolbox::composeSubs(sub, solution));
         debugAsymptoticBound("substitution: " << sub);
     }
 
     debugAsymptoticBound("solution for the solved limit problem: " << limitProblem.getSolution());
-    solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
+    solution = std::move(GuardToolbox::composeSubs(limitProblem.getSolution(), solution));
     debugAsymptoticBound("resulting solution: " << solution << std::endl);
 
     debugAsymptoticBound("fixing solution");
-    for (const Expression &ex : guard) {
+
+    GuardList guardCopy = guard;
+    guardCopy.push_back(cost);
+    for (const Expression &ex : guardCopy) {
         for (const ExprSymbol &var : ex.getVariables()) {
             if (solution.count(var) == 0) {
                 debugAsymptoticBound(var << " is missing");
@@ -250,19 +242,8 @@ GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
                 exmap sub;
                 sub.insert(std::make_pair(var, numeric(0)));
 
-                solution = GuardToolbox::composeSubs(sub, solution);
+                solution = std::move(GuardToolbox::composeSubs(sub, solution));
             }
-        }
-    }
-
-    for (const ExprSymbol &var : cost.getVariables()) {
-        if (solution.count(var) == 0) {
-            debugAsymptoticBound(var << " is missing");
-
-            exmap sub;
-            sub.insert(std::make_pair(var, numeric(0)));
-
-            solution = GuardToolbox::composeSubs(sub, solution);
         }
     }
 
@@ -272,12 +253,13 @@ GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
 }
 
 
-int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution) {
+int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
+                                               const GiNaC::exmap &solution) {
     debugAsymptoticBound("Finding upper bound for the solution.");
 
     ExprSymbol n = limitProblem.getN();
     int upperBound = 0;
-    for (auto pair : solution) {
+    for (auto const &pair : solution) {
         assert(is_a<symbol>(pair.first));
 
         if (!its.isFreeVar(ex_to<symbol>(pair.first))) {
@@ -304,7 +286,8 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
 }
 
 
-int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution) {
+int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProblem,
+                                                 const GiNaC::exmap &solution) {
     debugAsymptoticBound("Finding lower bound for the solved cost.");
 
     Expression solvedCost = cost.subs(solution);
@@ -350,6 +333,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
         debugAsymptoticBound("Omega(" << lowerBound << "^" << n << ")" << std::endl);
 
+        // code the lowerBound as a negative number to mark it as exponential
         lowerBound = -lowerBound;
     }
 
@@ -381,6 +365,7 @@ bool AsymptoticBound::solveLimitProblem() {
     if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
         debugAsymptoticBound("Currently handling:");
         debugAsymptoticBound(currentLP);
+        debugAsymptoticBound("");
 
         InftyExpressionSet::const_iterator it;
 
@@ -540,7 +525,8 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
 }
 
 
-void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir) {
+void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it,
+                                              Direction dir) {
     assert(dir == POS_INF || dir == POS_CONS);
 
     if (finalCheck && it->getDirection() == POS) {
@@ -549,6 +535,7 @@ void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_it
 
         debugAsymptoticBound("creating backtracking point:");
         debugAsymptoticBound(limitProblems.back());
+        debugAsymptoticBound("");
     }
 }
 
@@ -679,7 +666,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 
     std::vector<Expression> ops(it->begin(), it->end());
 
-    ExprSymbolSet minVars = ops[0].getVariables();
+    ExprSymbolSet minVars = std::move(ops[0].getVariables());
     for (int i = 1; i < it->nops(); ++i) {
         ExprSymbolSet vars = std::move(ops[i].getVariables());
         if (vars.size() < minVars.size()) {
@@ -796,14 +783,17 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 
                 debugAsymptoticBound("Z3: limit problem is sat");
                 debugAsymptoticBound(currentLP);
-                Expression rational = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
+                Expression rational =
+                    Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
 
                 exmap sub;
                 sub.insert(std::make_pair(var, rational));
-                substitutions.push_back(sub);
+                substitutions.push_back(std::move(sub));
+
+                debugAsymptoticBound("instantiating " << var << " by " << rational);
 
                 createBacktrackingPoint(it, POS_INF);
-                currentLP.substitute(sub, substitutions.size() - 1);
+                currentLP.substitute(substitutions.back(), substitutions.size() - 1);
 
             } else {
                 debugAsymptoticBound("Z3: limit problem is unknown");
@@ -851,7 +841,10 @@ bool AsymptoticBound::trySubstitutingVariable() {
 }
 
 
-InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost, bool finalCheck) {
+InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its,
+                                                               const GuardList &guard,
+                                                               const Expression &cost,
+                                                               bool finalCheck) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     debugAsymptoticBound("guard:" << std::endl);
@@ -863,7 +856,6 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     debugAsymptoticBound("");
 
     Expression expandedCost = cost.expand();
-    Expression useCost = cost;
     //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
     if (expandedCost.has(Expression::Infty)) {
         Expression inftyCoeff = expandedCost.coeff(Expression::Infty);
@@ -872,11 +864,12 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         query.push_back(inftyCoeff > 0);
 
         if (Z3Toolbox::checkExpressionsSAT(query) == z3::sat) {
-            return InfiniteInstances::Result(Expression::ComplexInfty, false, Expression::Infty, 0, "INF coeff sat");
-
+            return InfiniteInstances::Result(Expression::ComplexInfty, false,
+                                             Expression::Infty, 0, "INF coeff sat");
         }
 
-        useCost = cost.subs(Expression::Infty == 0); //remove INF symbol if INF cost cannot be proved
+        return InfiniteInstances::Result(Expression::ComplexNone,
+                                         "The cost contains infinity.");
     }
 
     AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
@@ -890,9 +883,10 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
 
         debugAsymptoticBound(asymptoticBound.solvedLimitProblems.size() << " solved problems");
 
+        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
                                          asymptoticBound.bestComplexity.upperBound > 1,
-                                         asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution),
+                                         solvedCost,
                                          0, "Solved the initial limit problem.");
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem.");
