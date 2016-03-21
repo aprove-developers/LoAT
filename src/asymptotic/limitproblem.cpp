@@ -13,6 +13,7 @@ LimitProblem::LimitProblem()
     : variableN("n"), unsolvable(false) {
 }
 
+
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
     : variableN("n"), unsolvable(false) {
     for (const Expression &ex : normalizedGuard) {
@@ -23,9 +24,6 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 
     assert(!is_a<relational>(cost));
     addExpression(InftyExpression(cost, POS_INF));
-
-    debugLimitProblem("Created initial limit problem:");
-    debugLimitProblem(*this);
 }
 
 
@@ -33,7 +31,7 @@ LimitProblem::LimitProblem(const LimitProblem &other)
     : set(other.set),
       variableN(other.variableN),
       substitutions(other.substitutions),
-      log(other.log),
+      //log(other.log),
       unsolvable(other.unsolvable) {
 }
 
@@ -43,7 +41,7 @@ LimitProblem& LimitProblem::operator=(const LimitProblem &other) {
         set = other.set;
         variableN = other.variableN;
         substitutions = other.substitutions;
-        log = other.log;
+        //log = other.log;
         unsolvable = other.unsolvable;
     }
 
@@ -55,7 +53,7 @@ LimitProblem::LimitProblem(LimitProblem &&other)
     : set(std::move(other.set)),
       variableN(other.variableN),
       substitutions(std::move(other.substitutions)),
-      log(std::move(other.log)),
+      //log(std::move(other.log)),
       unsolvable(other.unsolvable) {
 }
 
@@ -65,7 +63,7 @@ LimitProblem& LimitProblem::operator=(LimitProblem &&other) {
         set = std::move(other.set);
         variableN = other.variableN;
         substitutions = std::move(other.substitutions);
-        log = std::move(other.log);
+        //log = std::move(other.log);
         unsolvable = other.unsolvable;
     }
 
@@ -77,29 +75,39 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
     InftyExpressionSet::iterator it = set.find(ex);
 
     if (it == set.end()) {
+        // ex is not present
         set.insert(ex);
+
     } else {
+        // ex is already present
         if (it->getDirection() != ex.getDirection()) {
             if (it->getDirection() == POS &&
                 (ex.getDirection() == POS_INF || ex.getDirection() == POS_CONS)) {
+                // fix direction
                 set.erase(it);
                 set.insert(ex);
 
             } else if (!(ex.getDirection() == POS &&
                          (it->getDirection() == POS_INF || it->getDirection() == POS_CONS))) {
+                // the limit problem is contradictory
                 unsolvable = true;
             }
         }
     }
 
-    if ((ex.getDirection() == POS_INF || ex.getDirection() == NEG_INF)
-        && is_a<numeric>(ex)) {
-        unsolvable = true;
-    }
+    // check if the limit problem is definitely unsolvable
+    if (is_a<numeric>(ex)) {
+        if (ex.getDirection() == POS_INF || ex.getDirection() == NEG_INF) {
+            unsolvable = true;
 
-    if (((ex.getDirection() == POS_CONS || ex.getDirection() == POS) && is_a<numeric>(ex) && (ex.info(info_flags::negative) || ex.is_zero()))
-        || (ex.getDirection() == NEG_CONS && is_a<numeric>(ex) && ex.info(info_flags::nonnegative))) {
-        unsolvable = true;
+        } else if ((ex.getDirection() == POS_CONS || ex.getDirection() == POS)
+                   && (ex.info(info_flags::negative) || ex.is_zero())) {
+            unsolvable = true;
+
+        } else if (ex.getDirection() == NEG_CONS
+                   && ex.info(info_flags::nonnegative)) {
+            unsolvable = true;
+        }
     }
 }
 
@@ -122,10 +130,6 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
         assert(pos >= 0 && pos < it->nops());
     }
     assert(lv.isApplicable(dir));
-
-    for (int i = 0; i < it->nops(); i++) {
-        debugLimitProblem("op(" << i << "): " << it->op(i));
-    }
 
     Expression firstExp, secondExp;
     if (it->isProperRational()) {
@@ -168,87 +172,78 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
     } else {
         debugLimitProblem(*it << " is neither a proper rational, an addition,"
                           << " a multiplication, nor a proper natural power");
-        assert(false);
+        unreachable();
     }
 
-    std::ostringstream oss;
+    InftyExpression firstIE(firstExp, lv.getFirst());
+    InftyExpression secondIE(secondExp, lv.getSecond());
 
-    oss << "applying transformation rule (A), replacing " << *it
-                      << " (" << DirectionNames[dir] << ") by "
-                      << firstExp << " (" << DirectionNames[lv.getFirst()] << ") and "
-                      << secondExp << " (" << DirectionNames[lv.getSecond()] << ")"
-                      << " using " << lv;
-
-    log.push_back(oss.str());
-    debugLimitProblem(oss.str());
+    //log << "applying transformation rule (A), replacing " << *it
+    //    << " by " << firstIE << " and " << secondExp << " using " << lv << std::endl;
+    debugLimitProblem("applying transformation rule (A), replacing " << *it
+                      << " by " << firstIE << " and " << secondExp << " using " << lv);
 
     set.erase(it);
-    addExpression(InftyExpression(firstExp, lv.getFirst()));
-    addExpression(InftyExpression(secondExp, lv.getSecond()));
+    addExpression(firstIE);
+    addExpression(secondIE);
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
 
 
-void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it, Expression l, Expression r,
+void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it,
+                                    const Expression &l, const Expression &r,
                                     const LimitVector &lv) {
     Direction dir = it->getDirection();
-
     assert(lv.isApplicable(dir));
 
-    std::ostringstream oss;
+    InftyExpression firstIE(l, lv.getFirst());
+    InftyExpression secondIE(r, lv.getSecond());
 
-    oss << "applying transformation rule (A) (advanced), replacing " << *it
-                      << " (" << DirectionNames[dir] << ") by "
-                      << l << " (" << DirectionNames[lv.getFirst()] << ") and "
-                      << r << " (" << DirectionNames[lv.getSecond()] << ")"
-                      << " using " << lv;
+    //log << "applying transformation rule (A) (advanced), replacing " << *it
+    //    << " by " << firstIE << " and " << secondIE << " using " << lv << std::endl;
+    debugLimitProblem("applying transformation rule (A) (advanced), replacing " << *it
+                      << " by " << firstIE << " and " << secondIE << " using " << lv);
 
-    log.push_back(oss.str());
-    debugLimitProblem(oss.str());
 
     set.erase(it);
-    addExpression(InftyExpression(l, lv.getFirst()));
-    addExpression(InftyExpression(r, lv.getSecond()));
+    addExpression(firstIE);
+    addExpression(secondIE);
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
 
 
 void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
-    Direction dir = it->getDirection();
-
     assert(it->info(info_flags::integer));
+
     numeric num = ex_to<numeric>(*it);
+    Direction dir = it->getDirection();
     assert((num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS));
 
-    std::ostringstream oss;
-    oss << "applying transformation rule (B), deleting " << *it
-                      << " (" << DirectionNames[dir] << ")";
-
-    log.push_back(oss.str());
-    debugLimitProblem(oss.str());
+    //log << "applying transformation rule (B), deleting " << *it << std::endl;
+    debugLimitProblem("applying transformation rule (B), deleting " << *it);
 
     set.erase(it);
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
 
 
 void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
-    for (auto s : sub) {
+    for (auto const &s : sub) {
         assert(!s.second.has(s.first));
     }
 
-    std::ostringstream oss;
-    oss << "applying transformation rule (C) using substitution " << sub;
-
-    log.push_back(oss.str());
-    debugLimitProblem(oss.str());
+    //log << "applying transformation rule (C) using substitution " << sub << std::endl;
+    debugLimitProblem("applying transformation rule (C) using substitution " << sub);
 
     InftyExpressionSet oldSet;
     oldSet.swap(set);
@@ -258,13 +253,14 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
 
     substitutions.push_back(substitutionIndex);
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
 
 
 void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) {
-    ExprSymbolSet variables = it->getVariables();
+    ExprSymbolSet variables = std::move(it->getVariables());
 
     // the expression has to be a univariate polynomial
     assert(it->info(info_flags::polynomial));
@@ -285,25 +281,24 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
         debugLimitProblem("the leading term is " << leadingTerm);
 
         if (dir == POS) {
-            // Fix the direction of the expression
+            // Fix the direction
             dir = POS_INF;
         }
 
-        std::ostringstream oss;
+        InftyExpression inftyExp(leadingTerm, dir);
 
-        oss << "applying transformation rule (D), replacing " << *it
-                      << " (" << DirectionNames[it->getDirection()] << ") by "
-                      << leadingTerm << " (" << DirectionNames[dir] << ")";
-
-        log.push_back(oss.str());
-        debugLimitProblem(oss.str());
+        //log << "applying transformation rule (D), replacing " << *it
+        //    << " by " << inftyExp << std::endl;
+        debugLimitProblem("applying transformation rule (D), replacing " << *it
+                          << " by " << inftyExp);
 
         set.erase(it);
-        addExpression(InftyExpression(leadingTerm, dir));
+        addExpression(inftyExp);
     } else {
         debugLimitProblem(*it << " is already a monom");
     }
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
@@ -314,7 +309,7 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
 
     debugLimitProblem("expression: " << *it);
 
-    ExprSymbolSet variables = it->getVariables();
+    ExprSymbolSet variables = std::move(it->getVariables());
     assert(variables.size() == 1);
     ExprSymbol x = *variables.cbegin();
 
@@ -347,20 +342,19 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
     assert(e.is_polynomial(x));
     assert(e.has(x));
 
-    std::ostringstream oss;
+    InftyExpression firstIE(a - 1, POS);
+    InftyExpression secondIE(e, POS_INF);
 
-    oss << "applying transformation rule (E), replacing " << *it
-                      << " (" << DirectionNames[it->getDirection()] << ") by "
-                      << (a - 1) << " (" << DirectionNames[POS] << ") and "
-                      << e << " (" << DirectionNames[POS_INF] << ")";
-
-    log.push_back(oss.str());
-    debugLimitProblem(oss.str());
+    //log << "applying transformation rule (E), replacing " << *it << " by "
+    //    << firstIE << " and " << secondIE << std::endl;
+    debugLimitProblem("applying transformation rule (E), replacing " << *it
+                      << " by " << firstIE << " and " << secondIE);
 
     set.erase(it);
-    addExpression(InftyExpression(a - 1, POS));
-    addExpression(InftyExpression(e, POS_INF));
+    addExpression(firstIE);
+    addExpression(secondIE);
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
@@ -398,20 +392,19 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
 
     debugLimitProblem("a: " << a << ", e: " << e);
 
-    std::ostringstream oss;
+    InftyExpression firstIE(a - 1, POS);
+    InftyExpression secondIE(e + b, POS_INF);
 
-    oss << "applying transformation rule (F), replacing " << *it
-                      << " (" << DirectionNames[it->getDirection()] << ") by "
-                      << (a - 1) << " (" << DirectionNames[POS] << ") and "
-                      << (e + b) << " (" << DirectionNames[POS_INF] << ")";
-
-    log.push_back(oss.str());
-    debugLimitProblem(oss.str());
+    //log << "reducing general power, replacing " << *it
+    //    << " by " << firstIE << " and " << secondIE << std::endl;
+    debugLimitProblem("reducing general power, replacing " << *it
+                      << " by " << firstIE << " and " << secondIE);
 
     set.erase(it);
-    addExpression(InftyExpression(a - 1, POS));
-    addExpression(InftyExpression(e + b, POS_INF));
+    addExpression(firstIE);
+    addExpression(secondIE);
 
+    //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
 }
@@ -434,15 +427,13 @@ bool LimitProblem::isSolved() const {
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {
         if (!is_a<symbol>(ex)) {
-            //debugLimitProblem(ex << " is not a variable");
-
             return false;
         }
     }
 
     // Since the infinity expressions are compared using GiNaC::ex_is_less,
     // the directions do not affect the comparison.
-    // Therefore, there cannot be a single variable with different directions.
+    // Therefore, there cannot be a variable with different directions.
     return true;
 }
 
@@ -452,7 +443,6 @@ GiNaC::exmap LimitProblem::getSolution() const {
 
     exmap solution;
     for (const InftyExpression &ex : set) {
-
         switch (ex.getDirection()) {
             case POS:
             case POS_INF:
@@ -492,12 +482,11 @@ InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex)
 std::vector<Expression> LimitProblem::getQuery() {
     std::vector<Expression> query;
 
-    InftyExpressionSet::const_iterator it;
-    for (it = cbegin(); it != cend(); ++it) {
-        if (it->getDirection() == NEG_INF || it->getDirection() == NEG_CONS) {
-            query.push_back(it->expand() < 0);
+    for (const InftyExpression &ex : set) {
+        if (ex.getDirection() == NEG_INF || ex.getDirection() == NEG_CONS) {
+            query.push_back(ex.expand() < 0);
         } else {
-            query.push_back(it->expand() > 0);
+            query.push_back(ex.expand() > 0);
         }
     }
 
@@ -524,28 +513,31 @@ bool LimitProblem::removeConstantIsApplicable(const InftyExpressionSet::const_it
 
 
 bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it) {
-    ExprSymbolSet variables = it->getVariables();
-
-    if (!it->info(info_flags::polynomial) || !(variables.size() == 1)) {
-        return false;
-    }
-
     Direction dir = it->getDirection();
     if (!((dir == POS) || (dir == POS_INF) || (dir == NEG_INF))) {
         return false;
     }
 
+    if (!it->info(info_flags::polynomial)) {
+        return false;
+    }
+
     // Check if it is a monom
-    return is_a<add>(it->expand());
+    if (!is_a<add>(it->expand())) {
+        return false;
+    }
+
+    return it->getVariables().size() == 1;
 }
 
 
 bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it) {
-    if (!(it->getDirection() == POS_INF || it->getDirection() == POS)) {
+    Direction dir = it->getDirection();
+    if (!(dir == POS_INF || dir == POS)) {
         return false;
     }
 
-    ExprSymbolSet variables = it->getVariables();
+    ExprSymbolSet variables = std::move(it->getVariables());
 
     if (variables.size() != 1) {
         return false;
@@ -589,27 +581,25 @@ bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::c
 
 
 bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::const_iterator &it) {
-    if (!(it->getDirection() == POS_INF || it->getDirection() == POS)) {
+    Direction dir = it->getDirection();
+    if (!(dir == POS_INF || dir == POS)) {
         return false;
     }
 
-    Expression powerInExp;
     if (is_a<add>(*it)) {
         for (int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
                                          || summand.getVariables().size() > 1)) {
-                powerInExp = summand;
-                break;
+                return true;
             }
         }
 
-    } else {
-        powerInExp = *it;
+        return false;
     }
 
-    return is_a<power>(powerInExp) && (!powerInExp.op(1).info(info_flags::polynomial)
-                                       || powerInExp.getVariables().size() > 1);
+    return is_a<power>(*it) && (!it->op(1).info(info_flags::polynomial)
+                                || it->getVariables().size() > 1);
 }
 
 

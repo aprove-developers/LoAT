@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <set>
+#include <sstream>
 
 #include "guardtoolbox.h"
 #include "inftyexpression.h"
@@ -72,7 +73,8 @@ public:
      * @param it must be a valid const_iterator of the underlying set
      * @param lv must be applicable to *it
      */
-    void applyLimitVector(const InftyExpressionSet::const_iterator &it, Expression l, Expression r,
+    void applyLimitVector(const InftyExpressionSet::const_iterator &it,
+                          const Expression &l, const Expression &r,
                           const LimitVector &lv);
 
     /**
@@ -194,7 +196,7 @@ public:
     InftyExpressionSet set;
     ExprSymbol variableN;
     std::vector<int> substitutions;
-    std::vector<std::string> log;
+    //std::ostringstream log;
     bool unsolvable;
 };
 

@@ -27,10 +27,6 @@ private:
     Complexity getBestComplexity();
     bool isAdequateSolution(const LimitProblem &limitProblem);
 
-    //debug dumping
-    void dumpCost(const std::string &description) const;
-    void dumpGuard(const std::string &description) const;
-
 private:
     void createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir);
     bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
@@ -51,13 +47,21 @@ private:
     std::vector<LimitProblem> limitProblems;
     std::vector<LimitProblem> solvedLimitProblems;
     LimitProblem currentLP;
+
     std::vector<GiNaC::exmap> substitutions;
     GiNaC::exmap solutionBestCplx;
     int upperBoundBestCplx;
     bool finalCheck;
 
 public:
-    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost, bool finalCheck);
+    /**
+     * Analyzes the given guard and cost.
+     * @param its the ITRSProblem instance is needed to get information about free variables
+     * @param finalCheck enables more sophisticated backtracking
+     */
+    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its,
+                                                         const GuardList &guard,
+                                                         const Expression &cost, bool finalCheck);
 };
 
 #endif //ASYMPTOTICBOUND_H

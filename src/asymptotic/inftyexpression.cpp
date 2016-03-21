@@ -4,6 +4,7 @@
 
 const char* DirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
+
 InftyExpression::InftyExpression(Direction dir)
     : direction(dir) {
 }
@@ -29,6 +30,7 @@ void InftyExpression::setDirection(Direction dir) {
 Direction InftyExpression::getDirection() const {
     return direction;
 }
+
 
 std::ostream& operator<<(std::ostream &os, const InftyExpression &ie) {
     os << static_cast<const Expression &>(ie) << " ("

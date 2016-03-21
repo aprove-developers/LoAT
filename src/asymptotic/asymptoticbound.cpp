@@ -48,7 +48,10 @@ void AsymptoticBound::normalizeGuard() {
 
 
 void AsymptoticBound::createInitialLimitProblem() {
+    debugLimitProblem("Creating initial limit problem.");
     currentLP = LimitProblem(normalizedGuard, cost);
+
+    debugLimitProblem(currentLP);
 }
 
 void AsymptoticBound::propagateBounds() {
@@ -552,22 +555,6 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
 }
 
 
-void AsymptoticBound::dumpCost(const std::string &description) const {
-    debugAsymptoticBound(description << ": " << cost);
-}
-
-
-void AsymptoticBound::dumpGuard(const std::string &description) const {
-#ifdef DEBUG_ASYMPTOTIC_BOUNDS
-    std::cout << description << ": ";
-    for (auto ex : guard) {
-        std::cout << ex << " ";
-    }
-    std::cout << std::endl;
-#endif
-}
-
-
 void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir) {
     assert(dir == POS_INF || dir == POS_CONS);
 
@@ -882,6 +869,14 @@ bool AsymptoticBound::trySubstitutingVariable() {
 InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its, const GuardList &guard, const Expression &cost, bool finalCheck) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
+    debugAsymptoticBound("guard:" << std::endl);
+    for (const Expression &ex : guard) {
+        debugAsymptoticBound(ex);
+    }
+    debugAsymptoticBound("");
+    debugAsymptoticBound("cost:" << std::endl << cost);
+    debugAsymptoticBound("");
+
     Expression expandedCost = cost.expand();
     Expression useCost = cost;
     //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
@@ -900,10 +895,6 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     }
 
     AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
-    asymptoticBound.dumpGuard("guard");
-    asymptoticBound.dumpCost("cost");
-    debugAsymptoticBound("");
-
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();

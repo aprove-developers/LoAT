@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-// limit vectors for addition
 const std::vector<LimitVector> LimitVector::Addition = {
     // increasing limit vectors
     LimitVector(POS_INF, POS_INF, POS_INF),
@@ -26,7 +25,6 @@ const std::vector<LimitVector> LimitVector::Addition = {
 };
 
 
-// limit vectors for multiplication
 const std::vector<LimitVector> LimitVector::Multiplication = {
     // increasing limit vectors
     LimitVector(POS_INF, POS_INF, POS_INF),
@@ -54,7 +52,6 @@ const std::vector<LimitVector> LimitVector::Multiplication = {
 };
 
 
-// limit vectors for division
 const std::vector<LimitVector> LimitVector::Division = {
     // increasing limit vectors
     LimitVector(POS_INF, POS_INF, POS_CONS),
