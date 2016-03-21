@@ -190,6 +190,7 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 
@@ -215,6 +216,7 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 
@@ -234,6 +236,7 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 
@@ -256,6 +259,7 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 
@@ -301,6 +305,7 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 
@@ -357,6 +362,7 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 
@@ -407,6 +413,7 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
     //log << "resulting limit problem:" << std::endl << *this << std::endl;
     debugLimitProblem("resulting limit problem:");
     debugLimitProblem(*this);
+    debugLimitProblem("");
 }
 
 

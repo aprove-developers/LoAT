@@ -368,7 +368,7 @@ void AsymptoticBound::removeUnsatProblems() {
 
 
 bool AsymptoticBound::solveLimitProblem() {
-    debugAsymptoticBound("Trying to solve the initial limit problems.");
+    debugAsymptoticBound("Trying to solve the initial limit problem.");
 
     if (limitProblems.empty()) {
         return false;
@@ -465,47 +465,38 @@ bool AsymptoticBound::solveLimitProblem() {
 }
 
 
-Complexity AsymptoticBound::getComplexity(const LimitProblem &limitProblem) {
-    GiNaC::exmap solution = calcSolution(limitProblem);
-    int upperBound = findUpperBoundforSolution(limitProblem, solution);
-    if (upperBound == 0) {
-        return Expression::ComplexInfty;
-    }
-
-    int lowerBound = findLowerBoundforSolvedCost(limitProblem, solution);
-
+AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProblem &limitProblem) {
     debugAsymptoticBound("Calculating complexity.");
+    ComplexityResult res;
 
-    ExprSymbol n = limitProblem.getN();
-    if (lowerBound < 0) { // lower bound is exponential
-        debugAsymptoticBound("Omega(" << -lowerBound << "^"
-                             << "(" << n << "^"
-                             << "(1/" << upperBound << ")" << ")" << ")" << std::endl);
+    res.solution = std::move(calcSolution(limitProblem));
+    res.upperBound = findUpperBoundforSolution(limitProblem, res.solution);
 
-        return Expression::ComplexExp;
+    if (res.upperBound == 0) {
+        res.complexity = Expression::ComplexInfty;
     } else {
-        debugAsymptoticBound("Omega(" << n << "^"
-                             << "(" << lowerBound << "/" << upperBound << ")" << ")" << std::endl);
+        res.lowerBound = findLowerBoundforSolvedCost(limitProblem, res.solution);
 
-        return Complexity(lowerBound, upperBound);
-    }
-}
+        ExprSymbol n = limitProblem.getN();
+        if (res.lowerBound < 0) { // lower bound is exponential
+            res.lowerBound = -res.lowerBound;
+            debugAsymptoticBound("Omega(" << res.lowerBound << "^" << "(" << n << "^"
+                                 << "(1/" << res.upperBound << ")" << ")" << ")" << std::endl);
 
+            res.complexity = Expression::ComplexExp;
+        } else {
+            debugAsymptoticBound("Omega(" << n << "^" << "(" << res.lowerBound
+                                 << "/" << res.upperBound << ")" << ")" << std::endl);
 
-Complexity AsymptoticBound::getBestComplexity() {
-    Complexity cplx = Expression::ComplexNone;
-
-    for (const LimitProblem &limitProblem : solvedLimitProblems) {
-        Complexity newCplx = getComplexity(limitProblem);
-
-        if (newCplx > cplx) {
-            cplx = newCplx;
-            solutionBestCplx = calcSolution(limitProblem);
-            upperBoundBestCplx = findUpperBoundforSolution(limitProblem, solutionBestCplx);
+            res.complexity = Complexity(res.lowerBound, res.upperBound);
         }
     }
 
-    return cplx;
+    if (res.complexity > bestComplexity.complexity) {
+        bestComplexity = res;
+    }
+
+    return res;
 }
 
 
@@ -513,18 +504,17 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     debugAsymptoticBound("Checking solution for adequateness.");
     assert(limitProblem.isSolved());
 
-    Complexity cplx = getComplexity(limitProblem);
+    ComplexityResult result = getComplexity(limitProblem);
 
-    if (cplx == Expression::ComplexInfty) {
+    if (result.complexity == Expression::ComplexInfty) {
         return true;
     }
 
-    if (cost.getComplexity()  > cplx) {
+    if (cost.getComplexity()  > result.complexity) {
         return false;
     }
 
-    exmap solution = calcSolution(limitProblem);
-    Expression solvedCost = cost.subs(solution);
+    Expression solvedCost = cost.subs(result.solution);
     ExprSymbol n = limitProblem.getN();
     debugAsymptoticBound("solved cost: " << solvedCost << ", cost: " << cost);
 
@@ -539,16 +529,11 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
 
     }
 
-    bool costContainsFreeVar = false;
     for (const ExprSymbol &var : cost.getVariables()) {
         if (its.isFreeVar(ex_to<symbol>(var))) {
-            costContainsFreeVar = true;
-            break;
+            // we try to achieve ComplexInfty
+            return false;
         }
-    }
-
-    if (costContainsFreeVar && cplx != Expression::ComplexInfty) {
-        return false;
     }
 
     return true;
@@ -905,9 +890,9 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
 
         debugAsymptoticBound(asymptoticBound.solvedLimitProblems.size() << " solved problems");
 
-        return InfiniteInstances::Result(asymptoticBound.getBestComplexity(),
-                                         asymptoticBound.upperBoundBestCplx > 1,
-                                         asymptoticBound.cost.subs(asymptoticBound.solutionBestCplx),
+        return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
+                                         asymptoticBound.bestComplexity.upperBound > 1,
+                                         asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution),
                                          0, "Solved the initial limit problem.");
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem.");

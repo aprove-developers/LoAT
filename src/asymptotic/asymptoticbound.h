@@ -11,8 +11,24 @@
 #include "inftyexpression.h"
 #include "limitproblem.h"
 
+
+
 class AsymptoticBound {
 private:
+    // internal struct for the return value of getComplexity()
+    struct ComplexityResult {
+        ComplexityResult() {
+            complexity = Expression::ComplexNone;
+            upperBound = 0;
+            lowerBound = 0;
+        }
+
+        GiNaC::exmap solution;
+        Complexity complexity;
+        int upperBound;
+        int lowerBound;
+    };
+
     AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck);
 
     void normalizeGuard();
@@ -23,11 +39,9 @@ private:
     int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     void removeUnsatProblems();
     bool solveLimitProblem();
-    Complexity getComplexity(const LimitProblem &limitProblem);
-    Complexity getBestComplexity();
+    ComplexityResult getComplexity(const LimitProblem &limitProblem);
     bool isAdequateSolution(const LimitProblem &limitProblem);
 
-private:
     void createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir);
     bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
     bool tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it);
@@ -42,16 +56,15 @@ private:
     const ITRSProblem its;
     const GuardList guard;
     const Expression cost;
+    bool finalCheck;
     GuardList normalizedGuard;
+    ComplexityResult bestComplexity;
 
     std::vector<LimitProblem> limitProblems;
     std::vector<LimitProblem> solvedLimitProblems;
     LimitProblem currentLP;
 
     std::vector<GiNaC::exmap> substitutions;
-    GiNaC::exmap solutionBestCplx;
-    int upperBoundBestCplx;
-    bool finalCheck;
 
 public:
     /**
