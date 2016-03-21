@@ -2,154 +2,12 @@
 
 #include <z3++.h>
 #include <sstream>
+#include <utility>
 
 #include "debug.h"
 #include "z3toolbox.h"
 
 using namespace GiNaC;
-
-const char* InftyDirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
-
-// limit vectors for addition
-const std::vector<LimitVector> LimitVector::Addition = {
-    // increasing limit vectors
-    LimitVector(POS_INF, POS_INF, POS_INF),
-    LimitVector(POS_INF, POS_INF, POS_CONS),
-    LimitVector(POS_INF, POS_CONS, POS_INF),
-    LimitVector(POS_INF, POS_INF, NEG_CONS),
-    LimitVector(POS_INF, NEG_CONS, POS_INF),
-
-    // decreasing limit vectors
-    LimitVector(NEG_INF, NEG_INF, NEG_INF),
-    LimitVector(NEG_INF, NEG_INF, NEG_CONS),
-    LimitVector(NEG_INF, NEG_CONS, NEG_INF),
-    LimitVector(NEG_INF, NEG_INF, POS_CONS),
-    LimitVector(NEG_INF, POS_CONS, NEG_INF),
-
-    // positive limit vectors
-    LimitVector(POS_CONS, POS_CONS, POS_CONS),
-
-    // negative limit vectors
-    LimitVector(NEG_CONS, NEG_CONS, NEG_CONS)
-};
-
-// limit vectors for multiplication
-const std::vector<LimitVector> LimitVector::Multiplication = {
-    // increasing limit vectors
-    LimitVector(POS_INF, POS_INF, POS_INF),
-    LimitVector(POS_INF, POS_INF, POS_CONS),
-    LimitVector(POS_INF, POS_CONS, POS_INF),
-    LimitVector(POS_INF, NEG_INF, NEG_INF),
-    LimitVector(POS_INF, NEG_INF, NEG_CONS),
-    LimitVector(POS_INF, NEG_CONS, NEG_INF),
-
-    // decreasing limit vectors
-    LimitVector(NEG_INF, NEG_INF, POS_INF),
-    LimitVector(NEG_INF, POS_INF, NEG_INF),
-    LimitVector(NEG_INF, NEG_INF, POS_CONS),
-    LimitVector(NEG_INF, POS_CONS, NEG_INF),
-    LimitVector(NEG_INF, POS_INF, NEG_CONS),
-    LimitVector(NEG_INF, NEG_CONS, POS_INF),
-
-    // positive limit vectors
-    LimitVector(POS_CONS, POS_CONS, POS_CONS),
-    LimitVector(POS_CONS, NEG_CONS, NEG_CONS),
-
-    // negative limit vectors
-    LimitVector(NEG_CONS, POS_CONS, NEG_CONS),
-    LimitVector(NEG_CONS, NEG_CONS, POS_CONS)
-};
-
-// limit vectors for division
-const std::vector<LimitVector> LimitVector::Division = {
-    // increasing limit vectors
-    LimitVector(POS_INF, POS_INF, POS_CONS),
-    LimitVector(POS_INF, NEG_INF, NEG_CONS),
-
-    // decreasing limit vectors
-    LimitVector(NEG_INF, NEG_INF, POS_CONS),
-    LimitVector(NEG_INF, POS_INF, NEG_CONS),
-
-    // positive limit vectors
-    LimitVector(POS_CONS, POS_CONS, POS_CONS),
-    LimitVector(POS_CONS, NEG_CONS, NEG_CONS),
-
-    // negative limit vectors
-    LimitVector(NEG_CONS, NEG_CONS, POS_CONS),
-    LimitVector(NEG_CONS, POS_CONS, NEG_CONS)
-};
-
-LimitVector::LimitVector(InftyDirection type, InftyDirection first, InftyDirection second)
-    : type(type), first(first), second(second) {
-    assert(type != POS && first != POS && second != POS);
-}
-
-
-InftyDirection LimitVector::getType() const {
-    return type;
-}
-
-
-InftyDirection LimitVector::getFirst() const {
-    return first;
-}
-
-
-InftyDirection LimitVector::getSecond() const {
-    return second;
-}
-
-
-bool LimitVector::isApplicable(InftyDirection dir) const {
-    return  (dir == getType())
-            || (dir == POS && (getType() == POS_INF
-                               || getType() == POS_CONS));
-}
-
-
-std::ostream& operator<<(std::ostream &os, const LimitVector &lv) {
-    os << InftyDirectionNames[lv.getType()] << " limit vector "
-       << "(" << InftyDirectionNames[lv.getFirst()] << ","
-       << InftyDirectionNames[lv.getSecond()] << ")";
-
-    return os;
-}
-
-
-InftyExpression::InftyExpression(InftyDirection dir) {
-    setDirection(dir);
-}
-
-
-InftyExpression::InftyExpression(const GiNaC::basic &other, InftyDirection dir)
-    : Expression(other) {
-    setDirection(dir);
-}
-
-
-InftyExpression::InftyExpression(const GiNaC::ex &other, InftyDirection dir)
-    : Expression(other) {
-    setDirection(dir);
-}
-
-
-void InftyExpression::setDirection(InftyDirection dir) {
-    direction = dir;
-}
-
-
-InftyDirection InftyExpression::getDirection() const {
-    return direction;
-}
-
-
-void InftyExpression::dump(const std::string &description) const {
-#ifdef DEBUG_LIMIT_PROBLEMS
-    std::cout << description << ": " << *this << " ("
-              << InftyDirectionNames[getDirection()] << ")" << std::endl;
-#endif
-}
-
 
 LimitProblem::LimitProblem()
     : variableN("n"), unsolvable(false) {
@@ -160,13 +18,14 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
     for (const Expression &ex : normalizedGuard) {
         assert(GuardToolbox::isNormalizedInequality(ex));
 
-        addExpression(InftyExpression(ex.lhs()));
+        addExpression(InftyExpression(ex.lhs(), POS));
     }
 
     assert(!is_a<relational>(cost));
-    addExpression(InftyExpression(cost, InftyDirection::POS_INF));
+    addExpression(InftyExpression(cost, POS_INF));
 
-    dump("Created initial limit problem");
+    debugLimitProblem("Created initial limit problem:");
+    debugLimitProblem(*this);
 }
 
 
@@ -257,7 +116,7 @@ InftyExpressionSet::iterator LimitProblem::cend() const {
 
 void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
                                     const LimitVector &lv) {
-    InftyDirection dir = it->getDirection();
+    Direction dir = it->getDirection();
 
     if (it->nops() > 0) {
         assert(pos >= 0 && pos < it->nops());
@@ -315,9 +174,9 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
     std::ostringstream oss;
 
     oss << "applying transformation rule (A), replacing " << *it
-                      << " (" << InftyDirectionNames[dir] << ") by "
-                      << firstExp << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
-                      << secondExp << " (" << InftyDirectionNames[lv.getSecond()] << ")"
+                      << " (" << DirectionNames[dir] << ") by "
+                      << firstExp << " (" << DirectionNames[lv.getFirst()] << ") and "
+                      << secondExp << " (" << DirectionNames[lv.getSecond()] << ")"
                       << " using " << lv;
 
     log.push_back(oss.str());
@@ -327,22 +186,23 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
     addExpression(InftyExpression(firstExp, lv.getFirst()));
     addExpression(InftyExpression(secondExp, lv.getSecond()));
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
 
-void LimitProblem::applyLimitVectorAdvanced(const InftyExpressionSet::const_iterator &it, Expression l, Expression r,
+void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it, Expression l, Expression r,
                                     const LimitVector &lv) {
-    InftyDirection dir = it->getDirection();
+    Direction dir = it->getDirection();
 
     assert(lv.isApplicable(dir));
 
     std::ostringstream oss;
 
     oss << "applying transformation rule (A) (advanced), replacing " << *it
-                      << " (" << InftyDirectionNames[dir] << ") by "
-                      << l << " (" << InftyDirectionNames[lv.getFirst()] << ") and "
-                      << r << " (" << InftyDirectionNames[lv.getSecond()] << ")"
+                      << " (" << DirectionNames[dir] << ") by "
+                      << l << " (" << DirectionNames[lv.getFirst()] << ") and "
+                      << r << " (" << DirectionNames[lv.getSecond()] << ")"
                       << " using " << lv;
 
     log.push_back(oss.str());
@@ -352,12 +212,13 @@ void LimitProblem::applyLimitVectorAdvanced(const InftyExpressionSet::const_iter
     addExpression(InftyExpression(l, lv.getFirst()));
     addExpression(InftyExpression(r, lv.getSecond()));
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
 
 void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
-    InftyDirection dir = it->getDirection();
+    Direction dir = it->getDirection();
 
     assert(it->info(info_flags::integer));
     numeric num = ex_to<numeric>(*it);
@@ -366,14 +227,15 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
 
     std::ostringstream oss;
     oss << "applying transformation rule (B), deleting " << *it
-                      << " (" << InftyDirectionNames[dir] << ")";
+                      << " (" << DirectionNames[dir] << ")";
 
     log.push_back(oss.str());
     debugLimitProblem(oss.str());
 
     set.erase(it);
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
 
@@ -396,7 +258,8 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
 
     substitutions.push_back(substitutionIndex);
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
 
@@ -407,7 +270,7 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
     assert(it->info(info_flags::polynomial));
     assert(variables.size() == 1);
 
-    InftyDirection dir = it->getDirection();
+    Direction dir = it->getDirection();
     assert((dir == POS) || (dir == POS_INF) || (dir == NEG_INF));
 
     ExprSymbol var = *variables.begin();
@@ -429,8 +292,8 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
         std::ostringstream oss;
 
         oss << "applying transformation rule (D), replacing " << *it
-                      << " (" << InftyDirectionNames[it->getDirection()] << ") by "
-                      << leadingTerm << " (" << InftyDirectionNames[dir] << ")";
+                      << " (" << DirectionNames[it->getDirection()] << ") by "
+                      << leadingTerm << " (" << DirectionNames[dir] << ")";
 
         log.push_back(oss.str());
         debugLimitProblem(oss.str());
@@ -441,7 +304,8 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
         debugLimitProblem(*it << " is already a monom");
     }
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
 
@@ -486,9 +350,9 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
     std::ostringstream oss;
 
     oss << "applying transformation rule (E), replacing " << *it
-                      << " (" << InftyDirectionNames[it->getDirection()] << ") by "
-                      << (a - 1) << " (" << InftyDirectionNames[POS] << ") and "
-                      << e << " (" << InftyDirectionNames[POS_INF] << ")";
+                      << " (" << DirectionNames[it->getDirection()] << ") by "
+                      << (a - 1) << " (" << DirectionNames[POS] << ") and "
+                      << e << " (" << DirectionNames[POS_INF] << ")";
 
     log.push_back(oss.str());
     debugLimitProblem(oss.str());
@@ -497,7 +361,8 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
     addExpression(InftyExpression(a - 1, POS));
     addExpression(InftyExpression(e, POS_INF));
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
 
@@ -536,9 +401,9 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
     std::ostringstream oss;
 
     oss << "applying transformation rule (F), replacing " << *it
-                      << " (" << InftyDirectionNames[it->getDirection()] << ") by "
-                      << (a - 1) << " (" << InftyDirectionNames[POS] << ") and "
-                      << (e + b) << " (" << InftyDirectionNames[POS_INF] << ")";
+                      << " (" << DirectionNames[it->getDirection()] << ") by "
+                      << (a - 1) << " (" << DirectionNames[POS] << ") and "
+                      << (e + b) << " (" << DirectionNames[POS_INF] << ")";
 
     log.push_back(oss.str());
     debugLimitProblem(oss.str());
@@ -547,9 +412,19 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
     addExpression(InftyExpression(a - 1, POS));
     addExpression(InftyExpression(e + b, POS_INF));
 
-    dump("resulting limit problem");
+    debugLimitProblem("resulting limit problem:");
+    debugLimitProblem(*this);
 }
 
+
+bool LimitProblem::isUnsolvable() const {
+    return unsolvable;
+}
+
+
+void LimitProblem::setUnsolvable() {
+    unsolvable = true;
+}
 
 bool LimitProblem::isSolved() const {
     if (isUnsolvable()) {
@@ -635,22 +510,13 @@ bool LimitProblem::isUnsat() {
 }
 
 
-bool LimitProblem::isUnsolvable() const {
-    return unsolvable;
-}
-
-void LimitProblem::setUnsolvable() {
-    unsolvable = true;
-}
-
-
 bool LimitProblem::removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it) {
     if (!it->info(info_flags::integer)) {
         return false;
     }
 
     numeric num = ex_to<numeric>(*it);
-    InftyDirection dir = it->getDirection();
+    Direction dir = it->getDirection();
 
     return (num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS);
@@ -664,7 +530,7 @@ bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_it
         return false;
     }
 
-    InftyDirection dir = it->getDirection();
+    Direction dir = it->getDirection();
     if (!((dir == POS) || (dir == POS_INF) || (dir == NEG_INF))) {
         return false;
     }
@@ -747,21 +613,14 @@ bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::cons
 }
 
 
-void LimitProblem::dump(const std::string &description) {
-#ifdef DEBUG_LIMIT_PROBLEMS
-    std::ostringstream oss;
-
-    oss << description << ":" << std::endl;
-    for (auto ex : set) {
-        oss << ex << " (" << InftyDirectionNames[ex.getDirection()] << "), ";
+std::ostream& operator<<(std::ostream &os, const LimitProblem &lp) {
+    if (lp.cbegin() != lp.cend()) {
+        std::copy(lp.cbegin(), --lp.cend(), std::ostream_iterator<InftyExpression>(os, ", "));
+        os << *(--lp.cend()) << " ";
     }
-    oss << std::endl;
 
-    oss << "the problem is " << (isUnsolvable() ? "unsolvable" : (isSolved() ? "solved" : "not solved"))
-              << std::endl << std::endl;
+    os << "[" << (lp.isUnsolvable() ? "unsolvable"
+                  : (lp.isSolved() ? "solved" : "not solved")) << "]";
 
-    std::cout << oss.str();
-
-    log.push_back(oss.str());
-#endif
+    return os;
 }

@@ -356,7 +356,8 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
         if (limitProblems[i].isUnsat()) {
-            limitProblems[i].dump("unsat");
+            debugAsymptoticBound("unsat:");
+            debugAsymptoticBound(limitProblems[i]);
             limitProblems.erase(limitProblems.begin() + i);
         }
     }
@@ -375,7 +376,8 @@ bool AsymptoticBound::solveLimitProblem() {
 
     start:
     if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
-        currentLP.dump("Currently handling");
+        debugAsymptoticBound("Currently handling:");
+        debugAsymptoticBound(currentLP);
 
         InftyExpressionSet::const_iterator it;
 
@@ -432,7 +434,8 @@ bool AsymptoticBound::solveLimitProblem() {
     }
 
     if (currentLP.isUnsolvable()) {
-        currentLP.dump("Limit problem is unsolvable, throwing away");
+        debugAsymptoticBound("Limit problem is unsolvable, throwing away");
+        debugAsymptoticBound(currentLP);
 
     } else if (currentLP.isSolved()) {
         solvedLimitProblems.push_back(currentLP);
@@ -444,7 +447,8 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
     } else {
-        currentLP.dump("I don't know how to continue, throwing away");
+        debugAsymptoticBound("I don't know how to continue, throwing away");
+        debugAsymptoticBound(currentLP);
     }
 
     if (limitProblems.empty()) {
@@ -564,14 +568,15 @@ void AsymptoticBound::dumpGuard(const std::string &description) const {
 }
 
 
-void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, InftyDirection dir) {
+void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir) {
     assert(dir == POS_INF || dir == POS_CONS);
 
     if (finalCheck && it->getDirection() == POS) {
         limitProblems.push_back(currentLP);
         limitProblems.back().addExpression(InftyExpression(*it, dir));
 
-        limitProblems.back().dump("creating backtracking point");
+        debugAsymptoticBound("creating backtracking point:");
+        debugAsymptoticBound(limitProblems.back());
     }
 }
 
@@ -655,7 +660,7 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         }
     }
 
-    it->dump("expression");
+    debugAsymptoticBound("expression: " << *it);
     debugAsymptoticBound("applicable limit vectors:");
     for (const LimitVector &lv : toApply) {
         debugAsymptoticBound(lv);
@@ -758,7 +763,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
         }
     }
 
-    it->dump("expression");
+    debugAsymptoticBound("expression: " << *it);
     debugAsymptoticBound("l: " << l);
     debugAsymptoticBound("r: " << r);
     debugAsymptoticBound("applicable limit vectors (smart):");
@@ -781,14 +786,14 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
             LimitProblem &copy = limitProblems.back();
             auto copyIt = copy.find(*it);
 
-            copy.applyLimitVectorAdvanced(copyIt, l, r, toApply[i]);
+            copy.applyLimitVector(copyIt, l, r, toApply[i]);
 
             if (copy.isUnsolvable()) {
                 limitProblems.pop_back();
             }
         }
 
-        currentLP.applyLimitVectorAdvanced(it, l, r, toApply.back());
+        currentLP.applyLimitVector(it, l, r, toApply.back());
 
         return true;
     } else {
@@ -801,7 +806,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 bool AsymptoticBound::tryInstantiatingVariable() {
     for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
         ExprSymbolSet vars = std::move(it->getVariables());
-        InftyDirection dir = it->getDirection();
+        Direction dir = it->getDirection();
 
         if (vars.size() == 1 && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
             Z3VariableContext context;
@@ -810,13 +815,15 @@ bool AsymptoticBound::tryInstantiatingVariable() {
             result = Z3Toolbox::checkExpressionsSAT(currentLP.getQuery(), context, &model);
 
             if (result == z3::unsat) {
-                currentLP.dump("Z3: limit problem is unsat");
+                debugAsymptoticBound("Z3: limit problem is unsat");
+                debugAsymptoticBound(currentLP);
                 currentLP.setUnsolvable();
 
             } else if (result == z3::sat) {
                 ExprSymbol var = *vars.begin();
 
-                currentLP.dump("Z3: limit problem is sat");
+                debugAsymptoticBound("Z3: limit problem is sat");
+                debugAsymptoticBound(currentLP);
                 Expression rational = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
 
                 exmap sub;
@@ -827,7 +834,8 @@ bool AsymptoticBound::tryInstantiatingVariable() {
                 currentLP.substitute(sub, substitutions.size() - 1);
 
             } else {
-                currentLP.dump("Z3: limit problem is unknown");
+                debugAsymptoticBound("Z3: limit problem is unknown");
+                debugAsymptoticBound(currentLP);
                 return false;
             }
 
@@ -844,8 +852,8 @@ bool AsymptoticBound::trySubstitutingVariable() {
         if (is_a<symbol>(*it)) {
             for (it2 = std::next(it); it2 != currentLP.cend(); ++it2) {
                 if (is_a<symbol>(*it2)) {
-                    InftyDirection dir = it->getDirection();
-                    InftyDirection dir2 = it2->getDirection();
+                    Direction dir = it->getDirection();
+                    Direction dir2 = it2->getDirection();
 
                     if (((dir == POS || dir == POS_INF) && (dir2 == POS || dir2 == POS_INF))
                         || (dir == NEG_INF && dir2 == NEG_INF)) {

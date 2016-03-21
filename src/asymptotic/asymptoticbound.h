@@ -8,7 +8,8 @@
 #include "guardtoolbox.h"
 #include "infinity.h"
 #include "itrs.h"
-#include "asymptotic/limitproblem.h"
+#include "inftyexpression.h"
+#include "limitproblem.h"
 
 class AsymptoticBound {
 private:
@@ -31,7 +32,7 @@ private:
     void dumpGuard(const std::string &description) const;
 
 private:
-    void createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, InftyDirection dir);
+    void createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir);
     bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
     bool tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it);
     bool tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it);
