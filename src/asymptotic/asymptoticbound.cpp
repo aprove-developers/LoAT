@@ -432,14 +432,14 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
-        if (tryInstantiatingVariable()) {
-            goto start;
-        }
-
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (it->getVariables().size() <= 1 && tryApplyingLimitVector(it)) {
                 goto start;
             }
+        }
+
+        if (tryInstantiatingVariable()) {
+            goto start;
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
@@ -782,10 +782,10 @@ bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::c
     }
     debugAsymptoticBound("");
 
-    if (posInfVector) {
+    if (posInfVector && !posConsVector) {
         createBacktrackingPoint(it, POS_CONS);
     }
-    if (posConsVector) {
+    if (posConsVector && !posInfVector) {
         createBacktrackingPoint(it, POS_INF);
     }
 
@@ -851,10 +851,10 @@ bool AsymptoticBound::tryInstantiatingVariable() {
             }
 
             return true;
-        } else {
-            return false;
         }
     }
+
+    return false;
 }
 
 bool AsymptoticBound::trySubstitutingVariable() {
