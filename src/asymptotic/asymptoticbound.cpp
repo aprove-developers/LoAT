@@ -432,14 +432,14 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
+        if (tryInstantiatingVariable()) {
+            goto start;
+        }
+
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (it->getVariables().size() <= 1 && tryApplyingLimitVector(it)) {
                 goto start;
             }
-        }
-
-        if (tryInstantiatingVariable()) {
-            goto start;
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
