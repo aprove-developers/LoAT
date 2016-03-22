@@ -183,7 +183,7 @@ public:
     InftyExpressionSet set;
     ExprSymbol variableN;
     std::vector<int> substitutions;
-    //std::ostringstream log;
+    std::ostringstream log;
     bool unsolvable;
 };
 

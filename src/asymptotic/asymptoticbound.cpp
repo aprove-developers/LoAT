@@ -524,6 +524,9 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     debugAsymptoticBound("Checking solution for adequateness.");
     assert(limitProblem.isSolved());
 
+    debugAsymptoticBound("PROOF:");
+    debugAsymptoticBound(limitProblem.log.str());
+
     ComplexityResult result = getComplexity(limitProblem);
 
     if (result.complexity == Expression::ComplexInfty) {
