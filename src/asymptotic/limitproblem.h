@@ -54,19 +54,6 @@ public:
     InftyExpressionSet::const_iterator cend() const;
 
     /**
-     * Applies the given LimitVector at the given position to the InftyExpression
-     * specified by the given const_iterator.
-     * transformation rule (A)
-     * @param it must be a valid const_iterator of the underlying set and
-                 must point to a proper rational, an addition, a multiplication,
-                 or a proper natural power
-     * @param pos must satisfy 0 <= pos < it->nops()
-     * @param lv must be applicable to *it
-     */
-    void applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
-                          const LimitVector &lv);
-
-    /**
      * Applies the given LimitVector to the InftyExpression specified by
      * the given const_iterator where the resulting expression are given by l and r.
      * transformation rule (A)

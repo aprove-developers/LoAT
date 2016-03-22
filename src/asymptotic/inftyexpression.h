@@ -9,6 +9,7 @@
  * This enum represents a direction. POS stands for POS_INF or POS_CONS.
  */
 enum Direction { POS_INF = 0, NEG_INF, POS_CONS, NEG_CONS, POS };
+extern const int DirectionSize;
 extern const char* DirectionNames[];
 
 /**
@@ -40,6 +41,12 @@ public:
      * Returns the direction of this InftyExpression.
      */
     Direction getDirection() const;
+
+    /**
+     * Returns true if this InftyExpression is trivially unsatisfiable, e.g,
+     * if this is a variable and the direction is POS_INF or NEG_INF.
+     */
+    bool isTriviallyUnsatisfiable() const;
 
 private:
     Direction direction;

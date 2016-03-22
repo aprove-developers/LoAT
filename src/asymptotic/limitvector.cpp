@@ -99,6 +99,25 @@ bool LimitVector::isApplicable(Direction dir) const {
 }
 
 
+bool LimitVector::makesSense(Expression l, Expression r) const {
+    InftyExpression inftyL(l, first);
+    if (inftyL.isTriviallyUnsatisfiable()) {
+        return false;
+    }
+
+    InftyExpression inftyR(r, second);
+    if (inftyR.isTriviallyUnsatisfiable()) {
+        return false;
+    }
+
+    if (l == r && first != second) {
+        return false;
+    }
+
+    return true;
+}
+
+
 std::ostream& operator<<(std::ostream &os, const LimitVector &lv) {
     os << DirectionNames[lv.getType()] << " limit vector "
        << "(" << DirectionNames[lv.getFirst()] << ","

@@ -53,6 +53,12 @@ public:
      */
     bool isApplicable(Direction dir) const;
 
+    /**
+     * Returns false if applying this limit vector's directions to the expressions
+     * would result in a trivially unsolvable limit problem.
+     */
+    bool makesSense(Expression l, Expression r) const;
+
 private:
     const Direction type;
     const Direction first;

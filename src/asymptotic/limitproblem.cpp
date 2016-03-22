@@ -95,19 +95,9 @@ void LimitProblem::addExpression(const InftyExpression &ex) {
         }
     }
 
-    // check if the limit problem is definitely unsolvable
-    if (is_a<numeric>(ex)) {
-        if (ex.getDirection() == POS_INF || ex.getDirection() == NEG_INF) {
-            unsolvable = true;
-
-        } else if ((ex.getDirection() == POS_CONS || ex.getDirection() == POS)
-                   && (ex.info(info_flags::negative) || ex.is_zero())) {
-            unsolvable = true;
-
-        } else if (ex.getDirection() == NEG_CONS
-                   && ex.info(info_flags::nonnegative)) {
-            unsolvable = true;
-        }
+    // check if the expression is unsatisfiable
+    if (ex.isTriviallyUnsatisfiable()) {
+        unsolvable = true;
     }
 }
 
@@ -122,78 +112,6 @@ InftyExpressionSet::iterator LimitProblem::cend() const {
 }
 
 
-void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it, int pos,
-                                    const LimitVector &lv) {
-    Direction dir = it->getDirection();
-
-    if (it->nops() > 0) {
-        assert(pos >= 0 && pos < it->nops());
-    }
-    assert(lv.isApplicable(dir));
-
-    Expression firstExp, secondExp;
-    if (it->isProperRational()) {
-        debugLimitProblem(*it << " is a proper rational");
-        firstExp = it->numer();
-        secondExp = it->denom();
-
-    } else if (is_a<add>(*it)) {
-        debugLimitProblem(*it << " is an addition");
-        firstExp = numeric(0);
-        secondExp = numeric(0);
-
-        for (int i = 0; i <= pos; ++i) {
-            firstExp += it->op(i);
-        }
-        for (int i = pos + 1; i < it->nops(); ++i) {
-            secondExp += it->op(i);
-        }
-
-    } else if (is_a<mul>(*it)) {
-        debugLimitProblem(*it << " is a multiplication");
-        firstExp = numeric(1);
-        secondExp = numeric(1);
-
-        for (int i = 0; i <= pos; ++i) {
-            firstExp *= it->op(i);
-        }
-        for (int i = pos + 1; i < it->nops(); ++i) {
-            secondExp *= it->op(i);
-        }
-
-    } else if (it->isProperNaturalPower()) {
-        debugLimitProblem(*it << " is a proper natural power");
-        Expression base = it->op(0);
-        Expression power = it->op(1);
-
-        firstExp = pow(base, pos + 1);
-        secondExp = pow(base, power - pos - 1);
-
-    } else {
-        debugLimitProblem(*it << " is neither a proper rational, an addition,"
-                          << " a multiplication, nor a proper natural power");
-        unreachable();
-    }
-
-    InftyExpression firstIE(firstExp, lv.getFirst());
-    InftyExpression secondIE(secondExp, lv.getSecond());
-
-    //log << "applying transformation rule (A), replacing " << *it
-    //    << " by " << firstIE << " and " << secondExp << " using " << lv << std::endl;
-    debugLimitProblem("applying transformation rule (A), replacing " << *it
-                      << " by " << firstIE << " and " << secondExp << " using " << lv);
-
-    set.erase(it);
-    addExpression(firstIE);
-    addExpression(secondIE);
-
-    //log << "resulting limit problem:" << std::endl << *this << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
-}
-
-
 void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it,
                                     const Expression &l, const Expression &r,
                                     const LimitVector &lv) {
@@ -203,9 +121,9 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
     InftyExpression firstIE(l, lv.getFirst());
     InftyExpression secondIE(r, lv.getSecond());
 
-    //log << "applying transformation rule (A) (advanced), replacing " << *it
+    //log << "applying transformation rule (A), replacing " << *it
     //    << " by " << firstIE << " and " << secondIE << " using " << lv << std::endl;
-    debugLimitProblem("applying transformation rule (A) (advanced), replacing " << *it
+    debugLimitProblem("applying transformation rule (A), replacing " << *it
                       << " by " << firstIE << " and " << secondIE << " using " << lv);
 
 

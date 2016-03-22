@@ -31,6 +31,7 @@ private:
 
     AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck);
 
+    void initLimitVectors();
     void normalizeGuard();
     void createInitialLimitProblem();
     void propagateBounds();
@@ -49,6 +50,9 @@ private:
     bool tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it);
+    bool applyLimitVectorsThatMakeSense(const InftyExpressionSet::const_iterator &it,
+                                        const Expression &l, const Expression &r,
+                                        const std::vector<LimitVector> &limitVectors);
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
 
@@ -59,6 +63,10 @@ private:
     bool finalCheck;
     GuardList normalizedGuard;
     ComplexityResult bestComplexity;
+
+    std::vector<std::vector<LimitVector>> addition;
+    std::vector<std::vector<LimitVector>> multiplication;
+    std::vector<std::vector<LimitVector>> division;
 
     std::vector<LimitProblem> limitProblems;
     std::vector<LimitProblem> solvedLimitProblems;

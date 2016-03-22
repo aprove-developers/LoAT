@@ -14,8 +14,43 @@ using namespace GiNaC;
 
 AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard,
                                  Expression cost, bool finalCheck)
-    : its(its), guard(guard), cost(cost), finalCheck(finalCheck) {
+    : its(its), guard(guard), cost(cost), finalCheck(finalCheck),
+      addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
     assert(GuardToolbox::isValidGuard(guard));
+}
+
+
+void AsymptoticBound::initLimitVectors() {
+    debugAsymptoticBound("Initializing limit vectors.");
+
+    for (int i = 0; i < DirectionSize; ++i) {
+        Direction dir = static_cast<Direction>(i);
+        debugAsymptoticBound("Direction: " << DirectionNames[dir]);
+
+        debugAsymptoticBound("Addition:");
+        for (const LimitVector &lv : LimitVector::Addition) {
+            if (lv.isApplicable(dir)) {
+                debugAsymptoticBound(lv);
+                addition[dir].push_back(lv);
+            }
+        }
+
+        debugAsymptoticBound("Multiplication:");
+        for (const LimitVector &lv : LimitVector::Multiplication) {
+            if (lv.isApplicable(dir)) {
+                debugAsymptoticBound(lv);
+                multiplication[dir].push_back(lv);
+            }
+        }
+
+        debugAsymptoticBound("Division:");
+        for (const LimitVector &lv : LimitVector::Division) {
+            if (lv.isApplicable(dir)) {
+                debugAsymptoticBound(lv);
+                division[dir].push_back(lv);
+            }
+        }
+    }
 }
 
 
@@ -591,75 +626,73 @@ bool AsymptoticBound::tryReducingGeneralPower(const InftyExpressionSet::const_it
 
 
 bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it) {
-    std::vector<LimitVector> toApply;
+    std::vector<LimitVector> *limitVectors;
 
+    Expression l, r;
     if (it->isProperRational()) {
-        for (const LimitVector &lv : LimitVector::Division) {
-            if (lv.isApplicable(it->getDirection())) {
-                toApply.push_back(lv);
-            }
-        }
+        debugAsymptoticBound(*it << " is a proper rational");
+        l = it->numer();
+        r = it->denom();
+
+        limitVectors = &division[it->getDirection()];
+
     } else if (is_a<add>(*it)) {
-        for (const LimitVector &lv : LimitVector::Addition) {
-            if (lv.isApplicable(it->getDirection())) {
-                toApply.push_back(lv);
-            }
+        debugAsymptoticBound(*it << " is an addition");
+        l = numeric(0);
+        r = numeric(0);
+        int pos = 0;
+
+        for (int i = 0; i <= pos; ++i) {
+            l += it->op(i);
         }
+        for (int i = pos + 1; i < it->nops(); ++i) {
+            r += it->op(i);
+        }
+
+        limitVectors = &addition[it->getDirection()];
+
     } else if (is_a<mul>(*it)) {
-        for (const LimitVector &lv : LimitVector::Multiplication) {
-            if (lv.isApplicable(it->getDirection())) {
-                toApply.push_back(lv);
-            }
+        debugAsymptoticBound(*it << " is a multiplication");
+        l = numeric(1);
+        r = numeric(1);
+        int pos = 0;
+
+        for (int i = 0; i <= pos; ++i) {
+            l *= it->op(i);
         }
+        for (int i = pos + 1; i < it->nops(); ++i) {
+            r *= it->op(i);
+        }
+
+        limitVectors = &multiplication[it->getDirection()];
+
     } else if (it->isProperNaturalPower()) {
-        for (const LimitVector &lv : LimitVector::Multiplication) {
-            if (lv.isApplicable(it->getDirection())) {
-                toApply.push_back(lv);
-            }
-        }
-    }
+        debugLimitProblem(*it << " is a proper natural power");
+        Expression base = it->op(0);
+        numeric power = ex_to<numeric>(it->op(1));
 
-    debugAsymptoticBound("expression: " << *it);
-    debugAsymptoticBound("applicable limit vectors:");
-    for (const LimitVector &lv : toApply) {
-        debugAsymptoticBound(lv);
-    }
-    debugAsymptoticBound("");
-
-    for (const LimitVector &lv : toApply) {
-        if (lv.getType() == POS_INF) {
-            createBacktrackingPoint(it, POS_CONS);
-        } else if (lv.getType() == POS_CONS) {
-            createBacktrackingPoint(it, POS_INF);
-        }
-    }
-
-    if (!toApply.empty()) {
-        for (int i = 0; i < toApply.size() - 1; ++i) {
-            limitProblems.push_back(currentLP);
-            LimitProblem &copy = limitProblems.back();
-            auto copyIt = copy.find(*it);
-
-            copy.applyLimitVector(copyIt, 0, toApply[i]);
-
-            if (copy.isUnsolvable()) {
-                limitProblems.pop_back();
-            }
+        if (power.is_even()) {
+            l = pow(base, power / 2);
+            r = l;
+        } else {
+            l = base;
+            r = pow(base, power - 1);
         }
 
-        currentLP.applyLimitVector(it, 0, toApply.back());
+        limitVectors = &multiplication[it->getDirection()];
 
-        return true;
     } else {
+        debugAsymptoticBound(*it << " is neither a proper rational, an addition,"
+                             << " a multiplication, nor a proper natural power");
         return false;
     }
 
+    debugAsymptoticBound("trying to apply limit vectors");
+    return applyLimitVectorsThatMakeSense(it, l, r, *limitVectors);
 }
 
 
 bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it) {
-    std::vector<LimitVector> toApply;
-
     if (!(is_a<add>(*it) || is_a<mul>(*it))) {
         return false;
     }
@@ -680,6 +713,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
     }
 
     Expression l, r;
+    std::vector<LimitVector> *limitVectors;
     if (is_a<add>(*it)) {
         l = numeric(0);
         r = numeric(0);
@@ -695,11 +729,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
             return false;
         }
 
-        for (const LimitVector &lv : LimitVector::Addition) {
-            if (lv.isApplicable(it->getDirection())) {
-                toApply.push_back(lv);
-            }
-        }
+        limitVectors = &addition[it->getDirection()];
     } else {
         l = numeric(1);
         r = numeric(1);
@@ -715,28 +745,45 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
             return false;
         }
 
-        for (const LimitVector &lv : LimitVector::Multiplication) {
-            if (lv.isApplicable(it->getDirection())) {
-                toApply.push_back(lv);
-            }
-        }
+        limitVectors = &multiplication[it->getDirection()];
     }
 
+    debugAsymptoticBound("trying to apply limit vectors (smart)");
+    return applyLimitVectorsThatMakeSense(it, l, r, *limitVectors);
+}
+
+
+bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::const_iterator &it,
+                                                     const Expression &l, const Expression &r,
+                                                     const std::vector<LimitVector> &limitVectors) {
     debugAsymptoticBound("expression: " << *it);
     debugAsymptoticBound("l: " << l);
     debugAsymptoticBound("r: " << r);
-    debugAsymptoticBound("applicable limit vectors (smart):");
-    for (const LimitVector &lv : toApply) {
-        debugAsymptoticBound(lv);
+    debugAsymptoticBound("applicable limit vectors:");
+    std::vector<LimitVector> toApply;
+    bool posInfVector = false;
+    bool posConsVector = false;
+    for (const LimitVector &lv: limitVectors) {
+        if (lv.makesSense(l, r)) {
+            debugAsymptoticBound(lv << " makes sense");
+            toApply.push_back(lv);
+
+            if (lv.getType() == POS_INF) {
+                posInfVector = true;
+            } else if (lv.getType() == POS_CONS) {
+                posConsVector = true;
+            }
+        } else {
+            debugAsymptoticBound(lv << " does not make sense");
+        }
     }
     debugAsymptoticBound("");
 
-    for (const LimitVector &lv : toApply) {
-        if (lv.getType() == POS_INF) {
-            createBacktrackingPoint(it, POS_CONS);
-        } else if (lv.getType() == POS_CONS) {
-            createBacktrackingPoint(it, POS_INF);
-        }
+    if (posInfVector) {
+        createBacktrackingPoint(it, POS_CONS);
+    }
+    if (posConsVector) {
+        createBacktrackingPoint(it, POS_INF);
     }
 
     if (!toApply.empty()) {
@@ -758,7 +805,6 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
     } else {
         return false;
     }
-
 }
 
 
@@ -873,6 +919,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     }
 
     AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
+    asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
