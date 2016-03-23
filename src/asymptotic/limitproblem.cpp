@@ -228,7 +228,7 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
 }
 
 
-void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterator &it) {
+void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
 
     debugLimitProblem("expression: " << *it);
@@ -249,7 +249,7 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
     } else {
         powerInExp = *it;
     }
-    debugLimitProblem("polynomial power: " << powerInExp);
+    debugLimitProblem("exp: " << powerInExp);
     assert(is_a<power>(powerInExp));
 
     Expression b = *it - powerInExp;
@@ -284,7 +284,7 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
 }
 
 
-void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &it) {
+void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it) {
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
 
     debugLimitProblem("expression: " << *it);
@@ -456,7 +456,7 @@ bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_it
 }
 
 
-bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it) {
+bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterator &it) {
     Direction dir = it->getDirection();
     if (!(dir == POS_INF || dir == POS)) {
         return false;
@@ -503,7 +503,7 @@ bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::c
 }
 
 
-bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::const_iterator &it) {
+bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_iterator &it) {
     Direction dir = it->getDirection();
     if (!(dir == POS_INF || dir == POS)) {
         return false;
@@ -523,6 +523,11 @@ bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::cons
 
     return is_a<power>(*it) && (!it->op(1).info(info_flags::polynomial)
                                 || it->hasAtLeastTwoVariables());
+}
+
+
+std::string LimitProblem::getProof() {
+    return log.str();
 }
 
 

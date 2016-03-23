@@ -4,6 +4,7 @@
 #include <ostream>
 #include <set>
 #include <sstream>
+#include <string>
 
 #include "guardtoolbox.h"
 #include "inftyexpression.h"
@@ -97,7 +98,7 @@ public:
      *           and arbitrary many monoms. The direction of *it must be POS_INF
      *           or POS.
      */
-    void reducePolynomialPower(const InftyExpressionSet::const_iterator &it);
+    void reduceExp(const InftyExpressionSet::const_iterator &it);
 
     /**
      * "Unstacks" a power.
@@ -106,7 +107,7 @@ public:
      *           at least two different variables or whose exponent is not a
      *           polynomial.
      */
-    void reduceGeneralPower(const InftyExpressionSet::const_iterator &it);
+    void reduceGeneralExp(const InftyExpressionSet::const_iterator &it);
 
     /**
      * Returns true iff this problem is marked as unsolvable.
@@ -170,16 +171,21 @@ public:
     bool trimPolynomialIsApplicable(const InftyExpressionSet::const_iterator &it);
 
     /**
-     * Returns true iff the conditions for calling reducePolynomialPower(it) are met.
+     * Returns true iff the conditions for calling reduceExp(it) are met.
      */
-    bool reducePolynomialPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
+    bool reduceExpIsApplicable(const InftyExpressionSet::const_iterator &it);
 
     /**
-     * Returns true iff the conditions for calling reduceGeneralPower(it) are met.
+     * Returns true iff the conditions for calling reduceGeneralExp(it) are met.
      */
-    bool reduceGeneralPowerIsApplicable(const InftyExpressionSet::const_iterator &it);
+    bool reduceGeneralExpIsApplicable(const InftyExpressionSet::const_iterator &it);
 
-public:
+    /**
+     * Returns the internal log.
+     */
+    std::string getProof();
+
+private:
     InftyExpressionSet set;
     ExprSymbol variableN;
     std::vector<int> substitutions;

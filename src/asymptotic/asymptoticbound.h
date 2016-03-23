@@ -17,16 +17,16 @@ class AsymptoticBound {
 private:
     // internal struct for the return value of getComplexity()
     struct ComplexityResult {
-        ComplexityResult() {
-            complexity = Expression::ComplexNone;
-            upperBound = 0;
-            lowerBound = 0;
+        ComplexityResult()
+            : complexity(Expression::ComplexNone),
+              upperBound(0), lowerBound(0), inftyVars(0) {
         }
 
         GiNaC::exmap solution;
         Complexity complexity;
         int upperBound;
         int lowerBound;
+        int inftyVars;
     };
 
     AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck);
@@ -46,8 +46,8 @@ private:
     void createBacktrackingPoint(const InftyExpressionSet::const_iterator &it, Direction dir);
     bool tryRemovingConstant(const InftyExpressionSet::const_iterator &it);
     bool tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it);
-    bool tryReducingPolynomialPower(const InftyExpressionSet::const_iterator &it);
-    bool tryReducingGeneralPower(const InftyExpressionSet::const_iterator &it);
+    bool tryReducingExp(const InftyExpressionSet::const_iterator &it);
+    bool tryReducingGeneralExp(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it);
     bool applyLimitVectorsThatMakeSense(const InftyExpressionSet::const_iterator &it,
