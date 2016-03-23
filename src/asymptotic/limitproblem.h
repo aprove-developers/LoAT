@@ -181,6 +181,11 @@ public:
     bool reduceGeneralExpIsApplicable(const InftyExpressionSet::const_iterator &it);
 
     /**
+     * Returns the number of InftyExpressions in this LimitProblem.
+     */
+    InftyExpressionSet::size_type getSize();
+
+    /**
      * Returns the internal log.
      */
     std::string getProof();

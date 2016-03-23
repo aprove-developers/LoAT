@@ -74,6 +74,8 @@ private:
 
     std::vector<GiNaC::exmap> substitutions;
 
+    std::vector<LimitVector> toApply;
+
 public:
     /**
      * Analyzes the given guard and cost.

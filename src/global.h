@@ -124,5 +124,11 @@
  */
 #define FINAL_INFINITY_CHECK
 
+/*
+ * discard a limit problem of size >= LIMIT_PROBLEM_DISCARD_SIZE in a non-final check
+ * if z3 yields "unknown"
+ */
+#define LIMIT_PROBLEM_DISCARD_SIZE 10
+
 
 #endif //GLOBAL_H

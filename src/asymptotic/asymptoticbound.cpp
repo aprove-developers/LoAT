@@ -64,7 +64,7 @@ void AsymptoticBound::normalizeGuard() {
                || GuardToolbox::isValidInequality(ex));
 
         if (ex.info(info_flags::relation_equal)) {
-            // Split equality
+            // Split equation
             Expression greaterEqual = GuardToolbox::normalize(ex.lhs() >= ex.rhs());
             Expression lessEqual = GuardToolbox::normalize(ex.lhs() <= ex.rhs());
 
@@ -379,9 +379,18 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
-        if (limitProblems[i].isUnsat()) {
+        auto result = Z3Toolbox::checkExpressionsSAT(limitProblems[i].getQuery());
+
+        if (result == z3::unsat) {
             debugAsymptoticBound("unsat:");
             debugAsymptoticBound(limitProblems[i]);
+            limitProblems.erase(limitProblems.begin() + i);
+        } else if (result == z3::unknown
+                   && !finalCheck
+                   && limitProblems[i].getSize() >= LIMIT_PROBLEM_DISCARD_SIZE) {
+            debugAsymptoticBound("removing a limit problem since this is not the final check"
+                                 << " and it is very large (" << limitProblems[i].getSize()
+                                 << " InftyExpressions)");
             limitProblems.erase(limitProblems.begin() + i);
         }
     }
@@ -799,9 +808,9 @@ bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::c
     debugAsymptoticBound("l: " << l);
     debugAsymptoticBound("r: " << r);
     debugAsymptoticBound("applicable limit vectors:");
-    std::vector<LimitVector> toApply;
     bool posInfVector = false;
     bool posConsVector = false;
+    toApply.clear();
     for (const LimitVector &lv: limitVectors) {
         if (lv.makesSense(l, r)) {
             debugAsymptoticBound(lv << " makes sense");
@@ -879,6 +888,15 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 
             } else {
                 debugAsymptoticBound("Z3: limit problem is unknown");
+
+                if (!finalCheck && currentLP.getSize() >= LIMIT_PROBLEM_DISCARD_SIZE) {
+                    debugAsymptoticBound("marking the current limit problem as unsolvable"
+                                         << " since this is not the final check"
+                                         << " and it is very large (" << currentLP.getSize()
+                                         << " InftyExpressions)");
+                    currentLP.setUnsolvable();
+                }
+
                 return false;
             }
 
@@ -901,6 +919,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
                     if (((dir == POS || dir == POS_INF) && (dir2 == POS || dir2 == POS_INF))
                         || (dir == NEG_INF && dir2 == NEG_INF)) {
                         assert(*it != *it2);
+
                         debugAsymptoticBound("substituting variable " << *it << " by " << *it2);
 
                         exmap sub;

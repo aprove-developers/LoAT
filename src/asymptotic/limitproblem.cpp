@@ -525,6 +525,10 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
                                 || it->hasAtLeastTwoVariables());
 }
 
+InftyExpressionSet::size_type LimitProblem::getSize() {
+    return set.size();
+}
+
 
 std::string LimitProblem::getProof() {
     return log.str();
