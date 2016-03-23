@@ -356,7 +356,7 @@ bool Expression::hasExactlyOneVariable() const {
 ExprSymbol Expression::getAVariable() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         SymbolVisitor(GiNaC::symbol &variable)
-            : variable(variable){
+            : variable(variable) {
         }
         void visit(const GiNaC::symbol &var) {
             variable = var;

@@ -709,41 +709,36 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 
 
 bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it) {
-    if (!(is_a<add>(*it) || is_a<mul>(*it))) {
-        return false;
-    }
-
-    std::vector<Expression> ops(it->begin(), it->end());
-
-    ExprSymbolSet minVars = std::move(ops[0].getVariables());
-    ExprSymbolSet vars;
-    for (int i = 1; i < it->nops(); ++i) {
-        vars.clear();
-        ops[i].collectVariables(vars);
-        if (vars.size() < minVars.size()) {
-            minVars = std::move(vars);
-        }
-    }
-
-    debugAsymptoticBound("minVars: ");
-    for (const ExprSymbol &var : minVars) {
-        debugAsymptoticBound(var);
-    }
-
     Expression l, r;
     std::vector<LimitVector> *limitVectors;
     if (is_a<add>(*it)) {
         l = numeric(0);
         r = numeric(0);
 
+        bool foundOneVar = false;
+        ExprSymbol oneVar;
         for (int i = 0; i < it->nops(); ++i) {
-            vars.clear();
-            ops[i].collectVariables(vars);
+            Expression ex(it->op(i));
 
-            if (vars == minVars) {
-                l += ops[i];
+            if (ex.hasNoVariables()) {
+                l = ex;
+                r = *it - ex;
+                break;
+
+            } else if (ex.hasExactlyOneVariable()) {
+                if (!foundOneVar) {
+                    foundOneVar = true;
+                    oneVar = ex.getAVariable();
+                    l = ex;
+
+                } else if (oneVar == ex.getAVariable()) {
+                    l += ex;
+
+                } else {
+                    r += ex;
+                }
             } else {
-                r += ops[i];
+                r += ex;
             }
         }
 
@@ -752,18 +747,34 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
         }
 
         limitVectors = &addition[it->getDirection()];
-    } else {
+    } else if (is_a<mul>(*it)) {
         l = numeric(1);
         r = numeric(1);
 
+        bool foundOneVar = false;
+        ExprSymbol oneVar;
         for (int i = 0; i < it->nops(); ++i) {
-            vars.clear();
-            ops[i].collectVariables(vars);
+            Expression ex(it->op(i));
 
-            if (vars == minVars) {
-                l *= ops[i];
+            if (ex.hasNoVariables()) {
+                l = ex;
+                r = *it / ex;
+                break;
+
+            } else if (ex.hasExactlyOneVariable()) {
+                if (!foundOneVar) {
+                    foundOneVar = true;
+                    oneVar = ex.getAVariable();
+                    l = ex;
+
+                } else if (oneVar == ex.getAVariable()) {
+                    l *= ex;
+
+                } else {
+                    r *= ex;
+                }
             } else {
-                r *= ops[i];
+                r *= ex;
             }
         }
 
@@ -772,6 +783,8 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
         }
 
         limitVectors = &multiplication[it->getDirection()];
+    } else {
+        return false;
     }
 
     debugAsymptoticBound("trying to apply limit vectors (smart)");
