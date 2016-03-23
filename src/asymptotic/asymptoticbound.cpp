@@ -300,8 +300,8 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
         if (!its.isFreeVar(ex_to<symbol>(pair.first))) {
             Expression sub = pair.second;
             assert(sub.is_polynomial(n));
-            assert(sub.getVariables().empty()
-                   || (sub.getVariables().size() == 1 && sub.getVariables().count(n) > 0));
+            assert(sub.hasNoVariables()
+                   || (sub.hasExactlyOneVariable() && sub.has(n)));
 
             Expression expanded = sub.expand();
             int d = expanded.degree(n);
@@ -331,7 +331,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
     ExprSymbol n = limitProblem.getN();
     if (solvedCost.info(info_flags::polynomial)) {
         assert(solvedCost.is_polynomial(n));
-        assert(solvedCost.getVariables().size() <= 1);
+        assert(solvedCost.hasAtMostOneVariable());
 
         Expression expanded = solvedCost.expand();
         int d = expanded.degree(n);
@@ -397,7 +397,7 @@ bool AsymptoticBound::solveLimitProblem() {
     limitProblems.pop_back();
 
     start:
-    if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !Timeout::hard()) {
         debugAsymptoticBound("Currently handling:");
         debugAsymptoticBound(currentLP);
         debugAsymptoticBound("");
@@ -437,13 +437,13 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-            if (it->getVariables().size() <= 1 && tryApplyingLimitVector(it)) {
+            if (it->hasAtMostOneVariable() && tryApplyingLimitVector(it)) {
                 goto start;
             }
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-            if (it->getVariables().size() >= 2 && tryApplyingLimitVectorSmartly(it)) {
+            if (it->hasAtLeastTwoVariables() && tryApplyingLimitVectorSmartly(it)) {
                 goto start;
             }
         }
@@ -474,7 +474,7 @@ bool AsymptoticBound::solveLimitProblem() {
         debugAsymptoticBound(currentLP);
     }
 
-    if (limitProblems.empty()) {
+    if (limitProblems.empty() || Timeout::hard()) {
         return !solvedLimitProblems.empty();
 
     } else {
@@ -703,8 +703,10 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
     std::vector<Expression> ops(it->begin(), it->end());
 
     ExprSymbolSet minVars = std::move(ops[0].getVariables());
+    ExprSymbolSet vars;
     for (int i = 1; i < it->nops(); ++i) {
-        ExprSymbolSet vars = std::move(ops[i].getVariables());
+        vars.clear();
+        ops[i].collectVariables(vars);
         if (vars.size() < minVars.size()) {
             minVars = std::move(vars);
         }
@@ -720,8 +722,12 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
     if (is_a<add>(*it)) {
         l = numeric(0);
         r = numeric(0);
+
         for (int i = 0; i < it->nops(); ++i) {
-            if (ops[i].getVariables() == minVars) {
+            vars.clear();
+            ops[i].collectVariables(vars);
+
+            if (vars == minVars) {
                 l += ops[i];
             } else {
                 r += ops[i];
@@ -736,8 +742,12 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
     } else {
         l = numeric(1);
         r = numeric(1);
+
         for (int i = 0; i < it->nops(); ++i) {
-            if (ops[i].getVariables() == minVars) {
+            vars.clear();
+            ops[i].collectVariables(vars);
+
+            if (vars == minVars) {
                 l *= ops[i];
             } else {
                 r *= ops[i];
@@ -813,10 +823,9 @@ bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::c
 
 bool AsymptoticBound::tryInstantiatingVariable() {
     for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-        ExprSymbolSet vars = std::move(it->getVariables());
         Direction dir = it->getDirection();
 
-        if (vars.size() == 1 && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
+        if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
             Z3VariableContext context;
             z3::model model(context, Z3_model());
             z3::check_result result;
@@ -828,7 +837,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
                 currentLP.setUnsolvable();
 
             } else if (result == z3::sat) {
-                ExprSymbol var = *vars.begin();
+                ExprSymbol var = it->getAVariable();
 
                 debugAsymptoticBound("Z3: limit problem is sat");
                 debugAsymptoticBound(currentLP);

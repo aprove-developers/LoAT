@@ -185,16 +185,14 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
 
 
 void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) {
-    ExprSymbolSet variables = std::move(it->getVariables());
-
     // the expression has to be a univariate polynomial
     assert(it->info(info_flags::polynomial));
-    assert(variables.size() == 1);
+    assert(it->hasExactlyOneVariable());
 
     Direction dir = it->getDirection();
     assert((dir == POS) || (dir == POS_INF) || (dir == NEG_INF));
 
-    ExprSymbol var = *variables.begin();
+    ExprSymbol var = it->getAVariable();
 
     Expression expanded = it->expand();
     debugLimitProblem("expanded " << *it << " to " << expanded);
@@ -235,9 +233,8 @@ void LimitProblem::reducePolynomialPower(const InftyExpressionSet::const_iterato
 
     debugLimitProblem("expression: " << *it);
 
-    ExprSymbolSet variables = std::move(it->getVariables());
-    assert(variables.size() == 1);
-    ExprSymbol x = *variables.cbegin();
+    assert(it->hasExactlyOneVariable());
+    ExprSymbol x = it->getAVariable();
 
     Expression powerInExp;
     if (is_a<add>(*it)) {
@@ -297,7 +294,7 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
         for (int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
-                                         || summand.getVariables().size() > 1)) {
+                                         || summand.hasAtLeastTwoVariables())) {
                 powerInExp = summand;
                 break;
             }
@@ -309,7 +306,7 @@ void LimitProblem::reduceGeneralPower(const InftyExpressionSet::const_iterator &
     debugLimitProblem("general power: " << powerInExp);
     assert(is_a<power>(powerInExp));
     assert(!powerInExp.op(1).info(info_flags::polynomial)
-           || powerInExp.getVariables().size() > 1);
+           || powerInExp.hasAtLeastTwoVariables());
 
     Expression b = *it - powerInExp;
     debugLimitProblem("b: " << b);
@@ -455,7 +452,7 @@ bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_it
         return false;
     }
 
-    return it->getVariables().size() == 1;
+    return it->hasExactlyOneVariable();
 }
 
 
@@ -465,13 +462,11 @@ bool LimitProblem::reducePolynomialPowerIsApplicable(const InftyExpressionSet::c
         return false;
     }
 
-    ExprSymbolSet variables = std::move(it->getVariables());
-
-    if (variables.size() != 1) {
+    if (!it->hasExactlyOneVariable()) {
         return false;
     }
 
-    ExprSymbol x = *variables.cbegin();
+    ExprSymbol x = it->getAVariable();
 
     Expression powerInExp;
     if (is_a<add>(*it)) {
@@ -518,7 +513,7 @@ bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::cons
         for (int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
-                                         || summand.getVariables().size() > 1)) {
+                                         || summand.hasAtLeastTwoVariables())) {
                 return true;
             }
         }
@@ -527,7 +522,7 @@ bool LimitProblem::reduceGeneralPowerIsApplicable(const InftyExpressionSet::cons
     }
 
     return is_a<power>(*it) && (!it->op(1).info(info_flags::polynomial)
-                                || it->getVariables().size() > 1);
+                                || it->hasAtLeastTwoVariables());
 }
 
 

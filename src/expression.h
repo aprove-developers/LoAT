@@ -117,6 +117,9 @@ public:
 #endif
     }
 
+    /**
+     * Version of ex::find() that searches also in subexpressions of a match
+     */
     bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;
 
     /**
@@ -177,6 +180,35 @@ public:
      * Convenience method for collectVariables
      */
     ExprSymbolSet getVariables() const;
+
+    /**
+     * Returns true iff this Expression does not contain any variables, i.e.,
+     * getVariables():size() == 0
+     */
+    bool hasNoVariables() const;
+
+    /**
+     * Returns true iff this Expression contains exactly one variable, i.e.,
+     * getVariables().size() == 1
+     */
+    bool hasExactlyOneVariable() const;
+
+    /**
+     * Returns a variable that occurs in this Expression (if there is one)
+     */
+    ExprSymbol getAVariable() const;
+
+    /**
+     * Returns true iff this Expression contains at most one variable, i.e.,
+     * getVariables().size() <= 1
+     */
+    bool hasAtMostOneVariable() const;
+
+    /**
+     * Returns true iff this Expression contains at most one variable, i.e.,
+     * getVariables().size() >= 2
+     */
+    bool hasAtLeastTwoVariables() const;
 
     /**
      * Converts this term from a GiNaC::ex to a Z3 expression
