@@ -80,10 +80,10 @@ struct DebugStream {
 #define DEBUG_INFINITY
 
 //debugging for limit problems
-#define DEBUG_LIMIT_PROBLEMS
+//#define DEBUG_LIMIT_PROBLEMS
 
 //debugging for asymptotic bounds
-#define DEBUG_ASYMPTOTIC_BOUNDS
+//#define DEBUG_ASYMPTOTIC_BOUNDS
 
 //debugging for the Expression class
 #define DEBUG_EXPRESSION

@@ -60,12 +60,6 @@
 #define SELFLOOPS_ALWAYS_SIMPLIFY
 
 /*
- * if defined, for every loop elimination an empty transition is added, modelling the choice
- * to not execute any of the parallel selfloops at all
- */
-//#define SELFLOOP_ALLOW_ZEROEXEC
-
-/*
  * this defines the nesting iterations when eliminating selfloops, i.e.
  * how often the successfully nested loops are tried to be nested again
  * NOTE: nesting is always aborted if no new nested loops are created

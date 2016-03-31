@@ -68,6 +68,15 @@ FlowGraph::FlowGraph(ITRSProblem &itrs)
     for (const Rule &r : itrs.getRules()) {
         addRule(r);
     }
+
+    if (!getPredecessors(initial).empty()) {
+        debugGraph("the start location has incoming transitions, adding new start location");
+        NodeIndex newStart = addNode();
+        Transition epsilon;
+        epsilon.cost = Expression(0);
+        addTrans(newStart, initial, epsilon);
+        initial = newStart;
+    }
 }
 
 
@@ -168,15 +177,40 @@ bool FlowGraph::chainBranches() {
     return res;
 }
 
-bool FlowGraph::removeSelfloops() {
+bool FlowGraph::chainSimpleLoops() {
+    Timing::Scope timer(Timing::Contract);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("FlowGraph::chainSimpleLoops");
+
+    bool res = false;
+    for (NodeIndex node : nodes) {
+        if (!getTransFromTo(node, node).empty()) {
+            if (chainSimpleLoops(node)) {
+                res = true;
+            }
+
+            if (Timeout::soft()) return res;
+        }
+    }
+
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER CHAINING SIMPLE LOOPS ===========/ " << endl;
+#endif
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+bool FlowGraph::accelerateSimpleLoops() {
     Timing::Scope timer(Timing::Selfloops);
     assert(check(&nodes) == Graph::Valid);
-    Stats::addStep("FlowGraph::removeSelfloops");
+    Stats::addStep("FlowGraph::accelerateSimpleLoops");
 
     bool res = false;
     for (NodeIndex node : nodes) {
         if (!getTransFromTo(node,node).empty()) {
-            res = removeSelfloopsFrom(node) || res; //note: inserting while iterating is ok for std::set
+            res = accelerateSimpleLoops(node) || res;
             if (Timeout::soft()) return res;
         }
     }
@@ -473,17 +507,55 @@ bool FlowGraph::canNest(const Transition &inner, const Transition &outer) const 
 }
 
 
-bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
+bool FlowGraph::chainSimpleLoops(NodeIndex node) {
+    debugGraph("Chaining simple loops.");
+    assert(node != initial);
+    assert(!getTransFromTo(node, node).empty());
+
+    set<NodeIndex> predecessors = std::move(getPredecessors(node));
+    predecessors.erase(node);
+
+    vector<TransIndex> transitions;
+    for (NodeIndex pre : predecessors) {
+        for (TransIndex transition : getTransFromTo(pre, node)) {
+            transitions.push_back(transition);
+        }
+    }
+    debugGraph(transitions.size() << " transitions to " << node);
+
+    for (TransIndex simpleLoop : getTransFromTo(node, node)) {
+        const Transition &simpleLoopTransData = getTransData(simpleLoop);
+
+        for (TransIndex transition : transitions) {
+            Transition transData = getTransData(transition);
+
+            if (chainTransitionData(transData, simpleLoopTransData)) {
+                addTrans(getTransSource(transition), node, transData);
+                Stats::add(Stats::ContractLinear);
+            }
+
+        }
+
+        debugGraph("removing simple loop " << simpleLoop);
+        removeTrans(simpleLoop);
+    }
+
+    for (TransIndex transition : transitions) {
+        //debugGraph("removing transition " << transition);
+        //removeTrans(transition);
+    }
+
+    return true;
+}
+
+
+bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
     vector<TransIndex> loops = getTransFromTo(node,node);
     proofout << "Eliminating " << loops.size() << " self-loops for location ";
     if (node < itrs.getTermCount()) proofout << itrs.getTerm(node).name; else proofout << "[" << node << "]";
     proofout << endl;
     debugGraph("Eliminating " << loops.size() << " selfloops for node: " << node);
     assert(!loops.empty());
-
-    //split node into incoming and outgoing node, where loop will be replaced by single transition between them
-    NodeIndex outNode = addNode();
-    splitNode(node,outNode);
 
     //helper lambda
     auto try_rank = [&](Transition &data) -> bool {
@@ -506,7 +578,6 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
     };
 
     //first try to find a metering function for every parallel selfloop
-    bool add_empty = false;
     set<TransIndex> added_ranked;
     set<TransIndex> added_unranked;
     set<TransIndex> todo_remove;
@@ -523,7 +594,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
 
         //abort early on INF selfloops
         if (getTransData(tidx).cost.isInfty()) {
-            addTrans(node,outNode,getTransData(tidx));
+            addTrans(node,node,getTransData(tidx));
             continue;
         }
 
@@ -570,31 +641,28 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                 debugGraph("Farkas unbounded!");
                 data.cost = Expression::Infty;
                 data.update.clear(); //clear update, but keep guard!
-                TransIndex newIdx = addTrans(node,outNode,data);
+                TransIndex newIdx = addTrans(node,node,data);
                 proofout << "  Self-Loop " << tidx << " has unbounded runtime, resulting in the new transition " << newIdx << "." << endl;
             }
             else if (result == FarkasMeterGenerator::Nonlinear) {
                 Stats::add(Stats::SelfloopNoRank);
                 debugGraph("Farkas nonlinear!");
-                add_empty = true;
-                addTrans(node,outNode,getTransData(tidx)); //keep old
+                addTrans(node,node,getTransData(tidx)); //keep old
             }
             else if (result == FarkasMeterGenerator::Unsat) {
                 Stats::add(Stats::SelfloopNoRank);
                 debugGraph("Farkas unsat!");
-                add_empty = true;
-                added_unranked.insert(addTrans(node,outNode,data)); //keep old, mark as unsat
+                added_unranked.insert(addTrans(node,node,data)); //keep old, mark as unsat
             }
             else if (result == FarkasMeterGenerator::Success) {
                 debugGraph("RANK: " << rankfunc);
                 if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
                     //do not add to added_unranked, as this will probably not help with nested loops
                     Stats::add(Stats::SelfloopNoUpdate);
-                    add_empty = true;
-                    addTrans(node,outNode,getTransData(tidx)); //keep old
+                    addTrans(node,node,getTransData(tidx)); //keep old
                 } else {
                     Stats::add(Stats::SelfloopRanked);
-                    TransIndex tnew = addTrans(node,outNode,data);
+                    TransIndex tnew = addTrans(node,node,data);
                     added_ranked.insert(tnew);
                     added_unranked.insert(tidx); //try nesting also with original transition
                     map_to_original[tnew] = tidx;
@@ -646,14 +714,14 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                         proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
                         changed = true;
                         todo_remove.insert(outer); //remove the previously unsat loop
-                        TransIndex tnew = addTrans(node,outNode,loop);
+                        TransIndex tnew = addTrans(node,node,loop);
                         added_nested.insert(tnew);
                         proofout << tnew;
 
                         //try one outer iteration first as well (this is costly, but nested loops are often quadratic!)
                         Transition pre = getTransData(outer);
                         if (chainTransitionData(pre,loop)) {
-                            TransIndex tnew = addTrans(node,outNode,pre);
+                            TransIndex tnew = addTrans(node,node,pre);
                             added_nested.insert(tnew);
                             proofout << ", " << tnew;
                         }
@@ -669,14 +737,14 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                         proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
                         changed = true;
                         todo_remove.insert(outer); //remove the previously unsat loop
-                        TransIndex tnew = addTrans(node,outNode,loop);
+                        TransIndex tnew = addTrans(node,node,loop);
                         added_nested.insert(tnew);
                         proofout << tnew;
 
                         //try one inner iteration first as well (this is costly, but nested loops are often quadratic!)
                         Transition pre = getTransData(inner);
                         if (chainTransitionData(pre,loop)) {
-                            TransIndex tnew = addTrans(node,outNode,pre);
+                            TransIndex tnew = addTrans(node,node,pre);
                             added_nested.insert(tnew);
                             proofout << ", " << tnew;
                         }
@@ -695,7 +763,7 @@ bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
                 if (first == second) continue;
                 Transition chained = getTransData(first);
                 if (chainTransitionData(chained,getTransData(second))) {
-                    TransIndex newtrans = addTrans(node,outNode,chained);
+                    TransIndex newtrans = addTrans(node,node,chained);
                     added_nested.insert(newtrans);
                     changed = true;
                     proofout << "  Chained the parallel self-loops " << first << " and " << second << ", obtaining the new transition: " << newtrans << "." << endl;
@@ -718,19 +786,7 @@ timeout:
     }
     proofout << "." << endl;
 
-#ifdef SELFLOOP_ALLOW_ZEROEXEC
-    {
-#else
-    if (add_empty) {
-#endif
-        //ALSO add the choice to *not* take a loop at all (in case of unsats only)
-        Transition noloop;
-        noloop.cost = Expression(0);
-        TransIndex tnew = addTrans(node,outNode,noloop);
-        proofout << "Adding an epsilon transition (to model nonexecution of the loops): " << tnew << "." << endl;
-    }
-
-    removeDuplicateTransitions(getTransFromTo(node,outNode));
+    removeDuplicateTransitions(getTransFromTo(node,node));
 
     return true; //always changed as old transition is removed
 }

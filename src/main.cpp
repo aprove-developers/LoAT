@@ -218,13 +218,23 @@ int main(int argc, char *argv[]) {
         for (;;) {
             do {
                 changed = false;
-                if (g.removeSelfloops()) {
+                if (g.accelerateSimpleLoops()) {
                     changed = true;
-                    proofout << endl <<  "Removed all Self-loops using metering functions (where possible):" << endl;
+                    proofout << endl <<  "Accelerated all simple loops using metering functions"
+                             << " (where possible):" << endl;
                     g.printForProof();
                     if (dotOutput) g.printDot(dotStream,dotStep++,"Loop");
                 }
                 if (Timeout::soft()) break;
+
+                if (g.chainSimpleLoops()) {
+                    changed = true;
+                    proofout << endl <<  "Chained simpled loops:" << endl;
+                    g.printForProof();
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Chain simple loops");
+                }
+                if (Timeout::soft()) break;
+
                 if (g.chainLinear()) {
                     changed = true;
                     proofout << endl <<  "Applied simple chaining:" << endl;

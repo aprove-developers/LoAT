@@ -122,11 +122,19 @@ public:
     bool chainBranches();
 
     /**
-     * Replaces all selfloops with linear transitions by searching for metering functions and iterated costs/updates.
-     * Also handles nesting and chaining of parallel selfoops (where possible).
-     * @return true iff the graph was modified (which is always the case if any selfloops were present)
+     * Apply chaining to simple loops
+     * @return true iff the graph was modified
      */
-    bool removeSelfloops();
+    bool chainSimpleLoops();
+
+    /**
+     * Replaces all simple loops with accelerated simple loops
+     * by searching for metering functions and iterated costs/updates.
+     * Also handles nesting and chaining of parallel simple loops (where possible).
+     * @return true iff the graph was modified
+     *         (which is always the case if any simple loops were present)
+     */
+    bool accelerateSimpleLoops();
 
     /**
      * Tries to identify and remove duplicate transitions
@@ -198,11 +206,19 @@ private:
     bool canNest(const Transition &inner, const Transition &outer) const;
 
     /**
-     * Replaces all selfloops of the given location with linear transitions by searching for metering functions and iterated costs/updates.
-     * Also handles nesting and chaining of parallel selfoops (where possible).
-     * @return true iff the graph was modified (which is always the case if any selfloops were present)
+     * Apply chaining to the simple loops of node
+     * @return true iff the graph was modified
      */
-    bool removeSelfloopsFrom(NodeIndex node);
+    bool chainSimpleLoops(NodeIndex node);
+
+    /**
+     * Replaces all simple loops of the given location with accelerated simple loops
+     * by searching for metering functions and iterated costs/updates.
+     * Also handles nesting and chaining of parallel simple loops (where possible).
+     * @return true iff the graph was modified
+     *         (which is always the case if any selfloops were present)
+     */
+    bool accelerateSimpleLoops(NodeIndex node);
 
     /**
      * A simple syntactic comparision. If it returns true, a and b are guaranteed to be equal.
