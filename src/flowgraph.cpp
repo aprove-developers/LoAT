@@ -800,8 +800,10 @@ bool FlowGraph::pruneTransitions() {
     return false;
 #else
     Stats::addStep("Flowgraph::pruneTransitions");
-    typedef tuple<TransIndex,Complexity,int> TransCpx;
-    auto comp = [](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b) || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
+    typedef tuple<TransIndex,Complexity,int,bool> TransCpx;
+    auto comp = [this](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b)
+                                                    || (get<1>(a) == get<1>(b) && get<3>(a) && !get<3>(b))
+                                                    || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
 
     for (NodeIndex node : nodes) {
         if (Timeout::soft()) break;
@@ -818,7 +820,7 @@ bool FlowGraph::pruneTransitions() {
                     Transition data = getTransData(trans);
 
                     auto res = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, false);
-                    queue.push(make_tuple(trans,res.cpx,res.inftyVars));
+                    queue.push(make_tuple(trans,res.cpx,res.inftyVars, GiNaC::is_a<GiNaC::numeric>(getTransData(trans).cost)));
                 }
 
                 set<TransIndex> keep;
