@@ -215,15 +215,18 @@ int main(int argc, char *argv[]) {
             if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");
         }
 
-        for (;;) {
+        while (!g.isFullyChained()) {
+
+            bool changed;
             do {
                 changed = false;
+
                 if (g.accelerateSimpleLoops()) {
                     changed = true;
                     proofout << endl <<  "Accelerated all simple loops using metering functions"
                              << " (where possible):" << endl;
                     g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Loop");
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Accelerate simple loops");
                 }
                 if (Timeout::soft()) break;
 
@@ -235,28 +238,31 @@ int main(int argc, char *argv[]) {
                 }
                 if (Timeout::soft()) break;
 
-                if (g.chainLinear()) {
+                if (g.eliminateLocations(true)) {
                     changed = true;
-                    proofout << endl <<  "Applied simple chaining:" << endl;
+                    proofout << endl <<  "Eliminated locations (with just one incoming transition):" << endl;
                     g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Contract");
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (one incoming)");
                 }
                 if (Timeout::soft()) break;
             } while (changed);
-            if (Timeout::soft()) break;
 
-            if (g.isFullyChained()) break;
-            if (!g.chainBranches()) break; //break if nothing heamy results
-            if (dotOutput) g.printDot(dotStream,dotStep++,"Branches");
-
-            if (Timeout::soft()) break;
-            if (g.pruneTransitions()) {
-                if (dotOutput) g.printDot(dotStream,dotStep++,"Prune");
+            if (g.eliminateLocations(false)) {
+                proofout << endl <<  "Eliminated locations:" << endl;
+                g.printForProof();
+                if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations");
             }
+            if (Timeout::soft()) break;
+
+            if (g.pruneTransitions()) {
+                if (dotOutput) {
+                    g.printDot(dotStream, dotStep++, "Prune");
+                }
+            }
+            if (Timeout::soft()) break;
 
             proofout << endl <<  "Applied chaining over branches and pruning:" << endl;
             g.printForProof();
-            if (Timeout::soft()) break;
         }
 
         if (Timeout::soft()) proofout << "Aborted due to lack of remaining time" << endl << endl;

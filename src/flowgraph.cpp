@@ -161,6 +161,24 @@ bool FlowGraph::chainLinear() {
     return res;
 }
 
+
+bool FlowGraph::eliminateLocations(bool onlyOneIncoming) {
+    Timing::Scope timer(Timing::Contract);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("FlowGraph::eliminateLocations");
+
+    set<NodeIndex> visited;
+    bool res = eliminateLocations(initial, visited, onlyOneIncoming);
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER ELIMINATING LOCATIONS ===========/ " << endl;
+#endif
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
 bool FlowGraph::chainBranches() {
     Timing::Scope timer(Timing::Branches);
     assert(check(&nodes) == Graph::Valid);
@@ -176,6 +194,7 @@ bool FlowGraph::chainBranches() {
     assert(check(&nodes) == Graph::Valid);
     return res;
 }
+
 
 bool FlowGraph::chainSimpleLoops() {
     Timing::Scope timer(Timing::Contract);
@@ -201,6 +220,7 @@ bool FlowGraph::chainSimpleLoops() {
     assert(check(&nodes) == Graph::Valid);
     return res;
 }
+
 
 bool FlowGraph::accelerateSimpleLoops() {
     Timing::Scope timer(Timing::Selfloops);
@@ -433,6 +453,93 @@ bool FlowGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
 }
 
 
+bool FlowGraph::eliminateLocations(NodeIndex node, set<NodeIndex> &visited, bool onlyOneIncoming) {
+    if (visited.count(node) > 0) return false;
+
+    debugGraph("trying to eliminate location " << node);
+
+    bool modified = false;
+
+    set<NodeIndex> predecessors = std::move(getPredecessors(node));
+
+    vector<TransIndex> transitionsIn;
+    for (NodeIndex pre : predecessors) {
+        for (TransIndex transition : getTransFromTo(pre, node)) {
+            transitionsIn.push_back(transition);
+        }
+    }
+
+    vector<TransIndex> transitionsOut = std::move(getTransFrom(node));
+
+    set<NodeIndex> nextNodes;
+    if (predecessors.count(node) > 0 // simple loop
+        || (onlyOneIncoming && transitionsIn.size() > 1)
+        || transitionsIn.empty()
+        || transitionsOut.empty()) {
+        visited.insert(node);
+        nextNodes = std::move(getSuccessors(node));
+        nextNodes.erase(node);
+
+    } else {
+        assert(node != initial);
+
+        bool none = true;
+        for (TransIndex out : transitionsOut) {
+            const Transition &outTransData = getTransData(out);
+
+            for (TransIndex in : transitionsIn) {
+                Transition inTransData = getTransData(in);
+
+                if (chainTransitionData(inTransData, outTransData)) {
+                    none = false;
+                    addTrans(getTransSource(in), getTransTarget(out), inTransData);
+                    Stats::add(Stats::ContractLinear);
+                }
+            }
+        }
+
+        if (none) {
+            for (TransIndex trans : transitionsOut) {
+                nextNodes.insert(getTransTarget(trans));
+                removeTrans(trans);
+            }
+            visited.insert(node);
+
+        } else {
+            for (TransIndex trans : transitionsIn) {
+                removeTrans(trans);
+            }
+
+            for (TransIndex trans : transitionsOut) {
+                nextNodes.insert(getTransTarget(trans));
+                removeTrans(trans);
+            }
+
+            removeNode(node);
+            nodes.erase(node);
+        }
+
+        modified = true;
+    }
+
+    if (Timeout::soft()) {
+        return modified;
+    }
+
+    for (NodeIndex next : nextNodes) {
+        if (eliminateLocations(next, visited, onlyOneIncoming)) {
+            modified = true;
+        }
+
+        if (Timeout::soft()) {
+            return modified;
+        }
+    }
+
+    return modified;
+}
+
+
 bool FlowGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
     //avoid cycles even in branched mode. Contract a cycle to a selfloop and stop.
     if (visited.count(node) > 0) return false;
@@ -541,8 +648,8 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
     }
 
     for (TransIndex transition : transitions) {
-        //debugGraph("removing transition " << transition);
-        //removeTrans(transition);
+        debugGraph("removing transition " << transition);
+        removeTrans(transition);
     }
 
     return true;

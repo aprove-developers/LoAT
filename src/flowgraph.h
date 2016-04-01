@@ -114,6 +114,8 @@ public:
      */
     bool chainLinear();
 
+    bool eliminateLocations(bool onlyOneIncoming);
+
     /**
      * Apply branched chaining (i.e. the eliminated node can have multiple outgoing edges)
      * @note this is quite powerful, but often creates many branches. Consider pruning afterwards
@@ -192,6 +194,8 @@ private:
      * @return true iff the graph was modified
      */
     bool chainLinearPaths(NodeIndex node, std::set<NodeIndex> &visited);
+
+    bool eliminateLocations(NodeIndex node, std::set<NodeIndex> &visited, bool onlyOneIncoming);
 
     /**
      * Internal function for chainBranches
