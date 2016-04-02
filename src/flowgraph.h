@@ -258,6 +258,10 @@ private:
     NodeIndex nextNode;
 
     ITRSProblem &itrs;
+
+    // accelerateSimpleLoops() uses the following set to communicate
+    // with chainSimpleLoops().
+    std::set<NodeIndex> addTransitionToSkipLoops;
 };
 
 #endif // FLOWGRAPH_H

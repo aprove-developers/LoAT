@@ -227,6 +227,7 @@ bool FlowGraph::accelerateSimpleLoops() {
     assert(check(&nodes) == Graph::Valid);
     Stats::addStep("FlowGraph::accelerateSimpleLoops");
 
+    addTransitionToSkipLoops.clear();
     bool res = false;
     for (NodeIndex node : nodes) {
         if (!getTransFromTo(node,node).empty()) {
@@ -634,7 +635,7 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
     }
 
     for (const std::pair<TransIndex,bool> &pair : transitions) {
-        if (pair.second) {
+        if (pair.second && !(addTransitionToSkipLoops.count(node) > 0)) {
             debugGraph("removing transition " << pair.first);
             removeTrans(pair.first);
         }
@@ -742,11 +743,13 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
             else if (result == FarkasMeterGenerator::Nonlinear) {
                 Stats::add(Stats::SelfloopNoRank);
                 debugGraph("Farkas nonlinear!");
+                addTransitionToSkipLoops.insert(node);
                 addTrans(node,node,getTransData(tidx)); //keep old
             }
             else if (result == FarkasMeterGenerator::Unsat) {
                 Stats::add(Stats::SelfloopNoRank);
                 debugGraph("Farkas unsat!");
+                addTransitionToSkipLoops.insert(node);
                 added_unranked.insert(addTrans(node,node,data)); //keep old, mark as unsat
             }
             else if (result == FarkasMeterGenerator::Success) {
@@ -754,6 +757,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
                 if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
                     //do not add to added_unranked, as this will probably not help with nested loops
                     Stats::add(Stats::SelfloopNoUpdate);
+                    addTransitionToSkipLoops.insert(node);
                     addTrans(node,node,getTransData(tidx)); //keep old
                 } else {
                     Stats::add(Stats::SelfloopRanked);
