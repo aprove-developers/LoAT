@@ -114,7 +114,12 @@ public:
      */
     bool chainLinear();
 
-    bool eliminateLocations(bool onlyOneIncoming);
+    /**
+     * Eliminates a single location without simple loops by chaining incoming and outgoing
+     * transitions.
+     * @return true iff the graph was modified
+     */
+    bool eliminateALocation();
 
     /**
      * Apply branched chaining (i.e. the eliminated node can have multiple outgoing edges)
@@ -195,7 +200,11 @@ private:
      */
     bool chainLinearPaths(NodeIndex node, std::set<NodeIndex> &visited);
 
-    bool eliminateLocations(NodeIndex node, std::set<NodeIndex> &visited, bool onlyOneIncoming);
+    /**
+     * Internal function for eliminateALocation
+     * @return true iff the graph was modified
+     */
+    bool eliminateALocation(NodeIndex node, std::set<NodeIndex> &visited);
 
     /**
      * Internal function for chainBranches

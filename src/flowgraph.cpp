@@ -162,13 +162,13 @@ bool FlowGraph::chainLinear() {
 }
 
 
-bool FlowGraph::eliminateLocations(bool onlyOneIncoming) {
+bool FlowGraph::eliminateALocation() {
     Timing::Scope timer(Timing::Contract);
     assert(check(&nodes) == Graph::Valid);
-    Stats::addStep("FlowGraph::eliminateLocations");
+    Stats::addStep("FlowGraph::eliminateALocation");
 
     set<NodeIndex> visited;
-    bool res = eliminateLocations(initial, visited, onlyOneIncoming);
+    bool res = eliminateALocation(initial, visited);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
     print(cout);
@@ -453,12 +453,11 @@ bool FlowGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
 }
 
 
-bool FlowGraph::eliminateLocations(NodeIndex node, set<NodeIndex> &visited, bool onlyOneIncoming) {
+bool FlowGraph::eliminateALocation(NodeIndex node, set<NodeIndex> &visited) {
     if (visited.count(node) > 0) return false;
+    visited.insert(node);
 
     debugGraph("trying to eliminate location " << node);
-
-    bool modified = false;
 
     set<NodeIndex> predecessors = std::move(getPredecessors(node));
 
@@ -473,70 +472,54 @@ bool FlowGraph::eliminateLocations(NodeIndex node, set<NodeIndex> &visited, bool
 
     set<NodeIndex> nextNodes;
     if (predecessors.count(node) > 0 // simple loop
-        || (onlyOneIncoming && transitionsIn.size() > 1)
         || transitionsIn.empty()
         || transitionsOut.empty()) {
-        visited.insert(node);
-        nextNodes = std::move(getSuccessors(node));
-        nextNodes.erase(node);
 
-    } else {
-        assert(node != initial);
+        for (NodeIndex next : getSuccessors(node)) {
+            if (eliminateALocation(next, visited)) {
+                return true;
+            }
 
-        bool none = true;
-        for (TransIndex out : transitionsOut) {
-            const Transition &outTransData = getTransData(out);
-
-            for (TransIndex in : transitionsIn) {
-                Transition inTransData = getTransData(in);
-
-                if (chainTransitionData(inTransData, outTransData)) {
-                    none = false;
-                    addTrans(getTransSource(in), getTransTarget(out), inTransData);
-                    Stats::add(Stats::ContractLinear);
-                }
+            if (Timeout::soft()) {
+                return false;
             }
         }
 
-        if (none) {
-            for (TransIndex trans : transitionsOut) {
-                nextNodes.insert(getTransTarget(trans));
-                removeTrans(trans);
-            }
-            visited.insert(node);
-
-        } else {
-            for (TransIndex trans : transitionsIn) {
-                removeTrans(trans);
-            }
-
-            for (TransIndex trans : transitionsOut) {
-                nextNodes.insert(getTransTarget(trans));
-                removeTrans(trans);
-            }
-
-            removeNode(node);
-            nodes.erase(node);
-        }
-
-        modified = true;
+        return false;
     }
 
-    if (Timeout::soft()) {
-        return modified;
-    }
+    assert(node != initial);
 
-    for (NodeIndex next : nextNodes) {
-        if (eliminateLocations(next, visited, onlyOneIncoming)) {
-            modified = true;
-        }
+    bool addedTrans = false;
+    for (TransIndex out : transitionsOut) {
+        const Transition &outTransData = getTransData(out);
 
-        if (Timeout::soft()) {
-            return modified;
+        for (TransIndex in : transitionsIn) {
+            Transition inTransData = getTransData(in);
+
+            if (chainTransitionData(inTransData, outTransData)) {
+                addedTrans = true;
+                addTrans(getTransSource(in), getTransTarget(out), inTransData);
+                Stats::add(Stats::ContractLinear);
+            }
         }
     }
 
-    return modified;
+    for (TransIndex trans : transitionsOut) {
+        nextNodes.insert(getTransTarget(trans));
+        removeTrans(trans);
+    }
+
+    if (addedTrans) {
+        for (TransIndex trans : transitionsIn) {
+            removeTrans(trans);
+        }
+
+        removeNode(node);
+        nodes.erase(node);
+    }
+
+    return true;
 }
 
 
@@ -622,10 +605,12 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
     set<NodeIndex> predecessors = std::move(getPredecessors(node));
     predecessors.erase(node);
 
-    vector<TransIndex> transitions;
+    // the bool marks whether this transition was sucessfully chained
+    // with a simple loop
+    vector<std::pair<TransIndex,bool>> transitions;
     for (NodeIndex pre : predecessors) {
         for (TransIndex transition : getTransFromTo(pre, node)) {
-            transitions.push_back(transition);
+            transitions.push_back(std::make_pair(transition, false));
         }
     }
     debugGraph(transitions.size() << " transitions to " << node);
@@ -633,12 +618,13 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
     for (TransIndex simpleLoop : getTransFromTo(node, node)) {
         const Transition &simpleLoopTransData = getTransData(simpleLoop);
 
-        for (TransIndex transition : transitions) {
-            Transition transData = getTransData(transition);
+        for (std::pair<TransIndex,bool> &pair : transitions) {
+            Transition transData = getTransData(pair.first);
 
             if (chainTransitionData(transData, simpleLoopTransData)) {
-                addTrans(getTransSource(transition), node, transData);
+                addTrans(getTransSource(pair.first), node, transData);
                 Stats::add(Stats::ContractLinear);
+                pair.second = true;
             }
 
         }
@@ -647,9 +633,11 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
         removeTrans(simpleLoop);
     }
 
-    for (TransIndex transition : transitions) {
-        debugGraph("removing transition " << transition);
-        removeTrans(transition);
+    for (const std::pair<TransIndex,bool> &pair : transitions) {
+        if (pair.second) {
+            debugGraph("removing transition " << pair.first);
+            removeTrans(pair.first);
+        }
     }
 
     return true;
@@ -907,10 +895,8 @@ bool FlowGraph::pruneTransitions() {
     return false;
 #else
     Stats::addStep("Flowgraph::pruneTransitions");
-    typedef tuple<TransIndex,Complexity,int,bool> TransCpx;
-    auto comp = [this](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b)
-                                                    || (get<1>(a) == get<1>(b) && get<3>(a) && !get<3>(b))
-                                                    || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
+    typedef tuple<TransIndex,Complexity,int> TransCpx;
+    auto comp = [](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b) || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
 
     for (NodeIndex node : nodes) {
         if (Timeout::soft()) break;
@@ -927,7 +913,7 @@ bool FlowGraph::pruneTransitions() {
                     Transition data = getTransData(trans);
 
                     auto res = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, false);
-                    queue.push(make_tuple(trans,res.cpx,res.inftyVars, GiNaC::is_a<GiNaC::numeric>(getTransData(trans).cost)));
+                    queue.push(make_tuple(trans,res.cpx,res.inftyVars));
                 }
 
                 set<TransIndex> keep;

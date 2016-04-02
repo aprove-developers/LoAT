@@ -238,16 +238,23 @@ int main(int argc, char *argv[]) {
                 }
                 if (Timeout::soft()) break;
 
-                if (g.eliminateLocations(true)) {
+                if (g.chainLinear()) {
                     changed = true;
-                    proofout << endl <<  "Eliminated locations (with just one incoming transition):" << endl;
+                    proofout << endl <<  "Eliminated locations (linear):" << endl;
                     g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (one incoming)");
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (linear)");
                 }
                 if (Timeout::soft()) break;
+
             } while (changed);
 
-            if (g.eliminateLocations(false)) {
+
+            if (g.chainBranches()) {
+                proofout << endl <<  "Eliminated locations (branches):" << endl;
+                g.printForProof();
+                if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (branches)");
+
+            } else if (g.eliminateALocation()) {
                 proofout << endl <<  "Eliminated locations:" << endl;
                 g.printForProof();
                 if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations");
@@ -255,14 +262,11 @@ int main(int argc, char *argv[]) {
             if (Timeout::soft()) break;
 
             if (g.pruneTransitions()) {
-                if (dotOutput) {
-                    g.printDot(dotStream, dotStep++, "Prune");
-                }
+                proofout << endl <<  "Pruned:" << endl;
+                g.printForProof();
+                if (dotOutput) { g.printDot(dotStream,dotStep++,"Prune"); }
             }
             if (Timeout::soft()) break;
-
-            proofout << endl <<  "Applied chaining over branches and pruning:" << endl;
-            g.printForProof();
         }
 
         if (Timeout::soft()) proofout << "Aborted due to lack of remaining time" << endl << endl;
