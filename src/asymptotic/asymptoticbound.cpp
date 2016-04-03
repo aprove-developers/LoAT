@@ -994,6 +994,9 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         debugAsymptoticBound("Could not solve the initial limit problem");
 
         return InfiniteInstances::Result(Expression::ComplexNone,
+                                         false,
+                                         numeric(0),
+                                         cost.getVariables().size(),
                                          "Could not solve the initial limit problem");
     }
 }
