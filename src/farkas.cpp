@@ -474,7 +474,7 @@ z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints
 
 z3::expr FarkasMeterGenerator::genNotGuardImplication() const {
     vector<z3::expr> res;
-    vector<Expression> lhs = constraints.irrelevantGuard; //should not change soundness, but might improve performance
+    vector<Expression> lhs;
     for (Expression g : constraints.reducedGuard) {
         lhs.push_back(GuardToolbox::negateLessEqualInequality(g)); //the important negated constraint
         res.push_back(applyFarkas(lhs,symbols,coeffs,coeff0,0));
