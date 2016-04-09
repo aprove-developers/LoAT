@@ -18,7 +18,7 @@
 #include"guardtoolbox.h"
 
 #include "debug.h"
-#include "itrs.h"
+#include "its.h"
 
 using namespace std;
 
@@ -77,9 +77,9 @@ bool GuardToolbox::isLinearInequality(const Expression &term, const GiNaC::lst &
 }
 
 
-bool GuardToolbox::containsFreeVar(const ITRSProblem &itrs, const Expression &term) {
+bool GuardToolbox::containsFreeVar(const ITSProblem &its, const Expression &term) {
     for (const string &name : term.getVariableNames()) {
-        if (itrs.isFreeVar(itrs.getVarindex(name))) return true;
+        if (its.isFreeVar(its.getVarindex(name))) return true;
     }
     return false;
 }
@@ -215,7 +215,7 @@ bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, Propaga
 }
 
 
-bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
+bool GuardToolbox::propagateEqualities(const ITSProblem &its, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
                                        GiNaC::exmap *subs, function<bool(const ExprSymbol &)> allowFunc) {
     GiNaC::exmap varSubs;
     for (int i=0; i < guard.size(); ++i) {
@@ -223,7 +223,7 @@ bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard
         if (!GiNaC::is_a<GiNaC::relational>(ex) || !ex.info(GiNaC::info_flags::relation_equal)) continue;
 
         Expression target = ex.rhs() - ex.lhs();
-        if (!target.is_polynomial(itrs.getGinacVarList())) continue;
+        if (!target.is_polynomial(its.getGinacVarList())) continue;
 
         //check if equation can be solved for any single variable
         for (int level=NoCoefficients; level <= (int)maxlevel; ++level) {
@@ -235,7 +235,7 @@ bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard
 
                 //disallow replacing non-free vars by a term containing free vars
                 if (freevar == NoFreeOnRhs) {
-                    if (!itrs.isFreeVar(itrs.getVarindex(var.get_name())) && containsFreeVar(itrs,target)) continue;
+                    if (!its.isFreeVar(its.getVarindex(var.get_name())) && containsFreeVar(its,target)) continue;
                 }
 
                 //remove current equality (ok while iterating by index)

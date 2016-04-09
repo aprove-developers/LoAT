@@ -55,17 +55,17 @@ ostream& operator<<(ostream &s, const Transition &trans) {
 
 
 
-FlowGraph::FlowGraph(ITRSProblem &itrs)
-    : itrs(itrs)
+FlowGraph::FlowGraph(ITSProblem &its)
+    : its(its)
 {
     TermIndex i;
-    for (i=0; i < itrs.getTermCount(); ++i) {
+    for (i=0; i < its.getTermCount(); ++i) {
         nodes.insert((NodeIndex)i);
     }
     nextNode = i;
-    initial = itrs.getStartTerm();
+    initial = its.getStartTerm();
 
-    for (const Rule &r : itrs.getRules()) {
+    for (const Rule &r : its.getRules()) {
         addRule(r);
     }
 
@@ -87,14 +87,14 @@ void FlowGraph::addRule(const Rule &rule) {
     trans.guard = rule.guard;
     trans.cost = rule.cost;
 
-    const Term &targetTerm = itrs.getTerm(rule.rhsTerm);
+    const Term &targetTerm = its.getTerm(rule.rhsTerm);
     assert(targetTerm.args.size() == rule.rhsArgs.size());
 
     for (int i=0; i < targetTerm.args.size(); ++i) {
         Expression update = rule.rhsArgs[i];
         VariableIndex var = targetTerm.args[i];
         //avoid adding nontrivial updates (i.e. x=x)
-        if (!update.equalsVariable(itrs.getGinacSymbol(var)))
+        if (!update.equalsVariable(its.getGinacSymbol(var)))
             trans.update[var] = update;
     }
 
@@ -120,7 +120,7 @@ bool FlowGraph::simplifyTransitions() {
     //update/guard preprocessing
     for (TransIndex idx : getAllTrans()) {
         if (Timeout::preprocessing()) return changed;
-        changed = Preprocess::simplifyTransition(itrs,getTransData(idx)) || changed;
+        changed = Preprocess::simplifyTransition(its,getTransData(idx)) || changed;
     }
     //remove duplicates
     for (NodeIndex node : nodes) {
@@ -320,7 +320,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
 
         //check if this transition allows infinitely many guards
         debugGraph(endl << "INFINITY CHECK");
-        auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, true);
+        auto checkRes = AsymptoticBound::determineComplexity(its, getTransData(trans).guard, getTransData(trans).cost, true);
         debugGraph("RES: " << checkRes.cpx << " because: " << checkRes.reason);
         if (checkRes.cpx == Expression::ComplexNone) {
             debugGraph("INFINITY: FAIL");
@@ -359,7 +359,7 @@ bool FlowGraph::chainTransitionData(Transition &trans, const Transition &followT
     //build update replacement list
     GiNaC::exmap updateSubs;
     for (auto it : trans.update) {
-        updateSubs[itrs.getGinacSymbol(it.first)] = it.second;
+        updateSubs[its.getGinacSymbol(it.first)] = it.second;
     }
 
     //build new guard and check if it is SAT before continuing
@@ -590,7 +590,7 @@ bool FlowGraph::canNest(const Transition &inner, const Transition &outer) const 
     set<string> innerguard;
     for (const Expression &ex : inner.guard) ex.collectVariableNames(innerguard);
     for (const auto &it : outer.update) {
-        if (innerguard.count(itrs.getVarname(it.first)) > 0) {
+        if (innerguard.count(its.getVarname(it.first)) > 0) {
             return true;
         }
     }
@@ -648,7 +648,7 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
 bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
     vector<TransIndex> loops = getTransFromTo(node,node);
     proofout << "Eliminating " << loops.size() << " self-loops for location ";
-    if (node < itrs.getTermCount()) proofout << itrs.getTerm(node).name; else proofout << "[" << node << "]";
+    if (node < its.getTermCount()) proofout << its.getTerm(node).name; else proofout << "[" << node << "]";
     proofout << endl;
     debugGraph("Eliminating " << loops.size() << " selfloops for node: " << node);
     assert(!loops.empty());
@@ -656,14 +656,14 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
     //helper lambda
     auto try_rank = [&](Transition &data) -> bool {
         Expression rankfunc;
-        FarkasMeterGenerator::Result res = FarkasMeterGenerator::generate(itrs,data,rankfunc);
+        FarkasMeterGenerator::Result res = FarkasMeterGenerator::generate(its,data,rankfunc);
         if (res == FarkasMeterGenerator::Unbounded) {
             data.cost = Expression::Infty;
             data.update.clear(); //clear update, but keep guard!
             proofout << "  Found unbounded runtime when nesting loops," << endl;
             return true;
         } else if (res == FarkasMeterGenerator::Success) {
-            if (Recurrence::calcIterated(itrs,data,rankfunc)) {
+            if (Recurrence::calcIterated(its,data,rankfunc)) {
                 Stats::add(Stats::SelfloopRanked);
                 debugGraph("Farkas nested loop ranked!");
                 proofout << "  Found this metering function when nesting loops: " << rankfunc << "," << endl;
@@ -696,7 +696,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
 
 #ifdef SELFLOOPS_ALWAYS_SIMPLIFY
         Timing::start(Timing::Preprocess);
-        if (Preprocess::simplifyTransition(itrs,getTransData(tidx))) {
+        if (Preprocess::simplifyTransition(its,getTransData(tidx))) {
             debugGraph("Simplified transition before Farkas");
         }
         Timing::done(Timing::Preprocess);
@@ -705,7 +705,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
         Expression rankfunc;
         pair<VariableIndex,VariableIndex> conflictVar;
         Transition data = getTransData(tidx); //note: data possibly modified by instantiation in farkas
-        FarkasMeterGenerator::Result result = FarkasMeterGenerator::generate(itrs,data,rankfunc,&conflictVar);
+        FarkasMeterGenerator::Result result = FarkasMeterGenerator::generate(its,data,rankfunc,&conflictVar);
 
         //this is a second attempt for one selfloop, so ignore it if it was not successful
         if (lopidx >= oldloopcount && result != FarkasMeterGenerator::Unbounded && result != FarkasMeterGenerator::Success) continue;
@@ -718,12 +718,12 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
 
             //add A > B to the guard, process resulting selfloop later
             Transition dataAB = data; //copy
-            dataAB.guard.push_back(itrs.getGinacSymbol(A) > itrs.getGinacSymbol(B));
+            dataAB.guard.push_back(its.getGinacSymbol(A) > its.getGinacSymbol(B));
             loops.push_back(addTrans(node,node,dataAB));
 
             //add B > A to the guard, process resulting selfloop later
             Transition dataBA = data; //copy
-            dataBA.guard.push_back(itrs.getGinacSymbol(B) > itrs.getGinacSymbol(A));
+            dataBA.guard.push_back(its.getGinacSymbol(B) > its.getGinacSymbol(A));
             loops.push_back(addTrans(node,node,dataBA));
 
             //ConflictVar is really just Unsat
@@ -754,7 +754,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
             }
             else if (result == FarkasMeterGenerator::Success) {
                 debugGraph("RANK: " << rankfunc);
-                if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
+                if (!Recurrence::calcIterated(its,data,rankfunc)) {
                     //do not add to added_unranked, as this will probably not help with nested loops
                     Stats::add(Stats::SelfloopNoUpdate);
                     addTransitionToSkipLoops.insert(node);
@@ -774,9 +774,9 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
 #ifdef FARKAS_TRY_ADDITIONAL_GUARD
             if (step >= 1) break;
             //try again after adding helpful constraints to the guard
-            if (FarkasMeterGenerator::prepareGuard(itrs,data)) {
+            if (FarkasMeterGenerator::prepareGuard(its,data)) {
                 debugGraph("Farkas unsat try again after prepareGuard");
-                result = FarkasMeterGenerator::generate(itrs,data,rankfunc);
+                result = FarkasMeterGenerator::generate(its,data,rankfunc);
             }
             if (result != FarkasMeterGenerator::Success && result != FarkasMeterGenerator::Unbounded) break;
             //if this was successful, the original transition is still marked as unsat (for nested loops!)
@@ -916,7 +916,7 @@ bool FlowGraph::pruneTransitions() {
                     TransIndex trans = parallel[idx];
                     Transition data = getTransData(trans);
 
-                    auto res = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, false);
+                    auto res = AsymptoticBound::determineComplexity(its, getTransData(trans).guard, getTransData(trans).cost, false);
                     queue.push(make_tuple(trans,res.cpx,res.inftyVars));
                 }
 
@@ -1027,7 +1027,7 @@ RuntimeResult FlowGraph::getMaxPartialResult() {
             const Transition &data = getTransData(trans);
             if (data.cost.getComplexity() <= max(res.cpx,Complexity(0))) continue;
 
-            auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, true);
+            auto checkRes = AsymptoticBound::determineComplexity(its, getTransData(trans).guard, getTransData(trans).cost, true);
             if (checkRes.cpx > res.cpx) {
                 proofout << "Found new complexity " << Expression::complexityString(checkRes.cpx) << ", because: " << checkRes.reason << "." << endl << endl;
                 res.cpx = checkRes.cpx;
@@ -1072,11 +1072,11 @@ done:
 void FlowGraph::print(ostream &s) const {
     auto printVar = [&](VariableIndex vi) {
         s << vi;
-        s << "[" << itrs.getVarname(vi) << "]";
+        s << "[" << its.getVarname(vi) << "]";
     };
     auto printNode = [&](NodeIndex ni) {
         s << ni;
-        if (ni < itrs.getTermCount()) s << "[" << itrs.getTerm(ni).name << "]";
+        if (ni < its.getTermCount()) s << "[" << its.getTerm(ni).name << "]";
     };
 
     s << "Nodes:";
@@ -1112,7 +1112,7 @@ void FlowGraph::print(ostream &s) const {
 
 void FlowGraph::printForProof() const {
     auto printNode = [&](NodeIndex n) {
-        if (n < itrs.getTermCount()) proofout << itrs.getTerm(n).name; else proofout << "[" << n << "]";
+        if (n < its.getTermCount()) proofout << its.getTerm(n).name; else proofout << "[" << n << "]";
     };
 
     proofout << "  Start location: "; printNode(initial); proofout << endl;
@@ -1128,7 +1128,7 @@ void FlowGraph::printForProof() const {
             proofout << " : ";
             const Transition &data = getTransData(trans);
             for (auto upit : data.update) {
-                proofout << itrs.getVarname(upit.first) << "'";
+                proofout << its.getVarname(upit.first) << "'";
                 proofout << "=" << upit.second;
                 proofout << ", ";
             }
@@ -1150,7 +1150,7 @@ void FlowGraph::printForProof() const {
 
 
 void FlowGraph::printDot(ostream &s, int step, const string &desc) const {
-    auto printNodeName = [&](NodeIndex n) { if (n < itrs.getTermCount()) s << itrs.getTerm(n).name; else s << "[" << n << "]"; };
+    auto printNodeName = [&](NodeIndex n) { if (n < its.getTermCount()) s << its.getTerm(n).name; else s << "[" << n << "]"; };
     auto printNode = [&](NodeIndex n) { s << "node_" << step << "_" << n; };
 
     s << "subgraph cluster_" << step << " {" << endl;
@@ -1165,7 +1165,7 @@ void FlowGraph::printDot(ostream &s, int step, const string &desc) const {
             for (TransIndex trans : getTransFromTo(n,succ)) {
                 const Transition &data = getTransData(trans);
                 for (auto upit : data.update) {
-                    s << itrs.getVarname(upit.first) << "=" << upit.second << ", ";
+                    s << its.getVarname(upit.first) << "=" << upit.second << ", ";
                 }
                 s << "[";
                 for (int i=0; i < data.guard.size(); ++i) {
@@ -1208,7 +1208,7 @@ void FlowGraph::printT2(ostream &s) const {
             GiNaC::exmap t2subs;
             for (const ExprSymbol &sym : vars) {
                 t2subs[sym] = GiNaC::symbol("pre_v" + sym.get_name());
-                if (itrs.isFreeVar(itrs.getVarindex(sym.get_name()))) {
+                if (its.isFreeVar(its.getVarindex(sym.get_name()))) {
                     s << t2subs[sym] << " := nondet();" << endl;
                 } else {
                     s << t2subs[sym] << " := v" << sym.get_name() << ";" << endl;
@@ -1225,7 +1225,7 @@ void FlowGraph::printT2(ostream &s) const {
             }
 
             for (auto it : trans.update) {
-                s << "v" << itrs.getGinacSymbol(it.first) << " := ";
+                s << "v" << its.getGinacSymbol(it.first) << " := ";
                 s << it.second.subs(t2subs) << ";" << endl;
             }
 

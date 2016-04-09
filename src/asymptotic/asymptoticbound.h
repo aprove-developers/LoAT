@@ -7,7 +7,7 @@
 #include "expression.h"
 #include "guardtoolbox.h"
 #include "infinity.h"
-#include "itrs.h"
+#include "its.h"
 #include "inftyexpression.h"
 #include "limitproblem.h"
 
@@ -29,7 +29,7 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck);
+    AsymptoticBound(const ITSProblem &its, GuardList guard, Expression cost, bool finalCheck);
 
     void initLimitVectors();
     void normalizeGuard();
@@ -57,7 +57,7 @@ private:
     bool trySubstitutingVariable();
 
 private:
-    const ITRSProblem its;
+    const ITSProblem its;
     const GuardList guard;
     const Expression cost;
     bool finalCheck;
@@ -79,10 +79,10 @@ private:
 public:
     /**
      * Analyzes the given guard and cost.
-     * @param its the ITRSProblem instance is needed to get information about free variables
+     * @param its the ITSProblem instance is needed to get information about free variables
      * @param finalCheck enables more sophisticated backtracking
      */
-    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its,
+    static InfiniteInstances::Result determineComplexity(const ITSProblem &its,
                                                          const GuardList &guard,
                                                          const Expression &cost, bool finalCheck);
 };

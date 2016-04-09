@@ -29,7 +29,7 @@
 using namespace std;
 
 
-#include "itrs.h"
+#include "its.h"
 #include "flowgraph.h"
 #include "preprocess.h"
 #include "stats.h"
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-    ITRSProblem res = ITRSProblem::loadFromFile(filename);
+    ITSProblem res = ITSProblem::loadFromFile(filename);
     FlowGraph g(res);
 
     proofout << endl << "Initial Control flow graph problem:" << endl;

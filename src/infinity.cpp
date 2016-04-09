@@ -132,8 +132,8 @@ private:
 
 /* ### InfiniteInstances ### */
 
-InfiniteInstances::InfiniteInstances(const ITRSProblem &itrs, GuardList guard, Expression cost)
-    : itrs(itrs), guard(guard), originalGuard(guard), cost(cost), originalCost(cost) {}
+InfiniteInstances::InfiniteInstances(const ITSProblem &its, GuardList guard, Expression cost)
+    : its(its), guard(guard), originalGuard(guard), cost(cost), originalCost(cost) {}
 
 
 /* ### Tiny Helpers ### */
@@ -177,7 +177,7 @@ int InfiniteInstances::getExpSum(const MonomData &monom, const InftyCfg &cfg) {
 int InfiniteInstances::getUnboundedFreeExpSum(const MonomData &monom, const InftyCfg &cfg) const {
     int res = 0;
     for (int i=0; i < cfg.size(); ++i) {
-        if (!itrs.isFreeVar(itrs.getVarindex(symbols[i].get_name()))) continue; //not free
+        if (!its.isFreeVar(its.getVarindex(symbols[i].get_name()))) continue; //not free
         if (freeBoundedVars.count(symbols[i]) > 0) continue; //free, but bounded
         res += monom.getVarExp(i,cfg);
     }
@@ -396,7 +396,7 @@ bool InfiniteInstances::replaceEXPrelation(const Expression relation, Expression
 
     Expression exp;
     if (!getEXPterm(term,exp)) return false;
-    if (!exp.op(0).is_polynomial(itrs.getGinacVarList())) return false; //we allow 2^(2^x), but not (2^x)^(2^x)
+    if (!exp.op(0).is_polynomial(its.getGinacVarList())) return false; //we allow 2^(2^x), but not (2^x)^(2^x)
 
     //add to guard to ensure a proper base (might be trivial, e.g. 2 >= 2)
     guard.push_back(exp.op(0) >= 2);
@@ -433,7 +433,7 @@ uint InfiniteInstances::replaceEXPcost() {
     Expression exp;
     while (true) {
         if (!getEXPterm(cost,exp)) break;
-        if (!exp.op(0).is_polynomial(itrs.getGinacVarList())) break; //we allow 2^(2^x), but not (2^x)^(2^x)
+        if (!exp.op(0).is_polynomial(its.getGinacVarList())) break; //we allow 2^(2^x), but not (2^x)^(2^x)
         res += 1; //found one more exp level
 
         //add to guard to ensure a proper base (might be trivial, e.g. 2 >= 2)
@@ -458,28 +458,28 @@ uint InfiniteInstances::replaceEXPcost() {
 void InfiniteInstances::removeEqualitiesFromGuard() {
     //propagate equalities where possible
     GiNaC::exmap equalSubs;
-    GuardToolbox::propagateEqualities(itrs,guard,GuardToolbox::NoCoefficients,GuardToolbox::AllowFreeOnRhs,&equalSubs);
+    GuardToolbox::propagateEqualities(its,guard,GuardToolbox::NoCoefficients,GuardToolbox::AllowFreeOnRhs,&equalSubs);
     cost = cost.subs(equalSubs); //substitution must also be applied to cost
 
     //find free variables that are on rhs of substitutions, so they are in fact bounded
     for (const auto &it : equalSubs) {
-        if (itrs.isFreeVar(itrs.getVarindex(GiNaC::ex_to<GiNaC::symbol>(it.first).get_name()))) continue; //free/free2 imposes no bounds on anything
+        if (its.isFreeVar(its.getVarindex(GiNaC::ex_to<GiNaC::symbol>(it.first).get_name()))) continue; //free/free2 imposes no bounds on anything
         for (string varname : Expression(it.second).getVariableNames()) {
-            VariableIndex vi = itrs.getVarindex(varname);
-            if (itrs.isFreeVar(vi)) freeBoundedVars.insert(itrs.getGinacSymbol(vi));
+            VariableIndex vi = its.getVarindex(varname);
+            if (its.isFreeVar(vi)) freeBoundedVars.insert(its.getGinacSymbol(vi));
         }
     }
 
     //find nonlinear substitutions, as they have an impact on the resulting runtime complexity
     for (const auto &it : equalSubs) {
-        assert(it.second.is_polynomial(itrs.getGinacVarList()));
+        assert(it.second.is_polynomial(its.getGinacVarList()));
 
         //substituting (truly) free variables is ok
         string varname = GiNaC::ex_to<GiNaC::symbol>(it.first).get_name();
-        if (itrs.isFreeVar(itrs.getVarindex(varname)) && freeBoundedVars.count(GiNaC::ex_to<symbol>(it.first)) == 0) continue;
+        if (its.isFreeVar(its.getVarindex(varname)) && freeBoundedVars.count(GiNaC::ex_to<symbol>(it.first)) == 0) continue;
 
         //but otherwise, we need to remember all nonlinear substs
-        if (!Expression(it.second).isLinear(itrs.getGinacVarList())) {
+        if (!Expression(it.second).isLinear(its.getGinacVarList())) {
             nonlinearSubs[it.first] = it.second;
         }
     }
@@ -623,7 +623,7 @@ bool InfiniteInstances::containsUnboundedFreeInfty(const MonomData &monom, const
     for (int var=0; var < cfg.size(); ++var) {
         if (cfg[var] == InftyConst) continue;
         if (freeBoundedVars.count(symbols[var]) > 0) continue; //free, but bounded
-        if (itrs.isFreeVar(itrs.getVarindex(symbols[var].get_name()))) {
+        if (its.isFreeVar(its.getVarindex(symbols[var].get_name()))) {
             if (monom.getVarExp(var) > 0) return true;
         }
     }
@@ -888,7 +888,7 @@ Expression InfiniteInstances::buildProofBound(const exmap &constSubs) const {
     return originalCost.subs(constSubs);
 }
 
-InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, GuardList guard, Expression cost, bool isFinalCheck) {
+InfiniteInstances::Result InfiniteInstances::check(const ITSProblem &its, GuardList guard, Expression cost, bool isFinalCheck) {
     Timing::Scope timer(Timing::Infinity);
     assert(GuardToolbox::isValidGuard(guard));
 
@@ -912,7 +912,7 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
         cost = cost.subs(Expression::Infty == 0); //remove INF symbol if INF cost cannot be proved
     }
 
-    InfiniteInstances InfIns(itrs,guard,cost);
+    InfiniteInstances InfIns(its,guard,cost);
     InfIns.generateSymbolMapping();
 
     InfIns.dumpGuard("input guard");
@@ -927,8 +927,8 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
     InfIns.dumpGuard("noEXP guard");
 
     //guard and cost must be polynomial for this check
-    if (!GuardToolbox::isPolynomialGuard(InfIns.guard,itrs.getGinacVarList())) return Result(Expression::ComplexNone,"non-polynomial guard");
-    if (!InfIns.cost.is_polynomial(itrs.getGinacVarList())) return Result(Expression::ComplexNone,"non-polynomial cost");
+    if (!GuardToolbox::isPolynomialGuard(InfIns.guard,its.getGinacVarList())) return Result(Expression::ComplexNone,"non-polynomial guard");
+    if (!InfIns.cost.is_polynomial(its.getGinacVarList())) return Result(Expression::ComplexNone,"non-polynomial cost");
 
     //eliminate all equalities
     InfIns.removeEqualitiesFromGuard();

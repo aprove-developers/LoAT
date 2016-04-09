@@ -18,7 +18,7 @@
 #ifndef PREPROCESSOR_H
 #define PREPROCESSOR_H
 
-#include "itrs.h"
+#include "its.h"
 
 struct Transition;
 
@@ -33,7 +33,7 @@ namespace Preprocess
      * @param trans the transition, modified.
      * @return true iff trans was modified
      */
-    bool simplifyTransition(const ITRSProblem &itrs, Transition &trans);
+    bool simplifyTransition(const ITSProblem &its, Transition &trans);
 
     /**
      * Removes trivial terms from the given guard, i.e. 42 <= 1337 or x <= x+1
@@ -53,7 +53,7 @@ namespace Preprocess
      * Removes trivial updates of the form x <- x.
      * @return true iff update was modified
      */
-    bool removeTrivialUpdates(const ITRSProblem &itrs, UpdateMap &update);
+    bool removeTrivialUpdates(const ITSProblem &its, UpdateMap &update);
 
     /**
      * Expensive preprocessing step to remove all free variables from the update and,
@@ -61,7 +61,7 @@ namespace Preprocess
      * @param trans the transition, modified.
      * @return true iff trans was modified
      */
-    bool eliminateFreeVars(const ITRSProblem &itrs, Transition &trans);
+    bool eliminateFreeVars(const ITSProblem &its, Transition &trans);
 }
 
 #endif // PREPROCESSOR_H

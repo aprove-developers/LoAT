@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "itrs.h"
+#include "its.h"
 
 #include <fstream>
 #include <sstream>
@@ -46,7 +46,7 @@ static void escapeVarname(string &name) {
     }
 }
 
-void ITRSProblem::substituteVarnames(string &line) const {
+void ITSProblem::substituteVarnames(string &line) const {
     set<size_t> replacedPositions;
     for (auto it : escapeSymbols) {
         size_t pos = 0;
@@ -75,15 +75,15 @@ void ITRSProblem::substituteVarnames(string &line) const {
 static void parseFunapp(const string &line, string &fun, vector<string> &args) {
     args.clear();
     string::size_type pos = line.find('(');
-    if (pos == string::npos) throw ITRSProblem::FileError("Invalid funapp (missing open paren): " + line);
-    if (line.rfind(')') != line.length()-1) throw ITRSProblem::FileError("Invalid funapp (bad close paren): "+line);
+    if (pos == string::npos) throw ITSProblem::FileError("Invalid funapp (missing open paren): " + line);
+    if (line.rfind(')') != line.length()-1) throw ITSProblem::FileError("Invalid funapp (bad close paren): "+line);
 
     fun = line.substr(0,pos);
     string::size_type startpos = pos+1;
     while ((pos = line.find(',',startpos)) != string::npos) {
         string arg = line.substr(startpos,pos-startpos);
         trim(arg);
-        if (arg.empty()) throw ITRSProblem::FileError("Empty argument in funapp: "+line);
+        if (arg.empty()) throw ITSProblem::FileError("Empty argument in funapp: "+line);
         args.push_back(arg);
         startpos = pos+1;
     }
@@ -92,18 +92,18 @@ static void parseFunapp(const string &line, string &fun, vector<string> &args) {
     if (!lastarg.empty()) {
         args.push_back(lastarg);
     } else if (!args.empty()) {
-        throw ITRSProblem::FileError("Empty last argument in funapp: "+line);
+        throw ITSProblem::FileError("Empty last argument in funapp: "+line);
     }
 }
 
 /**
- * Parses a rule in the ITRS file format reading from line.
- * @param res the current state of the ITRS that is read (read and modified)
+ * Parses a rule in the ITS file format reading from line.
+ * @param res the current state of the ITS that is read (read and modified)
  * @param knownTerms mapping from string to the corresponding term index (read and modified)
  * @param knownVars mapping from string to the corresponding variable index (read and modified)
  * @param line the input string
  */
-void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIndex> &knownVars, const string &line) {
+void ITSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIndex> &knownVars, const string &line) {
     debugParser("parsing rule: " << line);
     Rule rule;
     rule.cost = Expression(1); //default, if not specified
@@ -141,14 +141,14 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     if (pos != string::npos) {
         //-{ cost }> sytnax
         auto endpos = line.find("}>");
-        if (endpos == string::npos) throw ITRSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
+        if (endpos == string::npos) throw ITSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
         cost = line.substr(pos+2,endpos-(pos+2));
         lhs = line.substr(0,pos);
         rhs = line.substr(endpos+2);
     } else {
         //default -> syntax (leave cost string empty)
         pos = line.find("->");
-        if (pos == string::npos) throw ITRSProblem::FileError("Invalid rule, -> missing: "+line);
+        if (pos == string::npos) throw ITSProblem::FileError("Invalid rule, -> missing: "+line);
         lhs = line.substr(0,pos);
         rhs = line.substr(pos+2);
     }
@@ -172,7 +172,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
             rhs = rhs.substr(6,rhs.length()-6-1);
             trim(rhs);
         } else {
-            throw ITRSProblem::FileError("Invalid Com_n application, only Com_1 supported");
+            throw ITSProblem::FileError("Invalid Com_n application, only Com_1 supported");
         }
     }
 
@@ -186,7 +186,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     for (string &v : args) {
         substituteVarnames(v);
         auto it = knownVars.find(v);
-        if (it == knownVars.end()) throw ITRSProblem::FileError("Unknown variable in lhs: " + v);
+        if (it == knownVars.end()) throw ITSProblem::FileError("Unknown variable in lhs: " + v);
         argVars.push_back(it->second);
     }
     //check if variable names differ from previous occurences and provide substitution if necessary
@@ -195,7 +195,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
         this->terms[rule.lhsTerm].args = std::move(argVars);
     } else {
         if (this->terms[rule.lhsTerm].args.size() != argVars.size()) {
-            throw ITRSProblem::FileError("Funapp redeclared with different argument count: "+fun);
+            throw ITSProblem::FileError("Funapp redeclared with different argument count: "+fun);
         }
         for (int i=0; i < argVars.size(); ++i) {
             VariableIndex vOld = this->terms[rule.lhsTerm].args[i];
@@ -204,7 +204,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
                 symbolSubs[getGinacSymbol(vNew)] = getGinacSymbol(vOld);
             }
         }
-        if (!symbolSubs.empty()) debugParser("ITRS Warning: funapp redeclared with different arguments: " << fun);
+        if (!symbolSubs.empty()) debugParser("ITS Warning: funapp redeclared with different arguments: " << fun);
     }
     //collect the lhs variables that are used (i.e. the ones of the previous occurence)
     for (VariableIndex vi : this->terms[rule.lhsTerm].args) boundSymbols.insert(getGinacSymbol(vi));
@@ -217,7 +217,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     rule.rhsTerm = getTermIndex(fun);
     for (string &v : args) {
         substituteVarnames(v);
-        if (v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        if (v.find('/') != string::npos) throw ITSProblem::FileError("Divison is not allowed in the input");
         Expression argterm = Expression::fromString(v,this->varSymbolList).subs(symbolSubs);
         argterm.collectVariables(rhsSymbols);
         rule.rhsArgs.push_back(argterm);
@@ -226,9 +226,9 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     /* cost */
     if (!cost.empty()) {
         substituteVarnames(cost);
-        if (cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        if (cost.find('/') != string::npos) throw ITSProblem::FileError("Divison is not allowed in the input");
         rule.cost = Expression::fromString(cost,this->varSymbolList).subs(symbolSubs);
-        if (!rule.cost.is_polynomial(this->varSymbolList)) throw ITRSProblem::FileError("Non polynomial cost in the input");
+        if (!rule.cost.is_polynomial(this->varSymbolList)) throw ITSProblem::FileError("Non polynomial cost in the input");
         rule.cost.collectVariables(rhsSymbols);
     }
 
@@ -252,7 +252,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
             //ignore TRUE in guards (used to indicate an empty guard in some files)
             if (term == "TRUE" || term.empty()) continue;
             substituteVarnames(term);
-            if (term.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+            if (term.find('/') != string::npos) throw ITSProblem::FileError("Divison is not allowed in the input");
             Expression guardTerm = Expression::fromString(term,this->varSymbolList).subs(symbolSubs);
             guardTerm.collectVariables(guardSymbols);
             rule.guard.push_back(guardTerm);
@@ -260,7 +260,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     }
     //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
     if (replaceUnboundedWithFresh(guardSymbols)) {
-        debugParser("ITRS Note: free variables in guard: " << guard);
+        debugParser("ITS Note: free variables in guard: " << guard);
         for (Expression &guardExpr : rule.guard) {
             guardExpr = guardExpr.subs(symbolSubs);
         }
@@ -274,8 +274,8 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
 }
 
 
-ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
-    ITRSProblem res;
+ITSProblem ITSProblem::loadFromFile(const string &filename) {
+    ITSProblem res;
     string startTerm;
     map<string,TermIndex> knownTerms;
     map<string,VariableIndex> knownVars;
@@ -385,8 +385,8 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
 
 
 
-ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules) {
-    ITRSProblem res;
+ITSProblem ITSProblem::dummyITSforTesting(const vector<string> vars, const vector<string> &rules) {
+    ITSProblem res;
     map<string,TermIndex> knownTerms;
 
     //create vars
@@ -417,7 +417,7 @@ ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const ve
 
 
 
-VariableIndex ITRSProblem::addVariable(string name) {
+VariableIndex ITSProblem::addVariable(string name) {
     //add new variable
     VariableIndex vi = vars.size();
     varMap[name] = vi;
@@ -432,7 +432,7 @@ VariableIndex ITRSProblem::addVariable(string name) {
 }
 
 
-string ITRSProblem::getFreshName(string basename) const {
+string ITSProblem::getFreshName(string basename) const {
     int num = 1;
     string name = basename;
     while (varMap.find(name) != varMap.end()) {
@@ -443,7 +443,7 @@ string ITRSProblem::getFreshName(string basename) const {
 }
 
 
-bool ITRSProblem::isFreeVar(const ExprSymbol &var) const {
+bool ITSProblem::isFreeVar(const ExprSymbol &var) const {
     for (VariableIndex i : freeVars) {
         if (var == getGinacSymbol(i)) {
             return true;
@@ -454,19 +454,19 @@ bool ITRSProblem::isFreeVar(const ExprSymbol &var) const {
 }
 
 
-VariableIndex ITRSProblem::addFreshVariable(string basename, bool free) {
+VariableIndex ITSProblem::addFreshVariable(string basename, bool free) {
     VariableIndex v = addVariable(getFreshName(basename));
     if (free) freeVars.insert(v);
     return v;
 }
 
 
-ExprSymbol ITRSProblem::getFreshSymbol(string basename) const {
+ExprSymbol ITSProblem::getFreshSymbol(string basename) const {
     return ExprSymbol(getFreshName(basename));
 }
 
 
-void ITRSProblem::print(ostream &s) const {
+void ITSProblem::print(ostream &s) const {
     auto printExpr = [&](const Expression &e) {
         s << e;
     };

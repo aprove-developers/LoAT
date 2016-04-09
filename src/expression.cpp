@@ -25,7 +25,7 @@
 
 #include <z3++.h>
 
-#include "itrs.h"
+#include "its.h"
 #include "z3toolbox.h"
 
 

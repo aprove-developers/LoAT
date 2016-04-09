@@ -18,7 +18,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "itrs.h"
+#include "its.h"
 #include "flowgraph.h"
 
 using namespace std;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     assert(argc == 3);
 
     string filename(argv[1]);
-    ITRSProblem res = ITRSProblem::loadFromFile(filename);
+    ITSProblem res = ITSProblem::loadFromFile(filename);
 
     string outname(argv[2]);
     ofstream outfile(outname);

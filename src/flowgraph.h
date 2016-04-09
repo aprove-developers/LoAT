@@ -21,7 +21,7 @@
 #include "global.h"
 
 #include "graph.h"
-#include "itrs.h"
+#include "its.h"
 #include "expression.h"
 
 
@@ -53,15 +53,15 @@ struct RuntimeResult {
 
 
 /**
- * Flow graph for an ITRS.
+ * Flow graph for an ITS.
  * This class implements the main logic of chaining and metering.
  */
 class FlowGraph : private Graph<Transition> {
 public:
     /**
-     * Creates the flow graph for the given itrs
+     * Creates the flow graph for the given its
      */
-    FlowGraph(ITRSProblem &itrs);
+    FlowGraph(ITSProblem &its);
 
     /**
      * Prints the graph in a readable but ugly format for debugging
@@ -257,7 +257,7 @@ private:
     std::set<NodeIndex> nodes;
     NodeIndex nextNode;
 
-    ITRSProblem &itrs;
+    ITSProblem &its;
 
     // accelerateSimpleLoops() uses the following set to communicate
     // with chainSimpleLoops().

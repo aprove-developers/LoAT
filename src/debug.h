@@ -88,7 +88,7 @@ struct DebugStream {
 //debugging for the Expression class
 #define DEBUG_EXPRESSION
 
-//debugging for the ITRS problem parser
+//debugging for the ITS problem parser
 //#define DEBUG_PARSER
 
 //debugging for PURRS

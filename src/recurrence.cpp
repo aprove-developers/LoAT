@@ -27,8 +27,8 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 
 
-Recurrence::Recurrence(const ITRSProblem &itrs)
-    : itrs(itrs), ginacN(Purrs::Expr(Purrs::Recurrence::n).toGiNaC())
+Recurrence::Recurrence(const ITSProblem &its)
+    : its(its), ginacN(Purrs::Expr(Purrs::Recurrence::n).toGiNaC())
 {}
 
 
@@ -44,7 +44,7 @@ vector<VariableIndex> Recurrence::dependencyOrder(UpdateMap &update) {
 
             //check if all variables on update rhs are already processed
             for (const string &varname : up.second.getVariableNames()) {
-                VariableIndex vi = itrs.getVarindex(varname);
+                VariableIndex vi = its.getVarindex(varname);
                 if (vi != up.first && update.count(vi) > 0 && orderedVars.count(vi) == 0)
                     goto skipUpdate;
             }
@@ -65,11 +65,11 @@ vector<VariableIndex> Recurrence::dependencyOrder(UpdateMap &update) {
         for (auto up : update) {
             if (orderedVars.count(up.first) > 0) continue;
             if (!has_target) {
-                target = itrs.getGinacSymbol(up.first);
+                target = its.getGinacSymbol(up.first);
                 has_target = true;
             } else {
-                addGuard.push_back(target == itrs.getGinacSymbol(up.first));
-                subs[itrs.getGinacSymbol(up.first)] = target;
+                addGuard.push_back(target == its.getGinacSymbol(up.first));
+                subs[its.getGinacSymbol(up.first)] = target;
             }
         }
         //assume all remaining variables are equal
@@ -148,7 +148,7 @@ bool Recurrence::calcIteratedUpdate(const UpdateMap &oldUpdate, const Expression
     //in the given order try to solve the recurrence for every updated variable
     for (VariableIndex vi : order) {
         Expression res;
-        ExprSymbol target = itrs.getGinacSymbol(vi);
+        ExprSymbol target = its.getGinacSymbol(vi);
 
         //use update rhs, but replace already processed variables with their recurrences
         Expression todo = update.at(vi).subs(knownPreRecurrences);
@@ -179,8 +179,8 @@ bool Recurrence::calcIteratedCost(const Expression &cost, const Expression &mete
 }
 
 
-bool Recurrence::calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &meterfunc) {
-    Recurrence rec(itrs);
+bool Recurrence::calcIterated(const ITSProblem &its, Transition &trans, const Expression &meterfunc) {
+    Recurrence rec(its);
 
     UpdateMap newUpdate;
     if (!rec.calcIteratedUpdate(trans.update,meterfunc,newUpdate)) {

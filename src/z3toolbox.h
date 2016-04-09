@@ -25,7 +25,7 @@
 #include <vector>
 #include <map>
 
-class ITRSProblem;
+class ITSProblem;
 struct Transition;
 class Expression;
 

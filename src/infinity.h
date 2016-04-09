@@ -25,7 +25,7 @@
 #include <vector>
 #include <map>
 
-class ITRSProblem;
+class ITSProblem;
 struct Transition;
 class Expression;
 
@@ -84,13 +84,13 @@ public:
     //return complexity and number of infty variables in the used configuration
     /**
      * The main function to be called. Analyzes the given guard and cost expressions
-     * @param itrs the ITRSProblem instance is needed to get information about free variables
+     * @param its the ITSProblem instance is needed to get information about free variables
      * @param isFinalCheck if true, the result is prepared for the proof output
      */
-    static Result check(const ITRSProblem &itrs, GuardList guard, Expression cost, bool isFinalCheck);
+    static Result check(const ITSProblem &its, GuardList guard, Expression cost, bool isFinalCheck);
 
 private:
-    InfiniteInstances(const ITRSProblem &itrs, GuardList guard, Expression cost);
+    InfiniteInstances(const ITSProblem &its, GuardList guard, Expression cost);
 
 
     // ### Helpers ###
@@ -254,7 +254,7 @@ private:
     Expression buildProofBound(const GiNaC::exmap &constSubs) const;
 
 private:
-    const ITRSProblem &itrs;
+    const ITSProblem &its;
 
     //list of symbols / symbol to index mapping for all symbols that appear in the guard
     std::map<ExprSymbol,int,GiNaC::ex_is_less> symbolIndexMap;

@@ -12,7 +12,7 @@
 
 using namespace GiNaC;
 
-AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard,
+AsymptoticBound::AsymptoticBound(const ITSProblem &its, GuardList guard,
                                  Expression cost, bool finalCheck)
     : its(its), guard(guard), cost(cost), finalCheck(finalCheck),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
@@ -941,7 +941,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
 }
 
 
-InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its,
+InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITSProblem &its,
                                                                const GuardList &guard,
                                                                const Expression &cost,
                                                                bool finalCheck) {

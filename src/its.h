@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef ITRS_H
-#define ITRS_H
+#ifndef ITS_H
+#define ITS_H
 
 #include "global.h"
 
@@ -38,7 +38,7 @@ typedef std::map<VariableIndex,Expression> UpdateMap;
 
 
 /**
- * Represents a rule in an ITRS
+ * Represents a rule in an ITS
  */
 struct Rule {
     TermIndex lhsTerm, rhsTerm;
@@ -48,7 +48,7 @@ struct Rule {
 };
 
 /**
- * Represents a term (lhs) in an ITRS.
+ * Represents a term (lhs) in an ITS.
  */
 struct Term {
     Term(std::string name) : name(name) {}
@@ -57,27 +57,27 @@ struct Term {
 };
 
 /**
- * Datatype representing an ITRS problem as defined in the sample files
+ * Datatype representing an ITS problem as defined in the sample files
  * @note variable names contain only alphanumeric characters and _
  */
-class ITRSProblem {
+class ITSProblem {
     friend class Preprocessor; //allow direct access for the preprocessing
 
 private:
-    ITRSProblem() {}
+    ITSProblem() {}
 
 public:
     /**
-     * Loads the ITRS data from the given file
+     * Loads the ITS data from the given file
      */
-    static ITRSProblem loadFromFile(const std::string &filename);
+    static ITSProblem loadFromFile(const std::string &filename);
     EXCEPTION(FileError,CustomException);
 
     /**
-     * Creates a dummy ITRSProblem that contains just the given rule
+     * Creates a dummy ITSProblem that contains just the given rule
      * @note is not very robust and should _only_ be used for testing
      */
-    static ITRSProblem dummyITRSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules);
+    static ITSProblem dummyITSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules);
 
     //simple getters
     inline TermIndex getStartTerm() const { return startTerm; }
@@ -103,13 +103,13 @@ public:
     VariableIndex addFreshVariable(std::string basename, bool free = false);
 
     /**
-     * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the itrs variables
+     * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the ITS variables
      * @return the newly created symbol (_not_ associated with a variable index!)
      */
     ExprSymbol getFreshSymbol(std::string basename) const;
 
     /**
-     * Prints this ITRS contents in a readable but ugly format, for debugging only
+     * Prints this ITS contents in a readable but ugly format, for debugging only
      * @param s output stream to print to (e.g. cout)
      */
     void print(std::ostream &s) const;
@@ -128,7 +128,7 @@ private:
                    const std::string &line);
 
 private:
-    /* ITRS Data */
+    /* ITS Data */
     std::vector<std::string> vars;
     std::set<VariableIndex> freeVars;
     std::vector<Term> terms;
@@ -146,4 +146,4 @@ private:
     std::map<std::string,std::string> escapeSymbols;
 };
 
-#endif // ITRS_H
+#endif // ITS_H
