@@ -8,7 +8,7 @@ The tool is based on the recurrence solver [PURRS](http://www.cs.unipr.it/purrs/
 
 ## Paper
 
-The technique behind LoAT is described in the following paper: coming soon.
+The technique behind LoAT is described in [this](http://aprove.informatik.rwth-aachen.de/eval/integerLower/compl-paper.pdf) paper.
 
 
 ## Website
