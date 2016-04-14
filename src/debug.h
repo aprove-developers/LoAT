@@ -91,6 +91,9 @@ struct DebugStream {
 //debugging for the ITS problem parser
 //#define DEBUG_PARSER
 
+//debugging for the ITRS term parser
+#define DEBUG_TERM_PARSER
+
 //debugging for PURRS
 #define DEBUG_PURRS
 
@@ -171,6 +174,12 @@ struct DebugStream {
 #define debugParser(output) do { std::cout << output << std::endl; } while(0)
 #else
 #define debugParser(output) (void(0))
+#endif
+
+#ifdef DEBUG_TERM_PARSER
+#define debugTermParser(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugTermParser(output) (void(0))
 #endif
 
 #ifdef DEBUG_OTHER
