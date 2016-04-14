@@ -6,59 +6,30 @@ TermTree::~TermTree() {
 }
 
 
-void TermTree::Visitor::visitNumber(const GiNaC::numeric &value) {
+void TermTree::collectVariables(std::set<VariableIndex> &set) const {
+    class CollectingVisitor : public ConstVisitor {
+    public:
+        CollectingVisitor(std::set<VariableIndex> &set)
+            : set(set) {
+        }
+
+        virtual void visitVariable(const VariableIndex &variable) {
+            set.insert(variable);
+        }
+
+    private:
+        std::set<VariableIndex> &set;
+    };
+
+    CollectingVisitor visitor(set);
+    traverse(visitor);
 }
 
 
-void TermTree::Visitor::visitAdditionPre() {
-}
-
-
-void TermTree::Visitor::visitAdditionIn() {
-}
-
-
-void TermTree::Visitor::visitAdditionPost() {
-}
-
-
-void TermTree::Visitor::visitSubtractionPre() {
-}
-
-
-void TermTree::Visitor::visitSubtractionIn() {
-}
-
-
-void TermTree::Visitor::visitSubtractionPost() {
-}
-
-
-void TermTree::Visitor::visitMultiplicationPre() {
-}
-
-
-void TermTree::Visitor::visitMultiplicationIn() {
-}
-
-
-void TermTree::Visitor::visitMultiplicationPost() {
-}
-
-
-void TermTree::Visitor::visitFunctionSymbolPre(FunctionSymbolIndex functionSymbol) {
-}
-
-
-void TermTree::Visitor::visitFunctionSymbolIn(FunctionSymbolIndex functionSymbol) {
-}
-
-
-void TermTree::Visitor::visitFunctionSymbolPost(FunctionSymbolIndex functionSymbol) {
-}
-
-
-void TermTree::Visitor::visitVariable(VariableIndex variable) {
+std::set<VariableIndex> TermTree::getVariables() const {
+    std::set<VariableIndex> set;
+    collectVariables(set);
+    return set;
 }
 
 
@@ -67,7 +38,12 @@ Number::Number(const GiNaC::numeric &value)
 }
 
 
-void Number::traverse(Visitor &visitor) const {
+void Number::traverse(Visitor &visitor) {
+    visitor.visitNumber(value);
+}
+
+
+void Number::traverse(ConstVisitor &visitor) const {
     visitor.visitNumber(value);
 }
 
@@ -77,7 +53,20 @@ Addition::Addition(const std::shared_ptr<TermTree> &l, const std::shared_ptr<Ter
 }
 
 
-void Addition::traverse(Visitor &visitor) const {
+void Addition::traverse(Visitor &visitor) {
+    visitor.visitAdditionPre();
+
+    l->traverse(visitor);
+
+    visitor.visitAdditionIn();
+
+    r->traverse(visitor);
+
+    visitor.visitAdditionPost();
+}
+
+
+void Addition::traverse(ConstVisitor &visitor) const {
     visitor.visitAdditionPre();
 
     l->traverse(visitor);
@@ -95,7 +84,20 @@ Subtraction::Subtraction(const std::shared_ptr<TermTree> &l, const std::shared_p
 }
 
 
-void Subtraction::traverse(Visitor &visitor) const {
+void Subtraction::traverse(Visitor &visitor) {
+    visitor.visitSubtractionPre();
+
+    l->traverse(visitor);
+
+    visitor.visitSubtractionIn();
+
+    r->traverse(visitor);
+
+    visitor.visitSubtractionPost();
+}
+
+
+void Subtraction::traverse(ConstVisitor &visitor) const {
     visitor.visitSubtractionPre();
 
     l->traverse(visitor);
@@ -113,7 +115,20 @@ Multiplication::Multiplication(const std::shared_ptr<TermTree> &l, const std::sh
 }
 
 
-void Multiplication::traverse(Visitor &visitor) const {
+void Multiplication::traverse(Visitor &visitor) {
+    visitor.visitMultiplicationPre();
+
+    l->traverse(visitor);
+
+    visitor.visitMultiplicationIn();
+
+    r->traverse(visitor);
+
+    visitor.visitMultiplicationPost();
+}
+
+
+void Multiplication::traverse(ConstVisitor &visitor) const {
     visitor.visitMultiplicationPre();
 
     l->traverse(visitor);
@@ -131,7 +146,22 @@ FunctionSymbol::FunctionSymbol(FunctionSymbolIndex functionSymbol, const std::ve
 }
 
 
-void FunctionSymbol::traverse(Visitor &visitor) const {
+void FunctionSymbol::traverse(Visitor &visitor) {
+    visitor.visitFunctionSymbolPre(functionSymbol);
+
+    for (int i = 0; i + 1 < args.size(); ++i) {
+        args[i]->traverse(visitor);
+        visitor.visitFunctionSymbolIn(functionSymbol);
+    }
+
+    if (args.size() > 0) {
+        args.back()->traverse(visitor);
+    }
+    visitor.visitFunctionSymbolPost(functionSymbol);
+}
+
+
+void FunctionSymbol::traverse(ConstVisitor &visitor) const {
     visitor.visitFunctionSymbolPre(functionSymbol);
 
     for (int i = 0; i + 1 < args.size(); ++i) {
@@ -151,7 +181,11 @@ Variable::Variable(VariableIndex variable)
 }
 
 
-void Variable::traverse(Visitor &visitor) const {
+void Variable::traverse(Visitor &visitor) {
+    visitor.visitVariable(variable);
+}
+
+void Variable::traverse(ConstVisitor &visitor) const {
     visitor.visitVariable(variable);
 }
 

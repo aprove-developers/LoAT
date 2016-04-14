@@ -71,40 +71,11 @@ void Problem::substituteVarnames(string &line) const {
 }
 
 
-/**
- * Splits a function application (line) in function name (fun) and argument strings (args)
- * e.g. f(x,y) will result in "f" and {"x","y"}
- */
-static void parseFunapp(const string &line, string &fun, vector<string> &args) {
-    args.clear();
-    string::size_type pos = line.find('(');
-    if (pos == string::npos) throw Problem::FileError("Invalid funapp (missing open paren): " + line);
-    if (line.rfind(')') != line.length()-1) throw Problem::FileError("Invalid funapp (bad close paren): "+line);
-
-    fun = line.substr(0,pos);
-    string::size_type startpos = pos+1;
-    while ((pos = line.find(',',startpos)) != string::npos) {
-        string arg = line.substr(startpos,pos-startpos);
-        trim(arg);
-        if (arg.empty()) throw Problem::FileError("Empty argument in funapp: "+line);
-        args.push_back(arg);
-        startpos = pos+1;
-    }
-    string lastarg = line.substr(startpos,line.length()-1-startpos);
-    trim(lastarg);
-    if (!lastarg.empty()) {
-        args.push_back(lastarg);
-    } else if (!args.empty()) {
-        throw Problem::FileError("Empty last argument in funapp: "+line);
-    }
-}
-
-
 Problem Problem::loadFromFile(const string &filename) {
     Problem res;
     string startTerm;
     map<string,TermIndex> knownTerms;
-    map<string,VariableIndex> knownVars;
+    res.knownVars.clear();
 
     ifstream file(filename);
     if (!file.is_open())
@@ -124,7 +95,7 @@ Problem Problem::loadFromFile(const string &filename) {
             if (line == ")")
                 in_rules = false;
             else {
-                res.parseRule(knownTerms,knownVars,line);
+                res.parseRule(knownTerms, line);
             }
         }
         else {
@@ -168,7 +139,7 @@ Problem Problem::loadFromFile(const string &filename) {
                     escapeVarname(escapedname);
                     VariableIndex vi = res.addFreshVariable(escapedname);
                     escapedname = res.getVarname(vi);
-                    knownVars[escapedname] = vi;
+                    res.knownVars[escapedname] = vi;
                     if (escapedname != varname) {
                         res.escapeSymbols[varname] = escapedname;
                     }
@@ -186,20 +157,11 @@ Problem Problem::loadFromFile(const string &filename) {
     //ensure we have at least some rules
     if (res.rules.empty()) throw FileError("No rules defined");
 
-    //if a term appeared only on rhs, the argument list is empty, add some dummy arguments (vars from 0 on)
-    for (const Rule &r : res.rules) {
-        if (res.terms[r.rhsTerm].args.empty()) {
-            for (VariableIndex v=0; v < r.rhsArgs.size(); ++v) {
-                res.terms[r.rhsTerm].args.push_back(v);
-            }
-        }
-    }
-
     //check if startTerm is valid
     if (startTerm.empty()) {
         debugParser("WARNING: Missing start term, defaulting to first rule lhs");
         assert(!res.rules.empty());
-        res.startTerm = res.rules[0].lhsTerm;
+        res.startTerm = res.rules[0].lhs;
     } else {
         auto it = knownTerms.find(startTerm);
         if (it == knownTerms.end()) throw FileError("No rules for start term: " + startTerm);
@@ -217,18 +179,10 @@ Problem Problem::loadFromFile(const string &filename) {
  * @param knownVars mapping from string to the corresponding variable index (read and modified)
  * @param line the input string
  */
-void Problem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIndex> &knownVars, const string &line) {
+void Problem::parseRule(map<string,TermIndex> &knownTerms, const string &line) {
     debugParser("parsing rule: " << line);
     Rule rule;
     rule.cost = Expression(1); //default, if not specified
-
-    auto getTermIndex = [&](const string &s) -> TermIndex {
-        if (knownTerms.find(s) == knownTerms.end()) {
-            knownTerms[s] = this->terms.size();
-            this->terms.push_back(Term(s));
-        }
-        return knownTerms[s];
-    };
 
     GiNaC::exmap symbolSubs;
     ExprSymbolSet boundSymbols;
@@ -290,55 +244,25 @@ void Problem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIn
         }
     }
 
-    print(parseTerm(lhs));
-    print(parseTerm(rhs));
-
-
     /* lhs */
-    /*string fun;
-    vector<string> args;
-    parseFunapp(lhs,fun,args);
-    //parse variables
-    vector<VariableIndex> argVars;
-    for (string &v : args) {
-        substituteVarnames(v);
-        auto it = knownVars.find(v);
-        if (it == knownVars.end()) throw Problem::FileError("Unknown variable in lhs: " + v);
-        argVars.push_back(it->second);
-    }
-    //check if variable names differ from previous occurences and provide substitution if necessary
-    rule.lhsTerm = getTermIndex(fun);
-    if (this->terms[rule.lhsTerm].args.empty()) {
-        this->terms[rule.lhsTerm].args = std::move(argVars);
-    } else {
-        if (this->terms[rule.lhsTerm].args.size() != argVars.size()) {
-            throw Problem::FileError("Funapp redeclared with different argument count: "+fun);
-        }
-        for (int i=0; i < argVars.size(); ++i) {
-            VariableIndex vOld = this->terms[rule.lhsTerm].args[i];
-            VariableIndex vNew = argVars[i];
-            if (vOld != vNew) {
-                symbolSubs[getGinacSymbol(vNew)] = getGinacSymbol(vOld);
-            }
-        }
-        if (!symbolSubs.empty()) debugParser("ITS Warning: funapp redeclared with different arguments: " << fun);
-    }
-    //collect the lhs variables that are used (i.e. the ones of the previous occurence)
-    for (VariableIndex vi : this->terms[rule.lhsTerm].args) boundSymbols.insert(getGinacSymbol(vi));
+    rule.lhs = terms.size();
+    terms.push_back(parseTerm(lhs));
+    print(terms.back());
 
+    //collect the lhs variables that are used (i.e. the ones of the previous occurence)
+    for (VariableIndex vi : terms[rule.lhs]->getVariables()) {
+        boundSymbols.insert(getGinacSymbol(vi));
+    }
 
     // rhs
-    args.clear();
+    rule.rhs = terms.size();
+    terms.push_back(parseTerm(rhs));
+    print(terms.back());
+
     ExprSymbolSet rhsSymbols;
-    parseFunapp(rhs,fun,args);
-    rule.rhsTerm = getTermIndex(fun);
-    for (string &v : args) {
-        substituteVarnames(v);
-        if (v.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
-        Expression argterm = Expression::fromString(v,this->varSymbolList).subs(symbolSubs);
-        argterm.collectVariables(rhsSymbols);
-        rule.rhsArgs.push_back(argterm);
-    }*/
+    for (VariableIndex vi : terms[rule.rhs]->getVariables()) {
+        rhsSymbols.insert(getGinacSymbol(vi));
+    }
 
     /* cost */
     if (!cost.empty()) {
@@ -346,16 +270,21 @@ void Problem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIn
         if (cost.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
         rule.cost = Expression::fromString(cost,this->varSymbolList).subs(symbolSubs);
         if (!rule.cost.is_polynomial(this->varSymbolList)) throw Problem::FileError("Non polynomial cost in the input");
-        //rule.cost.collectVariables(rhsSymbols);
+        rule.cost.collectVariables(rhsSymbols);
     }
 
     //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
-    /*if (replaceUnboundedWithFresh(rhsSymbols)) {
-        for (Expression &argExpr : rule.rhsArgs) {
-            argExpr = argExpr.subs(symbolSubs);
+    if (replaceUnboundedWithFresh(rhsSymbols)) {
+        std::map<VariableIndex,VariableIndex> indexSub;
+        for (auto const &pair : symbolSubs) {
+            indexSub.emplace(getVarindex(GiNaC::ex_to<GiNaC::symbol>(pair.first).get_name()),
+                             getVarindex(GiNaC::ex_to<GiNaC::symbol>(pair.second).get_name()));
         }
+        VarSubVisitor visitor(indexSub);
+        terms[rule.rhs]->traverse(visitor);
+
         rule.cost = rule.cost.subs(symbolSubs);
-    }*/
+    }
 
     /* guard */
     ExprSymbolSet guardSymbols;
@@ -388,37 +317,6 @@ void Problem::parseRule(map<string,TermIndex> &knownTerms, map<string,VariableIn
     }
 
     this->rules.push_back(rule);
-}
-
-
-Problem Problem::dummyITSforTesting(const vector<string> vars, const vector<string> &rules) {
-    Problem res;
-    map<string,TermIndex> knownTerms;
-
-    //create vars
-    map<string,VariableIndex> knownVars;
-    for (const string &name : vars) {
-        assert(res.varMap.count(name) == 0);
-        knownVars[name] = res.addVariable(name);
-    }
-
-    //parse all rules
-    for (const string &rule : rules) {
-        res.parseRule(knownTerms,knownVars,rule);
-    }
-
-    //if a term appeared only on rhs, the argument list is empty, add some dummy arguments (vars from 0 on)
-    for (const Rule &r : res.rules) {
-        if (res.terms[r.rhsTerm].args.empty()) {
-            for (VariableIndex v=0; v < r.rhsArgs.size(); ++v) {
-                res.terms[r.rhsTerm].args.push_back(v);
-            }
-        }
-    }
-
-    //make the first appearing term the start term
-    res.startTerm = 0;
-    return res;
 }
 
 
@@ -488,15 +386,10 @@ void Problem::print(ostream &s) const {
 
     s << "Rules:" << endl;
     for (Rule r : rules) {
-        s << terms[r.lhsTerm].name << "(";
-        for (VariableIndex v : terms[r.lhsTerm].args) s << vars[v] << ",";
-        s << ") -> ";
-        s << terms[r.rhsTerm].name << "(";
-        for (Expression e : r.rhsArgs) {
-            printExpr(e);
-            s << ",";
-        }
-        s << ") [";
+        print(terms[r.lhs]);
+        s << " -> ";
+        print(terms[r.rhs]);
+        s << " [";
         for (Expression e : r.guard) {
             printExpr(e);
             s << ",";
@@ -678,11 +571,11 @@ std::shared_ptr<TermTree> Problem::factor() {
 
     } else if (accept(VARIABLE)) {
         std::string name = lastIdent;
-        escapeVarname(name);
+        substituteVarnames(name);
         debugTermParser("parsing variable " << name);
 
-        auto it = varMap.find(name);
-        if (it == varMap.end()) {
+        auto it = knownVars.find(name);
+        if (it == knownVars.end()) {
             throw UnknownVariableException(name);
         }
         VariableIndex index = it->second;
@@ -709,10 +602,7 @@ std::shared_ptr<TermTree> Problem::factor() {
 
 void Problem::print(std::shared_ptr<TermTree> term) const {
     PrintVisitor printVisitor(vars, functionSymbols);
-
-    std::cout << "[term] ";
     term->traverse(printVisitor);
-    std::cout << " [/term]" << std::endl;
 }
 
 

@@ -35,7 +35,6 @@ namespace ITRS {
 
 //typedefs for readability
 typedef int TermIndex;
-typedef int VariableIndex;
 typedef std::vector<Expression> GuardList;
 typedef std::map<VariableIndex,Expression> UpdateMap;
 
@@ -44,74 +43,38 @@ typedef std::map<VariableIndex,Expression> UpdateMap;
  * Represents a rule in an ITS
  */
 struct Rule {
-    TermIndex lhsTerm, rhsTerm;
-    std::vector<Expression> rhsArgs;
+    TermIndex lhs, rhs;
     GuardList guard;
     Expression cost;
 };
 
-/**
- * Represents a term (lhs) in an ITS.
- */
-struct Term {
-    Term(std::string name) : name(name) {}
-    std::string name;
-    std::vector<VariableIndex> args;
-};
-
-class PrintVisitor : public ITRS::TermTree::Visitor {
+class VarSubVisitor : public ITRS::TermTree::Visitor {
 public:
-    PrintVisitor(const std::vector<std::string> &vars,
-                 const std::vector<std::string> &funcs)
-        : vars(vars), funcs(funcs) {
+    VarSubVisitor(const std::map<VariableIndex,VariableIndex> &sub)
+        : sub(sub) {
     }
 
-    virtual void visitNumber(const GiNaC::numeric &value) {
-        std::cout << value;
-    }
-    virtual void visitAdditionPre() {
-        std::cout << "(";
-    }
-    virtual void visitAdditionIn() {
-        std::cout << " + ";
-    }
-    virtual void visitAdditionPost() {
-        std::cout << ")";
-    }
-    virtual void visitSubtractionPre() {
-        std::cout << "(";
-    }
-    virtual void visitSubtractionIn() {
-        std::cout << " - ";
-    }
-    virtual void visitSubtractionPost() {
-        std::cout << ")";
-    }
-    virtual void visitMultiplicationPre() {
-        std::cout << "(";
-    }
-    virtual void visitMultiplicationIn() {
-        std::cout << " * ";
-    }
-    virtual void visitMultiplicationPost() {
-        std::cout << ")";
-    }
-    virtual void visitFunctionSymbolPre(FunctionSymbolIndex functionSymbol) {
-        std::cout << funcs[functionSymbol] << "(";
-    }
-    virtual void visitFunctionSymbolIn(FunctionSymbolIndex functionSymbol) {
-        std::cout << ", ";
-    }
-    virtual void visitFunctionSymbolPost(FunctionSymbolIndex functionSymbol) {
-        std::cout << ")";
-    }
-    virtual void visitVariable(VariableIndex variable) {
-        std::cout << vars[variable];
+    virtual void visitVariable(VariableIndex &variable) {
+        if (sub.count(variable) == 1) {
+            variable = sub.at(variable);
+        }
     }
 
 private:
-    const std::vector<std::string> &vars;
-    const std::vector<std::string> &funcs;
+    const std::map<VariableIndex,VariableIndex> &sub;
+};
+
+enum Symbol {
+    NUMBER,
+    PLUS,
+    MINUS,
+    TIMES,
+    SLASH,
+    FUNCTIONSYMBOL,
+    VARIABLE,
+    LPAREN,
+    RPAREN,
+    COMMA
 };
 
 /**
@@ -132,15 +95,9 @@ public:
     static Problem loadFromFile(const std::string &filename);
     EXCEPTION(FileError,CustomException);
 
-    /**
-     * Creates a dummy Problem that contains just the given rule
-     * @note is not very robust and should _only_ be used for testing
-     */
-    static Problem dummyITSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules);
-
     //simple getters
     inline TermIndex getStartTerm() const { return startTerm; }
-    inline Term getTerm(TermIndex idx) const { return terms[idx]; }
+    inline std::shared_ptr<TermTree> getTerm(TermIndex idx) const { return terms[idx]; }
     inline TermIndex getTermCount() const { return terms.size(); }
 
     inline const std::vector<Rule>& getRules() const { return rules; }
@@ -182,7 +139,6 @@ private:
     void substituteVarnames(std::string &line) const;
 
     void parseRule(std::map<std::string,TermIndex> &knownTerms,
-                   std::map<std::string,VariableIndex> &knownVars,
                    const std::string &line);
 
     // term parser
@@ -206,7 +162,7 @@ private:
     std::vector<std::string> vars;
     std::set<VariableIndex> freeVars;
     std::vector<std::string> functionSymbols;
-    std::vector<Term> terms;
+    std::vector<std::shared_ptr<TermTree>> terms;
     std::vector<Rule> rules;
     TermIndex startTerm;
 
@@ -222,6 +178,7 @@ private:
     std::map<std::string,std::string> escapeSymbols;
 
     /* parser stuff */
+    std::map<std::string,VariableIndex> knownVars;
     bool nextSymbolCalledOnEmptyInput;
     std::string toParseReversed;
     std::string lastIdent;
