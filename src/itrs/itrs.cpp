@@ -74,7 +74,6 @@ void Problem::substituteVarnames(string &line) const {
 Problem Problem::loadFromFile(const string &filename) {
     Problem res;
     string startTerm;
-    map<string,TermIndex> knownTerms;
     res.knownVars.clear();
 
     ifstream file(filename);
@@ -95,7 +94,7 @@ Problem Problem::loadFromFile(const string &filename) {
             if (line == ")")
                 in_rules = false;
             else {
-                res.parseRule(knownTerms, line);
+                res.parseRule(line);
             }
         }
         else {
@@ -163,45 +162,56 @@ Problem Problem::loadFromFile(const string &filename) {
         assert(!res.rules.empty());
         res.startTerm = res.rules[0].lhs;
     } else {
-        auto it = knownTerms.find(startTerm);
-        if (it == knownTerms.end()) throw FileError("No rules for start term: " + startTerm);
+        auto it = res.functionSymbolMap.find(startTerm);
+        if (it == res.functionSymbolMap.end()) throw FileError("No rules for start term: " + startTerm);
         res.startTerm = it->second;
     }
 
     return res;
 }
 
+/**
+ * Splits a function application (line) in function name (fun) and argument strings (args)
+ * e.g. f(x,y) will result in "f" and {"x","y"}
+ */
+static void parseFunapp(const string &line, string &fun, vector<string> &args) {
+    args.clear();
+    string::size_type pos = line.find('(');
+    if (pos == string::npos) throw Problem::FileError("Invalid funapp (missing open paren): " + line);
+    if (line.rfind(')') != line.length()-1) throw Problem::FileError("Invalid funapp (bad close paren): "+line);
+
+    fun = line.substr(0,pos);
+    string::size_type startpos = pos+1;
+    while ((pos = line.find(',',startpos)) != string::npos) {
+        string arg = line.substr(startpos,pos-startpos);
+        trim(arg);
+        if (arg.empty()) throw Problem::FileError("Empty argument in funapp: "+line);
+        args.push_back(arg);
+        startpos = pos+1;
+    }
+    string lastarg = line.substr(startpos,line.length()-1-startpos);
+    trim(lastarg);
+    if (!lastarg.empty()) {
+        args.push_back(lastarg);
+    } else if (!args.empty()) {
+        throw Problem::FileError("Empty last argument in funapp: "+line);
+    }
+}
+
 
 /**
  * Parses a rule in the ITS file format reading from line.
  * @param res the current state of the ITS that is read (read and modified)
- * @param knownTerms mapping from string to the corresponding term index (read and modified)
  * @param knownVars mapping from string to the corresponding variable index (read and modified)
  * @param line the input string
  */
-void Problem::parseRule(map<string,TermIndex> &knownTerms, const string &line) {
+void Problem::parseRule(const string &line) {
     debugParser("parsing rule: " << line);
-    Rule rule;
-    rule.cost = Expression(1); //default, if not specified
+    newRule = Rule();
+    newRule.cost = Expression(1); //default, if not specified
 
-    GiNaC::exmap symbolSubs;
-    ExprSymbolSet boundSymbols;
-
-    //setup substitution for unbound variables (i.e. not on lhs) by new fresh variables
-    auto replaceUnboundedWithFresh = [&](const ExprSymbolSet &checkSymbols) -> bool {
-        bool added = false;
-        for (const ExprSymbol &sym : checkSymbols) {
-            if (boundSymbols.count(sym) == 0) {
-                VariableIndex vFree = addFreshVariable("free");
-                this->freeVars.insert(vFree);
-                ExprSymbol freeSym = getGinacSymbol(vFree);
-                symbolSubs[sym] = freeSym;
-                boundSymbols.insert(freeSym);
-                added = true;
-            }
-        }
-        return added;
-    };
+    symbolSubs.clear();
+    boundSymbols.clear();
 
     /* split string into lhs, rhs (and possibly cost in between) */
     string lhs,rhs,cost;
@@ -244,33 +254,115 @@ void Problem::parseRule(map<string,TermIndex> &knownTerms, const string &line) {
         }
     }
 
-    /* lhs */
-    rule.lhs = terms.size();
-    terms.push_back(parseTerm(lhs));
-    print(terms.back());
+    parseLhs(lhs);
+    parseRhs(rhs);
+    parseCost(cost);
+    parseGuard(guard);
 
-    //collect the lhs variables that are used (i.e. the ones of the previous occurence)
-    for (VariableIndex vi : terms[rule.lhs]->getVariables()) {
+    this->rules.push_back(newRule);
+}
+
+void Problem::parseLhs(std::string &lhs) {
+    string fun;
+    vector<string> args;
+    parseFunapp(lhs, fun, args);
+    //parse variables
+    vector<VariableIndex> argVars;
+    for (string &v : args) {
+        substituteVarnames(v);
+
+        if (v.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
+        Expression argterm = Expression::fromString(v, this->varSymbolList);
+
+        if (GiNaC::is_a<GiNaC::symbol>(argterm)) {
+            GiNaC::symbol sym = GiNaC::ex_to<GiNaC::symbol>(argterm);
+
+            auto it = knownVars.find(sym.get_name());
+            if (it == knownVars.end()) {
+                throw Problem::FileError("Unknown variable in lhs: " + v);
+            }
+            argVars.push_back(it->second);
+
+        } else if (GiNaC::is_a<GiNaC::numeric>(argterm)) {
+            debugParser("moving condition to guard: " << v);
+            VariableIndex index = addFreshVariable("x", true);
+
+            newRule.guard.push_back(getGinacSymbol(index) == argterm);
+            argVars.push_back(index);
+
+        } else {
+            throw Problem::FileError("Unsupported expression on lhs: " + v);
+        }
+    }
+
+    auto funMapIt = functionSymbolMap.find(fun);
+    // Add function symbol if it is not already present
+    if (funMapIt == functionSymbolMap.end()) {
+        newRule.lhs = functionSymbols.size();
+        functionSymbolMap.emplace(fun, functionSymbols.size());
+        functionSymbols.push_back(fun);
+
+    } else {
+        newRule.lhs = funMapIt->second;
+    }
+
+    // Check if variable names differ from previous occurences and provide substitution if necessary
+    auto funVarsIt = functionSymbolVars.find(newRule.lhs);
+    if (funVarsIt == functionSymbolVars.end()) {
+        functionSymbolVars.emplace(newRule.lhs, argVars);
+
+    } else {
+        std::vector<VariableIndex> &previousVars = funVarsIt->second;
+
+        if (previousVars.size() != argVars.size()) {
+            throw Problem::FileError("Funapp redeclared with different argument count: " + fun);
+        }
+
+        for (int i = 0; i < argVars.size(); ++i) {
+            VariableIndex vOld = previousVars[i];
+            VariableIndex vNew = argVars[i];
+            if (vOld != vNew) {
+                symbolSubs[getGinacSymbol(vNew)] = getGinacSymbol(vOld);
+            }
+        }
+
+        if (!symbolSubs.empty()) {
+            debugParser("ITS Warning: funapp redeclared with different arguments: " << fun);
+        }
+        //collect the lhs variables that are used (i.e. the ones of the previous occurence)
+        for (VariableIndex vi : previousVars) {
+            boundSymbols.insert(getGinacSymbol(vi));
+        }
+    }
+
+    // Apply symbolSubs to expression that were added
+    // while moving conditions from the lhs to the guard
+    for (Expression &expression : newRule.guard) {
+        expression = expression.subs(symbolSubs);
+    }
+
+    //collect the lhs variables that are bound (i.e. the ones of the previous occurence)
+    for (VariableIndex vi : functionSymbolVars.at(newRule.lhs)) {
         boundSymbols.insert(getGinacSymbol(vi));
     }
+}
 
-    // rhs
-    rule.rhs = terms.size();
+
+void Problem::parseRhs(std::string &rhs) {
+    newRule.rhs = terms.size();
     terms.push_back(parseTerm(rhs));
-    print(terms.back());
+
+    std::map<VariableIndex,VariableIndex> indexSub;
+    for (auto const &pair : symbolSubs) {
+        indexSub.emplace(getVarindex(GiNaC::ex_to<GiNaC::symbol>(pair.first).get_name()),
+                         getVarindex(GiNaC::ex_to<GiNaC::symbol>(pair.second).get_name()));
+    }
+    VarSubVisitor visitor(indexSub);
+    terms[newRule.rhs]->traverse(visitor);
 
     ExprSymbolSet rhsSymbols;
-    for (VariableIndex vi : terms[rule.rhs]->getVariables()) {
+    for (VariableIndex vi : terms[newRule.rhs]->getVariables()) {
         rhsSymbols.insert(getGinacSymbol(vi));
-    }
-
-    /* cost */
-    if (!cost.empty()) {
-        substituteVarnames(cost);
-        if (cost.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
-        rule.cost = Expression::fromString(cost,this->varSymbolList).subs(symbolSubs);
-        if (!rule.cost.is_polynomial(this->varSymbolList)) throw Problem::FileError("Non polynomial cost in the input");
-        rule.cost.collectVariables(rhsSymbols);
     }
 
     //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
@@ -281,13 +373,39 @@ void Problem::parseRule(map<string,TermIndex> &knownTerms, const string &line) {
                              getVarindex(GiNaC::ex_to<GiNaC::symbol>(pair.second).get_name()));
         }
         VarSubVisitor visitor(indexSub);
-        terms[rule.rhs]->traverse(visitor);
+        terms[newRule.rhs]->traverse(visitor);
 
-        rule.cost = rule.cost.subs(symbolSubs);
+    }
+}
+
+
+void Problem::parseCost(std::string &cost) {
+    ExprSymbolSet costSymbols;
+
+    if (!cost.empty()) {
+        substituteVarnames(cost);
+        if (cost.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
+        newRule.cost = Expression::fromString(cost, this->varSymbolList).subs(symbolSubs);
+        if (!newRule.cost.is_polynomial(this->varSymbolList)) throw Problem::FileError("Non polynomial cost in the input");
+        newRule.cost.collectVariables(costSymbols);
     }
 
-    /* guard */
+    //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
+    if (replaceUnboundedWithFresh(costSymbols)) {
+        newRule.cost = newRule.cost.subs(symbolSubs);
+    }
+
+    //ensure user given costs are positive
+    if (!cost.empty()) {
+        newRule.guard.push_back(newRule.cost > 0);
+    }
+}
+
+
+void Problem::parseGuard(std::string &guard) {
     ExprSymbolSet guardSymbols;
+
+    string::size_type pos;
     if (!guard.empty()) {
         string::size_type startpos = 0;
         do {
@@ -301,22 +419,34 @@ void Problem::parseRule(map<string,TermIndex> &knownTerms, const string &line) {
             if (term.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
             Expression guardTerm = Expression::fromString(term,this->varSymbolList).subs(symbolSubs);
             guardTerm.collectVariables(guardSymbols);
-            rule.guard.push_back(guardTerm);
+            newRule.guard.push_back(guardTerm);
         } while (pos != string::npos);
     }
+
     //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
     if (replaceUnboundedWithFresh(guardSymbols)) {
         debugParser("ITS Note: free variables in guard: " << guard);
-        for (Expression &guardExpr : rule.guard) {
+        for (Expression &guardExpr : newRule.guard) {
             guardExpr = guardExpr.subs(symbolSubs);
         }
     }
-    //ensure user given costs are positive
-    if (!cost.empty()) {
-        rule.guard.push_back(rule.cost > 0);
-    }
+}
 
-    this->rules.push_back(rule);
+
+//setup substitution for unbound variables (i.e. not on lhs) by new fresh variables
+bool Problem::replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols) {
+    bool added = false;
+    for (const ExprSymbol &sym : checkSymbols) {
+        if (boundSymbols.count(sym) == 0) {
+            VariableIndex vFree = addFreshVariable("free");
+            this->freeVars.insert(vFree);
+            ExprSymbol freeSym = getGinacSymbol(vFree);
+            symbolSubs[sym] = freeSym;
+            boundSymbols.insert(freeSym);
+            added = true;
+        }
+    }
+    return added;
 }
 
 
@@ -386,15 +516,14 @@ void Problem::print(ostream &s) const {
 
     s << "Rules:" << endl;
     for (Rule r : rules) {
-        print(terms[r.lhs]);
+        printLhs(r.lhs, s);
         s << " -> ";
-        print(terms[r.rhs]);
+        terms[r.rhs]->print(vars, functionSymbols, s);
         s << " [";
         for (Expression e : r.guard) {
-            printExpr(e);
-            s << ",";
+            s << e << ",";
         }
-        s << "]" << endl;
+        s << "], " << r.cost << endl;
     }
 }
 
@@ -600,9 +729,17 @@ std::shared_ptr<TermTree> Problem::factor() {
 }
 
 
-void Problem::print(std::shared_ptr<TermTree> term) const {
-    PrintVisitor printVisitor(vars, functionSymbols);
-    term->traverse(printVisitor);
+void Problem::printLhs(FunctionSymbolIndex fun, std::ostream &os) const {
+    os << functionSymbols[fun] << "(";
+
+    auto &funcVars = functionSymbolVars.at(fun);
+    for (int i = 0; i + 1 < funcVars.size(); ++i) {
+        os << getVarname(funcVars[i]) << ",";
+    }
+    if (funcVars.size() > 0) {
+        os << getVarname(funcVars.back());
+    }
+    os << ")";
 }
 
 

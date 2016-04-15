@@ -2,6 +2,7 @@
 #define ITRS_TERM_H
 
 #include <memory>
+#include <ostream>
 #include <set>
 
 #include <ginac/ginac.h>
@@ -58,66 +59,12 @@ public:
 
     void collectVariables(std::set<VariableIndex> &set) const;
     std::set<VariableIndex> getVariables() const;
+    void print(const std::vector<std::string> &vars,
+               const std::vector<std::string> &funcs,
+               std::ostream &os) const;
 
     virtual void traverse(Visitor &visitor) = 0;
     virtual void traverse(ConstVisitor &visitor) const = 0;
-};
-
-
-
-class PrintVisitor : public TermTree::ConstVisitor {
-public:
-    PrintVisitor(const std::vector<std::string> &vars,
-                 const std::vector<std::string> &funcs)
-        : vars(vars), funcs(funcs) {
-    }
-
-    virtual void visitNumber(const GiNaC::numeric &value) {
-        std::cout << value;
-    }
-    virtual void visitAdditionPre() {
-        std::cout << "(";
-    }
-    virtual void visitAdditionIn() {
-        std::cout << " + ";
-    }
-    virtual void visitAdditionPost() {
-        std::cout << ")";
-    }
-    virtual void visitSubtractionPre() {
-        std::cout << "(";
-    }
-    virtual void visitSubtractionIn() {
-        std::cout << " - ";
-    }
-    virtual void visitSubtractionPost() {
-        std::cout << ")";
-    }
-    virtual void visitMultiplicationPre() {
-        std::cout << "(";
-    }
-    virtual void visitMultiplicationIn() {
-        std::cout << " * ";
-    }
-    virtual void visitMultiplicationPost() {
-        std::cout << ")";
-    }
-    virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
-        std::cout << funcs[functionSymbol] << "(";
-    }
-    virtual void visitFunctionSymbolIn(const FunctionSymbolIndex &functionSymbol) {
-        std::cout << ", ";
-    }
-    virtual void visitFunctionSymbolPost(const FunctionSymbolIndex &functionSymbol) {
-        std::cout << ")";
-    }
-    virtual void visitVariable(const VariableIndex &variable) {
-        std::cout << vars[variable];
-    }
-
-private:
-    const std::vector<std::string> &vars;
-    const std::vector<std::string> &funcs;
 };
 
 

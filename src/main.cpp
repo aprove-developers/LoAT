@@ -194,6 +194,7 @@ int main(int argc, char *argv[]) {
     cout << "Trying to load file: " << filename << endl;
 
     ITRS::Problem problem = ITRS::Problem::loadFromFile(filename);
+    problem.print(std::cout);
     return 0;
 
     ITSProblem res = ITSProblem::loadFromFile(filename);

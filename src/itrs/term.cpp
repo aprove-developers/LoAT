@@ -33,6 +33,71 @@ std::set<VariableIndex> TermTree::getVariables() const {
 }
 
 
+void TermTree::print(const std::vector<std::string> &vars,
+                     const std::vector<std::string> &funcs,
+                     std::ostream &os) const {
+    class PrintVisitor : public TermTree::ConstVisitor {
+    public:
+        PrintVisitor(const std::vector<std::string> &vars,
+                     const std::vector<std::string> &funcs,
+                     std::ostream &os)
+            : vars(vars), funcs(funcs), os(os) {
+        }
+
+        virtual void visitNumber(const GiNaC::numeric &value) {
+            os << value;
+        }
+        virtual void visitAdditionPre() {
+            os << "(";
+        }
+        virtual void visitAdditionIn() {
+            os << " + ";
+        }
+        virtual void visitAdditionPost() {
+            os << ")";
+        }
+        virtual void visitSubtractionPre() {
+            os << "(";
+        }
+        virtual void visitSubtractionIn() {
+            os << " - ";
+        }
+        virtual void visitSubtractionPost() {
+            os << ")";
+        }
+        virtual void visitMultiplicationPre() {
+            os << "(";
+        }
+        virtual void visitMultiplicationIn() {
+            os << " * ";
+        }
+        virtual void visitMultiplicationPost() {
+            os << ")";
+        }
+        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
+            os << funcs[functionSymbol] << "(";
+        }
+        virtual void visitFunctionSymbolIn(const FunctionSymbolIndex &functionSymbol) {
+            os << ", ";
+        }
+        virtual void visitFunctionSymbolPost(const FunctionSymbolIndex &functionSymbol) {
+            os << ")";
+        }
+        virtual void visitVariable(const VariableIndex &variable) {
+            os << vars[variable];
+        }
+
+    private:
+        const std::vector<std::string> &vars;
+        const std::vector<std::string> &funcs;
+        std::ostream &os;
+    };
+
+    PrintVisitor printVisitor(vars, funcs, os);
+    traverse(printVisitor);
+}
+
+
 Number::Number(const GiNaC::numeric &value)
     : value(value) {
 }

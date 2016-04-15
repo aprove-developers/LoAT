@@ -43,7 +43,8 @@ typedef std::map<VariableIndex,Expression> UpdateMap;
  * Represents a rule in an ITS
  */
 struct Rule {
-    TermIndex lhs, rhs;
+    FunctionSymbolIndex lhs;
+    TermIndex rhs;
     GuardList guard;
     Expression cost;
 };
@@ -96,7 +97,7 @@ public:
     EXCEPTION(FileError,CustomException);
 
     //simple getters
-    inline TermIndex getStartTerm() const { return startTerm; }
+    inline FunctionSymbolIndex getStartTerm() const { return startTerm; }
     inline std::shared_ptr<TermTree> getTerm(TermIndex idx) const { return terms[idx]; }
     inline TermIndex getTermCount() const { return terms.size(); }
 
@@ -138,8 +139,12 @@ private:
     //applies replacement map escapeSymbols to the given string (modified by reference)
     void substituteVarnames(std::string &line) const;
 
-    void parseRule(std::map<std::string,TermIndex> &knownTerms,
-                   const std::string &line);
+    void parseRule(const std::string &line);
+    void parseLhs(std::string &lhs);
+    void parseRhs(std::string &rhs);
+    void parseCost(std::string &cost);
+    void parseGuard(std::string &guard);
+    bool replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols);
 
     // term parser
     EXCEPTION(UnexpectedSymbolException, CustomException);
@@ -155,16 +160,17 @@ private:
     std::shared_ptr<TermTree> term();
     std::shared_ptr<TermTree> factor();
 
-    void print(std::shared_ptr<TermTree> term) const;
+    void printLhs(FunctionSymbolIndex fun, std::ostream &os) const;
 
 private:
     /* ITS Data */
     std::vector<std::string> vars;
     std::set<VariableIndex> freeVars;
     std::vector<std::string> functionSymbols;
+    std::map<FunctionSymbolIndex,std::vector<VariableIndex>> functionSymbolVars;
     std::vector<std::shared_ptr<TermTree>> terms;
     std::vector<Rule> rules;
-    TermIndex startTerm;
+    FunctionSymbolIndex startTerm;
 
     /* for lookup efficiency */
     std::map<std::string,VariableIndex> varMap;
@@ -178,6 +184,9 @@ private:
     std::map<std::string,std::string> escapeSymbols;
 
     /* parser stuff */
+    Rule newRule;
+    GiNaC::exmap symbolSubs;
+    ExprSymbolSet boundSymbols;
     std::map<std::string,VariableIndex> knownVars;
     bool nextSymbolCalledOnEmptyInput;
     std::string toParseReversed;

@@ -1,6 +1,6 @@
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR x y)
+(VAR x y a b c d free free2 free3)
 (RULES
 f(x,y) -> f(g(x),y) :|: y > 0
 f(x,0) -> 0
@@ -10,4 +10,30 @@ h(x,y) -> (f(x, y) + (((g(x))))) * (3 + f(0, y))
 f(x,y) -> 3 * f(x - 1, x * x + g(x * x)) * h(0, g(g(42))) * (g(42) + g(h(42, x - x + x * y)))
 f(x,y) -> x - y - x - y - x * 5
 f(x,y) -> (x - (y - (x - (y - x)))) * 5
+f(a,b) -> 3
+f(b,a) -> 7
+f(x,b) -> 9
+f(x,b) -> 10 :|: b > 42
+f(x,y) -> 10 :|: y > 42
+f(a,b) -> 42 :|: a == b
+i(0,0) -> 0
+i(1,0) -> 1
+i(2,0) -> 3
+i(a,b) -> a + b
+i(a,b) -{ a }> a + b
+i(a,b) -{ b }> a + b
+i(x,y) -{ x }> x + y
+i(x,y) -{ y }> x + y
+j(42,x,35,y,2,2,2,a,b) -> 0
+k(x,y) -> free
+k(x,y) -{ free }> free
+k(x,y) -{ free2 }> free
+k(x,y) -{ free }> free :|: free > 0
+k(x,y) -{ free }> free2 :|: free > 0
+k(x,y) -{ free2 }> free :|: free > 0
+k(x,y) -{ free }> free :|: free2 > 0
+k(x,y) -{ free2 }> free2 :|: free > 0
+k(x,y) -{ free }> free2 :|: free2 > 0
+k(x,y) -{ free2 }> free :|: free2 > 0
+k(x,y) -{ free2 }> free :|: free3 > 0
 )
