@@ -2,23 +2,36 @@
 
 #include "itrs.h"
 
-TermTree::~TermTree() {
+namespace TT {
+
+Term::Term(const ITRSProblem &itrs)
+    : itrs(itrs) {
 }
 
 
-void TermTree::collectVariables(std::set<VariableIndex> &set) const {
+Term::~Term() {
+}
+
+
+const ITRSProblem& Term::getITRSProblem() const {
+    return itrs;
+}
+
+
+void Term::collectVariables(ExprSymbolSet &set) const {
     class CollectingVisitor : public ConstVisitor {
     public:
-        CollectingVisitor(std::set<VariableIndex> &set)
+        CollectingVisitor(ExprSymbolSet &set)
             : set(set) {
         }
 
-        virtual void visitVariable(const VariableIndex &variable) {
-            set.insert(variable);
+        void visit(const GiNaCExpression &expr) override {
+            Expression customExpr(expr.getExpression());
+            customExpr.collectVariables(set);
         }
 
     private:
-        std::set<VariableIndex> &set;
+        ExprSymbolSet &set;
     };
 
     CollectingVisitor visitor(set);
@@ -26,22 +39,22 @@ void TermTree::collectVariables(std::set<VariableIndex> &set) const {
 }
 
 
-std::set<VariableIndex> TermTree::getVariables() const {
-    std::set<VariableIndex> set;
+ExprSymbolSet Term::getVariables() const {
+    ExprSymbolSet set;
     collectVariables(set);
     return set;
 }
 
 
-void TermTree::collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const {
+void Term::collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const {
     class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(std::set<FunctionSymbolIndex> &set)
             : set(set) {
         }
 
-        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
-            set.insert(functionSymbol);
+        void visitPre(const FunctionSymbol &funSymbol) override {
+            set.insert(funSymbol.getFunctionSymbol());
         }
 
     private:
@@ -53,15 +66,15 @@ void TermTree::collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const 
 }
 
 
-void TermTree::collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const {
+void Term::collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const {
     class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(std::vector<FunctionSymbolIndex> &vector)
             : vector(vector) {
         }
 
-        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
-            vector.push_back(functionSymbol);
+        void visitPre(const FunctionSymbol &funSymbol) override {
+            vector.push_back(funSymbol.getFunctionSymbol());
         }
 
     private:
@@ -73,232 +86,370 @@ void TermTree::collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) 
 }
 
 
-std::set<FunctionSymbolIndex> TermTree::getFunctionSymbols() const {
+std::set<FunctionSymbolIndex> Term::getFunctionSymbols() const {
     std::set<FunctionSymbolIndex> set;
     collectFunctionSymbols(set);
     return set;
 }
 
 
-std::vector<FunctionSymbolIndex> TermTree::getFunctionSymbolsAsVector() const {
+std::vector<FunctionSymbolIndex> Term::getFunctionSymbolsAsVector() const {
     std::vector<FunctionSymbolIndex> vector;
     collectFunctionSymbols(vector);
     return vector;
 }
 
-
-void TermTree::print(const ITRSProblem &itrs, std::ostream &os) const {
-    class PrintVisitor : public TermTree::ConstVisitor {
+bool Term::containsNoFunctionSymbols() const {
+    class NoFuncSymbolsVisitor : public ConstVisitor {
     public:
-        PrintVisitor(const ITRSProblem &itrs, std::ostream &os)
-            : itrs(itrs), os(os) {
+        NoFuncSymbolsVisitor(bool &noFuncSymbols)
+            : noFuncSymbols(noFuncSymbols) {
         }
 
-        virtual void visitNumber(const GiNaC::numeric &value) {
-            os << value;
-        }
-        virtual void visitAdditionPre() {
-            os << "(";
-        }
-        virtual void visitAdditionIn() {
-            os << " + ";
-        }
-        virtual void visitAdditionPost() {
-            os << ")";
-        }
-        virtual void visitSubtractionPre() {
-            os << "(";
-        }
-        virtual void visitSubtractionIn() {
-            os << " - ";
-        }
-        virtual void visitSubtractionPost() {
-            os << ")";
-        }
-        virtual void visitMultiplicationPre() {
-            os << "(";
-        }
-        virtual void visitMultiplicationIn() {
-            os << " * ";
-        }
-        virtual void visitMultiplicationPost() {
-            os << ")";
-        }
-        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
-            os << itrs.getFunctionSymbolName(functionSymbol) << "(";
-        }
-        virtual void visitFunctionSymbolIn(const FunctionSymbolIndex &functionSymbol) {
-            os << ", ";
-        }
-        virtual void visitFunctionSymbolPost(const FunctionSymbolIndex &functionSymbol) {
-            os << ")";
-        }
-        virtual void visitVariable(const VariableIndex &variable) {
-            os << itrs.getVarname(variable);
+        void visitPre(const FunctionSymbol &funcSym) override {
+            noFuncSymbols = false;
         }
 
     private:
-        const ITRSProblem &itrs;
+        bool &noFuncSymbols;
+    };
+
+    bool noFuncSymbols = true;
+    NoFuncSymbolsVisitor visitor(noFuncSymbols);
+    traverse(visitor);
+
+    return noFuncSymbols;
+}
+
+
+GiNaC::ex Term::toGiNaC() const {
+    throw UnsupportedOperationException();
+}
+
+
+std::ostream& operator<<(std::ostream &os, const Term &term) {
+    class PrintVisitor : public Term::ConstVisitor {
+    public:
+        PrintVisitor(std::ostream &os)
+            : os(os) {
+        }
+        void visitPre(const Addition &add) override {
+            os << "(";
+        }
+        void visitIn(const Addition &add) override {
+            os << " + ";
+        }
+        void visitPost(const Addition &add) override {
+            os << ")";
+        }
+        void visitPre(const Subtraction &sub) override {
+            os << "(";
+        }
+        void visitIn(const Subtraction &sub) override {
+            os << " - ";
+        }
+        void visitPost(const Subtraction &sub) override {
+            os << ")";
+        }
+        void visitPre(const Multiplication &mul) override {
+            os << "(";
+        }
+        void visitIn(const Multiplication &mul) override {
+            os << " * ";
+        }
+        void visitPost(const Multiplication &mul) override {
+            os << ")";
+        }
+        void visitPre(const FunctionSymbol &funcSymbol) override {
+            const ITRSProblem &itrs = funcSymbol.getITRSProblem();
+            FunctionSymbolIndex funcIndex = funcSymbol.getFunctionSymbol();
+
+            os << itrs.getFunctionSymbol(funcIndex).getName() << "(";
+        }
+        void visitIn(const FunctionSymbol &funcSymbol) override {
+            os << ", ";
+        }
+        void visitPost(const FunctionSymbol &funcSymbol) override {
+            os << ")";
+        }
+        void visit(const GiNaCExpression &expr) override {
+            os << expr.getExpression();
+        }
+
+    private:
         std::ostream &os;
     };
 
-    PrintVisitor printVisitor(itrs, os);
-    traverse(printVisitor);
+    PrintVisitor printVisitor(os);
+    term.traverse(printVisitor);
+
+    return os;
 }
 
 
-Number::Number(const GiNaC::numeric &value)
-    : value(value) {
-}
-
-
-void Number::traverse(Visitor &visitor) {
-    visitor.visitNumber(value);
-}
-
-
-void Number::traverse(ConstVisitor &visitor) const {
-    visitor.visitNumber(value);
-}
-
-
-Addition::Addition(const std::shared_ptr<TermTree> &l, const std::shared_ptr<TermTree> &r)
-    : l(l), r(r) {
+Addition::Addition(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : Term(itrs),
+      l(l), r(r) {
 }
 
 
 void Addition::traverse(Visitor &visitor) {
-    visitor.visitAdditionPre();
+    visitor.visitPre(*this);
 
     l->traverse(visitor);
 
-    visitor.visitAdditionIn();
+    visitor.visitIn(*this);
 
     r->traverse(visitor);
 
-    visitor.visitAdditionPost();
+    visitor.visitPost(*this);
 }
 
 
 void Addition::traverse(ConstVisitor &visitor) const {
-    visitor.visitAdditionPre();
+    visitor.visitPre(*this);
 
     l->traverse(visitor);
 
-    visitor.visitAdditionIn();
+    visitor.visitIn(*this);
 
     r->traverse(visitor);
 
-    visitor.visitAdditionPost();
+    visitor.visitPost(*this);
 }
 
 
-Subtraction::Subtraction(const std::shared_ptr<TermTree> &l, const std::shared_ptr<TermTree> &r)
-    : l(l), r(r) {
+GiNaC::ex Addition::toGiNaC() const {
+    return l->toGiNaC() + r->toGiNaC();
+}
+
+
+Purrs::Expr Addition::toPurrs() const {
+    return l->toPurrs() + r->toPurrs();
+}
+
+
+std::shared_ptr<Term> Addition::ginacify() const {
+    if (containsNoFunctionSymbols()) {
+        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+
+    } else {
+        std::shared_ptr<Term> newL = l->ginacify();
+        std::shared_ptr<Term> newR = r->ginacify();
+        return std::make_shared<Addition>(getITRSProblem(), newL, newR);
+    }
+}
+
+
+Subtraction::Subtraction(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : Term(itrs),
+      l(l), r(r) {
 }
 
 
 void Subtraction::traverse(Visitor &visitor) {
-    visitor.visitSubtractionPre();
+    visitor.visitPre(*this);
 
     l->traverse(visitor);
 
-    visitor.visitSubtractionIn();
+    visitor.visitIn(*this);
 
     r->traverse(visitor);
 
-    visitor.visitSubtractionPost();
+    visitor.visitPost(*this);
 }
 
 
 void Subtraction::traverse(ConstVisitor &visitor) const {
-    visitor.visitSubtractionPre();
+    visitor.visitPre(*this);
 
     l->traverse(visitor);
 
-    visitor.visitSubtractionIn();
+    visitor.visitIn(*this);
 
     r->traverse(visitor);
 
-    visitor.visitSubtractionPost();
+    visitor.visitPost(*this);
 }
 
 
-Multiplication::Multiplication(const std::shared_ptr<TermTree> &l, const std::shared_ptr<TermTree> &r)
-    : l(l), r(r) {
+GiNaC::ex Subtraction::toGiNaC() const {
+    return l->toGiNaC() - r->toGiNaC();
+}
+
+
+Purrs::Expr Subtraction::toPurrs() const {
+    return l->toPurrs() - r->toPurrs();
+}
+
+
+std::shared_ptr<Term> Subtraction::ginacify() const {
+    if (containsNoFunctionSymbols()) {
+        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+
+    } else {
+        std::shared_ptr<Term> newL = l->ginacify();
+        std::shared_ptr<Term> newR = r->ginacify();
+        return std::make_shared<Subtraction>(getITRSProblem(), newL, newR);
+    }
+}
+
+
+Multiplication::Multiplication(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : Term(itrs),
+      l(l), r(r) {
 }
 
 
 void Multiplication::traverse(Visitor &visitor) {
-    visitor.visitMultiplicationPre();
+    visitor.visitPre(*this);
 
     l->traverse(visitor);
 
-    visitor.visitMultiplicationIn();
+    visitor.visitIn(*this);
 
     r->traverse(visitor);
 
-    visitor.visitMultiplicationPost();
+    visitor.visitPost(*this);
 }
 
 
 void Multiplication::traverse(ConstVisitor &visitor) const {
-    visitor.visitMultiplicationPre();
+    visitor.visitPre(*this);
 
     l->traverse(visitor);
 
-    visitor.visitMultiplicationIn();
+    visitor.visitIn(*this);
 
     r->traverse(visitor);
 
-    visitor.visitMultiplicationPost();
+    visitor.visitPost(*this);
 }
 
 
-FunctionSymbol::FunctionSymbol(FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<TermTree>> &args)
-    : functionSymbol(functionSymbol), args(args){
+GiNaC::ex Multiplication::toGiNaC() const {
+    return l->toGiNaC() * r->toGiNaC();
+}
+
+
+Purrs::Expr Multiplication::toPurrs() const {
+    return l->toPurrs() * r->toPurrs();
+}
+
+
+std::shared_ptr<Term> Multiplication::ginacify() const {
+    if (containsNoFunctionSymbols()) {
+        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+
+    } else {
+        std::shared_ptr<Term> newL = l->ginacify();
+        std::shared_ptr<Term> newR = r->ginacify();
+        return std::make_shared<Multiplication>(getITRSProblem(), newL, newR);
+    }
+}
+
+
+FunctionSymbol::FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<Term>> &args)
+    : Term(itrs),
+      functionSymbol(functionSymbol), args(args) {
 }
 
 
 void FunctionSymbol::traverse(Visitor &visitor) {
-    visitor.visitFunctionSymbolPre(functionSymbol);
+    visitor.visitPre(*this);
 
     for (int i = 0; i + 1 < args.size(); ++i) {
         args[i]->traverse(visitor);
-        visitor.visitFunctionSymbolIn(functionSymbol);
+        visitor.visitIn(*this);
     }
 
     if (args.size() > 0) {
         args.back()->traverse(visitor);
     }
-    visitor.visitFunctionSymbolPost(functionSymbol);
+    visitor.visitPost(*this);
 }
 
 
 void FunctionSymbol::traverse(ConstVisitor &visitor) const {
-    visitor.visitFunctionSymbolPre(functionSymbol);
+    visitor.visitPre(*this);
 
     for (int i = 0; i + 1 < args.size(); ++i) {
         args[i]->traverse(visitor);
-        visitor.visitFunctionSymbolIn(functionSymbol);
+        visitor.visitIn(*this);
     }
 
     if (args.size() > 0) {
         args.back()->traverse(visitor);
     }
-    visitor.visitFunctionSymbolPost(functionSymbol);
+    visitor.visitPost(*this);
 }
 
 
-Variable::Variable(VariableIndex variable)
-    : variable(variable) {
+FunctionSymbolIndex FunctionSymbol::getFunctionSymbol() const {
+    return functionSymbol;
 }
 
 
-void Variable::traverse(Visitor &visitor) {
-    visitor.visitVariable(variable);
+Purrs::Expr FunctionSymbol::toPurrs() const {
+    assert(args.size() == 1);
+    return Purrs::x(args[0]->toPurrs());
 }
 
-void Variable::traverse(ConstVisitor &visitor) const {
-    visitor.visitVariable(variable);
+
+std::shared_ptr<Term> FunctionSymbol::ginacify() const {
+    std::vector<std::shared_ptr<Term>> newArgs;
+
+    for (const std::shared_ptr<Term> &term : args) {
+        if (term->containsNoFunctionSymbols()) {
+            newArgs.push_back(std::make_shared<GiNaCExpression>(getITRSProblem(), term->toGiNaC()));
+
+        } else {
+            newArgs.push_back(term->ginacify());
+        }
+    }
+
+    return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
 }
+
+
+GiNaCExpression::GiNaCExpression(const ITRSProblem &itrs, const GiNaC::ex &expr)
+    : Term(itrs),
+      expression(expr) {
+}
+
+
+void GiNaCExpression::traverse(Visitor &visitor) {
+    visitor.visit(*this);
+}
+
+
+void GiNaCExpression::traverse(ConstVisitor &visitor) const {
+    visitor.visit(*this);
+}
+
+
+GiNaC::ex GiNaCExpression::getExpression() const {
+    return expression;
+}
+
+
+void GiNaCExpression::setExpression(const GiNaC::ex &expr) {
+    expression = expr;
+}
+
+
+GiNaC::ex GiNaCExpression::toGiNaC() const {
+    return expression;
+}
+
+
+Purrs::Expr GiNaCExpression::toPurrs() const {
+    return Purrs::Expr::fromGiNaC(expression);
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::ginacify() const {
+    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression);
+}
+
+};

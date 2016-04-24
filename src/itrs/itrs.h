@@ -31,7 +31,6 @@
 #include "term.h"
 
 //typedefs for readability
-typedef int TermIndex;
 typedef std::vector<Expression> GuardList;
 
 
@@ -40,25 +39,42 @@ typedef std::vector<Expression> GuardList;
  */
 struct ITRSRule {
     FunctionSymbolIndex lhs;
-    TermIndex rhs;
+    std::shared_ptr<TT::Term> rhs;
     GuardList guard;
     Expression cost;
 };
 
-class VarSubVisitor : public TermTree::Visitor {
+
+class FunctionSymbol {
 public:
-    VarSubVisitor(const std::map<VariableIndex,VariableIndex> &sub)
-        : sub(sub) {
+    FunctionSymbol(std::string name)
+        : name(name), defined(false) {
     }
 
-    virtual void visitVariable(VariableIndex &variable) {
-        if (sub.count(variable) == 1) {
-            variable = sub.at(variable);
-        }
+    std::string getName() const {
+        return name;
+    }
+
+    bool isDefined() const {
+        return defined;
+    }
+
+    void setDefined() {
+        defined = true;
+    }
+
+    std::vector<VariableIndex>& getArguments() {
+        return arguments;
+    }
+
+    const std::vector<VariableIndex>& getArguments() const {
+        return arguments;
     }
 
 private:
-    const std::map<VariableIndex,VariableIndex> &sub;
+    std::string name;
+    bool defined;
+    std::vector<VariableIndex> arguments;
 };
 
 enum Symbol {
@@ -94,12 +110,8 @@ public:
 
     //simple getters
     inline FunctionSymbolIndex getStartFunctionSymbol() const { return startTerm; }
-    inline std::string getFunctionSymbolName(FunctionSymbolIndex idx) const { return functionSymbols[idx]; }
-    inline std::vector<std::string>::size_type getFunctionSymbolCount() const { return functionSymbols.size(); }
-    inline const std::vector<VariableIndex>& getFunctionSymbolVariables(FunctionSymbolIndex idx) const { return functionSymbolVars.at(idx); }
-
-    inline std::shared_ptr<TermTree> getTerm(TermIndex idx) const { return terms[idx]; }
-    inline TermIndex getTermCount() const { return terms.size(); }
+    inline const FunctionSymbol& getFunctionSymbol(FunctionSymbolIndex idx) const { return functionSymbols[idx]; }
+    inline std::vector<FunctionSymbol>::size_type getFunctionSymbolCount() const { return functionSymbols.size(); }
 
     inline const std::vector<ITRSRule>& getRules() const { return rules; }
 
@@ -154,21 +166,19 @@ private:
     EXCEPTION(UnknownVariableException, CustomException);
     EXCEPTION(UnexpectedEndOfTextException, CustomException);
     EXCEPTION(SyntaxErrorException, CustomException);
-    std::shared_ptr<TermTree> parseTerm(const std::string &term);
+    std::shared_ptr<TT::Term> parseTerm(const std::string &term);
     void nextSymbol();
     bool accept(Symbol sym);
     bool expect(Symbol sym);
-    std::shared_ptr<TermTree> expression();
-    std::shared_ptr<TermTree> term();
-    std::shared_ptr<TermTree> factor();
+    std::shared_ptr<TT::Term> expression();
+    std::shared_ptr<TT::Term> term();
+    std::shared_ptr<TT::Term> factor();
 
 private:
     /* ITS Data */
     std::vector<std::string> vars;
     std::set<VariableIndex> freeVars;
-    std::vector<std::string> functionSymbols;
-    std::map<FunctionSymbolIndex,std::vector<VariableIndex>> functionSymbolVars;
-    std::vector<std::shared_ptr<TermTree>> terms;
+    std::vector<FunctionSymbol> functionSymbols;
     std::vector<ITRSRule> rules;
     FunctionSymbolIndex startTerm;
 

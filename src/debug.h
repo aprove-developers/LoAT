@@ -73,6 +73,9 @@ struct DebugStream {
 //debugging for FlowGraph and the underlying Graph class
 #define DEBUG_GRAPH
 
+//debugging for RecursionGraph
+#define DEBUG_RECURSION_GRAPH
+
 //debugging for Farkas processor
 #define DEBUG_FARKAS
 
@@ -138,6 +141,12 @@ struct DebugStream {
 #define debugGraph(output) do { std::cout << output << std::endl; } while(0)
 #else
 #define debugGraph(output) (void(0))
+#endif
+
+#ifdef DEBUG_RECURSION_GRAPH
+#define debugRecGraph(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugRecGraph(output) (void(0))
 #endif
 
 #ifdef DEBUG_FARKAS

@@ -28,9 +28,11 @@ typedef int RightHandSideIndex;
 
 struct RightHandSide {
     GuardList guard;
-    std::shared_ptr<TermTree> term;
+    std::shared_ptr<TT::Term> term;
     Expression cost;
 };
+
+std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs);
 
 /**
  * Flow graph for an ITS.
@@ -42,6 +44,8 @@ public:
      * Creates the flow graph for the given its
      */
     RecursionGraph(ITRSProblem &its);
+
+    bool solveRecursion(NodeIndex node);
 
     /**
      * Prints the graph in a readable but ugly format for debugging
@@ -64,17 +68,11 @@ public:
     void printDotText(std::ostream &s, int step, const std::string &desc) const;
 
 private:
-    void printRhs(const RightHandSide &rhs, std::ostream &os) const;
 
     /**
      * Adds the given rule to this graph, calculating the required update
      */
     void addRule(const ITRSRule &rule);
-
-    /**
-     * Adds a new node to the graph, returns the index of the created node
-     */
-    NodeIndex addNode();
 
 private:
     ITRSProblem &itrs;

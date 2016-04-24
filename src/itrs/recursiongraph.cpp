@@ -17,9 +17,26 @@
 
 #include "recursiongraph.h"
 
+#include <purrs.hh>
+
 using namespace std;
+namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 const NodeIndex RecursionGraph::NULLNODE = -1;
+
+std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs) {
+    os << *(rhs.term) << ", [";
+    for (int i = 0; i < rhs.guard.size(); ++i) {
+        if (i > 0) {
+            os << ", ";
+        }
+
+        os << rhs.guard[i];
+    }
+    os << "], " << rhs.cost;
+
+    return os;
+}
 
 RecursionGraph::RecursionGraph(ITRSProblem &itrs)
     : itrs(itrs), nextRightHandSide(0) {
@@ -34,6 +51,65 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
     for (const ITRSRule &rule : itrs.getRules()) {
         addRule(rule);
     }
+}
+
+
+bool RecursionGraph::solveRecursion(NodeIndex node) {
+    class VarSubVisitor : public TT::Term::Visitor {
+    public:
+        VarSubVisitor(const ITRSProblem &itrs) {
+        }
+
+        void visit(TT::GiNaCExpression &expr) override {
+            GiNaC::exmap sub;
+            for (const ExprSymbol &sym : Expression(expr.getExpression()).getVariables()) {
+                sub.emplace(sym, Purrs::Expr(Purrs::Recurrence::n).toGiNaC());
+            }
+
+            expr.setExpression(expr.getExpression().subs(sub));
+        }
+    };
+
+    assert(node != NULLNODE);
+    debugRecGraph("solving recursion for " << itrs.getFunctionSymbol(node).getName());
+
+    const FunctionSymbol& funSymbol = itrs.getFunctionSymbol((FunctionSymbolIndex)node);
+    VariableIndex critVar = funSymbol.getArguments()[0];
+
+    std::vector<TransIndex> recursiveCalls = getTransFromTo(node, node);
+    RightHandSideIndex rhsIndex = getTransData(recursiveCalls[0]);
+    const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+    debugRecGraph(rhs);
+
+    VarSubVisitor vis(itrs);
+    rhs.term->traverse(vis);
+
+    Purrs::Expr recurrence = rhs.term->toPurrs();
+    Purrs::Expr exact;
+
+    try {
+        Purrs::Recurrence rec(recurrence);
+        rec.set_initial_conditions({ {0, 0} }); //costs for no iterations are hopefully 0
+
+        debugRecGraph("recurrence: " << recurrence);
+
+        auto res = rec.compute_exact_solution();
+        if (res != Purrs::Recurrence::SUCCESS) {
+            return false;
+        }
+
+        rec.exact_solution(exact);
+    } catch (...) {
+        debugRecGraph("Purrs failed on x(n) = " << recurrence << " with initial x(0)=0");
+        return false;
+    }
+
+    GiNaC::ex result = exact.toGiNaC();
+    GiNaC::exmap sub;
+    sub.emplace(Purrs::Expr(Purrs::Recurrence::n).toGiNaC(), itrs.getGinacSymbol(critVar));
+    result = result.subs(sub);
+
+    debugRecGraph("Purrs result:" << result);
 }
 
 
@@ -67,7 +143,7 @@ void RecursionGraph::print(ostream &s) const {
             s << " -> ";
             printNode(getTransTarget(trans));
             const RightHandSideIndex index = getTransData(trans);
-            printRhs(rightHandSides.at(index), s);
+            s << rightHandSides.at(index);
             s << endl;
         }
     }
@@ -98,7 +174,7 @@ void RecursionGraph::printForProof() const {
             printNode(getTransTarget(trans));
             proofout << " : ";
             const RightHandSideIndex index = getTransData(trans);
-            printRhs(rightHandSides.at(index), proofout);
+            proofout << rightHandSides.at(index);
         }
     }
     proofout << endl;
@@ -134,18 +210,7 @@ void RecursionGraph::printDot(ostream &s, int step, const string &desc) const {
                 const RightHandSide &rhs = rightHandSides.at(index);
 
                 s << "(" << index << "): ";
-                rhs.term->print(itrs, s);
-                s << ", [";
-                for (int i = 0; i < rhs.guard.size(); ++i) {
-                    if (i > 0) {
-                        s << ", ";
-                    }
-
-                    s << rhs.guard[i];
-                }
-                s << "], ";
-                s << rhs.cost;
-
+                s << rhs;
                 s << "\\l";
             }
             s << "\"];" << endl;
@@ -163,23 +228,11 @@ void RecursionGraph::printDotText(ostream &s, int step, const string &txt) const
     s << "}" << endl;
 }
 
-void RecursionGraph::printRhs(const RightHandSide &rhs, std::ostream &os) const {
-    os << "right-hand side(";
-    rhs.term->print(itrs, os);
-    os << "| ";
-    for (auto expr : rhs.guard) {
-        os << expr << ", ";
-    }
-    os << "| ";
-    os << rhs.cost;
-    os << ")";
-}
-
 
 void RecursionGraph::addRule(const ITRSRule &rule) {
     RightHandSide rhs;
     rhs.guard = rule.guard;
-    rhs.term = itrs.getTerm(rule.rhs);
+    rhs.term = rule.rhs;
     rhs.cost = rule.cost;
 
     NodeIndex src = (NodeIndex)rule.lhs;

@@ -6,6 +6,12 @@
 #include <set>
 
 #include <ginac/ginac.h>
+#include <purrs.hh>
+
+#include "exceptions.h"
+#include "expression.h"
+
+namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 // typedefs for readability
 typedef int FunctionSymbolIndex;
@@ -13,129 +19,171 @@ typedef int VariableIndex;
 
 class ITRSProblem;
 
+namespace TT {
+
+    class Addition;
+    class Subtraction;
+    class Multiplication;
+    class FunctionSymbol;
+    class GiNaCExpression;
+
 /**
  * Represents a term (lhs/rhs) of a rule as an AST.
  */
-class TermTree {
+class Term {
 public:
     class Visitor {
     public:
-        virtual void visitNumber(const GiNaC::numeric &value) {};
-        virtual void visitAdditionPre() {};
-        virtual void visitAdditionIn() {};
-        virtual void visitAdditionPost() {};
-        virtual void visitSubtractionPre() {};
-        virtual void visitSubtractionIn() {};
-        virtual void visitSubtractionPost() {};
-        virtual void visitMultiplicationPre() {};
-        virtual void visitMultiplicationIn() {};
-        virtual void visitMultiplicationPost() {};
-        virtual void visitFunctionSymbolPre(FunctionSymbolIndex &functionSymbol) {};
-        virtual void visitFunctionSymbolIn(FunctionSymbolIndex &functionSymbol) {};
-        virtual void visitFunctionSymbolPost(FunctionSymbolIndex &functionSymbol) {};
-        virtual void visitVariable(VariableIndex &variable) {};
+        virtual void visitPre(Addition &add) {};
+        virtual void visitIn(Addition &add) {};
+        virtual void visitPost(Addition &add) {};
+
+        virtual void visitPre(Subtraction &sub) {};
+        virtual void visitIn(Subtraction &sub) {};
+        virtual void visitPost(Subtraction &sub) {};
+
+        virtual void visitPre(Multiplication &mul) {};
+        virtual void visitIn(Multiplication &mul) {};
+        virtual void visitPost(Multiplication &mul) {};
+
+        virtual void visitPre(FunctionSymbol &funcSym) {};
+        virtual void visitIn(FunctionSymbol &funcSym) {};
+        virtual void visitPost(FunctionSymbol &funcSym) {};
+
+        virtual void visit(GiNaCExpression &expr) {};
     };
 
     class ConstVisitor {
     public:
-        virtual void visitNumber(const GiNaC::numeric &value) {};
-        virtual void visitAdditionPre() {};
-        virtual void visitAdditionIn() {};
-        virtual void visitAdditionPost() {};
-        virtual void visitSubtractionPre() {};
-        virtual void visitSubtractionIn() {};
-        virtual void visitSubtractionPost() {};
-        virtual void visitMultiplicationPre() {};
-        virtual void visitMultiplicationIn() {};
-        virtual void visitMultiplicationPost() {};
-        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {};
-        virtual void visitFunctionSymbolIn(const FunctionSymbolIndex &functionSymbol) {};
-        virtual void visitFunctionSymbolPost(const FunctionSymbolIndex &functionSymbol) {};
-        virtual void visitVariable(const VariableIndex &variable) {};
+        virtual void visitPre(const Addition &add) {};
+        virtual void visitIn(const Addition &add) {};
+        virtual void visitPost(const Addition &add) {};
+
+        virtual void visitPre(const Subtraction &sub) {};
+        virtual void visitIn(const Subtraction &sub) {};
+        virtual void visitPost(const Subtraction &sub) {};
+
+        virtual void visitPre(const Multiplication &mul) {};
+        virtual void visitIn(const Multiplication &mul) {};
+        virtual void visitPost(const Multiplication &mul) {};
+
+        virtual void visitPre(const FunctionSymbol &funcSym) {};
+        virtual void visitIn(const FunctionSymbol &funcSym) {};
+        virtual void visitPost(const FunctionSymbol &funcSym) {};
+
+        virtual void visit(const GiNaCExpression &expr) {};
     };
 
 public:
-    virtual ~TermTree();
+    Term(const ITRSProblem &itrs);
+    virtual ~Term();
 
-    void collectVariables(std::set<VariableIndex> &set) const;
-    std::set<VariableIndex> getVariables() const;
+    const ITRSProblem& getITRSProblem() const;
+
+    void collectVariables(ExprSymbolSet &set) const;
+    ExprSymbolSet getVariables() const;
+
     void collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const;
     void collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const;
     std::set<FunctionSymbolIndex> getFunctionSymbols() const;
     std::vector<FunctionSymbolIndex> getFunctionSymbolsAsVector() const;
 
-
-    void print(const ITRSProblem &itrs, std::ostream &os) const;
+    bool containsNoFunctionSymbols() const;
 
     virtual void traverse(Visitor &visitor) = 0;
     virtual void traverse(ConstVisitor &visitor) const = 0;
-};
 
-
-class Number : public TermTree {
-public:
-    Number(const GiNaC::numeric &value);
-    virtual void traverse(Visitor &visitor);
-    virtual void traverse(ConstVisitor &visitor) const;
+    EXCEPTION(UnsupportedOperationException, CustomException);
+    virtual GiNaC::ex toGiNaC() const;
+    virtual Purrs::Expr toPurrs() const = 0;
+    virtual std::shared_ptr<Term> ginacify() const = 0;
 
 private:
-    GiNaC::numeric value;
+    const ITRSProblem &itrs;
 };
 
+std::ostream& operator<<(std::ostream &os, const Term &term);
 
-class Addition : public TermTree {
+
+class Addition : public Term {
 public:
-    Addition(const std::shared_ptr<TermTree> &l, const std::shared_ptr<TermTree> &r);
-    virtual void traverse(Visitor &visitor);
-    virtual void traverse(ConstVisitor &visitor) const;
+    Addition(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
+    void traverse(Visitor &visitor) override;
+    void traverse(ConstVisitor &visitor) const;
+
+    GiNaC::ex toGiNaC() const override;
+    Purrs::Expr toPurrs() const override;
+    std::shared_ptr<Term> ginacify() const override;
 
 private:
-    std::shared_ptr<TermTree> l, r;
+    std::shared_ptr<Term> l, r;
 };
 
 
-class Subtraction : public TermTree {
+class Subtraction : public Term {
 public:
-    Subtraction(const std::shared_ptr<TermTree> &l, const std::shared_ptr<TermTree> &r);
-    virtual void traverse(Visitor &visitor);
-    virtual void traverse(ConstVisitor &visitor) const;
+    Subtraction(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
+    void traverse(Visitor &visitor) override;
+    void traverse(ConstVisitor &visitor) const override;
+
+    GiNaC::ex toGiNaC() const override;
+    Purrs::Expr toPurrs() const override;
+    std::shared_ptr<Term> ginacify() const override;
 
 private:
-    std::shared_ptr<TermTree> l, r;
+    std::shared_ptr<Term> l, r;
 };
 
 
-class Multiplication : public TermTree {
+class Multiplication : public Term {
 public:
-    Multiplication(const std::shared_ptr<TermTree> &l, const std::shared_ptr<TermTree> &r);
-    virtual void traverse(Visitor &visitor);
-    virtual void traverse(ConstVisitor &visitor) const;
+    Multiplication(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
+    void traverse(Visitor &visitor) override;
+    void traverse(ConstVisitor &visitor) const override;
+
+    GiNaC::ex toGiNaC() const override;
+    Purrs::Expr toPurrs() const override;
+    std::shared_ptr<Term> ginacify() const override;
 
 private:
-    std::shared_ptr<TermTree> l, r;
+    std::shared_ptr<Term> l, r;
 };
 
 
-class FunctionSymbol : public TermTree {
+class FunctionSymbol : public Term {
 public:
-    FunctionSymbol(FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<TermTree>> &args);
-    virtual void traverse(Visitor &visitor);
-    virtual void traverse(ConstVisitor &visitor) const;
+    FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<Term>> &args);
+    void traverse(Visitor &visitor) override;
+    void traverse(ConstVisitor &visitor) const override;
+
+    FunctionSymbolIndex getFunctionSymbol() const;
+
+    Purrs::Expr toPurrs() const override;
+    std::shared_ptr<Term> ginacify() const override;
 
 private:
     FunctionSymbolIndex functionSymbol;
-    std::vector<std::shared_ptr<TermTree>> args;
+    std::vector<std::shared_ptr<Term>> args;
 };
 
 
-class Variable : public TermTree {
+class GiNaCExpression : public Term {
 public:
-    Variable(VariableIndex variable);
-    virtual void traverse(Visitor &visitor);
-    virtual void traverse(ConstVisitor &visitor) const;
+    GiNaCExpression(const ITRSProblem &itrs, const GiNaC::ex &expr);
+    void traverse(Visitor &visitor) override;
+    void traverse(ConstVisitor &visitor) const override;
+
+    GiNaC::ex getExpression() const;
+    void setExpression(const GiNaC::ex &expr);
+
+    GiNaC::ex toGiNaC() const override;
+    Purrs::Expr toPurrs() const override;
+    std::shared_ptr<Term> ginacify() const override;
 
 private:
-    VariableIndex variable;
+    GiNaC::ex expression;
+};
+
 };
 
 #endif // ITRS_TERM_H

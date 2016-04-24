@@ -200,6 +200,8 @@ int main(int argc, char *argv[]) {
     RecursionGraph graph(problem);
     graph.printDot(dotStream, 0, "foo");
     dotStream << "\n}";
+
+    graph.solveRecursion(1);
     return 0;
 
     ITSProblem res = ITSProblem::loadFromFile(filename);
