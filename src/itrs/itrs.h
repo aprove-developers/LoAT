@@ -30,26 +30,22 @@
 #include "expression.h"
 #include "term.h"
 
-
-namespace ITRS {
-
 //typedefs for readability
 typedef int TermIndex;
 typedef std::vector<Expression> GuardList;
-typedef std::map<VariableIndex,Expression> UpdateMap;
 
 
 /**
  * Represents a rule in an ITS
  */
-struct Rule {
+struct ITRSRule {
     FunctionSymbolIndex lhs;
     TermIndex rhs;
     GuardList guard;
     Expression cost;
 };
 
-class VarSubVisitor : public ITRS::TermTree::Visitor {
+class VarSubVisitor : public TermTree::Visitor {
 public:
     VarSubVisitor(const std::map<VariableIndex,VariableIndex> &sub)
         : sub(sub) {
@@ -83,25 +79,29 @@ enum Symbol {
  * @note variable names contain only alphanumeric characters and _
  */
 
-class Problem {
+class ITRSProblem {
     friend class Preprocessor; //allow direct access for the preprocessing
 
 private:
-    Problem() {}
+    ITRSProblem() {}
 
 public:
     /**
      * Loads the ITS data from the given file
      */
-    static Problem loadFromFile(const std::string &filename);
+    static ITRSProblem loadFromFile(const std::string &filename);
     EXCEPTION(FileError,CustomException);
 
     //simple getters
-    inline FunctionSymbolIndex getStartTerm() const { return startTerm; }
+    inline FunctionSymbolIndex getStartFunctionSymbol() const { return startTerm; }
+    inline std::string getFunctionSymbolName(FunctionSymbolIndex idx) const { return functionSymbols[idx]; }
+    inline std::vector<std::string>::size_type getFunctionSymbolCount() const { return functionSymbols.size(); }
+    inline const std::vector<VariableIndex>& getFunctionSymbolVariables(FunctionSymbolIndex idx) const { return functionSymbolVars.at(idx); }
+
     inline std::shared_ptr<TermTree> getTerm(TermIndex idx) const { return terms[idx]; }
     inline TermIndex getTermCount() const { return terms.size(); }
 
-    inline const std::vector<Rule>& getRules() const { return rules; }
+    inline const std::vector<ITRSRule>& getRules() const { return rules; }
 
     inline std::string getVarname(VariableIndex idx) const { return vars[idx]; }
     inline VariableIndex getVarindex(std::string name) const { return varMap.at(name); }
@@ -130,6 +130,8 @@ public:
      * @param s output stream to print to (e.g. cout)
      */
     void print(std::ostream &s) const;
+
+    void printLhs(FunctionSymbolIndex fun, std::ostream &os) const;
 
 private:
     //helpers for variable handling
@@ -160,8 +162,6 @@ private:
     std::shared_ptr<TermTree> term();
     std::shared_ptr<TermTree> factor();
 
-    void printLhs(FunctionSymbolIndex fun, std::ostream &os) const;
-
 private:
     /* ITS Data */
     std::vector<std::string> vars;
@@ -169,7 +169,7 @@ private:
     std::vector<std::string> functionSymbols;
     std::map<FunctionSymbolIndex,std::vector<VariableIndex>> functionSymbolVars;
     std::vector<std::shared_ptr<TermTree>> terms;
-    std::vector<Rule> rules;
+    std::vector<ITRSRule> rules;
     FunctionSymbolIndex startTerm;
 
     /* for lookup efficiency */
@@ -184,7 +184,7 @@ private:
     std::map<std::string,std::string> escapeSymbols;
 
     /* parser stuff */
-    Rule newRule;
+    ITRSRule newRule;
     GiNaC::exmap symbolSubs;
     ExprSymbolSet boundSymbols;
     std::map<std::string,VariableIndex> knownVars;
@@ -194,5 +194,4 @@ private:
     Symbol symbol;
 };
 
-} // namespace ITRS
 #endif // ITRS_H

@@ -11,7 +11,7 @@
 typedef int FunctionSymbolIndex;
 typedef int VariableIndex;
 
-namespace ITRS {
+class ITRSProblem;
 
 /**
  * Represents a term (lhs/rhs) of a rule as an AST.
@@ -59,9 +59,13 @@ public:
 
     void collectVariables(std::set<VariableIndex> &set) const;
     std::set<VariableIndex> getVariables() const;
-    void print(const std::vector<std::string> &vars,
-               const std::vector<std::string> &funcs,
-               std::ostream &os) const;
+    void collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const;
+    void collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const;
+    std::set<FunctionSymbolIndex> getFunctionSymbols() const;
+    std::vector<FunctionSymbolIndex> getFunctionSymbolsAsVector() const;
+
+
+    void print(const ITRSProblem &itrs, std::ostream &os) const;
 
     virtual void traverse(Visitor &visitor) = 0;
     virtual void traverse(ConstVisitor &visitor) const = 0;
@@ -133,7 +137,5 @@ public:
 private:
     VariableIndex variable;
 };
-
-} // namespace ITRS
 
 #endif // ITRS_TERM_H

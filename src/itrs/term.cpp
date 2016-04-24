@@ -1,6 +1,6 @@
 #include "term.h"
 
-namespace ITRS {
+#include "itrs.h"
 
 TermTree::~TermTree() {
 }
@@ -33,15 +33,65 @@ std::set<VariableIndex> TermTree::getVariables() const {
 }
 
 
-void TermTree::print(const std::vector<std::string> &vars,
-                     const std::vector<std::string> &funcs,
-                     std::ostream &os) const {
+void TermTree::collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const {
+    class CollectingVisitor : public ConstVisitor {
+    public:
+        CollectingVisitor(std::set<FunctionSymbolIndex> &set)
+            : set(set) {
+        }
+
+        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
+            set.insert(functionSymbol);
+        }
+
+    private:
+        std::set<FunctionSymbolIndex> &set;
+    };
+
+    CollectingVisitor visitor(set);
+    traverse(visitor);
+}
+
+
+void TermTree::collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const {
+    class CollectingVisitor : public ConstVisitor {
+    public:
+        CollectingVisitor(std::vector<FunctionSymbolIndex> &vector)
+            : vector(vector) {
+        }
+
+        virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
+            vector.push_back(functionSymbol);
+        }
+
+    private:
+        std::vector<FunctionSymbolIndex> &vector;
+    };
+
+    CollectingVisitor visitor(vector);
+    traverse(visitor);
+}
+
+
+std::set<FunctionSymbolIndex> TermTree::getFunctionSymbols() const {
+    std::set<FunctionSymbolIndex> set;
+    collectFunctionSymbols(set);
+    return set;
+}
+
+
+std::vector<FunctionSymbolIndex> TermTree::getFunctionSymbolsAsVector() const {
+    std::vector<FunctionSymbolIndex> vector;
+    collectFunctionSymbols(vector);
+    return vector;
+}
+
+
+void TermTree::print(const ITRSProblem &itrs, std::ostream &os) const {
     class PrintVisitor : public TermTree::ConstVisitor {
     public:
-        PrintVisitor(const std::vector<std::string> &vars,
-                     const std::vector<std::string> &funcs,
-                     std::ostream &os)
-            : vars(vars), funcs(funcs), os(os) {
+        PrintVisitor(const ITRSProblem &itrs, std::ostream &os)
+            : itrs(itrs), os(os) {
         }
 
         virtual void visitNumber(const GiNaC::numeric &value) {
@@ -75,7 +125,7 @@ void TermTree::print(const std::vector<std::string> &vars,
             os << ")";
         }
         virtual void visitFunctionSymbolPre(const FunctionSymbolIndex &functionSymbol) {
-            os << funcs[functionSymbol] << "(";
+            os << itrs.getFunctionSymbolName(functionSymbol) << "(";
         }
         virtual void visitFunctionSymbolIn(const FunctionSymbolIndex &functionSymbol) {
             os << ", ";
@@ -84,16 +134,15 @@ void TermTree::print(const std::vector<std::string> &vars,
             os << ")";
         }
         virtual void visitVariable(const VariableIndex &variable) {
-            os << vars[variable];
+            os << itrs.getVarname(variable);
         }
 
     private:
-        const std::vector<std::string> &vars;
-        const std::vector<std::string> &funcs;
+        const ITRSProblem &itrs;
         std::ostream &os;
     };
 
-    PrintVisitor printVisitor(vars, funcs, os);
+    PrintVisitor printVisitor(itrs, os);
     traverse(printVisitor);
 }
 
@@ -253,5 +302,3 @@ void Variable::traverse(Visitor &visitor) {
 void Variable::traverse(ConstVisitor &visitor) const {
     visitor.visitVariable(variable);
 }
-
-} // namespace ITRS

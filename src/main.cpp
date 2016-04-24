@@ -31,6 +31,7 @@ using namespace std;
 
 #include "its.h"
 #include "itrs/itrs.h"
+#include "itrs/recursiongraph.h"
 #include "flowgraph.h"
 #include "preprocess.h"
 #include "stats.h"
@@ -193,8 +194,12 @@ int main(int argc, char *argv[]) {
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-    ITRS::Problem problem = ITRS::Problem::loadFromFile(filename);
+    ITRSProblem problem = ITRSProblem::loadFromFile(filename);
     problem.print(std::cout);
+
+    RecursionGraph graph(problem);
+    graph.printDot(dotStream, 0, "foo");
+    dotStream << "\n}";
     return 0;
 
     ITSProblem res = ITSProblem::loadFromFile(filename);

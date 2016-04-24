@@ -30,8 +30,6 @@
 using namespace std;
 using namespace boost::algorithm;
 
-namespace ITRS {
-
 /**
  * Replaces symbols that ginac does not allow by underscores _
  * @param name the variable name to be modified
@@ -48,7 +46,7 @@ static void escapeVarname(string &name) {
 }
 
 
-void Problem::substituteVarnames(string &line) const {
+void ITRSProblem::substituteVarnames(string &line) const {
     set<size_t> replacedPositions;
     for (auto it : escapeSymbols) {
         size_t pos = 0;
@@ -71,8 +69,8 @@ void Problem::substituteVarnames(string &line) const {
 }
 
 
-Problem Problem::loadFromFile(const string &filename) {
-    Problem res;
+ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
+    ITRSProblem res;
     string startTerm;
     res.knownVars.clear();
 
@@ -177,15 +175,15 @@ Problem Problem::loadFromFile(const string &filename) {
 static void parseFunapp(const string &line, string &fun, vector<string> &args) {
     args.clear();
     string::size_type pos = line.find('(');
-    if (pos == string::npos) throw Problem::FileError("Invalid funapp (missing open paren): " + line);
-    if (line.rfind(')') != line.length()-1) throw Problem::FileError("Invalid funapp (bad close paren): "+line);
+    if (pos == string::npos) throw ITRSProblem::FileError("Invalid funapp (missing open paren): " + line);
+    if (line.rfind(')') != line.length()-1) throw ITRSProblem::FileError("Invalid funapp (bad close paren): "+line);
 
     fun = line.substr(0,pos);
     string::size_type startpos = pos+1;
     while ((pos = line.find(',',startpos)) != string::npos) {
         string arg = line.substr(startpos,pos-startpos);
         trim(arg);
-        if (arg.empty()) throw Problem::FileError("Empty argument in funapp: "+line);
+        if (arg.empty()) throw ITRSProblem::FileError("Empty argument in funapp: "+line);
         args.push_back(arg);
         startpos = pos+1;
     }
@@ -194,7 +192,7 @@ static void parseFunapp(const string &line, string &fun, vector<string> &args) {
     if (!lastarg.empty()) {
         args.push_back(lastarg);
     } else if (!args.empty()) {
-        throw Problem::FileError("Empty last argument in funapp: "+line);
+        throw ITRSProblem::FileError("Empty last argument in funapp: "+line);
     }
 }
 
@@ -205,9 +203,9 @@ static void parseFunapp(const string &line, string &fun, vector<string> &args) {
  * @param knownVars mapping from string to the corresponding variable index (read and modified)
  * @param line the input string
  */
-void Problem::parseRule(const string &line) {
+void ITRSProblem::parseRule(const string &line) {
     debugParser("parsing rule: " << line);
-    newRule = Rule();
+    newRule = ITRSRule();
     newRule.cost = Expression(1); //default, if not specified
 
     symbolSubs.clear();
@@ -219,14 +217,14 @@ void Problem::parseRule(const string &line) {
     if (pos != string::npos) {
         //-{ cost }> sytnax
         auto endpos = line.find("}>");
-        if (endpos == string::npos) throw Problem::FileError("Invalid rule, malformed -{ cost }>: "+line);
+        if (endpos == string::npos) throw ITRSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
         cost = line.substr(pos+2,endpos-(pos+2));
         lhs = line.substr(0,pos);
         rhs = line.substr(endpos+2);
     } else {
         //default -> syntax (leave cost string empty)
         pos = line.find("->");
-        if (pos == string::npos) throw Problem::FileError("Invalid rule, -> missing: "+line);
+        if (pos == string::npos) throw ITRSProblem::FileError("Invalid rule, -> missing: "+line);
         lhs = line.substr(0,pos);
         rhs = line.substr(pos+2);
     }
@@ -250,7 +248,7 @@ void Problem::parseRule(const string &line) {
             rhs = rhs.substr(6,rhs.length()-6-1);
             trim(rhs);
         } else {
-            throw Problem::FileError("Invalid Com_n application, only Com_1 supported");
+            throw ITRSProblem::FileError("Invalid Com_n application, only Com_1 supported");
         }
     }
 
@@ -262,7 +260,7 @@ void Problem::parseRule(const string &line) {
     this->rules.push_back(newRule);
 }
 
-void Problem::parseLhs(std::string &lhs) {
+void ITRSProblem::parseLhs(std::string &lhs) {
     string fun;
     vector<string> args;
     parseFunapp(lhs, fun, args);
@@ -271,7 +269,7 @@ void Problem::parseLhs(std::string &lhs) {
     for (string &v : args) {
         substituteVarnames(v);
 
-        if (v.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
+        if (v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
         Expression argterm = Expression::fromString(v, this->varSymbolList);
 
         if (GiNaC::is_a<GiNaC::symbol>(argterm)) {
@@ -279,7 +277,7 @@ void Problem::parseLhs(std::string &lhs) {
 
             auto it = knownVars.find(sym.get_name());
             if (it == knownVars.end()) {
-                throw Problem::FileError("Unknown variable in lhs: " + v);
+                throw ITRSProblem::FileError("Unknown variable in lhs: " + v);
             }
             argVars.push_back(it->second);
 
@@ -291,7 +289,7 @@ void Problem::parseLhs(std::string &lhs) {
             argVars.push_back(index);
 
         } else {
-            throw Problem::FileError("Unsupported expression on lhs: " + v);
+            throw ITRSProblem::FileError("Unsupported expression on lhs: " + v);
         }
     }
 
@@ -299,11 +297,13 @@ void Problem::parseLhs(std::string &lhs) {
     // Add function symbol if it is not already present
     if (funMapIt == functionSymbolMap.end()) {
         newRule.lhs = functionSymbols.size();
-        functionSymbolMap.emplace(fun, functionSymbols.size());
         functionSymbols.push_back(fun);
+        functionSymbolMap.emplace(fun, newRule.lhs);
+        debugParser(fun << " is " << newRule.lhs);
 
     } else {
         newRule.lhs = funMapIt->second;
+        debugParser(fun << " is " << newRule.lhs << " (alread present)");
     }
 
     // Check if variable names differ from previous occurences and provide substitution if necessary
@@ -315,7 +315,7 @@ void Problem::parseLhs(std::string &lhs) {
         std::vector<VariableIndex> &previousVars = funVarsIt->second;
 
         if (previousVars.size() != argVars.size()) {
-            throw Problem::FileError("Funapp redeclared with different argument count: " + fun);
+            throw ITRSProblem::FileError("Funapp redeclared with different argument count: " + fun);
         }
 
         for (int i = 0; i < argVars.size(); ++i) {
@@ -348,7 +348,7 @@ void Problem::parseLhs(std::string &lhs) {
 }
 
 
-void Problem::parseRhs(std::string &rhs) {
+void ITRSProblem::parseRhs(std::string &rhs) {
     newRule.rhs = terms.size();
     terms.push_back(parseTerm(rhs));
 
@@ -379,14 +379,14 @@ void Problem::parseRhs(std::string &rhs) {
 }
 
 
-void Problem::parseCost(std::string &cost) {
+void ITRSProblem::parseCost(std::string &cost) {
     ExprSymbolSet costSymbols;
 
     if (!cost.empty()) {
         substituteVarnames(cost);
-        if (cost.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
+        if (cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
         newRule.cost = Expression::fromString(cost, this->varSymbolList).subs(symbolSubs);
-        if (!newRule.cost.is_polynomial(this->varSymbolList)) throw Problem::FileError("Non polynomial cost in the input");
+        if (!newRule.cost.is_polynomial(this->varSymbolList)) throw ITRSProblem::FileError("Non polynomial cost in the input");
         newRule.cost.collectVariables(costSymbols);
     }
 
@@ -402,7 +402,7 @@ void Problem::parseCost(std::string &cost) {
 }
 
 
-void Problem::parseGuard(std::string &guard) {
+void ITRSProblem::parseGuard(std::string &guard) {
     ExprSymbolSet guardSymbols;
 
     string::size_type pos;
@@ -416,7 +416,7 @@ void Problem::parseGuard(std::string &guard) {
             //ignore TRUE in guards (used to indicate an empty guard in some files)
             if (term == "TRUE" || term.empty()) continue;
             substituteVarnames(term);
-            if (term.find('/') != string::npos) throw Problem::FileError("Divison is not allowed in the input");
+            if (term.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
             Expression guardTerm = Expression::fromString(term,this->varSymbolList).subs(symbolSubs);
             guardTerm.collectVariables(guardSymbols);
             newRule.guard.push_back(guardTerm);
@@ -434,7 +434,7 @@ void Problem::parseGuard(std::string &guard) {
 
 
 //setup substitution for unbound variables (i.e. not on lhs) by new fresh variables
-bool Problem::replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols) {
+bool ITRSProblem::replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols) {
     bool added = false;
     for (const ExprSymbol &sym : checkSymbols) {
         if (boundSymbols.count(sym) == 0) {
@@ -450,7 +450,7 @@ bool Problem::replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols) {
 }
 
 
-VariableIndex Problem::addVariable(string name) {
+VariableIndex ITRSProblem::addVariable(string name) {
     //add new variable
     VariableIndex vi = vars.size();
     varMap[name] = vi;
@@ -465,7 +465,7 @@ VariableIndex Problem::addVariable(string name) {
 }
 
 
-string Problem::getFreshName(string basename) const {
+string ITRSProblem::getFreshName(string basename) const {
     int num = 1;
     string name = basename;
     while (varMap.find(name) != varMap.end()) {
@@ -476,7 +476,7 @@ string Problem::getFreshName(string basename) const {
 }
 
 
-bool Problem::isFreeVar(const ExprSymbol &var) const {
+bool ITRSProblem::isFreeVar(const ExprSymbol &var) const {
     for (VariableIndex i : freeVars) {
         if (var == getGinacSymbol(i)) {
             return true;
@@ -487,19 +487,19 @@ bool Problem::isFreeVar(const ExprSymbol &var) const {
 }
 
 
-VariableIndex Problem::addFreshVariable(string basename, bool free) {
+VariableIndex ITRSProblem::addFreshVariable(string basename, bool free) {
     VariableIndex v = addVariable(getFreshName(basename));
     if (free) freeVars.insert(v);
     return v;
 }
 
 
-ExprSymbol Problem::getFreshSymbol(string basename) const {
+ExprSymbol ITRSProblem::getFreshSymbol(string basename) const {
     return ExprSymbol(getFreshName(basename));
 }
 
 
-void Problem::print(ostream &s) const {
+void ITRSProblem::print(ostream &s) const {
     auto printExpr = [&](const Expression &e) {
         s << e;
     };
@@ -515,10 +515,10 @@ void Problem::print(ostream &s) const {
     s << endl;
 
     s << "Rules:" << endl;
-    for (Rule r : rules) {
+    for (ITRSRule r : rules) {
         printLhs(r.lhs, s);
         s << " -> ";
-        terms[r.rhs]->print(vars, functionSymbols, s);
+        terms[r.rhs]->print(*this, s);
         s << " [";
         for (Expression e : r.guard) {
             s << e << ",";
@@ -528,7 +528,7 @@ void Problem::print(ostream &s) const {
 }
 
 
-std::shared_ptr<TermTree> Problem::parseTerm(const std::string &term) {
+std::shared_ptr<TermTree> ITRSProblem::parseTerm(const std::string &term) {
     debugTermParser("Parsing " << term);
     toParseReversed = term;
     std::reverse(toParseReversed.begin(), toParseReversed.end());
@@ -539,7 +539,7 @@ std::shared_ptr<TermTree> Problem::parseTerm(const std::string &term) {
 }
 
 
-void Problem::nextSymbol() {
+void ITRSProblem::nextSymbol() {
     trim_right(toParseReversed);
 
     if (nextSymbolCalledOnEmptyInput) {
@@ -607,7 +607,7 @@ void Problem::nextSymbol() {
 }
 
 
-bool Problem::accept(Symbol sym) {
+bool ITRSProblem::accept(Symbol sym) {
     if (sym == symbol) {
         nextSymbol();
         return true;
@@ -618,7 +618,7 @@ bool Problem::accept(Symbol sym) {
 }
 
 
-bool Problem::expect(Symbol sym) {
+bool ITRSProblem::expect(Symbol sym) {
     if (accept(sym)) {
         return true;
     } else {
@@ -627,7 +627,7 @@ bool Problem::expect(Symbol sym) {
 }
 
 
-std::shared_ptr<TermTree> Problem::expression() {
+std::shared_ptr<TermTree> ITRSProblem::expression() {
     debugTermParser("parsing expression");
     bool negative = false;
     if (symbol == PLUS || symbol == MINUS) {
@@ -658,7 +658,7 @@ std::shared_ptr<TermTree> Problem::expression() {
 }
 
 
-std::shared_ptr<TermTree> Problem::term() {
+std::shared_ptr<TermTree> ITRSProblem::term() {
     debugTermParser("parsing term");
     std::shared_ptr<TermTree> result = factor();
 
@@ -671,7 +671,7 @@ std::shared_ptr<TermTree> Problem::term() {
 }
 
 
-std::shared_ptr<TermTree> Problem::factor() {
+std::shared_ptr<TermTree> ITRSProblem::factor() {
     debugTermParser("parsing factor");
     if (accept(FUNCTIONSYMBOL)) {
         std::string name = lastIdent;
@@ -691,6 +691,7 @@ std::shared_ptr<TermTree> Problem::factor() {
         if (it == functionSymbolMap.end()) {
             index = functionSymbols.size();
             functionSymbols.push_back(name);
+            functionSymbolMap.emplace(name, index);
 
         } else {
             index = it->second;
@@ -729,7 +730,7 @@ std::shared_ptr<TermTree> Problem::factor() {
 }
 
 
-void Problem::printLhs(FunctionSymbolIndex fun, std::ostream &os) const {
+void ITRSProblem::printLhs(FunctionSymbolIndex fun, std::ostream &os) const {
     os << functionSymbols[fun] << "(";
 
     auto &funcVars = functionSymbolVars.at(fun);
@@ -741,6 +742,3 @@ void Problem::printLhs(FunctionSymbolIndex fun, std::ostream &os) const {
     }
     os << ")";
 }
-
-
-} // namespace ITRS
