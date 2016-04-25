@@ -66,12 +66,32 @@ public:
         std::vector<TransIndex> res;
         auto it = outgoing.find(from);
         if (it != outgoing.end()) {
-            for (auto targetIt : it->second) {
-                for (TransIndex trans : targetIt.second) {
+            for (auto targetPair : it->second) {
+                for (TransIndex trans : targetPair.second) {
                     res.push_back(trans);
                 }
             }
         }
+        return res;
+    }
+
+    std::vector<TransIndex> getTransTo(NodeIndex to) const {
+        std::vector<TransIndex> res;
+
+        for (NodeIndex from : getPredecessors(to)) {
+            auto fromIt = outgoing.find(from);
+
+            if (fromIt != outgoing.end()) {
+                auto toIt = fromIt->second.find(to);
+
+                if (toIt != fromIt->second.end()) {
+                    for (TransIndex trans : toIt->second) {
+                        res.push_back(trans);
+                    }
+                }
+            }
+        }
+
         return res;
     }
 

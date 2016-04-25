@@ -37,6 +37,7 @@ typedef GiNaC::symbol ExprSymbol;
 typedef GiNaC::lst ExprList;
 typedef std::set<ExprSymbol, GiNaC::ex_is_less> ExprSymbolSet;
 typedef std::set<Expression, GiNaC::ex_is_less> ExpressionSet;
+typedef std::vector<Expression> GuardList;
 
 /**
  * This class represents a runtime complexity.

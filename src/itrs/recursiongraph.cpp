@@ -17,7 +17,8 @@
 
 #include "recursiongraph.h"
 
-#include <purrs.hh>
+#include "term.h"
+#include "recursion.h"
 
 using namespace std;
 namespace Purrs = Parma_Recurrence_Relation_Solver;
@@ -55,61 +56,43 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
 
 
 bool RecursionGraph::solveRecursion(NodeIndex node) {
-    class VarSubVisitor : public TT::Term::Visitor {
-    public:
-        VarSubVisitor(const ITRSProblem &itrs) {
-        }
-
-        void visit(TT::GiNaCExpression &expr) override {
-            GiNaC::exmap sub;
-            for (const ExprSymbol &sym : Expression(expr.getExpression()).getVariables()) {
-                sub.emplace(sym, Purrs::Expr(Purrs::Recurrence::n).toGiNaC());
-            }
-
-            expr.setExpression(expr.getExpression().subs(sub));
-        }
-    };
-
     assert(node != NULLNODE);
     debugRecGraph("solving recursion for " << itrs.getFunctionSymbol(node).getName());
 
     const FunctionSymbol& funSymbol = itrs.getFunctionSymbol((FunctionSymbolIndex)node);
-    VariableIndex critVar = funSymbol.getArguments()[0];
 
-    std::vector<TransIndex> recursiveCalls = getTransFromTo(node, node);
-    RightHandSideIndex rhsIndex = getTransData(recursiveCalls[0]);
-    const RightHandSide &rhs = rightHandSides.at(rhsIndex);
-    debugRecGraph(rhs);
+    std::vector<TransIndex> transitions = getTransFrom(node);
+    std::set<RightHandSide*> rhss;
+    for (TransIndex index : transitions) {
+        rhss.insert(&rightHandSides.at(getTransData(index)));
+    }
 
-    VarSubVisitor vis(itrs);
-    rhs.term->traverse(vis);
-
-    Purrs::Expr recurrence = rhs.term->toPurrs();
-    Purrs::Expr exact;
-
-    try {
-        Purrs::Recurrence rec(recurrence);
-        rec.set_initial_conditions({ {0, 0} }); //costs for no iterations are hopefully 0
-
-        debugRecGraph("recurrence: " << recurrence);
-
-        auto res = rec.compute_exact_solution();
-        if (res != Purrs::Recurrence::SUCCESS) {
-            return false;
-        }
-
-        rec.exact_solution(exact);
-    } catch (...) {
-        debugRecGraph("Purrs failed on x(n) = " << recurrence << " with initial x(0)=0");
+    Expression result, cost;
+    GuardList guard;
+    if (!Recursion::solve(itrs, funSymbol, rhss, result, cost, guard)) {
         return false;
     }
 
-    GiNaC::ex result = exact.toGiNaC();
-    GiNaC::exmap sub;
-    sub.emplace(Purrs::Expr(Purrs::Recurrence::n).toGiNaC(), itrs.getGinacSymbol(critVar));
-    result = result.subs(sub);
+    // replace calls to funSymbol by their definition
+    TT::FunctionDefinition funDef(funSymbol, result, cost, guard);
 
-    debugRecGraph("Purrs result:" << result);
+    std:set<RightHandSide*> alreadyEvaluated;
+    for (TransIndex trans : getTransTo(node)) {
+        RightHandSide &rhs = rightHandSides.at(getTransData(trans));
+
+        if (alreadyEvaluated.count(&rhs) == 0) {
+            debugRecGraph("rhs before: " << rhs);
+            rhs.term = rhs.term->evaluateFunction(funDef, rhs.cost, rhs.guard);
+            debugRecGraph("rhs after: " << rhs);
+
+            alreadyEvaluated.insert(&rhs);
+
+        }
+
+        removeTrans(trans);
+    }
+
+    return true;
 }
 
 

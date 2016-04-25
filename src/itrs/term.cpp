@@ -2,6 +2,8 @@
 
 #include "itrs.h"
 
+#include "expression.h"
+
 namespace TT {
 
 Term::Term(const ITRSProblem &itrs)
@@ -219,6 +221,14 @@ void Addition::traverse(ConstVisitor &visitor) const {
 }
 
 
+std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDef,
+                                                 Expression &addToCost,
+                                                 GuardList &addToGuard) {
+    return std::make_shared<Addition>(getITRSProblem(),
+                                      l->evaluateFunction(funDef, addToCost, addToGuard),
+                                      r->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
 GiNaC::ex Addition::toGiNaC() const {
     return l->toGiNaC() + r->toGiNaC();
 }
@@ -273,6 +283,15 @@ void Subtraction::traverse(ConstVisitor &visitor) const {
 }
 
 
+std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &funDef,
+                                                 Expression &addToCost,
+                                                 GuardList &addToGuard) {
+    return std::make_shared<Subtraction>(getITRSProblem(),
+                                         l->evaluateFunction(funDef, addToCost, addToGuard),
+                                         r->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
 GiNaC::ex Subtraction::toGiNaC() const {
     return l->toGiNaC() - r->toGiNaC();
 }
@@ -324,6 +343,15 @@ void Multiplication::traverse(ConstVisitor &visitor) const {
     r->traverse(visitor);
 
     visitor.visitPost(*this);
+}
+
+
+std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition &funDef,
+                                                 Expression &addToCost,
+                                                 GuardList &addToGuard) {
+    return std::make_shared<Multiplication>(getITRSProblem(),
+                                            l->evaluateFunction(funDef, addToCost, addToGuard),
+                                            r->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
 
@@ -384,6 +412,42 @@ void FunctionSymbol::traverse(ConstVisitor &visitor) const {
     visitor.visitPost(*this);
 }
 
+std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition &funDef,
+                                                       Expression &addToCost,
+                                                       GuardList &addToGuard) {
+
+    // evaluate arguments first
+    std::vector<std::shared_ptr<Term>> newArgs;
+    for (const std::shared_ptr<Term> &arg : args) {
+        newArgs.push_back(arg->evaluateFunction(funDef, addToCost, addToGuard));
+    }
+
+    if (funDef.getFunctionSymbol().getName()
+        == getITRSProblem().getFunctionSymbol(functionSymbol).getName()) {
+        const std::vector<VariableIndex> &vars = funDef.getFunctionSymbol().getArguments();
+        assert(vars.size() == args.size());
+
+        // TODO
+        // build the substitution: variable -> passed argument
+        GiNaC::exmap sub;
+        for (int i = 0; i < vars.size(); ++i) {
+            sub.emplace(getITRSProblem().getGinacSymbol(vars[i]), newArgs[i]->toGiNaC());
+        }
+
+        // apply the sub
+        addToCost += funDef.getCost().subs(sub);
+
+        for (const Expression &ex : funDef.getGuard()) {
+            addToGuard.push_back(ex.subs(sub));
+        }
+
+        return std::make_shared<GiNaCExpression>(getITRSProblem(), funDef.getDefinition().subs(sub));
+
+    } else {
+        return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+    }
+}
+
 
 FunctionSymbolIndex FunctionSymbol::getFunctionSymbol() const {
     return functionSymbol;
@@ -425,6 +489,14 @@ void GiNaCExpression::traverse(Visitor &visitor) {
 
 void GiNaCExpression::traverse(ConstVisitor &visitor) const {
     visitor.visit(*this);
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
+                                                       Expression &addToCost,
+                                                       GuardList &addToGuard) {
+
+    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression);
 }
 
 

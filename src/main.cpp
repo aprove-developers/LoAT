@@ -199,9 +199,13 @@ int main(int argc, char *argv[]) {
 
     RecursionGraph graph(problem);
     graph.printDot(dotStream, 0, "foo");
-    dotStream << "\n}";
 
     graph.solveRecursion(1);
+
+    graph.printDot(dotStream, 1, "bar");
+
+
+    dotStream << "\n}";
     return 0;
 
     ITSProblem res = ITSProblem::loadFromFile(filename);

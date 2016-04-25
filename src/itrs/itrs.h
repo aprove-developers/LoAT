@@ -30,9 +30,6 @@
 #include "expression.h"
 #include "term.h"
 
-//typedefs for readability
-typedef std::vector<Expression> GuardList;
-
 
 /**
  * Represents a rule in an ITS

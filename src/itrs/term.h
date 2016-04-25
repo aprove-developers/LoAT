@@ -4,6 +4,7 @@
 #include <memory>
 #include <ostream>
 #include <set>
+#include <vector>
 
 #include <ginac/ginac.h>
 #include <purrs.hh>
@@ -17,6 +18,7 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 typedef int FunctionSymbolIndex;
 typedef int VariableIndex;
 
+class FunctionSymbol;
 class ITRSProblem;
 
 namespace TT {
@@ -26,6 +28,39 @@ namespace TT {
     class Multiplication;
     class FunctionSymbol;
     class GiNaCExpression;
+
+// helper class for evaluateFunction()
+class FunctionDefinition {
+public:
+    FunctionDefinition(const ::FunctionSymbol &fs,
+                       const Expression &def,
+                       const Expression &cost,
+                       const GuardList &guard)
+    : functionSymbol(fs), definition(def), cost(cost), guard(guard) {
+    }
+
+    const ::FunctionSymbol& getFunctionSymbol() const {
+        return functionSymbol;
+    }
+
+    const Expression& getDefinition() const {
+        return definition;
+    }
+
+    const Expression& getCost() const {
+        return cost;
+    }
+
+    const GuardList& getGuard() const {
+        return guard;
+    }
+
+private:
+    const ::FunctionSymbol &functionSymbol;
+    const Expression &definition;
+    const Expression &cost;
+    const GuardList &guard;
+};
 
 /**
  * Represents a term (lhs/rhs) of a rule as an AST.
@@ -93,6 +128,9 @@ public:
     virtual void traverse(Visitor &visitor) = 0;
     virtual void traverse(ConstVisitor &visitor) const = 0;
 
+    virtual std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost, GuardList &addToGuard) = 0;
+
     EXCEPTION(UnsupportedOperationException, CustomException);
     virtual GiNaC::ex toGiNaC() const;
     virtual Purrs::Expr toPurrs() const = 0;
@@ -111,6 +149,10 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const;
 
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost,
+                                                   GuardList &addToGuard) override;
+
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
@@ -125,6 +167,10 @@ public:
     Subtraction(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
+
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost,
+                                                   GuardList &addToGuard) override;
 
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
@@ -141,6 +187,10 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost,
+                                                   GuardList &addToGuard) override;
+
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
@@ -155,6 +205,10 @@ public:
     FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<Term>> &args);
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
+
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost,
+                                                   GuardList &addToGuard) override;
 
     FunctionSymbolIndex getFunctionSymbol() const;
 
@@ -172,6 +226,10 @@ public:
     GiNaCExpression(const ITRSProblem &itrs, const GiNaC::ex &expr);
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
+
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost,
+                                                   GuardList &addToGuard) override;
 
     GiNaC::ex getExpression() const;
     void setExpression(const GiNaC::ex &expr);

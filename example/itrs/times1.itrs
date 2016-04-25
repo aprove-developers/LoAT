@@ -4,5 +4,5 @@
 (RULES
 times(x,y) -> plus(x, times(x,y-1)) :|: y > 0
 times(x,0) -> 0
-plus(x,y) -{ x }> x + y :|:
+plus(x,y) -{ x }> x + y
 )
