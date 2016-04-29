@@ -67,14 +67,18 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
         rhss.insert(&rightHandSides.at(getTransData(index)));
     }
 
-    Expression result, cost;
+    Expression result;
+    Expression cost;
     GuardList guard;
     if (!Recursion::solve(itrs, funSymbol, rhss, result, cost, guard)) {
         return false;
     }
 
     // replace calls to funSymbol by their definition
-    TT::FunctionDefinition funDef(funSymbol, result, cost, guard);
+    debugRecGraph("evaluating function");
+    std::shared_ptr<TT::Term> tt = TT::Term::fromGiNaC(itrs, result);
+    TT::FunctionDefinition funDef(funSymbol, tt, cost, guard);
+    debugRecGraph("definition:" << *(funDef.getDefinition()));
 
     std:set<RightHandSide*> alreadyEvaluated;
     for (TransIndex trans : getTransTo(node)) {

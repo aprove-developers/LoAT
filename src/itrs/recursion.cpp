@@ -25,10 +25,12 @@ bool Recursion::solve(const ITRSProblem &itrs,
         }
     };
     VariableIndex critVar = funSymbol.getArguments()[0];
-    RightHandSide &rhs = *(*rightHandSides.begin());
+    RightHandSide rhs = *(*rightHandSides.begin());
     debugPurrs(rhs);
 
     VarSubVisitor vis(itrs);
+    rhs.term = rhs.term->copy();
+    debugPurrs("rhs after copy: " << rhs);
     rhs.term->traverse(vis);
 
     Purrs::Expr recurrence = rhs.term->toPurrs();

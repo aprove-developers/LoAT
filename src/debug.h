@@ -91,6 +91,9 @@ struct DebugStream {
 //debugging for the Expression class
 #define DEBUG_EXPRESSION
 
+//debugging for the Term class
+#define DEBUG_TERM
+
 //debugging for the ITS problem parser
 #define DEBUG_PARSER
 
@@ -177,6 +180,12 @@ struct DebugStream {
 #define debugProblem(output) do { std::cerr << output << std::endl; } while(0)
 #else
 #define debugProblem(output) (void(0))
+#endif
+
+#ifdef DEBUG_TERM
+#define debugTerm(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugTerm(output) (void(0))
 #endif
 
 #ifdef DEBUG_PARSER
