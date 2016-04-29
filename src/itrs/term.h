@@ -40,29 +40,15 @@ public:
     FunctionDefinition(const ::FunctionSymbol &fs,
                        const std::shared_ptr<Term> &def,
                        const Expression &cost,
-                       const GuardList &guard)
-    : functionSymbol(fs), definition(def), cost(cost), guard(guard) {
-    }
-
-    const ::FunctionSymbol& getFunctionSymbol() const {
-        return functionSymbol;
-    }
-
-    const std::shared_ptr<Term>& getDefinition() const {
-        return definition;
-    }
-
-    const Expression& getCost() const {
-        return cost;
-    }
-
-    const GuardList& getGuard() const {
-        return guard;
-    }
+                       const GuardList &guard);
+    const ::FunctionSymbol& getFunctionSymbol() const;
+    std::shared_ptr<Term> getDefinition() const;
+    const Expression& getCost() const;
+    const GuardList& getGuard() const;
 
 private:
     const ::FunctionSymbol &functionSymbol;
-    const std::shared_ptr<Term> &definition;
+    const std::shared_ptr<Term> definition;
     const Expression &cost;
     const GuardList &guard;
 };
@@ -146,6 +132,7 @@ public:
     virtual GiNaC::ex toGiNaC() const;
     virtual Purrs::Expr toPurrs() const = 0;
     virtual std::shared_ptr<Term> ginacify() const = 0;
+    virtual std::shared_ptr<Term> unGinacify() const = 0;
 
 private:
     const ITRSProblem &itrs;
@@ -169,6 +156,7 @@ public:
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -190,6 +178,7 @@ public:
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -211,6 +200,7 @@ public:
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -233,6 +223,7 @@ public:
 
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
 
 private:
     FunctionSymbolIndex functionSymbol;
@@ -258,6 +249,7 @@ public:
     GiNaC::ex toGiNaC() const override;
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
 
 private:
     GiNaC::ex expression;

@@ -90,7 +90,6 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
             debugRecGraph("rhs after: " << rhs);
 
             alreadyEvaluated.insert(&rhs);
-
         }
 
         removeTrans(trans);
