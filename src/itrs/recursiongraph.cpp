@@ -32,9 +32,9 @@ std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs) {
             os << ", ";
         }
 
-        os << rhs.guard[i];
+        os << *rhs.guard[i];
     }
-    os << "], " << rhs.cost;
+    os << "], " << *(rhs.cost);
 
     return os;
 }
@@ -69,15 +69,17 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
 
     Expression result;
     Expression cost;
-    GuardList guard;
+    TermVector guard;
     if (!Recursion::solve(itrs, funSymbol, rhss, result, cost, guard)) {
         return false;
     }
 
     // replace calls to funSymbol by their definition
     debugRecGraph("evaluating function");
-    std::shared_ptr<TT::Term> tt = TT::Term::fromGiNaC(itrs, result);
-    TT::FunctionDefinition funDef(funSymbol, tt, cost, guard);
+    std::shared_ptr<TT::Term> recResult = TT::Term::fromGiNaC(itrs, result);
+
+    std::shared_ptr<TT::Term> recCost = TT::Term::fromGiNaC(itrs, cost);
+    TT::FunctionDefinition funDef(funSymbol, recResult, recCost, guard);
     debugRecGraph("definition:" << *(funDef.getDefinition()));
 
     std:set<RightHandSide*> alreadyEvaluated;
@@ -87,6 +89,8 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
         if (alreadyEvaluated.count(&rhs) == 0) {
             debugRecGraph("rhs before: " << rhs);
             rhs.term = rhs.term->evaluateFunction(funDef, rhs.cost, rhs.guard);
+            rhs.term = rhs.term->ginacify();
+            rhs.cost = rhs.cost->ginacify();
             debugRecGraph("rhs after: " << rhs);
 
             alreadyEvaluated.insert(&rhs);
@@ -217,9 +221,11 @@ void RecursionGraph::printDotText(ostream &s, int step, const string &txt) const
 
 void RecursionGraph::addRule(const ITRSRule &rule) {
     RightHandSide rhs;
-    rhs.guard = rule.guard;
+    for (const Expression &ex : rule.guard) {
+        rhs.guard.push_back(TT::Term::fromGiNaC(itrs, ex));
+    }
     rhs.term = rule.rhs;
-    rhs.cost = rule.cost;
+    rhs.cost = TT::Term::fromGiNaC(itrs, rule.cost);
 
     NodeIndex src = (NodeIndex)rule.lhs;
     std::vector<NodeIndex> dsts = (std::vector<NodeIndex>)rhs.term->getFunctionSymbolsAsVector();

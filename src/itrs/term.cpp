@@ -8,8 +8,8 @@ namespace TT {
 
 FunctionDefinition::FunctionDefinition(const ::FunctionSymbol &fs,
                                        const std::shared_ptr<Term> &def,
-                                       const Expression &cost,
-                                       const GuardList &guard)
+                                       const std::shared_ptr<Term> &cost,
+                                       const TermVector &guard)
     : functionSymbol(fs), definition(def->unGinacify()), cost(cost), guard(guard) {
 }
 
@@ -21,11 +21,11 @@ std::shared_ptr<Term> FunctionDefinition::getDefinition() const {
     return definition;
 }
 
-const Expression& FunctionDefinition::getCost() const {
+std::shared_ptr<Term> FunctionDefinition::getCost() const {
     return cost;
 }
 
-const GuardList& FunctionDefinition::getGuard() const {
+const TermVector& FunctionDefinition::getGuard() const {
     return guard;
 }
 
@@ -49,6 +49,25 @@ std::shared_ptr<Term> Term::fromGiNaC(const ITRSProblem &itrs, const GiNaC::ex &
     } else if (GiNaC::is_a<GiNaC::numeric>(ex)
                || GiNaC::is_a<GiNaC::symbol>(ex)) {
         res = std::make_shared<GiNaCExpression>(itrs, ex);
+
+    } else if (GiNaC::is_a<GiNaC::relational>(ex)) {
+        Relation::Type type;
+        if (ex.info(GiNaC::info_flags::relation_equal)) {
+            type = Relation::EQUAL;
+
+        } else if (ex.info(GiNaC::info_flags::relation_greater_or_equal)) {
+            type = Relation::GREATER_EQUAL;
+
+        } else if (ex.info(GiNaC::info_flags::relation_greater)) {
+            type = Relation::GREATER;
+
+        } else {
+            debugTerm(ex);
+            throw UnsupportedExpressionException();
+        }
+
+        res = std::make_shared<Relation>(itrs, type,
+                                         fromGiNaC(itrs, ex.op(0)), fromGiNaC(itrs, ex.op(1)));
 
     } else {
         throw UnsupportedExpressionException();
@@ -180,11 +199,19 @@ GiNaC::ex Term::toGiNaC() const {
 }
 
 
+Purrs::Expr Term::toPurrs() const {
+    throw UnsupportedOperationException();
+}
+
+
 std::ostream& operator<<(std::ostream &os, const Term &term) {
     class PrintVisitor : public Term::ConstVisitor {
     public:
         PrintVisitor(std::ostream &os)
             : os(os) {
+        }
+        void visitIn(const Relation &rel) override {
+            os << " " << Relation::TypeNames[rel.getType()] << " ";
         }
         void visitPre(const Addition &add) override {
             os << "(";
@@ -239,6 +266,99 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
     return os;
 }
 
+const char* Relation::TypeNames[] = { "==", ">", ">=" };
+
+Relation::Relation(const ITRSProblem &itrs, Type type, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : Term(itrs), type(type), l(l), r(r) {
+}
+
+
+void Relation::traverse(Visitor &visitor) {
+    visitor.visitPre(*this);
+
+    l->traverse(visitor);
+
+    visitor.visitIn(*this);
+
+    r->traverse(visitor);
+
+    visitor.visitPost(*this);
+}
+
+
+void Relation::traverse(ConstVisitor &visitor) const {
+    visitor.visitPre(*this);
+
+    l->traverse(visitor);
+
+    visitor.visitIn(*this);
+
+    r->traverse(visitor);
+
+    visitor.visitPost(*this);
+}
+
+
+std::shared_ptr<Term> Relation::copy() const {
+    return std::make_shared<Relation>(getITRSProblem(), type, l, r);
+}
+
+
+std::shared_ptr<Term> Relation::evaluateFunction(const FunctionDefinition &funDef,
+                                                 std::shared_ptr<Term> &addToCost,
+                                                 TermVector &addToGuard) {
+    return std::make_shared<Relation>(getITRSProblem(),
+                                      type,
+                                      l->evaluateFunction(funDef, addToCost, addToGuard),
+                                      r->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Relation::substitute(const Substitution &sub) const {
+    return std::make_shared<Relation>(getITRSProblem(),
+                                      type,
+                                      l->substitute(sub),
+                                      r->substitute(sub));
+}
+
+
+Relation::Type Relation::getType() const {
+    return type;
+}
+
+
+GiNaC::ex Relation::toGiNaC() const {
+    if (type == EQUAL) {
+        return l->toGiNaC() == r->toGiNaC();
+
+    } else if (type == GREATER_EQUAL) {
+        return l->toGiNaC() >= r->toGiNaC();
+
+    } else if (type == GREATER) {
+        return l->toGiNaC() > r->toGiNaC();
+
+    } else {
+        throw UnsupportedExpressionException();
+    }
+}
+
+
+std::shared_ptr<Term> Relation::ginacify() const {
+    if (containsNoFunctionSymbols()) {
+        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+
+    } else {
+        std::shared_ptr<Term> newL = l->ginacify();
+        std::shared_ptr<Term> newR = r->ginacify();
+        return std::make_shared<Relation>(getITRSProblem(), type, newL, newR);
+    }
+}
+
+
+std::shared_ptr<Term> Relation::unGinacify() const {
+    return std::make_shared<Relation>(getITRSProblem(), type, l->unGinacify(), r->unGinacify());
+}
+
 
 Addition::Addition(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
     : Term(itrs),
@@ -278,8 +398,8 @@ std::shared_ptr<Term> Addition::copy() const {
 
 
 std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 GuardList &addToGuard) {
+                                                 std::shared_ptr<Term> &addToCost,
+                                                 TermVector &addToGuard) {
     return std::make_shared<Addition>(getITRSProblem(),
                                       l->evaluateFunction(funDef, addToCost, addToGuard),
                                       r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -358,8 +478,8 @@ std::shared_ptr<Term> Subtraction::copy() const {
 
 
 std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 GuardList &addToGuard) {
+                                                 std::shared_ptr<Term> &addToCost,
+                                                 TermVector &addToGuard) {
     return std::make_shared<Subtraction>(getITRSProblem(),
                                          l->evaluateFunction(funDef, addToCost, addToGuard),
                                          r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -438,8 +558,8 @@ std::shared_ptr<Term> Multiplication::copy() const {
 
 
 std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 GuardList &addToGuard) {
+                                                 std::shared_ptr<Term> &addToCost,
+                                                 TermVector &addToGuard) {
     return std::make_shared<Multiplication>(getITRSProblem(),
                                             l->evaluateFunction(funDef, addToCost, addToGuard),
                                             r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -522,8 +642,8 @@ std::shared_ptr<Term> FunctionSymbol::copy() const {
 
 
 std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition &funDef,
-                                                       Expression &addToCost,
-                                                       GuardList &addToGuard) {
+                                                       std::shared_ptr<Term> &addToCost,
+                                                       TermVector &addToGuard) {
     std::string funSymName = getITRSProblem().getFunctionSymbol(functionSymbol).getName();
     debugTerm("evaluate: at " << *this);
     // evaluate arguments first
@@ -546,12 +666,13 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
         }
 
         // apply the sub
-        // TODO
-        //addToCost += funDef.getCost().subs(sub);
+        addToCost = std::make_shared<Addition>(getITRSProblem(),
+                                               addToCost,
+                                               funDef.getCost()->substitute(sub));
 
-        //for (const Expression &ex : funDef.getGuard()) {
-        //    addToGuard.push_back(ex.subs(sub));
-        //}
+        for (const std::shared_ptr<Term> &term : funDef.getGuard()) {
+            addToGuard.push_back(term->substitute(sub));
+        }
 
         return funDef.getDefinition()->substitute(sub);
 
@@ -631,8 +752,8 @@ std::shared_ptr<Term> GiNaCExpression::copy() const {
 
 
 std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
-                                                       Expression &addToCost,
-                                                       GuardList &addToGuard) {
+                                                       std::shared_ptr<Term> &addToCost,
+                                                       TermVector &addToGuard) {
 
     return copy();
 }

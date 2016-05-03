@@ -4,6 +4,7 @@
 #include <set>
 
 #include "expression.h"
+#include "term.h"
 
 class FunctionSymbol;
 class ITRSProblem;
@@ -16,7 +17,7 @@ public:
                       std::set<RightHandSide*> rightHandSides,
                       Expression &result,
                       Expression &cost,
-                      GuardList &guard);
+                      TermVector &guard);
 };
 
 #endif // RECURSION_H

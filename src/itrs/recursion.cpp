@@ -9,7 +9,7 @@ bool Recursion::solve(const ITRSProblem &itrs,
                       std::set<RightHandSide*> rightHandSides,
                       Expression &result,
                       Expression &cost,
-                      GuardList &guard) {
+                      TermVector &guard) {
     class VarSubVisitor : public TT::Term::Visitor {
     public:
         VarSubVisitor(const ITRSProblem &itrs) {
@@ -25,7 +25,7 @@ bool Recursion::solve(const ITRSProblem &itrs,
         }
     };
     VariableIndex critVar = funSymbol.getArguments()[0];
-    RightHandSide rhs = *(*(++rightHandSides.begin()));
+    RightHandSide rhs = *(*(rightHandSides.begin()));
     debugPurrs(rhs);
 
     VarSubVisitor vis(itrs);
@@ -62,13 +62,14 @@ bool Recursion::solve(const ITRSProblem &itrs,
 
     rhs.term = std::make_shared<TT::GiNaCExpression>(itrs, result);
 
-    guard.push_back(itrs.getGinacSymbol(critVar) >= 0);
+    Expression toGuard = itrs.getGinacSymbol(critVar) >= 0;
+    guard.push_back(TT::Term::fromGiNaC(itrs, toGuard));
 
     debugPurrs("definition: " << result);
     debugPurrs("cost: " << cost);
     debugPurrs("guard:");
-    for (const Expression &ex : guard) {
-        debugPurrs(ex);
+    for (const std::shared_ptr<TT::Term> &term : guard) {
+        debugPurrs(*term);
     }
 
     return true;
