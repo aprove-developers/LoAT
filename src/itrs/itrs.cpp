@@ -350,34 +350,16 @@ void ITRSProblem::parseLhs(std::string &lhs) {
 
 
 void ITRSProblem::parseRhs(std::string &rhs) {
-    class VarSubVisitor : public TT::Term::Visitor {
-    public:
-        VarSubVisitor(const ITRSProblem &itrs, const GiNaC::exmap &sub)
-            : sub(sub) {
-        }
-
-        void visit(TT::GiNaCExpression &expr) override {
-            expr.setExpression(expr.getExpression().subs(sub));
-        }
-
-    private:
-        const GiNaC::exmap &sub;
-    };
-
-    newRule.rhs = parseTerm(rhs)->ginacify();
-
-    VarSubVisitor visitor(*this, symbolSubs);
-    newRule.rhs->traverse(visitor);
+    newRule.rhs = parseTerm(rhs).ginacify().substitute(symbolSubs);
 
     ExprSymbolSet rhsSymbols;
-    for (const ExprSymbol &sym : newRule.rhs->getVariables()) {
+    for (const ExprSymbol &sym : newRule.rhs.getVariables()) {
         rhsSymbols.insert(sym);
     }
 
     //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
     if (replaceUnboundedWithFresh(rhsSymbols)) {
-        VarSubVisitor visitor(*this, symbolSubs);
-        newRule.rhs->traverse(visitor);
+        newRule.rhs = newRule.rhs.substitute(symbolSubs);
 
     }
 }
@@ -522,7 +504,7 @@ void ITRSProblem::print(ostream &s) const {
     for (ITRSRule r : rules) {
         printLhs(r.lhs, s);
         s << " -> ";
-        s << *(r.rhs);
+        s << r.rhs;
         s << " [";
         for (Expression e : r.guard) {
             s << e << ",";
@@ -532,7 +514,7 @@ void ITRSProblem::print(ostream &s) const {
 }
 
 
-std::shared_ptr<TT::Term> ITRSProblem::parseTerm(const std::string &term) {
+TT::Expression ITRSProblem::parseTerm(const std::string &term) {
     debugTermParser("Parsing " << term);
     toParseReversed = term;
     std::reverse(toParseReversed.begin(), toParseReversed.end());
@@ -631,7 +613,7 @@ bool ITRSProblem::expect(Symbol sym) {
 }
 
 
-std::shared_ptr<TT::Term> ITRSProblem::expression() {
+TT::Expression ITRSProblem::expression() {
     debugTermParser("parsing expression");
     bool negative = false;
     if (symbol == PLUS || symbol == MINUS) {
@@ -640,21 +622,21 @@ std::shared_ptr<TT::Term> ITRSProblem::expression() {
         nextSymbol();
     }
 
-    std::shared_ptr<TT::Term> result = term();
+    TT::Expression result = term();
     if (negative) {
-        std::shared_ptr<TT::Term> minusOne = std::make_shared<TT::GiNaCExpression>(*this, GiNaC::numeric(-1));
-        result = std::make_shared<TT::Multiplication>(*this, minusOne, result);
+        result = TT::Expression(*this, GiNaC::numeric(-1)) * result;
     }
 
     while (symbol == PLUS || symbol == MINUS) {
         negative = (symbol == MINUS);
         nextSymbol();
 
-        std::shared_ptr<TT::Term> temp = term();
+        TT::Expression temp = term();
         if (negative) {
-            result = std::make_shared<TT::Subtraction>(*this, result, temp);
+            result = result - temp;
+
         } else {
-            result = std::make_shared<TT::Addition>(*this, result, temp);
+            result = result + temp;
         }
     }
 
@@ -662,20 +644,20 @@ std::shared_ptr<TT::Term> ITRSProblem::expression() {
 }
 
 
-std::shared_ptr<TT::Term> ITRSProblem::term() {
+TT::Expression ITRSProblem::term() {
     debugTermParser("parsing term");
-    std::shared_ptr<TT::Term> result = factor();
+    TT::Expression result = factor();
 
     while (symbol == TIMES || symbol == SLASH) {
         nextSymbol();
-        result = std::make_shared<TT::Multiplication>(*this, result, factor());
+        result = result * factor();
     }
 
     return result;
 }
 
 
-std::shared_ptr<TT::Term> ITRSProblem::factor() {
+TT::Expression ITRSProblem::factor() {
     debugTermParser("parsing factor");
     if (accept(FUNCTIONSYMBOL)) {
         std::string name = lastIdent;
@@ -683,7 +665,7 @@ std::shared_ptr<TT::Term> ITRSProblem::factor() {
 
         expect(LPAREN);
 
-        std::vector<std::shared_ptr<TT::Term>> args;
+        std::vector<TT::Expression> args;
         do {
             args.push_back(expression());
         } while (accept(COMMA));
@@ -701,7 +683,7 @@ std::shared_ptr<TT::Term> ITRSProblem::factor() {
             index = it->second;
         }
 
-        return std::make_shared<TT::FunctionSymbol>(*this, index, args);
+        return TT::Expression(*this, index, args);
 
     } else if (accept(VARIABLE)) {
         std::string name = lastIdent;
@@ -713,18 +695,17 @@ std::shared_ptr<TT::Term> ITRSProblem::factor() {
             throw UnknownVariableException(name);
         }
         VariableIndex index = it->second;
-        ExprSymbol ginacSymbol = getGinacSymbol(index);
 
-        return std::make_shared<TT::GiNaCExpression>(*this, ginacSymbol);
+        return TT::Expression(*this, getGinacSymbol(index));
 
     } else if (accept(NUMBER)) {
         debugTermParser("parsing number " << lastIdent);
 
         GiNaC::numeric num(lastIdent.c_str());
-        return std::make_shared<TT::GiNaCExpression>(*this, num);
+        return TT::Expression(*this, num);
 
     } else if (accept(LPAREN)) {
-        std::shared_ptr<TT::Term> result = expression();
+        TT::Expression result = expression();
         expect(RPAREN);
 
         return result;

@@ -26,15 +26,15 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 const NodeIndex RecursionGraph::NULLNODE = -1;
 
 std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs) {
-    os << *(rhs.term) << ", [";
+    os << rhs.term << ", [";
     for (int i = 0; i < rhs.guard.size(); ++i) {
         if (i > 0) {
             os << ", ";
         }
 
-        os << *rhs.guard[i];
+        os << rhs.guard[i];
     }
-    os << "], " << *(rhs.cost);
+    os << "], " << rhs.cost;
 
     return os;
 }
@@ -69,18 +69,18 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
 
     Expression result;
     Expression cost;
-    TermVector guard;
+    TT::ExpressionVector guard;
     if (!Recursion::solve(itrs, funSymbol, rhss, result, cost, guard)) {
         return false;
     }
 
     // replace calls to funSymbol by their definition
     debugRecGraph("evaluating function");
-    std::shared_ptr<TT::Term> recResult = TT::Term::fromGiNaC(itrs, result);
+    TT::Expression recResult = TT::Expression(itrs, result);
+    TT::Expression recCost = TT::Expression(itrs, cost);
 
-    std::shared_ptr<TT::Term> recCost = TT::Term::fromGiNaC(itrs, cost);
     TT::FunctionDefinition funDef(funSymbol, recResult, recCost, guard);
-    debugRecGraph("definition:" << *(funDef.getDefinition()));
+    debugRecGraph("definition:" << funDef.getDefinition());
 
     std:set<RightHandSide*> alreadyEvaluated;
     for (TransIndex trans : getTransTo(node)) {
@@ -88,9 +88,9 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
 
         if (alreadyEvaluated.count(&rhs) == 0) {
             debugRecGraph("rhs before: " << rhs);
-            rhs.term = rhs.term->evaluateFunction(funDef, rhs.cost, rhs.guard);
-            rhs.term = rhs.term->ginacify();
-            rhs.cost = rhs.cost->ginacify();
+            rhs.term = rhs.term.evaluateFunction(funDef, rhs.cost, rhs.guard);
+            rhs.term = rhs.term.ginacify();
+            rhs.cost = rhs.cost.ginacify();
             debugRecGraph("rhs after: " << rhs);
 
             alreadyEvaluated.insert(&rhs);
@@ -222,13 +222,13 @@ void RecursionGraph::printDotText(ostream &s, int step, const string &txt) const
 void RecursionGraph::addRule(const ITRSRule &rule) {
     RightHandSide rhs;
     for (const Expression &ex : rule.guard) {
-        rhs.guard.push_back(TT::Term::fromGiNaC(itrs, ex));
+        rhs.guard.push_back(TT::Expression(itrs, ex));
     }
     rhs.term = rule.rhs;
-    rhs.cost = TT::Term::fromGiNaC(itrs, rule.cost);
+    rhs.cost = TT::Expression(itrs, rule.cost);
 
     NodeIndex src = (NodeIndex)rule.lhs;
-    std::vector<NodeIndex> dsts = (std::vector<NodeIndex>)rhs.term->getFunctionSymbolsAsVector();
+    std::vector<NodeIndex> dsts = (std::vector<NodeIndex>)rhs.term.getFunctionSymbolsAsVector();
     if (dsts.empty()) {
         dsts.push_back(NULLNODE);
     }

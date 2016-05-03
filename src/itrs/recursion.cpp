@@ -9,31 +9,19 @@ bool Recursion::solve(const ITRSProblem &itrs,
                       std::set<RightHandSide*> rightHandSides,
                       Expression &result,
                       Expression &cost,
-                      TermVector &guard) {
-    class VarSubVisitor : public TT::Term::Visitor {
-    public:
-        VarSubVisitor(const ITRSProblem &itrs) {
-        }
-
-        void visit(TT::GiNaCExpression &expr) override {
-            GiNaC::exmap sub;
-            for (const ExprSymbol &sym : Expression(expr.getExpression()).getVariables()) {
-                sub.emplace(sym, Purrs::Expr(Purrs::Recurrence::n).toGiNaC());
-            }
-
-            expr.setExpression(expr.getExpression().subs(sub));
-        }
-    };
+                      TT::ExpressionVector &guard) {
     VariableIndex critVar = funSymbol.getArguments()[0];
     RightHandSide rhs = *(*(rightHandSides.begin()));
     debugPurrs(rhs);
 
-    VarSubVisitor vis(itrs);
-    rhs.term = rhs.term->copy();
-    debugPurrs("rhs after copy: " << rhs);
-    rhs.term->traverse(vis);
+    GiNaC::exmap varSub;
+    for (const ExprSymbol &var : rhs.term.getVariables()) {
+        debugPurrs("varsub: " << var << "\\" << "n");
+        varSub.emplace(var, Purrs::Expr(Purrs::Recurrence::n).toGiNaC());
+    }
+    rhs.term = rhs.term.substitute(varSub);
 
-    Purrs::Expr recurrence = rhs.term->toPurrs();
+    Purrs::Expr recurrence = rhs.term.toPurrs();
     Purrs::Expr exact;
 
     try {
@@ -60,16 +48,16 @@ bool Recursion::solve(const ITRSProblem &itrs,
 
     cost = result + 1;
 
-    rhs.term = std::make_shared<TT::GiNaCExpression>(itrs, result);
+    rhs.term = TT::Expression(itrs, result);
 
     Expression toGuard = itrs.getGinacSymbol(critVar) >= 0;
-    guard.push_back(TT::Term::fromGiNaC(itrs, toGuard));
+    guard.push_back(TT::Expression(itrs, toGuard));
 
     debugPurrs("definition: " << result);
     debugPurrs("cost: " << cost);
     debugPurrs("guard:");
-    for (const std::shared_ptr<TT::Term> &term : guard) {
-        debugPurrs(*term);
+    for (const TT::Expression &ex : guard) {
+        debugPurrs(ex);
     }
 
     return true;

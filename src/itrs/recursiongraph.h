@@ -27,9 +27,9 @@
 typedef int RightHandSideIndex;
 
 struct RightHandSide {
-    TermVector guard;
-    std::shared_ptr<TT::Term> term;
-    std::shared_ptr<TT::Term> cost;
+    TT::ExpressionVector guard;
+    TT::Expression term;
+    TT::Expression cost;
 };
 
 std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs);

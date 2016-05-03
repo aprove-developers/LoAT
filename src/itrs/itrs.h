@@ -36,7 +36,7 @@
  */
 struct ITRSRule {
     FunctionSymbolIndex lhs;
-    std::shared_ptr<TT::Term> rhs;
+    TT::Expression rhs;
     GuardList guard;
     Expression cost;
 };
@@ -163,13 +163,13 @@ private:
     EXCEPTION(UnknownVariableException, CustomException);
     EXCEPTION(UnexpectedEndOfTextException, CustomException);
     EXCEPTION(SyntaxErrorException, CustomException);
-    std::shared_ptr<TT::Term> parseTerm(const std::string &term);
+    TT::Expression parseTerm(const std::string &term);
     void nextSymbol();
     bool accept(Symbol sym);
     bool expect(Symbol sym);
-    std::shared_ptr<TT::Term> expression();
-    std::shared_ptr<TT::Term> term();
-    std::shared_ptr<TT::Term> factor();
+    TT::Expression expression();
+    TT::Expression term();
+    TT::Expression factor();
 
 private:
     /* ITS Data */

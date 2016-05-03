@@ -17,7 +17,7 @@ public:
                       std::set<RightHandSide*> rightHandSides,
                       Expression &result,
                       Expression &cost,
-                      TermVector &guard);
+                      TT::ExpressionVector &guard);
 };
 
 #endif // RECURSION_H
