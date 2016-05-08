@@ -57,29 +57,38 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
 
 bool RecursionGraph::solveRecursion(NodeIndex node) {
     assert(node != NULLNODE);
-    debugRecGraph("solving recursion for " << itrs.getFunctionSymbol(node).getName());
+    debugRecGraph("Solving recursion for " << itrs.getFunctionSymbol(node).getName());
 
-    const FunctionSymbol& funSymbol = itrs.getFunctionSymbol((FunctionSymbolIndex)node);
+    int funSymbolIndex = (FunctionSymbolIndex)node;
 
     std::vector<TransIndex> transitions = getTransFrom(node);
-    std::set<RightHandSide*> rhss;
+    std::set<const RightHandSide*> rhss;
     for (TransIndex index : transitions) {
         rhss.insert(&rightHandSides.at(getTransData(index)));
     }
 
-    Expression result;
-    Expression cost;
-    TT::ExpressionVector guard;
-    if (!Recursion::solve(itrs, funSymbol, rhss, result, cost, guard)) {
+    RightHandSide defRhs;
+    Recursion recursion(itrs, funSymbolIndex, rhss, defRhs.term, defRhs.cost, defRhs.guard);
+    if (!recursion.solve()) {
         return false;
     }
 
+    for (TransIndex index : transitions) {
+        if (rhss.count(&rightHandSides.at(getTransData(index))) == 0) {
+            debugRecGraph("transition " << index << " was used for solving the recursion, removing");
+            removeTrans(index);
+        }
+    }
+
+    debugRecGraph("adding a new rhs for the solved recursion");
+    assert(defRhs.term.getFunctionSymbols().empty());
+    RightHandSideIndex rhsIndex = nextRightHandSide++;
+    rightHandSides.emplace(rhsIndex, defRhs);
+    addTrans(node, NULLNODE, rhsIndex);
+
     // replace calls to funSymbol by their definition
     debugRecGraph("evaluating function");
-    TT::Expression recResult = TT::Expression(itrs, result);
-    TT::Expression recCost = TT::Expression(itrs, cost);
-
-    TT::FunctionDefinition funDef(funSymbol, recResult, recCost, guard);
+    TT::FunctionDefinition funDef(funSymbolIndex, defRhs.term, defRhs.cost, defRhs.guard);
     debugRecGraph("definition:" << funDef.getDefinition());
 
     std:set<RightHandSide*> alreadyEvaluated;
@@ -88,9 +97,14 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
 
         if (alreadyEvaluated.count(&rhs) == 0) {
             debugRecGraph("rhs before: " << rhs);
-            rhs.term = rhs.term.evaluateFunction(funDef, rhs.cost, rhs.guard);
-            rhs.term = rhs.term.ginacify();
-            rhs.cost = rhs.cost.ginacify();
+            rhs.term = rhs.term.evaluateFunction(funDef, rhs.cost, rhs.guard).ginacify();
+            TT::Expression dummy;
+            rhs.cost = rhs.cost.evaluateFunction(funDef, dummy, rhs.guard).ginacify();
+            for (int i = 0; i < rhs.guard.size(); ++i) {
+                // the following call might add new elements to rhs.guard
+                rhs.guard[i] = rhs.guard[i].evaluateFunction(funDef, dummy, rhs.guard).ginacify();
+            }
+
             debugRecGraph("rhs after: " << rhs);
 
             alreadyEvaluated.insert(&rhs);

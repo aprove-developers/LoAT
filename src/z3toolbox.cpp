@@ -147,7 +147,6 @@ z3::check_result Z3Toolbox::checkExpressionsSATapproximate(const std::vector<Exp
 }
 
 
-
 bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const Expression &rhs) {
     using namespace z3; //for z3::implies, due to a z3 bug
     Z3VariableContext context;
@@ -159,5 +158,31 @@ bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const 
 
     Z3Solver solver(context);
     solver.add(!rhsExpr && concatExpressions(context,lhsList,ConcatAnd));
+    return solver.check() == z3::unsat; //must be unsat to prove the original implication
+}
+
+
+bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const vector<vector<Expression>> &rhs) {
+    using namespace z3; //for z3::implies, due to a z3 bug
+    Z3VariableContext context;
+
+    //rephrase "forall vars: lhs -> rhs" to "not exist vars: (not rhs) and lhs" to avoid all-quantor
+    std::vector<z3::expr> rhsList;
+    for (const std::vector<Expression> &conjunction : rhs) {
+        std::vector<z3::expr> z3conjunction;
+        for (const Expression &ex : conjunction) {
+            z3conjunction.push_back(ex.toZ3(context));
+        }
+
+        rhsList.push_back(!concatExpressions(context, z3conjunction, ConcatAnd));
+    }
+
+    vector<z3::expr> lhsList;
+    for (const Expression &ex : lhs) {
+        lhsList.push_back(ex.toZ3(context));
+    }
+
+    Z3Solver solver(context);
+    solver.add(concatExpressions(context, rhsList, ConcatAnd) && concatExpressions(context, lhsList, ConcatAnd));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
 }

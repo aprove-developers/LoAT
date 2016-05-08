@@ -14,10 +14,6 @@
 
 namespace Purrs = Parma_Recurrence_Relation_Solver;
 
-namespace TT {
-class Expression;
-}
-
 // typedefs for readability
 typedef int FunctionSymbolIndex;
 typedef int VariableIndex;
@@ -26,6 +22,8 @@ class FunctionSymbol;
 class ITRSProblem;
 
 namespace TT {
+class Expression;
+
 typedef std::map<ExprSymbol, TT::Expression> Substitution;
 typedef std::vector<TT::Expression> ExpressionVector;
 
@@ -33,6 +31,7 @@ class Relation;
 class Addition;
 class Subtraction;
 class Multiplication;
+class Power;
 class FunctionSymbol;
 class GiNaCExpression;
 class FunctionDefinition;
@@ -59,6 +58,9 @@ public:
 
     void collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const;
     std::vector<FunctionSymbolIndex> getFunctionSymbolsAsVector() const;
+
+    void collectUpdates(std::vector<Expression> &updates) const;
+    std::vector<Expression> getUpdates() const;
 
     bool containsNoFunctionSymbols() const;
 
@@ -94,17 +96,17 @@ std::ostream& operator<<(std::ostream &os, const Expression &ex);
 // helper class for evaluateFunction()
 class FunctionDefinition {
 public:
-    FunctionDefinition(const ::FunctionSymbol &fs,
+    FunctionDefinition(const FunctionSymbolIndex fs,
                        const Expression &def,
                        const Expression &cost,
                        const ExpressionVector &guard);
-    const ::FunctionSymbol& getFunctionSymbol() const;
+    const FunctionSymbolIndex getFunctionSymbol() const;
     const Expression& getDefinition() const;
     const Expression& getCost() const;
     const ExpressionVector& getGuard() const;
 
 private:
-    const ::FunctionSymbol &functionSymbol;
+    FunctionSymbolIndex functionSymbol;
     Expression definition;
     Expression cost;
     ExpressionVector guard;
@@ -131,6 +133,10 @@ public:
         virtual void visitIn(Multiplication &mul) {};
         virtual void visitPost(Multiplication &mul) {};
 
+        virtual void visitPre(Power &pow) {};
+        virtual void visitIn(Power &pow) {};
+        virtual void visitPost(Power &pow) {};
+
         virtual void visitPre(FunctionSymbol &funcSym) {};
         virtual void visitIn(FunctionSymbol &funcSym) {};
         virtual void visitPost(FunctionSymbol &funcSym) {};
@@ -155,6 +161,10 @@ public:
         virtual void visitPre(const Multiplication &mul) {};
         virtual void visitIn(const Multiplication &mul) {};
         virtual void visitPost(const Multiplication &mul) {};
+
+        virtual void visitPre(const Power &pow) {};
+        virtual void visitIn(const Power &pow) {};
+        virtual void visitPost(const Power &pow) {};
 
         virtual void visitPre(const FunctionSymbol &funcSym) {};
         virtual void visitIn(const FunctionSymbol &funcSym) {};
@@ -185,6 +195,9 @@ public:
     void collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const;
     std::vector<FunctionSymbolIndex> getFunctionSymbolsAsVector() const;
 
+    void collectUpdates(std::vector<Expression> &updates) const;
+    std::vector<Expression> getUpdates() const;
+
     bool containsNoFunctionSymbols() const;
 
     virtual std::shared_ptr<Term> copy() const = 0;
@@ -208,7 +221,7 @@ std::ostream& operator<<(std::ostream &os, const Term &term);
 
 class Relation : public Term {
 public:
-    enum Type { EQUAL = 0, GREATER, GREATER_EQUAL };
+    enum Type { EQUAL = 0, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL };
     static const char* TypeNames[];
 
 public:
@@ -303,6 +316,29 @@ private:
 };
 
 
+class Power : public Term {
+public:
+    Power(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
+    void traverse(Visitor &visitor) override;
+    void traverse(ConstVisitor &visitor) const override;
+
+    std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                                   Expression &addToCost,
+                                                   ExpressionVector &addToGuard) const override;
+    std::shared_ptr<Term> substitute(const Substitution &sub) const override;
+    std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+
+    GiNaC::ex toGiNaC() const override;
+    Purrs::Expr toPurrs() const override;
+    std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
+
+private:
+    std::shared_ptr<Term> l, r;
+};
+
+
 class FunctionSymbol : public Term {
 public:
     FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<Term>> &args);
@@ -318,6 +354,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
     FunctionSymbolIndex getFunctionSymbol() const;
+    const std::vector<std::shared_ptr<Term>>& getArguments() const;
 
     Purrs::Expr toPurrs() const override;
     std::shared_ptr<Term> ginacify() const override;

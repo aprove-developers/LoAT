@@ -123,6 +123,11 @@ namespace Z3Toolbox {
      * Returns true iff the implication "AND(lhs) -> rhs" is a (z3-provable) tautology in all occurring symbols
      */
     bool checkTautologicImplication(const std::vector<Expression> &lhs, const Expression &rhs);
+
+    /**
+     * Returns true iff the implication "AND(lhs) -> OR(AND(rhs))" is a (z3-provable) tautology in all occurring symbols
+     */
+    bool checkTautologicImplication(const std::vector<Expression> &lhs, const std::vector<std::vector<Expression>> &rhs);
 }
 
 #endif // Z3TOOLBOX_H

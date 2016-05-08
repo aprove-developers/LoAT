@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x n)
+(RULES
+f(x) -> f(fib(x))
+fib(n) -> fib(n-1) + fib(n-2) :|: n > 2
+fib(2) -> 1
+fib(1) -> 1
+)
