@@ -27,6 +27,7 @@ public:
     bool solve();
 
 private:
+    bool findRealVars(const TT::Expression &term);
     bool findBaseCases();
     bool baseCasesAreSufficient();
     bool solve(Purrs::Expr &recurrence, const PurrsBaseCases &bc);
@@ -39,11 +40,17 @@ private:
     TT::Expression &result;
     TT::Expression &cost;
     TT::ExpressionVector &guard;
+    const FunctionSymbol& funSymbol;
+
+    // findRealVars()
+    // stores the indices of the "real" recursion variables
+    std::set<int> realVars;
 
     // attributes
     const RightHandSide *recursion;
-    VariableIndex critVar;
-    ExprSymbol critVarGiNaC;
+    int realVarIndex;
+    VariableIndex realVar;
+    ExprSymbol realVarGiNaC;
     std::map<Purrs::index_type,const RightHandSide*> baseCases;
 };
 

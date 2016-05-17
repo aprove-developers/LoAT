@@ -200,7 +200,9 @@ int main(int argc, char *argv[]) {
     RecursionGraph graph(problem);
     graph.printDot(dotStream, 0, "foo");
 
-    graph.solveRecursion(1);
+    for (int i = 0; i < problem.getFunctionSymbolCount(); ++i) {
+        graph.solveRecursion(i);
+    }
 
     graph.printDot(dotStream, 1, "bar");
 

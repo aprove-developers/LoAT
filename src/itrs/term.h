@@ -50,6 +50,9 @@ public:
     Expression operator-(const Expression &r) const;
     Expression operator*(const Expression &r) const;
 
+    int nops() const;
+    Expression op(int i) const;
+
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
 
@@ -62,6 +65,9 @@ public:
     void collectUpdates(std::vector<Expression> &updates) const;
     std::vector<Expression> getUpdates() const;
 
+    void collectFunctionApplications(std::vector<Expression> &app) const;
+    std::vector<Expression> getFunctionApplications() const;
+
     bool containsNoFunctionSymbols() const;
 
     Expression substitute(const Substitution &sub) const;
@@ -72,7 +78,7 @@ public:
 
 
     GiNaC::ex toGiNaC() const;
-    Purrs::Expr toPurrs() const;
+    Purrs::Expr toPurrs(int i = -1) const;
     Expression ginacify() const ;
     Expression unGinacify() const;
 
@@ -186,6 +192,9 @@ public:
     virtual void traverse(Visitor &visitor) = 0;
     virtual void traverse(ConstVisitor &visitor) const = 0;
 
+    virtual int nops() const = 0;
+    virtual std::shared_ptr<Term> op(int i) const = 0;
+
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
 
@@ -198,6 +207,9 @@ public:
     void collectUpdates(std::vector<Expression> &updates) const;
     std::vector<Expression> getUpdates() const;
 
+    void collectFunctionApplications(std::vector<Expression> &updates) const;
+    std::vector<Expression> getFunctionApplications() const;
+
     bool containsNoFunctionSymbols() const;
 
     virtual std::shared_ptr<Term> copy() const = 0;
@@ -208,7 +220,7 @@ public:
 
     EXCEPTION(UnsupportedOperationException, CustomException);
     virtual GiNaC::ex toGiNaC() const;
-    virtual Purrs::Expr toPurrs() const;
+    virtual Purrs::Expr toPurrs(int i) const;
     virtual std::shared_ptr<Term> ginacify() const = 0;
     virtual std::shared_ptr<Term> unGinacify() const = 0;
 
@@ -228,6 +240,9 @@ public:
     Relation(const ITRSProblem &itrs, Type type, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const;
+
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
 
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
@@ -253,6 +268,9 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const;
 
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression &addToCost,
@@ -261,7 +279,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
     GiNaC::ex toGiNaC() const override;
-    Purrs::Expr toPurrs() const override;
+    Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 
@@ -276,6 +294,9 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression &addToCost,
@@ -284,7 +305,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
     GiNaC::ex toGiNaC() const override;
-    Purrs::Expr toPurrs() const override;
+    Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 
@@ -299,6 +320,9 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression &addToCost,
@@ -307,7 +331,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
     GiNaC::ex toGiNaC() const override;
-    Purrs::Expr toPurrs() const override;
+    Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 
@@ -322,6 +346,9 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression &addToCost,
@@ -330,7 +357,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
     GiNaC::ex toGiNaC() const override;
-    Purrs::Expr toPurrs() const override;
+    Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 
@@ -346,6 +373,9 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression &addToCost,
@@ -356,7 +386,7 @@ public:
     FunctionSymbolIndex getFunctionSymbol() const;
     const std::vector<std::shared_ptr<Term>>& getArguments() const;
 
-    Purrs::Expr toPurrs() const override;
+    Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 
@@ -372,6 +402,9 @@ public:
     void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression &addToCost,
@@ -383,7 +416,7 @@ public:
     void setExpression(const GiNaC::ex &expr);
 
     GiNaC::ex toGiNaC() const override;
-    Purrs::Expr toPurrs() const override;
+    Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 

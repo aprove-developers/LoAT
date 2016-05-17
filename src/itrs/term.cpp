@@ -60,6 +60,16 @@ Expression Expression::operator*(const Expression &rhs) const {
 }
 
 
+int Expression::nops() const {
+    return root->nops();
+}
+
+
+Expression Expression::op(int i) const {
+    return Expression(root->op(i));
+}
+
+
 void Expression::collectVariables(ExprSymbolSet &set) const {
     root->collectVariables(set);
 }
@@ -100,6 +110,16 @@ std::vector<Expression> Expression::getUpdates() const {
 }
 
 
+void Expression::collectFunctionApplications(std::vector<Expression> &app) const {
+    return root->collectFunctionApplications(app);
+}
+
+
+std::vector<Expression> Expression::getFunctionApplications() const {
+    return root->getFunctionApplications();
+}
+
+
 bool Expression::containsNoFunctionSymbols() const {
     return root->containsNoFunctionSymbols();
 }
@@ -127,8 +147,8 @@ GiNaC::ex Expression::toGiNaC() const {
 }
 
 
-Purrs::Expr Expression::toPurrs() const {
-    return root->toPurrs();
+Purrs::Expr Expression::toPurrs(int i) const {
+    return root->toPurrs(i);
 }
 
 
@@ -373,6 +393,33 @@ std::vector<Expression> Term::getUpdates() const {
 }
 
 
+void Term::collectFunctionApplications(std::vector<Expression> &app) const {
+    class CollectingVisitor : public Term::ConstVisitor {
+    public:
+        CollectingVisitor(std::vector<Expression> &app)
+            : app(app) {
+        }
+
+        void visitPre(const FunctionSymbol &funSymbol) override {
+            app.push_back(Expression(funSymbol.copy()));
+        }
+
+    private:
+        std::vector<Expression> &app;
+    };
+
+    CollectingVisitor visitor(app);
+    traverse(visitor);
+}
+
+
+std::vector<Expression> Term::getFunctionApplications() const {
+    std::vector<Expression> app;
+    collectFunctionApplications(app);
+    return app;
+}
+
+
 bool Term::containsNoFunctionSymbols() const {
     class NoFuncSymbolsVisitor : public Term::ConstVisitor {
     public:
@@ -402,7 +449,7 @@ GiNaC::ex Term::toGiNaC() const {
 }
 
 
-Purrs::Expr Term::toPurrs() const {
+Purrs::Expr Term::toPurrs(int i) const {
     throw UnsupportedOperationException();
 }
 
@@ -508,6 +555,23 @@ void Relation::traverse(ConstVisitor &visitor) const {
     r->traverse(visitor);
 
     visitor.visitPost(*this);
+}
+
+
+int Relation::nops() const {
+    return 2;
+}
+
+
+std::shared_ptr<Term> Relation::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    if (i == 0) {
+        return l;
+
+    } else {
+        return r;
+    }
 }
 
 
@@ -621,6 +685,23 @@ void Addition::traverse(ConstVisitor &visitor) const {
 }
 
 
+int Addition::nops() const {
+    return 2;
+}
+
+
+std::shared_ptr<Term> Addition::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    if (i == 0) {
+        return l;
+
+    } else {
+        return r;
+    }
+}
+
+
 std::shared_ptr<Term> Addition::copy() const {
     return std::make_shared<Addition>(getITRSProblem(), l, r);
 }
@@ -654,8 +735,8 @@ GiNaC::ex Addition::toGiNaC() const {
 }
 
 
-Purrs::Expr Addition::toPurrs() const {
-    return l->toPurrs() + r->toPurrs();
+Purrs::Expr Addition::toPurrs(int i) const {
+    return l->toPurrs(i) + r->toPurrs(i);
 }
 
 
@@ -708,6 +789,23 @@ void Subtraction::traverse(ConstVisitor &visitor) const {
 }
 
 
+int Subtraction::nops() const {
+    return 2;
+}
+
+
+std::shared_ptr<Term> Subtraction::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    if (i == 0) {
+        return l;
+
+    } else {
+        return r;
+    }
+}
+
+
 std::shared_ptr<Term> Subtraction::copy() const {
     return std::make_shared<Subtraction>(getITRSProblem(), l, r);
 }
@@ -741,8 +839,8 @@ GiNaC::ex Subtraction::toGiNaC() const {
 }
 
 
-Purrs::Expr Subtraction::toPurrs() const {
-    return l->toPurrs() - r->toPurrs();
+Purrs::Expr Subtraction::toPurrs(int i) const {
+    return l->toPurrs(i) - r->toPurrs(i);
 }
 
 
@@ -795,6 +893,23 @@ void Multiplication::traverse(ConstVisitor &visitor) const {
 }
 
 
+int Multiplication::nops() const {
+    return 2;
+}
+
+
+std::shared_ptr<Term> Multiplication::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    if (i == 0) {
+        return l;
+
+    } else {
+        return r;
+    }
+}
+
+
 std::shared_ptr<Term> Multiplication::copy() const {
     return std::make_shared<Multiplication>(getITRSProblem(), l, r);
 }
@@ -833,8 +948,8 @@ std::shared_ptr<Term> Multiplication::unGinacify() const {
 }
 
 
-Purrs::Expr Multiplication::toPurrs() const {
-    return l->toPurrs() * r->toPurrs();
+Purrs::Expr Multiplication::toPurrs(int i) const {
+    return l->toPurrs(i) * r->toPurrs(i);
 }
 
 
@@ -881,6 +996,23 @@ void Power::traverse(ConstVisitor &visitor) const {
 }
 
 
+int Power::nops() const {
+    return 2;
+}
+
+
+std::shared_ptr<Term> Power::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    if (i == 0) {
+        return l;
+
+    } else {
+        return r;
+    }
+}
+
+
 std::shared_ptr<Term> Power::copy() const {
     return std::make_shared<Power>(getITRSProblem(), l, r);
 }
@@ -919,8 +1051,8 @@ std::shared_ptr<Term> Power::unGinacify() const {
 }
 
 
-Purrs::Expr Power::toPurrs() const {
-    return Purrs::pwr(l->toPurrs(), r->toPurrs());
+Purrs::Expr Power::toPurrs(int i) const {
+    return Purrs::pwr(l->toPurrs(i), r->toPurrs(i));
 }
 
 
@@ -975,6 +1107,18 @@ void FunctionSymbol::traverse(ConstVisitor &visitor) const {
     }
 
     visitor.visitPost(*this);
+}
+
+
+int FunctionSymbol::nops() const {
+    return args.size();
+}
+
+
+std::shared_ptr<Term> FunctionSymbol::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    return args[i];
 }
 
 
@@ -1053,9 +1197,10 @@ std::shared_ptr<Term> FunctionSymbol::substitute(const GiNaC::exmap &sub) const 
 }
 
 
-Purrs::Expr FunctionSymbol::toPurrs() const {
-    assert(args.size() == 1);
-    return Purrs::x(args[0]->toPurrs());
+Purrs::Expr FunctionSymbol::toPurrs(int i) const {
+    assert(i >= 0);
+    assert(i < args.size());
+    return Purrs::x(args[i]->toPurrs(i));
 }
 
 
@@ -1099,6 +1244,18 @@ void GiNaCExpression::traverse(Visitor &visitor) {
 
 void GiNaCExpression::traverse(ConstVisitor &visitor) const {
     visitor.visit(*this);
+}
+
+
+int GiNaCExpression::nops() const {
+    return 1;
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    return copy();
 }
 
 
@@ -1149,7 +1306,7 @@ GiNaC::ex GiNaCExpression::toGiNaC() const {
 }
 
 
-Purrs::Expr GiNaCExpression::toPurrs() const {
+Purrs::Expr GiNaCExpression::toPurrs(int i) const {
     return Purrs::Expr::fromGiNaC(expression);
 }
 
