@@ -20,23 +20,7 @@ Recursion::Recursion(const ITRSProblem &itrs,
 }
 
 bool Recursion::solve() {
-    recursion = nullptr;
-    for (const RightHandSide *rhs : rightHandSides) {
-        std::set<FunctionSymbolIndex> funSymbols = std::move(rhs->term.getFunctionSymbols());
-
-        if (funSymbols.size() == 1 && funSymbols.count(funSymbolIndex) == 1) {
-            debugPurrs("Found recursion: " << *rhs);
-
-            if (findRealVars(rhs->term)) {
-                debugPurrs("Recursion is suitable");
-                recursion = rhs;
-                rightHandSides.erase(rhs);
-                break;
-            }
-        }
-    }
-
-    if (recursion == nullptr) {
+    if (!findRecursion()) {
         debugPurrs("No suitable recursion found");
         return false;
     }
@@ -67,6 +51,7 @@ bool Recursion::solve() {
             return false;
         }
 
+
         debugPurrs("===Solving recursion===");
         GiNaC::exmap varSub;
         varSub.emplace(realVarGiNaC, Purrs::Expr(Purrs::Recurrence::n).toGiNaC());
@@ -86,8 +71,52 @@ bool Recursion::solve() {
         varReSub.emplace(Purrs::Expr(Purrs::Recurrence::n).toGiNaC(), realVarGiNaC);
         result = TT::Expression(itrs, recurrence.toGiNaC().subs(varReSub));
 
+
+        debugPurrs("===Constructing guard===");
+        debugPurrs("using guard of recursion:");
+        TT::ExpressionVector preEvaluatedGuard;
+        for (const TT::Expression &ex : recursion->guard) {
+            debugPurrs(ex);
+            guard.push_back(ex);
+            preEvaluatedGuard.push_back(ex);
+        }
+
+        // We already have the definition for this function symbol
+        // Evaluate all occurences in the guard and the cost
+        TT::Expression dummy(itrs, GiNaC::numeric(0));
+        TT::ExpressionVector dummyVector;
+        // TODO use pointers to avoid dummies
+        TT::FunctionDefinition funDef(funSymbolIndex, result, dummy, guard);
+
+        debugPurrs("Pre-evaluated guard:");
+        for (int i = 0; i < preEvaluatedGuard.size(); ++i) {
+            preEvaluatedGuard[i] = preEvaluatedGuard[i].evaluateFunction(funDef, dummy, dummyVector).ginacify();
+            debugPurrs(preEvaluatedGuard[i]);
+        }
+        // Update funDef
+        // TODO optimze
+        funDef = TT::FunctionDefinition(funSymbolIndex, result, dummy, preEvaluatedGuard);
+
+        debugPurrs("Evaluated guard:");
+        for (int i = 0; i < guard.size(); ++i) {
+            TT::Expression temp = std::move(guard[i]);
+            guard[i] = std::move(temp.evaluateFunction(funDef, dummy, guard).ginacify());
+
+            debugPurrs(guard[i]);
+        }
+
+        int oldSize = guard.size();
+        TT::Expression costRecurrence = recursion->cost.evaluateFunction(funDef, dummy, guard).ginacify();
+        for (int i = oldSize; i < guard.size(); ++i) {
+            guard[i] = guard[i].ginacify();
+        }
+        debugPurrs("After evaluating cost:");
+        for (const TT::Expression &ex : guard) {
+            debugPurrs(ex);
+        }
+
+
         debugPurrs("===Solving cost===");
-        TT::Expression costRecurrence = recursion->cost;
         for (const TT::Expression &funApp : recursion->term.getFunctionApplications()) {
             TT::Expression update = funApp.op(realVarIndex);
             std::vector<TT::Expression> updateAsVector;
@@ -108,12 +137,6 @@ bool Recursion::solve() {
 
         cost = TT::Expression(itrs, recurrence.toGiNaC().subs(varReSub));
 
-        debugPurrs("===Constructing guard===");
-        debugPurrs("using guard of recursion:");
-        for (const TT::Expression &ex : recursion->guard) {
-            debugPurrs(ex);
-            guard.push_back(ex);
-        }
 
         debugPurrs("===Resulting rhs===");
         debugPurrs("definition: " << result);
@@ -130,6 +153,47 @@ bool Recursion::solve() {
 
         return false;
     }
+}
+
+
+bool Recursion::findRecursion() {
+    recursion = nullptr;
+
+    for (const RightHandSide *rhs : rightHandSides) {
+        std::set<FunctionSymbolIndex> funSymbols = std::move(rhs->term.getFunctionSymbols());
+
+        if (funSymbols.size() == 1 && funSymbols.count(funSymbolIndex) == 1) {
+            debugPurrs("Found recursion: " << *rhs);
+
+            // Check if there are any function symbols besides funSymbol in the cost/guard
+            funSymbols = std::move(rhs->term.getFunctionSymbols());
+            if (funSymbols.size() > 0) {
+                if (funSymbols.size() > 1 || funSymbols.count(funSymbolIndex) == 0) {
+                    debugPurrs("cost contains an alien function symbol");
+                    continue;
+                }
+            }
+
+            for (const TT::Expression &ex : rhs->guard) {
+                funSymbols = std::move(ex.getFunctionSymbols());
+
+                if (funSymbols.size() > 0) {
+                    if (funSymbols.size() > 1 || funSymbols.count(funSymbolIndex) == 0) {
+                        debugPurrs("guard contains an alien function symbol");
+                    }
+                }
+            }
+
+            if (findRealVars(rhs->term)) {
+                debugPurrs("Recursion is suitable");
+                recursion = rhs;
+                rightHandSides.erase(rhs);
+                break;
+            }
+        }
+    }
+
+    return recursion != nullptr;
 }
 
 
@@ -227,8 +291,12 @@ bool Recursion::baseCasesAreSufficient() {
             debugPurrs("OR (updated base case guard)");
             std::vector<Expression> updatedGuard;
             for (const TT::Expression &ex : pair.second->guard) {
-                assert(ex.containsNoFunctionSymbols());
-                updatedGuard.push_back(ex.toGiNaC().subs(updateSub));
+                if (!ex.containsNoFunctionSymbols()) {
+                    debugPurrs("Warning: guard contains function symbol, substituting by variable");
+                }
+
+                // Using toGiNaC(true) to substitute function symbols by variables
+                updatedGuard.push_back(ex.toGiNaC(true).subs(updateSub));
                 debugPurrs("\tAND " << updatedGuard.back());
             }
             Expression forceCritVar(realVarGiNaC == pair.first);
@@ -240,12 +308,18 @@ bool Recursion::baseCasesAreSufficient() {
 
         std::vector<Expression> queryLhs; // conjunction
         for (const TT::Expression &ex : recursion->guard) {
-            assert(ex.containsNoFunctionSymbols());
-            queryLhs.push_back(ex.toGiNaC());
+            if (!ex.containsNoFunctionSymbols()) {
+                debugPurrs("Warning: guard contains function symbol, substituting by variable");
+            }
+
+            // Using toGiNaC(true) to substitute function symbols by variables
+
+            queryLhs.push_back(ex.toGiNaC(true));
         }
 
         for (const TT::Expression &negateEx : recursion->guard) {
-            queryLhs.push_back(GT::negateLessEqualInequality(GT::makeLessEqual(negateEx.toGiNaC().subs(updateSub))));
+            // Using toGiNaC(true) to substitute function symbols by variables
+            queryLhs.push_back(GT::negateLessEqualInequality(GT::makeLessEqual(negateEx.toGiNaC(true).subs(updateSub))));
 
             debugPurrs("LHS:");
             for (const Expression &ex : queryLhs) {

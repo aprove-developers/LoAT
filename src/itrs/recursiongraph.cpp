@@ -19,6 +19,9 @@
 
 #include "term.h"
 #include "recursion.h"
+#include "stats.h"
+#include "timeout.h"
+#include "z3toolbox.h"
 
 using namespace std;
 namespace Purrs = Parma_Recurrence_Relation_Solver;
@@ -85,33 +88,6 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
     RightHandSideIndex rhsIndex = nextRightHandSide++;
     rightHandSides.emplace(rhsIndex, defRhs);
     addTrans(node, NULLNODE, rhsIndex);
-
-    // replace calls to funSymbol by their definition
-    debugRecGraph("evaluating function");
-    TT::FunctionDefinition funDef(funSymbolIndex, defRhs.term, defRhs.cost, defRhs.guard);
-    debugRecGraph("definition:" << funDef.getDefinition());
-
-    std:set<RightHandSide*> alreadyEvaluated;
-    for (TransIndex trans : getTransTo(node)) {
-        RightHandSide &rhs = rightHandSides.at(getTransData(trans));
-
-        if (alreadyEvaluated.count(&rhs) == 0) {
-            debugRecGraph("rhs before: " << rhs);
-            rhs.term = rhs.term.evaluateFunction(funDef, rhs.cost, rhs.guard).ginacify();
-            TT::Expression dummy;
-            rhs.cost = rhs.cost.evaluateFunction(funDef, dummy, rhs.guard).ginacify();
-            for (int i = 0; i < rhs.guard.size(); ++i) {
-                // the following call might add new elements to rhs.guard
-                rhs.guard[i] = rhs.guard[i].evaluateFunction(funDef, dummy, rhs.guard).ginacify();
-            }
-
-            debugRecGraph("rhs after: " << rhs);
-
-            alreadyEvaluated.insert(&rhs);
-        }
-
-        removeTrans(trans);
-    }
 
     return true;
 }
@@ -233,6 +209,24 @@ void RecursionGraph::printDotText(ostream &s, int step, const string &txt) const
 }
 
 
+bool RecursionGraph::chainLinear() {
+    Timing::Scope timer(Timing::Contract);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("FlowGraph::chainLinear");
+
+    set<NodeIndex> visited;
+    bool res = chainLinearPaths(initial,visited);
+    removeIncorrectTransitionsToNullNode();
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER CONTRACT ===========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER CONTRACT ===========/ " << endl;
+#endif
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
 void RecursionGraph::addRule(const ITRSRule &rule) {
     RightHandSide rhs;
     for (const Expression &ex : rule.guard) {
@@ -242,15 +236,167 @@ void RecursionGraph::addRule(const ITRSRule &rule) {
     rhs.cost = TT::Expression(itrs, rule.cost);
 
     NodeIndex src = (NodeIndex)rule.lhs;
-    std::vector<NodeIndex> dsts = (std::vector<NodeIndex>)rhs.term.getFunctionSymbolsAsVector();
+    std::set<NodeIndex> dsts = (std::set<NodeIndex>)rhs.term.getFunctionSymbols();
     if (dsts.empty()) {
-        dsts.push_back(NULLNODE);
+        dsts.insert(NULLNODE);
     }
 
     RightHandSideIndex rhsIndex = nextRightHandSide++;
-    rightHandSides.insert(std::make_pair(rhsIndex, rhs));
+    rightHandSides.emplace(rhsIndex, rhs);
 
     for (NodeIndex dst : dsts) {
         addTrans(src, dst, rhsIndex);
+    }
+}
+
+
+bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
+                                         const FunctionSymbolIndex funSymbolIndex,
+                                         const RightHandSide &followRhs) const {
+    const FunctionSymbol &funSymbol = itrs.getFunctionSymbol(funSymbolIndex);
+    const TT::FunctionDefinition funDef(funSymbolIndex, followRhs.term, followRhs.cost, followRhs.guard);
+
+    // perform rewriting on a copy of rhs
+    RightHandSide rhsCopy(rhs);
+    rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, rhsCopy.cost, rhsCopy.guard).ginacify();
+    TT::Expression dummy(itrs, GiNaC::numeric(0));
+    rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, dummy, rhsCopy.guard).ginacify();
+    for (int i = 0; i < rhsCopy.guard.size(); ++i) {
+           // the following call might add new elements to rhsCopy.guard
+           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction(funDef, dummy, rhsCopy.guard).ginacify();
+    }
+
+
+    GuardList funSymbolFreeGuard;
+    for (const TT::Expression &ex : rhsCopy.guard) {
+        if (!ex.containsNoFunctionSymbols()) {
+            // toGiNaC(true) -> Substitute function symbols by fresh variables
+            funSymbolFreeGuard.push_back(ex.toGiNaC(true));
+        }
+    }
+
+#ifdef CONTRACT_CHECK_SAT
+    auto z3res = Z3Toolbox::checkExpressionsSAT(funSymbolFreeGuard);
+
+#ifdef CONTRACT_CHECK_SAT_APPROXIMATE
+    //try to solve an approximate problem instead, as we do not need 100% soundness here
+    if (z3res == z3::unknown) {
+        debugProblem("Contract unknown, try approximation for: "
+                     << rhs << " + " << funSymbol.getName() << " -> " << followRhs);
+        z3res = Z3Toolbox::checkExpressionsSATapproximate(funSymbolFreeGuard);
+    }
+#endif
+
+#ifdef CONTRACT_CHECK_EXP_OVER_UNKNOWN
+    Expression funSymbolFreeCost = rhsCopy.cost.toGiNaC(true);
+    if (z3res == z3::unknown && funSymbolFreeCost.getComplexity() == Expression::ComplexExp) {
+        debugGraph("Contract: keeping unknown because of EXP cost");
+        z3res = z3::sat;
+    }
+#endif
+
+    if (z3res != z3::sat) {
+        debugGraph("Contract: aborting due to notSAT for transitions: "
+                   << rhs << " + " << funSymbol.getName() << " -> " << followRhs);
+        Stats::add(Stats::ContractUnsat);
+#ifdef DEBUG_PROBLEMS
+        if (z3res == z3::unknown) {
+            debugProblem("Contract final unknown for: " << rhs << " + " << followRhs);
+        }
+#endif
+        return false;
+    }
+#endif
+
+    // move term and guard
+    rhs.term = std::move(rhsCopy.term);
+    rhs.guard = std::move(rhsCopy.guard);
+
+    // move cost, but keep INF if present
+    // TODO optimize (isInfinity() member function)
+    if ((rhs.cost.containsNoFunctionSymbols() && Expression(rhs.cost.toGiNaC()).isInfty())
+        || (followRhs.cost.containsNoFunctionSymbols() && Expression(followRhs.cost.toGiNaC()).isInfty())) {
+        rhs.cost = TT::Expression(itrs, Expression::Infty);
+
+    } else {
+        rhs.cost = std::move(rhsCopy.cost);
+    }
+    return true;
+}
+
+
+bool RecursionGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
+    if (visited.count(node) > 0) return false;
+
+    bool modified = false;
+    bool changed;
+    do {
+        changed = false;
+        vector<TransIndex> out = std::move(getTransFrom(node));
+        for (TransIndex t : out) {
+            RightHandSideIndex rhsIndex = getTransData(t);
+            NodeIndex dst = getTransTarget(t);
+            if (dst == initial) continue; //avoid isolating the initial node (has an implicit "incoming edge")
+
+            //check for a safe linear path, i.e. dst has no other incoming and outgoing transitions
+            vector<TransIndex> dstOut = getTransFrom(dst);
+            if (dstOut.size() > 0) {
+                // check if all outgoing transitions are labeled with the same rhs
+                RightHandSideIndex followRhsIndex = getTransData(dstOut[0]);
+                bool onlyOneRhs = true;
+                for (TransIndex index : dstOut) {
+                    if (getTransData(index) != followRhsIndex) {
+                        onlyOneRhs = false;
+                        break;
+                    }
+                }
+
+                // check if this path is "linear"
+                set<NodeIndex> dstPred = std::move(getPredecessors(dst));
+                if (onlyOneRhs
+                    && dstPred.size() == 1
+                    && getTransFromTo(*dstPred.begin(), dst).size() == 1) {
+                    RightHandSide &rhs = rightHandSides.at(rhsIndex);
+                    const RightHandSide &followRhs = rightHandSides.at(followRhsIndex);
+
+                    if (chainRightHandSides(rhs, dst, followRhs)) {
+                        // change the target of t so that one does not have to remove it
+                        changeTransTarget(t, getTransTarget(dstOut[0]));
+                        // add new for the remaining function symbols
+                        for (int i = 1; i < dstOut.size(); i++) {
+                            addTrans(*dstPred.begin(), getTransTarget(dstOut[i]), rhsIndex);
+                        }
+
+                        // removing dst also removes all outgoing transitions
+                        removeNode(dst);
+                        nodes.erase(dst);
+                        // remove the chained rhs
+                        rightHandSides.erase(followRhsIndex);
+                        changed = true;
+                        Stats::add(Stats::ContractLinear);
+                    }
+
+                }
+            }
+        }
+        modified = changed || modified;
+        if (Timeout::soft()) return modified;
+    } while (changed);
+
+    visited.insert(node);
+    for (NodeIndex next : getSuccessors(node)) {
+        modified = chainLinearPaths(next,visited) || modified;
+        if (Timeout::soft()) return modified;
+    }
+    return modified;
+}
+
+
+void RecursionGraph::removeIncorrectTransitionsToNullNode() {
+    vector<TransIndex> toNull = getTransTo(NULLNODE);
+    for (TransIndex trans : toNull) {
+        if (!rightHandSides.at(getTransData(trans)).term.containsNoFunctionSymbols()) {
+            removeTrans(trans);
+        }
     }
 }

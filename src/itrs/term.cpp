@@ -39,6 +39,22 @@ Expression& Expression::operator=(const Expression &r) {
     } else {
         root = nullptr;
     }
+
+    return *this;
+}
+
+
+Expression::Expression(Expression &&ex) {
+    root = ex.root;
+    ex.root = nullptr;
+}
+
+
+Expression& Expression::operator=(Expression &&r) {
+    root = r.root;
+    r.root = nullptr;
+
+    return *this;
 }
 
 
@@ -142,8 +158,8 @@ Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
 }
 
 
-GiNaC::ex Expression::toGiNaC() const {
-    return root->toGiNaC();
+GiNaC::ex Expression::toGiNaC(bool subFunSyms) const {
+    return root->toGiNaC(subFunSyms);
 }
 
 
@@ -444,7 +460,7 @@ bool Term::containsNoFunctionSymbols() const {
 }
 
 
-GiNaC::ex Term::toGiNaC() const {
+GiNaC::ex Term::toGiNaC(bool subFunSyms) const {
     throw UnsupportedOperationException();
 }
 
@@ -512,7 +528,7 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
             os << ")";
         }
         void visit(const GiNaCExpression &expr) override {
-            os << expr.getExpression();
+            os << "(" << expr.getExpression() << ")";
         }
 
     private:
@@ -611,24 +627,27 @@ Relation::Type Relation::getType() const {
 }
 
 
-GiNaC::ex Relation::toGiNaC() const {
+GiNaC::ex Relation::toGiNaC(bool subFunSyms) const {
+    GiNaC::ex newL = l->toGiNaC(subFunSyms);
+    GiNaC::ex newR = r->toGiNaC(subFunSyms);
+
     if (type == EQUAL) {
-        return l->toGiNaC() == r->toGiNaC();
+        return newL == newR;
 
     } else if (type == NOT_EQUAL) {
-        return l->toGiNaC() != r->toGiNaC();
+        return newL != newR;
 
     } else if (type == GREATER) {
-        return l->toGiNaC() > r->toGiNaC();
+        return newL > newR;
 
     } else if (type == GREATER_EQUAL) {
-        return l->toGiNaC() >= r->toGiNaC();
+        return newL >= newR;
 
     } else if (type == LESS) {
-        return l->toGiNaC() < r->toGiNaC();
+        return newL < newR;
 
     } else if (type == LESS_EQUAL) {
-        return l->toGiNaC() <= r->toGiNaC();
+        return newL <= newR;
 
     } else {
         throw UnsupportedExpressionException();
@@ -730,8 +749,8 @@ std::shared_ptr<Term> Addition::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Addition::toGiNaC() const {
-    return l->toGiNaC() + r->toGiNaC();
+GiNaC::ex Addition::toGiNaC(bool subFunSyms) const {
+    return l->toGiNaC(subFunSyms) + r->toGiNaC(subFunSyms);
 }
 
 
@@ -834,8 +853,8 @@ std::shared_ptr<Term> Subtraction::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Subtraction::toGiNaC() const {
-    return l->toGiNaC() - r->toGiNaC();
+GiNaC::ex Subtraction::toGiNaC(bool subFunSyms) const {
+    return l->toGiNaC(subFunSyms) - r->toGiNaC(subFunSyms);
 }
 
 
@@ -938,8 +957,8 @@ std::shared_ptr<Term> Multiplication::substitute(const GiNaC::exmap &sub) const 
 }
 
 
-GiNaC::ex Multiplication::toGiNaC() const {
-    return l->toGiNaC() * r->toGiNaC();
+GiNaC::ex Multiplication::toGiNaC(bool subFunSyms) const {
+    return l->toGiNaC(subFunSyms) * r->toGiNaC(subFunSyms);
 }
 
 
@@ -1041,8 +1060,8 @@ std::shared_ptr<Term> Power::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Power::toGiNaC() const {
-    return GiNaC::pow(l->toGiNaC(), r->toGiNaC());
+GiNaC::ex Power::toGiNaC(bool subFunSyms) const {
+    return GiNaC::pow(l->toGiNaC(subFunSyms), r->toGiNaC(subFunSyms));
 }
 
 
@@ -1152,6 +1171,7 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
             debugTerm("\t" << var << "\\" << *newArgs[i]);
         }
 
+
         // apply the sub
         addToCost = addToCost + funDef.getCost().substitute(sub);
 
@@ -1159,7 +1179,11 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
             addToGuard.push_back(ex.substitute(sub));
         }
 
-        return funDef.getDefinition().getTermTree()->substitute(sub);
+        debugTerm("funDef: " << funDef.getDefinition());
+        std::shared_ptr<Term> result = funDef.getDefinition().getTermTree()->substitute(sub);
+        debugTerm("result: " << *result);
+
+        return result;
 
     } else {
         return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
@@ -1194,6 +1218,16 @@ std::shared_ptr<Term> FunctionSymbol::substitute(const GiNaC::exmap &sub) const 
     }
 
     return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+}
+
+
+GiNaC::ex FunctionSymbol::toGiNaC(bool subFunSyms) const {
+    if (subFunSyms) {
+        return ExprSymbol(getITRSProblem().getFunctionSymbol(functionSymbol).getName());
+
+    } else {
+        throw UnsupportedOperationException();
+    }
 }
 
 
@@ -1265,8 +1299,8 @@ std::shared_ptr<Term> GiNaCExpression::copy() const {
 
 
 std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
-                                                       Expression &addToCost,
-                                                       ExpressionVector &addToGuard) const {
+                                                        Expression &addToCost,
+                                                        ExpressionVector &addToGuard) const {
 
     return copy();
 }
@@ -1301,7 +1335,7 @@ std::shared_ptr<Term> GiNaCExpression::substitute(const GiNaC::exmap &sub) const
 }
 
 
-GiNaC::ex GiNaCExpression::toGiNaC() const {
+GiNaC::ex GiNaCExpression::toGiNaC(bool subFunSyms) const {
     return expression;
 }
 

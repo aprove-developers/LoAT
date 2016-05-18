@@ -67,12 +67,38 @@ public:
     void printDot(std::ostream &s, int step, const std::string &desc) const;
     void printDotText(std::ostream &s, int step, const std::string &desc) const;
 
+    /**
+     * Apply simple chaining (i.e. only linear paths)
+     * @return true iff the graph was modified
+     */
+    bool chainLinear();
+
 private:
 
     /**
      * Adds the given rule to this graph, calculating the required update
      */
     void addRule(const ITRSRule &rule);
+
+    /**
+     * Chains transition followTrans into trans
+     * @param trans the first transition, will be modified
+     * @param followTrans the second transition. Must follow trans!
+     * @note it is valid for trans and followTrans to point to the same data
+     * @note does only affect trans, the internal transitions are *not* modified
+     * @return true iff contraction was performed, false if aborted as result was not SATable
+     */
+    bool chainRightHandSides(RightHandSide &rhs,
+                             const FunctionSymbolIndex funSymbolIndex,
+                             const RightHandSide &followRhs) const;
+
+    /**
+     * Internal function for chainLinear
+     * @return true iff the graph was modified
+     */
+    bool chainLinearPaths(NodeIndex node, std::set<NodeIndex> &visited);
+
+    void removeIncorrectTransitionsToNullNode();
 
 private:
     ITRSProblem &itrs;

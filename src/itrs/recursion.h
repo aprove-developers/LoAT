@@ -27,6 +27,7 @@ public:
     bool solve();
 
 private:
+    bool findRecursion();
     bool findRealVars(const TT::Expression &term);
     bool findBaseCases();
     bool baseCasesAreSufficient();

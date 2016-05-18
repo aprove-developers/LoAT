@@ -206,6 +206,20 @@ int main(int argc, char *argv[]) {
 
     graph.printDot(dotStream, 1, "bar");
 
+    graph.chainLinear();
+
+    graph.printDot(dotStream, 2, "baz");
+
+    for (int i = 0; i < problem.getFunctionSymbolCount(); ++i) {
+        graph.solveRecursion(i);
+    }
+
+    graph.printDot(dotStream, 3, "bar2");
+
+    graph.chainLinear();
+
+    graph.printDot(dotStream, 4, "baz2");
+
 
     dotStream << "\n}";
     return 0;
