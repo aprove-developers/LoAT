@@ -58,6 +58,72 @@ Expression& Expression::operator=(Expression &&r) {
 }
 
 
+Expression Expression::operator+(const GiNaC::ex &rhs) const {
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Addition>(root->getITRSProblem(), root, r));
+}
+
+
+Expression Expression::operator-(const GiNaC::ex &rhs) const {
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Subtraction>(root->getITRSProblem(), root, r));
+}
+
+
+Expression Expression::operator*(const GiNaC::ex &rhs) const {
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Multiplication>(root->getITRSProblem(), root, r));
+}
+
+
+Expression Expression::operator==(const GiNaC::ex &rhs) const {
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(GiNaC::info_flags::relation));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::EQUAL, root, r));
+}
+
+
+Expression Expression::operator!=(const GiNaC::ex &rhs) const {
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(GiNaC::info_flags::relation));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::NOT_EQUAL, root, r));
+}
+
+
+Expression Expression::operator<(const GiNaC::ex &rhs) const {
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(GiNaC::info_flags::relation));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS, root, r));
+}
+
+
+Expression Expression::operator<=(const GiNaC::ex &rhs) const {
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(GiNaC::info_flags::relation));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS_EQUAL, root, r));
+}
+
+
+Expression Expression::operator>(const GiNaC::ex &rhs) const {
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(GiNaC::info_flags::relation));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER, root, r));
+}
+
+
+Expression Expression::operator>=(const GiNaC::ex &rhs) const {
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(GiNaC::info_flags::relation));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER_EQUAL, root, r));
+}
+
+
 Expression Expression::operator+(const Expression &rhs) const {
     assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     return Expression(std::make_shared<Addition>(root->getITRSProblem(), root, rhs.root));
@@ -76,6 +142,77 @@ Expression Expression::operator*(const Expression &rhs) const {
 }
 
 
+Expression Expression::operator==(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(InfoFlag::Relation));
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::EQUAL, root, rhs.root));
+}
+
+
+Expression Expression::operator!=(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(InfoFlag::Relation));
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::NOT_EQUAL, root, rhs.root));
+}
+
+
+Expression Expression::operator<(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(InfoFlag::Relation));
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS, root, rhs.root));
+}
+
+
+Expression Expression::operator<=(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(InfoFlag::Relation));
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS_EQUAL, root, rhs.root));
+}
+
+
+Expression Expression::operator>(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(InfoFlag::Relation));
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER, root, rhs.root));
+}
+
+
+Expression Expression::operator>=(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    assert(!info(InfoFlag::Relation));
+    assert(!rhs.info(InfoFlag::Relation));
+    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER_EQUAL, root, rhs.root));
+}
+
+
+Expression& Expression::operator+=(const Expression &rhs) {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    root = std::make_shared<Addition>(root->getITRSProblem(), root, rhs.root);
+    return *this;
+}
+
+
+Expression& Expression::operator-=(const Expression &rhs) {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    root = std::make_shared<Subtraction>(root->getITRSProblem(), root, rhs.root);
+    return *this;
+
+}
+
+
+Expression& Expression::operator*=(const Expression &rhs) {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    root = std::make_shared<Multiplication>(root->getITRSProblem(), root, rhs.root);
+    return *this;
+
+}
+
+
 int Expression::nops() const {
     return root->nops();
 }
@@ -83,6 +220,16 @@ int Expression::nops() const {
 
 Expression Expression::op(int i) const {
     return Expression(root->op(i));
+}
+
+
+bool Expression::info(InfoFlag info) const {
+    return root->info(info);
+}
+
+
+bool Expression::has(const ExprSymbol &sym) const {
+    return root->has(sym);
 }
 
 
@@ -141,6 +288,11 @@ bool Expression::containsNoFunctionSymbols() const {
 }
 
 
+bool Expression::containsExactlyOneFunctionSymbol() const {
+    return root->containsExactlyOneFunctionSymbol();
+}
+
+
 Expression Expression::substitute(const Substitution &sub) const {
     return Expression(root->substitute(sub));
 }
@@ -152,8 +304,8 @@ Expression Expression::substitute(const GiNaC::exmap &sub) const {
 
 
 Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
-                                        Expression &addToCost,
-                                        ExpressionVector &addToGuard) const {
+                                        Expression *addToCost,
+                                        ExpressionVector *addToGuard) const {
     return Expression(root->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
@@ -295,6 +447,32 @@ Term::~Term() {
 
 const ITRSProblem& Term::getITRSProblem() const {
     return itrs;
+}
+
+
+bool Term::has(const ExprSymbol &sym) const {
+    class HasVisitor : public Term::ConstVisitor {
+    public:
+        HasVisitor(const ExprSymbol &symbol)
+            : symbol(symbol), hasSym(false) {
+        }
+
+        void visit(const GiNaCExpression &expr) override {
+            hasSym = hasSym || expr.has(symbol);
+        }
+
+        bool hasSymbol() const {
+            return hasSym;
+        }
+
+    private:
+        const ExprSymbol &symbol;
+        bool hasSym;
+    };
+
+    HasVisitor visitor(sym);
+    traverse(visitor);
+    return visitor.hasSymbol();
 }
 
 
@@ -460,6 +638,41 @@ bool Term::containsNoFunctionSymbols() const {
 }
 
 
+bool Term::containsExactlyOneFunctionSymbol() const {
+    class ExactlyOneFunSymbolVisitor : public Term::ConstVisitor {
+    public:
+        ExactlyOneFunSymbolVisitor(bool &oneFunSymbol)
+            : oneFunSymbol(oneFunSymbol) {
+            funSymbol = false;
+            oneFunSymbol = 0;
+        }
+
+        void visitPre(const FunctionSymbol &fs) override {
+            if (oneFunSymbol) {
+                if (funSymbol != fs.getFunctionSymbol()) {
+                    oneFunSymbol = false;
+                    funSymbol = -1;
+                }
+
+            } else if (oneFunSymbol != -1) {
+                oneFunSymbol = true;
+                funSymbol = fs.getFunctionSymbol();
+            }
+        }
+
+    private:
+        bool &oneFunSymbol;
+        FunctionSymbolIndex funSymbol;
+    };
+
+    bool oneFunSymbol;
+    ExactlyOneFunSymbolVisitor visitor(oneFunSymbol);
+    traverse(visitor);
+
+    return oneFunSymbol;
+}
+
+
 GiNaC::ex Term::toGiNaC(bool subFunSyms) const {
     throw UnsupportedOperationException();
 }
@@ -548,19 +761,6 @@ Relation::Relation(const ITRSProblem &itrs, Type type, const std::shared_ptr<Ter
 }
 
 
-void Relation::traverse(Visitor &visitor) {
-    visitor.visitPre(*this);
-
-    l->traverse(visitor);
-
-    visitor.visitIn(*this);
-
-    r->traverse(visitor);
-
-    visitor.visitPost(*this);
-}
-
-
 void Relation::traverse(ConstVisitor &visitor) const {
     visitor.visitPre(*this);
 
@@ -591,14 +791,19 @@ std::shared_ptr<Term> Relation::op(int i) const {
 }
 
 
+bool Relation::info(InfoFlag info) const {
+    return info == InfoFlag::Relation || info == getTypeInfoFlag();
+}
+
+
 std::shared_ptr<Term> Relation::copy() const {
     return std::make_shared<Relation>(getITRSProblem(), type, l, r);
 }
 
 
 std::shared_ptr<Term> Relation::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 ExpressionVector &addToGuard) const {
+                                                 Expression *addToCost,
+                                                 ExpressionVector *addToGuard) const {
     return std::make_shared<Relation>(getITRSProblem(),
                                       type,
                                       l->evaluateFunction(funDef, addToCost, addToGuard),
@@ -624,6 +829,38 @@ std::shared_ptr<Term> Relation::substitute(const GiNaC::exmap &sub) const {
 
 Relation::Type Relation::getType() const {
     return type;
+}
+
+
+InfoFlag Relation::getTypeInfoFlag() const {
+    switch (type) {
+        case EQUAL:
+            return InfoFlag::RelationEqual;
+            break;
+
+        case NOT_EQUAL:
+            return InfoFlag::RelationNotEqual;
+            break;
+
+        case GREATER:
+            return InfoFlag::RelationGreater;
+            break;
+
+        case GREATER_EQUAL:
+            return InfoFlag::RelationGreaterEqual;
+            break;
+
+        case LESS:
+            return InfoFlag::RelationLess;
+            break;
+
+        case LESS_EQUAL:
+            return InfoFlag::RelationLessEqual;
+            break;
+
+        default:
+            assert(false);
+    }
 }
 
 
@@ -678,19 +915,6 @@ Addition::Addition(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, cons
 }
 
 
-void Addition::traverse(Visitor &visitor) {
-    visitor.visitPre(*this);
-
-    l->traverse(visitor);
-
-    visitor.visitIn(*this);
-
-    r->traverse(visitor);
-
-    visitor.visitPost(*this);
-}
-
-
 void Addition::traverse(ConstVisitor &visitor) const {
     visitor.visitPre(*this);
 
@@ -721,14 +945,19 @@ std::shared_ptr<Term> Addition::op(int i) const {
 }
 
 
+bool Addition::info(InfoFlag info) const {
+    return info == InfoFlag::Addition;
+}
+
+
 std::shared_ptr<Term> Addition::copy() const {
     return std::make_shared<Addition>(getITRSProblem(), l, r);
 }
 
 
 std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 ExpressionVector &addToGuard) const {
+                                                 Expression *addToCost,
+                                                 ExpressionVector *addToGuard) const {
     return std::make_shared<Addition>(getITRSProblem(),
                                       l->evaluateFunction(funDef, addToCost, addToGuard),
                                       r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -782,19 +1011,6 @@ Subtraction::Subtraction(const ITRSProblem &itrs, const std::shared_ptr<Term> &l
 }
 
 
-void Subtraction::traverse(Visitor &visitor) {
-    visitor.visitPre(*this);
-
-    l->traverse(visitor);
-
-    visitor.visitIn(*this);
-
-    r->traverse(visitor);
-
-    visitor.visitPost(*this);
-}
-
-
 void Subtraction::traverse(ConstVisitor &visitor) const {
     visitor.visitPre(*this);
 
@@ -825,14 +1041,19 @@ std::shared_ptr<Term> Subtraction::op(int i) const {
 }
 
 
+bool Subtraction::info(InfoFlag info) const {
+    return info == InfoFlag::Subtraction;
+}
+
+
 std::shared_ptr<Term> Subtraction::copy() const {
     return std::make_shared<Subtraction>(getITRSProblem(), l, r);
 }
 
 
 std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 ExpressionVector &addToGuard) const {
+                                                 Expression *addToCost,
+                                                 ExpressionVector *addToGuard) const {
     return std::make_shared<Subtraction>(getITRSProblem(),
                                          l->evaluateFunction(funDef, addToCost, addToGuard),
                                          r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -886,19 +1107,6 @@ Multiplication::Multiplication(const ITRSProblem &itrs, const std::shared_ptr<Te
 }
 
 
-void Multiplication::traverse(Visitor &visitor) {
-    visitor.visitPre(*this);
-
-    l->traverse(visitor);
-
-    visitor.visitIn(*this);
-
-    r->traverse(visitor);
-
-    visitor.visitPost(*this);
-}
-
-
 void Multiplication::traverse(ConstVisitor &visitor) const {
     visitor.visitPre(*this);
 
@@ -929,14 +1137,19 @@ std::shared_ptr<Term> Multiplication::op(int i) const {
 }
 
 
+bool Multiplication::info(InfoFlag info) const {
+    return info == InfoFlag::Multiplication;
+}
+
+
 std::shared_ptr<Term> Multiplication::copy() const {
     return std::make_shared<Multiplication>(getITRSProblem(), l, r);
 }
 
 
 std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 ExpressionVector &addToGuard) const {
+                                                 Expression *addToCost,
+                                                 ExpressionVector *addToGuard) const {
     return std::make_shared<Multiplication>(getITRSProblem(),
                                             l->evaluateFunction(funDef, addToCost, addToGuard),
                                             r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -989,19 +1202,6 @@ Power::Power(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std:
 }
 
 
-void Power::traverse(Visitor &visitor) {
-    visitor.visitPre(*this);
-
-    l->traverse(visitor);
-
-    visitor.visitIn(*this);
-
-    r->traverse(visitor);
-
-    visitor.visitPost(*this);
-}
-
-
 void Power::traverse(ConstVisitor &visitor) const {
     visitor.visitPre(*this);
 
@@ -1032,14 +1232,19 @@ std::shared_ptr<Term> Power::op(int i) const {
 }
 
 
+bool Power::info(InfoFlag info) const {
+    return info == InfoFlag::Power;
+}
+
+
 std::shared_ptr<Term> Power::copy() const {
     return std::make_shared<Power>(getITRSProblem(), l, r);
 }
 
 
 std::shared_ptr<Term> Power::evaluateFunction(const FunctionDefinition &funDef,
-                                                 Expression &addToCost,
-                                                 ExpressionVector &addToGuard) const {
+                                                 Expression *addToCost,
+                                                 ExpressionVector *addToGuard) const {
     return std::make_shared<Power>(getITRSProblem(),
                                             l->evaluateFunction(funDef, addToCost, addToGuard),
                                             r->evaluateFunction(funDef, addToCost, addToGuard));
@@ -1099,21 +1304,6 @@ FunctionSymbol::FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex func
 }
 
 
-void FunctionSymbol::traverse(Visitor &visitor) {
-    visitor.visitPre(*this);
-
-    for (int i = 0; i < args.size(); ++i) {
-        if (i > 0) {
-            visitor.visitIn(*this);
-        }
-
-        args[i]->traverse(visitor);
-    }
-
-    visitor.visitPost(*this);
-}
-
-
 void FunctionSymbol::traverse(ConstVisitor &visitor) const {
     visitor.visitPre(*this);
 
@@ -1141,14 +1331,19 @@ std::shared_ptr<Term> FunctionSymbol::op(int i) const {
 }
 
 
+bool FunctionSymbol::info(InfoFlag info) const {
+    return info == InfoFlag::FunctionSymbol;
+}
+
+
 std::shared_ptr<Term> FunctionSymbol::copy() const {
     return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, args);
 }
 
 
 std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition &funDef,
-                                                       Expression &addToCost,
-                                                       ExpressionVector &addToGuard) const {
+                                                       Expression *addToCost,
+                                                       ExpressionVector *addToGuard) const {
     debugTerm("evaluate: at " << *this);
     // evaluate arguments first
     std::vector<std::shared_ptr<Term>> newArgs;
@@ -1173,10 +1368,14 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
 
 
         // apply the sub
-        addToCost = addToCost + funDef.getCost().substitute(sub);
+        if (addToCost) {
+            *addToCost = *addToCost + funDef.getCost().substitute(sub);
+        }
 
-        for (const Expression &ex : funDef.getGuard()) {
-            addToGuard.push_back(ex.substitute(sub));
+        if (addToGuard) {
+            for (const Expression &ex : funDef.getGuard()) {
+                addToGuard->push_back(ex.substitute(sub));
+            }
         }
 
         debugTerm("funDef: " << funDef.getDefinition());
@@ -1223,7 +1422,7 @@ std::shared_ptr<Term> FunctionSymbol::substitute(const GiNaC::exmap &sub) const 
 
 GiNaC::ex FunctionSymbol::toGiNaC(bool subFunSyms) const {
     if (subFunSyms) {
-        return ExprSymbol(getITRSProblem().getFunctionSymbol(functionSymbol).getName());
+        return ExprSymbol();
 
     } else {
         throw UnsupportedOperationException();
@@ -1271,25 +1470,61 @@ GiNaCExpression::GiNaCExpression(const ITRSProblem &itrs, const GiNaC::ex &expr)
 }
 
 
-void GiNaCExpression::traverse(Visitor &visitor) {
-    visitor.visit(*this);
-}
-
-
 void GiNaCExpression::traverse(ConstVisitor &visitor) const {
     visitor.visit(*this);
 }
 
 
 int GiNaCExpression::nops() const {
-    return 1;
+    return expression.nops();
 }
 
 
 std::shared_ptr<Term> GiNaCExpression::op(int i) const {
-    assert(i >= 0 && i < nops());
+    assert(i >= 0 && i < expression.nops());
 
-    return copy();
+    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression.op(i));
+}
+
+
+bool GiNaCExpression::info(InfoFlag info) const {
+    switch (info) {
+        case InfoFlag::Relation:
+            return expression.info(GiNaC::info_flags::relation);
+
+        case InfoFlag::RelationEqual:
+            return expression.info(GiNaC::info_flags::relation_equal);
+
+        case InfoFlag::RelationNotEqual:
+            return expression.info(GiNaC::info_flags::relation_not_equal);
+
+        case InfoFlag::RelationGreater:
+            return expression.info(GiNaC::info_flags::relation_greater);
+
+        case InfoFlag::RelationGreaterEqual:
+            return expression.info(GiNaC::info_flags::relation_greater_or_equal);
+
+        case InfoFlag::RelationLess:
+            return expression.info(GiNaC::info_flags::relation_less);
+
+        case InfoFlag::RelationLessEqual:
+            return expression.info(GiNaC::info_flags::relation_less_or_equal);
+
+        case InfoFlag::Addition:
+            return GiNaC::is_a<GiNaC::add>(expression);
+
+        case InfoFlag::Multiplication:
+            return GiNaC::is_a<GiNaC::mul>(expression);
+
+        case InfoFlag::Power:
+            return GiNaC::is_a<GiNaC::power>(expression);
+
+        case InfoFlag::Number:
+            return GiNaC::is_a<GiNaC::numeric>(expression);
+
+        default:
+            return false;
+    }
 }
 
 
@@ -1299,9 +1534,8 @@ std::shared_ptr<Term> GiNaCExpression::copy() const {
 
 
 std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
-                                                        Expression &addToCost,
-                                                        ExpressionVector &addToGuard) const {
-
+                                                        Expression *addToCost,
+                                                        ExpressionVector *addToGuard) const {
     return copy();
 }
 

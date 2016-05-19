@@ -19,6 +19,7 @@
 
 #include "debug.h"
 #include "its.h"
+#include "itrs/itrs.h"
 
 using namespace std;
 
@@ -46,10 +47,24 @@ bool GuardToolbox::isEquality(const Expression &term) {
 }
 
 
+bool GuardToolbox::isEquality(const TT::Expression &term) {
+    assert(term.info(TT::InfoFlag::Relation));
+    return term.info(TT::InfoFlag::RelationEqual);
+}
+
+
 bool GuardToolbox::isValidInequality(const Expression &term) {
     if (!GiNaC::is_a<GiNaC::relational>(term) || term.nops() != 2) return false;
     if (term.info(GiNaC::info_flags::relation_equal)) return false;
     if (term.info(GiNaC::info_flags::relation_not_equal)) return false;
+    return true;
+}
+
+
+bool GuardToolbox::isValidInequality(const TT::Expression &term) {
+    if (!term.info(TT::InfoFlag::Relation) || term.nops() != 2) return false;
+    if (term.info(TT::InfoFlag::RelationEqual)) return false;
+    if (term.info(TT::InfoFlag::RelationNotEqual)) return false;
     return true;
 }
 
@@ -85,6 +100,14 @@ bool GuardToolbox::containsFreeVar(const ITSProblem &its, const Expression &term
 }
 
 
+bool GuardToolbox::containsFreeVar(const ITRSProblem &itrs, const Expression &term) {
+    for (const string &name : term.getVariableNames()) {
+        if (itrs.isFreeVar(itrs.getVarindex(name))) return true;
+    }
+    return false;
+}
+
+
 Expression GuardToolbox::makeLessEqual(Expression term) {
     assert(isValidInequality(term));
 
@@ -101,6 +124,26 @@ Expression GuardToolbox::makeLessEqual(Expression term) {
     }
 
     assert(term.info(GiNaC::info_flags::relation_less_or_equal));
+    return term;
+}
+
+
+TT::Expression GuardToolbox::makeLessEqual(TT::Expression term) {
+    assert(isValidInequality(term));
+
+    //flip > or >=
+    if (term.info(TT::InfoFlag::RelationGreater)) {
+        term = term.op(1) < term.op(0);
+    } else if (term.info(TT::InfoFlag::RelationGreaterEqual)) {
+        term = term.op(1) <= term.op(0);
+    }
+
+    //change < to <=, assuming integer arithmetic
+    if (term.info(TT::InfoFlag::RelationLess)) {
+        term = term.op(0) <= (term.op(1) - 1);
+    }
+
+    assert(term.info(TT::InfoFlag::RelationLessEqual));
     return term;
 }
 
@@ -197,6 +240,26 @@ bool GuardToolbox::isTrivialInequality(const Expression &term) {
 }
 
 
+bool GuardToolbox::isTrivialInequality(const TT::Expression &term) {
+    assert(term.info(TT::InfoFlag::RelationLessEqual));
+    using namespace GiNaC;
+
+    TT::Expression lhs = term.op(0);
+    TT::Expression rhs = term.op(1);
+    if (lhs.info(TT::InfoFlag::Number) && rhs.info(TT::InfoFlag::Number)) {
+        numeric lhsNum = ex_to<numeric>(lhs.toGiNaC());
+        numeric rhsNum = ex_to<numeric>(rhs.toGiNaC());
+        if (lhsNum.is_equal(rhsNum)) return true;
+        if (lhsNum.is_integer() && rhsNum.is_integer() && lhsNum.to_int() <= rhsNum.to_int()) return true;
+    } else {
+        // toGiNaC(true) substitutes function calls by (different) variables
+        if ((lhs.toGiNaC(true) - rhs.toGiNaC(true)).is_zero()) return true;
+    }
+
+    return false;
+}
+
+
 bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, PropagationLevel level) {
     assert(!GiNaC::is_a<GiNaC::relational>(term));
 
@@ -251,6 +314,50 @@ bool GuardToolbox::propagateEqualities(const ITSProblem &its, GuardList &guard, 
     //apply substitution to guard and update
     for (Expression &ex: guard) {
         ex = ex.subs(varSubs);
+    }
+    bool res = !varSubs.empty();
+    if (subs) *subs = std::move(varSubs);
+    return res;
+}
+
+
+bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, TT::ExpressionVector &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
+                                       GiNaC::exmap *subs, function<bool(const ExprSymbol &)> allowFunc) {
+    GiNaC::exmap varSubs;
+    for (int i=0; i < guard.size(); ++i) {
+        // the guard must not contain any function symbols
+        Expression ex = guard[i].toGiNaC().subs(varSubs);
+        if (!GiNaC::is_a<GiNaC::relational>(ex) || !ex.info(GiNaC::info_flags::relation_equal)) continue;
+
+        Expression target = ex.rhs() - ex.lhs();
+        if (!target.is_polynomial(itrs.getGinacVarList())) continue;
+
+        //check if equation can be solved for any single variable
+        for (int level=NoCoefficients; level <= (int)maxlevel; ++level) {
+            for (const ExprSymbol &var : target.getVariables()) {
+                if (!allowFunc(var)) continue;
+
+                //solve target for var (result is in target)
+                if (!solveTermFor(target,var,(PropagationLevel)level)) continue;
+
+                //disallow replacing non-free vars by a term containing free vars
+                if (freevar == NoFreeOnRhs) {
+                    if (!itrs.isFreeVar(itrs.getVarindex(var.get_name())) && containsFreeVar(itrs,target)) continue;
+                }
+
+                //remove current equality (ok while iterating by index)
+                guard.erase(guard.begin() + i);
+                i--;
+
+                varSubs[var] = target;
+                goto next;
+            }
+        }
+        next:;
+    }
+    //apply substitution to guard and update
+    for (TT::Expression &ex: guard) {
+        ex = ex.substitute(varSubs);
     }
     bool res = !varSubs.empty();
     if (subs) *subs = std::move(varSubs);
@@ -319,6 +426,68 @@ abort:  ; //this symbol could not be eliminated, try the next one
 }
 
 
+bool GuardToolbox::eliminateByTransitiveClosure(const ITRSProblem &itrs, TT::ExpressionVector &guard, const GiNaC::lst &vars, bool removeHalfBounds,
+                                                function<bool(const ExprSymbol &)> allowFunc) {
+    //get all variables that appear in an inequality
+    ExprSymbolSet tryVars;
+    for (const TT::Expression &ex : guard) {
+        Expression asGiNaC = ex.toGiNaC();
+        if (!isValidInequality(asGiNaC) || !(asGiNaC.lhs()-asGiNaC.rhs()).is_polynomial(vars)) continue;
+        asGiNaC.collectVariables(tryVars);
+    }
+
+    //for each variable, try if we can eliminate every occurrence. Otherwise do nothing.
+    bool changed = false;
+    for (const ExprSymbol &var : tryVars) {
+        if (!allowFunc(var)) continue;
+
+        vector<Expression> varLessThan, varGreaterThan; //var <= expr and var >= expr
+        vector<int> guardTerms; //indices of guard terms that can be removed if succesfull
+
+        for (int i=0; i < guard.size(); ++i) {
+            //check if this guard must be used for var
+            const Expression ex = guard[i].toGiNaC();
+            if (!ex.has(var)) continue;
+            if (!isValidInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) goto abort;
+
+            //make less equal
+            Expression target = makeLessEqual(ex);
+            target = target.lhs() - target.rhs();
+            if (!target.has(var)) continue; //might have changed, e.h. x <= x
+
+            //check coefficient and direction
+            Expression c = target.coeff(var);
+            if (c.compare(1) != 0 && c.compare(-1) != 0) goto abort;
+            if (c.compare(1) == 0) {
+                varLessThan.push_back( -(target-var) );
+            } else {
+                varGreaterThan.push_back( target+var );
+            }
+            guardTerms.push_back(i);
+        }
+        if (guardTerms.empty()) goto abort;
+        if (!removeHalfBounds && (varLessThan.empty() || varGreaterThan.empty())) goto abort;
+
+        //success: remove lower <= x and x <= upper as they will be replaced
+        while (!guardTerms.empty()) {
+            guard.erase(guard.begin() + guardTerms.back());
+            guardTerms.pop_back();
+        }
+        //add new transitive guard terms
+        for (const Expression &upper : varLessThan) {
+            for (const Expression &lower : varGreaterThan) {
+                //lower <= var <= upper --> lower <= upper
+                guard.push_back(TT::Expression(itrs, lower <= upper));
+            }
+        }
+        changed = true;
+
+abort:  ; //this symbol could not be eliminated, try the next one
+    }
+    return changed;
+}
+
+
 bool GuardToolbox::findEqualities(GuardList &guard) {
     vector<pair<int,Expression>> terms; //inequalities from the guard, with the associated index in guard
     map<int,pair<int,Expression>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
@@ -338,6 +507,43 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
     if (matches.empty()) return false;
 
     GuardList res;
+    set<int> ignore;
+    for (int i=0; i < guard.size(); ++i) {
+        //ignore multiple equalities as well as the original second inequality
+        if (ignore.count(i) > 0) continue;
+
+        auto it = matches.find(i);
+        if (it != matches.end()) {
+            res.push_back(it->second.second == 0);
+            ignore.insert(it->second.first);
+        } else {
+            res.push_back(guard[i]);
+        }
+    }
+    res.swap(guard);
+    return true;
+}
+
+
+bool GuardToolbox::findEqualities(TT::ExpressionVector &guard) {
+    vector<pair<int,TT::Expression>> terms; //inequalities from the guard, with the associated index in guard
+    map<int,pair<int,TT::Expression>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
+
+    for (int i=0; i < guard.size(); ++i) {
+        if (isEquality(guard[i])) continue;
+        TT::Expression term = makeLessEqual(guard[i]);
+        term = term.op(0) - term.op(1);
+        for (const auto &prev : terms) {
+            if ((prev.second + term).toGiNaC(true).is_zero()) {
+                matches[prev.first] = make_pair(i,prev.second);
+            }
+        }
+        terms.push_back(make_pair(i,term));
+    }
+
+    if (matches.empty()) return false;
+
+    TT::ExpressionVector res;
     set<int> ignore;
     for (int i=0; i < guard.size(); ++i) {
         //ignore multiple equalities as well as the original second inequality

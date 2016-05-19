@@ -37,6 +37,22 @@ class GiNaCExpression;
 class FunctionDefinition;
 class Term;
 
+enum class InfoFlag {
+    RelationEqual,
+    RelationNotEqual,
+    RelationGreater,
+    RelationGreaterEqual,
+    RelationLess,
+    RelationLessEqual,
+    Relation,
+    Addition,
+    Subtraction,
+    Multiplication,
+    Power,
+    FunctionSymbol,
+    Number
+};
+
 class Expression {
 public:
     Expression();
@@ -51,12 +67,38 @@ public:
     Expression(Expression &&ex);
     Expression& operator=(Expression &&r);
 
-    Expression operator+(const Expression &r) const;
-    Expression operator-(const Expression &r) const;
-    Expression operator*(const Expression &r) const;
+    Expression operator+(const GiNaC::ex &rhs) const;
+    Expression operator-(const GiNaC::ex &rhs) const;
+    Expression operator*(const GiNaC::ex &rhs) const;
+
+    Expression operator==(const GiNaC::ex &rhs) const;
+    Expression operator!=(const GiNaC::ex &rhs) const;
+    Expression operator<(const GiNaC::ex &rhs) const;
+    Expression operator<=(const GiNaC::ex &rhs) const;
+    Expression operator>(const GiNaC::ex &rhs) const;
+    Expression operator>=(const GiNaC::ex &rhs) const;
+
+    Expression operator+(const Expression &rhs) const;
+    Expression operator-(const Expression &rhs) const;
+    Expression operator*(const Expression &rhs) const;
+
+    Expression operator==(const Expression &rhs) const;
+    Expression operator!=(const Expression &rhs) const;
+    Expression operator<(const Expression &rhs) const;
+    Expression operator<=(const Expression &rhs) const;
+    Expression operator>(const Expression &rhs) const;
+    Expression operator>=(const Expression &rhs) const;
+
+    Expression& operator+=(const Expression &rhs);
+    Expression& operator-=(const Expression &rhs);
+    Expression& operator*=(const Expression &rhs);
 
     int nops() const;
     Expression op(int i) const;
+
+    bool info(InfoFlag info) const;
+
+    bool has(const ExprSymbol &sym) const;
 
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
@@ -74,12 +116,13 @@ public:
     std::vector<Expression> getFunctionApplications() const;
 
     bool containsNoFunctionSymbols() const;
+    bool containsExactlyOneFunctionSymbol() const;
 
     Expression substitute(const Substitution &sub) const;
     Expression substitute(const GiNaC::exmap &sub) const;
     Expression evaluateFunction(const FunctionDefinition &funDef,
-                                Expression &addToCost,
-                                ExpressionVector &addToGuard) const;
+                                Expression *addToCost,
+                                ExpressionVector *addToGuard) const;
 
 
     GiNaC::ex toGiNaC(bool subFunSyms = false) const;
@@ -126,35 +169,6 @@ private:
 
 class Term {
 public:
-    class Visitor {
-    public:
-        virtual void visitPre(Relation &rel) {};
-        virtual void visitIn(Relation &rel) {};
-        virtual void visitPost(Relation &rel) {};
-
-        virtual void visitPre(Addition &add) {};
-        virtual void visitIn(Addition &add) {};
-        virtual void visitPost(Addition &add) {};
-
-        virtual void visitPre(Subtraction &sub) {};
-        virtual void visitIn(Subtraction &sub) {};
-        virtual void visitPost(Subtraction &sub) {};
-
-        virtual void visitPre(Multiplication &mul) {};
-        virtual void visitIn(Multiplication &mul) {};
-        virtual void visitPost(Multiplication &mul) {};
-
-        virtual void visitPre(Power &pow) {};
-        virtual void visitIn(Power &pow) {};
-        virtual void visitPost(Power &pow) {};
-
-        virtual void visitPre(FunctionSymbol &funcSym) {};
-        virtual void visitIn(FunctionSymbol &funcSym) {};
-        virtual void visitPost(FunctionSymbol &funcSym) {};
-
-        virtual void visit(GiNaCExpression &expr) {};
-    };
-
     class ConstVisitor {
     public:
         virtual void visitPre(const Relation &rel) {};
@@ -194,11 +208,12 @@ public:
 
     const ITRSProblem& getITRSProblem() const;
 
-    virtual void traverse(Visitor &visitor) = 0;
     virtual void traverse(ConstVisitor &visitor) const = 0;
 
     virtual int nops() const = 0;
     virtual std::shared_ptr<Term> op(int i) const = 0;
+
+    bool has(const ExprSymbol &sym) const;
 
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
@@ -216,10 +231,14 @@ public:
     std::vector<Expression> getFunctionApplications() const;
 
     bool containsNoFunctionSymbols() const;
+    bool containsExactlyOneFunctionSymbol() const;
+
+    virtual bool info(InfoFlag info) const = 0;
 
     virtual std::shared_ptr<Term> copy() const = 0;
     virtual std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost, ExpressionVector &addToGuard) const = 0;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const = 0;
     virtual std::shared_ptr<Term> substitute(const Substitution &sub) const = 0;
     virtual std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const = 0;
 
@@ -243,20 +262,22 @@ public:
 
 public:
     Relation(const ITRSProblem &itrs, Type type, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
     Type getType() const;
+    InfoFlag getTypeInfoFlag() const;
 
     GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
     std::shared_ptr<Term> ginacify() const override;
@@ -270,16 +291,17 @@ private:
 class Addition : public Term {
 public:
     Addition(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -296,16 +318,17 @@ private:
 class Subtraction : public Term {
 public:
     Subtraction(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -322,16 +345,17 @@ private:
 class Multiplication : public Term {
 public:
     Multiplication(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -348,16 +372,17 @@ private:
 class Power : public Term {
 public:
     Power(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -375,16 +400,17 @@ class FunctionSymbol : public Term {
 public:
     FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<Term>> &args);
     FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<Expression> &args);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -405,16 +431,17 @@ private:
 class GiNaCExpression : public Term {
 public:
     GiNaCExpression(const ITRSProblem &itrs, const GiNaC::ex &expr);
-    void traverse(Visitor &visitor) override;
     void traverse(ConstVisitor &visitor) const override;
 
     int nops() const override;
     std::shared_ptr<Term> op(int i) const override;
 
+    bool info(InfoFlag info) const override;
+
     std::shared_ptr<Term> copy() const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
-                                                   Expression &addToCost,
-                                                   ExpressionVector &addToGuard) const override;
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 

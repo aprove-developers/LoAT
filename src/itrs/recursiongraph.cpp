@@ -19,6 +19,7 @@
 
 #include "term.h"
 #include "recursion.h"
+#include "preprocessitrs.h"
 #include "stats.h"
 #include "timeout.h"
 #include "z3toolbox.h"
@@ -209,6 +210,73 @@ void RecursionGraph::printDotText(ostream &s, int step, const string &txt) const
 }
 
 
+bool RecursionGraph::isEmpty() const {
+    return getTransFrom(initial).empty();
+}
+
+
+bool RecursionGraph::simplifyTransitions() {
+    Timing::Scope _timer(Timing::Preprocess);
+    //remove unreachable transitions/nodes
+    bool changed = removeConstLeavesAndUnreachable();
+    //update/guard preprocessing
+    for (TransIndex idx : getAllTrans()) {
+        if (Timeout::preprocessing()) return changed;
+        RightHandSide &rhs = rightHandSides.at(getTransData(idx));
+        changed = PreprocessITRS::simplifyRightHandSide(itrs, rhs) || changed;
+    }
+    //remove duplicates
+    for (NodeIndex node : nodes) {
+        for (NodeIndex succ : getSuccessors(node)) {
+            if (Timeout::preprocessing()) return changed;
+            changed = removeDuplicateTransitions(getTransFromTo(node,succ)) || changed;
+        }
+    }
+    return changed;
+}
+
+
+bool RecursionGraph::removeDuplicateTransitions(const std::vector<TransIndex> &trans) {
+    bool changed = false;
+    for (int i=0; i < trans.size(); ++i) {
+        for (int j=i+1; j < trans.size(); ++j) {
+            RightHandSideIndex rhsIndexI = getTransData(trans[i]);
+            RightHandSideIndex rhsIndexJ = getTransData(trans[j]);
+            if (compareRightHandSides(rhsIndexI, rhsIndexJ)) {
+                proofout << "Removing duplicate rhs: "
+                         << rightHandSides.at(rhsIndexI) << "." << endl;
+                removeRightHandSide(getTransSource(trans[i]), rhsIndexI);
+                changed = true;
+                goto nextouter; //do not remove trans[i] again
+            }
+        }
+nextouter:;
+    }
+    return changed;
+}
+
+
+bool RecursionGraph::reduceInitialTransitions() {
+    bool changed = false;
+    for (TransIndex trans : getTransFrom(initial)) {
+        RightHandSideIndex rhsIndex = getTransData(trans);
+        RightHandSide &rhs = rightHandSides.at(rhsIndex);
+
+        std::vector<Expression> asGiNaC;
+        for (const TT::Expression &ex : rhs.guard) {
+            // substitute function symbols by variables
+            asGiNaC.push_back(ex.toGiNaC(true));
+        }
+
+        if (Z3Toolbox::checkExpressionsSAT(asGiNaC) == z3::unsat) {
+            removeRightHandSide(initial, rhsIndex);
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+
 bool RecursionGraph::chainLinear() {
     Timing::Scope timer(Timing::Contract);
     assert(check(&nodes) == Graph::Valid);
@@ -250,6 +318,16 @@ void RecursionGraph::addRule(const ITRSRule &rule) {
 }
 
 
+void RecursionGraph::removeRightHandSide(NodeIndex node, RightHandSideIndex rhs) {
+    for (TransIndex trans : getTransFrom(node)) {
+        if (getTransData(trans) == rhs) {
+            removeTrans(trans);
+        }
+    }
+    rightHandSides.erase(rhs);
+}
+
+
 bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
                                          const FunctionSymbolIndex funSymbolIndex,
                                          const RightHandSide &followRhs) const {
@@ -258,12 +336,11 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     // perform rewriting on a copy of rhs
     RightHandSide rhsCopy(rhs);
-    rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, rhsCopy.cost, rhsCopy.guard).ginacify();
-    TT::Expression dummy(itrs, GiNaC::numeric(0));
-    rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, dummy, rhsCopy.guard).ginacify();
+    rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
+    rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, nullptr, &rhsCopy.guard).ginacify();
     for (int i = 0; i < rhsCopy.guard.size(); ++i) {
            // the following call might add new elements to rhsCopy.guard
-           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction(funDef, dummy, rhsCopy.guard).ginacify();
+           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction(funDef, nullptr, &rhsCopy.guard).ginacify();
     }
 
 
@@ -399,4 +476,81 @@ void RecursionGraph::removeIncorrectTransitionsToNullNode() {
             removeTrans(trans);
         }
     }
+}
+
+
+bool RecursionGraph::compareRightHandSides(RightHandSideIndex indexA, RightHandSideIndex indexB) const {
+    assert(indexA != indexB);
+
+    const RightHandSide &a = rightHandSides.at(indexA);
+    const RightHandSide &b = rightHandSides.at(indexB);
+    if (a.guard.size() != b.guard.size()) return false;
+    if (!a.cost.containsNoFunctionSymbols() || !b.cost.containsNoFunctionSymbols()) {
+        return false;
+    }
+
+    if (!GiNaC::is_a<GiNaC::numeric>(a.cost.toGiNaC()-b.cost.toGiNaC())) return false; //cost equal up to constants
+    if (a.term.info(TT::InfoFlag::FunctionSymbol)
+        && b.term.info(TT::InfoFlag::FunctionSymbol)
+        && a.term.containsExactlyOneFunctionSymbol()
+        && b.term.containsExactlyOneFunctionSymbol()) {
+        for (int i = 0; i < a.term.nops(); i++) {
+            if (!a.term.op(i).toGiNaC().is_equal(b.term.op(i).toGiNaC())) {
+                return false;
+            }
+        }
+
+    } else {
+        return false;
+    }
+
+    for (int i=0; i < a.guard.size(); ++i) {
+        if (!a.guard[i].toGiNaC(true).is_equal(b.guard[i].toGiNaC(true))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool RecursionGraph::removeConstLeavesAndUnreachable() {
+    bool changed = false;
+    set<NodeIndex> reached;
+    function<void(NodeIndex)> dfs_remove;
+    dfs_remove = [&](NodeIndex curr) {
+        if (reached.insert(curr).second == false) return; //already present
+        for (NodeIndex next : getSuccessors(curr)) {
+            //recurse
+            dfs_remove(next);
+
+            //if next is (now) a leaf, remove const transitions to next
+            if (!getTransFrom(next).empty()) continue;
+            for (TransIndex trans : getTransFromTo(curr,next)) {
+                RightHandSideIndex rhsIndex = getTransData(trans);
+                const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+
+                // toGiNaC(true) -> Substitute function symbols by variables
+                Expression costGiNaC = rhs.cost.toGiNaC(true);
+                if (rhs.term.containsExactlyOneFunctionSymbol()
+                    && costGiNaC.getComplexity() <= 0) {
+                    removeTrans(trans);
+                    rightHandSides.erase(rhsIndex);
+                    changed = true;
+                }
+            }
+        }
+    };
+    dfs_remove(initial);
+
+    //remove nodes not seen on dfs
+    for (auto it = nodes.begin(); it != nodes.end(); ) {
+        if (reached.count(*it) == 0) {
+            removeNode(*it);
+            it = nodes.erase(it);
+            changed = true;
+        } else {
+            ++it;
+        }
+    }
+    return changed;
 }

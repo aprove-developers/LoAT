@@ -68,6 +68,33 @@ public:
     void printDotText(std::ostream &s, int step, const std::string &desc) const;
 
     /**
+     * Returns true if there are no (reachable) transitions from the initial location
+     */
+    bool isEmpty() const;
+
+    //calls Preprocess::...)
+    /**
+     * Performs extensive preprocessing to simplify the graph (i.e. remove unreachable nodes, simplify guards)
+     * @note this is a slow operation and should be used rarely (e.g. only once before the processing begins)
+     * @return true iff the graph was modified
+     */
+    bool simplifyTransitions();
+
+    /**
+     * Tries to identify and remove duplicate transitions
+     * @param trans list of transitions that are checked
+     * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
+     * @return true iff the graph was modified (i.e. a duplicate got deleted)
+     */
+    bool removeDuplicateTransitions(const std::vector<TransIndex> &trans);
+
+    /**
+     * Checks initial transitions for satisfiability, removes unsat transitions.
+     * @return true iff the graph was modified
+     */
+    bool reduceInitialTransitions();
+
+    /**
      * Apply simple chaining (i.e. only linear paths)
      * @return true iff the graph was modified
      */
@@ -79,6 +106,8 @@ private:
      * Adds the given rule to this graph, calculating the required update
      */
     void addRule(const ITRSRule &rule);
+
+    void removeRightHandSide(NodeIndex node, RightHandSideIndex rhs);
 
     /**
      * Chains transition followTrans into trans
@@ -99,6 +128,18 @@ private:
     bool chainLinearPaths(NodeIndex node, std::set<NodeIndex> &visited);
 
     void removeIncorrectTransitionsToNullNode();
+
+    /**
+     * A simple syntactic comparision. If it returns true, a and b are guaranteed to be equal.
+     * @note as this is a syntactic check, false has no guaranteed meaning
+     */
+    bool compareRightHandSides(RightHandSideIndex a, RightHandSideIndex b) const;
+
+    /**
+     * Removes all unreachable nodes and transitions to leaves with constant cost, as they have no impact on the runtime
+     * @return true iff the graph was modified
+     */
+    bool removeConstLeavesAndUnreachable();
 
 private:
     ITRSProblem &itrs;

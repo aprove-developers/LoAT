@@ -1,4 +1,4 @@
-OBJECTS = its.o itrs/itrs.o itrs/term.o itrs/recursiongraph.o itrs/recursion.o expression.o flowgraph.o recurrence.o z3toolbox.o farkas.o stats.o preprocess.o infinity.o asymptotic/inftyexpression.o asymptotic/limitvector.o asymptotic/limitproblem.o asymptotic/asymptoticbound.o guardtoolbox.o timing.o debug.o timeout.o
+OBJECTS = its.o itrs/itrs.o itrs/term.o itrs/recursiongraph.o itrs/recursion.o itrs/preprocessitrs.o expression.o flowgraph.o recurrence.o z3toolbox.o farkas.o stats.o preprocess.o infinity.o asymptotic/inftyexpression.o asymptotic/limitvector.o asymptotic/limitproblem.o asymptotic/asymptoticbound.o guardtoolbox.o timing.o debug.o timeout.o
 
 .PHONY: clean all
 

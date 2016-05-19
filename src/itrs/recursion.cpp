@@ -84,13 +84,11 @@ bool Recursion::solve() {
         // We already have the definition for this function symbol
         // Evaluate all occurences in the guard and the cost
         TT::Expression dummy(itrs, GiNaC::numeric(0));
-        TT::ExpressionVector dummyVector;
-        // TODO use pointers to avoid dummies
         TT::FunctionDefinition funDef(funSymbolIndex, result, dummy, guard);
 
         debugPurrs("Pre-evaluated guard:");
         for (int i = 0; i < preEvaluatedGuard.size(); ++i) {
-            preEvaluatedGuard[i] = preEvaluatedGuard[i].evaluateFunction(funDef, dummy, dummyVector).ginacify();
+            preEvaluatedGuard[i] = preEvaluatedGuard[i].evaluateFunction(funDef, nullptr, nullptr).ginacify();
             debugPurrs(preEvaluatedGuard[i]);
         }
         // Update funDef
@@ -100,13 +98,13 @@ bool Recursion::solve() {
         debugPurrs("Evaluated guard:");
         for (int i = 0; i < guard.size(); ++i) {
             TT::Expression temp = std::move(guard[i]);
-            guard[i] = std::move(temp.evaluateFunction(funDef, dummy, guard).ginacify());
+            guard[i] = std::move(temp.evaluateFunction(funDef, nullptr, &guard).ginacify());
 
             debugPurrs(guard[i]);
         }
 
         int oldSize = guard.size();
-        TT::Expression costRecurrence = recursion->cost.evaluateFunction(funDef, dummy, guard).ginacify();
+        TT::Expression costRecurrence = recursion->cost.evaluateFunction(funDef, nullptr, &guard).ginacify();
         for (int i = oldSize; i < guard.size(); ++i) {
             guard[i] = guard[i].ginacify();
         }

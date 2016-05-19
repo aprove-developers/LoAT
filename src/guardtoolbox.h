@@ -20,6 +20,7 @@
 
 #include "global.h"
 #include "expression.h"
+#include "itrs/term.h"
 
 #include <vector>
 #include <map>
@@ -59,6 +60,8 @@ namespace GuardToolbox {
      */
     bool propagateEqualities(const ITSProblem &its, GuardList &guard, PropagationLevel level, PropagationFreevar freevar, GiNaC::exmap *subs = nullptr,
                              std::function<bool(const ExprSymbol &)> allowFunc = [](const ExprSymbol &){return true;});
+    bool propagateEqualities(const ITRSProblem &itrs, TT::ExpressionVector &guard, PropagationLevel level, PropagationFreevar freevar, GiNaC::exmap *subs = nullptr,
+                             std::function<bool(const ExprSymbol &)> allowFunc = [](const ExprSymbol &){return true;});
 
 
     /**
@@ -77,6 +80,8 @@ namespace GuardToolbox {
      */
     bool eliminateByTransitiveClosure(GuardList &guard, const GiNaC::lst &vars, bool removeHalfBounds,
                                       std::function<bool(const ExprSymbol &)> allowFunc);
+    bool eliminateByTransitiveClosure(const ITRSProblem &itrs, TT::ExpressionVector &guard, const GiNaC::lst &vars, bool removeHalfBounds,
+                                      std::function<bool(const ExprSymbol &)> allowFunc);
 
 
     /**
@@ -90,9 +95,10 @@ namespace GuardToolbox {
     /**
      * Replaces bidirectional inequalities, e.g. x <= y, y >= x by an equality, e.g. x == y
      * @note expensive for large guards
-     * @return true iff guard was changed. The inequalties are rmoved, the equality is added to guard
+     * @return true iff guard was changed. The inequalties are removed, the equality is added to guard
      */
     bool findEqualities(GuardList &guard);
+    bool findEqualities(TT::ExpressionVector &guard);
 
 
     /**
@@ -115,9 +121,16 @@ namespace GuardToolbox {
 
 
     /**
+     * Given a relational, returns true iff this term is an equality
+     */
+    bool isEquality(const TT::Expression &term);
+
+
+    /**
      * Returns true iff term is a <,<=,>=,> relational with 2 arguments (not == or !=)
      */
     bool isValidInequality(const Expression &term);
+    bool isValidInequality(const TT::Expression &term);
 
 
     /**
@@ -130,6 +143,7 @@ namespace GuardToolbox {
      * Returns true iff term contains a free variable (note that this is possibly not very efficient)
      */
     bool containsFreeVar(const ITSProblem &its, const Expression &term);
+    bool containsFreeVar(const ITRSProblem &itrs, const Expression &term);
 
     /**
      * Given a valid inequality, replaces lhs and rhs with the given arguments and keeps operator
@@ -149,6 +163,7 @@ namespace GuardToolbox {
      * Given a valid inequality, transforms it into one only using the <= operator
      */
     Expression makeLessEqual(Expression term);
+    TT::Expression makeLessEqual(TT::Expression term);
 
 
     /**
@@ -188,6 +203,7 @@ namespace GuardToolbox {
      * or if lhs and rhs are the same (e.g. 0 <= 0 or 42 <= 127 or x <= x)
      */
     bool isTrivialInequality(const Expression &term);
+    bool isTrivialInequality(const TT::Expression &term);
 
     /**
      *

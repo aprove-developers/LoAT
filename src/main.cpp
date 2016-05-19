@@ -198,6 +198,8 @@ int main(int argc, char *argv[]) {
     problem.print(std::cout);
 
     RecursionGraph graph(problem);
+    graph.simplifyTransitions();
+
     graph.printDot(dotStream, 0, "foo");
 
     for (int i = 0; i < problem.getFunctionSymbolCount(); ++i) {
