@@ -100,6 +100,26 @@ public:
      */
     bool chainLinear();
 
+    /**
+     * Eliminates a single location without simple loops by chaining incoming and outgoing
+     * transitions.
+     * @return true iff the graph was modified
+     */
+    bool eliminateALocation();
+
+    /**
+     * Apply branched chaining (i.e. the eliminated node can have multiple outgoing edges)
+     * @note this is quite powerful, but often creates many branches. Consider pruning afterwards
+     * @return true iff the graph was modified
+     */
+    bool chainBranches();
+
+    /**
+     * Apply chaining to simple loops
+     * @return true iff the graph was modified
+     */
+    bool chainSimpleLoops();
+
 private:
 
     /**
@@ -107,7 +127,14 @@ private:
      */
     void addRule(const ITRSRule &rule);
 
+    RightHandSideIndex addRightHandSide(NodeIndex node, const RightHandSide &rhs);
+    RightHandSideIndex addRightHandSide(NodeIndex node, const RightHandSide &&rhs);
+
+    bool hasExactlyOneRightHandSide(NodeIndex node);
+
     void removeRightHandSide(NodeIndex node, RightHandSideIndex rhs);
+
+    std::set<NodeIndex> getSuccessorsOfExpression(const TT::Expression &ex);
 
     /**
      * Chains transition followTrans into trans
@@ -126,6 +153,24 @@ private:
      * @return true iff the graph was modified
      */
     bool chainLinearPaths(NodeIndex node, std::set<NodeIndex> &visited);
+
+    /**
+     * Internal function for eliminateALocation
+     * @return true iff the graph was modified
+     */
+    bool eliminateALocation(NodeIndex node, std::set<NodeIndex> &visited);
+
+    /**
+     * Internal function for chainBranches
+     * @return true iff the graph was modified
+     */
+    bool chainBranchedPaths(NodeIndex node, std::set<NodeIndex> &visited);
+
+    /**
+     * Apply chaining to the simple loops of node
+     * @return true iff the graph was modified
+     */
+    bool chainSimpleLoops(NodeIndex node);
 
     void removeIncorrectTransitionsToNullNode();
 
@@ -149,6 +194,10 @@ private:
     std::set<NodeIndex> nodes;
     std::map<RightHandSideIndex,RightHandSide> rightHandSides;
     int nextRightHandSide;
+
+    // accelerateSimpleLoops() uses the following set to communicate
+    // with chainSimpleLoops().
+    std::set<NodeIndex> addTransitionToSkipLoops;
 };
 
 #endif // RECURSIONGRAPH_H

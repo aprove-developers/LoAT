@@ -485,6 +485,29 @@ ExprSymbol ITRSProblem::getFreshSymbol(string basename) const {
 }
 
 
+FunctionSymbolIndex ITRSProblem::addFunctionSymbolVariant(FunctionSymbolIndex fs) {
+    assert(fs >= 0);
+    assert(fs < functionSymbols.size());
+    const FunctionSymbol &oldFun = functionSymbols[fs];
+    std::string newName = oldFun.getName();
+    while (functionSymbolMap.count(newName) == 1) {
+        newName += "'";
+    }
+
+    FunctionSymbol newFun(newName);
+    if (oldFun.isDefined()) {
+        newFun.setDefined();
+    }
+    newFun.getArguments() = oldFun.getArguments();
+
+    FunctionSymbolIndex newFunIndex = functionSymbols.size();
+    functionSymbols.push_back(std::move(newFun));
+    functionSymbolMap.emplace(newName, newFunIndex);
+
+    return newFunIndex;
+}
+
+
 void ITRSProblem::print(ostream &s) const {
     auto printExpr = [&](const Expression &e) {
         s << e;

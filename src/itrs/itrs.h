@@ -134,6 +134,8 @@ public:
      */
     ExprSymbol getFreshSymbol(std::string basename) const;
 
+    FunctionSymbolIndex addFunctionSymbolVariant(FunctionSymbolIndex fs);
+
     /**
      * Prints this ITS contents in a readable but ugly format, for debugging only
      * @param s output stream to print to (e.g. cout)

@@ -280,7 +280,7 @@ bool RecursionGraph::reduceInitialTransitions() {
 bool RecursionGraph::chainLinear() {
     Timing::Scope timer(Timing::Contract);
     assert(check(&nodes) == Graph::Valid);
-    Stats::addStep("FlowGraph::chainLinear");
+    Stats::addStep("RecursionGraph::chainLinear");
 
     set<NodeIndex> visited;
     bool res = chainLinearPaths(initial,visited);
@@ -289,6 +289,66 @@ bool RecursionGraph::chainLinear() {
     cout << " /========== AFTER CONTRACT ===========\\ " << endl;
     print(cout);
     cout << " \\========== AFTER CONTRACT ===========/ " << endl;
+#endif
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
+bool RecursionGraph::eliminateALocation() {
+    Timing::Scope timer(Timing::Contract);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("RecursionGraph::eliminateALocation");
+
+    set<NodeIndex> visited;
+    bool res = eliminateALocation(initial, visited);
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER ELIMINATING LOCATIONS ===========/ " << endl;
+#endif
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
+bool RecursionGraph::chainBranches() {
+    Timing::Scope timer(Timing::Branches);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("RecursionGraph::chainBranches");
+
+    set<NodeIndex> visited;
+    bool res = chainBranchedPaths(initial,visited);
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER BRANCH CONTRACT ===========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER BRANCH CONTRACT ===========/ " << endl;
+#endif
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
+bool RecursionGraph::chainSimpleLoops() {
+    Timing::Scope timer(Timing::Contract);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("RecursionGraph::chainSimpleLoops");
+
+    bool res = false;
+    for (NodeIndex node : nodes) {
+        if (!getTransFromTo(node, node).empty()) {
+            if (chainSimpleLoops(node)) {
+                res = true;
+            }
+
+            if (Timeout::soft()) return res;
+        }
+    }
+
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER CHAINING SIMPLE LOOPS ===========/ " << endl;
 #endif
     assert(check(&nodes) == Graph::Valid);
     return res;
@@ -318,6 +378,47 @@ void RecursionGraph::addRule(const ITRSRule &rule) {
 }
 
 
+RightHandSideIndex RecursionGraph::addRightHandSide(NodeIndex node, const RightHandSide &rhs) {
+    RightHandSideIndex rhsIndex = nextRightHandSide++;
+    auto it = rightHandSides.emplace(rhsIndex, rhs).first;
+
+    for (NodeIndex to : getSuccessorsOfExpression(it->second.term)) {
+        addTrans(node, to, rhsIndex);
+    }
+
+    return rhsIndex;
+}
+
+
+RightHandSideIndex RecursionGraph::addRightHandSide(NodeIndex node, const RightHandSide &&rhs) {
+    RightHandSideIndex rhsIndex = nextRightHandSide++;
+    auto it = rightHandSides.emplace(rhsIndex, rhs).first;
+
+    for (NodeIndex to : getSuccessorsOfExpression(it->second.term)) {
+        addTrans(node, to, rhsIndex);
+    }
+
+    return rhsIndex;
+}
+
+
+bool RecursionGraph::hasExactlyOneRightHandSide(NodeIndex node) {
+    std::vector<TransIndex> trans = std::move(getTransFrom(node));
+    if (trans.empty()) {
+        return false;
+    }
+
+    RightHandSideIndex rhsIndex = getTransData(trans[0]);
+    for (int i = 1; i < trans.size(); ++i) {
+        if (trans[i] != rhsIndex) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 void RecursionGraph::removeRightHandSide(NodeIndex node, RightHandSideIndex rhs) {
     for (TransIndex trans : getTransFrom(node)) {
         if (getTransData(trans) == rhs) {
@@ -325,6 +426,15 @@ void RecursionGraph::removeRightHandSide(NodeIndex node, RightHandSideIndex rhs)
         }
     }
     rightHandSides.erase(rhs);
+}
+
+
+std::set<NodeIndex> RecursionGraph::getSuccessorsOfExpression(const TT::Expression &ex) {
+    std::set<FunctionSymbolIndex> funSyms = std::move(ex.getFunctionSymbols());
+    if (funSyms.empty()) {
+        funSyms.insert(NULLNODE);
+    }
+    return funSyms;
 }
 
 
@@ -466,6 +576,243 @@ bool RecursionGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
         if (Timeout::soft()) return modified;
     }
     return modified;
+}
+
+
+bool RecursionGraph::eliminateALocation(NodeIndex node, set<NodeIndex> &visited) {
+    if (visited.count(node) > 0) return false;
+    visited.insert(node);
+
+    debugGraph("trying to eliminate location " << node);
+
+    set<NodeIndex> predecessors = std::move(getPredecessors(node));
+
+    vector<TransIndex> transitionsIn = std::move(getTransTo(node));
+    vector<TransIndex> transitionsOut = std::move(getTransFrom(node));
+
+    set<NodeIndex> nextNodes;
+    if (predecessors.count(node) > 0 // simple loop
+        || transitionsIn.empty()
+        || transitionsOut.empty()) {
+
+        for (NodeIndex next : getSuccessors(node)) {
+            if (eliminateALocation(next, visited)) {
+                return true;
+            }
+
+            if (Timeout::soft()) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    assert(node != initial);
+
+    bool addedTrans = false;
+    for (TransIndex out : transitionsOut) {
+        RightHandSideIndex outRhsIndex = getTransData(out);
+        auto it = rightHandSides.find(outRhsIndex);
+        if (it == rightHandSides.end()) {
+            // This rhs was already chained
+            continue;
+        }
+        const RightHandSide &outRhs = it->second;
+
+        for (TransIndex in : transitionsIn) {
+            RightHandSideIndex inRhsIndex = getTransData(in);
+            RightHandSide inRhsCopy = rightHandSides.at(inRhsIndex);
+
+            if (chainRightHandSides(inRhsCopy, node, outRhs)) {
+                addedTrans = true;
+                addRightHandSide(getTransSource(in), std::move(inRhsCopy));
+                Stats::add(Stats::ContractLinear);
+            }
+        }
+
+        rightHandSides.erase(outRhsIndex);
+    }
+
+    for (TransIndex trans : transitionsOut) {
+        nextNodes.insert(getTransTarget(trans));
+        // the right-hand sides have already been deleted
+        removeTrans(trans);
+    }
+
+    if (addedTrans) {
+        for (TransIndex trans : transitionsIn) {
+            RightHandSideIndex rhsIndex = getTransData(trans);
+            removeRightHandSide(getTransSource(trans),rhsIndex);
+        }
+
+        removeNode(node);
+        nodes.erase(node);
+    }
+
+    return true;
+}
+
+
+bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
+    //avoid cycles even in branched mode. Contract a cycle to a selfloop and stop.
+    if (visited.count(node) > 0) return false;
+
+    bool modified = false;
+    bool changed;
+    do {
+        changed = false;
+        vector<TransIndex> out = getTransFrom(node);
+        set<TransIndex> removeThese;
+        for (TransIndex t : out) {
+            NodeIndex mid = getTransTarget(t);
+
+            //check if skipping mid is sound, i.e. it is not a selfloop and has no other predecessors
+            if (mid == node) continue; //ignore selfloops
+            assert(getPredecessors(mid).count(node) == 1);
+            if (getPredecessors(mid).size() > 1) continue; //this is a "V" pattern, try contracting the rest first [node = loop head]
+
+            //now contract with all children of mid, to "skip" mid
+            vector<TransIndex> midout = getTransFrom(mid);
+            if (midout.empty()) continue;
+
+            RightHandSideIndex rhsIndex = getTransData(t);
+            const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+
+            std::set<RightHandSideIndex> alreadyChainedWith;
+            for (TransIndex t2 : midout) {
+                assert (mid != getTransTarget(t2)); //selfloops cannot occur ("V" check above)
+                if (Timeout::soft()) break;
+
+                RightHandSideIndex rhsIndex2 = getTransData(t2);
+                const RightHandSide &rhs2 = rightHandSides.at(rhsIndex);
+
+                if (alreadyChainedWith.count(rhsIndex2) == 1) {
+                    continue;
+                }
+                alreadyChainedWith.insert(rhsIndex2);
+
+                RightHandSide rhsCopy = rhs;
+                if (chainRightHandSides(rhsCopy, mid, rhs2)) {
+                    addRightHandSide(node, std::move(rhsCopy));
+                    Stats::add(Stats::ContractBranch);
+
+                } else {
+                    //if UNSAT, add a new dummy node to keep the first part of the transition (which is removed below)
+                    if (Expression(rhsCopy.cost.toGiNaC(true)).getComplexity() > 0) {
+                        assert(mid != NULLNODE);
+
+                        // replace function symbol "mid" by a new one
+                        // by rewriting using the rule mid(x_1, ..., x_n) -> mid'(x_1, ..., x_n)
+                        FunctionSymbolIndex oldIndex = (FunctionSymbolIndex)mid;
+                        const FunctionSymbol &oldFunSym = itrs.getFunctionSymbol(oldIndex);
+                        FunctionSymbolIndex newIndex = itrs.addFunctionSymbolVariant(oldIndex);
+                        nodes.insert((NodeIndex)newIndex);
+                        const FunctionSymbol &newFunSym = itrs.getFunctionSymbol(newIndex);
+
+                        // build the definition needed for replacing mid by mid'
+                        std::vector<TT::Expression> args;
+                        for (VariableIndex var : oldFunSym.getArguments()) {
+                            args.push_back(TT::Expression(itrs, itrs.getGinacSymbol(var)));
+                        }
+
+                        // mid'(x_1, ..., x_n)
+                        TT::Expression def(itrs, newIndex, args);
+                        GiNaC::numeric nullGiNaC;
+                        TT::Expression null(itrs, nullGiNaC);
+                        std::vector<TT::Expression> nullVector;
+                        TT::FunctionDefinition funDef(oldIndex, def, null, nullVector);
+
+                        // evaluate the function
+                        rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, nullptr, nullptr);
+
+                        addRightHandSide(node, std::move(rhsCopy));
+                    }
+                }
+            }
+
+            removeThese.insert(t);
+            changed = true;
+            if (Timeout::soft()) break;
+        }
+
+        for (TransIndex t : removeThese) {
+            RightHandSideIndex rhsIndex = getTransData(t);
+            removeRightHandSide(node, rhsIndex);
+        }
+
+        modified = modified || changed;
+        if (Timeout::soft()) return modified;
+    } while (changed);
+
+    //this node cannot be contracted further, try its children
+    visited.insert(node);
+    for (NodeIndex next : getSuccessors(node)) {
+        modified = chainBranchedPaths(next,visited) || modified;
+        if (Timeout::soft()) return modified;
+    }
+
+    //only for the main caller, reduce unreachable stuff
+    if (node == initial) {
+        removeConstLeavesAndUnreachable();
+    }
+
+    return modified;
+}
+
+
+bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
+    debugGraph("Chaining simple loops.");
+    assert(node != initial);
+    assert(!getTransFromTo(node, node).empty());
+
+    set<NodeIndex> predecessors = std::move(getPredecessors(node));
+    predecessors.erase(node);
+
+    // the bool marks whether this transition was sucessfully chained
+    // with a simple loop
+    vector<std::pair<TransIndex,bool>> transitions;
+    for (NodeIndex pre : predecessors) {
+        for (TransIndex transition : getTransFromTo(pre, node)) {
+            transitions.push_back(std::make_pair(transition, false));
+        }
+    }
+    debugGraph(transitions.size() << " transitions to " << node);
+
+    for (TransIndex simpleLoop : getTransFromTo(node, node)) {
+        RightHandSideIndex simpleLoopRhsIndex = getTransData(simpleLoop);
+        const RightHandSide &simpleLoopRhs = rightHandSides.at(simpleLoopRhsIndex);
+
+        if (!simpleLoopRhs.term.info(TT::InfoFlag::FunctionSymbol)
+            || !simpleLoopRhs.term.containsExactlyOneFunctionSymbol()) {
+            continue;
+        }
+
+        for (std::pair<TransIndex,bool> &pair : transitions) {
+            RightHandSideIndex rhsIndex = getTransData(pair.first);
+            RightHandSide rhsCopy = rightHandSides.at(rhsIndex);
+
+            if (chainRightHandSides(rhsCopy, node, simpleLoopRhs)) {
+                addRightHandSide(getTransSource(pair.first), rhsCopy);
+                Stats::add(Stats::ContractLinear);
+                pair.second = true;
+            }
+
+        }
+
+        debugGraph("removing simple loop " << simpleLoop);
+        removeTrans(simpleLoop);
+    }
+
+    for (const std::pair<TransIndex,bool> &pair : transitions) {
+        if (pair.second && !(addTransitionToSkipLoops.count(node) > 0)) {
+            debugGraph("removing transition (+ rhs)" << pair.first);
+            RightHandSideIndex rhsIndex = getTransData(pair.first);
+            removeRightHandSide(getTransSource(pair.first), rhsIndex);
+        }
+    }
+
+    return true;
 }
 
 

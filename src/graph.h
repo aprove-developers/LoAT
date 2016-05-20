@@ -123,6 +123,7 @@ public:
 
     inline T& getTransData(TransIndex idx) { return transitions[idx].data; }
     inline const T& getTransData(TransIndex idx) const { return transitions.at(idx).data; }
+    inline bool transExists(TransIndex idx) const { return transitions.count(idx) == 1; }
     inline NodeIndex getTransSource(TransIndex idx) const { return transitions.at(idx).from; }
     inline NodeIndex getTransTarget(TransIndex idx) const { return transitions.at(idx).to; }
 
