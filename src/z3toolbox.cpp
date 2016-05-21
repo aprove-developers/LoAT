@@ -19,7 +19,7 @@
 
 #include "timing.h"
 #include "expression.h"
-#include "flowgraph.h"
+#include "itrs/recursiongraph.h"
 
 #include "debug.h"
 

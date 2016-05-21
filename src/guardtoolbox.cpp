@@ -18,7 +18,7 @@
 #include"guardtoolbox.h"
 
 #include "debug.h"
-#include "its.h"
+#include "itrs/itrs.h"
 #include "itrs/itrs.h"
 
 using namespace std;
@@ -89,14 +89,6 @@ Expression GuardToolbox::replaceLhsRhs(const Expression &term, Expression lhs, E
 bool GuardToolbox::isLinearInequality(const Expression &term, const GiNaC::lst &vars) {
     if (!isValidInequality(term)) return false;
     return Expression(term.lhs()).isLinear(vars) && Expression(term.rhs()).isLinear(vars);
-}
-
-
-bool GuardToolbox::containsFreeVar(const ITSProblem &its, const Expression &term) {
-    for (const string &name : term.getVariableNames()) {
-        if (its.isFreeVar(its.getVarindex(name))) return true;
-    }
-    return false;
 }
 
 
@@ -278,7 +270,7 @@ bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, Propaga
 }
 
 
-bool GuardToolbox::propagateEqualities(const ITSProblem &its, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
+bool GuardToolbox::propagateEqualities(const ITRSProblem &its, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
                                        GiNaC::exmap *subs, function<bool(const ExprSymbol &)> allowFunc) {
     GiNaC::exmap varSubs;
     for (int i=0; i < guard.size(); ++i) {

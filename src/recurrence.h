@@ -19,7 +19,7 @@
 #define RECURRENCE_H
 
 #include "global.h"
-#include "its.h"
+#include "itrs/itrs.h"
 
 struct Transition;
 
@@ -39,10 +39,10 @@ public:
      * If successful, returns true and modifies trans to contain the iterated update and cost (using the given metering function as "iteration step")
      * Otherwise, false is returned and trans is left unchanged
      */
-    static bool calcIterated(const ITSProblem &its, Transition &trans, const Expression &meterfunc);
+    static bool calcIterated(const ITRSProblem &its, Transition &trans, const Expression &meterfunc);
 
 private:
-    Recurrence(const ITSProblem &its);
+    Recurrence(const ITRSProblem &its);
 
     /**
      * Returns true iff iterated update was calculated successfully and newUpdate has been set accordingly (with runtime as "iteration step")
@@ -81,7 +81,7 @@ private:
     /**
      * The ITS data, to query variable names/indices
      */
-    const ITSProblem &its;
+    const ITRSProblem &its;
 
     /**
      * Purrs::Recurrence::n converted to a ginac expression, for convenience only

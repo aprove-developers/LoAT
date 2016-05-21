@@ -29,11 +29,9 @@
 using namespace std;
 
 
-#include "its.h"
+#include "itrs/itrs.h"
 #include "itrs/itrs.h"
 #include "itrs/recursiongraph.h"
-#include "flowgraph.h"
-#include "preprocess.h"
 #include "stats.h"
 #include "timing.h"
 #include "timeout.h"
@@ -195,39 +193,7 @@ int main(int argc, char *argv[]) {
     cout << "Trying to load file: " << filename << endl;
 
     ITRSProblem problem = ITRSProblem::loadFromFile(filename);
-    problem.print(std::cout);
-
-    RecursionGraph graph(problem);
-    graph.simplifyTransitions();
-
-    graph.printDot(dotStream, 0, "foo");
-
-    for (int i = 0; i < problem.getFunctionSymbolCount(); ++i) {
-        graph.solveRecursion(i);
-    }
-
-    graph.printDot(dotStream, 1, "bar");
-
-    graph.chainLinear();
-
-    graph.printDot(dotStream, 2, "baz");
-
-    for (int i = 0; i < problem.getFunctionSymbolCount(); ++i) {
-        graph.solveRecursion(i);
-    }
-
-    graph.printDot(dotStream, 3, "bar2");
-
-    graph.chainLinear();
-
-    graph.printDot(dotStream, 4, "baz2");
-
-
-    dotStream << "\n}";
-    return 0;
-
-    ITSProblem res = ITSProblem::loadFromFile(filename);
-    FlowGraph g(res);
+    RecursionGraph g(problem);
 
     proofout << endl << "Initial Control flow graph problem:" << endl;
     g.printForProof();
@@ -254,6 +220,13 @@ int main(int argc, char *argv[]) {
             bool changed;
             do {
                 changed = false;
+
+                if (g.solveRecursions()) {
+                    changed = true;
+                    proofout << endl << "solved recursions" << endl;
+                    g.printForProof();
+                    if (dotOutput) g.printDot(dotStream, dotStep++, "Solved recursions");
+                }
 
                 if (g.accelerateSimpleLoops()) {
                     changed = true;

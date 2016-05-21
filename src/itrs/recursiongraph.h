@@ -26,13 +26,43 @@
 
 typedef int RightHandSideIndex;
 
+struct RightHandSide;
+
+/**
+ * Represents one transition in the graph with the given target, guards and updates
+ */
+struct Transition {
+    Transition() : cost(1) {}
+    GuardList guard;
+    UpdateMap update;
+    Expression cost;
+
+    RightHandSide toRightHandSide(const ITRSProblem &itrs, FunctionSymbolIndex funSym) const;
+};
+
+std::ostream& operator<<(std::ostream &, const Transition &);
+
 struct RightHandSide {
     TT::ExpressionVector guard;
     TT::Expression term;
     TT::Expression cost;
+
+    Transition toLegacyTransition(const ITRSProblem &itrs, FunctionSymbolIndex funSym) const;
 };
 
 std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs);
+
+/**
+ * Represents the final runtime complexity result,
+ * including the final cost and guard
+ */
+struct RuntimeResult {
+    Expression bound;
+    GuardList guard;
+    Complexity cpx;
+    bool reducedCpx;
+    RuntimeResult() : bound(0), cpx(Expression::ComplexNone), reducedCpx(false) {}
+};
 
 /**
  * Flow graph for an ITS.
@@ -89,6 +119,28 @@ public:
     bool removeDuplicateTransitions(const std::vector<TransIndex> &trans);
 
     /**
+     * Reduces the number of parallel transitions by applying some greedy heuristic to find the "best" transitions
+     * @note also removes unreachable nodes and irrelevant const transitions using removeConstLeafsAndUnreachable()
+     * @return true iff the graph was modified (transitions were deleted)
+     */
+    bool pruneTransitions();
+
+    /**
+     * Returns true iff all paths have a length of at most 1
+     */
+    bool isFullyChained() const;
+
+    /**
+     * For a fully chained graph problem, this calculates the maximum runtime complexity (using the infinity check)
+     */
+    RuntimeResult getMaxRuntime();
+
+    /**
+     * In case of a timeout (when the graph is not fully chained), this tries to find a good partial result at least
+     */
+    RuntimeResult getMaxPartialResult();
+
+    /**
      * Checks initial transitions for satisfiability, removes unsat transitions.
      * @return true iff the graph was modified
      */
@@ -120,12 +172,31 @@ public:
      */
     bool chainSimpleLoops();
 
+    /**
+     * Replaces all simple loops with accelerated simple loops
+     * by searching for metering functions and iterated costs/updates.
+     * Also handles nesting and chaining of parallel simple loops (where possible).
+     * @return true iff the graph was modified
+     *         (which is always the case if any simple loops were present)
+     */
+    bool accelerateSimpleLoops();
+
+    bool solveRecursions();
+
 private:
 
     /**
      * Adds the given rule to this graph, calculating the required update
      */
     void addRule(const ITRSRule &rule);
+
+    TransIndex addLegacyTransition(NodeIndex from,
+                                   NodeIndex to,
+                                   const Transition &trans);
+
+    TransIndex addLegacyRightHandSide(NodeIndex from,
+                                      NodeIndex to,
+                                      const RightHandSide &trans);
 
     RightHandSideIndex addRightHandSide(NodeIndex node, const RightHandSide &rhs);
     RightHandSideIndex addRightHandSide(NodeIndex node, const RightHandSide &&rhs);
@@ -167,10 +238,26 @@ private:
     bool chainBranchedPaths(NodeIndex node, std::set<NodeIndex> &visited);
 
     /**
+     * Helper function that checks with a very simple heuristic if the transitions might be nested loops
+     * (this is done to avoid too many nesting attemts, as finding a metering function takes some time).
+     */
+    bool canNest(const RightHandSide &inner, FunctionSymbolIndex index, const RightHandSide &outer) const;
+
+    /**
      * Apply chaining to the simple loops of node
      * @return true iff the graph was modified
      */
     bool chainSimpleLoops(NodeIndex node);
+
+    /**
+     * Replaces all simple loops of the given location with accelerated simple loops
+     * by searching for metering functions and iterated costs/updates.
+     * Also handles nesting and chaining of parallel simple loops (where possible).
+     * @return true iff the graph was modified
+     *         (which is always the case if any selfloops were present)
+     */
+    bool accelerateSimpleLoops(NodeIndex node);
+
 
     void removeIncorrectTransitionsToNullNode();
 
@@ -185,6 +272,13 @@ private:
      * @return true iff the graph was modified
      */
     bool removeConstLeavesAndUnreachable();
+
+    /**
+     * This removes all subgraphs that have only constant costs.
+     * @note this will also remove selfloops and is only meant to be used after a soft timeout
+     * @return true iff the graph was modified
+     */
+    bool removeIrrelevantTransitions(NodeIndex curr, std::set<NodeIndex> &visited);
 
 private:
     ITRSProblem &itrs;

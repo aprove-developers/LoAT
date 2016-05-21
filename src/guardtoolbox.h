@@ -27,7 +27,7 @@
 
 typedef std::vector<Expression> GuardList;
 
-class ITSProblem;
+class ITRSProblem;
 
 /**
  * Namespace for several helpers operating on relational expressions found in the guard
@@ -58,7 +58,7 @@ namespace GuardToolbox {
      *
      * @return true if any progpagation was performed.
      */
-    bool propagateEqualities(const ITSProblem &its, GuardList &guard, PropagationLevel level, PropagationFreevar freevar, GiNaC::exmap *subs = nullptr,
+    bool propagateEqualities(const ITRSProblem &its, GuardList &guard, PropagationLevel level, PropagationFreevar freevar, GiNaC::exmap *subs = nullptr,
                              std::function<bool(const ExprSymbol &)> allowFunc = [](const ExprSymbol &){return true;});
     bool propagateEqualities(const ITRSProblem &itrs, TT::ExpressionVector &guard, PropagationLevel level, PropagationFreevar freevar, GiNaC::exmap *subs = nullptr,
                              std::function<bool(const ExprSymbol &)> allowFunc = [](const ExprSymbol &){return true;});
@@ -142,7 +142,6 @@ namespace GuardToolbox {
     /**
      * Returns true iff term contains a free variable (note that this is possibly not very efficient)
      */
-    bool containsFreeVar(const ITSProblem &its, const Expression &term);
     bool containsFreeVar(const ITRSProblem &itrs, const Expression &term);
 
     /**

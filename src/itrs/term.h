@@ -100,6 +100,10 @@ public:
 
     bool has(const ExprSymbol &sym) const;
 
+    // simple expression =^= f(term1, .., term2)
+    // function symbol, no nested function symbols
+    bool isSimple() const;
+
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
 
@@ -115,8 +119,8 @@ public:
     void collectFunctionApplications(std::vector<Expression> &app) const;
     std::vector<Expression> getFunctionApplications() const;
 
-    bool containsNoFunctionSymbols() const;
-    bool containsExactlyOneFunctionSymbol() const;
+    bool hasNoFunctionSymbols() const;
+    bool hasExactlyOneFunctionSymbol() const;
 
     Expression substitute(const Substitution &sub) const;
     Expression substitute(const GiNaC::exmap &sub) const;
@@ -230,8 +234,8 @@ public:
     void collectFunctionApplications(std::vector<Expression> &updates) const;
     std::vector<Expression> getFunctionApplications() const;
 
-    bool containsNoFunctionSymbols() const;
-    bool containsExactlyOneFunctionSymbol() const;
+    bool hasNoFunctionSymbols() const;
+    bool hasExactlyOneFunctionSymbol() const;
 
     virtual bool info(InfoFlag info) const = 0;
 

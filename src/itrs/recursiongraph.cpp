@@ -17,17 +17,91 @@
 
 #include "recursiongraph.h"
 
+#include <queue>
+
 #include "term.h"
+#include "farkas.h"
 #include "recursion.h"
 #include "preprocessitrs.h"
+#include "recurrence.h"
 #include "stats.h"
 #include "timeout.h"
 #include "z3toolbox.h"
+#include "asymptotic/asymptoticbound.h"
 
 using namespace std;
 namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 const NodeIndex RecursionGraph::NULLNODE = -1;
+
+
+RightHandSide Transition::toRightHandSide(const ITRSProblem &itrs,
+                                                FunctionSymbolIndex funSym) const {
+    RightHandSide rhs;
+    rhs.cost = TT::Expression(itrs, cost);
+    for (const Expression &ex : guard) {
+        rhs.guard.push_back(TT::Expression(itrs, ex));
+    }
+
+    std::vector<TT::Expression> args;
+    const FunctionSymbol &funSymbol = itrs.getFunctionSymbol(funSym);
+    for (VariableIndex var : funSymbol.getArguments()) {
+        auto it = update.find(var);
+
+        if (it != update.end()) {
+            args.push_back(TT::Expression(itrs, it->second));
+
+        } else {
+            args.push_back(TT::Expression(itrs, itrs.getGinacSymbol(var)));
+        }
+    }
+
+    rhs.term = TT::Expression(itrs, funSym, args);
+
+    return rhs;
+}
+
+
+std::ostream& operator<<(std::ostream &s, const Transition &trans) {
+    s << "Transition(";
+    for (auto upit : trans.update) {
+        s << upit.first << "=" << upit.second;
+        s << ", ";
+    }
+    s << "| ";
+    for (auto expr : trans.guard) {
+        s << expr << ", ";
+    }
+    s << "| ";
+    s << trans.cost;
+    s << ")";
+    return s;
+}
+
+Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
+                                                   FunctionSymbolIndex funSym) const {
+    Transition trans;
+    assert(cost.hasNoFunctionSymbols());
+    trans.cost = cost.toGiNaC();
+
+    for (const TT::Expression &ex : guard) {
+        assert(ex.hasNoFunctionSymbols());
+        trans.guard.push_back(ex.toGiNaC());
+    }
+
+    assert(term.isSimple());
+    const FunctionSymbol &funSymbol = itrs.getFunctionSymbol(funSym);
+    for (int i = 0; i < term.nops(); ++i) {
+        Expression arg = term.op(i).toGiNaC();
+        VariableIndex varIndex = funSymbol.getArguments()[i];
+
+        if (!arg.is_equal(itrs.getGinacSymbol(varIndex))) {
+            trans.update.emplace(varIndex, arg);
+        }
+    }
+
+    return trans;
+}
 
 std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs) {
     os << rhs.term << ", [";
@@ -220,11 +294,11 @@ bool RecursionGraph::simplifyTransitions() {
     //remove unreachable transitions/nodes
     bool changed = removeConstLeavesAndUnreachable();
     //update/guard preprocessing
-    for (TransIndex idx : getAllTrans()) {
+    for (auto &pair : rightHandSides) {
         if (Timeout::preprocessing()) return changed;
-        RightHandSide &rhs = rightHandSides.at(getTransData(idx));
-        changed = PreprocessITRS::simplifyRightHandSide(itrs, rhs) || changed;
+        changed = PreprocessITRS::simplifyRightHandSide(itrs, pair.second) || changed;
     }
+
     //remove duplicates
     for (NodeIndex node : nodes) {
         for (NodeIndex succ : getSuccessors(node)) {
@@ -253,6 +327,221 @@ bool RecursionGraph::removeDuplicateTransitions(const std::vector<TransIndex> &t
 nextouter:;
     }
     return changed;
+}
+
+
+
+bool RecursionGraph::pruneTransitions() {
+    bool changed = removeConstLeavesAndUnreachable();
+
+#ifndef PRUNING_ENABLE
+    return false;
+#else
+    Stats::addStep("Flowgraph::pruneTransitions");
+    typedef tuple<TransIndex,Complexity,int> TransCpx;
+    auto comp = [](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b) || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
+
+    for (NodeIndex node : nodes) {
+        if (Timeout::soft()) break;
+        for (NodeIndex pre : getPredecessors(node)) {
+            const vector<TransIndex> &parallel = getTransFromTo(pre,node);
+
+            if (parallel.size() > PRUNE_MAX_PARALLEL_TRANSITIONS) {
+                priority_queue<TransCpx,std::vector<TransCpx>,decltype(comp)> queue(comp);
+
+                for (int i=0; i < parallel.size(); ++i) {
+                    //alternating iteration (front,end) that might avoid choosing similar edges
+                    int idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
+                    TransIndex trans = parallel[idx];
+
+                    RightHandSideIndex rhsIndex = getTransData(trans);
+                    const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+                    if (!rhs.term.isSimple()) {
+                        continue;
+                    }
+
+                    Transition legacy = rhs.toLegacyTransition(itrs, pre);
+
+                    auto res = AsymptoticBound::determineComplexity(itrs, legacy.guard, legacy.cost, false);
+                    queue.push(make_tuple(trans,res.cpx,res.inftyVars));
+                }
+
+                set<TransIndex> keep;
+                for (int i=0; i < PRUNE_MAX_PARALLEL_TRANSITIONS; ++i) {
+                    keep.insert(get<0>(queue.top()));
+                    queue.pop();
+                }
+
+                bool has_empty = false;
+                for (TransIndex trans : parallel) {
+                    RightHandSideIndex rhsIndex = getTransData(trans);
+                    const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+                    if (!rhs.term.isSimple()) {
+                        continue;
+                    }
+                    Transition legacy = rhs.toLegacyTransition(itrs, pre);
+
+                    if (!has_empty && legacy.update.empty() && legacy.guard.empty() && legacy.cost.is_zero()) {
+                        has_empty = true;
+                    } else {
+                        if (keep.count(trans) == 0) {
+                            Stats::add(Stats::PruneRemove);
+
+                            removeRightHandSide(pre, getTransData(trans));
+                        }
+                    }
+                }
+                changed = true;
+            }
+        }
+    }
+    return changed;
+
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER PRUNING ==========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER PRUNING ==========/ " << endl;
+#endif
+#endif
+}
+
+
+bool RecursionGraph::isFullyChained() const {
+    //ensure that all transitions start from initial node
+    for (NodeIndex node : nodes) {
+        if (node == initial) continue;
+        if (!getTransFrom(node).empty()) return false;
+    }
+    return true;
+}
+
+
+RuntimeResult RecursionGraph::getMaxRuntime() {
+    std::vector<TransIndex> vec = getTransFrom(initial);
+
+    proofout << "Computing complexity for remaining " << vec.size() << " transitions." << endl << endl;
+
+#ifdef DEBUG_PROBLEMS
+    Complexity oldMaxCpx = Expression::ComplexNone;
+    Expression oldMaxExpr(0);
+#endif
+
+    Complexity cpx;
+    RuntimeResult res;
+
+    for (TransIndex trans : vec) {
+        const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
+        if (!rhs.term.isSimple()) {
+            continue;
+        }
+
+        Transition legacy = rhs.toLegacyTransition(itrs, initial);
+
+        Complexity oldCpx = legacy.cost.getComplexity();
+
+#ifdef DEBUG_PROBLEMS
+        if (oldCpx > oldMaxCpx) {
+            oldMaxCpx = oldCpx;
+            oldMaxExpr = legacy.cost;
+        }
+#endif
+        //avoid infinity checks that cannot improve the result
+        if (oldCpx <= res.cpx) continue;
+
+        //check if this transition allows infinitely many guards
+        debugGraph(endl << "INFINITY CHECK");
+
+        auto checkRes = AsymptoticBound::determineComplexity(itrs, legacy.guard, legacy.cost, true);
+        debugGraph("RES: " << checkRes.cpx << " because: " << checkRes.reason);
+        if (checkRes.cpx == Expression::ComplexNone) {
+            debugGraph("INFINITY: FAIL");
+            continue;
+        }
+        debugGraph("INFINITY: Success!");
+        cpx = checkRes.cpx;
+
+        if (cpx > res.cpx) {
+            res.cpx = cpx;
+
+            proofout << "Found new complexity " << Expression::complexityString(cpx) << ", because: " << checkRes.reason << "." << endl << endl;
+            res.bound = checkRes.cost;
+            res.reducedCpx = checkRes.reducedCpx;
+            res.guard = legacy.guard;
+
+            if (cpx == Expression::ComplexInfty) break;
+        }
+
+        if (Timeout::hard()) return res;
+    }
+
+#ifdef DEBUG_PROBLEMS
+    if (oldMaxCpx > res.cpx) {
+        debugProblem("Infinity lost complexity: " << oldMaxCpx << " [" << oldMaxExpr << "] --> " << res.cpx << " [" << res.bound << "]");
+    }
+#endif
+
+    return res;
+}
+
+
+RuntimeResult RecursionGraph::getMaxPartialResult() {
+    //remove all irrelevant transitions to reduce z3 invocations
+    set<NodeIndex> visited;
+    removeIrrelevantTransitions(initial,visited);
+    proofout << "Removed transitions with const cost" << endl;
+    printForProof();
+
+    //contract and always compute the maximum complexity to allow abortion
+    RuntimeResult res;
+
+    while (true) {
+        //always check for timeouts
+        if (Timeout::hard()) goto abort;
+
+        //get current max cost (with infinity check)
+        for (TransIndex trans : getTransFrom(initial)) {
+            const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
+            Transition legacy = rhs.toLegacyTransition(itrs, initial);
+
+            if (legacy.cost.getComplexity() <= max(res.cpx,Complexity(0))) continue;
+
+            auto checkRes = AsymptoticBound::determineComplexity(itrs, legacy.guard, legacy.cost, true);
+            if (checkRes.cpx > res.cpx) {
+                proofout << "Found new complexity " << Expression::complexityString(checkRes.cpx) << ", because: " << checkRes.reason << "." << endl << endl;
+                res.cpx = checkRes.cpx;
+                res.bound = checkRes.cost;
+                res.reducedCpx = checkRes.reducedCpx;
+                res.guard = legacy.guard;
+                if (res.cpx == Expression::ComplexInfty) goto done;
+            }
+            if (Timeout::hard()) goto abort;
+        }
+
+        //contract next level (if there is one)
+        /*auto succ = getSuccessors(initial);
+        if (succ.empty()) goto done;
+        for (NodeIndex mid : succ) {
+            for (TransIndex first : getTransFromTo(initial,mid)) {
+                for (TransIndex second : getTransFrom(mid)) {
+                    Transition data = getTransData(first);
+                    if (chainTransitionData(data,getTransData(second))) {
+                        addTrans(initial,getTransTarget(second),data);
+                    }
+                    removeTrans(second);
+                    if (Timeout::hard()) goto abort;
+                }
+                removeTrans(first);
+            }
+        }*/
+        // TODO FIX SHIT
+        proofout << "Performed chaining from the start location:" << endl;
+        printForProof();
+    }
+    goto done;
+abort:
+    proofout << "Aborting due to timeout" << endl;
+done:
+    return res;
 }
 
 
@@ -355,6 +644,54 @@ bool RecursionGraph::chainSimpleLoops() {
 }
 
 
+bool RecursionGraph::accelerateSimpleLoops() {
+    Timing::Scope timer(Timing::Selfloops);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("RecursionGraph::accelerateSimpleLoops");
+
+    addTransitionToSkipLoops.clear();
+    bool res = false;
+    for (NodeIndex node : nodes) {
+        if (!getTransFromTo(node,node).empty()) {
+            res = accelerateSimpleLoops(node) || res;
+            if (Timeout::soft()) return res;
+        }
+    }
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER SELFLOOPS ==========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER SELFLOOPS ==========/ " << endl;
+#endif
+
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
+bool RecursionGraph::solveRecursions() {
+    // TODO Timing
+    Timing::Scope timer(Timing::Selfloops);
+    assert(check(&nodes) == Graph::Valid);
+    Stats::addStep("RecursionGraph::solveRecursions");
+
+    bool res = false;
+    for (NodeIndex node : nodes) {
+        if (node != NULLNODE) {
+            res = solveRecursion(node) || res;
+            if (Timeout::soft()) return res;
+        }
+    }
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER RECURSIONS ==========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER RECURSIONS ==========/ " << endl;
+#endif
+
+    assert(check(&nodes) == Graph::Valid);
+    return res;
+}
+
+
 void RecursionGraph::addRule(const ITRSRule &rule) {
     RightHandSide rhs;
     for (const Expression &ex : rule.guard) {
@@ -375,6 +712,31 @@ void RecursionGraph::addRule(const ITRSRule &rule) {
     for (NodeIndex dst : dsts) {
         addTrans(src, dst, rhsIndex);
     }
+}
+
+
+TransIndex RecursionGraph::addLegacyTransition(NodeIndex from,
+                                               NodeIndex to,
+                                               const Transition &trans) {
+    RightHandSide rhs = std::move(trans.toRightHandSide(itrs, to));
+    assert(rhs.term.isSimple());
+
+    RightHandSideIndex rhsIndex = nextRightHandSide++;
+    rightHandSides.emplace(rhsIndex, std::move(rhs)).first;
+
+    return addTrans(from, to, rhsIndex);
+}
+
+
+TransIndex RecursionGraph::addLegacyRightHandSide(NodeIndex from,
+                                                  NodeIndex to,
+                                                  const RightHandSide &rhs) {
+    assert(rhs.term.isSimple());
+
+    RightHandSideIndex rhsIndex = nextRightHandSide++;
+    auto it = rightHandSides.emplace(rhsIndex, rhs).first;
+
+    return addTrans(from, to, rhsIndex);
 }
 
 
@@ -456,7 +818,7 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     GuardList funSymbolFreeGuard;
     for (const TT::Expression &ex : rhsCopy.guard) {
-        if (!ex.containsNoFunctionSymbols()) {
+        if (!ex.hasNoFunctionSymbols()) {
             // toGiNaC(true) -> Substitute function symbols by fresh variables
             funSymbolFreeGuard.push_back(ex.toGiNaC(true));
         }
@@ -501,8 +863,8 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     // move cost, but keep INF if present
     // TODO optimize (isInfinity() member function)
-    if ((rhs.cost.containsNoFunctionSymbols() && Expression(rhs.cost.toGiNaC()).isInfty())
-        || (followRhs.cost.containsNoFunctionSymbols() && Expression(followRhs.cost.toGiNaC()).isInfty())) {
+    if ((rhs.cost.hasNoFunctionSymbols() && Expression(rhs.cost.toGiNaC()).isInfty())
+        || (followRhs.cost.hasNoFunctionSymbols() && Expression(followRhs.cost.toGiNaC()).isInfty())) {
         rhs.cost = TT::Expression(itrs, Expression::Infty);
 
     } else {
@@ -761,6 +1123,19 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
 }
 
 
+bool RecursionGraph::canNest(const RightHandSide &inner, FunctionSymbolIndex index, const RightHandSide &outer) const {
+    set<string> innerguard;
+    for (const TT::Expression &ex : inner.guard) Expression(ex.toGiNaC()).collectVariableNames(innerguard);
+    for (const auto &it : outer.toLegacyTransition(itrs, index).update) {
+        if (innerguard.count(itrs.getVarname(it.first)) > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
     debugGraph("Chaining simple loops.");
     assert(node != initial);
@@ -783,8 +1158,7 @@ bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
         RightHandSideIndex simpleLoopRhsIndex = getTransData(simpleLoop);
         const RightHandSide &simpleLoopRhs = rightHandSides.at(simpleLoopRhsIndex);
 
-        if (!simpleLoopRhs.term.info(TT::InfoFlag::FunctionSymbol)
-            || !simpleLoopRhs.term.containsExactlyOneFunctionSymbol()) {
+        if (!simpleLoopRhs.term.isSimple()) {
             continue;
         }
 
@@ -816,10 +1190,280 @@ bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
 }
 
 
+bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
+    vector<TransIndex> loops = getTransFromTo(node,node);
+
+    for (int i = loops.size() - 1; i >= 0; --i) {
+        const RightHandSide &rhs = rightHandSides.at(getTransData(loops[i]));
+        if (!rhs.term.isSimple()) {
+            loops.erase(loops.begin() + i);
+        }
+    }
+
+    proofout << "Eliminating " << loops.size() << " self-loops for location ";
+    itrs.printLhs(node, proofout);
+    proofout << endl;
+    debugGraph("Eliminating " << loops.size() << " selfloops for node: " << node);
+    assert(!loops.empty());
+
+    //helper lambda
+    auto try_rank = [&](Transition &data) -> bool {
+        Expression rankfunc;
+        FarkasMeterGenerator::Result res = FarkasMeterGenerator::generate(itrs,data,rankfunc);
+        if (res == FarkasMeterGenerator::Unbounded) {
+            data.cost = Expression::Infty;
+            data.update.clear(); //clear update, but keep guard!
+            proofout << "  Found unbounded runtime when nesting loops," << endl;
+            return true;
+        } else if (res == FarkasMeterGenerator::Success) {
+            if (Recurrence::calcIterated(itrs,data,rankfunc)) {
+                Stats::add(Stats::SelfloopRanked);
+                debugGraph("Farkas nested loop ranked!");
+                proofout << "  Found this metering function when nesting loops: " << rankfunc << "," << endl;
+                return true;
+            }
+        }
+        return false;
+    };
+
+    //first try to find a metering function for every parallel selfloop
+    set<TransIndex> added_ranked;
+    set<TransIndex> added_unranked;
+    set<TransIndex> todo_remove;
+    map<TransIndex,TransIndex> map_to_original; //maps ranked transition to the original transition
+
+    //use index to iterate, as transitions are appended to loops while iterating
+    int oldloopcount = loops.size();
+    for (int lopidx=0; lopidx < loops.size(); ++lopidx) {
+        if (Timeout::soft()) goto timeout;
+        TransIndex tidx = loops[lopidx];
+        RightHandSide &rhs = rightHandSides.at(getTransData(tidx));
+
+        //remove the original selfloop later
+        todo_remove.insert(tidx);
+
+        //abort early on INF selfloops
+        if (Expression(rhs.cost.toGiNaC()).isInfty()) {
+            addRightHandSide(node, rhs);
+            continue;
+        }
+
+#ifdef SELFLOOPS_ALWAYS_SIMPLIFY
+        Timing::start(Timing::Preprocess);
+
+        if (PreprocessITRS::simplifyRightHandSide(itrs, rhs)) {
+            debugGraph("Simplified transition before Farkas");
+        }
+        Timing::done(Timing::Preprocess);
+#endif
+
+        Expression rankfunc;
+        pair<VariableIndex,VariableIndex> conflictVar;
+        Transition data = rhs.toLegacyTransition(itrs, node); //note: data possibly modified by instantiation in farkas
+        FarkasMeterGenerator::Result result = FarkasMeterGenerator::generate(itrs,data,rankfunc,&conflictVar);
+
+        //this is a second attempt for one selfloop, so ignore it if it was not successful
+        if (lopidx >= oldloopcount && result != FarkasMeterGenerator::Unbounded && result != FarkasMeterGenerator::Success) continue;
+        if (lopidx >= oldloopcount) debugGraph("MinMax heuristic successful");
+
+#ifdef FARKAS_HEURISTIC_FOR_MINMAX
+        if (result == FarkasMeterGenerator::ConflictVar) {
+            VariableIndex A,B;
+            tie(A,B) = conflictVar;
+
+            //add A > B to the guard, process resulting selfloop later
+            Transition dataAB = data; //copy
+            dataAB.guard.push_back(itrs.getGinacSymbol(A) > itrs.getGinacSymbol(B));
+            loops.push_back(addLegacyTransition(node, node, dataAB));
+
+            //add B > A to the guard, process resulting selfloop later
+            Transition dataBA = data; //copy
+            dataBA.guard.push_back(itrs.getGinacSymbol(B) > itrs.getGinacSymbol(A));
+            loops.push_back(addLegacyTransition(node, node, dataBA));
+
+            //ConflictVar is really just Unsat
+            result = FarkasMeterGenerator::Unsat;
+        }
+#endif
+
+        for (int step=0; step < 2; ++step) {
+            if (result == FarkasMeterGenerator::Unbounded) {
+                Stats::add(Stats::SelfloopInfinite);
+                debugGraph("Farkas unbounded!");
+                data.cost = Expression::Infty;
+                data.update.clear(); //clear update, but keep guard!
+                TransIndex newIdx = addLegacyTransition(node,node,data);
+                proofout << "  Self-Loop " << tidx << " has unbounded runtime, resulting in the new transition " << newIdx << "." << endl;
+            }
+            else if (result == FarkasMeterGenerator::Nonlinear) {
+                Stats::add(Stats::SelfloopNoRank);
+                debugGraph("Farkas nonlinear!");
+                addTransitionToSkipLoops.insert(node);
+                addRightHandSide(node, rhs); //keep old
+            }
+            else if (result == FarkasMeterGenerator::Unsat) {
+                Stats::add(Stats::SelfloopNoRank);
+                debugGraph("Farkas unsat!");
+                addTransitionToSkipLoops.insert(node);
+                added_unranked.insert(addLegacyTransition(node,node,data)); //keep old, mark as unsat
+            }
+            else if (result == FarkasMeterGenerator::Success) {
+                debugGraph("RANK: " << rankfunc);
+                if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
+                    //do not add to added_unranked, as this will probably not help with nested loops
+                    Stats::add(Stats::SelfloopNoUpdate);
+                    addTransitionToSkipLoops.insert(node);
+                    addRightHandSide(node, rhs); //keep old
+
+                } else {
+                    Stats::add(Stats::SelfloopRanked);
+                    TransIndex tnew = addLegacyTransition(node,node,data);
+                    added_ranked.insert(tnew);
+                    added_unranked.insert(tidx); //try nesting also with original transition
+                    map_to_original[tnew] = tidx;
+                    proofout << "  Self-Loop " << tidx << " has the metering function: " << rankfunc << ", resulting in the new transition " << tnew << "." << endl;
+                }
+            }
+
+            if (result != FarkasMeterGenerator::Unsat) break;
+
+#ifdef FARKAS_TRY_ADDITIONAL_GUARD
+            if (step >= 1) break;
+            //try again after adding helpful constraints to the guard
+            if (FarkasMeterGenerator::prepareGuard(itrs,data)) {
+                debugGraph("Farkas unsat try again after prepareGuard");
+                result = FarkasMeterGenerator::generate(itrs,data,rankfunc);
+            }
+            if (result != FarkasMeterGenerator::Success && result != FarkasMeterGenerator::Unbounded) break;
+            //if this was successful, the original transition is still marked as unsat (for nested loops!)
+#else
+            break;
+#endif
+        }
+    }
+
+    //try nesting loops (inner loop ranked, outer loop not [or perhaps it is?])
+    for (int i=0; i < NESTING_MAX_ITERATIONS; ++i) {
+        debugGraph("Nesting iteration: " << i);
+        bool changed = false;
+        set<TransIndex> added_nested;
+        for (TransIndex inner : added_ranked) {
+            const RightHandSide &innerRhs = rightHandSides.at(getTransData(inner));
+
+            for (TransIndex outer : added_unranked) {
+                if (Timeout::soft()) goto timeout;
+
+                //dont nest a loop with itself or with its original transition (save time)
+                if (inner == outer) continue;
+                if (map_to_original[inner] == outer) continue;
+
+                const RightHandSide &outerRhs = rightHandSides.at(getTransData(outer));
+
+                //dont nest if the inner loop has constant runtime
+                if (Expression(innerRhs.cost.toGiNaC()).getComplexity() == 0) continue;
+
+                //check if we can nest at all
+                if (!canNest(innerRhs, node, outerRhs)) continue;
+
+                //inner loop first
+                RightHandSide loop = innerRhs;
+                if (chainRightHandSides(loop, node, outerRhs)) {
+                    Complexity oldcpx = Expression(loop.cost.toGiNaC()).getComplexity();
+
+                    Transition loopLegacy = loop.toLegacyTransition(itrs, node);
+                    if (try_rank(loopLegacy) && loopLegacy.cost.getComplexity() > oldcpx) {
+                        proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
+                        changed = true;
+                        todo_remove.insert(outer); //remove the previously unsat loop
+                        TransIndex tnew = addLegacyTransition(node,node,loopLegacy);
+                        added_nested.insert(tnew);
+                        proofout << tnew;
+
+                        //try one outer iteration first as well (this is costly, but nested loops are often quadratic!)
+                        RightHandSide pre = outerRhs;
+                        RightHandSide loopAsRhs = loopLegacy.toRightHandSide(itrs, node);
+                        if (chainRightHandSides(pre, node, loopAsRhs)) {
+                            TransIndex tnew = addLegacyRightHandSide(node, node, pre);
+                            added_nested.insert(tnew);
+                            proofout << ", " << tnew;
+                        }
+                        proofout << "." << endl;
+                    }
+                }
+
+                //outer loop first
+                loop = outerRhs;
+                if (chainRightHandSides(loop, node, innerRhs)) {
+                    Complexity oldcpx = Expression(loop.cost.toGiNaC()).getComplexity();
+
+                    Transition loopLegacy = loop.toLegacyTransition(itrs, node);
+                    if (try_rank(loopLegacy) && loopLegacy.cost.getComplexity() > oldcpx) {
+                        proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
+                        changed = true;
+                        todo_remove.insert(outer); //remove the previously unsat loop
+                        TransIndex tnew = addLegacyTransition(node,node,loopLegacy);
+                        added_nested.insert(tnew);
+                        proofout << tnew;
+
+                        //try one inner iteration first as well (this is costly, but nested loops are often quadratic!)
+                        RightHandSide pre = innerRhs;
+                        RightHandSide loopAsRhs = loopLegacy.toRightHandSide(itrs, node);
+                        if (chainRightHandSides(pre, node, loopAsRhs)) {
+                            TransIndex tnew = addLegacyRightHandSide(node, node, pre);
+                            added_nested.insert(tnew);
+                            proofout << ", " << tnew;
+                        }
+                        proofout << "." << endl;
+                    }
+                }
+            }
+        }
+
+        debugGraph("Nested loops: " << added_nested.size());
+
+#ifdef NESTING_CHAIN_RANKED
+        for (TransIndex first : added_ranked) {
+            for (TransIndex second : added_ranked) {
+                if (Timeout::soft()) goto timeout;
+                if (first == second) continue;
+                RightHandSide chainedRhs = rightHandSides.at(getTransData(first));
+                const RightHandSide &secondRhs = rightHandSides.at(getTransData(second));
+                if (chainRightHandSides(chainedRhs, secondRhs)) {
+                    TransIndex newtrans = addLegacyRightHandSide(node, node, chainedRhs);
+                    added_nested.insert(newtrans);
+                    changed = true;
+                    proofout << "  Chained the parallel self-loops " << first << " and " << second << ", obtaining the new transition: " << newtrans << "." << endl;
+                }
+            }
+        }
+        debugGraph("Nested+chained loops: " << added_nested.size());
+#endif
+
+        if (!changed) break;
+        added_ranked.swap(added_nested); //remove ranked loops, try to nest nested loops one more time
+    }
+
+timeout:
+    //remove unsat transitions that were used in nested loops
+    proofout << "  Removing the self-loops:";
+    for (TransIndex tidx : todo_remove) {
+        proofout << " " << tidx;
+
+        rightHandSides.erase(getTransData(tidx));
+        removeTrans(tidx);
+    }
+    proofout << "." << endl;
+
+    removeDuplicateTransitions(getTransFromTo(node,node));
+
+    return true; //always changed as old transition is removed
+}
+
+
 void RecursionGraph::removeIncorrectTransitionsToNullNode() {
     vector<TransIndex> toNull = getTransTo(NULLNODE);
     for (TransIndex trans : toNull) {
-        if (!rightHandSides.at(getTransData(trans)).term.containsNoFunctionSymbols()) {
+        if (!rightHandSides.at(getTransData(trans)).term.hasNoFunctionSymbols()) {
             removeTrans(trans);
         }
     }
@@ -832,15 +1476,12 @@ bool RecursionGraph::compareRightHandSides(RightHandSideIndex indexA, RightHandS
     const RightHandSide &a = rightHandSides.at(indexA);
     const RightHandSide &b = rightHandSides.at(indexB);
     if (a.guard.size() != b.guard.size()) return false;
-    if (!a.cost.containsNoFunctionSymbols() || !b.cost.containsNoFunctionSymbols()) {
+    if (!a.cost.hasNoFunctionSymbols() || !b.cost.hasNoFunctionSymbols()) {
         return false;
     }
 
     if (!GiNaC::is_a<GiNaC::numeric>(a.cost.toGiNaC()-b.cost.toGiNaC())) return false; //cost equal up to constants
-    if (a.term.info(TT::InfoFlag::FunctionSymbol)
-        && b.term.info(TT::InfoFlag::FunctionSymbol)
-        && a.term.containsExactlyOneFunctionSymbol()
-        && b.term.containsExactlyOneFunctionSymbol()) {
+    if (a.term.isSimple() && b.term.isSimple()) {
         for (int i = 0; i < a.term.nops(); i++) {
             if (!a.term.op(i).toGiNaC().is_equal(b.term.op(i).toGiNaC())) {
                 return false;
@@ -878,7 +1519,7 @@ bool RecursionGraph::removeConstLeavesAndUnreachable() {
 
                 // toGiNaC(true) -> Substitute function symbols by variables
                 Expression costGiNaC = rhs.cost.toGiNaC(true);
-                if (rhs.term.containsExactlyOneFunctionSymbol()
+                if (rhs.term.hasExactlyOneFunctionSymbol()
                     && costGiNaC.getComplexity() <= 0) {
                     removeTrans(trans);
                     rightHandSides.erase(rhsIndex);
@@ -900,4 +1541,25 @@ bool RecursionGraph::removeConstLeavesAndUnreachable() {
         }
     }
     return changed;
+}
+
+bool RecursionGraph::removeIrrelevantTransitions(NodeIndex curr, set<NodeIndex> &visited) {
+    if (visited.insert(curr).second == false) return true; //already seen, remove any transitions forminig a loop
+
+    for (NodeIndex next : getSuccessors(curr)) {
+        if (Timeout::hard()) return false;
+        if (removeIrrelevantTransitions(next,visited)) {
+            //only const costs below next, so keep only non-const transitions to next
+            std::vector<TransIndex> checktrans = getTransFromTo(curr,next);
+            for (TransIndex trans : checktrans) {
+                RightHandSideIndex rhsIndex = getTransData(trans);
+                const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+
+                if (Expression(rhs.cost.toGiNaC()).getComplexity() <= 0)  {
+                    removeRightHandSide(curr, rhsIndex);
+                }
+            }
+        }
+    }
+    return getTransFrom(curr).empty(); //if true, curr is not of any interest anymore
 }

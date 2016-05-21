@@ -17,7 +17,7 @@
 
 #include "recurrence.h"
 
-#include "flowgraph.h"
+#include "itrs/recursiongraph.h"
 #include "timing.h"
 
 #include <purrs.hh>
@@ -27,7 +27,7 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 
 
-Recurrence::Recurrence(const ITSProblem &its)
+Recurrence::Recurrence(const ITRSProblem &its)
     : its(its), ginacN(Purrs::Expr(Purrs::Recurrence::n).toGiNaC())
 {}
 
@@ -179,7 +179,7 @@ bool Recurrence::calcIteratedCost(const Expression &cost, const Expression &mete
 }
 
 
-bool Recurrence::calcIterated(const ITSProblem &its, Transition &trans, const Expression &meterfunc) {
+bool Recurrence::calcIterated(const ITRSProblem &its, Transition &trans, const Expression &meterfunc) {
     Recurrence rec(its);
 
     UpdateMap newUpdate;

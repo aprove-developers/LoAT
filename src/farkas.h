@@ -22,7 +22,7 @@
 
 #include "expression.h"
 #include "z3toolbox.h"
-#include "its.h"
+#include "itrs/itrs.h"
 
 #include <vector>
 #include <map>
@@ -56,7 +56,7 @@ public:
 
     /**
      * Try to find a metering function for the given transition in the given ITS
-     * @param its the ITSProblem instance, providing lists of all symbols
+     * @param its the ITRSProblem instance, providing lists of all symbols
      * @param t the Transition to find a metering function for, NOTE: modified by instantiation
      * @param result the resulting metering function (output only)
      * @param conflictVar if given, this is set if it would help to add A > B (or B > A) to the guard for variables A,B
@@ -64,16 +64,16 @@ public:
      *
      * @note the transition t might be modified (by freevar instantiation) only if the result is Success
      */
-    static Result generate(ITSProblem &its, Transition &t, Expression &result, std::pair<VariableIndex, VariableIndex> *conflictVar = nullptr);
+    static Result generate(ITRSProblem &its, Transition &t, Expression &result, std::pair<VariableIndex, VariableIndex> *conflictVar = nullptr);
 
     /**
      * Prepares the guard to get better farkas results by adding additional constraints
      * @return true iff the transition was changed
      */
-    static bool prepareGuard(ITSProblem &its, Transition &t);
+    static bool prepareGuard(ITRSProblem &its, Transition &t);
 
 private:
-    FarkasMeterGenerator(ITSProblem &its, const Transition &t);
+    FarkasMeterGenerator(ITRSProblem &its, const Transition &t);
 
     /**
      * Some preprocessing steps as equality propagation and elimination by transitive closure
@@ -196,9 +196,9 @@ private:
 
 private:
     /**
-     * The ITSProblem instance, used for list of variables and handling of fresh symbols
+     * The ITRSProblem instance, used for list of variables and handling of fresh symbols
      */
-    ITSProblem &its;
+    ITRSProblem &its;
 
     /**
      * The transition data (possible modified by makeLinearTransition)

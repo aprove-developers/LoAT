@@ -21,7 +21,7 @@
 #include "guardtoolbox.h"
 #include "z3toolbox.h"
 #include "expression.h"
-#include "flowgraph.h"
+#include "itrs/recursiongraph.h"
 #include "timeout.h"
 
 #include <string>
@@ -33,7 +33,7 @@
 using namespace std;
 
 
-FarkasMeterGenerator::FarkasMeterGenerator(ITSProblem &its, const Transition &t)
+FarkasMeterGenerator::FarkasMeterGenerator(ITRSProblem &its, const Transition &t)
     : its(its), update(t.update), guard(t.guard),
       coeff0(context.getFreshVariable("c",Z3VariableContext::Real))
 {}
@@ -595,7 +595,7 @@ stack<GiNaC::exmap> FarkasMeterGenerator::instantiateFreeVariables() const {
 }
 
 
-bool FarkasMeterGenerator::prepareGuard(ITSProblem &its, Transition &t) {
+bool FarkasMeterGenerator::prepareGuard(ITRSProblem &its, Transition &t) {
     Timing::Scope timer1(Timing::FarkasTotal);
     Timing::Scope timer2(Timing::FarkasLogic);
     bool changed = false;
@@ -630,7 +630,7 @@ bool FarkasMeterGenerator::prepareGuard(ITSProblem &its, Transition &t) {
 }
 
 
-FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITSProblem &its, Transition &t, Expression &result, pair<VariableIndex, VariableIndex> *conflictVar) {
+FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &its, Transition &t, Expression &result, pair<VariableIndex, VariableIndex> *conflictVar) {
     Timing::Scope timer(Timing::FarkasTotal);
     Timing::start(Timing::FarkasLogic);
     FarkasMeterGenerator f(its,t);

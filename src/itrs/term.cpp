@@ -232,6 +232,10 @@ bool Expression::has(const ExprSymbol &sym) const {
     return root->has(sym);
 }
 
+bool Expression::isSimple() const {
+    return info(InfoFlag::FunctionSymbol) && hasExactlyOneFunctionSymbol();
+}
+
 
 void Expression::collectVariables(ExprSymbolSet &set) const {
     root->collectVariables(set);
@@ -283,13 +287,13 @@ std::vector<Expression> Expression::getFunctionApplications() const {
 }
 
 
-bool Expression::containsNoFunctionSymbols() const {
-    return root->containsNoFunctionSymbols();
+bool Expression::hasNoFunctionSymbols() const {
+    return root->hasNoFunctionSymbols();
 }
 
 
-bool Expression::containsExactlyOneFunctionSymbol() const {
-    return root->containsExactlyOneFunctionSymbol();
+bool Expression::hasExactlyOneFunctionSymbol() const {
+    return root->hasExactlyOneFunctionSymbol();
 }
 
 
@@ -614,7 +618,7 @@ std::vector<Expression> Term::getFunctionApplications() const {
 }
 
 
-bool Term::containsNoFunctionSymbols() const {
+bool Term::hasNoFunctionSymbols() const {
     class NoFuncSymbolsVisitor : public Term::ConstVisitor {
     public:
         NoFuncSymbolsVisitor(bool &noFuncSymbols)
@@ -638,7 +642,7 @@ bool Term::containsNoFunctionSymbols() const {
 }
 
 
-bool Term::containsExactlyOneFunctionSymbol() const {
+bool Term::hasExactlyOneFunctionSymbol() const {
     class ExactlyOneFunSymbolVisitor : public Term::ConstVisitor {
     public:
         ExactlyOneFunSymbolVisitor(bool &oneFunSymbol)
@@ -893,7 +897,7 @@ GiNaC::ex Relation::toGiNaC(bool subFunSyms) const {
 
 
 std::shared_ptr<Term> Relation::ginacify() const {
-    if (containsNoFunctionSymbols()) {
+    if (hasNoFunctionSymbols()) {
         return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
 
     } else {
@@ -989,7 +993,7 @@ Purrs::Expr Addition::toPurrs(int i) const {
 
 
 std::shared_ptr<Term> Addition::ginacify() const {
-    if (containsNoFunctionSymbols()) {
+    if (hasNoFunctionSymbols()) {
         return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
 
     } else {
@@ -1085,7 +1089,7 @@ Purrs::Expr Subtraction::toPurrs(int i) const {
 
 
 std::shared_ptr<Term> Subtraction::ginacify() const {
-    if (containsNoFunctionSymbols()) {
+    if (hasNoFunctionSymbols()) {
         return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
 
     } else {
@@ -1186,7 +1190,7 @@ Purrs::Expr Multiplication::toPurrs(int i) const {
 
 
 std::shared_ptr<Term> Multiplication::ginacify() const {
-    if (containsNoFunctionSymbols()) {
+    if (hasNoFunctionSymbols()) {
         return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
 
     } else {
@@ -1281,7 +1285,7 @@ Purrs::Expr Power::toPurrs(int i) const {
 
 
 std::shared_ptr<Term> Power::ginacify() const {
-    if (containsNoFunctionSymbols()) {
+    if (hasNoFunctionSymbols()) {
         return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
 
     } else {
@@ -1441,7 +1445,7 @@ std::shared_ptr<Term> FunctionSymbol::ginacify() const {
     std::vector<std::shared_ptr<Term>> newArgs;
 
     for (const std::shared_ptr<Term> &term : args) {
-        if (term->containsNoFunctionSymbols()) {
+        if (term->hasNoFunctionSymbols()) {
             newArgs.push_back(std::make_shared<GiNaCExpression>(getITRSProblem(), term->toGiNaC()));
 
         } else {

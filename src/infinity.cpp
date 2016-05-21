@@ -20,7 +20,7 @@
 #include "timing.h"
 #include "z3toolbox.h"
 #include "guardtoolbox.h"
-#include "flowgraph.h"
+#include "itrs/recursiongraph.h"
 #include "debug.h"
 
 #include <queue>
@@ -132,7 +132,7 @@ private:
 
 /* ### InfiniteInstances ### */
 
-InfiniteInstances::InfiniteInstances(const ITSProblem &its, GuardList guard, Expression cost)
+InfiniteInstances::InfiniteInstances(const ITRSProblem &its, GuardList guard, Expression cost)
     : its(its), guard(guard), originalGuard(guard), cost(cost), originalCost(cost) {}
 
 
@@ -888,7 +888,7 @@ Expression InfiniteInstances::buildProofBound(const exmap &constSubs) const {
     return originalCost.subs(constSubs);
 }
 
-InfiniteInstances::Result InfiniteInstances::check(const ITSProblem &its, GuardList guard, Expression cost, bool isFinalCheck) {
+InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &its, GuardList guard, Expression cost, bool isFinalCheck) {
     Timing::Scope timer(Timing::Infinity);
     assert(GuardToolbox::isValidGuard(guard));
 

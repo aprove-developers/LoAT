@@ -113,12 +113,6 @@
 #define Z3_CHECK_TIMEOUT 100u
 
 /*
- * if defined, the final guard/cost is checked to ensure it has infintily many instances
- * NOTE: this check is strongly required for soundness (should never be disabled anymore)
- */
-#define FINAL_INFINITY_CHECK
-
-/*
  * discard a limit problem of size >= LIMIT_PROBLEM_DISCARD_SIZE in a non-final check
  * if z3 yields "unknown"
  */

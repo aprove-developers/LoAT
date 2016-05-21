@@ -32,7 +32,7 @@ bool Recursion::solve() {
 
         // Identify potential base cases
         for (auto it = rightHandSides.begin(); it != rightHandSides.end();) {
-            if ((*it)->term.containsNoFunctionSymbols()) {
+            if ((*it)->term.hasNoFunctionSymbols()) {
                 debugPurrs("Potential base case: " << **it);
                 ++it;
 
@@ -210,7 +210,7 @@ bool Recursion::findRealVars(const TT::Expression &term) {
 
             TT::Expression update = funApp.op(i);
             debugPurrs("update: " << update);
-            if (!update.containsNoFunctionSymbols()) {
+            if (!update.hasNoFunctionSymbols()) {
                 debugPurrs("Update contains function symbol, cannot continue");
                 return false;
             }
@@ -231,7 +231,7 @@ bool Recursion::findBaseCases() {
     for (auto it = rightHandSides.begin(); it != rightHandSides.end();) {
         std::vector<Expression> query;
         for (const TT::Expression &ex : (*it)->guard) {
-            assert(ex.containsNoFunctionSymbols());
+            assert(ex.hasNoFunctionSymbols());
             query.push_back(ex.toGiNaC());
         }
 
@@ -279,7 +279,7 @@ bool Recursion::baseCasesAreSufficient() {
     for (const TT::Expression &funApp : funApps) {
         TT::Expression update = funApp.op(realVarIndex);
         debugPurrs("Update: " << update);
-        assert(update.containsNoFunctionSymbols());
+        assert(update.hasNoFunctionSymbols());
         GiNaC::exmap updateSub;
         updateSub.emplace(realVarGiNaC, update.toGiNaC());
 
@@ -289,7 +289,7 @@ bool Recursion::baseCasesAreSufficient() {
             debugPurrs("OR (updated base case guard)");
             std::vector<Expression> updatedGuard;
             for (const TT::Expression &ex : pair.second->guard) {
-                if (!ex.containsNoFunctionSymbols()) {
+                if (!ex.hasNoFunctionSymbols()) {
                     debugPurrs("Warning: guard contains function symbol, substituting by variable");
                 }
 
@@ -306,7 +306,7 @@ bool Recursion::baseCasesAreSufficient() {
 
         std::vector<Expression> queryLhs; // conjunction
         for (const TT::Expression &ex : recursion->guard) {
-            if (!ex.containsNoFunctionSymbols()) {
+            if (!ex.hasNoFunctionSymbols()) {
                 debugPurrs("Warning: guard contains function symbol, substituting by variable");
             }
 

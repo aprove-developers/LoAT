@@ -30,6 +30,8 @@
 #include "expression.h"
 #include "term.h"
 
+typedef std::vector<Expression> GuardList;
+typedef std::map<VariableIndex,Expression> UpdateMap;
 
 /**
  * Represents a rule in an ITS
