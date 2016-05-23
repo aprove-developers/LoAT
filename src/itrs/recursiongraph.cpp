@@ -130,6 +130,31 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
     for (const ITRSRule &rule : itrs.getRules()) {
         addRule(rule);
     }
+
+    // add a new initial node if the current one has ingoing transitions
+    if (!getTransTo(initial).empty()) {
+        // create the function symbol initial'
+        FunctionSymbolIndex newInitialIndex = itrs.addFunctionSymbolVariant(initial);
+        nodes.insert((NodeIndex)newInitialIndex);
+        const FunctionSymbol &newInitial = itrs.getFunctionSymbol(newInitialIndex);
+
+        // build the rule initial'(x_1, ..., x_n) -> initial(x_1, ..., x_n)
+        std::vector<TT::Expression> vars;
+        for (VariableIndex var : newInitial.getArguments()) {
+            vars.push_back(TT::Expression(itrs, itrs.getGinacSymbol(var)));
+        }
+        TT::Expression def(itrs, initial, vars);
+
+        RightHandSide rhs;
+        // initial(x_1, ..., x_n)
+        rhs.term = TT::Expression(itrs, initial, vars);
+        // cost 0
+        rhs.cost = TT::Expression(itrs, 0);
+
+        addRightHandSide(newInitialIndex, std::move(rhs));
+
+        initial = newInitialIndex;
+    }
 }
 
 
@@ -346,6 +371,8 @@ bool RecursionGraph::pruneTransitions() {
         for (NodeIndex pre : getPredecessors(node)) {
             const vector<TransIndex> &parallel = getTransFromTo(pre,node);
 
+            set<TransIndex> keep;
+
             if (parallel.size() > PRUNE_MAX_PARALLEL_TRANSITIONS) {
                 priority_queue<TransCpx,std::vector<TransCpx>,decltype(comp)> queue(comp);
 
@@ -357,6 +384,7 @@ bool RecursionGraph::pruneTransitions() {
                     RightHandSideIndex rhsIndex = getTransData(trans);
                     const RightHandSide &rhs = rightHandSides.at(rhsIndex);
                     if (!rhs.term.isSimple()) {
+                        keep.insert(trans);
                         continue;
                     }
 
@@ -366,7 +394,6 @@ bool RecursionGraph::pruneTransitions() {
                     queue.push(make_tuple(trans,res.cpx,res.inftyVars));
                 }
 
-                set<TransIndex> keep;
                 for (int i=0; i < PRUNE_MAX_PARALLEL_TRANSITIONS; ++i) {
                     keep.insert(get<0>(queue.top()));
                     queue.pop();
@@ -376,9 +403,6 @@ bool RecursionGraph::pruneTransitions() {
                 for (TransIndex trans : parallel) {
                     RightHandSideIndex rhsIndex = getTransData(trans);
                     const RightHandSide &rhs = rightHandSides.at(rhsIndex);
-                    if (!rhs.term.isSimple()) {
-                        continue;
-                    }
                     Transition legacy = rhs.toLegacyTransition(itrs, pre);
 
                     if (!has_empty && legacy.update.empty() && legacy.guard.empty() && legacy.cost.is_zero()) {
@@ -431,18 +455,35 @@ RuntimeResult RecursionGraph::getMaxRuntime() {
 
     for (TransIndex trans : vec) {
         const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
-        if (!rhs.term.isSimple()) {
+
+        // Make sure that rhs's guard and cost do not contain any function symbols
+        bool hasFunSym = false;
+        for (const TT::Expression &ex : rhs.guard) {
+            if (!ex.hasNoFunctionSymbols()) {
+                hasFunSym = true;
+                break;
+            }
+        }
+        if (hasFunSym) {
             continue;
         }
 
-        Transition legacy = rhs.toLegacyTransition(itrs, initial);
+        if (!rhs.cost.hasNoFunctionSymbols()) {
+            continue;
+        }
+        // TODO do the same for the parital function
+        Expression costGiNaC = rhs.cost.toGiNaC();
+        std::vector<Expression> guardGiNaC;
+        for (const TT::Expression &ex : rhs.guard) {
+            guardGiNaC.push_back(ex.toGiNaC());
+        }
 
-        Complexity oldCpx = legacy.cost.getComplexity();
+        Complexity oldCpx = costGiNaC.getComplexity();
 
 #ifdef DEBUG_PROBLEMS
         if (oldCpx > oldMaxCpx) {
             oldMaxCpx = oldCpx;
-            oldMaxExpr = legacy.cost;
+            oldMaxExpr = costGiNaC;
         }
 #endif
         //avoid infinity checks that cannot improve the result
@@ -451,7 +492,7 @@ RuntimeResult RecursionGraph::getMaxRuntime() {
         //check if this transition allows infinitely many guards
         debugGraph(endl << "INFINITY CHECK");
 
-        auto checkRes = AsymptoticBound::determineComplexity(itrs, legacy.guard, legacy.cost, true);
+        auto checkRes = AsymptoticBound::determineComplexity(itrs, guardGiNaC, costGiNaC, true);
         debugGraph("RES: " << checkRes.cpx << " because: " << checkRes.reason);
         if (checkRes.cpx == Expression::ComplexNone) {
             debugGraph("INFINITY: FAIL");
@@ -466,7 +507,7 @@ RuntimeResult RecursionGraph::getMaxRuntime() {
             proofout << "Found new complexity " << Expression::complexityString(cpx) << ", because: " << checkRes.reason << "." << endl << endl;
             res.bound = checkRes.cost;
             res.reducedCpx = checkRes.reducedCpx;
-            res.guard = legacy.guard;
+            res.guard = guardGiNaC;
 
             if (cpx == Expression::ComplexInfty) break;
         }
@@ -782,6 +823,7 @@ bool RecursionGraph::hasExactlyOneRightHandSide(NodeIndex node) {
 
 
 void RecursionGraph::removeRightHandSide(NodeIndex node, RightHandSideIndex rhs) {
+    debugGraph("removing rhs " << rhs);
     for (TransIndex trans : getTransFrom(node)) {
         if (getTransData(trans) == rhs) {
             removeTrans(trans);
@@ -818,10 +860,8 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     GuardList funSymbolFreeGuard;
     for (const TT::Expression &ex : rhsCopy.guard) {
-        if (!ex.hasNoFunctionSymbols()) {
-            // toGiNaC(true) -> Substitute function symbols by fresh variables
-            funSymbolFreeGuard.push_back(ex.toGiNaC(true));
-        }
+        // toGiNaC(true) -> Substitute function symbols by fresh variables
+        funSymbolFreeGuard.push_back(ex.toGiNaC(true));
     }
 
 #ifdef CONTRACT_CHECK_SAT
@@ -947,6 +987,7 @@ bool RecursionGraph::eliminateALocation(NodeIndex node, set<NodeIndex> &visited)
 
     debugGraph("trying to eliminate location " << node);
 
+
     set<NodeIndex> predecessors = std::move(getPredecessors(node));
 
     vector<TransIndex> transitionsIn = std::move(getTransTo(node));
@@ -1047,7 +1088,7 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
                 if (Timeout::soft()) break;
 
                 RightHandSideIndex rhsIndex2 = getTransData(t2);
-                const RightHandSide &rhs2 = rightHandSides.at(rhsIndex);
+                const RightHandSide &rhs2 = rightHandSides.at(rhsIndex2);
 
                 if (alreadyChainedWith.count(rhsIndex2) == 1) {
                     continue;
@@ -1141,6 +1182,8 @@ bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
     assert(node != initial);
     assert(!getTransFromTo(node, node).empty());
 
+    bool changed = false;
+
     set<NodeIndex> predecessors = std::move(getPredecessors(node));
     predecessors.erase(node);
 
@@ -1158,24 +1201,25 @@ bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
         RightHandSideIndex simpleLoopRhsIndex = getTransData(simpleLoop);
         const RightHandSide &simpleLoopRhs = rightHandSides.at(simpleLoopRhsIndex);
 
-        if (!simpleLoopRhs.term.isSimple()) {
-            continue;
-        }
 
-        for (std::pair<TransIndex,bool> &pair : transitions) {
-            RightHandSideIndex rhsIndex = getTransData(pair.first);
-            RightHandSide rhsCopy = rightHandSides.at(rhsIndex);
+        if (simpleLoopRhs.term.isSimple()) {
+            for (std::pair<TransIndex,bool> &pair : transitions) {
+                RightHandSideIndex rhsIndex = getTransData(pair.first);
+                RightHandSide rhsCopy = rightHandSides.at(rhsIndex);
 
-            if (chainRightHandSides(rhsCopy, node, simpleLoopRhs)) {
-                addRightHandSide(getTransSource(pair.first), rhsCopy);
-                Stats::add(Stats::ContractLinear);
-                pair.second = true;
+                if (chainRightHandSides(rhsCopy, node, simpleLoopRhs)) {
+                    addRightHandSide(getTransSource(pair.first), rhsCopy);
+                    Stats::add(Stats::ContractLinear);
+                    pair.second = true;
+
+                    changed = true;
+                }
+
             }
 
+            debugGraph("removing simple loop " << simpleLoop);
+            removeTrans(simpleLoop);
         }
-
-        debugGraph("removing simple loop " << simpleLoop);
-        removeTrans(simpleLoop);
     }
 
     for (const std::pair<TransIndex,bool> &pair : transitions) {
@@ -1186,18 +1230,22 @@ bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
         }
     }
 
-    return true;
+    return changed;
 }
 
 
 bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
-    vector<TransIndex> loops = getTransFromTo(node,node);
+    vector<TransIndex> loops;
+    for (TransIndex trans : getTransFromTo(node, node)) {
+        const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
 
-    for (int i = loops.size() - 1; i >= 0; --i) {
-        const RightHandSide &rhs = rightHandSides.at(getTransData(loops[i]));
-        if (!rhs.term.isSimple()) {
-            loops.erase(loops.begin() + i);
+        if (rhs.term.isSimple()) {
+            loops.push_back(trans);
         }
+    }
+
+    if (loops.empty()) {
+        return false;
     }
 
     proofout << "Eliminating " << loops.size() << " self-loops for location ";
@@ -1512,18 +1560,18 @@ bool RecursionGraph::removeConstLeavesAndUnreachable() {
             dfs_remove(next);
 
             //if next is (now) a leaf, remove const transitions to next
-            if (!getTransFrom(next).empty()) continue;
-            for (TransIndex trans : getTransFromTo(curr,next)) {
-                RightHandSideIndex rhsIndex = getTransData(trans);
-                const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+            if (getTransFrom(next).empty()) {
+                for (TransIndex trans : getTransFromTo(curr,next)) {
+                    RightHandSideIndex rhsIndex = getTransData(trans);
+                    const RightHandSide &rhs = rightHandSides.at(rhsIndex);
 
-                // toGiNaC(true) -> Substitute function symbols by variables
-                Expression costGiNaC = rhs.cost.toGiNaC(true);
-                if (rhs.term.hasExactlyOneFunctionSymbol()
-                    && costGiNaC.getComplexity() <= 0) {
-                    removeTrans(trans);
-                    rightHandSides.erase(rhsIndex);
-                    changed = true;
+                    // toGiNaC(true) -> Substitute function symbols by variables
+                    Expression costGiNaC = rhs.cost.toGiNaC(true);
+                    if (!rhs.term.hasNoFunctionSymbols()
+                        && costGiNaC.getComplexity() <= 0) {
+                        removeRightHandSide(curr, rhsIndex);
+                        changed = true;
+                    }
                 }
             }
         }

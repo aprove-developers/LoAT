@@ -140,6 +140,9 @@ z3::check_result Z3Toolbox::checkExpressionsSATapproximate(const std::vector<Exp
     z3::expr target = concatExpressions(context,exprvec,ConcatAnd);
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(target);
     z3::check_result z3res = solver.check();
     debugZ3(solver,z3res,"checkExprSATapprox");

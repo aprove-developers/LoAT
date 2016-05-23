@@ -82,6 +82,7 @@ enum Symbol {
     MINUS,
     TIMES,
     SLASH,
+    CIRCUMFLEX,
     FUNCTIONSYMBOL,
     VARIABLE,
     LPAREN,
@@ -176,6 +177,8 @@ private:
     TT::Expression factor();
 
 private:
+    static const std::set<char> specialCharsInVarNames;
+
     /* ITS Data */
     std::vector<std::string> vars;
     std::set<VariableIndex> freeVars;

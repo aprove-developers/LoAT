@@ -76,6 +76,12 @@ Expression Expression::operator*(const GiNaC::ex &rhs) const {
 }
 
 
+Expression Expression::operator^(const GiNaC::ex &rhs) const {
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
+    return Expression(std::make_shared<Power>(root->getITRSProblem(), root, r));
+}
+
+
 Expression Expression::operator==(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
@@ -142,6 +148,12 @@ Expression Expression::operator*(const Expression &rhs) const {
 }
 
 
+Expression Expression::operator^(const Expression &rhs) const {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    return Expression(std::make_shared<Power>(root->getITRSProblem(), root, rhs.root));
+}
+
+
 Expression Expression::operator==(const Expression &rhs) const {
     assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
@@ -201,7 +213,6 @@ Expression& Expression::operator-=(const Expression &rhs) {
     assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     root = std::make_shared<Subtraction>(root->getITRSProblem(), root, rhs.root);
     return *this;
-
 }
 
 
@@ -209,7 +220,13 @@ Expression& Expression::operator*=(const Expression &rhs) {
     assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     root = std::make_shared<Multiplication>(root->getITRSProblem(), root, rhs.root);
     return *this;
+}
 
+
+Expression& Expression::operator^=(const Expression &rhs) {
+    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
+    root = std::make_shared<Power>(root->getITRSProblem(), root, rhs.root);
+    return *this;
 }
 
 
@@ -462,7 +479,7 @@ bool Term::has(const ExprSymbol &sym) const {
         }
 
         void visit(const GiNaCExpression &expr) override {
-            hasSym = hasSym || expr.has(symbol);
+            hasSym = hasSym || expr.getExpression().has(symbol);
         }
 
         bool hasSymbol() const {
@@ -1362,7 +1379,7 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
         assert(vars.size() == args.size());
 
         // build the substitution: variable -> passed argument
-        debugTerm("\tbuild substitution");
+        debugTerm("\tbuilt substitution");
         Substitution sub;
         for (int i = 0; i < vars.size(); ++i) {
             ExprSymbol var = getITRSProblem().getGinacSymbol(vars[i]);

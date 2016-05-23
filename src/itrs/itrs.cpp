@@ -30,6 +30,8 @@
 using namespace std;
 using namespace boost::algorithm;
 
+const std::set<char> ITRSProblem::specialCharsInVarNames = {'/', '\'', '.'};
+
 /**
  * Replaces symbols that ginac does not allow by underscores _
  * @param name the variable name to be modified
@@ -574,7 +576,8 @@ void ITRSProblem::nextSymbol() {
 
     } else if (isalpha(nextChar)) {
         lastIdent.clear();
-        while (isalnum(toParseReversed.back())) {
+        while (isalnum(toParseReversed.back())
+               || specialCharsInVarNames.count(toParseReversed.back()) == 1) {
             lastIdent += toParseReversed.back();
             toParseReversed.pop_back();
         }
@@ -597,6 +600,9 @@ void ITRSProblem::nextSymbol() {
 
         }  else if (nextChar == '/') {
             symbol = SLASH;
+
+        }  else if (nextChar == '^') {
+            symbol = CIRCUMFLEX;
 
         } else if (nextChar == '(') {
             symbol = LPAREN;
@@ -671,9 +677,20 @@ TT::Expression ITRSProblem::term() {
     debugTermParser("parsing term");
     TT::Expression result = factor();
 
-    while (symbol == TIMES || symbol == SLASH) {
+    while (symbol == TIMES || symbol == SLASH || symbol == CIRCUMFLEX) {
+        Symbol op = symbol;
         nextSymbol();
-        result = result * factor();
+
+        if (op == TIMES) {
+            result *= factor();
+
+        } else if (op == SLASH) {
+            throw UnexpectedSymbolException("division is not allowed in the input");
+            //result /= factor();
+
+        } else { // CIRCUMFLEX
+            result ^= factor();
+        }
     }
 
     return result;

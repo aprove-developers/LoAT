@@ -38,7 +38,6 @@ bool PreprocessITRS::simplifyRightHandSide(const ITRSProblem &itrs, RightHandSid
     do {
         changed = removeTrivialGuards(rhs.guard);
         changed = eliminateFreeVars(itrs,rhs) || changed;
-        //changed = removeTrivialUpdates(itrs,rhs.update) || changed;
         result = result || changed;
     } while (changed);
     return result;
@@ -127,5 +126,6 @@ bool PreprocessITRS::eliminateFreeVars(const ITRSProblem &itrs, RightHandSide &r
 
         result = result || changed;
     } while (changed);
+
     return result;
 }

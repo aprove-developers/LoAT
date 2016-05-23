@@ -226,24 +226,26 @@ int main(int argc, char *argv[]) {
                     proofout << endl << "solved recursions" << endl;
                     g.printForProof();
                     if (dotOutput) g.printDot(dotStream, dotStep++, "Solved recursions");
-                }
+                    if (Timeout::soft()) break;
 
-                if (g.accelerateSimpleLoops()) {
-                    changed = true;
-                    proofout << endl <<  "Accelerated all simple loops using metering functions"
-                             << " (where possible):" << endl;
-                    g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Accelerate simple loops");
-                }
-                if (Timeout::soft()) break;
+                } else {
+                    if (g.accelerateSimpleLoops()) {
+                        changed = true;
+                        proofout << endl <<  "Accelerated all simple loops using metering functions"
+                                 << " (where possible):" << endl;
+                        g.printForProof();
+                        if (dotOutput) g.printDot(dotStream,dotStep++,"Accelerate simple loops");
+                    }
+                    if (Timeout::soft()) break;
 
-                if (g.chainSimpleLoops()) {
-                    changed = true;
-                    proofout << endl <<  "Chained simpled loops:" << endl;
-                    g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Chain simple loops");
+                    if (g.chainSimpleLoops()) {
+                        changed = true;
+                        proofout << endl <<  "Chained simpled loops:" << endl;
+                        g.printForProof();
+                        if (dotOutput) g.printDot(dotStream,dotStep++,"Chain simple loops");
+                    }
+                    if (Timeout::soft()) break;
                 }
-                if (Timeout::soft()) break;
 
                 if (g.chainLinear()) {
                     changed = true;

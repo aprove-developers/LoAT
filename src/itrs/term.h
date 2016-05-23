@@ -70,6 +70,7 @@ public:
     Expression operator+(const GiNaC::ex &rhs) const;
     Expression operator-(const GiNaC::ex &rhs) const;
     Expression operator*(const GiNaC::ex &rhs) const;
+    Expression operator^(const GiNaC::ex &rhs) const;
 
     Expression operator==(const GiNaC::ex &rhs) const;
     Expression operator!=(const GiNaC::ex &rhs) const;
@@ -81,6 +82,7 @@ public:
     Expression operator+(const Expression &rhs) const;
     Expression operator-(const Expression &rhs) const;
     Expression operator*(const Expression &rhs) const;
+    Expression operator^(const Expression &rhs) const;
 
     Expression operator==(const Expression &rhs) const;
     Expression operator!=(const Expression &rhs) const;
@@ -92,6 +94,7 @@ public:
     Expression& operator+=(const Expression &rhs);
     Expression& operator-=(const Expression &rhs);
     Expression& operator*=(const Expression &rhs);
+    Expression& operator^=(const Expression &rhs);
 
     int nops() const;
     Expression op(int i) const;

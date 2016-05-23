@@ -155,6 +155,7 @@ bool Recursion::solve() {
 
 
 bool Recursion::findRecursion() {
+    debugPurrs("===Finding recursion===");
     recursion = nullptr;
 
     for (const RightHandSide *rhs : rightHandSides) {

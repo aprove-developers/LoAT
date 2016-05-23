@@ -414,12 +414,14 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::l
 
 abort:  ; //this symbol could not be eliminated, try the next one
     }
+
     return changed;
 }
 
 
 bool GuardToolbox::eliminateByTransitiveClosure(const ITRSProblem &itrs, TT::ExpressionVector &guard, const GiNaC::lst &vars, bool removeHalfBounds,
                                                 function<bool(const ExprSymbol &)> allowFunc) {
+
     //get all variables that appear in an inequality
     ExprSymbolSet tryVars;
     for (const TT::Expression &ex : guard) {
@@ -438,6 +440,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(const ITRSProblem &itrs, TT::Exp
 
         for (int i=0; i < guard.size(); ++i) {
             //check if this guard must be used for var
+
             const Expression ex = guard[i].toGiNaC();
             if (!ex.has(var)) continue;
             if (!isValidInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) goto abort;
@@ -476,6 +479,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(const ITRSProblem &itrs, TT::Exp
 
 abort:  ; //this symbol could not be eliminated, try the next one
     }
+
     return changed;
 }
 
