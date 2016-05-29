@@ -280,6 +280,8 @@ private:
      */
     bool removeIrrelevantTransitions(NodeIndex curr, std::set<NodeIndex> &visited);
 
+    bool rightHandSideIsEmpty(NodeIndex node, const RightHandSide &rhs) const;
+
 private:
     ITRSProblem &itrs;
 

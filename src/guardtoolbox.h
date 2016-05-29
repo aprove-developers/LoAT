@@ -196,6 +196,8 @@ namespace GuardToolbox {
      */
     Expression negateLessEqualInequality(const Expression &term);
 
+    Expression negate(const Expression &term);
+
 
     /**
      * Given a <= inequality, returns true if lhs and rhs are numeric and this is a tautology,

@@ -130,6 +130,7 @@ public:
     std::vector<Expression> getFunctionApplications() const;
 
     bool hasNoFunctionSymbols() const;
+    // e.g., f(f(x)) has exactly one function symbol
     bool hasExactlyOneFunctionSymbol() const;
 
     Expression substitute(const Substitution &sub) const;

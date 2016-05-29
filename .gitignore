@@ -15,7 +15,7 @@
 loat
 src/loat
 src/koatToComplexity
-src/koatToT2
+src/itrsToLoAT
 
 #benchmarking directories
 benchlog

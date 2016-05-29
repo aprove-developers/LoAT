@@ -8,11 +8,26 @@
 void writeRules(const ITRS &itrs,
                 const std::vector<ITRSRule> &rules,
                 std::ostream &os) {
+    std::vector<FunctionSymbolIndex> allFunSyms;
+    std::set<FunctionSymbolIndex> allFunSymsSet;
+    for (const ITRSRule &rule : rules) {
+        rule.lhs.collectFunctionSymbols(allFunSyms);
+        rule.lhs.collectFunctionSymbols(allFunSymsSet);
+    }
+    assert(!allFunSyms.empty());
 
     os << "(GOAL COMPLEXITY)" << std::endl;
-    os << "(STARTTERM (FUNCTIONSYMBOLS "
-       << itrs.getFunctionSymbolName(itrs.getStartFunctionSymbol())
-       << "))" << std::endl;
+    if (itrs.startFunctionSymbolWasDeclared()) {
+        os << "(STARTTERM (FUNCTIONSYMBOLS ";
+        if (allFunSymsSet.count(itrs.getStartFunctionSymbol()) == 1) {
+           os << itrs.getFunctionSymbolName(itrs.getStartFunctionSymbol());
+
+        } else {
+            os << itrs.getFunctionSymbolName(allFunSyms.front());
+        }
+
+        os << "))" << std::endl;
+    }
 
     os << "(VAR";
     for (const std::string &var : itrs.getVariables()) {
@@ -84,7 +99,7 @@ std::set<FunctionSymbolIndex> findFunctionSymbolsToAbstract(const ITRS &itrs) {
 
 int main(int argc, char *argv[]) {
     if (argc < 2 || argc > 3) {
-        std::cout << "Usage: " << argv[0] << " in.itrs [out.loat]" << std::endl;
+        std::cout << "Usage: " << argv[0] << " in.itrs [out.koat]" << std::endl;
         return 1;
     }
 

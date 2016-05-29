@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x y z)
+(RULES
+eval_1((x), (y), (z)) -> eval_2((x), (y), (z)) :|: x>=0 && y>=0 && z>=0 && x>z
+eval_2((x), (y), (z)) -> eval_2((x), (-1+y), (z)) :|: x>=0 && y>=0 && z>=0 && x>z && y>z
+eval_2((x), (y), (z)) -> eval_1((-1+x), (y), (z)) :|: x>=0 && y>=0 && z>=0 && x>z && z>=y
+)

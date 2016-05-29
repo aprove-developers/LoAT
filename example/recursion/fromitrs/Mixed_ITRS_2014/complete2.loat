@@ -1,6 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS eval))
-(VAR x)
-(RULES
-eval((x)) -> eval((10-2*x)) :|: x>=0 && x>=0
-)

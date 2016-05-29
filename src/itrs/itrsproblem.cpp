@@ -124,7 +124,7 @@ void ITRSProblem::processRules() {
         GiNaC::numeric one(1);
         if (!(res.cost.info(TT::InfoFlag::Number)
               && res.cost.toGiNaC().is_equal(one))) {
-            res.guard.push_back(res.cost > 0);
+            res.guard.push_back(TT::Expression(res.cost > 0).ginacify());
         }
 
         // process the guard

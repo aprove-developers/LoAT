@@ -1,6 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS eval))
-(VAR i j nat pos)
-(RULES
-eval((i), (j)) -> eval((-nat+i), (j+pos)) :|: j>=0 && nat>=0 && pos>=0 && i>=0 && -j+i>=1 && nat>=0 && pos>0
-)

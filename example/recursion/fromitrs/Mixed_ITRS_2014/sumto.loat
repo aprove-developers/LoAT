@@ -1,8 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS sumto))
-(VAR x y z x_0)
-(RULES
-sumto((x), (y)) -> 1 :|: y>=0 && x>=0 && x>y
-sumto((x), (y)) -> if(sumto((1+x), (y)), (x), (y)) :|: y>=0 && x>=0 && y>=x
-if((x_0), (x), (y)) -> 1+z+x :|: y>=0 && z>=0 && x>=0 && x_0==1+z && x_0>0
-)

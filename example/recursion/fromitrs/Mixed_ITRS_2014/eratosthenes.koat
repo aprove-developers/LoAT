@@ -1,0 +1,25 @@
+(GOAL COMPLEXITY)
+(VAR x y zs ys x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11)
+(RULES
+isprime((x)) -> mem((x), primes((x))) :|: x>=0
+mem((x), (x_0)) -> 1 :|: x>=0 && x_0==1 && x_0>0
+mem((x), (x_1)) -> 1 :|: x>=0 && y>=0 && zs>=0 && x_1==1+y+zs && x_1>0 && x==y
+mem((x), (x_2)) -> mem((x), (zs)) :|: x>=0 && y>=0 && zs>=0 && x_2==1+y+zs && x_2>0 && y>x
+mem((x), (x_3)) -> mem((x), (zs)) :|: x>=0 && y>=0 && zs>=0 && x_3==1+y+zs && x_3>0 && x>y
+primes((x)) -> sieve(nats((2), (x))) :|: x>=0
+nats((x), (y)) -> 1 :|: x>=0 && y>=0 && x>y
+nats((x), (y)) -> 2+x :|: x>=0 && y>=0 && x==y
+nats((x), (y)) -> (1+x) + nats((1+x), (y)) :|: x>=0 && y>=0 && y>x
+sieve((x_4)) -> 1 :|: x_4==1 && x_4>0
+sieve((x_5)) -> (1+x) + sieve(filter((x), (ys))) :|: ys>=0 && x>=0 && x_5==1+ys+x && x_5>0
+filter((x), (x_6)) -> 1 :|: x>=0 && x_6==1 && x_6>0
+filter((x), (x_7)) -> if_1(isdiv((x), (y)), (x), (y), (zs)) :|: x>=0 && y>=0 && zs>=0 && x_7==1+y+zs && x_7>0
+if_1((x_8), (x), (y), (zs)) -> filter((x), (zs)) :|: x>=0 && y>=0 && zs>=0 && x_8==1 && x_8>0
+filter((x), (x_9)) -> if_2(isdiv((x), (y)), (x), (y), (zs)) :|: x>=0 && y>=0 && zs>=0 && x_9==1+y+zs && x_9>0
+if_2((x_10), (x), (y), (zs)) -> (1+x) + filter((x), (zs)) :|: x>=0 && y>=0 && zs>=0 && x_10==1 && x_10>0
+isdiv((x), (x_11)) -> 1 :|: x>=0 && x_11==0 && x_11>0 && x>0
+isdiv((x), (y)) -> 1 :|: x>=0 && y>=0 && x>y && y>0
+isdiv((x), (y)) -> isdiv((x), (-x+y)) :|: x>=0 && y>=0 && y>=x && x>0
+isdiv((x), (y)) -> isdiv((x), (-y)) :|: x>=0 && y>=0 && 0>y
+isdiv((x), (y)) -> isdiv((-x), (y)) :|: x>=0 && y>=0 && 0>x
+)

@@ -215,6 +215,21 @@ Expression GuardToolbox::negateLessEqualInequality(const Expression &term) {
 }
 
 
+Expression GuardToolbox::negate(const Expression &term) {
+    assert(GiNaC::is_a<GiNaC::relational>(term));
+
+    if (term.info(GiNaC::info_flags::relation_equal)) {
+        return term.lhs() != term.rhs();
+
+    } else if (term.info(GiNaC::info_flags::relation_not_equal)) {
+        return term.lhs() == term.rhs();
+
+    } else {
+        return negateLessEqualInequality(makeLessEqual(term));
+    }
+}
+
+
 bool GuardToolbox::isTrivialInequality(const Expression &term) {
     assert(term.info(GiNaC::info_flags::relation_less_or_equal));
     using namespace GiNaC;

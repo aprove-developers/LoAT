@@ -1,7 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS eval))
-(VAR x y z)
-(RULES
-eval((x), (y), (z)) -> eval((1+x), (y), (z)) :|: y>=0 && z>=0 && x>=0 && y>x && z>x
-eval((x), (y), (z)) -> eval((x), (y), (1+z)) :|: y>=0 && z>=0 && x>=0 && y>x && x>=z
-)

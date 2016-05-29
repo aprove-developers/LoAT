@@ -129,7 +129,7 @@ private:
      * @param subsMap The resulting substitution. Must be applied to term before calling! [input and output]
      * @return true iff a substitution was found and term is now linear
      */
-    bool makeLinear(Expression &term, ExprList vars, ExprSymbolSet &subsVars, GiNaC::exmap &subsMap);
+    bool makeLinear(Expression &term, const ExprList &vars, ExprSymbolSet &subsVars, GiNaC::exmap &subsMap);
 
     /**
      * Modifies guard and update to be linear if possible

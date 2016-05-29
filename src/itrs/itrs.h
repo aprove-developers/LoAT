@@ -97,6 +97,8 @@ public:
      */
     virtual void print(std::ostream &os) const;
 
+    bool startFunctionSymbolWasDeclared() const;
+
 protected:
     ITRS() {}
     void load(const std::string &filename);
@@ -132,6 +134,7 @@ private:
     static const std::set<char> specialCharsInVarNames;
 
     /* ITRS Data */
+    bool startFunctionSymbolDeclared;
     std::vector<std::string> variables;
     std::vector<std::string> functionSymbols;
     std::vector<ITRSRule> rules;

@@ -115,6 +115,9 @@ void FarkasMeterGenerator::reduceGuard() {
     //create Z3 solver here to use push/pop for efficiency
     Z3VariableContext c;
     Z3Solver sol(c);
+    z3::params params(c);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    sol.set(params);
     for (const Expression &ex : guard) sol.add(ex.toZ3(c));
 
     for (Expression ex : guard) {
@@ -254,11 +257,11 @@ void FarkasMeterGenerator::createCoefficients(Z3VariableContext::VariableType ty
 /* ### Make guard/update linear by substitution ### */
 
 
-bool FarkasMeterGenerator::makeLinear(Expression &term, ExprList vars, ExprSymbolSet &subsVars, GiNaC::exmap &subsMap) {
+bool FarkasMeterGenerator::makeLinear(Expression &term, const ExprList &vars, ExprSymbolSet &subsVars, GiNaC::exmap &subsMap) {
     //term must be a polynomial
     if (!term.is_polynomial(vars)) return false;
 
-    auto addSubs = [&](ExprSymbol var, Expression ex, string name) -> bool {
+    auto addSubs = [&](ExprSymbol var, const Expression &ex, const string &name) -> bool {
         if (subsVars.count(var) > 0) return false;
         if (update.count(its.getVariableIndex(var.get_name())) > 0) return false;
         subsVars.insert(var);
@@ -349,6 +352,12 @@ bool FarkasMeterGenerator::makeLinearTransition() {
         for (auto it = update.begin(); it != update.end(); ++it) it->second = it->second.subs(subsMap);
     }
 
+    for (const Expression &ex : guard) {
+        if (!GuardToolbox::isLinearInequality(ex, its.getGinacVarList())) {
+            return false;
+        }
+    }
+
     //calculate reverse substitution
     for (auto it : subsMap) nonlinearSubs[it.second] = it.first;
     return true;
@@ -380,6 +389,7 @@ void FarkasMeterGenerator::buildConstraints() {
         make_constraint(ex,constraints.irrelevantGuard);
     }
     for (Expression ex : guard) {
+
         make_constraint(ex,constraints.guard);
         make_constraint(ex,constraints.guardUpdate);
     }
@@ -686,6 +696,9 @@ FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &its, Tr
 
     //solve implications
     Z3Solver solver(f.context);
+    z3::params params(f.context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(f.genNotGuardImplication());
     solver.add(f.genUpdateImplication());
     solver.add(f.genNonTrivial());

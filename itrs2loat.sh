@@ -10,10 +10,12 @@ fi
 
 if [ ! -d "$1" ]; then
     echo "$1 is not a valid directory"
+    exit 1
 fi
 
 if [ ! -d "$2" ]; then
     echo "$2 is not a valid directory"
+    exit 1
 fi
 
 # make sure that indir and outdir end with a '/'
@@ -26,7 +28,7 @@ for file in $files
 do
     if [ -f "$file" ]; then
         infile="$file"
-        outfile="$outdir/$(basename $file .itrs).loat"
+        outfile="$outdir/$(basename $file .itrs).koat"
         printf "$(basename $infile)"
 
         # run the program

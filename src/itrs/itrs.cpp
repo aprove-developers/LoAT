@@ -116,6 +116,11 @@ void ITRS::print(std::ostream &os) const {
 }
 
 
+bool ITRS::startFunctionSymbolWasDeclared() const {
+    return startFunctionSymbolDeclared;
+}
+
+
 ITRS ITRS::loadFromFile(const string &filename) {
     ITRS res;
     res.load(filename);
@@ -124,6 +129,7 @@ ITRS ITRS::loadFromFile(const string &filename) {
 
 
 void ITRS::load(const std::string &filename) {
+    startFunctionSymbolDeclared = false;
     string startTerm;
     knownVariables.clear();
 
@@ -207,8 +213,16 @@ void ITRS::load(const std::string &filename) {
     if (startTerm.empty()) {
         debugParser("WARNING: Missing start term, defaulting to first function symbol");
         assert(!functionSymbols.empty());
-        startFunctionSymbol = 0;
+        for (const ITRSRule &rule : rules) {
+            std::vector<FunctionSymbolIndex> funcSyms = rule.lhs.getFunctionSymbolsAsVector();
+            if (!funcSyms.empty()) {
+                startFunctionSymbol = funcSyms.front();
+            }
+        }
+
     } else {
+        startFunctionSymbolDeclared = true;
+
         auto it = functionSymbolNameMap.find(startTerm);
         if (it == functionSymbolNameMap.end()) throw FileError("Unknown function symbol: " + startTerm);
         startFunctionSymbol = it->second;

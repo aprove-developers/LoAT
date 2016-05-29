@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR an bn cn i j)
+(RULES
+eval((an), (bn), (cn), (i), (j)) -> eval((an), (bn), (1+cn), (i), (1+j)) :|: an>=0 && j>=0 && bn>=0 && cn>=0 && i>=0 && j<bn && i<an
+eval((an), (bn), (cn), (i), (j)) -> eval((an), (bn), (1+cn), (1+i), (j)) :|: an>=0 && j>=0 && bn>=0 && cn>=0 && i>=0 && j<bn && i<an
+eval((an), (bn), (cn), (i), (j)) -> eval((an), (bn), (1+cn), (1+i), (j)) :|: an>=0 && j>=0 && bn>=0 && cn>=0 && i>=0 && j>=bn && i<an
+eval((an), (bn), (cn), (i), (j)) -> eval((an), (bn), (1+cn), (i), (1+j)) :|: an>=0 && j>=0 && bn>=0 && cn>=0 && i>=0 && j<bn && i>=an
+)

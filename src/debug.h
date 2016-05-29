@@ -100,8 +100,11 @@ struct DebugStream {
 //debugging for the ITRS term parser
 //#define DEBUG_TERM_PARSER
 
+//debugging for recursion solving
+#define DEBUG_RECURSION
+
 //debugging for PURRS
-#define DEBUG_PURRS
+//#define DEBUG_PURRS
 
 //debugging for all other parts
 #define DEBUG_OTHER
@@ -132,6 +135,12 @@ struct DebugStream {
 #define debugZ3(solver,res,location) do { std::cout << (location) << " Z3 Solver: " << (solver) << "Z3 Result: " << (res) << std::endl; } while(0)
 #else
 #define debugZ3(solver,res,location) (void(0))
+#endif
+
+#ifdef DEBUG_RECURSION
+#define debugRecursion(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugRecursion(output) (void(0))
 #endif
 
 #ifdef DEBUG_PURRS

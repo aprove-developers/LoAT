@@ -572,7 +572,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     }
 
     for (const ExprSymbol &var : cost.getVariables()) {
-        if (its.isFreeVariable(ex_to<symbol>(var))) {
+        if (its.isFreeVariable(var)) {
             // we try to achieve ComplexInfty
             return false;
         }

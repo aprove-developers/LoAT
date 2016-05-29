@@ -755,13 +755,18 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
             os << ")";
         }
         void visitPre(const FunctionSymbol &funcSymbol) override {
-            os << funcSymbol.getName() << "(";
+            os << funcSymbol.getName();
+            if (!funcSymbol.getArguments().empty()) {
+                os << "(";
+            }
         }
         void visitIn(const FunctionSymbol &funcSymbol) override {
             os << ", ";
         }
         void visitPost(const FunctionSymbol &funcSymbol) override {
-            os << ")";
+            if (!funcSymbol.getArguments().empty()) {
+                os << ")";
+            }
         }
         void visit(const GiNaCExpression &expr) override {
             os << "(" << expr.getExpression() << ")";

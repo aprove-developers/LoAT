@@ -268,6 +268,9 @@ int main(int argc, char *argv[]) {
                 proofout << endl <<  "Eliminated locations:" << endl;
                 g.printForProof();
                 if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations");
+            } else {
+                proofout << endl <<  "Cannot continue:" << endl;
+                break;
             }
             if (Timeout::soft()) break;
 

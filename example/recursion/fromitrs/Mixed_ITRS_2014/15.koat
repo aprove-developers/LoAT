@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x y)
+(RULES
+eval((x), (y)) -> eval((-1+x), (y)) :|: y>=0 && x>=0 && y+x>0 && x>0
+eval((x), (y)) -> eval((x), (-1+y)) :|: y>=0 && x>=0 && y+x>0 && 0>=x && y>0
+eval((x), (y)) -> eval((x), (y)) :|: y>=0 && x>=0 && y+x>0 && 0>=x && 0>=y
+)
