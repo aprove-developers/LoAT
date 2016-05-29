@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS sum))
+(VAR x xs x_0 x_1 x_2)
+(RULES
+sum((x_0)) -> sum((xs+x)) + (1) :|: xs>=0 && x>=0 && x_0==1+xs+x && x_0>0 && x>0
+sum((x_1)) -> sum((xs)) :|: xs>=0 && x>=0 && x_1==1+xs+x && x_1>0 && x==0
+sum((x_2)) -> 0 :|: x_2==1 && x_2>0
+)

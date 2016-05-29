@@ -21,7 +21,7 @@
 #include "global.h"
 
 #include "graph.h"
-#include "itrs.h"
+#include "itrsproblem.h"
 #include "expression.h"
 
 typedef int RightHandSideIndex;
@@ -188,7 +188,7 @@ private:
     /**
      * Adds the given rule to this graph, calculating the required update
      */
-    void addRule(const ITRSRule &rule);
+    void addRule(const Rule &rule);
 
     TransIndex addLegacyTransition(NodeIndex from,
                                    NodeIndex to,

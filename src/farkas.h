@@ -22,7 +22,7 @@
 
 #include "expression.h"
 #include "z3toolbox.h"
-#include "itrs/itrs.h"
+#include "itrs/itrsproblem.h"
 
 #include <vector>
 #include <map>

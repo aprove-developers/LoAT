@@ -177,7 +177,7 @@ int InfiniteInstances::getExpSum(const MonomData &monom, const InftyCfg &cfg) {
 int InfiniteInstances::getUnboundedFreeExpSum(const MonomData &monom, const InftyCfg &cfg) const {
     int res = 0;
     for (int i=0; i < cfg.size(); ++i) {
-        if (!its.isFreeVar(its.getVarindex(symbols[i].get_name()))) continue; //not free
+        if (!its.isFreeVariable(its.getVariableIndex(symbols[i].get_name()))) continue; //not free
         if (freeBoundedVars.count(symbols[i]) > 0) continue; //free, but bounded
         res += monom.getVarExp(i,cfg);
     }
@@ -463,10 +463,10 @@ void InfiniteInstances::removeEqualitiesFromGuard() {
 
     //find free variables that are on rhs of substitutions, so they are in fact bounded
     for (const auto &it : equalSubs) {
-        if (its.isFreeVar(its.getVarindex(GiNaC::ex_to<GiNaC::symbol>(it.first).get_name()))) continue; //free/free2 imposes no bounds on anything
+        if (its.isFreeVariable(its.getVariableIndex(GiNaC::ex_to<GiNaC::symbol>(it.first).get_name()))) continue; //free/free2 imposes no bounds on anything
         for (string varname : Expression(it.second).getVariableNames()) {
-            VariableIndex vi = its.getVarindex(varname);
-            if (its.isFreeVar(vi)) freeBoundedVars.insert(its.getGinacSymbol(vi));
+            VariableIndex vi = its.getVariableIndex(varname);
+            if (its.isFreeVariable(vi)) freeBoundedVars.insert(its.getGinacSymbol(vi));
         }
     }
 
@@ -476,7 +476,7 @@ void InfiniteInstances::removeEqualitiesFromGuard() {
 
         //substituting (truly) free variables is ok
         string varname = GiNaC::ex_to<GiNaC::symbol>(it.first).get_name();
-        if (its.isFreeVar(its.getVarindex(varname)) && freeBoundedVars.count(GiNaC::ex_to<symbol>(it.first)) == 0) continue;
+        if (its.isFreeVariable(its.getVariableIndex(varname)) && freeBoundedVars.count(GiNaC::ex_to<symbol>(it.first)) == 0) continue;
 
         //but otherwise, we need to remember all nonlinear substs
         if (!Expression(it.second).isLinear(its.getGinacVarList())) {
@@ -623,7 +623,7 @@ bool InfiniteInstances::containsUnboundedFreeInfty(const MonomData &monom, const
     for (int var=0; var < cfg.size(); ++var) {
         if (cfg[var] == InftyConst) continue;
         if (freeBoundedVars.count(symbols[var]) > 0) continue; //free, but bounded
-        if (its.isFreeVar(its.getVarindex(symbols[var].get_name()))) {
+        if (its.isFreeVariable(its.getVariableIndex(symbols[var].get_name()))) {
             if (monom.getVarExp(var) > 0) return true;
         }
     }

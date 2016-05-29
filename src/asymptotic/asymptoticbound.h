@@ -7,7 +7,7 @@
 #include "expression.h"
 #include "guardtoolbox.h"
 #include "infinity.h"
-#include "itrs/itrs.h"
+#include "itrs/itrsproblem.h"
 #include "inftyexpression.h"
 #include "limitproblem.h"
 

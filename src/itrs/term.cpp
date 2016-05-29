@@ -1,24 +1,26 @@
 #include "term.h"
 
-#include "itrs.h"
+#include <sstream>
 
+#include "itrsproblem.h"
 #include "expression.h"
 
 namespace TT {
 
-Expression::Expression()
-    : root(nullptr) {
+Expression::Expression() {
+    root = std::make_shared<GiNaCExpression>(GiNaC::numeric(0));
 }
 
 
-Expression::Expression(const ITRSProblem &itrs, const GiNaC::ex &ex) {
-    root = std::make_shared<GiNaCExpression>(itrs, ex);
+Expression::Expression(const GiNaC::ex &ex) {
+    root = std::make_shared<GiNaCExpression>(ex);
 }
 
 
-Expression::Expression(const ITRSProblem &itrs, const FunctionSymbolIndex functionSymbol,
-           const std::vector<Expression> &args) {
-    root = std::make_shared<FunctionSymbol>(itrs, functionSymbol, args);
+Expression::Expression(const FunctionSymbolIndex functionSymbol,
+                       const std::string &name,
+                       const std::vector<Expression> &args) {
+    root = std::make_shared<FunctionSymbol>(functionSymbol, name, args);
 }
 
 
@@ -53,179 +55,164 @@ Expression::Expression(Expression &&ex) {
 Expression& Expression::operator=(Expression &&r) {
     root = r.root;
     r.root = nullptr;
-
     return *this;
 }
 
 
 Expression Expression::operator+(const GiNaC::ex &rhs) const {
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Addition>(root->getITRSProblem(), root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Addition>(root, r));
 }
 
 
 Expression Expression::operator-(const GiNaC::ex &rhs) const {
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Subtraction>(root->getITRSProblem(), root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Subtraction>(root, r));
 }
 
 
 Expression Expression::operator*(const GiNaC::ex &rhs) const {
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Multiplication>(root->getITRSProblem(), root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Multiplication>(root, r));
 }
 
 
 Expression Expression::operator^(const GiNaC::ex &rhs) const {
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Power>(root->getITRSProblem(), root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Power>(root, r));
 }
 
 
 Expression Expression::operator==(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::EQUAL, root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Relation>(Relation::EQUAL, root, r));
 }
 
 
 Expression Expression::operator!=(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::NOT_EQUAL, root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Relation>(Relation::NOT_EQUAL, root, r));
 }
 
 
 Expression Expression::operator<(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS, root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Relation>(Relation::LESS, root, r));
 }
 
 
 Expression Expression::operator<=(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS_EQUAL, root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Relation>(Relation::LESS_EQUAL, root, r));
 }
 
 
 Expression Expression::operator>(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER, root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Relation>(Relation::GREATER, root, r));
 }
 
 
 Expression Expression::operator>=(const GiNaC::ex &rhs) const {
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(GiNaC::info_flags::relation));
-    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(root->getITRSProblem(), rhs);
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER_EQUAL, root, r));
+    std::shared_ptr<Term> r = std::make_shared<GiNaCExpression>(rhs);
+    return Expression(std::make_shared<Relation>(Relation::GREATER_EQUAL, root, r));
 }
 
 
 Expression Expression::operator+(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    return Expression(std::make_shared<Addition>(root->getITRSProblem(), root, rhs.root));
+    return Expression(std::make_shared<Addition>(root, rhs.root));
 }
 
 
 Expression Expression::operator-(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    return Expression(std::make_shared<Subtraction>(root->getITRSProblem(), root, rhs.root));
+    return Expression(std::make_shared<Subtraction>(root, rhs.root));
 }
 
 
 Expression Expression::operator*(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    return Expression(std::make_shared<Multiplication>(root->getITRSProblem(), root, rhs.root));
+    return Expression(std::make_shared<Multiplication>(root, rhs.root));
 }
 
 
 Expression Expression::operator^(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    return Expression(std::make_shared<Power>(root->getITRSProblem(), root, rhs.root));
+    return Expression(std::make_shared<Power>(root, rhs.root));
 }
 
 
 Expression Expression::operator==(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(InfoFlag::Relation));
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::EQUAL, root, rhs.root));
+    return Expression(std::make_shared<Relation>(Relation::EQUAL, root, rhs.root));
 }
 
 
 Expression Expression::operator!=(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(InfoFlag::Relation));
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::NOT_EQUAL, root, rhs.root));
+    return Expression(std::make_shared<Relation>(Relation::NOT_EQUAL, root, rhs.root));
 }
 
 
 Expression Expression::operator<(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(InfoFlag::Relation));
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS, root, rhs.root));
+    return Expression(std::make_shared<Relation>(Relation::LESS, root, rhs.root));
 }
 
 
 Expression Expression::operator<=(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(InfoFlag::Relation));
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::LESS_EQUAL, root, rhs.root));
+    return Expression(std::make_shared<Relation>(Relation::LESS_EQUAL, root, rhs.root));
 }
 
 
 Expression Expression::operator>(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(InfoFlag::Relation));
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER, root, rhs.root));
+    return Expression(std::make_shared<Relation>(Relation::GREATER, root, rhs.root));
 }
 
 
 Expression Expression::operator>=(const Expression &rhs) const {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
     assert(!info(InfoFlag::Relation));
     assert(!rhs.info(InfoFlag::Relation));
-    return Expression(std::make_shared<Relation>(root->getITRSProblem(), Relation::GREATER_EQUAL, root, rhs.root));
+    return Expression(std::make_shared<Relation>(Relation::GREATER_EQUAL, root, rhs.root));
 }
 
 
 Expression& Expression::operator+=(const Expression &rhs) {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    root = std::make_shared<Addition>(root->getITRSProblem(), root, rhs.root);
+    root = std::make_shared<Addition>(root, rhs.root);
     return *this;
 }
 
 
 Expression& Expression::operator-=(const Expression &rhs) {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    root = std::make_shared<Subtraction>(root->getITRSProblem(), root, rhs.root);
+    root = std::make_shared<Subtraction>(root, rhs.root);
     return *this;
 }
 
 
 Expression& Expression::operator*=(const Expression &rhs) {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    root = std::make_shared<Multiplication>(root->getITRSProblem(), root, rhs.root);
+    root = std::make_shared<Multiplication>(root, rhs.root);
     return *this;
 }
 
 
 Expression& Expression::operator^=(const Expression &rhs) {
-    assert(&root->getITRSProblem() == &rhs.root->getITRSProblem());
-    root = std::make_shared<Power>(root->getITRSProblem(), root, rhs.root);
+    root = std::make_shared<Power>(root, rhs.root);
     return *this;
 }
 
@@ -249,8 +236,14 @@ bool Expression::has(const ExprSymbol &sym) const {
     return root->has(sym);
 }
 
+
 bool Expression::isSimple() const {
     return info(InfoFlag::FunctionSymbol) && hasExactlyOneFunctionSymbol();
+}
+
+
+void Expression::traverse(ConstVisitor &visitor) const {
+    root->traverse(visitor);
 }
 
 
@@ -331,6 +324,11 @@ Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
 }
 
 
+Expression Expression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    return Expression(root->abstractSize(funSyms));
+}
+
+
 GiNaC::ex Expression::toGiNaC(bool subFunSyms) const {
     return root->toGiNaC(subFunSyms);
 }
@@ -367,14 +365,20 @@ std::ostream& operator<<(std::ostream &os, const Expression &ex) {
 }
 
 
-FunctionDefinition::FunctionDefinition(const FunctionSymbolIndex fs,
+FunctionDefinition::FunctionDefinition(const ITRSProblem &itrs,
+                                       const FunctionSymbolIndex fs,
                                        const Expression &def,
                                        const Expression &cost,
                                        const ExpressionVector &guard)
-    : functionSymbol(fs), definition(def.unGinacify()), cost(cost.unGinacify()) {
+    : itrs(&itrs), functionSymbol(fs), definition(def.unGinacify()), cost(cost.unGinacify()) {
     for (const Expression &ex : guard) {
         this->guard.push_back(ex.unGinacify());
     }
+}
+
+
+const ITRSProblem& FunctionDefinition::getITRSProblem() const {
+    return *itrs;
 }
 
 
@@ -398,29 +402,29 @@ const ExpressionVector& FunctionDefinition::getGuard() const {
 }
 
 
-std::shared_ptr<Term> Term::fromGiNaC(const ITRSProblem &itrs, const GiNaC::ex &ex) {
+std::shared_ptr<Term> Term::fromGiNaC(const GiNaC::ex &ex) {
     std::shared_ptr<Term> res;
 
     if (GiNaC::is_a<GiNaC::add>(ex)) {
-        res = fromGiNaC(itrs, ex.op(0));
+        res = fromGiNaC(ex.op(0));
 
         for (int i = 1; i < ex.nops(); ++i) {
-            res = std::make_shared<Addition>(itrs, res, fromGiNaC(itrs, ex.op(i)));
+            res = std::make_shared<Addition>(res, fromGiNaC(ex.op(i)));
         }
 
     } else if (GiNaC::is_a<GiNaC::mul>(ex)) {
-        res = fromGiNaC(itrs, ex.op(0));
+        res = fromGiNaC(ex.op(0));
 
         for (int i = 1; i < ex.nops(); ++i) {
-            res = std::make_shared<Multiplication>(itrs, res, fromGiNaC(itrs, ex.op(i)));
+            res = std::make_shared<Multiplication>(res, fromGiNaC(ex.op(i)));
         }
 
     } else if (GiNaC::is_a<GiNaC::power>(ex)) {
-        res = std::make_shared<Power>(itrs, fromGiNaC(itrs, ex.op(0)), fromGiNaC(itrs, ex.op(1)));
+        res = std::make_shared<Power>(fromGiNaC(ex.op(0)), fromGiNaC(ex.op(1)));
 
     } else if (GiNaC::is_a<GiNaC::numeric>(ex)
                || GiNaC::is_a<GiNaC::symbol>(ex)) {
-        res = std::make_shared<GiNaCExpression>(itrs, ex);
+        res = std::make_shared<GiNaCExpression>(ex);
 
     } else if (GiNaC::is_a<GiNaC::relational>(ex)) {
         Relation::Type type;
@@ -447,8 +451,7 @@ std::shared_ptr<Term> Term::fromGiNaC(const ITRSProblem &itrs, const GiNaC::ex &
             throw UnsupportedExpressionException();
         }
 
-        res = std::make_shared<Relation>(itrs, type,
-                                         fromGiNaC(itrs, ex.op(0)), fromGiNaC(itrs, ex.op(1)));
+        res = std::make_shared<Relation>(type, fromGiNaC(ex.op(0)), fromGiNaC(ex.op(1)));
 
     } else {
         throw UnsupportedExpressionException();
@@ -457,22 +460,13 @@ std::shared_ptr<Term> Term::fromGiNaC(const ITRSProblem &itrs, const GiNaC::ex &
     return res;
 }
 
-Term::Term(const ITRSProblem &itrs)
-    : itrs(itrs) {
-}
-
 
 Term::~Term() {
 }
 
 
-const ITRSProblem& Term::getITRSProblem() const {
-    return itrs;
-}
-
-
 bool Term::has(const ExprSymbol &sym) const {
-    class HasVisitor : public Term::ConstVisitor {
+    class HasVisitor : public ConstVisitor {
     public:
         HasVisitor(const ExprSymbol &symbol)
             : symbol(symbol), hasSym(false) {
@@ -498,7 +492,7 @@ bool Term::has(const ExprSymbol &sym) const {
 
 
 void Term::collectVariables(ExprSymbolSet &set) const {
-    class CollectingVisitor : public Term::ConstVisitor {
+    class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(ExprSymbolSet &set)
             : set(set) {
@@ -526,7 +520,7 @@ ExprSymbolSet Term::getVariables() const {
 
 
 void Term::collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const {
-    class CollectingVisitor : public Term::ConstVisitor {
+    class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(std::set<FunctionSymbolIndex> &set)
             : set(set) {
@@ -553,7 +547,7 @@ std::set<FunctionSymbolIndex> Term::getFunctionSymbols() const {
 
 
 void Term::collectFunctionSymbols(std::vector<FunctionSymbolIndex> &vector) const {
-    class CollectingVisitor : public Term::ConstVisitor {
+    class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(std::vector<FunctionSymbolIndex> &vector)
             : vector(vector) {
@@ -580,7 +574,7 @@ std::vector<FunctionSymbolIndex> Term::getFunctionSymbolsAsVector() const {
 
 
 void Term::collectUpdates(std::vector<Expression> &updates) const {
-    class CollectingVisitor : public Term::ConstVisitor {
+    class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(std::vector<Expression> &updates)
             : updates(updates) {
@@ -609,7 +603,7 @@ std::vector<Expression> Term::getUpdates() const {
 
 
 void Term::collectFunctionApplications(std::vector<Expression> &app) const {
-    class CollectingVisitor : public Term::ConstVisitor {
+    class CollectingVisitor : public ConstVisitor {
     public:
         CollectingVisitor(std::vector<Expression> &app)
             : app(app) {
@@ -636,7 +630,7 @@ std::vector<Expression> Term::getFunctionApplications() const {
 
 
 bool Term::hasNoFunctionSymbols() const {
-    class NoFuncSymbolsVisitor : public Term::ConstVisitor {
+    class NoFuncSymbolsVisitor : public ConstVisitor {
     public:
         NoFuncSymbolsVisitor(bool &noFuncSymbols)
             : noFuncSymbols(noFuncSymbols) {
@@ -660,7 +654,7 @@ bool Term::hasNoFunctionSymbols() const {
 
 
 bool Term::hasExactlyOneFunctionSymbol() const {
-    class ExactlyOneFunSymbolVisitor : public Term::ConstVisitor {
+    class ExactlyOneFunSymbolVisitor : public ConstVisitor {
     public:
         ExactlyOneFunSymbolVisitor(bool &oneFunSymbol)
             : oneFunSymbol(oneFunSymbol) {
@@ -694,6 +688,11 @@ bool Term::hasExactlyOneFunctionSymbol() const {
 }
 
 
+std::shared_ptr<Term> Term::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    throw UnsupportedOperationException();
+}
+
+
 GiNaC::ex Term::toGiNaC(bool subFunSyms) const {
     throw UnsupportedOperationException();
 }
@@ -705,13 +704,19 @@ Purrs::Expr Term::toPurrs(int i) const {
 
 
 std::ostream& operator<<(std::ostream &os, const Term &term) {
-    class PrintVisitor : public Term::ConstVisitor {
+    class PrintVisitor : public ConstVisitor {
     public:
         PrintVisitor(std::ostream &os)
             : os(os) {
         }
+        void visitPre(const Relation &rel) override {
+            os << "(";
+        }
         void visitIn(const Relation &rel) override {
             os << " " << Relation::TypeNames[rel.getType()] << " ";
+        }
+        void visitPost(const Relation &rel) override {
+            os << ")";
         }
         void visitPre(const Addition &add) override {
             os << "(";
@@ -750,10 +755,7 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
             os << ")";
         }
         void visitPre(const FunctionSymbol &funcSymbol) override {
-            const ITRSProblem &itrs = funcSymbol.getITRSProblem();
-            FunctionSymbolIndex funcIndex = funcSymbol.getFunctionSymbol();
-
-            os << itrs.getFunctionSymbol(funcIndex).getName() << "(";
+            os << funcSymbol.getName() << "(";
         }
         void visitIn(const FunctionSymbol &funcSymbol) override {
             os << ", ";
@@ -769,16 +771,24 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
         std::ostream &os;
     };
 
-    PrintVisitor printVisitor(os);
+    std::ostringstream oss;
+    PrintVisitor printVisitor(oss);
     term.traverse(printVisitor);
+
+    if (oss.str()[0] == '(') {
+        os << oss.str().substr(1, oss.str().length() - 2);
+
+    } else {
+        os << oss.str();
+    }
 
     return os;
 }
 
 const char* Relation::TypeNames[] = { "==", "!=", ">", ">=", "<", "<=" };
 
-Relation::Relation(const ITRSProblem &itrs, Type type, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
-    : Term(itrs), type(type), l(l), r(r) {
+Relation::Relation(Type type, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : type(type), l(l), r(r) {
 }
 
 
@@ -818,31 +828,28 @@ bool Relation::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> Relation::copy() const {
-    return std::make_shared<Relation>(getITRSProblem(), type, l, r);
+    return std::make_shared<Relation>(type, l, r);
 }
 
 
 std::shared_ptr<Term> Relation::evaluateFunction(const FunctionDefinition &funDef,
                                                  Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
-    return std::make_shared<Relation>(getITRSProblem(),
-                                      type,
+    return std::make_shared<Relation>(type,
                                       l->evaluateFunction(funDef, addToCost, addToGuard),
                                       r->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
 
 std::shared_ptr<Term> Relation::substitute(const Substitution &sub) const {
-    return std::make_shared<Relation>(getITRSProblem(),
-                                      type,
+    return std::make_shared<Relation>(type,
                                       l->substitute(sub),
                                       r->substitute(sub));
 }
 
 
 std::shared_ptr<Term> Relation::substitute(const GiNaC::exmap &sub) const {
-    return std::make_shared<Relation>(getITRSProblem(),
-                                      type,
+    return std::make_shared<Relation>(type,
                                       l->substitute(sub),
                                       r->substitute(sub));
 }
@@ -915,24 +922,23 @@ GiNaC::ex Relation::toGiNaC(bool subFunSyms) const {
 
 std::shared_ptr<Term> Relation::ginacify() const {
     if (hasNoFunctionSymbols()) {
-        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+        return std::make_shared<GiNaCExpression>(toGiNaC());
 
     } else {
         std::shared_ptr<Term> newL = l->ginacify();
         std::shared_ptr<Term> newR = r->ginacify();
-        return std::make_shared<Relation>(getITRSProblem(), type, newL, newR);
+        return std::make_shared<Relation>(type, newL, newR);
     }
 }
 
 
 std::shared_ptr<Term> Relation::unGinacify() const {
-    return std::make_shared<Relation>(getITRSProblem(), type, l->unGinacify(), r->unGinacify());
+    return std::make_shared<Relation>(type, l->unGinacify(), r->unGinacify());
 }
 
 
-Addition::Addition(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
-    : Term(itrs),
-      l(l), r(r) {
+Addition::Addition(const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : l(l), r(r) {
 }
 
 
@@ -972,29 +978,32 @@ bool Addition::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> Addition::copy() const {
-    return std::make_shared<Addition>(getITRSProblem(), l, r);
+    return std::make_shared<Addition>(l, r);
 }
 
 
 std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDef,
                                                  Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
-    return std::make_shared<Addition>(getITRSProblem(),
-                                      l->evaluateFunction(funDef, addToCost, addToGuard),
+    return std::make_shared<Addition>(l->evaluateFunction(funDef, addToCost, addToGuard),
                                       r->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
 
+std::shared_ptr<Term> Addition::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    return std::make_shared<Addition>(l->abstractSize(funSyms),
+                                      r->abstractSize(funSyms));
+}
+
+
 std::shared_ptr<Term> Addition::substitute(const Substitution &sub) const {
-    return std::make_shared<Addition>(getITRSProblem(),
-                                      l->substitute(sub),
+    return std::make_shared<Addition>(l->substitute(sub),
                                       r->substitute(sub));
 }
 
 
 std::shared_ptr<Term> Addition::substitute(const GiNaC::exmap &sub) const {
-    return std::make_shared<Addition>(getITRSProblem(),
-                                      l->substitute(sub),
+    return std::make_shared<Addition>(l->substitute(sub),
                                       r->substitute(sub));
 }
 
@@ -1011,24 +1020,23 @@ Purrs::Expr Addition::toPurrs(int i) const {
 
 std::shared_ptr<Term> Addition::ginacify() const {
     if (hasNoFunctionSymbols()) {
-        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+        return std::make_shared<GiNaCExpression>(toGiNaC());
 
     } else {
         std::shared_ptr<Term> newL = l->ginacify();
         std::shared_ptr<Term> newR = r->ginacify();
-        return std::make_shared<Addition>(getITRSProblem(), newL, newR);
+        return std::make_shared<Addition>(newL, newR);
     }
 }
 
 
 std::shared_ptr<Term> Addition::unGinacify() const {
-    return std::make_shared<Addition>(getITRSProblem(), l->unGinacify(), r->unGinacify());
+    return std::make_shared<Addition>(l->unGinacify(), r->unGinacify());
 }
 
 
-Subtraction::Subtraction(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
-    : Term(itrs),
-      l(l), r(r) {
+Subtraction::Subtraction(const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : l(l), r(r) {
 }
 
 
@@ -1068,29 +1076,32 @@ bool Subtraction::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> Subtraction::copy() const {
-    return std::make_shared<Subtraction>(getITRSProblem(), l, r);
+    return std::make_shared<Subtraction>(l, r);
 }
 
 
 std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &funDef,
                                                  Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
-    return std::make_shared<Subtraction>(getITRSProblem(),
-                                         l->evaluateFunction(funDef, addToCost, addToGuard),
+    return std::make_shared<Subtraction>(l->evaluateFunction(funDef, addToCost, addToGuard),
                                          r->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
 
+std::shared_ptr<Term> Subtraction::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    return std::make_shared<Subtraction>(l->abstractSize(funSyms),
+                                         r->abstractSize(funSyms));
+}
+
+
 std::shared_ptr<Term> Subtraction::substitute(const Substitution &sub) const {
-    return std::make_shared<Subtraction>(getITRSProblem(),
-                                         l->substitute(sub),
+    return std::make_shared<Subtraction>(   l->substitute(sub),
                                          r->substitute(sub));
 }
 
 
 std::shared_ptr<Term> Subtraction::substitute(const GiNaC::exmap &sub) const {
-    return std::make_shared<Subtraction>(getITRSProblem(),
-                                         l->substitute(sub),
+    return std::make_shared<Subtraction>(   l->substitute(sub),
                                          r->substitute(sub));
 }
 
@@ -1107,24 +1118,23 @@ Purrs::Expr Subtraction::toPurrs(int i) const {
 
 std::shared_ptr<Term> Subtraction::ginacify() const {
     if (hasNoFunctionSymbols()) {
-        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+        return std::make_shared<GiNaCExpression>(toGiNaC());
 
     } else {
         std::shared_ptr<Term> newL = l->ginacify();
         std::shared_ptr<Term> newR = r->ginacify();
-        return std::make_shared<Subtraction>(getITRSProblem(), newL, newR);
+        return std::make_shared<Subtraction>(newL, newR);
     }
 }
 
 
 std::shared_ptr<Term> Subtraction::unGinacify() const {
-    return std::make_shared<Subtraction>(getITRSProblem(), l->unGinacify(), r->unGinacify());
+    return std::make_shared<Subtraction>(l->unGinacify(), r->unGinacify());
 }
 
 
-Multiplication::Multiplication(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
-    : Term(itrs),
-      l(l), r(r) {
+Multiplication::Multiplication(const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : l(l), r(r) {
 }
 
 
@@ -1164,29 +1174,32 @@ bool Multiplication::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> Multiplication::copy() const {
-    return std::make_shared<Multiplication>(getITRSProblem(), l, r);
+    return std::make_shared<Multiplication>(l, r);
 }
 
 
 std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition &funDef,
                                                  Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
-    return std::make_shared<Multiplication>(getITRSProblem(),
-                                            l->evaluateFunction(funDef, addToCost, addToGuard),
+    return std::make_shared<Multiplication>(l->evaluateFunction(funDef, addToCost, addToGuard),
                                             r->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
 
+std::shared_ptr<Term> Multiplication::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    return std::make_shared<Multiplication>(l->abstractSize(funSyms),
+                                      r->abstractSize(funSyms));
+}
+
+
 std::shared_ptr<Term> Multiplication::substitute(const Substitution &sub) const {
-    return std::make_shared<Multiplication>(getITRSProblem(),
-                                            l->substitute(sub),
+    return std::make_shared<Multiplication>(      l->substitute(sub),
                                             r->substitute(sub));
 }
 
 
 std::shared_ptr<Term> Multiplication::substitute(const GiNaC::exmap &sub) const {
-    return std::make_shared<Multiplication>(getITRSProblem(),
-                                            l->substitute(sub),
+    return std::make_shared<Multiplication>(      l->substitute(sub),
                                             r->substitute(sub));
 }
 
@@ -1197,7 +1210,7 @@ GiNaC::ex Multiplication::toGiNaC(bool subFunSyms) const {
 
 
 std::shared_ptr<Term> Multiplication::unGinacify() const {
-    return std::make_shared<Multiplication>(getITRSProblem(), l->unGinacify(), r->unGinacify());
+    return std::make_shared<Multiplication>(l->unGinacify(), r->unGinacify());
 }
 
 
@@ -1208,18 +1221,18 @@ Purrs::Expr Multiplication::toPurrs(int i) const {
 
 std::shared_ptr<Term> Multiplication::ginacify() const {
     if (hasNoFunctionSymbols()) {
-        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+        return std::make_shared<GiNaCExpression>(toGiNaC());
 
     } else {
         std::shared_ptr<Term> newL = l->ginacify();
         std::shared_ptr<Term> newR = r->ginacify();
-        return std::make_shared<Multiplication>(getITRSProblem(), newL, newR);
+        return std::make_shared<Multiplication>(newL, newR);
     }
 }
 
 
-Power::Power(const ITRSProblem &itrs, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
-    : Term(itrs), l(l), r(r) {
+Power::Power(const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
+    : l(l), r(r) {
 }
 
 
@@ -1259,29 +1272,32 @@ bool Power::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> Power::copy() const {
-    return std::make_shared<Power>(getITRSProblem(), l, r);
+    return std::make_shared<Power>(l, r);
 }
 
 
 std::shared_ptr<Term> Power::evaluateFunction(const FunctionDefinition &funDef,
                                                  Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
-    return std::make_shared<Power>(getITRSProblem(),
-                                            l->evaluateFunction(funDef, addToCost, addToGuard),
+    return std::make_shared<Power>(      l->evaluateFunction(funDef, addToCost, addToGuard),
                                             r->evaluateFunction(funDef, addToCost, addToGuard));
 }
 
 
+std::shared_ptr<Term> Power::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    return std::make_shared<Power>(l->abstractSize(funSyms),
+                                   r->abstractSize(funSyms));
+}
+
+
 std::shared_ptr<Term> Power::substitute(const Substitution &sub) const {
-    return std::make_shared<Power>(getITRSProblem(),
-                                            l->substitute(sub),
+    return std::make_shared<Power>(      l->substitute(sub),
                                             r->substitute(sub));
 }
 
 
 std::shared_ptr<Term> Power::substitute(const GiNaC::exmap &sub) const {
-    return std::make_shared<Power>(getITRSProblem(),
-                                            l->substitute(sub),
+    return std::make_shared<Power>(      l->substitute(sub),
                                             r->substitute(sub));
 }
 
@@ -1292,7 +1308,7 @@ GiNaC::ex Power::toGiNaC(bool subFunSyms) const {
 
 
 std::shared_ptr<Term> Power::unGinacify() const {
-    return std::make_shared<Power>(getITRSProblem(), l->unGinacify(), r->unGinacify());
+    return std::make_shared<Power>(l->unGinacify(), r->unGinacify());
 }
 
 
@@ -1303,22 +1319,26 @@ Purrs::Expr Power::toPurrs(int i) const {
 
 std::shared_ptr<Term> Power::ginacify() const {
     if (hasNoFunctionSymbols()) {
-        return std::make_shared<GiNaCExpression>(getITRSProblem(), toGiNaC());
+        return std::make_shared<GiNaCExpression>(toGiNaC());
 
     } else {
         std::shared_ptr<Term> newL = l->ginacify();
         std::shared_ptr<Term> newR = r->ginacify();
-        return std::make_shared<Power>(getITRSProblem(), newL, newR);
+        return std::make_shared<Power>(newL, newR);
     }
 }
 
 
-FunctionSymbol::FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<std::shared_ptr<Term>> &args)
-    : Term(itrs), functionSymbol(functionSymbol), args(args) {
+FunctionSymbol::FunctionSymbol(FunctionSymbolIndex functionSymbol,
+                               const std::string &name,
+                               const std::vector<std::shared_ptr<Term>> &args)
+    : functionSymbol(functionSymbol), name(name), args(args) {
 }
 
-FunctionSymbol::FunctionSymbol(const ITRSProblem &itrs, FunctionSymbolIndex functionSymbol, const std::vector<Expression> &args)
-    : Term(itrs), functionSymbol(functionSymbol) {
+FunctionSymbol::FunctionSymbol(FunctionSymbolIndex functionSymbol,
+                               const std::string &name,
+                               const std::vector<Expression> &args)
+    : functionSymbol(functionSymbol), name(name) {
     for (const Expression &ex : args) {
         this->args.push_back(ex.getTermTree());
     }
@@ -1358,7 +1378,7 @@ bool FunctionSymbol::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> FunctionSymbol::copy() const {
-    return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, args);
+    return std::make_shared<FunctionSymbol>(functionSymbol, name, args);
 }
 
 
@@ -1372,17 +1392,17 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
         newArgs.push_back(arg->evaluateFunction(funDef, addToCost, addToGuard));
     }
 
-    std::string funSymName = getITRSProblem().getFunctionSymbol(functionSymbol).getName();
-    const ::FunctionSymbol &funSymbol = getITRSProblem().getFunctionSymbol(funDef.getFunctionSymbol());
-    if (funSymbol.getName() == funSymName) {
+    FunctionSymbolIndex funSymbolIndex = funDef.getFunctionSymbol();
+    if (funSymbolIndex == functionSymbol) {
+        const ::FunctionSymbol &funSymbol = funDef.getITRSProblem().getFunctionSymbol(funSymbolIndex);
         const std::vector<VariableIndex> &vars = funSymbol.getArguments();
         assert(vars.size() == args.size());
 
         // build the substitution: variable -> passed argument
-        debugTerm("\tbuilt substitution");
+        debugTerm("\tbuilding substitution");
         Substitution sub;
         for (int i = 0; i < vars.size(); ++i) {
-            ExprSymbol var = getITRSProblem().getGinacSymbol(vars[i]);
+            ExprSymbol var = funDef.getITRSProblem().getGinacSymbol(vars[i]);
             sub.emplace(var, Expression(newArgs[i]));
             debugTerm("\t" << var << "\\" << *newArgs[i]);
         }
@@ -1406,13 +1426,39 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
         return result;
 
     } else {
-        return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+        return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
+    }
+}
+
+
+std::shared_ptr<Term> FunctionSymbol::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    // abstract arguments first
+    std::vector<std::shared_ptr<Term>> newArgs;
+    for (const std::shared_ptr<Term> &arg : args) {
+        newArgs.push_back(arg->abstractSize(funSyms));
+    }
+
+    if (funSyms.count(functionSymbol) == 1) {
+        std::shared_ptr<Term> res = std::make_shared<GiNaCExpression>(GiNaC::numeric(1));
+        for (const std::shared_ptr<Term> &arg : newArgs) {
+            res = std::make_shared<Addition>(res, arg);
+        }
+
+        return res;
+
+    } else {
+        return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
     }
 }
 
 
 FunctionSymbolIndex FunctionSymbol::getFunctionSymbol() const {
     return functionSymbol;
+}
+
+
+std::string FunctionSymbol::getName() const {
+    return name;
 }
 
 
@@ -1427,7 +1473,7 @@ std::shared_ptr<Term> FunctionSymbol::substitute(const Substitution &sub) const 
         newArgs.push_back(arg->substitute(sub));
     }
 
-    return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+    return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
 }
 
 
@@ -1437,7 +1483,7 @@ std::shared_ptr<Term> FunctionSymbol::substitute(const GiNaC::exmap &sub) const 
         newArgs.push_back(arg->substitute(sub));
     }
 
-    return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+    return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
 }
 
 
@@ -1463,14 +1509,14 @@ std::shared_ptr<Term> FunctionSymbol::ginacify() const {
 
     for (const std::shared_ptr<Term> &term : args) {
         if (term->hasNoFunctionSymbols()) {
-            newArgs.push_back(std::make_shared<GiNaCExpression>(getITRSProblem(), term->toGiNaC()));
+            newArgs.push_back(std::make_shared<GiNaCExpression>(term->toGiNaC()));
 
         } else {
             newArgs.push_back(term->ginacify());
         }
     }
 
-    return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+    return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
 }
 
 
@@ -1481,13 +1527,12 @@ std::shared_ptr<Term> FunctionSymbol::unGinacify() const {
         newArgs.push_back(term->unGinacify());
     }
 
-    return std::make_shared<FunctionSymbol>(getITRSProblem(), functionSymbol, newArgs);
+    return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
 }
 
 
-GiNaCExpression::GiNaCExpression(const ITRSProblem &itrs, const GiNaC::ex &expr)
-    : Term(itrs),
-      expression(expr) {
+GiNaCExpression::GiNaCExpression(const GiNaC::ex &expr)
+    : expression(expr) {
 }
 
 
@@ -1504,7 +1549,7 @@ int GiNaCExpression::nops() const {
 std::shared_ptr<Term> GiNaCExpression::op(int i) const {
     assert(i >= 0 && i < expression.nops());
 
-    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression.op(i));
+    return std::make_shared<GiNaCExpression>(expression.op(i));
 }
 
 
@@ -1543,6 +1588,9 @@ bool GiNaCExpression::info(InfoFlag info) const {
         case InfoFlag::Number:
             return GiNaC::is_a<GiNaC::numeric>(expression);
 
+        case InfoFlag::Variable:
+            return GiNaC::is_a<GiNaC::symbol>(expression);
+
         default:
             return false;
     }
@@ -1550,13 +1598,18 @@ bool GiNaCExpression::info(InfoFlag info) const {
 
 
 std::shared_ptr<Term> GiNaCExpression::copy() const {
-    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression);
+    return std::make_shared<GiNaCExpression>(expression);
 }
 
 
 std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
                                                         Expression *addToCost,
                                                         ExpressionVector *addToGuard) const {
+    return copy();
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
     return copy();
 }
 
@@ -1586,7 +1639,7 @@ std::shared_ptr<Term> GiNaCExpression::substitute(const Substitution &sub) const
 
 
 std::shared_ptr<Term> GiNaCExpression::substitute(const GiNaC::exmap &sub) const {
-    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression.subs(sub));
+    return std::make_shared<GiNaCExpression>(expression.subs(sub));
 }
 
 
@@ -1601,12 +1654,12 @@ Purrs::Expr GiNaCExpression::toPurrs(int i) const {
 
 
 std::shared_ptr<Term> GiNaCExpression::ginacify() const {
-    return std::make_shared<GiNaCExpression>(getITRSProblem(), expression);
+    return std::make_shared<GiNaCExpression>(expression);
 }
 
 
 std::shared_ptr<Term> GiNaCExpression::unGinacify() const {
-    return fromGiNaC(getITRSProblem(), expression);
+    return fromGiNaC(expression);
 }
 
 };

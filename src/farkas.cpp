@@ -54,7 +54,7 @@ void FarkasMeterGenerator::preprocessFreevars() {
     for (auto it : update) if (isRelevantVariable(it.first)) it.second.collectVariables(varsInUpdate);
 
     //helpers for guard preprocessing
-    auto sym_is_free = [&](const ExprSymbol &sym){ return its.isFreeVar(its.getVarindex(sym.get_name())); };
+    auto sym_is_free = [&](const ExprSymbol &sym){ return its.isFreeVariable(its.getVariableIndex(sym.get_name())); };
     auto free_in_update = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) > 0; };
     auto free_noupdate = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0; };
 
@@ -123,9 +123,9 @@ void FarkasMeterGenerator::reduceGuard() {
         GiNaC::exmap updateSubs;
         auto varnames = ex.getVariableNames();
         for (string varname : varnames) {
-            VariableIndex vi = its.getVarindex(varname);
+            VariableIndex vi = its.getVariableIndex(varname);
             //keep constraint if it contains a free variable
-            if (its.isFreeVar(vi)) {
+            if (its.isFreeVariable(vi)) {
                 add_always = true;
             }
             //keep constraint if it contains an updated variable
@@ -161,7 +161,7 @@ void FarkasMeterGenerator::findRelevantVariables() {
 
     //helper to add a variable based on its name, returns true iff the variable did not yet exist
     auto addVar = [&](const string &name) -> bool {
-        VariableIndex idx = its.getVarindex(name);
+        VariableIndex idx = its.getVariableIndex(name);
         if (added.find(idx) != added.end()) return false;
         added.insert(idx);
         varlist.push_back(idx);
@@ -206,7 +206,7 @@ bool FarkasMeterGenerator::isRelevantVariable(VariableIndex vi) const {
 void FarkasMeterGenerator::restrictToRelevantVariables() {
     auto contains_relevant = [&](const Expression &ex) {
         auto names = ex.getVariableNames();
-        return std::any_of(names.begin(),names.end(),[&](const string &s){ return isRelevantVariable(its.getVarindex(s)); });
+        return std::any_of(names.begin(),names.end(),[&](const string &s){ return isRelevantVariable(its.getVariableIndex(s)); });
     };
 
     //remove updates of irrelevant variables
@@ -260,7 +260,7 @@ bool FarkasMeterGenerator::makeLinear(Expression &term, ExprList vars, ExprSymbo
 
     auto addSubs = [&](ExprSymbol var, Expression ex, string name) -> bool {
         if (subsVars.count(var) > 0) return false;
-        if (update.count(its.getVarindex(var.get_name())) > 0) return false;
+        if (update.count(its.getVariableIndex(var.get_name())) > 0) return false;
         subsVars.insert(var);
         subsMap[ex] = its.getGinacSymbol(its.addFreshVariable(name));
         term = term.subs(subsMap);
@@ -368,9 +368,9 @@ void FarkasMeterGenerator::buildConstraints() {
     auto make_constraint = [&](const GiNaC::ex &rel, vector<Expression> &vec) {
         using namespace GuardToolbox;
         assert(isLinearInequality(rel,its.getGinacVarList()));
-        GiNaC::ex tmp = makeLessEqual(rel);
+        GiNaC::ex tmp = makeLessEqual((Expression)rel);
         tmp = splitVariablesAndConstants(tmp);
-        if (!isTrivialInequality(tmp)) vec.push_back(tmp);
+        if (!isTrivialInequality((Expression)tmp)) vec.push_back(tmp);
     };
 
     for (Expression ex : reducedGuard) {
@@ -389,7 +389,7 @@ void FarkasMeterGenerator::buildConstraints() {
         if (primeIt != primedSymbols.end()) {
             primed = primeIt->second;
         } else {
-            primedSymbols[it.first] = (primed = its.getFreshSymbol(its.getVarname(it.first)+"'"));
+            primedSymbols[it.first] = (primed = its.getFreshSymbol(its.getVariableName(it.first)+"'"));
         }
         make_constraint(primed <= it.second, constraints.guardUpdate);
         make_constraint(primed >= it.second, constraints.guardUpdate);
@@ -541,7 +541,7 @@ stack<GiNaC::exmap> FarkasMeterGenerator::instantiateFreeVariables() const {
     if (FREEVAR_INSTANTIATE_MAXBOUNDS == 0) return stack<GiNaC::exmap>();
 
     //find free variables
-    const set<VariableIndex> &freeVar = its.getFreeVars();
+    const set<VariableIndex> &freeVar = its.getFreeVariables();
     if (freeVar.empty()) return stack<GiNaC::exmap>();
 
     //find all bounds for every free variable
@@ -608,7 +608,7 @@ bool FarkasMeterGenerator::prepareGuard(ITRSProblem &its, Transition &t) {
         //check if the update rhs contains no updated variables
         bool skip = false;
         for (string varname : it.second.getVariableNames()) {
-            if (f.update.find(its.getVarindex(varname)) != f.update.end()) {
+            if (f.update.find(its.getVariableIndex(varname)) != f.update.end()) {
                 skip = true;
                 break;
             }
@@ -747,7 +747,7 @@ FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &its, Tr
             for (const auto &it : f.update) {
                 auto rhsVars = it.second.getVariableNames();
                 //the update must be some sort of simple counting, e.g. A = A+2
-                if (rhsVars.size() != 1 || rhsVars.count(its.getVarname(it.first)) == 0) continue;
+                if (rhsVars.size() != 1 || rhsVars.count(its.getVariableName(it.first)) == 0) continue;
                 //and there must be a guard term limiting the execution of this counting
                 for (const Expression &x : f.reducedGuard) {
                     if (x.has(its.getGinacSymbol(it.first))) {
@@ -758,7 +758,7 @@ FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &its, Tr
             }
             //if we have more than 2 variables, there are too many possiblities, limit the heuristic to A > B and B > A.
             if (failVars.size() == 2) {
-                debugProblem("Farkas found conflicting variables: " << its.getVarname(failVars[0]) << " and " << its.getVarname(failVars[1]));
+                debugProblem("Farkas found conflicting variables: " << its.getVariableName(failVars[0]) << " and " << its.getVariableName(failVars[1]));
                 *conflictVar = make_pair(failVars[0],failVars[1]);
                 return ConflictVar;
             }
@@ -818,7 +818,7 @@ FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &its, Tr
     }
     //remove reals from the metering function
     if (has_reals) {
-        VariableIndex free = its.addFreshVariable("meter",true);
+        VariableIndex free = its.addFreshFreeVariable("meter");
         t.guard.push_back(its.getGinacSymbol(free)*mult == result*mult);
         result = its.getGinacSymbol(free);
     }

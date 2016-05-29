@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS nil))
+(VAR zs x ys y zl zh yl yh x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+app((x_0), (zs)) -> zs :|: zs>=0 && x_0==1 && x_0>0
+app((x_1), (zs)) -> (1+x) + app((ys), (zs)) :|: ys>=0 && zs>=0 && x>=0 && x_1==1+ys+x && x_1>0
+split((x), (x_2)) -> 3 :|: x>=0 && x_2==1 && x_2>0
+split((x), (x_3)) -> if_1(split((x), (zs)), (x), (y), (zs)) :|: y>=0 && zs>=0 && x>=0 && x_3==1+y+zs && x_3>0 && x>y
+if_1((x_4), (x), (y), (zs)) -> 2+zh+y+zl :|: zh>=0 && y>=0 && zs>=0 && zl>=0 && x>=0 && x_4==1+zh+zl && x_4>0 && x>y
+split((x), (x_5)) -> if_2(split((x), (zs)), (x), (y), (zs)) :|: y>=0 && zs>=0 && x>=0 && x_5==1+y+zs && x_5>0 && y>=x
+if_2((x_6), (x), (y), (zs)) -> 2+zh+y+zl :|: zh>=0 && y>=0 && zs>=0 && zl>=0 && x>=0 && x_6==1+zh+zl && x_6>0 && y>=x
+qsort((x_7)) -> 1 :|: x_7==1 && x_7>0
+qsort((x_8)) -> if_3(split((x), (ys)), (x), (ys)) :|: ys>=0 && x>=0 && x_8==1+ys+x && x_8>0
+if_3((x_9), (x), (ys)) -> app(qsort((yl)), ((1+x) + qsort((yh)))) :|: ys>=0 && yl>=0 && yh>=0 && x>=0 && x_9==1+yl+yh && x_9>0
+)

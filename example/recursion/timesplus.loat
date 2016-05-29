@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS times))
+(VAR x y)
+(RULES
+times(x,y) -> plus(x, times(x,y-1)) :|: y > 0
+times(x,0) -> 0
+plus(x,y) -> plus(x-1,y) + 1 :|: x > 0
+plus(0,y) -> y
+)

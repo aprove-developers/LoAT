@@ -18,7 +18,7 @@
 #ifndef PREPROCESSITRS_H
 #define PREPROCESSITRS_H
 
-#include "itrs.h"
+#include "itrsproblem.h"
 
 struct RightHandSide;
 

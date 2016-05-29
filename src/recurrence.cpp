@@ -44,7 +44,7 @@ vector<VariableIndex> Recurrence::dependencyOrder(UpdateMap &update) {
 
             //check if all variables on update rhs are already processed
             for (const string &varname : up.second.getVariableNames()) {
-                VariableIndex vi = its.getVarindex(varname);
+                VariableIndex vi = its.getVariableIndex(varname);
                 if (vi != up.first && update.count(vi) > 0 && orderedVars.count(vi) == 0)
                     goto skipUpdate;
             }

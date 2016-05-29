@@ -13,7 +13,7 @@ LDFLAGS_STATIC = -lpurrs -lginac -lcln -lntl -lz3 -lgmp -lgomp -lpthread $(LINK_
 
 SRCDIR = src
 
-.PHONY: clean cleanstatic all loat static koatToT2 koatToComplexity
+.PHONY: clean cleanstatic all loat static itrsToLoAT koatToComplexity
 
 all: loat
 
@@ -25,8 +25,8 @@ static:
 	$(MAKE) -C $(SRCDIR) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS_STATIC)" LDFLAGS="$(LDFLAGS_STATIC)" loat
 	cp $(SRCDIR)/loat loat-static && strip loat-static
 
-koatToT2:
-	$(MAKE) -C $(SRCDIR) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" koatToT2
+itrsToLoAT:
+	$(MAKE) -C $(SRCDIR) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" itrsToLoAT
 
 koatToComplexity:
 	$(MAKE) -C $(SRCDIR) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" koatToComplexity

@@ -69,7 +69,7 @@ bool Recursion::solve() {
 
         GiNaC::exmap varReSub;
         varReSub.emplace(Purrs::Expr(Purrs::Recurrence::n).toGiNaC(), realVarGiNaC);
-        result = TT::Expression(itrs, recurrence.toGiNaC().subs(varReSub));
+        result = TT::Expression(recurrence.toGiNaC().subs(varReSub));
 
 
         debugPurrs("===Constructing guard===");
@@ -83,8 +83,8 @@ bool Recursion::solve() {
 
         // We already have the definition for this function symbol
         // Evaluate all occurences in the guard and the cost
-        TT::Expression dummy(itrs, GiNaC::numeric(0));
-        TT::FunctionDefinition funDef(funSymbolIndex, result, dummy, guard);
+        TT::Expression dummy(GiNaC::numeric(0));
+        TT::FunctionDefinition funDef(itrs, funSymbolIndex, result, dummy, guard);
 
         debugPurrs("Pre-evaluated guard:");
         for (int i = 0; i < preEvaluatedGuard.size(); ++i) {
@@ -92,8 +92,8 @@ bool Recursion::solve() {
             debugPurrs(preEvaluatedGuard[i]);
         }
         // Update funDef
-        // TODO optimze
-        funDef = TT::FunctionDefinition(funSymbolIndex, result, dummy, preEvaluatedGuard);
+        // TODO optimize
+        funDef = TT::FunctionDefinition(itrs, funSymbolIndex, result, dummy, preEvaluatedGuard);
 
         debugPurrs("Evaluated guard:");
         for (int i = 0; i < guard.size(); ++i) {
@@ -119,7 +119,7 @@ bool Recursion::solve() {
             TT::Expression update = funApp.op(realVarIndex);
             std::vector<TT::Expression> updateAsVector;
             updateAsVector.push_back(update);
-            costRecurrence = costRecurrence + TT::Expression(itrs, funSymbolIndex, updateAsVector);
+            costRecurrence = costRecurrence + TT::Expression(funSymbolIndex, itrs.getFunctionSymbolName(funSymbolIndex), updateAsVector);
         }
         recurrence = costRecurrence.substitute(varSub).toPurrs(0);
 
@@ -133,7 +133,7 @@ bool Recursion::solve() {
             return false;
         }
 
-        cost = TT::Expression(itrs, recurrence.toGiNaC().subs(varReSub));
+        cost = TT::Expression(recurrence.toGiNaC().subs(varReSub));
 
 
         debugPurrs("===Resulting rhs===");
@@ -318,7 +318,7 @@ bool Recursion::baseCasesAreSufficient() {
 
         for (const TT::Expression &negateEx : recursion->guard) {
             // Using toGiNaC(true) to substitute function symbols by variables
-            queryLhs.push_back(GT::negateLessEqualInequality(GT::makeLessEqual(negateEx.toGiNaC(true).subs(updateSub))));
+            queryLhs.push_back(GT::negateLessEqualInequality(GT::makeLessEqual((Expression)negateEx.toGiNaC(true).subs(updateSub))));
 
             debugPurrs("LHS:");
             for (const Expression &ex : queryLhs) {

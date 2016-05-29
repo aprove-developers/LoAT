@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS sqrt))
+(VAR x z u w)
+(RULES
+sqrt((x)) -> f((x), (0), (1), (1)) :|: x>=0
+f((x), (z), (u), (w)) -> f((x), (1+z), (2+u), (2+u+w)) :|: u>=0 && w>=0 && x>=0 && z>=0 && x>=w && u>=0
+f((x), (z), (u), (w)) -> z :|: u>=0 && w>=0 && x>=0 && z>=0 && w>x
+)

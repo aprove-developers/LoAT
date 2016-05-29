@@ -113,7 +113,7 @@ void AsymptoticBound::propagateBounds() {
             std::vector<ExprSymbol> vars;
             std::vector<ExprSymbol> tempVars;
             for (const ExprSymbol & var : target.getVariables()) {
-                if (its.isFreeVar(var)) {
+                if (its.isFreeVariable(var)) {
                     tempVars.push_back(var);
                 } else {
                     vars.push_back(var);
@@ -299,7 +299,7 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
     for (auto const &pair : solution) {
         assert(is_a<symbol>(pair.first));
 
-        if (!its.isFreeVar(ex_to<symbol>(pair.first))) {
+        if (!its.isFreeVariable(ex_to<symbol>(pair.first))) {
             Expression sub = pair.second;
             assert(sub.is_polynomial(n));
             assert(sub.hasNoVariables()
@@ -572,7 +572,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     }
 
     for (const ExprSymbol &var : cost.getVariables()) {
-        if (its.isFreeVar(ex_to<symbol>(var))) {
+        if (its.isFreeVariable(ex_to<symbol>(var))) {
             // we try to achieve ComplexInfty
             return false;
         }

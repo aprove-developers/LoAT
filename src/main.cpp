@@ -29,8 +29,8 @@
 using namespace std;
 
 
-#include "itrs/itrs.h"
-#include "itrs/itrs.h"
+#include "itrs/itrsproblem.h"
+#include "itrs/itrsproblem.h"
 #include "itrs/recursiongraph.h"
 #include "stats.h"
 #include "timing.h"
@@ -193,6 +193,7 @@ int main(int argc, char *argv[]) {
     cout << "Trying to load file: " << filename << endl;
 
     ITRSProblem problem = ITRSProblem::loadFromFile(filename);
+    problem.print(cout);
     RecursionGraph g(problem);
 
     proofout << endl << "Initial Control flow graph problem:" << endl;

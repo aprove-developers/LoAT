@@ -30,50 +30,14 @@
 #include "expression.h"
 #include "term.h"
 
-typedef std::vector<Expression> GuardList;
-typedef std::map<VariableIndex,Expression> UpdateMap;
-
 /**
- * Represents a rule in an ITS
+ * Represents a rule in an ITRS
  */
 struct ITRSRule {
-    FunctionSymbolIndex lhs;
+    TT::Expression lhs;
     TT::Expression rhs;
-    GuardList guard;
-    Expression cost;
-};
-
-
-class FunctionSymbol {
-public:
-    FunctionSymbol(std::string name)
-        : name(name), defined(false) {
-    }
-
-    std::string getName() const {
-        return name;
-    }
-
-    bool isDefined() const {
-        return defined;
-    }
-
-    void setDefined() {
-        defined = true;
-    }
-
-    std::vector<VariableIndex>& getArguments() {
-        return arguments;
-    }
-
-    const std::vector<VariableIndex>& getArguments() const {
-        return arguments;
-    }
-
-private:
-    std::string name;
-    bool defined;
-    std::vector<VariableIndex> arguments;
+    TT::ExpressionVector guard;
+    TT::Expression cost;
 };
 
 enum Symbol {
@@ -91,76 +55,64 @@ enum Symbol {
 };
 
 /**
- * Datatype representing an ITS problem as defined in the sample files
+ * Class for parsing an ITRS
  * @note variable names contain only alphanumeric characters and _
  */
 
-class ITRSProblem {
-    friend class Preprocessor; //allow direct access for the preprocessing
-
-private:
-    ITRSProblem() {}
-
+class ITRS {
 public:
     /**
-     * Loads the ITS data from the given file
+     * Loads an ITRS data from the given file
      */
-    static ITRSProblem loadFromFile(const std::string &filename);
-    EXCEPTION(FileError,CustomException);
+    static ITRS loadFromFile(const std::string &filename);
 
     //simple getters
-    inline FunctionSymbolIndex getStartFunctionSymbol() const { return startTerm; }
-    inline const FunctionSymbol& getFunctionSymbol(FunctionSymbolIndex idx) const { return functionSymbols[idx]; }
-    inline std::vector<FunctionSymbol>::size_type getFunctionSymbolCount() const { return functionSymbols.size(); }
+    inline FunctionSymbolIndex getStartFunctionSymbol() const { return startFunctionSymbol; }
+    inline std::string getFunctionSymbolName(FunctionSymbolIndex index) const { return functionSymbols[index]; }
+    inline FunctionSymbolIndex getFunctionSymbolIndex(const std::string &name) const { return functionSymbolNameMap.at(name); }
+    inline const std::vector<std::string>::size_type getFunctionSymbolCount() const { return functionSymbols.size(); }
+    inline const std::vector<std::string>& getFunctionSymbolNames() const { return functionSymbols; }
 
-    inline const std::vector<ITRSRule>& getRules() const { return rules; }
-
-    inline std::string getVarname(VariableIndex idx) const { return vars[idx]; }
-    inline VariableIndex getVarindex(std::string name) const { return varMap.at(name); }
-
-    inline const std::set<VariableIndex>& getFreeVars() const { return freeVars; }
-    inline bool isFreeVar(VariableIndex idx) const { return freeVars.count(idx) > 0; }
-    bool isFreeVar(const ExprSymbol &var) const;
-
-    inline ExprSymbol getGinacSymbol(VariableIndex idx) const { return varSymbols[idx]; }
+    inline std::string getVariableName(VariableIndex index) const { return variables[index]; }
+    inline ExprSymbol getGinacSymbol(VariableIndex index) const { return ginacSymbols[index]; }
+    inline VariableIndex getVariableIndex(const std::string &name) const { return variableMap.at(name); }
+    inline const std::vector<std::string>& getVariables() const { return variables; }
     inline ExprList getGinacVarList() const { return varSymbolList; }
 
-    /**
-     * Adds a new fresh variable based on the given name
-     * @return the VariableIndex of the newly added variable
-     */
-    VariableIndex addFreshVariable(std::string basename, bool free = false);
+    inline const std::vector<ITRSRule>& getITRSRules() const { return rules; }
 
-    /**
-     * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the ITS variables
-     * @return the newly created symbol (_not_ associated with a variable index!)
-     */
-    ExprSymbol getFreshSymbol(std::string basename) const;
+    // helpers for variable handling
+    VariableIndex addVariable(const std::string &name);
+    VariableIndex addFreshVariable(const std::string &basename);
+    std::string getFreshName(const std::string &baseName) const;
 
-    FunctionSymbolIndex addFunctionSymbolVariant(FunctionSymbolIndex fs);
+    // helpers for function symbol handling
+    FunctionSymbolIndex addFunctionSymbol(const std::string &name);
+    FunctionSymbolIndex addFreshFunctionSymbol(const std::string &basename);
+    std::string getFreshFunctionSymbolName(const std::string &basename) const;
 
     /**
      * Prints this ITS contents in a readable but ugly format, for debugging only
      * @param s output stream to print to (e.g. cout)
      */
-    void print(std::ostream &s) const;
+    virtual void print(std::ostream &os) const;
 
-    void printLhs(FunctionSymbolIndex fun, std::ostream &os) const;
+protected:
+    ITRS() {}
+    void load(const std::string &filename);
+    EXCEPTION(FileError,CustomException);
 
 private:
-    //helpers for variable handling
-    VariableIndex addVariable(std::string name);
-    std::string getFreshName(std::string basename) const;
+    void verifyFunctionSymbolArity();
+    EXCEPTION(ArityMismatchException,CustomException);
 
-    //applies replacement map escapeSymbols to the given string (modified by reference)
-    void substituteVarnames(std::string &line) const;
-
+    // parsing
+    std::string escapeVariableName(const std::string &name);
     void parseRule(const std::string &line);
-    void parseLhs(std::string &lhs);
-    void parseRhs(std::string &rhs);
-    void parseCost(std::string &cost);
-    void parseGuard(std::string &guard);
-    bool replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols);
+    void parseLeftHandSide(const std::string &lhs);
+    void parseRightHandSide(const std::string &rhs);
+    void parseCost(const std::string &cost);
+    void parseGuard(const std::string &guard);
 
     // term parser
     EXCEPTION(UnexpectedSymbolException, CustomException);
@@ -179,29 +131,24 @@ private:
 private:
     static const std::set<char> specialCharsInVarNames;
 
-    /* ITS Data */
-    std::vector<std::string> vars;
-    std::set<VariableIndex> freeVars;
-    std::vector<FunctionSymbol> functionSymbols;
+    /* ITRS Data */
+    std::vector<std::string> variables;
+    std::vector<std::string> functionSymbols;
     std::vector<ITRSRule> rules;
-    FunctionSymbolIndex startTerm;
+    FunctionSymbolIndex startFunctionSymbol;
 
     /* for lookup efficiency */
-    std::map<std::string,VariableIndex> varMap;
-    std::map<std::string,FunctionSymbolIndex> functionSymbolMap;
+    std::map<std::string,VariableIndex> variableMap;
+    std::map<std::string,FunctionSymbolIndex> functionSymbolNameMap;
 
     /* needed since GiNaC::symbols must be referenced later on */
     /* NOTE: symbols with the same name are *NOT* identical to GiNaC */
-    std::vector<ExprSymbol> varSymbols;
+    std::vector<ExprSymbol> ginacSymbols;
     ExprList varSymbolList;
-
-    std::map<std::string,std::string> escapeSymbols;
 
     /* parser stuff */
     ITRSRule newRule;
-    GiNaC::exmap symbolSubs;
-    ExprSymbolSet boundSymbols;
-    std::map<std::string,VariableIndex> knownVars;
+    std::map<std::string,VariableIndex> knownVariables;
     bool nextSymbolCalledOnEmptyInput;
     std::string toParseReversed;
     std::string lastIdent;

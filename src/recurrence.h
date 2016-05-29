@@ -19,7 +19,7 @@
 #define RECURRENCE_H
 
 #include "global.h"
-#include "itrs/itrs.h"
+#include "itrs/itrsproblem.h"
 
 struct Transition;
 

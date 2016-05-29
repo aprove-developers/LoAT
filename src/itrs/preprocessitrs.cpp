@@ -17,7 +17,7 @@
 
 #include "preprocessitrs.h"
 
-#include "itrs.h"
+#include "itrsproblem.h"
 #include "recursiongraph.h"
 #include "guardtoolbox.h"
 #include "z3toolbox.h"
@@ -97,7 +97,7 @@ bool PreprocessITRS::eliminateFreeVars(const ITRSProblem &itrs, RightHandSide &r
 
         //helpers for guard preprocessing
         ExprSymbolSet varsInUpdate;
-        auto sym_is_free = [&](const ExprSymbol &sym){ return itrs.isFreeVar(itrs.getVarindex(sym.get_name())); };
+        auto sym_is_free = [&](const ExprSymbol &sym){ return itrs.isFreeVariable(itrs.getVariableIndex(sym.get_name())); };
         auto free_in_update = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) > 0; };
 
         //remove free variables from update rhs (varsInUpdate, e.g. x <- free with free == x+1). Repeat for transitive closure.

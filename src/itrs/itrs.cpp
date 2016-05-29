@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "itrs.h"
+#include "itrsproblem.h"
 
 #include <algorithm>
 #include <fstream>
@@ -30,51 +30,102 @@
 using namespace std;
 using namespace boost::algorithm;
 
-const std::set<char> ITRSProblem::specialCharsInVarNames = {'/', '\'', '.'};
+const std::set<char> ITRS::specialCharsInVarNames = {'/', '\'', '.', '_'};
 
-/**
- * Replaces symbols that ginac does not allow by underscores _
- * @param name the variable name to be modified
- */
-static void escapeVarname(string &name) {
-    assert(!name.empty());
-    for (int i=0; i < name.length(); ++i) {
-        if (name[i] == 'I') name[i] = 'Q'; //replace I to avoid interpretation as complex number
-        if (!isalnum(name[i])) name[i] = '_'; //escape any symbol ginac can probably not parse
-    }
-    if (!isalpha(name[0])) {
-        name = "q" + name; //ensure name starts with a letter
-    }
+
+VariableIndex ITRS::addVariable(const std::string &name) {
+    assert(variableMap.count(name) == 0);
+
+    // add new variable
+    VariableIndex index = variables.size();
+    variables.push_back(name);
+    variableMap.emplace(name, index);
+
+    // convert to ginac
+    ExprSymbol symbol(name);
+    ginacSymbols.push_back(symbol);
+    varSymbolList.append(symbol);
+
+    return index;
 }
 
 
-void ITRSProblem::substituteVarnames(string &line) const {
-    set<size_t> replacedPositions;
-    for (auto it : escapeSymbols) {
-        size_t pos = 0;
-        while ((pos = line.find(it.first,pos)) != string::npos) {
-            //ensure no character is replaced more than once, and also
-            //ensure a complete variable is substituted, i.e. the name does not continue to the left and/or right
-            size_t nextpos = pos+it.first.length();
-            if (replacedPositions.count(pos) > 0
-               || (pos > 0 && (line[pos-1] == '_' || isalnum(line[pos-1])))
-               || (nextpos < line.length() && (line[nextpos] == '_' || isalnum(line[nextpos])))) {
-                pos++;
-                continue;
-            }
-            //otherwise it can be replaced
-            line.replace(pos, it.first.size(), it.second);
-            for (int i=0; i < it.second.length(); ++i) replacedPositions.insert(pos+i);
-            pos += it.second.length();
+VariableIndex ITRS::addFreshVariable(const std::string &basename) {
+    return addVariable(getFreshName(basename));
+}
+
+
+std::string ITRS::getFreshName(const std::string &basename) const {
+    int num = 0;
+    string name = basename;
+
+    while (variableMap.count(name) == 1) {
+        name = basename + "_" + to_string(num);
+        num++;
+    }
+
+    return name;
+}
+
+
+FunctionSymbolIndex ITRS::addFunctionSymbol(const std::string &name) {
+    assert(functionSymbolNameMap.count(name) == 0);
+
+    FunctionSymbolIndex index = functionSymbols.size();
+    functionSymbols.push_back(name);
+    functionSymbolNameMap.emplace(name, index);
+
+    return index;
+}
+
+
+FunctionSymbolIndex ITRS::addFreshFunctionSymbol(const std::string &basename) {
+    return addFunctionSymbol(getFreshFunctionSymbolName(basename));
+}
+
+
+std::string ITRS::getFreshFunctionSymbolName(const std::string &basename) const {
+    std::string name = basename;
+
+    while (functionSymbolNameMap.count(name) == 1) {
+        name += "'";
+    }
+
+    return name;
+}
+
+
+void ITRS::print(std::ostream &os) const {
+    os << "Variables:";
+    for (std::string v : getVariables()) {
+        os << " " << v;
+    }
+    os << std::endl;
+
+    os << "Rules:" << std::endl;
+    for (const ITRSRule &r : rules) {
+        os << r.lhs;
+        os << " -> ";
+        os << r.rhs;
+        os << " [";
+        for (const TT::Expression &ex : r.guard) {
+            os << ex << ",";
         }
+        os << "], " << r.cost << std::endl;
     }
 }
 
 
-ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
-    ITRSProblem res;
+ITRS ITRS::loadFromFile(const string &filename) {
+    ITRS res;
+    res.load(filename);
+    return res;
+}
+
+
+void ITRS::load(const std::string &filename) {
     string startTerm;
-    res.knownVars.clear();
+    knownVariables.clear();
 
     ifstream file(filename);
     if (!file.is_open())
@@ -94,13 +145,15 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
             if (line == ")")
                 in_rules = false;
             else {
-                res.parseRule(line);
+                parseRule(line);
             }
         }
         else {
             if (line[0] != '(') throw FileError("Malformed line: "+line);
             if (line == "(RULES") {
-                if (!has_goal || !has_vars || !has_start) throw FileError("Missing declarations before RULES-block");
+                if (!has_goal || !has_vars || !has_start) {
+                    debugParser("WARNING: Missing declarations before RULES-block");
+                }
                 in_rules = true;
             }
             else if (line.rfind(')') != line.length()-1)
@@ -134,16 +187,10 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
                 stringstream ss(line.substr(4,line.length()-1-4));
                 string varname;
                 while (ss >> varname) {
-                    string escapedname = varname;
-                    escapeVarname(escapedname);
-                    VariableIndex vi = res.addFreshVariable(escapedname);
-                    escapedname = res.getVarname(vi);
-                    res.knownVars[escapedname] = vi;
-                    if (escapedname != varname) {
-                        res.escapeSymbols[varname] = escapedname;
-                    }
+                    VariableIndex var = addFreshVariable(escapeVariableName(varname));
+                    knownVariables.emplace(varname, var);
                 }
-                debugParser("Found variable declaration with " << res.vars.size() << " entries");
+                debugParser("Found variable declaration with " << variables.size() << " entries");
                 has_vars = true;
             }
 
@@ -154,64 +201,98 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
     }
 
     //ensure we have at least some rules
-    if (res.rules.empty()) throw FileError("No rules defined");
+    if (rules.empty()) throw FileError("No rules defined");
 
     //check if startTerm is valid
     if (startTerm.empty()) {
-        debugParser("WARNING: Missing start term, defaulting to first rule lhs");
-        assert(!res.rules.empty());
-        res.startTerm = res.rules[0].lhs;
+        debugParser("WARNING: Missing start term, defaulting to first function symbol");
+        assert(!functionSymbols.empty());
+        startFunctionSymbol = 0;
     } else {
-        auto it = res.functionSymbolMap.find(startTerm);
-        if (it == res.functionSymbolMap.end()) throw FileError("No rules for start term: " + startTerm);
-        res.startTerm = it->second;
+        auto it = functionSymbolNameMap.find(startTerm);
+        if (it == functionSymbolNameMap.end()) throw FileError("Unknown function symbol: " + startTerm);
+        startFunctionSymbol = it->second;
     }
 
-    return res;
+    verifyFunctionSymbolArity();
 }
 
-/**
- * Splits a function application (line) in function name (fun) and argument strings (args)
- * e.g. f(x,y) will result in "f" and {"x","y"}
- */
-static void parseFunapp(const string &line, string &fun, vector<string> &args) {
-    args.clear();
-    string::size_type pos = line.find('(');
-    if (pos == string::npos) throw ITRSProblem::FileError("Invalid funapp (missing open paren): " + line);
-    if (line.rfind(')') != line.length()-1) throw ITRSProblem::FileError("Invalid funapp (bad close paren): "+line);
 
-    fun = line.substr(0,pos);
-    string::size_type startpos = pos+1;
-    while ((pos = line.find(',',startpos)) != string::npos) {
-        string arg = line.substr(startpos,pos-startpos);
-        trim(arg);
-        if (arg.empty()) throw ITRSProblem::FileError("Empty argument in funapp: "+line);
-        args.push_back(arg);
-        startpos = pos+1;
+void ITRS::verifyFunctionSymbolArity() {
+    class ArityMismatchVisitor : public TT::ConstVisitor {
+    public:
+        void visitPre(const TT::FunctionSymbol &funSymbol) override {
+            FunctionSymbolIndex fsIndex = funSymbol.getFunctionSymbol();
+            int fsArity = funSymbol.getArguments().size();
+
+            auto it = arity.find(fsIndex);
+            if (it == arity.end()) {
+                arity.emplace(fsIndex, fsArity);
+
+            } else {
+                if (it->second != fsArity) {
+                    throw ArityMismatchException("function symbol redeclared with different arity");
+                }
+            }
+        }
+
+    private:
+        std::map<FunctionSymbolIndex,int> arity;
+    };
+
+    ArityMismatchVisitor visitor;
+
+    for (const ITRSRule &rule : rules) {
+        rule.lhs.traverse(visitor);
+        rule.rhs.traverse(visitor);
+        rule.cost.traverse(visitor);
+
+        for (const TT::Expression &ex : rule.guard) {
+            ex.traverse(visitor);
+        }
     }
-    string lastarg = line.substr(startpos,line.length()-1-startpos);
-    trim(lastarg);
-    if (!lastarg.empty()) {
-        args.push_back(lastarg);
-    } else if (!args.empty()) {
-        throw ITRSProblem::FileError("Empty last argument in funapp: "+line);
+}
+
+
+/**
+ * Replaces symbols that ginac does not allow by underscores _
+ * @param name the variable name to be modified
+ */
+std::string ITRS::escapeVariableName(const std::string &name) {
+    assert(!name.empty());
+
+    std::string escapedName = name;
+    for (int i = 0; i < escapedName.length(); ++i) {
+        //replace I to avoid interpretation as complex number
+        if (escapedName[i] == 'I') {
+            escapedName[i] = 'Q';
+        }
+
+        //escape any symbol ginac can probably not parse
+        if (!isalnum(escapedName[i])) {
+            escapedName[i] = '_';
+        }
     }
+
+    //ensure name starts with a letter
+    if (!isalpha(escapedName[0])) {
+        escapedName = "q" + escapedName;
+    }
+
+    return escapedName;
 }
 
 
 /**
  * Parses a rule in the ITS file format reading from line.
  * @param res the current state of the ITS that is read (read and modified)
- * @param knownVars mapping from string to the corresponding variable index (read and modified)
+ * @param knownVariables mapping from string to the corresponding variable index (read and modified)
  * @param line the input string
  */
-void ITRSProblem::parseRule(const string &line) {
+void ITRS::parseRule(const string &line) {
     debugParser("parsing rule: " << line);
     newRule = ITRSRule();
     newRule.cost = Expression(1); //default, if not specified
-
-    symbolSubs.clear();
-    boundSymbols.clear();
 
     /* split string into lhs, rhs (and possibly cost in between) */
     string lhs,rhs,cost;
@@ -219,14 +300,14 @@ void ITRSProblem::parseRule(const string &line) {
     if (pos != string::npos) {
         //-{ cost }> sytnax
         auto endpos = line.find("}>");
-        if (endpos == string::npos) throw ITRSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
+        if (endpos == string::npos) throw ITRS::FileError("Invalid rule, malformed -{ cost }>: "+line);
         cost = line.substr(pos+2,endpos-(pos+2));
         lhs = line.substr(0,pos);
         rhs = line.substr(endpos+2);
     } else {
         //default -> syntax (leave cost string empty)
         pos = line.find("->");
-        if (pos == string::npos) throw ITRSProblem::FileError("Invalid rule, -> missing: "+line);
+        if (pos == string::npos) throw ITRS::FileError("Invalid rule, -> missing: "+line);
         lhs = line.substr(0,pos);
         rhs = line.substr(pos+2);
     }
@@ -250,147 +331,39 @@ void ITRSProblem::parseRule(const string &line) {
             rhs = rhs.substr(6,rhs.length()-6-1);
             trim(rhs);
         } else {
-            throw ITRSProblem::FileError("Invalid Com_n application, only Com_1 supported");
+            throw ITRS::FileError("Invalid Com_n application, only Com_1 supported");
         }
     }
 
-    parseLhs(lhs);
-    parseRhs(rhs);
+    parseLeftHandSide(lhs);
+    parseRightHandSide(rhs);
     parseCost(cost);
     parseGuard(guard);
 
-    this->rules.push_back(newRule);
+    rules.push_back(std::move(newRule));
 }
 
-void ITRSProblem::parseLhs(std::string &lhs) {
-    string fun;
-    vector<string> args;
-    parseFunapp(lhs, fun, args);
-    //parse variables
-    vector<VariableIndex> argVars;
-    for (string &v : args) {
-        substituteVarnames(v);
+void ITRS::parseLeftHandSide(const std::string &lhs) {
+    newRule.lhs = std::move(parseTerm(lhs).ginacify());
+}
 
-        if (v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
-        Expression argterm = Expression::fromString(v, this->varSymbolList);
 
-        if (GiNaC::is_a<GiNaC::symbol>(argterm)) {
-            GiNaC::symbol sym = GiNaC::ex_to<GiNaC::symbol>(argterm);
+void ITRS::parseRightHandSide(const std::string &rhs) {
+    newRule.rhs = std::move(parseTerm(rhs).ginacify());
+}
 
-            auto it = knownVars.find(sym.get_name());
-            if (it == knownVars.end()) {
-                throw ITRSProblem::FileError("Unknown variable in lhs: " + v);
-            }
-            argVars.push_back(it->second);
 
-        } else if (GiNaC::is_a<GiNaC::numeric>(argterm)) {
-            debugParser("moving condition to guard: " << v);
-            VariableIndex index = addFreshVariable("x", true);
-
-            newRule.guard.push_back(getGinacSymbol(index) == argterm);
-            argVars.push_back(index);
-
-        } else {
-            throw ITRSProblem::FileError("Unsupported expression on lhs: " + v);
-        }
-    }
-
-    auto funMapIt = functionSymbolMap.find(fun);
-    // Add function symbol if it is not already present
-    if (funMapIt == functionSymbolMap.end()) {
-        newRule.lhs = functionSymbols.size();
-        functionSymbols.emplace_back(fun);
-        functionSymbolMap.emplace(fun, newRule.lhs);
-        debugParser(fun << " is " << newRule.lhs);
+void ITRS::parseCost(const std::string &cost) {
+    if (cost.empty()) {
+        newRule.cost = TT::Expression(1);
 
     } else {
-        newRule.lhs = funMapIt->second;
-        debugParser(fun << " is " << newRule.lhs << " (already present)");
-    }
-
-    // Check if variable names differ from previous occurences and provide substitution if necessary
-    FunctionSymbol &funSymbol = functionSymbols[newRule.lhs];
-    if (!funSymbol.isDefined()) {
-        funSymbol.setDefined();
-        funSymbol.getArguments() = std::move(argVars);
-
-    } else {
-        std::vector<VariableIndex> &previousVars = funSymbol.getArguments();
-
-        if (previousVars.size() != argVars.size()) {
-            throw ITRSProblem::FileError("Funapp redeclared with different argument count: " + fun);
-        }
-
-        for (int i = 0; i < argVars.size(); ++i) {
-            VariableIndex vOld = previousVars[i];
-            VariableIndex vNew = argVars[i];
-            if (vOld != vNew) {
-                symbolSubs[getGinacSymbol(vNew)] = getGinacSymbol(vOld);
-            }
-        }
-
-        if (!symbolSubs.empty()) {
-            debugParser("ITS Warning: funapp redeclared with different arguments: " << fun);
-        }
-        //collect the lhs variables that are used (i.e. the ones of the previous occurence)
-        for (VariableIndex vi : previousVars) {
-            boundSymbols.insert(getGinacSymbol(vi));
-        }
-    }
-
-    // Apply symbolSubs to expression that were added
-    // while moving conditions from the lhs to the guard
-    for (Expression &expression : newRule.guard) {
-        expression = expression.subs(symbolSubs);
-    }
-
-    //collect the lhs variables that are bound (i.e. the ones of the previous occurence)
-    for (VariableIndex vi : funSymbol.getArguments()) {
-        boundSymbols.insert(getGinacSymbol(vi));
+        newRule.cost = std::move(parseTerm(cost).ginacify());
     }
 }
 
 
-void ITRSProblem::parseRhs(std::string &rhs) {
-    newRule.rhs = parseTerm(rhs).ginacify().substitute(symbolSubs);
-
-    ExprSymbolSet rhsSymbols;
-    for (const ExprSymbol &sym : newRule.rhs.getVariables()) {
-        rhsSymbols.insert(sym);
-    }
-
-    //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
-    if (replaceUnboundedWithFresh(rhsSymbols)) {
-        newRule.rhs = newRule.rhs.substitute(symbolSubs);
-
-    }
-}
-
-
-void ITRSProblem::parseCost(std::string &cost) {
-    ExprSymbolSet costSymbols;
-
-    if (!cost.empty()) {
-        substituteVarnames(cost);
-        if (cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
-        newRule.cost = Expression::fromString(cost, this->varSymbolList).subs(symbolSubs);
-        if (!newRule.cost.is_polynomial(this->varSymbolList)) throw ITRSProblem::FileError("Non polynomial cost in the input");
-        newRule.cost.collectVariables(costSymbols);
-    }
-
-    //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
-    if (replaceUnboundedWithFresh(costSymbols)) {
-        newRule.cost = newRule.cost.subs(symbolSubs);
-    }
-
-    //ensure user given costs are positive
-    if (!cost.empty()) {
-        newRule.guard.push_back(newRule.cost > 0);
-    }
-}
-
-
-void ITRSProblem::parseGuard(std::string &guard) {
+void ITRS::parseGuard(const std::string &guard) {
     ExprSymbolSet guardSymbols;
 
     string::size_type pos;
@@ -403,143 +376,57 @@ void ITRSProblem::parseGuard(std::string &guard) {
             startpos = pos+2;
             //ignore TRUE in guards (used to indicate an empty guard in some files)
             if (term == "TRUE" || term.empty()) continue;
-            substituteVarnames(term);
-            if (term.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
-            Expression guardTerm = Expression::fromString(term,this->varSymbolList).subs(symbolSubs);
-            guardTerm.collectVariables(guardSymbols);
-            newRule.guard.push_back(guardTerm);
+
+            TT::Expression res;
+            string::size_type relpos;
+            std::string lhs, rhs;
+            if ((relpos = term.find("==")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 2); trim(rhs);
+                res = parseTerm(lhs) == parseTerm(rhs);
+
+            } else if ((relpos = term.find("!=")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 2); trim(rhs);
+                res = parseTerm(lhs) != parseTerm(rhs);
+
+            } else if ((relpos = term.find(">=")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 2); trim(rhs);
+                res = parseTerm(lhs) >= parseTerm(rhs);
+
+            } else if ((relpos = term.find("<=")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 2); trim(rhs);
+                res = parseTerm(lhs) <= parseTerm(rhs);
+
+            } else if ((relpos = term.find(">")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 1); trim(rhs);
+                res = parseTerm(lhs) > parseTerm(rhs);
+
+            } else if ((relpos = term.find("<")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 1); trim(rhs);
+                res = parseTerm(lhs) < parseTerm(rhs);
+
+            } else if ((relpos = term.find("=")) != std::string::npos) {
+                lhs = term.substr(0, relpos); trim(lhs);
+                rhs = term.substr(relpos + 1); trim(rhs);
+                res = parseTerm(lhs) == parseTerm(rhs);
+
+            } else {
+                throw FileError("Can't parse guard");
+            }
+
+            newRule.guard.push_back(std::move(res.ginacify()));
+
         } while (pos != string::npos);
     }
-
-    //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
-    if (replaceUnboundedWithFresh(guardSymbols)) {
-        debugParser("ITS Note: free variables in guard: " << guard);
-        for (Expression &guardExpr : newRule.guard) {
-            guardExpr = guardExpr.subs(symbolSubs);
-        }
-    }
 }
 
 
-//setup substitution for unbound variables (i.e. not on lhs) by new fresh variables
-bool ITRSProblem::replaceUnboundedWithFresh(const ExprSymbolSet &checkSymbols) {
-    bool added = false;
-    for (const ExprSymbol &sym : checkSymbols) {
-        if (boundSymbols.count(sym) == 0) {
-            VariableIndex vFree = addFreshVariable("free");
-            this->freeVars.insert(vFree);
-            ExprSymbol freeSym = getGinacSymbol(vFree);
-            symbolSubs[sym] = freeSym;
-            boundSymbols.insert(freeSym);
-            added = true;
-        }
-    }
-    return added;
-}
-
-
-VariableIndex ITRSProblem::addVariable(string name) {
-    //add new variable
-    VariableIndex vi = vars.size();
-    varMap[name] = vi;
-    vars.push_back(name);
-
-    //convert to ginac
-    auto sym = GiNaC::symbol(name);
-    varSymbols.push_back(sym);
-    varSymbolList.append(sym);
-
-    return vi;
-}
-
-
-string ITRSProblem::getFreshName(string basename) const {
-    int num = 1;
-    string name = basename;
-    while (varMap.find(name) != varMap.end()) {
-        name = basename + "_" + to_string(num);
-        num++;
-    }
-    return name;
-}
-
-
-bool ITRSProblem::isFreeVar(const ExprSymbol &var) const {
-    for (VariableIndex i : freeVars) {
-        if (var == getGinacSymbol(i)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-VariableIndex ITRSProblem::addFreshVariable(string basename, bool free) {
-    VariableIndex v = addVariable(getFreshName(basename));
-    if (free) freeVars.insert(v);
-    return v;
-}
-
-
-ExprSymbol ITRSProblem::getFreshSymbol(string basename) const {
-    return ExprSymbol(getFreshName(basename));
-}
-
-
-FunctionSymbolIndex ITRSProblem::addFunctionSymbolVariant(FunctionSymbolIndex fs) {
-    assert(fs >= 0);
-    assert(fs < functionSymbols.size());
-    const FunctionSymbol &oldFun = functionSymbols[fs];
-    std::string newName = oldFun.getName();
-    while (functionSymbolMap.count(newName) == 1) {
-        newName += "'";
-    }
-
-    FunctionSymbol newFun(newName);
-    if (oldFun.isDefined()) {
-        newFun.setDefined();
-    }
-    newFun.getArguments() = oldFun.getArguments();
-
-    FunctionSymbolIndex newFunIndex = functionSymbols.size();
-    functionSymbols.push_back(std::move(newFun));
-    functionSymbolMap.emplace(newName, newFunIndex);
-
-    return newFunIndex;
-}
-
-
-void ITRSProblem::print(ostream &s) const {
-    auto printExpr = [&](const Expression &e) {
-        s << e;
-    };
-
-    s << "Variables:";
-    for (string v : vars) {
-        s << " ";
-        if (isFreeVar(getVarindex(v)))
-            s << "_" << v << "_";
-        else
-            s << v;
-    }
-    s << endl;
-
-    s << "Rules:" << endl;
-    for (ITRSRule r : rules) {
-        printLhs(r.lhs, s);
-        s << " -> ";
-        s << r.rhs;
-        s << " [";
-        for (Expression e : r.guard) {
-            s << e << ",";
-        }
-        s << "], " << r.cost << endl;
-    }
-}
-
-
-TT::Expression ITRSProblem::parseTerm(const std::string &term) {
+TT::Expression ITRS::parseTerm(const std::string &term) {
     debugTermParser("Parsing " << term);
     toParseReversed = term;
     std::reverse(toParseReversed.begin(), toParseReversed.end());
@@ -550,7 +437,7 @@ TT::Expression ITRSProblem::parseTerm(const std::string &term) {
 }
 
 
-void ITRSProblem::nextSymbol() {
+void ITRS::nextSymbol() {
     trim_right(toParseReversed);
 
     if (nextSymbolCalledOnEmptyInput) {
@@ -584,6 +471,7 @@ void ITRSProblem::nextSymbol() {
 
         if (toParseReversed.back() == '(') {
             symbol = FUNCTIONSYMBOL;
+
         } else {
             symbol = VARIABLE;
         }
@@ -622,7 +510,7 @@ void ITRSProblem::nextSymbol() {
 }
 
 
-bool ITRSProblem::accept(Symbol sym) {
+bool ITRS::accept(Symbol sym) {
     if (sym == symbol) {
         nextSymbol();
         return true;
@@ -633,7 +521,7 @@ bool ITRSProblem::accept(Symbol sym) {
 }
 
 
-bool ITRSProblem::expect(Symbol sym) {
+bool ITRS::expect(Symbol sym) {
     if (accept(sym)) {
         return true;
     } else {
@@ -642,7 +530,7 @@ bool ITRSProblem::expect(Symbol sym) {
 }
 
 
-TT::Expression ITRSProblem::expression() {
+TT::Expression ITRS::expression() {
     debugTermParser("parsing expression");
     bool negative = false;
     if (symbol == PLUS || symbol == MINUS) {
@@ -653,7 +541,7 @@ TT::Expression ITRSProblem::expression() {
 
     TT::Expression result = term();
     if (negative) {
-        result = TT::Expression(*this, GiNaC::numeric(-1)) * result;
+        result = TT::Expression(-1) * result;
     }
 
     while (symbol == PLUS || symbol == MINUS) {
@@ -662,10 +550,10 @@ TT::Expression ITRSProblem::expression() {
 
         TT::Expression temp = term();
         if (negative) {
-            result = result - temp;
+            result -= temp;
 
         } else {
-            result = result + temp;
+            result += temp;
         }
     }
 
@@ -673,7 +561,7 @@ TT::Expression ITRSProblem::expression() {
 }
 
 
-TT::Expression ITRSProblem::term() {
+TT::Expression ITRS::term() {
     debugTermParser("parsing term");
     TT::Expression result = factor();
 
@@ -697,7 +585,7 @@ TT::Expression ITRSProblem::term() {
 }
 
 
-TT::Expression ITRSProblem::factor() {
+TT::Expression ITRS::factor() {
     debugTermParser("parsing factor");
     if (accept(FUNCTIONSYMBOL)) {
         std::string name = lastIdent;
@@ -713,36 +601,49 @@ TT::Expression ITRSProblem::factor() {
         expect(RPAREN);
 
         FunctionSymbolIndex index;
-        auto it = functionSymbolMap.find(name);
-        if (it == functionSymbolMap.end()) {
+        auto it = functionSymbolNameMap.find(name);
+        if (it == functionSymbolNameMap.end()) {
             index = functionSymbols.size();
             functionSymbols.emplace_back(name);
-            functionSymbolMap.emplace(name, index);
+            functionSymbolNameMap.emplace(name, index);
 
         } else {
             index = it->second;
         }
 
-        return TT::Expression(*this, index, args);
+        return TT::Expression(index, name, args);
 
     } else if (accept(VARIABLE)) {
         std::string name = lastIdent;
-        substituteVarnames(name);
         debugTermParser("parsing variable " << name);
 
-        auto it = knownVars.find(name);
-        if (it == knownVars.end()) {
-            throw UnknownVariableException(name);
-        }
-        VariableIndex index = it->second;
+        auto it = knownVariables.find(name);
+        if (it == knownVariables.end()) {
+            debugTermParser("Ooops, " << name << " is a functio symbol of arity 0");
 
-        return TT::Expression(*this, getGinacSymbol(index));
+            FunctionSymbolIndex index;
+            auto it = functionSymbolNameMap.find(name);
+            if (it == functionSymbolNameMap.end()) {
+                index = functionSymbols.size();
+                functionSymbols.emplace_back(name);
+                functionSymbolNameMap.emplace(name, index);
+
+            } else {
+                index = it->second;
+            }
+
+            std::vector<TT::Expression> args;
+            return TT::Expression(index, name, args);
+        }
+
+        VariableIndex index = it->second;
+        return TT::Expression(getGinacSymbol(index));
 
     } else if (accept(NUMBER)) {
         debugTermParser("parsing number " << lastIdent);
 
         GiNaC::numeric num(lastIdent.c_str());
-        return TT::Expression(*this, num);
+        return TT::Expression(num);
 
     } else if (accept(LPAREN)) {
         TT::Expression result = expression();
@@ -753,20 +654,4 @@ TT::Expression ITRSProblem::factor() {
     } else {
         throw SyntaxErrorException();
     }
-}
-
-
-void ITRSProblem::printLhs(FunctionSymbolIndex fun, std::ostream &os) const {
-    const FunctionSymbol &funSymbol = functionSymbols[fun];
-    os << funSymbol.getName() << "(";
-
-    auto &funcVars = funSymbol.getArguments();
-    for (int i = 0; i < funcVars.size(); ++i) {
-        if (i > 0) {
-            os << ", ";
-        }
-
-        os << getVarname(funcVars[i]);
-    }
-    os << ")";
 }

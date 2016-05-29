@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS eval_1))
+(VAR i j)
+(RULES
+eval_1((i), (j)) -> eval_2((i), (0)) :|: i>=0 && j>=0 && i>=0
+eval_2((i), (j)) -> eval_2((i), (1+j)) :|: i>=0 && j>=0 && j<=-1+i
+eval_2((i), (j)) -> eval_1((-1+i), (j)) :|: i>=0 && j>=0 && j>-1+i
+)

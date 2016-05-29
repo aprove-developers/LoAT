@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS gcd))
+(VAR x y x_0 x_1)
+(RULES
+gcd((x), (x_0)) -> x :|: x>=0 && x_0==0 && x_0>0
+gcd((x_1), (y)) -> y :|: y>=0 && x_1==0 && x_1>0
+gcd((x), (y)) -> gcd((x-y), (y)) :|: x>=0 && y>=0 && x>=y && y>0
+gcd((x), (y)) -> gcd((-x+y), (x)) :|: x>=0 && y>=0 && y>x && x>0
+)

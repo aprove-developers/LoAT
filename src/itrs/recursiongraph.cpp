@@ -38,9 +38,9 @@ const NodeIndex RecursionGraph::NULLNODE = -1;
 RightHandSide Transition::toRightHandSide(const ITRSProblem &itrs,
                                                 FunctionSymbolIndex funSym) const {
     RightHandSide rhs;
-    rhs.cost = TT::Expression(itrs, cost);
+    rhs.cost = TT::Expression(cost);
     for (const Expression &ex : guard) {
-        rhs.guard.push_back(TT::Expression(itrs, ex));
+        rhs.guard.push_back(TT::Expression(ex));
     }
 
     std::vector<TT::Expression> args;
@@ -49,14 +49,14 @@ RightHandSide Transition::toRightHandSide(const ITRSProblem &itrs,
         auto it = update.find(var);
 
         if (it != update.end()) {
-            args.push_back(TT::Expression(itrs, it->second));
+            args.push_back(TT::Expression(it->second));
 
         } else {
-            args.push_back(TT::Expression(itrs, itrs.getGinacSymbol(var)));
+            args.push_back(TT::Expression(itrs.getGinacSymbol(var)));
         }
     }
 
-    rhs.term = TT::Expression(itrs, funSym, args);
+    rhs.term = TT::Expression(funSym, itrs.getFunctionSymbolName(funSym), args);
 
     return rhs;
 }
@@ -127,7 +127,7 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
 
     initial = itrs.getStartFunctionSymbol();
 
-    for (const ITRSRule &rule : itrs.getRules()) {
+    for (const Rule &rule : itrs.getRules()) {
         addRule(rule);
     }
 
@@ -141,15 +141,14 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
         // build the rule initial'(x_1, ..., x_n) -> initial(x_1, ..., x_n)
         std::vector<TT::Expression> vars;
         for (VariableIndex var : newInitial.getArguments()) {
-            vars.push_back(TT::Expression(itrs, itrs.getGinacSymbol(var)));
+            vars.push_back(TT::Expression(itrs.getGinacSymbol(var)));
         }
-        TT::Expression def(itrs, initial, vars);
 
         RightHandSide rhs;
         // initial(x_1, ..., x_n)
-        rhs.term = TT::Expression(itrs, initial, vars);
+        rhs.term = TT::Expression(initial, itrs.getFunctionSymbolName(initial), vars);
         // cost 0
-        rhs.cost = TT::Expression(itrs, 0);
+        rhs.cost = TT::Expression(GiNaC::numeric(0));
 
         addRightHandSide(newInitialIndex, std::move(rhs));
 
@@ -196,7 +195,7 @@ bool RecursionGraph::solveRecursion(NodeIndex node) {
 void RecursionGraph::print(ostream &s) const {
     auto printVar = [&](VariableIndex vi) {
         s << vi;
-        s << "[" << itrs.getVarname(vi) << "]";
+        s << "[" << itrs.getVariableName(vi) << "]";
     };
     auto printNode = [&](NodeIndex ni) {
         s << ni;
@@ -733,13 +732,11 @@ bool RecursionGraph::solveRecursions() {
 }
 
 
-void RecursionGraph::addRule(const ITRSRule &rule) {
+void RecursionGraph::addRule(const Rule &rule) {
     RightHandSide rhs;
-    for (const Expression &ex : rule.guard) {
-        rhs.guard.push_back(TT::Expression(itrs, ex));
-    }
+    rhs.guard = rule.guard;
     rhs.term = rule.rhs;
-    rhs.cost = TT::Expression(itrs, rule.cost);
+    rhs.cost = rule.cost;
 
     NodeIndex src = (NodeIndex)rule.lhs;
     std::set<NodeIndex> dsts = (std::set<NodeIndex>)rhs.term.getFunctionSymbols();
@@ -846,7 +843,7 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
                                          const FunctionSymbolIndex funSymbolIndex,
                                          const RightHandSide &followRhs) const {
     const FunctionSymbol &funSymbol = itrs.getFunctionSymbol(funSymbolIndex);
-    const TT::FunctionDefinition funDef(funSymbolIndex, followRhs.term, followRhs.cost, followRhs.guard);
+    const TT::FunctionDefinition funDef(itrs, funSymbolIndex, followRhs.term, followRhs.cost, followRhs.guard);
 
     // perform rewriting on a copy of rhs
     RightHandSide rhsCopy(rhs);
@@ -905,7 +902,7 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
     // TODO optimize (isInfinity() member function)
     if ((rhs.cost.hasNoFunctionSymbols() && Expression(rhs.cost.toGiNaC()).isInfty())
         || (followRhs.cost.hasNoFunctionSymbols() && Expression(followRhs.cost.toGiNaC()).isInfty())) {
-        rhs.cost = TT::Expression(itrs, Expression::Infty);
+        rhs.cost = TT::Expression(Expression::Infty);
 
     } else {
         rhs.cost = std::move(rhsCopy.cost);
@@ -1116,15 +1113,14 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
                         // build the definition needed for replacing mid by mid'
                         std::vector<TT::Expression> args;
                         for (VariableIndex var : oldFunSym.getArguments()) {
-                            args.push_back(TT::Expression(itrs, itrs.getGinacSymbol(var)));
+                            args.push_back(TT::Expression(itrs.getGinacSymbol(var)));
                         }
 
                         // mid'(x_1, ..., x_n)
-                        TT::Expression def(itrs, newIndex, args);
-                        GiNaC::numeric nullGiNaC;
-                        TT::Expression null(itrs, nullGiNaC);
+                        TT::Expression def(newIndex, newFunSym.getName(), args);
+                        TT::Expression null(GiNaC::numeric(0));
                         std::vector<TT::Expression> nullVector;
-                        TT::FunctionDefinition funDef(oldIndex, def, null, nullVector);
+                        TT::FunctionDefinition funDef(itrs, oldIndex, def, null, nullVector);
 
                         // evaluate the function
                         rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, nullptr, nullptr);
@@ -1168,7 +1164,7 @@ bool RecursionGraph::canNest(const RightHandSide &inner, FunctionSymbolIndex ind
     set<string> innerguard;
     for (const TT::Expression &ex : inner.guard) Expression(ex.toGiNaC()).collectVariableNames(innerguard);
     for (const auto &it : outer.toLegacyTransition(itrs, index).update) {
-        if (innerguard.count(itrs.getVarname(it.first)) > 0) {
+        if (innerguard.count(itrs.getVariableName(it.first)) > 0) {
             return true;
         }
     }
