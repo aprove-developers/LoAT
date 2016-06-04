@@ -2,9 +2,8 @@
 (STARTTERM (FUNCTIONSYMBOLS start))
 (VAR x y)
 (RULES
-start(x) -> comp1(times(x,x))
-comp1(x) -> comp2(times(x,x))
-comp2(x) -> comp2(0) :|: x > 0
+start(x,y) -> comp(x,y)
+comp(x,y) -> comp(times(x,x), y-1) :|: y > 0
 times(x,y) -> plus(x, times(x,y-1)) :|: y > 0
 times(x,0) -> 0
 plus(x,y) -> plus(x-1,y) + 1 :|: x > 0

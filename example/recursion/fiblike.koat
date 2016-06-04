@@ -5,7 +5,7 @@
 start(x) -> comp(fib(x))
 comp(x) -> greater :|: x > 100
 comp(x) -> less :|: x <= 100
-fib(n) -> fib(n-1) + fib(n-2) :|: n > 2
+fib(n) -> fib(n-1) + fib(n-1) :|: n > 2
 fib(2) -> 1
 fib(1) -> 1
 )

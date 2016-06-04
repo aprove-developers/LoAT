@@ -62,7 +62,7 @@ struct DebugStream {
 #ifndef DEBUG_DISABLE_ALL
 
 //print an overview of the problem after every relevant simplification step (similar to proof output)
-//#define DEBUG_PRINTSTEPS
+#define DEBUG_PRINTSTEPS
 
 //print problems that (might) have a strong impact on the result
 #define DEBUG_PROBLEMS

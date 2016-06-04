@@ -767,10 +767,7 @@ void RecursionGraph::addRule(const Rule &rule) {
     rhs.cost = rule.cost;
 
     NodeIndex src = (NodeIndex)rule.lhs;
-    std::set<NodeIndex> dsts = (std::set<NodeIndex>)rhs.term.getFunctionSymbols();
-    if (dsts.empty()) {
-        dsts.insert(NULLNODE);
-    }
+    std::set<NodeIndex> dsts = std::move(getSuccessorsOfExpression(rhs.term));
 
     RightHandSideIndex rhsIndex = nextRightHandSide++;
     rightHandSides.emplace(rhsIndex, rhs);
@@ -848,7 +845,15 @@ bool RecursionGraph::hasExactlyOneRightHandSide(NodeIndex node) {
 
 
 void RecursionGraph::removeRightHandSide(NodeIndex node, RightHandSideIndex rhs) {
-    debugGraph("removing rhs " << rhs);
+    debugGraph("removing rhs #" << rhs << ":");
+    if (rightHandSides.count(rhs) == 0) {
+        debugGraph("WARNING: NOT PRESENT");
+
+    } else {
+        debugGraph(rightHandSides.at(rhs));
+    }
+
+
     for (TransIndex trans : getTransFrom(node)) {
         if (getTransData(trans) == rhs) {
             removeTrans(trans);
@@ -1590,23 +1595,32 @@ bool RecursionGraph::removeConstLeavesAndUnreachable() {
     function<void(NodeIndex)> dfs_remove;
     dfs_remove = [&](NodeIndex curr) {
         if (reached.insert(curr).second == false) return; //already present
-        for (NodeIndex next : getSuccessors(curr)) {
-            //recurse
-            dfs_remove(next);
 
-            //if next is (now) a leaf, remove const transitions to next
-            if (getTransFrom(next).empty()) {
-                for (TransIndex trans : getTransFromTo(curr,next)) {
-                    RightHandSideIndex rhsIndex = getTransData(trans);
-                    const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+        std::set<RightHandSideIndex> rhss;
+        for (TransIndex trans : getTransFrom(curr)) {
+            rhss.insert(getTransData(trans));
+        }
 
-                    // toGiNaC(true) -> Substitute function symbols by variables
-                    Expression costGiNaC = rhs.cost.toGiNaC(true);
-                    if (!rhs.term.hasNoFunctionSymbols()
-                        && costGiNaC.getComplexity() <= 0) {
-                        removeRightHandSide(curr, rhsIndex);
-                        changed = true;
-                    }
+        for (RightHandSideIndex rhsIndex : rhss) {
+            const RightHandSide &rhs = rightHandSides.at(rhsIndex);
+
+            bool allLeaves = true;
+            std::set<NodeIndex> succs = std::move(getSuccessorsOfExpression(rhs.term));
+            for (NodeIndex succ : succs) {
+                dfs_remove(succ);
+
+                if (succ == NULLNODE || !getTransFrom(succ).empty()) {
+                    allLeaves = false;
+                    // do not break so that all successors will be simplified
+                }
+            }
+
+            if (allLeaves) {
+                // toGiNaC(true) -> Substitute function symbols by variables
+                Expression costGiNaC = rhs.cost.toGiNaC(true);
+                if (costGiNaC.getComplexity() <= 0) {
+                    removeRightHandSide(curr, rhsIndex);
+                    changed = true;
                 }
             }
         }

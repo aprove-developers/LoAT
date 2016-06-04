@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
                     changed = true;
                     proofout << endl << "solved recursions" << endl;
                     g.printForProof();
-                    if (dotOutput) g.printDot(dotStream, dotStep++, "Solved recursions");
+                    if (dotOutput) g.printDot(dotStream, dotStep++, "Solve recursions");
                     if (Timeout::soft()) break;
 
                 } else {
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
                 g.printForProof();
                 if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations");
             } else {
-                proofout << endl <<  "Cannot continue:" << endl;
+                proofout << endl <<  "Cannot continue" << endl;
                 break;
             }
             if (Timeout::soft()) break;
