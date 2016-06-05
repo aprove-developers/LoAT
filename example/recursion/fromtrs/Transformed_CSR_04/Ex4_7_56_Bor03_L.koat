@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR N X XS x x_0 x_1)
+(RULES
+after((x), (x_0)) -> after((N), (XS)) :|: N>=0 && X>=0 && XS>=0 && x==1+N && x>0 && x_0==1+X && x_0>0
+from((X)) -> 1+X :|: X>=0
+after((x_1), (XS)) -> XS :|: XS>=0 && x_1==0
+)

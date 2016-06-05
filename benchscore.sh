@@ -17,7 +17,7 @@ LOATBIN=./src/loat
 LOATBENCHBIN=./loat_bench
 
 #dump stdout,stderr (for debugging only)
-DUMP=0
+DUMP=1
 DUMPDIR="./benchlog"
 
 #quiet mode

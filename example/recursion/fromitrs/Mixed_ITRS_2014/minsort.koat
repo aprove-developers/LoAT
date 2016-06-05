@@ -1,12 +1,12 @@
 (GOAL COMPLEXITY)
 (VAR x y zs m zh ys x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 (RULES
-min((x), (x_0)) -> 2+x :|: x>=0 && x_0==1 && x_0>0
+min((x), (x_0)) -> 2+x :|: x>=0 && x_0==1
 min((x), (x_1)) -> if_1(min((y), (zs)), (x), (y), (zs)) :|: zs>=0 && x>=0 && y>=0 && x_1==1+zs+y && x_1>0
 if_1((x_2), (x), (y), (zs)) -> 2+m+x+zh :|: zs>=0 && m>=0 && x>=0 && zh>=0 && y>=0 && x_2==1+m+zh && x_2>0 && m>x
 min((x), (x_3)) -> if_2(min((y), (zs)), (x), (y), (zs)) :|: zs>=0 && x>=0 && y>=0 && x_3==1+zs+y && x_3>0
 if_2((x_4), (x), (y), (zs)) -> 2+m+x+zh :|: zs>=0 && m>=0 && x>=0 && zh>=0 && y>=0 && x_4==1+m+zh && x_4>0 && x>=m
-msort((x_5)) -> 1 :|: x_5==1 && x_5>0
-msort((x_6)) -> if_3(min((x), (ys)), (x), (ys)) :|: x>=0 && ys>=0 && x_6==1+x+ys && x_6>0
-if_3((x_7), (x), (ys)) -> (1+m) + msort((zs)) :|: zs>=0 && m>=0 && x>=0 && ys>=0 && x_7==1+zs+m && x_7>0
+msort((x_5)) -> 1 :|: x_5==1
+msort((x_6)) -> if_3(min((x), (ys)), (x), (ys)) :|: ys>=0 && x>=0 && x_6==1+ys+x && x_6>0
+if_3((x_7), (x), (ys)) -> (1+m) + msort((zs)) :|: ys>=0 && zs>=0 && m>=0 && x>=0 && x_7==1+zs+m && x_7>0
 )

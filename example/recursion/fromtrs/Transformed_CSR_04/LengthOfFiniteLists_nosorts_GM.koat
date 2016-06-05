@@ -1,0 +1,19 @@
+(GOAL COMPLEXITY)
+(VAR L N X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+a__zeros -> 2
+a__and((x), (X)) -> mark((X)) :|: X>=0 && x==1
+a__length((x_0)) -> 0 :|: x_0==1
+a__length((x_1)) -> (1) + a__length(mark((L))) :|: N>=0 && L>=0 && x_1==1+N+L && x_1>0
+mark((x_2)) -> a__zeros :|: x_2==1
+mark((x_3)) -> a__and(mark((X1)), (X2)) :|: X2>=0 && X1>=0 && x_3==1+X2+X1 && x_3>0
+mark((x_4)) -> a__length(mark((X))) :|: X>=0 && x_4==1+X && x_4>0
+mark((x_5)) -> ((1) + mark((X1))) + (X2) :|: X2>=0 && X1>=0 && x_5==1+X2+X1 && x_5>0
+mark((x_6)) -> 0 :|: x_6==0
+mark((x_7)) -> 1 :|: x_7==1
+mark((x_8)) -> 1 :|: x_8==1
+mark((x_9)) -> (1) + mark((X)) :|: X>=0 && x_9==1+X && x_9>0
+a__zeros -> 1
+a__and((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+a__length((X)) -> 1+X :|: X>=0
+)

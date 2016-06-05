@@ -1,0 +1,81 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N V V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48 x_49 x_50 x_51 x_52 x_53 x_54 x_55 x_56 x_57 x_58 x_59 x_60 x_61 x_62 x_63 x_64 x_65 x_66 x_67 x_68 x_69 x_70)
+(RULES
+zeros -> 2
+U101((x), (V1), (V2)) -> U102(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x==1
+U102((x_0), (V1), (V2)) -> U103(isNatIListKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_0==1
+U103((x_1), (V1), (V2)) -> U104(isNatIListKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_1==1
+U104((x_2), (V1), (V2)) -> U105(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_2==1
+U105((x_3), (V2)) -> U106(isNatIList(activate((V2)))) :|: V2>=0 && x_3==1
+U106((x_4)) -> 1 :|: x_4==1
+U11((x_5), (V1)) -> U12(isNatIListKind(activate((V1))), activate((V1))) :|: V1>=0 && x_5==1
+U111((x_6), (L), (N)) -> U112(isNatIListKind(activate((L))), activate((L)), activate((N))) :|: N>=0 && L>=0 && x_6==1
+U112((x_7), (L), (N)) -> U113(isNat(activate((N))), activate((L)), activate((N))) :|: N>=0 && L>=0 && x_7==1
+U113((x_8), (L), (N)) -> U114(isNatKind(activate((N))), activate((L))) :|: N>=0 && L>=0 && x_8==1
+U114((x_9), (L)) -> (1) + length(activate((L))) :|: L>=0 && x_9==1
+U12((x_10), (V1)) -> U13(isNatList(activate((V1)))) :|: V1>=0 && x_10==1
+U121((x_11), (QL)) -> U122(isNatIListKind(activate((QL)))) :|: QL>=0 && x_11==1
+U122((x_12)) -> 1 :|: x_12==1
+U13((x_13)) -> 1 :|: x_13==1
+U131((x_14), (QL), (M), (N)) -> U132(isNatIListKind(activate((QL))), activate((QL)), activate((M)), activate((N))) :|: N>=0 && QL>=0 && M>=0 && x_14==1
+U132((x_15), (QL), (M), (N)) -> U133(isNat(activate((M))), activate((QL)), activate((M)), activate((N))) :|: N>=0 && QL>=0 && M>=0 && x_15==1
+U133((x_16), (QL), (M), (N)) -> U134(isNatKind(activate((M))), activate((QL)), activate((M)), activate((N))) :|: N>=0 && QL>=0 && M>=0 && x_16==1
+U134((x_17), (QL), (M), (N)) -> U135(isNat(activate((N))), activate((QL)), activate((M)), activate((N))) :|: N>=0 && QL>=0 && M>=0 && x_17==1
+U135((x_18), (QL), (M), (N)) -> U136(isNatKind(activate((N))), activate((QL)), activate((M)), activate((N))) :|: N>=0 && QL>=0 && M>=0 && x_18==1
+U136((x_19), (QL), (M), (N)) -> ((1) + activate((N))) + (((1) + activate((M))) + activate((QL))) :|: N>=0 && QL>=0 && M>=0 && x_19==1
+U21((x_20), (V1)) -> U22(isNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_20==1
+U22((x_21), (V1)) -> U23(isNat(activate((V1)))) :|: V1>=0 && x_21==1
+U23((x_22)) -> 1 :|: x_22==1
+U31((x_23), (V)) -> U32(isNatIListKind(activate((V))), activate((V))) :|: V>=0 && x_23==1
+U32((x_24), (V)) -> U33(isNatList(activate((V)))) :|: V>=0 && x_24==1
+U33((x_25)) -> 1 :|: x_25==1
+U41((x_26), (V1), (V2)) -> U42(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_26==1
+U42((x_27), (V1), (V2)) -> U43(isNatIListKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_27==1
+U43((x_28), (V1), (V2)) -> U44(isNatIListKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_28==1
+U44((x_29), (V1), (V2)) -> U45(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_29==1
+U45((x_30), (V2)) -> U46(isNatIList(activate((V2)))) :|: V2>=0 && x_30==1
+U46((x_31)) -> 1 :|: x_31==1
+U51((x_32), (V2)) -> U52(isNatIListKind(activate((V2)))) :|: V2>=0 && x_32==1
+U52((x_33)) -> 1 :|: x_33==1
+U61((x_34), (V2)) -> U62(isNatIListKind(activate((V2)))) :|: V2>=0 && x_34==1
+U62((x_35)) -> 1 :|: x_35==1
+U71((x_36)) -> 1 :|: x_36==1
+U81((x_37)) -> 1 :|: x_37==1
+U91((x_38), (V1), (V2)) -> U92(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_38==1
+U92((x_39), (V1), (V2)) -> U93(isNatIListKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_39==1
+U93((x_40), (V1), (V2)) -> U94(isNatIListKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_40==1
+U94((x_41), (V1), (V2)) -> U95(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_41==1
+U95((x_42), (V2)) -> U96(isNatList(activate((V2)))) :|: V2>=0 && x_42==1
+U96((x_43)) -> 1 :|: x_43==1
+isNat((x_44)) -> 1 :|: x_44==1
+isNat((x_45)) -> U11(isNatIListKind(activate((V1))), activate((V1))) :|: V1>=0 && x_45==1+V1 && x_45>0
+isNat((x_46)) -> U21(isNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_46==1+V1 && x_46>0
+isNatIList((V)) -> U31(isNatIListKind(activate((V))), activate((V))) :|: V>=0
+isNatIList((x_47)) -> 1 :|: x_47==1
+isNatIList((x_48)) -> U41(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_48==1+V2+V1 && x_48>0
+isNatIListKind((x_49)) -> 1 :|: x_49==1
+isNatIListKind((x_50)) -> 1 :|: x_50==1
+isNatIListKind((x_51)) -> U51(isNatKind(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_51==1+V2+V1 && x_51>0
+isNatIListKind((x_52)) -> U61(isNatKind(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_52==1+V2+V1 && x_52>0
+isNatKind((x_53)) -> 1 :|: x_53==1
+isNatKind((x_54)) -> U71(isNatIListKind(activate((V1)))) :|: V1>=0 && x_54==1+V1 && x_54>0
+isNatKind((x_55)) -> U81(isNatKind(activate((V1)))) :|: V1>=0 && x_55==1+V1 && x_55>0
+isNatList((x_56)) -> 1 :|: x_56==1
+isNatList((x_57)) -> U91(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_57==1+V2+V1 && x_57>0
+isNatList((x_58)) -> U101(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_58==1+V2+V1 && x_58>0
+length((x_59)) -> 0 :|: x_59==1
+length((x_60)) -> U111(isNatList(activate((L))), activate((L)), (N)) :|: N>=0 && L>=0 && x_60==1+N+L && x_60>0
+take((x_61), (QL)) -> U121(isNatIList((QL)), (QL)) :|: QL>=0 && x_61==0
+take((x_62), (x_63)) -> U131(isNatIList(activate((QL))), activate((QL)), (M), (N)) :|: N>=0 && QL>=0 && M>=0 && x_62==1+M && x_62>0 && x_63==1+N+QL && x_63>0
+zeros -> 1
+take((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+length((X)) -> 1+X :|: X>=0
+activate((x_64)) -> zeros :|: x_64==1
+activate((x_65)) -> take(activate((X1)), activate((X2))) :|: X2>=0 && X1>=0 && x_65==1+X2+X1 && x_65>0
+activate((x_66)) -> 0 :|: x_66==1
+activate((x_67)) -> length(activate((X))) :|: X>=0 && x_67==1+X && x_67>0
+activate((x_68)) -> (1) + activate((X)) :|: X>=0 && x_68==1+X && x_68>0
+activate((x_69)) -> ((1) + activate((X1))) + (X2) :|: X2>=0 && X1>=0 && x_69==1+X2+X1 && x_69>0
+activate((x_70)) -> 1 :|: x_70==1
+activate((X)) -> X :|: X>=0
+)

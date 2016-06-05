@@ -1,0 +1,20 @@
+(GOAL COMPLEXITY)
+(VAR M N V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+(RULES
+U11((x), (V2)) -> U12(isNat(activate((V2)))) :|: V2>=0 && x==1
+U12((x_0)) -> 1 :|: x_0==1
+U21((x_1)) -> 1 :|: x_1==1
+U31((x_2), (N)) -> activate((N)) :|: N>=0 && x_2==1
+U41((x_3), (M), (N)) -> U42(isNat(activate((N))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_3==1
+U42((x_4), (M), (N)) -> (1) + plus(activate((N)), activate((M))) :|: M>=0 && N>=0 && x_4==1
+isNat((x_5)) -> 1 :|: x_5==1
+isNat((x_6)) -> U11(isNat(activate((V1))), activate((V2))) :|: V1>=0 && V2>=0 && x_6==1+V1+V2 && x_6>0
+isNat((x_7)) -> U21(isNat(activate((V1)))) :|: V1>=0 && x_7==1+V1 && x_7>0
+plus((N), (x_8)) -> U31(isNat((N)), (N)) :|: N>=0 && x_8==0
+plus((N), (x_9)) -> U41(isNat((M)), (M), (N)) :|: M>=0 && N>=0 && x_9==1+M && x_9>0
+plus((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_10)) -> 0 :|: x_10==1
+activate((x_11)) -> plus(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_11==1+X1+X2 && x_11>0
+activate((x_12)) -> (1) + activate((X)) :|: X>=0 && x_12==1+X && x_12>0
+activate((X)) -> X :|: X>=0
+)

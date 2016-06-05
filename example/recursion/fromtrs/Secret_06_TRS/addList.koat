@@ -1,0 +1,25 @@
+(GOAL COMPLEXITY)
+(VAR b x xs xs2 y ys ys2 zs zs2 x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25)
+(RULES
+isEmpty((x_0)) -> 0 :|: x>=0 && xs>=0 && x_0==1+x+xs && x_0>0
+isEmpty((x_1)) -> 1 :|: x_1==1
+isZero((x_2)) -> 1 :|: x_2==0
+isZero((x_3)) -> 0 :|: x>=0 && x_3==1+x && x_3>0
+head((x_4)) -> x :|: x>=0 && xs>=0 && x_4==1+x+xs && x_4>0
+tail((x_5)) -> xs :|: x>=0 && xs>=0 && x_5==1+x+xs && x_5>0
+tail((x_6)) -> 1 :|: x_6==1
+append((x_7), (x)) -> 2+x :|: x>=0 && x_7==1
+append((x_8), (x)) -> (1+y) + append((ys), (x)) :|: y>=0 && x>=0 && ys>=0 && x_8==1+y+ys && x_8>0
+p((x_9)) -> (1) + p((1+x)) :|: x>=0 && x_9==2+x && x_9>0
+p((x_10)) -> 0 :|: x_10==1
+p((x_11)) -> 0 :|: x_11==0
+inc((x_12)) -> (1) + inc((x)) :|: x>=0 && x_12==1+x && x_12>0
+inc((x_13)) -> 1 :|: x_13==0
+addLists((xs), (ys), (zs)) -> if(isEmpty((xs)), isEmpty((ys)), isZero(head((xs))), tail((xs)), tail((ys)), (((1) + p(head((xs)))) + tail((xs))), (((1) + inc(head((ys)))) + tail((ys))), (zs), append((zs), head((ys)))) :|: zs>=0 && ys>=0 && xs>=0
+if((x_14), (x_15), (b), (xs), (ys), (xs2), (ys2), (zs), (zs2)) -> zs :|: zs>=0 && zs2>=0 && ys>=0 && xs>=0 && ys2>=0 && xs2>=0 && b>=0 && x_14==1 && x_15==1
+if((x_16), (x_17), (b), (xs), (ys), (xs2), (ys2), (zs), (zs2)) -> 1 :|: zs>=0 && zs2>=0 && ys>=0 && xs>=0 && ys2>=0 && xs2>=0 && b>=0 && x_16==1 && x_17==0
+if((x_18), (x_19), (b), (xs), (ys), (xs2), (ys2), (zs), (zs2)) -> 1 :|: zs>=0 && zs2>=0 && ys>=0 && xs>=0 && ys2>=0 && xs2>=0 && b>=0 && x_18==0 && x_19==1
+if((x_20), (x_21), (x_22), (xs), (ys), (xs2), (ys2), (zs), (zs2)) -> addLists((xs2), (ys2), (zs)) :|: zs>=0 && zs2>=0 && ys>=0 && xs>=0 && ys2>=0 && xs2>=0 && x_20==0 && x_21==0 && x_22==0
+if((x_23), (x_24), (x_25), (xs), (ys), (xs2), (ys2), (zs), (zs2)) -> addLists((xs), (ys), (zs2)) :|: zs>=0 && zs2>=0 && ys>=0 && xs>=0 && ys2>=0 && xs2>=0 && x_23==0 && x_24==0 && x_25==1
+addList((xs), (ys)) -> addLists((xs), (ys), (1)) :|: ys>=0 && xs>=0
+)

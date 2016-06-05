@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 X3 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8)
+(RULES
+active((x)) -> 2+3*X :|: X>=0 && x==3+X && x>0
+active((x_0)) -> 2 :|: x_0==1
+active((x_1)) -> 2 :|: x_1==1
+active((x_2)) -> (1+X1+X2) + active((X3)) :|: X1>=0 && X2>=0 && X3>=0 && x_2==1+X1+X2+X3 && x_2>0
+proper((x_3)) -> (((1) + proper((X1))) + proper((X2))) + proper((X3)) :|: X1>=0 && X2>=0 && X3>=0 && x_3==1+X1+X2+X3 && x_3>0
+proper((x_4)) -> 2 :|: x_4==1
+proper((x_5)) -> 2 :|: x_5==1
+proper((x_6)) -> 2 :|: x_6==1
+top((x_7)) -> top(proper((X))) :|: X>=0 && x_7==1+X && x_7>0
+top((x_8)) -> top(active((X))) :|: X>=0 && x_8==1+X && x_8>0
+)

@@ -1,0 +1,119 @@
+(GOAL COMPLEXITY)
+(VAR N V1 V2 X X1 X2 XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48 x_49 x_50 x_51 x_52 x_53 x_54 x_55 x_56 x_57 x_58 x_59 x_60 x_61 x_62 x_63 x_64 x_65 x_66 x_67 x_68 x_69 x_70 x_71 x_72 x_73 x_74 x_75 x_76 x_77 x_78 x_79 x_80 x_81 x_82 x_83 x_84 x_85 x_86 x_87 x_88 x_89 x_90 x_91 x_92 x_93 x_94)
+(RULES
+U101((x), (V1), (V2)) -> U102(isNatural(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x==1
+U102((x_0), (V2)) -> U103(isLNat(activate((V2)))) :|: V2>=0 && x_0==1
+U103((x_1)) -> 1 :|: x_1==1
+U11((x_2), (N), (XS)) -> snd(splitAt(activate((N)), activate((XS)))) :|: XS>=0 && N>=0 && x_2==1
+U111((x_3), (V1)) -> U112(isLNat(activate((V1)))) :|: V1>=0 && x_3==1
+U112((x_4)) -> 1 :|: x_4==1
+U121((x_5), (V1)) -> U122(isNatural(activate((V1)))) :|: V1>=0 && x_5==1
+U122((x_6)) -> 1 :|: x_6==1
+U131((x_7), (V1), (V2)) -> U132(isNatural(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_7==1
+U132((x_8), (V2)) -> U133(isLNat(activate((V2)))) :|: V2>=0 && x_8==1
+U133((x_9)) -> 1 :|: x_9==1
+U141((x_10), (V1), (V2)) -> U142(isLNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_10==1
+U142((x_11), (V2)) -> U143(isLNat(activate((V2)))) :|: V2>=0 && x_11==1
+U143((x_12)) -> 1 :|: x_12==1
+U151((x_13), (V1), (V2)) -> U152(isNatural(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_13==1
+U152((x_14), (V2)) -> U153(isLNat(activate((V2)))) :|: V2>=0 && x_14==1
+U153((x_15)) -> 1 :|: x_15==1
+U161((x_16), (N)) -> ((1) + activate((N))) + ((1) + ((1) + activate((N)))) :|: N>=0 && x_16==1
+U171((x_17), (N), (XS)) -> head(afterNth(activate((N)), activate((XS)))) :|: XS>=0 && N>=0 && x_17==1
+U181((x_18), (Y)) -> activate((Y)) :|: Y>=0 && x_18==1
+U191((x_19), (XS)) -> ((1) + nil) + activate((XS)) :|: XS>=0 && x_19==1
+U201((x_20), (N), (X), (XS)) -> U202(splitAt(activate((N)), activate((XS))), activate((X))) :|: XS>=0 && X>=0 && N>=0 && x_20==1
+U202((x_21), (X)) -> ((1) + (((1) + activate((X))) + (YS))) + (ZS) :|: ZS>=0 && X>=0 && YS>=0 && x_21==1+ZS+YS && x_21>0
+U21((x_22), (X)) -> activate((X)) :|: X>=0 && x_22==1
+U211((x_23), (XS)) -> activate((XS)) :|: XS>=0 && x_23==1
+U221((x_24), (N), (XS)) -> fst(splitAt(activate((N)), activate((XS)))) :|: XS>=0 && N>=0 && x_24==1
+U31((x_25), (N)) -> activate((N)) :|: N>=0 && x_25==1
+U41((x_26), (V1), (V2)) -> U42(isNatural(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_26==1
+U42((x_27), (V2)) -> U43(isLNat(activate((V2)))) :|: V2>=0 && x_27==1
+U43((x_28)) -> 1 :|: x_28==1
+U51((x_29), (V1), (V2)) -> U52(isNatural(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_29==1
+U52((x_30), (V2)) -> U53(isLNat(activate((V2)))) :|: V2>=0 && x_30==1
+U53((x_31)) -> 1 :|: x_31==1
+U61((x_32), (V1)) -> U62(isPLNat(activate((V1)))) :|: V1>=0 && x_32==1
+U62((x_33)) -> 1 :|: x_33==1
+U71((x_34), (V1)) -> U72(isNatural(activate((V1)))) :|: V1>=0 && x_34==1
+U72((x_35)) -> 1 :|: x_35==1
+U81((x_36), (V1)) -> U82(isPLNat(activate((V1)))) :|: V1>=0 && x_36==1
+U82((x_37)) -> 1 :|: x_37==1
+U91((x_38), (V1)) -> U92(isLNat(activate((V1)))) :|: V1>=0 && x_38==1
+U92((x_39)) -> 1 :|: x_39==1
+afterNth((N), (XS)) -> U11(and(and(isNatural((N)), (1+N)), (3+2*XS)), (N), (XS)) :|: XS>=0 && N>=0
+and((x_40), (X)) -> activate((X)) :|: X>=0 && x_40==1
+fst((x_41)) -> U21(and(and(isLNat((X)), (1+X)), (3+2*Y)), (X)) :|: X>=0 && Y>=0 && x_41==1+X+Y && x_41>0
+head((x_42)) -> U31(and(and(isNatural((N)), (1+N)), (((1) + ((1) + activate((XS)))) + ((1) + activate((XS))))), (N)) :|: XS>=0 && N>=0 && x_42==1+XS+N && x_42>0
+isLNat((x_43)) -> 1 :|: x_43==1
+isLNat((x_44)) -> U41(and(isNaturalKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_44==1+V2+V1 && x_44>0
+isLNat((x_45)) -> U51(and(isNaturalKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_45==1+V2+V1 && x_45>0
+isLNat((x_46)) -> U61(isPLNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_46==1+V1 && x_46>0
+isLNat((x_47)) -> U71(isNaturalKind(activate((V1))), activate((V1))) :|: V1>=0 && x_47==1+V1 && x_47>0
+isLNat((x_48)) -> U81(isPLNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_48==1+V1 && x_48>0
+isLNat((x_49)) -> U91(isLNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_49==1+V1 && x_49>0
+isLNat((x_50)) -> U101(and(isNaturalKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_50==1+V2+V1 && x_50>0
+isLNatKind((x_51)) -> 1 :|: x_51==1
+isLNatKind((x_52)) -> and(isNaturalKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_52==1+V2+V1 && x_52>0
+isLNatKind((x_53)) -> and(isNaturalKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_53==1+V2+V1 && x_53>0
+isLNatKind((x_54)) -> isPLNatKind(activate((V1))) :|: V1>=0 && x_54==1+V1 && x_54>0
+isLNatKind((x_55)) -> isNaturalKind(activate((V1))) :|: V1>=0 && x_55==1+V1 && x_55>0
+isLNatKind((x_56)) -> isPLNatKind(activate((V1))) :|: V1>=0 && x_56==1+V1 && x_56>0
+isLNatKind((x_57)) -> isLNatKind(activate((V1))) :|: V1>=0 && x_57==1+V1 && x_57>0
+isLNatKind((x_58)) -> and(isNaturalKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_58==1+V2+V1 && x_58>0
+isNatural((x_59)) -> 1 :|: x_59==1
+isNatural((x_60)) -> U111(isLNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_60==1+V1 && x_60>0
+isNatural((x_61)) -> U121(isNaturalKind(activate((V1))), activate((V1))) :|: V1>=0 && x_61==1+V1 && x_61>0
+isNatural((x_62)) -> U131(and(isNaturalKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_62==1+V2+V1 && x_62>0
+isNaturalKind((x_63)) -> 1 :|: x_63==1
+isNaturalKind((x_64)) -> isLNatKind(activate((V1))) :|: V1>=0 && x_64==1+V1 && x_64>0
+isNaturalKind((x_65)) -> isNaturalKind(activate((V1))) :|: V1>=0 && x_65==1+V1 && x_65>0
+isNaturalKind((x_66)) -> and(isNaturalKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_66==1+V2+V1 && x_66>0
+isPLNat((x_67)) -> U141(and(isLNatKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_67==1+V2+V1 && x_67>0
+isPLNat((x_68)) -> U151(and(isNaturalKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_68==1+V2+V1 && x_68>0
+isPLNatKind((x_69)) -> and(isLNatKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_69==1+V2+V1 && x_69>0
+isPLNatKind((x_70)) -> and(isNaturalKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_70==1+V2+V1 && x_70>0
+natsFrom((N)) -> U161(and(isNatural((N)), (1+N)), (N)) :|: N>=0
+sel((N), (XS)) -> U171(and(and(isNatural((N)), (1+N)), (3+2*XS)), (N), (XS)) :|: XS>=0 && N>=0
+snd((x_71)) -> U181(and(and(isLNat((X)), (1+X)), (3+2*Y)), (Y)) :|: X>=0 && Y>=0 && x_71==1+X+Y && x_71>0
+splitAt((x_72), (XS)) -> U191(and(isLNat((XS)), (1+XS)), (XS)) :|: XS>=0 && x_72==0
+splitAt((x_73), (x_74)) -> U201(and(and(isNatural((N)), (1+N)), ((4+2*X) + (((1) + ((1) + activate((XS)))) + ((1) + activate((XS)))))), (N), (X), activate((XS))) :|: XS>=0 && X>=0 && N>=0 && x_73==1+N && x_73>0 && x_74==1+XS+X && x_74>0
+tail((x_75)) -> U211(and(and(isNatural((N)), (1+N)), (((1) + ((1) + activate((XS)))) + ((1) + activate((XS))))), activate((XS))) :|: XS>=0 && N>=0 && x_75==1+XS+N && x_75>0
+take((N), (XS)) -> U221(and(and(isNatural((N)), (1+N)), (3+2*XS)), (N), (XS)) :|: XS>=0 && N>=0
+natsFrom((X)) -> 1+X :|: X>=0
+isNaturalKind((X)) -> 1+X :|: X>=0
+and((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+isLNat((X)) -> 1+X :|: X>=0
+isLNatKind((X)) -> 1+X :|: X>=0
+nil -> 1
+afterNth((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+fst((X)) -> 1+X :|: X>=0
+snd((X)) -> 1+X :|: X>=0
+tail((X)) -> 1+X :|: X>=0
+take((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+head((X)) -> 1+X :|: X>=0
+sel((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+splitAt((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+isNatural((X)) -> 1+X :|: X>=0
+activate((x_76)) -> natsFrom(activate((X))) :|: X>=0 && x_76==1+X && x_76>0
+activate((x_77)) -> (1) + activate((X)) :|: X>=0 && x_77==1+X && x_77>0
+activate((x_78)) -> isNaturalKind((X)) :|: X>=0 && x_78==1+X && x_78>0
+activate((x_79)) -> and(activate((X1)), (X2)) :|: X1>=0 && X2>=0 && x_79==1+X1+X2 && x_79>0
+activate((x_80)) -> isLNat((X)) :|: X>=0 && x_80==1+X && x_80>0
+activate((x_81)) -> isLNatKind((X)) :|: X>=0 && x_81==1+X && x_81>0
+activate((x_82)) -> nil :|: x_82==1
+activate((x_83)) -> afterNth(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_83==1+X1+X2 && x_83>0
+activate((x_84)) -> ((1) + activate((X1))) + (X2) :|: X1>=0 && X2>=0 && x_84==1+X1+X2 && x_84>0
+activate((x_85)) -> fst(activate((X))) :|: X>=0 && x_85==1+X && x_85>0
+activate((x_86)) -> snd(activate((X))) :|: X>=0 && x_86==1+X && x_86>0
+activate((x_87)) -> tail(activate((X))) :|: X>=0 && x_87==1+X && x_87>0
+activate((x_88)) -> take(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_88==1+X1+X2 && x_88>0
+activate((x_89)) -> 0 :|: x_89==1
+activate((x_90)) -> head(activate((X))) :|: X>=0 && x_90==1+X && x_90>0
+activate((x_91)) -> sel(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_91==1+X1+X2 && x_91>0
+activate((x_92)) -> ((1) + activate((X1))) + activate((X2)) :|: X1>=0 && X2>=0 && x_92==1+X1+X2 && x_92>0
+activate((x_93)) -> splitAt(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_93==1+X1+X2 && x_93>0
+activate((x_94)) -> isNatural((X)) :|: X>=0 && x_94==1+X && x_94>0
+activate((X)) -> X :|: X>=0
+)

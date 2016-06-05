@@ -1,5 +1,5 @@
 (GOAL COMPLEXITY)
 (VAR i j k)
 (RULES
-eval((i), (j), (k)) -> eval((j), (1+i), (-1+k)) :|: j>=0 && k>=0 && i>=0 && i<=100 && j<=k
+eval((i), (j), (k)) -> eval((j), (1+i), (-1+k)) :|: k>=0 && i>=0 && j>=0 && i<=100 && j<=k
 )

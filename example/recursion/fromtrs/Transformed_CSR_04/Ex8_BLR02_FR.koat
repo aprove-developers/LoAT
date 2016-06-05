@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR N X X1 X2 XS Y x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+fib((N)) -> sel((N), fib1((1), (1))) :|: N>=0
+fib1((X), (Y)) -> 3+2*X+2*Y :|: X>=0 && Y>=0
+add((x), (X)) -> X :|: X>=0 && x==0
+add((x_0), (Y)) -> (1) + add((X), (Y)) :|: X>=0 && Y>=0 && x_0==1+X && x_0>0
+sel((x_1), (x_2)) -> X :|: X>=0 && XS>=0 && x_1==0 && x_2==1+X+XS && x_2>0
+sel((x_3), (x_4)) -> sel((N), activate((XS))) :|: X>=0 && N>=0 && XS>=0 && x_3==1+N && x_3>0 && x_4==1+X+XS && x_4>0
+fib1((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+add((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_5)) -> fib1(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_5==1+X1+X2 && x_5>0
+activate((x_6)) -> add(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_6==1+X1+X2 && x_6>0
+activate((X)) -> X :|: X>=0
+)

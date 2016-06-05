@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR rest revprefix x x_ xs x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+selects((x_), (revprefix), (x_0)) -> ((1) + ((1+x_) + revapp((revprefix), (1+xs+x)))) + selects((x), (1+x_+revprefix), (xs)) :|: x_>=0 && xs>=0 && revprefix>=0 && x>=0 && x_0==1+xs+x && x_0>0
+select((x_1)) -> selects((x), (1), (xs)) :|: xs>=0 && x>=0 && x_1==1+xs+x && x_1>0
+revapp((x_2), (rest)) -> revapp((xs), (1+rest+x)) :|: rest>=0 && xs>=0 && x>=0 && x_2==1+xs+x && x_2>0
+selects((x), (revprefix), (x_3)) -> ((1) + ((1+x) + revapp((revprefix), (1)))) + (1) :|: revprefix>=0 && x>=0 && x_3==1
+select((x_4)) -> 1 :|: x_4==1
+revapp((x_5), (rest)) -> rest :|: rest>=0 && x_5==1
+)

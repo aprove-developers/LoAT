@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR X)
+(RULES
+from((X)) -> 1+X :|: X>=0
+length -> 0
+length -> (1) + length1
+length1 -> length
+)

@@ -1,0 +1,13 @@
+(GOAL COMPLEXITY)
+(VAR X XS x x_0 x_1 x_2)
+(RULES
+nats -> (1) + ((1) + nats)
+pairs -> (1) + ((1) + odds)
+odds -> incr(pairs)
+incr((x)) -> (2+X) + ((1) + activate((XS))) :|: XS>=0 && X>=0 && x==1+XS+X && x>0
+head((x_0)) -> X :|: XS>=0 && X>=0 && x_0==1+XS+X && x_0>0
+tail((x_1)) -> activate((XS)) :|: XS>=0 && X>=0 && x_1==1+XS+X && x_1>0
+incr((X)) -> 1+X :|: X>=0
+activate((x_2)) -> incr((X)) :|: X>=0 && x_2==1+X && x_2>0
+activate((X)) -> X :|: X>=0
+)

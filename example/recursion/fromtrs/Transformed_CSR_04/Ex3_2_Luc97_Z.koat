@@ -1,0 +1,25 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y Z x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14)
+(RULES
+dbl((x)) -> 0 :|: x==0
+dbl((x_0)) -> (1) + ((1) + ((1) + activate((X)))) :|: X>=0 && x_0==1+X && x_0>0
+dbls((x_1)) -> 1 :|: x_1==1
+dbls((x_2)) -> ((1) + ((1) + activate((X)))) + ((1) + activate((Y))) :|: X>=0 && Y>=0 && x_2==1+X+Y && x_2>0
+sel((x_3), (x_4)) -> activate((X)) :|: X>=0 && Y>=0 && x_3==0 && x_4==1+X+Y && x_4>0
+sel((x_5), (x_6)) -> sel(activate((X)), activate((Z))) :|: X>=0 && Z>=0 && Y>=0 && x_5==1+X && x_5>0 && x_6==1+Z+Y && x_6>0
+indx((x_7), (X)) -> 1 :|: X>=0 && x_7==1
+indx((x_8), (Z)) -> ((1) + (((1) + activate((X))) + activate((Z)))) + (((1) + activate((Y))) + activate((Z))) :|: X>=0 && Z>=0 && Y>=0 && x_8==1+X+Y && x_8>0
+from((X)) -> ((1) + activate((X))) + ((1) + ((1) + activate((X)))) :|: X>=0
+dbl((X)) -> 1+X :|: X>=0
+dbls((X)) -> 1+X :|: X>=0
+sel((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+indx((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+from((X)) -> 1+X :|: X>=0
+activate((x_9)) -> 1+X :|: X>=0 && x_9==1+X && x_9>0
+activate((x_10)) -> dbl((X)) :|: X>=0 && x_10==1+X && x_10>0
+activate((x_11)) -> dbls((X)) :|: X>=0 && x_11==1+X && x_11>0
+activate((x_12)) -> sel((X1), (X2)) :|: X1>=0 && X2>=0 && x_12==1+X1+X2 && x_12>0
+activate((x_13)) -> indx((X1), (X2)) :|: X1>=0 && X2>=0 && x_13==1+X1+X2 && x_13>0
+activate((x_14)) -> from((X)) :|: X>=0 && x_14==1+X && x_14>0
+activate((X)) -> X :|: X>=0
+)

@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x xs y ys x_0 x_1)
+(RULES
+append((x_0), (ys)) -> (1+x) + append((xs), (ys)) :|: ys>=0 && x>=0 && xs>=0 && x_0==1+x+xs && x_0>0
+append((x_1), (ys)) -> ys :|: ys>=0 && x_1==1
+goal((x), (y)) -> append((x), (y)) :|: y>=0 && x>=0
+)

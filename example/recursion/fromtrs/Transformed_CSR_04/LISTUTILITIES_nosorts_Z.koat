@@ -1,0 +1,20 @@
+(GOAL COMPLEXITY)
+(VAR N X XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+U11((x), (N), (X), (XS)) -> U12(splitAt(activate((N)), activate((XS))), activate((X))) :|: N>=0 && X>=0 && XS>=0 && x==1
+U12((x_0), (X)) -> ((1) + (((1) + activate((X))) + (YS))) + (ZS) :|: YS>=0 && X>=0 && ZS>=0 && x_0==1+YS+ZS && x_0>0
+afterNth((N), (XS)) -> snd(splitAt((N), (XS))) :|: N>=0 && XS>=0
+and((x_1), (X)) -> activate((X)) :|: X>=0 && x_1==1
+fst((x_2)) -> X :|: Y>=0 && X>=0 && x_2==1+Y+X && x_2>0
+head((x_3)) -> N :|: N>=0 && XS>=0 && x_3==1+N+XS && x_3>0
+natsFrom((N)) -> 3+2*N :|: N>=0
+sel((N), (XS)) -> head(afterNth((N), (XS))) :|: N>=0 && XS>=0
+snd((x_4)) -> Y :|: Y>=0 && X>=0 && x_4==1+Y+X && x_4>0
+splitAt((x_5), (XS)) -> 2+XS :|: XS>=0 && x_5==0
+splitAt((x_6), (x_7)) -> U11((1), (N), (X), activate((XS))) :|: N>=0 && X>=0 && XS>=0 && x_6==1+N && x_6>0 && x_7==1+X+XS && x_7>0
+tail((x_8)) -> activate((XS)) :|: N>=0 && XS>=0 && x_8==1+N+XS && x_8>0
+take((N), (XS)) -> fst(splitAt((N), (XS))) :|: N>=0 && XS>=0
+natsFrom((X)) -> 1+X :|: X>=0
+activate((x_9)) -> natsFrom((X)) :|: X>=0 && x_9==1+X && x_9>0
+activate((X)) -> X :|: X>=0
+)

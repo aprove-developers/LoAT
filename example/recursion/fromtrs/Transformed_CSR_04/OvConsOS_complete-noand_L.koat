@@ -1,0 +1,69 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48)
+(RULES
+U114((x)) -> (1) + length((L)) :|: L>=0 && x==1
+U136((x_0)) -> 1+N :|: N>=0 && x_0==1
+zeros -> 1
+U101((x_1)) -> U102(isNatKind) :|: x_1==1
+U102((x_2)) -> U103(isNatIListKind) :|: x_2==1
+U103((x_3)) -> U104(isNatIListKind) :|: x_3==1
+U104((x_4)) -> U105(isNat) :|: x_4==1
+U105((x_5)) -> U106(isNatIList) :|: x_5==1
+U106((x_6)) -> 1 :|: x_6==1
+U11((x_7)) -> U12(isNatIListKind) :|: x_7==1
+U111((x_8)) -> U112(isNatIListKind) :|: x_8==1
+U112((x_9)) -> U113(isNat) :|: x_9==1
+U113((x_10)) -> U114(isNatKind) :|: x_10==1
+U12((x_11)) -> U13(isNatList) :|: x_11==1
+U121((x_12)) -> U122(isNatIListKind) :|: x_12==1
+U122((x_13)) -> 1 :|: x_13==1
+U13((x_14)) -> 1 :|: x_14==1
+U131((x_15)) -> U132(isNatIListKind) :|: x_15==1
+U132((x_16)) -> U133(isNat) :|: x_16==1
+U133((x_17)) -> U134(isNatKind) :|: x_17==1
+U134((x_18)) -> U135(isNat) :|: x_18==1
+U135((x_19)) -> U136(isNatKind) :|: x_19==1
+U21((x_20)) -> U22(isNatKind) :|: x_20==1
+U22((x_21)) -> U23(isNat) :|: x_21==1
+U23((x_22)) -> 1 :|: x_22==1
+U31((x_23)) -> U32(isNatIListKind) :|: x_23==1
+U32((x_24)) -> U33(isNatList) :|: x_24==1
+U33((x_25)) -> 1 :|: x_25==1
+U41((x_26)) -> U42(isNatKind) :|: x_26==1
+U42((x_27)) -> U43(isNatIListKind) :|: x_27==1
+U43((x_28)) -> U44(isNatIListKind) :|: x_28==1
+U44((x_29)) -> U45(isNat) :|: x_29==1
+U45((x_30)) -> U46(isNatIList) :|: x_30==1
+U46((x_31)) -> 1 :|: x_31==1
+U51((x_32)) -> U52(isNatIListKind) :|: x_32==1
+U52((x_33)) -> 1 :|: x_33==1
+U61((x_34)) -> U62(isNatIListKind) :|: x_34==1
+U62((x_35)) -> 1 :|: x_35==1
+U71((x_36)) -> 1 :|: x_36==1
+U81((x_37)) -> 1 :|: x_37==1
+U91((x_38)) -> U92(isNatKind) :|: x_38==1
+U92((x_39)) -> U93(isNatIListKind) :|: x_39==1
+U93((x_40)) -> U94(isNatIListKind) :|: x_40==1
+U94((x_41)) -> U95(isNat) :|: x_41==1
+U95((x_42)) -> U96(isNatList) :|: x_42==1
+U96((x_43)) -> 1 :|: x_43==1
+isNat -> 1
+isNat -> U11(isNatIListKind)
+isNat -> U21(isNatKind)
+isNatIList -> U31(isNatIListKind)
+isNatIList -> 1
+isNatIList -> U41(isNatKind)
+isNatIListKind -> 1
+isNatIListKind -> U51(isNatKind)
+isNatIListKind -> U61(isNatKind)
+isNatKind -> 1
+isNatKind -> U71(isNatIListKind)
+isNatKind -> U81(isNatKind)
+isNatList -> 1
+isNatList -> U91(isNatKind)
+isNatList -> U101(isNatKind)
+length((x_44)) -> 0 :|: x_44==1
+length((x_45)) -> U111(isNatList) :|: N>=0 && x_45==1+N && x_45>0
+take((x_46), (QL)) -> U121(isNatIList) :|: QL>=0 && x_46==0
+take((x_47), (x_48)) -> U131(isNatIList) :|: N>=0 && M>=0 && x_47==1+M && x_47>0 && x_48==1+N && x_48>0
+)

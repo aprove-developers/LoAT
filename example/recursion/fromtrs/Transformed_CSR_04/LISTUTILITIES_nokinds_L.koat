@@ -1,0 +1,37 @@
+(GOAL COMPLEXITY)
+(VAR N X XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17)
+(RULES
+U101((x)) -> fst(splitAt((N), (XS))) :|: XS>=0 && N>=0 && x==1
+U11((x_0)) -> snd(splitAt((N), (XS))) :|: XS>=0 && N>=0 && x_0==1
+U21((x_1)) -> X :|: X>=0 && x_1==1
+U31((x_2)) -> N :|: N>=0 && x_2==1
+U41((x_3)) -> 1+N :|: N>=0 && x_3==1
+U51((x_4)) -> head(afterNth((N), (XS))) :|: XS>=0 && N>=0 && x_4==1
+U61((x_5)) -> Y :|: Y>=0 && x_5==1
+U71((x_6)) -> 2+XS :|: XS>=0 && x_6==1
+U81((x_7)) -> U82(splitAt((N), (XS))) :|: XS>=0 && N>=0 && x_7==1
+U82((x_8)) -> 2+X+ZS :|: X>=0 && ZS>=0 && YS>=0 && x_8==1+ZS+YS && x_8>0
+U91((x_9)) -> XS :|: XS>=0 && x_9==1
+and((x_10)) -> X :|: X>=0 && x_10==1
+afterNth((N), (XS)) -> U11(and(isNatural)) :|: XS>=0 && N>=0
+fst((x_11)) -> U21(and(isLNat)) :|: X>=0 && Y>=0 && x_11==1+X+Y && x_11>0
+head((x_12)) -> U31(and(isNatural)) :|: N>=0 && x_12==1+N && x_12>0
+isLNat -> 1
+isLNat -> and(isNatural)
+isLNat -> isPLNat
+isLNat -> isNatural
+isLNat -> isLNat
+isNatural -> 1
+isNatural -> isLNat
+isNatural -> isNatural
+isNatural -> and(isNatural)
+isPLNat -> and(isLNat)
+isPLNat -> and(isNatural)
+natsFrom((N)) -> U41(isNatural) :|: N>=0
+sel((N), (XS)) -> U51(and(isNatural)) :|: XS>=0 && N>=0
+snd((x_13)) -> U61(and(isLNat)) :|: X>=0 && Y>=0 && x_13==1+X+Y && x_13>0
+splitAt((x_14), (XS)) -> U71(isLNat) :|: XS>=0 && x_14==0
+splitAt((x_15), (x_16)) -> U81(and(isNatural)) :|: X>=0 && N>=0 && x_15==1+N && x_15>0 && x_16==1+X && x_16>0
+tail((x_17)) -> U91(and(isNatural)) :|: N>=0 && x_17==1+N && x_17>0
+take((N), (XS)) -> U101(and(isNatural)) :|: XS>=0 && N>=0
+)

@@ -1,0 +1,44 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N V V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33)
+(RULES
+zeros -> 2
+U11((x)) -> 1 :|: x==1
+U21((x_0)) -> 1 :|: x_0==1
+U31((x_1)) -> 1 :|: x_1==1
+U41((x_2), (V2)) -> U42(isNatIList(activate((V2)))) :|: V2>=0 && x_2==1
+U42((x_3)) -> 1 :|: x_3==1
+U51((x_4), (V2)) -> U52(isNatList(activate((V2)))) :|: V2>=0 && x_4==1
+U52((x_5)) -> 1 :|: x_5==1
+U61((x_6), (V2)) -> U62(isNatIList(activate((V2)))) :|: V2>=0 && x_6==1
+U62((x_7)) -> 1 :|: x_7==1
+U71((x_8), (L), (N)) -> U72(isNat(activate((N))), activate((L))) :|: L>=0 && N>=0 && x_8==1
+U72((x_9), (L)) -> (1) + length(activate((L))) :|: L>=0 && x_9==1
+U81((x_10)) -> 1 :|: x_10==1
+U91((x_11), (QL), (M), (N)) -> U92(isNat(activate((M))), activate((QL)), activate((M)), activate((N))) :|: M>=0 && N>=0 && QL>=0 && x_11==1
+U92((x_12), (QL), (M), (N)) -> U93(isNat(activate((N))), activate((QL)), activate((M)), activate((N))) :|: M>=0 && N>=0 && QL>=0 && x_12==1
+U93((x_13), (QL), (M), (N)) -> ((1) + activate((N))) + (((1) + activate((M))) + activate((QL))) :|: M>=0 && N>=0 && QL>=0 && x_13==1
+isNat((x_14)) -> 1 :|: x_14==1
+isNat((x_15)) -> U11(isNatList(activate((V1)))) :|: V1>=0 && x_15==1+V1 && x_15>0
+isNat((x_16)) -> U21(isNat(activate((V1)))) :|: V1>=0 && x_16==1+V1 && x_16>0
+isNatIList((V)) -> U31(isNatList(activate((V)))) :|: V>=0
+isNatIList((x_17)) -> 1 :|: x_17==1
+isNatIList((x_18)) -> U41(isNat(activate((V1))), activate((V2))) :|: V1>=0 && V2>=0 && x_18==1+V1+V2 && x_18>0
+isNatList((x_19)) -> 1 :|: x_19==1
+isNatList((x_20)) -> U51(isNat(activate((V1))), activate((V2))) :|: V1>=0 && V2>=0 && x_20==1+V1+V2 && x_20>0
+isNatList((x_21)) -> U61(isNat(activate((V1))), activate((V2))) :|: V1>=0 && V2>=0 && x_21==1+V1+V2 && x_21>0
+length((x_22)) -> 0 :|: x_22==1
+length((x_23)) -> U71(isNatList(activate((L))), activate((L)), (N)) :|: L>=0 && N>=0 && x_23==1+L+N && x_23>0
+take((x_24), (QL)) -> U81(isNatIList((QL))) :|: QL>=0 && x_24==0
+take((x_25), (x_26)) -> U91(isNatIList(activate((QL))), activate((QL)), (M), (N)) :|: M>=0 && N>=0 && QL>=0 && x_25==1+M && x_25>0 && x_26==1+N+QL && x_26>0
+zeros -> 1
+take((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+length((X)) -> 1+X :|: X>=0
+activate((x_27)) -> zeros :|: x_27==1
+activate((x_28)) -> take(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_28==1+X1+X2 && x_28>0
+activate((x_29)) -> 0 :|: x_29==1
+activate((x_30)) -> length(activate((X))) :|: X>=0 && x_30==1+X && x_30>0
+activate((x_31)) -> (1) + activate((X)) :|: X>=0 && x_31==1+X && x_31>0
+activate((x_32)) -> ((1) + activate((X1))) + (X2) :|: X1>=0 && X2>=0 && x_32==1+X1+X2 && x_32>0
+activate((x_33)) -> 1 :|: x_33==1
+activate((X)) -> X :|: X>=0
+)

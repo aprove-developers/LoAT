@@ -1,0 +1,13 @@
+(GOAL COMPLEXITY)
+(VAR dummy dummy2 x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15)
+(RULES
+function((x_0), (x_1), (dummy), (dummy2)) -> 1 :|: dummy>=0 && dummy2>=0 && x_0==1 && x_1==0
+function((x_2), (x_3), (dummy), (dummy2)) -> 0 :|: x>=0 && dummy>=0 && dummy2>=0 && x_2==1 && x_3==1+x && x_3>0
+function((x_4), (x_5), (dummy), (dummy2)) -> 0 :|: dummy>=0 && dummy2>=0 && x_4==1 && x_5==0
+function((x_6), (x_7), (dummy), (dummy2)) -> 0 :|: dummy>=0 && dummy2>=0 && x_6==1 && x_7==1
+function((x_8), (x_9), (dummy), (dummy2)) -> (1) + function((1), (1+x), (x), (x)) :|: x>=0 && dummy>=0 && dummy2>=0 && x_8==1 && x_9==2+x && x_9>0
+function((x_10), (dummy), (x), (y)) -> function((1), function((1), (x), (x), (x)), (x), (y)) :|: x>=0 && y>=0 && dummy>=0 && x_10==1
+function((x_11), (x_12), (x), (y)) -> y :|: x>=0 && y>=0 && x_11==1 && x_12==1
+function((x_13), (x_14), (x), (y)) -> function((1), function((1), (x), (y), (y)), function((1), (x), (x), (y)), (1+y)) :|: x>=0 && y>=0 && x_13==1 && x_14==0
+function((x_15), (x), (y), (z)) -> z :|: x>=0 && y>=0 && z>=0 && x_15==1
+)

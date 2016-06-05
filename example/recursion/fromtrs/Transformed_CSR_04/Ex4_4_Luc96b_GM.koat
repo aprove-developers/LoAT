@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y x x_0 x_1)
+(RULES
+a__f((x), (Y)) -> a__f(mark((X)), (2+Y+X)) :|: Y>=0 && X>=0 && x==1+X && x>0
+mark((x_0)) -> a__f(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_0==1+X1+X2 && x_0>0
+mark((x_1)) -> (1) + mark((X)) :|: X>=0 && x_1==1+X && x_1>0
+a__f((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+)

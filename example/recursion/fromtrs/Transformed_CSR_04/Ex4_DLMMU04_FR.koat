@@ -1,0 +1,33 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N T X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21)
+(RULES
+and((x), (T)) -> T :|: T>=0 && x==1
+isNatIList((QL)) -> isNatList(activate((QL))) :|: QL>=0
+isNat((x_0)) -> 1 :|: x_0==1
+isNat((x_1)) -> isNat(activate((N))) :|: N>=0 && x_1==1+N && x_1>0
+isNat((x_2)) -> isNatList(activate((L))) :|: L>=0 && x_2==1+L && x_2>0
+isNatIList((x_3)) -> 1 :|: x_3==1
+isNatIList((x_4)) -> and(isNat(activate((N))), isNatIList(activate((QL)))) :|: QL>=0 && N>=0 && x_4==1+QL+N && x_4>0
+isNatList((x_5)) -> 1 :|: x_5==1
+isNatList((x_6)) -> and(isNat(activate((N))), isNatList(activate((L)))) :|: L>=0 && N>=0 && x_6==1+L+N && x_6>0
+isNatList((x_7)) -> and(isNat(activate((N))), isNatIList(activate((QL)))) :|: QL>=0 && N>=0 && x_7==1+QL+N && x_7>0
+zeros -> 2
+take((x_8), (QL)) -> uTake1(isNatIList((QL))) :|: QL>=0 && x_8==0
+uTake1((x_9)) -> nil :|: x_9==1
+take((x_10), (x_11)) -> uTake2(and(isNat((M)), and(isNat((N)), isNatIList(activate((QL))))), (M), (N), activate((QL))) :|: QL>=0 && M>=0 && N>=0 && x_10==1+M && x_10>0 && x_11==1+QL+N && x_11>0
+uTake2((x_12), (M), (N), (QL)) -> ((1) + activate((N))) + (((1) + activate((M))) + activate((QL))) :|: QL>=0 && M>=0 && N>=0 && x_12==1
+length((x_13)) -> uLength(and(isNat((N)), isNatList(activate((L)))), activate((L))) :|: L>=0 && N>=0 && x_13==1+L+N && x_13>0
+uLength((x_14), (L)) -> (1) + length(activate((L))) :|: L>=0 && x_14==1
+length((X)) -> 1+X :|: X>=0
+zeros -> 1
+nil -> 1
+take((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+activate((x_15)) -> 0 :|: x_15==1
+activate((x_16)) -> (1) + activate((X)) :|: X>=0 && x_16==1+X && x_16>0
+activate((x_17)) -> length(activate((X))) :|: X>=0 && x_17==1+X && x_17>0
+activate((x_18)) -> zeros :|: x_18==1
+activate((x_19)) -> ((1) + activate((X1))) + (X2) :|: X2>=0 && X1>=0 && x_19==1+X2+X1 && x_19>0
+activate((x_20)) -> nil :|: x_20==1
+activate((x_21)) -> take(activate((X1)), activate((X2))) :|: X2>=0 && X1>=0 && x_21==1+X2+X1 && x_21>0
+activate((X)) -> X :|: X>=0
+)

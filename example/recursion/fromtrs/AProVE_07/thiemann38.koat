@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(VAR accu l orig x y x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+(RULES
+length((x_0)) -> 0 :|: x_0==1
+length((x_1)) -> (1) + length((l)) :|: l>=0 && x>=0 && x_1==1+l+x && x_1>0
+lt((x), (x_2)) -> 0 :|: x>=0 && x_2==0
+lt((x_3), (x_4)) -> 1 :|: y>=0 && x_3==0 && x_4==1+y && x_4>0
+lt((x_5), (x_6)) -> lt((x), (y)) :|: y>=0 && x>=0 && x_5==1+x && x_5>0 && x_6==1+y && x_6>0
+head((x_7)) -> x :|: l>=0 && x>=0 && x_7==1+l+x && x_7>0
+head((x_8)) -> 1 :|: x_8==1
+tail((x_9)) -> 1 :|: x_9==1
+tail((x_10)) -> l :|: l>=0 && x>=0 && x_10==1+l+x && x_10>0
+reverse((l)) -> rev((0), (l), (1), (l)) :|: l>=0
+rev((x), (l), (accu), (orig)) -> if(lt((x), length((orig))), (x), (l), (accu), (orig)) :|: accu>=0 && l>=0 && orig>=0 && x>=0
+if((x_11), (x), (l), (accu), (orig)) -> rev((1+x), tail((l)), (((1) + head((l))) + (accu)), (orig)) :|: accu>=0 && l>=0 && orig>=0 && x>=0 && x_11==1
+if((x_12), (x), (l), (accu), (orig)) -> accu :|: accu>=0 && l>=0 && orig>=0 && x>=0 && x_12==0
+)

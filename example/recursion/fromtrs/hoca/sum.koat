@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR x1 x12 x2 x4 x x_0 x_1 x_2)
+(RULES
+plusiwashash2((x), (x12)) -> x12 :|: x12>=0 && x==0
+plusiwashash2((x_0), (x2)) -> (1) + plusiwashash2((x4), (x2)) :|: x2>=0 && x4>=0 && x_0==1+x4 && x_0>0
+foldiwashash3((x_1)) -> 0 :|: x_1==1
+foldiwashash3((x_2)) -> plusiwashash2((x4), foldiwashash3((x2))) :|: x2>=0 && x4>=0 && x_2==1+x2+x4 && x_2>0
+main((x1)) -> foldiwashash3((x1)) :|: x1>=0
+)

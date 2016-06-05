@@ -1,0 +1,19 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+(RULES
+plus((x_0), (x)) -> x :|: x>=0 && x_0==0
+plus((x_1), (y)) -> (1) + plus((x), (y)) :|: x>=0 && y>=0 && x_1==1+x && x_1>0
+times((x_2), (y)) -> 0 :|: y>=0 && x_2==0
+times((x_3), (y)) -> plus((y), times((x), (y))) :|: x>=0 && y>=0 && x_3==1+x && x_3>0
+p((x_4)) -> x :|: x>=0 && x_4==1+x && x_4>0
+p((x_5)) -> 0 :|: x_5==0
+minus((x), (x_6)) -> x :|: x>=0 && x_6==0
+minus((x_7), (x)) -> 0 :|: x>=0 && x_7==0
+minus((x), (x_8)) -> p(minus((x), (y))) :|: x>=0 && y>=0 && x_8==1+y && x_8>0
+isZero((x_9)) -> 1 :|: x_9==0
+isZero((x_10)) -> 0 :|: x>=0 && x_10==1+x && x_10>0
+facIter((x), (y)) -> if(isZero((x)), minus((x), (1)), (y), times((y), (x))) :|: x>=0 && y>=0
+if((x_11), (x), (y), (z)) -> y :|: x>=0 && y>=0 && z>=0 && x_11==1
+if((x_12), (x), (y), (z)) -> facIter((x), (z)) :|: x>=0 && y>=0 && z>=0 && x_12==0
+factorial((x)) -> facIter((x), (1)) :|: x>=0
+)

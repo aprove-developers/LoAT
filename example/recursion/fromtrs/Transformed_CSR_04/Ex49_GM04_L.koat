@@ -1,0 +1,13 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0 x_1 x_2)
+(RULES
+if((x)) -> X :|: X>=0 && x==1
+if((x_0)) -> Y :|: Y>=0 && x_0==0
+minus -> 0
+minus -> minus
+geq -> 1
+geq -> 0
+geq -> geq
+div((x_1)) -> 0 :|: x_1==0
+div((x_2)) -> if(geq) :|: X>=0 && x_2==1+X && x_2>0
+)

@@ -1,0 +1,153 @@
+(GOAL COMPLEXITY)
+(VAR N X XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48 x_49 x_50 x_51 x_52 x_53 x_54 x_55 x_56 x_57 x_58 x_59 x_60 x_61 x_62 x_63 x_64 x_65 x_66 x_67 x_68 x_69 x_70 x_71 x_72 x_73 x_74 x_75 x_76 x_77 x_78 x_79 x_80 x_81 x_82 x_83 x_84 x_85 x_86 x_87 x_88 x_89 x_90 x_91 x_92 x_93 x_94 x_95 x_96 x_97 x_98 x_99 x_100 x_101 x_102 x_103 x_104 x_105 x_106 x_107 x_108 x_109 x_110 x_111 x_112 x_113 x_114 x_115 x_116)
+(RULES
+U14((x)) -> snd(splitAt((N), (XS))) :|: XS>=0 && N>=0 && x==1
+U24((x_0)) -> X :|: X>=0 && x_0==1
+U282((x_1)) -> 1+N :|: N>=0 && x_1==1
+U294((x_2)) -> head(afterNth((N), (XS))) :|: XS>=0 && N>=0 && x_2==1
+U304((x_3)) -> Y :|: Y>=0 && x_3==1
+U312((x_4)) -> 2+XS :|: XS>=0 && x_4==1
+U326((x_5)) -> U327(splitAt((N), (XS))) :|: XS>=0 && N>=0 && x_5==1
+U327((x_6)) -> 2+X+ZS :|: YS>=0 && X>=0 && ZS>=0 && x_6==1+YS+ZS && x_6>0
+U334((x_7)) -> XS :|: XS>=0 && x_7==1
+U34((x_8)) -> N :|: N>=0 && x_8==1
+U344((x_9)) -> fst(splitAt((N), (XS))) :|: XS>=0 && N>=0 && x_9==1
+U101((x_10)) -> U102(isNaturalKind) :|: x_10==1
+U102((x_11)) -> U103(isLNatKind) :|: x_11==1
+U103((x_12)) -> U104(isLNatKind) :|: x_12==1
+U104((x_13)) -> U105(isNatural) :|: x_13==1
+U105((x_14)) -> U106(isLNat) :|: x_14==1
+U106((x_15)) -> 1 :|: x_15==1
+U11((x_16)) -> U12(isNaturalKind) :|: x_16==1
+U111((x_17)) -> U112(isLNatKind) :|: x_17==1
+U112((x_18)) -> 1 :|: x_18==1
+U12((x_19)) -> U13(isLNat) :|: x_19==1
+U121((x_20)) -> U122(isLNatKind) :|: x_20==1
+U122((x_21)) -> 1 :|: x_21==1
+U13((x_22)) -> U14(isLNatKind) :|: x_22==1
+U131((x_23)) -> 1 :|: x_23==1
+U141((x_24)) -> 1 :|: x_24==1
+U151((x_25)) -> 1 :|: x_25==1
+U161((x_26)) -> 1 :|: x_26==1
+U171((x_27)) -> U172(isLNatKind) :|: x_27==1
+U172((x_28)) -> 1 :|: x_28==1
+U181((x_29)) -> U182(isLNatKind) :|: x_29==1
+U182((x_30)) -> U183(isLNat) :|: x_30==1
+U183((x_31)) -> 1 :|: x_31==1
+U191((x_32)) -> U192(isNaturalKind) :|: x_32==1
+U192((x_33)) -> U193(isNatural) :|: x_33==1
+U193((x_34)) -> 1 :|: x_34==1
+U201((x_35)) -> U202(isNaturalKind) :|: x_35==1
+U202((x_36)) -> U203(isLNatKind) :|: x_36==1
+U203((x_37)) -> U204(isLNatKind) :|: x_37==1
+U204((x_38)) -> U205(isNatural) :|: x_38==1
+U205((x_39)) -> U206(isLNat) :|: x_39==1
+U206((x_40)) -> 1 :|: x_40==1
+U21((x_41)) -> U22(isLNatKind) :|: x_41==1
+U211((x_42)) -> 1 :|: x_42==1
+U22((x_43)) -> U23(isLNat) :|: x_43==1
+U221((x_44)) -> 1 :|: x_44==1
+U23((x_45)) -> U24(isLNatKind) :|: x_45==1
+U231((x_46)) -> U232(isLNatKind) :|: x_46==1
+U232((x_47)) -> 1 :|: x_47==1
+U241((x_48)) -> U242(isLNatKind) :|: x_48==1
+U242((x_49)) -> U243(isLNatKind) :|: x_49==1
+U243((x_50)) -> U244(isLNatKind) :|: x_50==1
+U244((x_51)) -> U245(isLNat) :|: x_51==1
+U245((x_52)) -> U246(isLNat) :|: x_52==1
+U246((x_53)) -> 1 :|: x_53==1
+U251((x_54)) -> U252(isNaturalKind) :|: x_54==1
+U252((x_55)) -> U253(isLNatKind) :|: x_55==1
+U253((x_56)) -> U254(isLNatKind) :|: x_56==1
+U254((x_57)) -> U255(isNatural) :|: x_57==1
+U255((x_58)) -> U256(isLNat) :|: x_58==1
+U256((x_59)) -> 1 :|: x_59==1
+U261((x_60)) -> U262(isLNatKind) :|: x_60==1
+U262((x_61)) -> 1 :|: x_61==1
+U271((x_62)) -> U272(isLNatKind) :|: x_62==1
+U272((x_63)) -> 1 :|: x_63==1
+U281((x_64)) -> U282(isNaturalKind) :|: x_64==1
+U291((x_65)) -> U292(isNaturalKind) :|: x_65==1
+U292((x_66)) -> U293(isLNat) :|: x_66==1
+U293((x_67)) -> U294(isLNatKind) :|: x_67==1
+U301((x_68)) -> U302(isLNatKind) :|: x_68==1
+U302((x_69)) -> U303(isLNat) :|: x_69==1
+U303((x_70)) -> U304(isLNatKind) :|: x_70==1
+U31((x_71)) -> U32(isNaturalKind) :|: x_71==1
+U311((x_72)) -> U312(isLNatKind) :|: x_72==1
+U32((x_73)) -> U33(isLNat) :|: x_73==1
+U321((x_74)) -> U322(isNaturalKind) :|: x_74==1
+U322((x_75)) -> U323(isNatural) :|: x_75==1
+U323((x_76)) -> U324(isNaturalKind) :|: x_76==1
+U324((x_77)) -> U325(isLNat) :|: x_77==1
+U325((x_78)) -> U326(isLNatKind) :|: x_78==1
+U33((x_79)) -> U34(isLNatKind) :|: x_79==1
+U331((x_80)) -> U332(isNaturalKind) :|: x_80==1
+U332((x_81)) -> U333(isLNat) :|: x_81==1
+U333((x_82)) -> U334(isLNatKind) :|: x_82==1
+U341((x_83)) -> U342(isNaturalKind) :|: x_83==1
+U342((x_84)) -> U343(isLNat) :|: x_84==1
+U343((x_85)) -> U344(isLNatKind) :|: x_85==1
+U41((x_86)) -> U42(isNaturalKind) :|: x_86==1
+U42((x_87)) -> U43(isLNatKind) :|: x_87==1
+U43((x_88)) -> U44(isLNatKind) :|: x_88==1
+U44((x_89)) -> U45(isNatural) :|: x_89==1
+U45((x_90)) -> U46(isLNat) :|: x_90==1
+U46((x_91)) -> 1 :|: x_91==1
+U51((x_92)) -> U52(isNaturalKind) :|: x_92==1
+U52((x_93)) -> U53(isLNatKind) :|: x_93==1
+U53((x_94)) -> U54(isLNatKind) :|: x_94==1
+U54((x_95)) -> U55(isNatural) :|: x_95==1
+U55((x_96)) -> U56(isLNat) :|: x_96==1
+U56((x_97)) -> 1 :|: x_97==1
+U61((x_98)) -> U62(isPLNatKind) :|: x_98==1
+U62((x_99)) -> U63(isPLNat) :|: x_99==1
+U63((x_100)) -> 1 :|: x_100==1
+U71((x_101)) -> U72(isNaturalKind) :|: x_101==1
+U72((x_102)) -> U73(isNatural) :|: x_102==1
+U73((x_103)) -> 1 :|: x_103==1
+U81((x_104)) -> U82(isPLNatKind) :|: x_104==1
+U82((x_105)) -> U83(isPLNat) :|: x_105==1
+U83((x_106)) -> 1 :|: x_106==1
+U91((x_107)) -> U92(isLNatKind) :|: x_107==1
+U92((x_108)) -> U93(isLNat) :|: x_108==1
+U93((x_109)) -> 1 :|: x_109==1
+afterNth((N), (XS)) -> U11(isNatural) :|: XS>=0 && N>=0
+fst((x_110)) -> U21(isLNat) :|: X>=0 && Y>=0 && x_110==1+X+Y && x_110>0
+head((x_111)) -> U31(isNatural) :|: N>=0 && x_111==1+N && x_111>0
+isLNat -> 1
+isLNat -> U41(isNaturalKind)
+isLNat -> U51(isNaturalKind)
+isLNat -> U61(isPLNatKind)
+isLNat -> U71(isNaturalKind)
+isLNat -> U81(isPLNatKind)
+isLNat -> U91(isLNatKind)
+isLNat -> U101(isNaturalKind)
+isLNatKind -> 1
+isLNatKind -> U111(isNaturalKind)
+isLNatKind -> U121(isNaturalKind)
+isLNatKind -> U131(isPLNatKind)
+isLNatKind -> U141(isNaturalKind)
+isLNatKind -> U151(isPLNatKind)
+isLNatKind -> U161(isLNatKind)
+isLNatKind -> U171(isNaturalKind)
+isNatural -> 1
+isNatural -> U181(isLNatKind)
+isNatural -> U191(isNaturalKind)
+isNatural -> U201(isNaturalKind)
+isNaturalKind -> 1
+isNaturalKind -> U211(isLNatKind)
+isNaturalKind -> U221(isNaturalKind)
+isNaturalKind -> U231(isNaturalKind)
+isPLNat -> U241(isLNatKind)
+isPLNat -> U251(isNaturalKind)
+isPLNatKind -> U261(isLNatKind)
+isPLNatKind -> U271(isNaturalKind)
+natsFrom((N)) -> U281(isNatural) :|: N>=0
+sel((N), (XS)) -> U291(isNatural) :|: XS>=0 && N>=0
+snd((x_112)) -> U301(isLNat) :|: X>=0 && Y>=0 && x_112==1+X+Y && x_112>0
+splitAt((x_113), (XS)) -> U311(isLNat) :|: XS>=0 && x_113==0
+splitAt((x_114), (x_115)) -> U321(isNatural) :|: X>=0 && N>=0 && x_114==1+N && x_114>0 && x_115==1+X && x_115>0
+tail((x_116)) -> U331(isNatural) :|: N>=0 && x_116==1+N && x_116>0
+take((N), (XS)) -> U341(isNatural) :|: XS>=0 && N>=0
+)

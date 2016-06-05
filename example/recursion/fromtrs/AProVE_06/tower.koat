@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+plus((x_0), (x)) -> x :|: x>=0 && x_0==0
+plus((x_1), (y)) -> (1) + plus(p((1+x)), (y)) :|: y>=0 && x>=0 && x_1==1+x && x_1>0
+times((x_2), (y)) -> 0 :|: y>=0 && x_2==0
+times((x_3), (y)) -> plus((y), times(p((1+x)), (y))) :|: y>=0 && x>=0 && x_3==1+x && x_3>0
+exp((x), (x_4)) -> 1 :|: x>=0 && x_4==0
+exp((x), (x_5)) -> times((x), exp((x), (y))) :|: y>=0 && x>=0 && x_5==1+y && x_5>0
+p((x_6)) -> 0 :|: x_6==1
+p((x_7)) -> (1) + p((1+x)) :|: x>=0 && x_7==2+x && x_7>0
+tower((x), (y)) -> towerIter((x), (y), (1)) :|: y>=0 && x>=0
+towerIter((x_8), (y), (z)) -> z :|: y>=0 && z>=0 && x_8==0
+towerIter((x_9), (y), (z)) -> towerIter(p((1+x)), (y), exp((y), (z))) :|: y>=0 && z>=0 && x>=0 && x_9==1+x && x_9>0
+)

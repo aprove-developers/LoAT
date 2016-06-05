@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR x1 x2 x3 x6 x9 x x_0 x_1 x_2 x_3 x_4)
+(RULES
+compS_fiwashash1((x), (x1)) -> compS_fiwashash1((x2), (1+x1)) :|: x2>=0 && x1>=0 && x==1+x2 && x>0
+compS_fiwashash1((x_0), (x3)) -> 1+x3 :|: x3>=0 && x_0==1
+iteriwashash3((x_1)) -> 1 :|: x_1==0
+iteriwashash3((x_2)) -> (1) + iteriwashash3((x6)) :|: x6>=0 && x_2==1+x6 && x_2>0
+main((x_3)) -> 0 :|: x_3==0
+main((x_4)) -> compS_fiwashash1(iteriwashash3((x9)), (0)) :|: x9>=0 && x_4==1+x9 && x_4>0
+)

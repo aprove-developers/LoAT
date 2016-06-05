@@ -1,0 +1,42 @@
+(GOAL COMPLEXITY)
+(VAR M N V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30)
+(RULES
+U11((x), (V1), (V2)) -> U12(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x==1
+U12((x_0), (V2)) -> U13(isNat(activate((V2)))) :|: V2>=0 && x_0==1
+U13((x_1)) -> 1 :|: x_1==1
+U21((x_2), (V1)) -> U22(isNat(activate((V1)))) :|: V1>=0 && x_2==1
+U22((x_3)) -> 1 :|: x_3==1
+U31((x_4), (V1), (V2)) -> U32(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_4==1
+U32((x_5), (V2)) -> U33(isNat(activate((V2)))) :|: V2>=0 && x_5==1
+U33((x_6)) -> 1 :|: x_6==1
+U41((x_7), (N)) -> activate((N)) :|: N>=0 && x_7==1
+U51((x_8), (M), (N)) -> (1) + plus(activate((N)), activate((M))) :|: M>=0 && N>=0 && x_8==1
+U61((x_9)) -> 0 :|: x_9==1
+U71((x_10), (M), (N)) -> plus(x(activate((N)), activate((M))), activate((N))) :|: M>=0 && N>=0 && x_10==1
+and((x_11), (X)) -> activate((X)) :|: X>=0 && x_11==1
+isNat((x_12)) -> 1 :|: x_12==1
+isNat((x_13)) -> U11(and(isNatKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_13==1+V2+V1 && x_13>0
+isNat((x_14)) -> U21(isNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_14==1+V1 && x_14>0
+isNat((x_15)) -> U31(and(isNatKind(activate((V1))), ((1) + activate((V2)))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_15==1+V2+V1 && x_15>0
+isNatKind((x_16)) -> 1 :|: x_16==1
+isNatKind((x_17)) -> and(isNatKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_17==1+V2+V1 && x_17>0
+isNatKind((x_18)) -> isNatKind(activate((V1))) :|: V1>=0 && x_18==1+V1 && x_18>0
+isNatKind((x_19)) -> and(isNatKind(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_19==1+V2+V1 && x_19>0
+plus((N), (x_20)) -> U41(and(isNat((N)), (1+N)), (N)) :|: N>=0 && x_20==0
+plus((N), (x_21)) -> U51(and(and(isNat((M)), (1+M)), (3+2*N)), (M), (N)) :|: M>=0 && N>=0 && x_21==1+M && x_21>0
+x((N), (x_22)) -> U61(and(isNat((N)), (1+N))) :|: N>=0 && x_22==0
+x((N), (x_23)) -> U71(and(and(isNat((M)), (1+M)), (3+2*N)), (M), (N)) :|: M>=0 && N>=0 && x_23==1+M && x_23>0
+plus((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+isNatKind((X)) -> 1+X :|: X>=0
+x((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+and((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+isNat((X)) -> 1+X :|: X>=0
+activate((x_24)) -> 0 :|: x_24==1
+activate((x_25)) -> plus(activate((X1)), activate((X2))) :|: X2>=0 && X1>=0 && x_25==1+X2+X1 && x_25>0
+activate((x_26)) -> isNatKind((X)) :|: X>=0 && x_26==1+X && x_26>0
+activate((x_27)) -> (1) + activate((X)) :|: X>=0 && x_27==1+X && x_27>0
+activate((x_28)) -> x(activate((X1)), activate((X2))) :|: X2>=0 && X1>=0 && x_28==1+X2+X1 && x_28>0
+activate((x_29)) -> and(activate((X1)), (X2)) :|: X2>=0 && X1>=0 && x_29==1+X2+X1 && x_29>0
+activate((x_30)) -> isNat((X)) :|: X>=0 && x_30==1+X && x_30>0
+activate((X)) -> X :|: X>=0
+)

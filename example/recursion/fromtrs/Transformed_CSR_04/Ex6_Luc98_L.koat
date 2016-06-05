@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0 x_1)
+(RULES
+first((x), (X)) -> 1 :|: X>=0 && x==0
+first((x_0), (x_1)) -> 1+Y :|: X>=0 && Y>=0 && x_0==1+X && x_0>0 && x_1==1+Y && x_1>0
+from((X)) -> 1+X :|: X>=0
+)

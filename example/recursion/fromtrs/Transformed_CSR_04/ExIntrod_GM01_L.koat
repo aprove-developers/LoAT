@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR L X x x_0 x_1 x_2 x_3 x_4)
+(RULES
+tail((x)) -> L :|: X>=0 && L>=0 && x==1+X && x>0
+incr((x_0)) -> 1 :|: x_0==1
+incr((x_1)) -> 2+X :|: X>=0 && x_1==1+X && x_1>0
+adx((x_2)) -> 1 :|: x_2==1
+adx((x_3)) -> incr((1+X)) :|: X>=0 && x_3==1+X && x_3>0
+nats -> adx(zeros)
+zeros -> 1
+head((x_4)) -> X :|: X>=0 && x_4==1+X && x_4>0
+)

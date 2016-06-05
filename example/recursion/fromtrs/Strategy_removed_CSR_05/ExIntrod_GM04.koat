@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0 x_1 x_2)
+(RULES
+nats -> adx(zeros)
+zeros -> (1) + zeros
+incr((x)) -> (2+X) + incr((Y)) :|: X>=0 && Y>=0 && x==1+X+Y && x>0
+adx((x_0)) -> incr(((1+X) + adx((Y)))) :|: X>=0 && Y>=0 && x_0==1+X+Y && x_0>0
+hd((x_1)) -> X :|: X>=0 && Y>=0 && x_1==1+X+Y && x_1>0
+tl((x_2)) -> Y :|: X>=0 && Y>=0 && x_2==1+X+Y && x_2>0
+)

@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR U V W X Y Z x x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+concat((x), (Y)) -> Y :|: Y>=0 && x==1
+concat((x_0), (Y)) -> (1+U) + concat((V), (Y)) :|: U>=0 && Y>=0 && V>=0 && x_0==1+U+V && x_0>0
+lessleaves((X), (x_1)) -> 0 :|: X>=0 && x_1==1
+lessleaves((x_2), (x_3)) -> 1 :|: Z>=0 && W>=0 && x_2==1 && x_3==1+Z+W && x_3>0
+lessleaves((x_4), (x_5)) -> lessleaves(concat((U), (V)), concat((W), (Z))) :|: Z>=0 && W>=0 && U>=0 && V>=0 && x_4==1+U+V && x_4>0 && x_5==1+Z+W && x_5>0
+)

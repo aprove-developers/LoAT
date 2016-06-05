@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR X Y Z x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+f((X)) -> 3+2*X :|: X>=0
+g((x)) -> 1 :|: x==0
+g((x_0)) -> (1) + ((1) + g((X))) :|: X>=0 && x_0==1+X && x_0>0
+sel((x_1), (x_2)) -> X :|: X>=0 && Y>=0 && x_1==0 && x_2==1+X+Y && x_2>0
+sel((x_3), (x_4)) -> sel((X), activate((Z))) :|: Z>=0 && X>=0 && Y>=0 && x_3==1+X && x_3>0 && x_4==1+Z+Y && x_4>0
+f((X)) -> 1+X :|: X>=0
+g((X)) -> 1+X :|: X>=0
+activate((x_5)) -> f(activate((X))) :|: X>=0 && x_5==1+X && x_5>0
+activate((x_6)) -> g(activate((X))) :|: X>=0 && x_6==1+X && x_6>0
+activate((X)) -> X :|: X>=0
+)

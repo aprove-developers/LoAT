@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR k l x y x_0 x_1 x_2 x_3 x_4)
+(RULES
+sum((x_0)) -> 2+x :|: x>=0 && x_0==2+x && x_0>0
+sum((x_1)) -> sum((2+x+y+l)) :|: x>=0 && y>=0 && l>=0 && x_1==2+x+y+l && x_1>0
+sum((x_2)) -> sum(((1+l) + sum((2+x+y+k)))) :|: x>=0 && y>=0 && k>=0 && l>=0 && x_2==3+x+y+k+l && x_2>0
+sum((x_3)) -> pred(sum((3+x+y+l))) :|: x>=0 && y>=0 && l>=0 && x_3==3+x+y+l && x_3>0
+pred((x_4)) -> 2+x :|: x>=0 && x_4==3+x && x_4>0
+)

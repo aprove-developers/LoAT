@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR w ws xs y ys z zs x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+r((xs), (ys), (zs), (x)) -> xs :|: ys>=0 && xs>=0 && zs>=0 && x==1
+r((xs), (x_0), (zs), (x_1)) -> r((xs), (xs), (3+zs), (ws)) :|: w>=0 && ws>=0 && xs>=0 && zs>=0 && x_0==1 && x_1==1+w+ws && x_1>0
+r((xs), (x_2), (x_3), (x_4)) -> r((xs), (xs), (4), (ws)) :|: y>=0 && w>=0 && ys>=0 && ws>=0 && xs>=0 && x_2==1+y+ys && x_2>0 && x_3==1 && x_4==1+w+ws && x_4>0
+r((xs), (x_5), (x_6), (x_7)) -> r((ys), (1+y+ys), (zs), (4+w+ws)) :|: y>=0 && w>=0 && ys>=0 && ws>=0 && z>=0 && xs>=0 && zs>=0 && x_5==1+y+ys && x_5>0 && x_6==1+z+zs && x_6>0 && x_7==1+w+ws && x_7>0
+)

@@ -1,0 +1,94 @@
+(GOAL COMPLEXITY)
+(VAR N V1 V2 X X1 X2 X3 X4 XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48 x_49 x_50 x_51 x_52 x_53 x_54 x_55 x_56 x_57 x_58 x_59 x_60 x_61)
+(RULES
+a__U101((x), (N), (XS)) -> a__fst(a__splitAt(mark((N)), mark((XS)))) :|: N>=0 && XS>=0 && x==1
+a__U11((x_0), (N), (XS)) -> a__snd(a__splitAt(mark((N)), mark((XS)))) :|: N>=0 && XS>=0 && x_0==1
+a__U21((x_1), (X)) -> mark((X)) :|: X>=0 && x_1==1
+a__U31((x_2), (N)) -> mark((N)) :|: N>=0 && x_2==1
+a__U41((x_3), (N)) -> ((1) + mark((N))) + (2+N) :|: N>=0 && x_3==1
+a__U51((x_4), (N), (XS)) -> a__head(a__afterNth(mark((N)), mark((XS)))) :|: N>=0 && XS>=0 && x_4==1
+a__U61((x_5), (Y)) -> mark((Y)) :|: Y>=0 && x_5==1
+a__U71((x_6), (XS)) -> (2) + mark((XS)) :|: XS>=0 && x_6==1
+a__U81((x_7), (N), (X), (XS)) -> a__U82(a__splitAt(mark((N)), mark((XS))), (X)) :|: X>=0 && N>=0 && XS>=0 && x_7==1
+a__U82((x_8), (X)) -> ((1) + (((1) + mark((X))) + (YS))) + mark((ZS)) :|: X>=0 && YS>=0 && ZS>=0 && x_8==1+YS+ZS && x_8>0
+a__U91((x_9), (XS)) -> mark((XS)) :|: XS>=0 && x_9==1
+a__afterNth((N), (XS)) -> a__U11(a__and(a__isNatural((N)), (1+XS)), (N), (XS)) :|: N>=0 && XS>=0
+a__and((x_10), (X)) -> mark((X)) :|: X>=0 && x_10==1
+a__fst((x_11)) -> a__U21(a__and(a__isLNat((X)), (1+Y)), (X)) :|: X>=0 && Y>=0 && x_11==1+X+Y && x_11>0
+a__head((x_12)) -> a__U31(a__and(a__isNatural((N)), (1+XS)), (N)) :|: N>=0 && XS>=0 && x_12==1+N+XS && x_12>0
+a__isLNat((x_13)) -> 1 :|: x_13==1
+a__isLNat((x_14)) -> a__and(a__isNatural((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_14==1+V1+V2 && x_14>0
+a__isLNat((x_15)) -> a__and(a__isNatural((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_15==1+V1+V2 && x_15>0
+a__isLNat((x_16)) -> a__isPLNat((V1)) :|: V1>=0 && x_16==1+V1 && x_16>0
+a__isLNat((x_17)) -> a__isNatural((V1)) :|: V1>=0 && x_17==1+V1 && x_17>0
+a__isLNat((x_18)) -> a__isPLNat((V1)) :|: V1>=0 && x_18==1+V1 && x_18>0
+a__isLNat((x_19)) -> a__isLNat((V1)) :|: V1>=0 && x_19==1+V1 && x_19>0
+a__isLNat((x_20)) -> a__and(a__isNatural((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_20==1+V1+V2 && x_20>0
+a__isNatural((x_21)) -> 1 :|: x_21==0
+a__isNatural((x_22)) -> a__isLNat((V1)) :|: V1>=0 && x_22==1+V1 && x_22>0
+a__isNatural((x_23)) -> a__isNatural((V1)) :|: V1>=0 && x_23==1+V1 && x_23>0
+a__isNatural((x_24)) -> a__and(a__isNatural((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_24==1+V1+V2 && x_24>0
+a__isPLNat((x_25)) -> a__and(a__isLNat((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_25==1+V1+V2 && x_25>0
+a__isPLNat((x_26)) -> a__and(a__isNatural((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_26==1+V1+V2 && x_26>0
+a__natsFrom((N)) -> a__U41(a__isNatural((N)), (N)) :|: N>=0
+a__sel((N), (XS)) -> a__U51(a__and(a__isNatural((N)), (1+XS)), (N), (XS)) :|: N>=0 && XS>=0
+a__snd((x_27)) -> a__U61(a__and(a__isLNat((X)), (1+Y)), (Y)) :|: X>=0 && Y>=0 && x_27==1+X+Y && x_27>0
+a__splitAt((x_28), (XS)) -> a__U71(a__isLNat((XS)), (XS)) :|: XS>=0 && x_28==0
+a__splitAt((x_29), (x_30)) -> a__U81(a__and(a__isNatural((N)), (3+X+XS)), (N), (X), (XS)) :|: X>=0 && N>=0 && XS>=0 && x_29==1+N && x_29>0 && x_30==1+X+XS && x_30>0
+a__tail((x_31)) -> a__U91(a__and(a__isNatural((N)), (1+XS)), (XS)) :|: N>=0 && XS>=0 && x_31==1+N+XS && x_31>0
+a__take((N), (XS)) -> a__U101(a__and(a__isNatural((N)), (1+XS)), (N), (XS)) :|: N>=0 && XS>=0
+mark((x_32)) -> a__U101(mark((X1)), (X2), (X3)) :|: X1>=0 && X2>=0 && X3>=0 && x_32==1+X1+X2+X3 && x_32>0
+mark((x_33)) -> a__fst(mark((X))) :|: X>=0 && x_33==1+X && x_33>0
+mark((x_34)) -> a__splitAt(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_34==1+X1+X2 && x_34>0
+mark((x_35)) -> a__U11(mark((X1)), (X2), (X3)) :|: X1>=0 && X2>=0 && X3>=0 && x_35==1+X1+X2+X3 && x_35>0
+mark((x_36)) -> a__snd(mark((X))) :|: X>=0 && x_36==1+X && x_36>0
+mark((x_37)) -> a__U21(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_37==1+X1+X2 && x_37>0
+mark((x_38)) -> a__U31(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_38==1+X1+X2 && x_38>0
+mark((x_39)) -> a__U41(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_39==1+X1+X2 && x_39>0
+mark((x_40)) -> a__natsFrom(mark((X))) :|: X>=0 && x_40==1+X && x_40>0
+mark((x_41)) -> a__U51(mark((X1)), (X2), (X3)) :|: X1>=0 && X2>=0 && X3>=0 && x_41==1+X1+X2+X3 && x_41>0
+mark((x_42)) -> a__head(mark((X))) :|: X>=0 && x_42==1+X && x_42>0
+mark((x_43)) -> a__afterNth(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_43==1+X1+X2 && x_43>0
+mark((x_44)) -> a__U61(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_44==1+X1+X2 && x_44>0
+mark((x_45)) -> a__U71(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_45==1+X1+X2 && x_45>0
+mark((x_46)) -> a__U81(mark((X1)), (X2), (X3), (X4)) :|: X4>=0 && X1>=0 && X2>=0 && X3>=0 && x_46==1+X4+X1+X2+X3 && x_46>0
+mark((x_47)) -> a__U82(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_47==1+X1+X2 && x_47>0
+mark((x_48)) -> a__U91(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_48==1+X1+X2 && x_48>0
+mark((x_49)) -> a__and(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_49==1+X1+X2 && x_49>0
+mark((x_50)) -> a__isNatural((X)) :|: X>=0 && x_50==1+X && x_50>0
+mark((x_51)) -> a__isLNat((X)) :|: X>=0 && x_51==1+X && x_51>0
+mark((x_52)) -> a__isPLNat((X)) :|: X>=0 && x_52==1+X && x_52>0
+mark((x_53)) -> a__tail(mark((X))) :|: X>=0 && x_53==1+X && x_53>0
+mark((x_54)) -> a__take(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_54==1+X1+X2 && x_54>0
+mark((x_55)) -> a__sel(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_55==1+X1+X2 && x_55>0
+mark((x_56)) -> 1 :|: x_56==1
+mark((x_57)) -> ((1) + mark((X1))) + (X2) :|: X1>=0 && X2>=0 && x_57==1+X1+X2 && x_57>0
+mark((x_58)) -> (1) + mark((X)) :|: X>=0 && x_58==1+X && x_58>0
+mark((x_59)) -> ((1) + mark((X1))) + mark((X2)) :|: X1>=0 && X2>=0 && x_59==1+X1+X2 && x_59>0
+mark((x_60)) -> 1 :|: x_60==1
+mark((x_61)) -> 0 :|: x_61==0
+a__U101((X1), (X2), (X3)) -> 1+X1+X2+X3 :|: X1>=0 && X2>=0 && X3>=0
+a__fst((X)) -> 1+X :|: X>=0
+a__splitAt((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U11((X1), (X2), (X3)) -> 1+X1+X2+X3 :|: X1>=0 && X2>=0 && X3>=0
+a__snd((X)) -> 1+X :|: X>=0
+a__U21((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U31((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U41((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__natsFrom((X)) -> 1+X :|: X>=0
+a__U51((X1), (X2), (X3)) -> 1+X1+X2+X3 :|: X1>=0 && X2>=0 && X3>=0
+a__head((X)) -> 1+X :|: X>=0
+a__afterNth((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U61((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U71((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U81((X1), (X2), (X3), (X4)) -> 1+X4+X1+X2+X3 :|: X4>=0 && X1>=0 && X2>=0 && X3>=0
+a__U82((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__U91((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__and((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__isNatural((X)) -> 1+X :|: X>=0
+a__isLNat((X)) -> 1+X :|: X>=0
+a__isPLNat((X)) -> 1+X :|: X>=0
+a__tail((X)) -> 1+X :|: X>=0
+a__take((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__sel((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+)

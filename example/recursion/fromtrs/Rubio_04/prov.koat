@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0 x_1)
+(RULES
+ackin((x), (x_0)) -> u21(ackin((1+X), (Y)), (X)) :|: X>=0 && Y>=0 && x==1+X && x>0 && x_0==1+Y && x_0>0
+u21((x_1), (Y)) -> (1) + ackin((Y), (X)) :|: X>=0 && Y>=0 && x_1==1+X && x_1>0
+)

@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+nonZero((x_0)) -> 0 :|: x_0==0
+nonZero((x_1)) -> 1 :|: x>=0 && x_1==1+x && x_1>0
+p((x_2)) -> 0 :|: x_2==0
+p((x_3)) -> x :|: x>=0 && x_3==1+x && x_3>0
+id_inc((x)) -> x :|: x>=0
+id_inc((x)) -> 1+x :|: x>=0
+random((x)) -> rand((x), (0)) :|: x>=0
+rand((x), (y)) -> if(nonZero((x)), (x), (y)) :|: x>=0 && y>=0
+if((x_4), (x), (y)) -> y :|: x>=0 && y>=0 && x_4==0
+if((x_5), (x), (y)) -> rand(p((x)), id_inc((y))) :|: x>=0 && y>=0 && x_5==1
+)

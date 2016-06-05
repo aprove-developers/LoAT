@@ -1,0 +1,19 @@
+(GOAL COMPLEXITY)
+(VAR L X X1 X2 XS Y YS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8)
+(RULES
+app((x), (YS)) -> YS :|: YS>=0 && x==1
+app((x_0), (YS)) -> (1+X) + (((1) + activate((XS))) + (YS)) :|: XS>=0 && X>=0 && YS>=0 && x_0==1+XS+X && x_0>0
+from((X)) -> 3+2*X :|: X>=0
+zWadr((x_1), (YS)) -> 1 :|: YS>=0 && x_1==1
+zWadr((XS), (x_2)) -> 1 :|: XS>=0 && x_2==1
+zWadr((x_3), (x_4)) -> ((1) + app((Y), (2+X))) + (((1) + activate((XS))) + activate((YS))) :|: XS>=0 && X>=0 && Y>=0 && YS>=0 && x_3==1+XS+X && x_3>0 && x_4==1+Y+YS && x_4>0
+prefix((L)) -> (2) + ((1+L) + prefix((L))) :|: L>=0
+app((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+from((X)) -> 1+X :|: X>=0
+zWadr((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_5)) -> app((X1), (X2)) :|: X1>=0 && X2>=0 && x_5==1+X1+X2 && x_5>0
+activate((x_6)) -> from((X)) :|: X>=0 && x_6==1+X && x_6>0
+activate((x_7)) -> 1 :|: x_7==1
+activate((x_8)) -> zWadr((X1), (X2)) :|: X1>=0 && X2>=0 && x_8==1+X1+X2 && x_8>0
+activate((X)) -> X :|: X>=0
+)

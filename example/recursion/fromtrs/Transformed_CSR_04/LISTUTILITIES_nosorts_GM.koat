@@ -1,0 +1,47 @@
+(GOAL COMPLEXITY)
+(VAR N X X1 X2 X3 X4 XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26)
+(RULES
+a__U11((x), (N), (X), (XS)) -> a__U12(a__splitAt(mark((N)), mark((XS))), (X)) :|: XS>=0 && N>=0 && X>=0 && x==1
+a__U12((x_0), (X)) -> ((1) + (((1) + mark((X))) + (YS))) + mark((ZS)) :|: YS>=0 && ZS>=0 && X>=0 && x_0==1+YS+ZS && x_0>0
+a__afterNth((N), (XS)) -> a__snd(a__splitAt(mark((N)), mark((XS)))) :|: XS>=0 && N>=0
+a__and((x_1), (X)) -> mark((X)) :|: X>=0 && x_1==1
+a__fst((x_2)) -> mark((X)) :|: Y>=0 && X>=0 && x_2==1+Y+X && x_2>0
+a__head((x_3)) -> mark((N)) :|: XS>=0 && N>=0 && x_3==1+XS+N && x_3>0
+a__natsFrom((N)) -> ((1) + mark((N))) + (2+N) :|: N>=0
+a__sel((N), (XS)) -> a__head(a__afterNth(mark((N)), mark((XS)))) :|: XS>=0 && N>=0
+a__snd((x_4)) -> mark((Y)) :|: Y>=0 && X>=0 && x_4==1+Y+X && x_4>0
+a__splitAt((x_5), (XS)) -> (2) + mark((XS)) :|: XS>=0 && x_5==0
+a__splitAt((x_6), (x_7)) -> a__U11((1), (N), (X), (XS)) :|: XS>=0 && N>=0 && X>=0 && x_6==1+N && x_6>0 && x_7==1+XS+X && x_7>0
+a__tail((x_8)) -> mark((XS)) :|: XS>=0 && N>=0 && x_8==1+XS+N && x_8>0
+a__take((N), (XS)) -> a__fst(a__splitAt(mark((N)), mark((XS)))) :|: XS>=0 && N>=0
+mark((x_9)) -> a__U11(mark((X1)), (X2), (X3), (X4)) :|: X4>=0 && X1>=0 && X2>=0 && X3>=0 && x_9==1+X4+X1+X2+X3 && x_9>0
+mark((x_10)) -> a__U12(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_10==1+X1+X2 && x_10>0
+mark((x_11)) -> a__splitAt(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_11==1+X1+X2 && x_11>0
+mark((x_12)) -> a__afterNth(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_12==1+X1+X2 && x_12>0
+mark((x_13)) -> a__snd(mark((X))) :|: X>=0 && x_13==1+X && x_13>0
+mark((x_14)) -> a__and(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_14==1+X1+X2 && x_14>0
+mark((x_15)) -> a__fst(mark((X))) :|: X>=0 && x_15==1+X && x_15>0
+mark((x_16)) -> a__head(mark((X))) :|: X>=0 && x_16==1+X && x_16>0
+mark((x_17)) -> a__natsFrom(mark((X))) :|: X>=0 && x_17==1+X && x_17>0
+mark((x_18)) -> a__sel(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_18==1+X1+X2 && x_18>0
+mark((x_19)) -> a__tail(mark((X))) :|: X>=0 && x_19==1+X && x_19>0
+mark((x_20)) -> a__take(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_20==1+X1+X2 && x_20>0
+mark((x_21)) -> 1 :|: x_21==1
+mark((x_22)) -> ((1) + mark((X1))) + mark((X2)) :|: X1>=0 && X2>=0 && x_22==1+X1+X2 && x_22>0
+mark((x_23)) -> ((1) + mark((X1))) + (X2) :|: X1>=0 && X2>=0 && x_23==1+X1+X2 && x_23>0
+mark((x_24)) -> (1) + mark((X)) :|: X>=0 && x_24==1+X && x_24>0
+mark((x_25)) -> 0 :|: x_25==0
+mark((x_26)) -> 1 :|: x_26==1
+a__U11((X1), (X2), (X3), (X4)) -> 1+X4+X1+X2+X3 :|: X4>=0 && X1>=0 && X2>=0 && X3>=0
+a__U12((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__splitAt((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__afterNth((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__snd((X)) -> 1+X :|: X>=0
+a__and((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__fst((X)) -> 1+X :|: X>=0
+a__head((X)) -> 1+X :|: X>=0
+a__natsFrom((X)) -> 1+X :|: X>=0
+a__sel((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__tail((X)) -> 1+X :|: X>=0
+a__take((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+)

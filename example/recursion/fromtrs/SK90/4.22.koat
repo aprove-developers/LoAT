@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1)
+(RULES
+not((x_0)) -> ((1) + not((x))) + not((y)) :|: x>=0 && y>=0 && x_0==1+x+y && x_0>0
+not((x_1)) -> ((1) + not((x))) + not((y)) :|: x>=0 && y>=0 && x_1==1+x+y && x_1>0
+)

@@ -1,0 +1,25 @@
+(GOAL COMPLEXITY)
+(VAR u x xs y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16)
+(RULES
+prod((xs)) -> prodIter((xs), (1)) :|: xs>=0
+prodIter((xs), (x)) -> ifProd(isempty((xs)), (xs), (x)) :|: xs>=0 && x>=0
+ifProd((x_0), (xs), (x)) -> x :|: xs>=0 && x>=0 && x_0==1
+ifProd((x_1), (xs), (x)) -> prodIter(tail((xs)), times((x), head((xs)))) :|: xs>=0 && x>=0 && x_1==0
+plus((x_2), (y)) -> y :|: y>=0 && x_2==0
+plus((x_3), (y)) -> (1) + plus((x), (y)) :|: y>=0 && x>=0 && x_3==1+x && x_3>0
+times((x), (y)) -> timesIter((x), (y), (0), (0)) :|: y>=0 && x>=0
+timesIter((x), (y), (z), (u)) -> ifTimes(ge((u), (x)), (x), (y), (z), (u)) :|: y>=0 && u>=0 && z>=0 && x>=0
+ifTimes((x_4), (x), (y), (z), (u)) -> z :|: y>=0 && u>=0 && z>=0 && x>=0 && x_4==1
+ifTimes((x_5), (x), (y), (z), (u)) -> timesIter((x), (y), plus((y), (z)), (1+u)) :|: y>=0 && u>=0 && z>=0 && x>=0 && x_5==0
+isempty((x_6)) -> 1 :|: x_6==1
+isempty((x_7)) -> 0 :|: xs>=0 && x>=0 && x_7==1+xs+x && x_7>0
+head((x_8)) -> 1 :|: x_8==1
+head((x_9)) -> x :|: xs>=0 && x>=0 && x_9==1+xs+x && x_9>0
+tail((x_10)) -> 1 :|: x_10==1
+tail((x_11)) -> xs :|: xs>=0 && x>=0 && x_11==1+xs+x && x_11>0
+ge((x), (x_12)) -> 1 :|: x>=0 && x_12==0
+ge((x_13), (x_14)) -> 0 :|: y>=0 && x_13==0 && x_14==1+y && x_14>0
+ge((x_15), (x_16)) -> ge((x), (y)) :|: y>=0 && x>=0 && x_15==1+x && x_15>0 && x_16==1+y && x_16>0
+a -> 1
+a -> 1
+)

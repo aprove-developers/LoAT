@@ -1,0 +1,26 @@
+(GOAL COMPLEXITY)
+(VAR h m n pid store t x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26)
+(RULES
+fstsplit((x_0), (x)) -> 1 :|: x>=0 && x_0==0
+fstsplit((x_1), (x_2)) -> 1 :|: n>=0 && x_1==1+n && x_1>0 && x_2==1
+fstsplit((x_3), (x_4)) -> (1+h) + fstsplit((n), (t)) :|: t>=0 && n>=0 && h>=0 && x_3==1+n && x_3>0 && x_4==1+t+h && x_4>0
+sndsplit((x_5), (x)) -> x :|: x>=0 && x_5==0
+sndsplit((x_6), (x_7)) -> 1 :|: n>=0 && x_6==1+n && x_6>0 && x_7==1
+sndsplit((x_8), (x_9)) -> sndsplit((n), (t)) :|: t>=0 && n>=0 && h>=0 && x_8==1+n && x_8>0 && x_9==1+t+h && x_9>0
+empty((x_10)) -> 1 :|: x_10==1
+empty((x_11)) -> 0 :|: t>=0 && h>=0 && x_11==1+t+h && x_11>0
+leq((x_12), (m)) -> 1 :|: m>=0 && x_12==0
+leq((x_13), (x_14)) -> 0 :|: n>=0 && x_13==1+n && x_13>0 && x_14==0
+leq((x_15), (x_16)) -> leq((n), (m)) :|: m>=0 && n>=0 && x_15==1+n && x_15>0 && x_16==1+m && x_16>0
+length((x_17)) -> 0 :|: x_17==1
+length((x_18)) -> (1) + length((t)) :|: t>=0 && h>=0 && x_18==1+t+h && x_18>0
+app((x_19), (x)) -> x :|: x>=0 && x_19==1
+app((x_20), (x)) -> (1+h) + app((t), (x)) :|: t>=0 && x>=0 && h>=0 && x_20==1+t+h && x_20>0
+map_f((pid), (x_21)) -> 1 :|: pid>=0 && x_21==1
+map_f((pid), (x_22)) -> app((1+pid+h), map_f((pid), (t))) :|: t>=0 && pid>=0 && h>=0 && x_22==1+t+h && x_22>0
+process((store), (m)) -> if1((store), (m), leq((m), length((store)))) :|: store>=0 && m>=0
+if1((store), (m), (x_23)) -> if2((store), (m), empty(fstsplit((m), (store)))) :|: store>=0 && m>=0 && x_23==1
+if1((store), (m), (x_24)) -> if3((store), (m), empty(fstsplit((m), app(map_f((1), (1)), (store))))) :|: store>=0 && m>=0 && x_24==0
+if2((store), (m), (x_25)) -> process(app(map_f((1), (1)), sndsplit((m), (store))), (m)) :|: store>=0 && m>=0 && x_25==0
+if3((store), (m), (x_26)) -> process(sndsplit((m), app(map_f((1), (1)), (store))), (m)) :|: store>=0 && m>=0 && x_26==0
+)

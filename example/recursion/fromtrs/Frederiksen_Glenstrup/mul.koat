@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR x xs y ys x_0 x_1 x_2 x_3)
+(RULES
+mul0((x_0), (y)) -> add0(mul0((xs), (y)), (y)) :|: x>=0 && xs>=0 && y>=0 && x_0==1+x+xs && x_0>0
+add0((x_1), (y)) -> add0((xs), (2+y)) :|: x>=0 && xs>=0 && y>=0 && x_1==1+x+xs && x_1>0
+mul0((x_2), (y)) -> 1 :|: y>=0 && x_2==1
+add0((x_3), (y)) -> y :|: y>=0 && x_3==1
+goal((xs), (ys)) -> mul0((xs), (ys)) :|: ys>=0 && xs>=0
+)

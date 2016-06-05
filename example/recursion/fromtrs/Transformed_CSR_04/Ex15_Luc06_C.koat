@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR X x x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+active((x)) -> 5 :|: x==3
+active((x_0)) -> (1) + active((X)) :|: X>=0 && x_0==1+X && x_0>0
+proper((x_1)) -> (1) + proper((X)) :|: X>=0 && x_1==1+X && x_1>0
+proper((x_2)) -> 2 :|: x_2==1
+proper((x_3)) -> (1) + proper((X)) :|: X>=0 && x_3==1+X && x_3>0
+top((x_4)) -> top(proper((X))) :|: X>=0 && x_4==1+X && x_4>0
+top((x_5)) -> top(active((X))) :|: X>=0 && x_5==1+X && x_5>0
+)

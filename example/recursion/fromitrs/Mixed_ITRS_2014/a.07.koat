@@ -1,5 +1,5 @@
 (GOAL COMPLEXITY)
 (VAR x y z)
 (RULES
-eval((x), (y), (z)) -> eval((x), (1+y), (1+z)) :|: x>=0 && y>=0 && z>=0 && x>y && x>z
+eval((x), (y), (z)) -> eval((x), (1+y), (1+z)) :|: z>=0 && x>=0 && y>=0 && x>y && x>z
 )

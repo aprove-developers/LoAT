@@ -1,0 +1,23 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+(RULES
+fact((X)) -> if(zero((X)), (2), (3+2*X)) :|: X>=0
+add((x), (X)) -> X :|: X>=0 && x==0
+add((x_0), (Y)) -> (1) + add((X), (Y)) :|: X>=0 && Y>=0 && x_0==1+X && x_0>0
+prod((x_1), (X)) -> 0 :|: X>=0 && x_1==0
+prod((x_2), (Y)) -> add((Y), prod((X), (Y))) :|: X>=0 && Y>=0 && x_2==1+X && x_2>0
+if((x_3), (X), (Y)) -> activate((X)) :|: X>=0 && Y>=0 && x_3==1
+if((x_4), (X), (Y)) -> activate((Y)) :|: X>=0 && Y>=0 && x_4==0
+zero((x_5)) -> 1 :|: x_5==0
+zero((x_6)) -> 0 :|: X>=0 && x_6==1+X && x_6>0
+p((x_7)) -> X :|: X>=0 && x_7==1+X && x_7>0
+prod((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+fact((X)) -> 1+X :|: X>=0
+p((X)) -> 1+X :|: X>=0
+activate((x_8)) -> (1) + activate((X)) :|: X>=0 && x_8==1+X && x_8>0
+activate((x_9)) -> 0 :|: x_9==1
+activate((x_10)) -> prod(activate((X1)), activate((X2))) :|: X1>=0 && X2>=0 && x_10==1+X1+X2 && x_10>0
+activate((x_11)) -> fact(activate((X))) :|: X>=0 && x_11==1+X && x_11>0
+activate((x_12)) -> p(activate((X))) :|: X>=0 && x_12==1+X && x_12>0
+activate((X)) -> X :|: X>=0
+)

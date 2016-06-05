@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR l l1 l2 x x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+is_empty((x_0)) -> 1 :|: x_0==1
+is_empty((x_1)) -> 0 :|: x>=0 && l>=0 && x_1==1+x+l && x_1>0
+hd((x_2)) -> x :|: x>=0 && l>=0 && x_2==1+x+l && x_2>0
+tl((x_3)) -> l :|: x>=0 && l>=0 && x_3==1+x+l && x_3>0
+append((l1), (l2)) -> ifappend((l1), (l2), is_empty((l1))) :|: l1>=0 && l2>=0
+ifappend((l1), (l2), (x_4)) -> l2 :|: l1>=0 && l2>=0 && x_4==1
+ifappend((l1), (l2), (x_5)) -> ((1) + hd((l1))) + append(tl((l1)), (l2)) :|: l1>=0 && l2>=0 && x_5==0
+)

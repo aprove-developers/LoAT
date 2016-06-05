@@ -1,0 +1,13 @@
+(GOAL COMPLEXITY)
+(VAR ALPHA BETA X x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+dx((X)) -> 1 :|: X>=0
+dx((x)) -> 1 :|: x==1
+dx((x_0)) -> ((1) + dx((ALPHA))) + dx((BETA)) :|: ALPHA>=0 && BETA>=0 && x_0==1+ALPHA+BETA && x_0>0
+dx((x_1)) -> ((1) + ((1+BETA) + dx((ALPHA)))) + ((1+ALPHA) + dx((BETA))) :|: ALPHA>=0 && BETA>=0 && x_1==1+ALPHA+BETA && x_1>0
+dx((x_2)) -> ((1) + dx((ALPHA))) + dx((BETA)) :|: ALPHA>=0 && BETA>=0 && x_2==1+ALPHA+BETA && x_2>0
+dx((x_3)) -> (1) + dx((ALPHA)) :|: ALPHA>=0 && x_3==1+ALPHA && x_3>0
+dx((x_4)) -> ((1) + (((1) + dx((ALPHA))) + (BETA))) + ((1+ALPHA) + (((1) + dx((BETA))) + (2+BETA))) :|: ALPHA>=0 && BETA>=0 && x_4==1+ALPHA+BETA && x_4>0
+dx((x_5)) -> ((1) + dx((ALPHA))) + (ALPHA) :|: ALPHA>=0 && x_5==1+ALPHA && x_5>0
+dx((x_6)) -> ((1) + ((1+BETA) + ((4+ALPHA+BETA) + dx((ALPHA))))) + ((2+ALPHA+BETA) + ((2+ALPHA) + dx((BETA)))) :|: ALPHA>=0 && BETA>=0 && x_6==1+ALPHA+BETA && x_6>0
+)

@@ -70,6 +70,7 @@ public:
     inline FunctionSymbolIndex getStartFunctionSymbol() const { return startFunctionSymbol; }
     inline std::string getFunctionSymbolName(FunctionSymbolIndex index) const { return functionSymbols[index]; }
     inline FunctionSymbolIndex getFunctionSymbolIndex(const std::string &name) const { return functionSymbolNameMap.at(name); }
+    inline bool hasFunctionSymbol(const std::string &name) const { return functionSymbolNameMap.count(name) == 1; }
     inline const std::vector<std::string>::size_type getFunctionSymbolCount() const { return functionSymbols.size(); }
     inline const std::vector<std::string>& getFunctionSymbolNames() const { return functionSymbols; }
 

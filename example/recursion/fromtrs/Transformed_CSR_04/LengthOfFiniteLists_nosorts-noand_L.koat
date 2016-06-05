@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR L N x x_0 x_1 x_2)
+(RULES
+U12((x)) -> (1) + length((L)) :|: L>=0 && x==1
+zeros -> 1
+U11((x_0)) -> U12((1)) :|: x_0==1
+length((x_1)) -> 0 :|: x_1==1
+length((x_2)) -> U11((1)) :|: N>=0 && x_2==1+N && x_2>0
+)

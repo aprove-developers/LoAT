@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+zeros -> 2
+and((x), (X)) -> activate((X)) :|: X>=0 && x==1
+length((x_0)) -> 0 :|: x_0==1
+length((x_1)) -> (1) + length(activate((L))) :|: N>=0 && L>=0 && x_1==1+N+L && x_1>0
+take((x_2), (QL)) -> 1 :|: QL>=0 && x_2==0
+take((x_3), (x_4)) -> (1+N) + ((1+M) + activate((QL))) :|: N>=0 && QL>=0 && M>=0 && x_3==1+M && x_3>0 && x_4==1+N+QL && x_4>0
+zeros -> 1
+take((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+activate((x_5)) -> zeros :|: x_5==1
+activate((x_6)) -> take(activate((X1)), activate((X2))) :|: X2>=0 && X1>=0 && x_6==1+X2+X1 && x_6>0
+activate((X)) -> X :|: X>=0
+)

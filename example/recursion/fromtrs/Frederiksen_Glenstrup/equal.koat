@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR x xs x_0 x_1)
+(RULES
+equal0((x_0)) -> number42((1)) :|: x_0==1
+equal0((x_1)) -> equal0((1+x+xs)) :|: x>=0 && xs>=0 && x_1==1+x+xs && x_1>0
+number42((x)) -> 85 :|: x>=0
+goal((x)) -> equal0((x)) :|: x>=0
+)

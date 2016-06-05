@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(VAR M N X X1 X2 X3 Y x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+filter((x), (x_0), (M)) -> (1) + ((((1) + activate((Y))) + (M)) + (M)) :|: X>=0 && Y>=0 && M>=0 && x==1+X+Y && x>0 && x_0==0
+filter((x_1), (x_2), (M)) -> (1+X) + ((((1) + activate((Y))) + (N)) + (M)) :|: N>=0 && X>=0 && Y>=0 && M>=0 && x_1==1+X+Y && x_1>0 && x_2==1+N && x_2>0
+sieve((x_3)) -> (1) + ((1) + activate((Y))) :|: Y>=0 && x_3==1+Y && x_3>0
+sieve((x_4)) -> (2+N) + ((1) + filter(activate((Y)), (N), (N))) :|: N>=0 && Y>=0 && x_4==2+N+Y && x_4>0
+nats((N)) -> 3+2*N :|: N>=0
+zprimes -> sieve(nats((2)))
+filter((X1), (X2), (X3)) -> 1+X2+X3+X1 :|: X2>=0 && X3>=0 && X1>=0
+sieve((X)) -> 1+X :|: X>=0
+nats((X)) -> 1+X :|: X>=0
+activate((x_5)) -> filter((X1), (X2), (X3)) :|: X2>=0 && X3>=0 && X1>=0 && x_5==1+X2+X3+X1 && x_5>0
+activate((x_6)) -> sieve((X)) :|: X>=0 && x_6==1+X && x_6>0
+activate((x_7)) -> nats((X)) :|: X>=0 && x_7==1+X && x_7>0
+activate((X)) -> X :|: X>=0
+)

@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0)
+(RULES
+g((x_0)) -> g((1+y+z+x)) :|: y>=0 && z>=0 && x>=0 && x_0==3+y+z+x && x_0>0
+cons((x), (y)) -> x :|: y>=0 && x>=0
+cons((x), (y)) -> y :|: y>=0 && x>=0
+)

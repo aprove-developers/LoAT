@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR ap n xs y ys x x_0 x_1 x_2 x_3)
+(RULES
+f((x)) -> f(addchild(select((xs)), (1+xs+n))) :|: xs>=0 && n>=0 && x==2+xs+n && x>0
+select((x_0)) -> ap :|: xs>=0 && ap>=0 && x_0==1+xs+ap && x_0>0
+select((x_1)) -> select((xs)) :|: xs>=0 && ap>=0 && x_1==1+xs+ap && x_1>0
+addchild((x_2), (x_3)) -> 3+xs+y+ys+n :|: xs>=0 && y>=0 && ys>=0 && n>=0 && x_2==1+y+ys && x_2>0 && x_3==1+xs+n && x_3>0
+)

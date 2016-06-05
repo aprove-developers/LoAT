@@ -1,0 +1,49 @@
+(GOAL COMPLEXITY)
+(VAR L N x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29)
+(RULES
+U94((x)) -> (1) + length((L)) :|: L>=0 && x==1
+zeros -> 1
+U11((x_0)) -> U12(isNatIListKind) :|: x_0==1
+U12((x_1)) -> U13(isNatList) :|: x_1==1
+U13((x_2)) -> 1 :|: x_2==1
+U21((x_3)) -> U22(isNatKind) :|: x_3==1
+U22((x_4)) -> U23(isNat) :|: x_4==1
+U23((x_5)) -> 1 :|: x_5==1
+U31((x_6)) -> U32(isNatIListKind) :|: x_6==1
+U32((x_7)) -> U33(isNatList) :|: x_7==1
+U33((x_8)) -> 1 :|: x_8==1
+U41((x_9)) -> U42(isNatKind) :|: x_9==1
+U42((x_10)) -> U43(isNatIListKind) :|: x_10==1
+U43((x_11)) -> U44(isNatIListKind) :|: x_11==1
+U44((x_12)) -> U45(isNat) :|: x_12==1
+U45((x_13)) -> U46(isNatIList) :|: x_13==1
+U46((x_14)) -> 1 :|: x_14==1
+U51((x_15)) -> U52(isNatIListKind) :|: x_15==1
+U52((x_16)) -> 1 :|: x_16==1
+U61((x_17)) -> 1 :|: x_17==1
+U71((x_18)) -> 1 :|: x_18==1
+U81((x_19)) -> U82(isNatKind) :|: x_19==1
+U82((x_20)) -> U83(isNatIListKind) :|: x_20==1
+U83((x_21)) -> U84(isNatIListKind) :|: x_21==1
+U84((x_22)) -> U85(isNat) :|: x_22==1
+U85((x_23)) -> U86(isNatList) :|: x_23==1
+U86((x_24)) -> 1 :|: x_24==1
+U91((x_25)) -> U92(isNatIListKind) :|: x_25==1
+U92((x_26)) -> U93(isNat) :|: x_26==1
+U93((x_27)) -> U94(isNatKind) :|: x_27==1
+isNat -> 1
+isNat -> U11(isNatIListKind)
+isNat -> U21(isNatKind)
+isNatIList -> U31(isNatIListKind)
+isNatIList -> 1
+isNatIList -> U41(isNatKind)
+isNatIListKind -> 1
+isNatIListKind -> U51(isNatKind)
+isNatKind -> 1
+isNatKind -> U61(isNatIListKind)
+isNatKind -> U71(isNatKind)
+isNatList -> 1
+isNatList -> U81(isNatKind)
+length((x_28)) -> 0 :|: x_28==1
+length((x_29)) -> U91(isNatList) :|: N>=0 && x_29==1+N && x_29>0
+)

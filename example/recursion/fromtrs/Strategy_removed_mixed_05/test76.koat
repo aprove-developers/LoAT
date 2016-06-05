@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0 x_1 x_2)
+(RULES
+iwasplus((X), (x)) -> X :|: X>=0 && x==0
+iwasplus((X), (x_0)) -> (1) + iwasplus((X), (Y)) :|: X>=0 && Y>=0 && x_0==1+Y && x_0>0
+f((x_1), (x_2), (X)) -> f((X), iwasplus((X), (X)), (X)) :|: X>=0 && x_1==0 && x_2==1
+g((X), (Y)) -> X :|: X>=0 && Y>=0
+g((X), (Y)) -> Y :|: X>=0 && Y>=0
+)

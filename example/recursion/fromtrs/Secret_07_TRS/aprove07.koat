@@ -1,0 +1,23 @@
+(GOAL COMPLEXITY)
+(VAR x xs y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14)
+(RULES
+plus((x), (y)) -> plusIter((x), (y), (0)) :|: x>=0 && y>=0
+plusIter((x), (y), (z)) -> ifPlus(le((x), (z)), (x), (y), (z)) :|: z>=0 && x>=0 && y>=0
+ifPlus((x_0), (x), (y), (z)) -> y :|: z>=0 && x>=0 && y>=0 && x_0==1
+ifPlus((x_1), (x), (y), (z)) -> plusIter((x), (1+y), (1+z)) :|: z>=0 && x>=0 && y>=0 && x_1==0
+le((x_2), (x_3)) -> 0 :|: x>=0 && x_2==1+x && x_2>0 && x_3==0
+le((x_4), (y)) -> 1 :|: y>=0 && x_4==0
+le((x_5), (x_6)) -> le((x), (y)) :|: x>=0 && y>=0 && x_5==1+x && x_5>0 && x_6==1+y && x_6>0
+sum((xs)) -> sumIter((xs), (0)) :|: xs>=0
+sumIter((xs), (x)) -> ifSum(isempty((xs)), (xs), (x), plus((x), head((xs)))) :|: x>=0 && xs>=0
+ifSum((x_7), (xs), (x), (y)) -> x :|: x>=0 && xs>=0 && y>=0 && x_7==1
+ifSum((x_8), (xs), (x), (y)) -> sumIter(tail((xs)), (y)) :|: x>=0 && xs>=0 && y>=0 && x_8==0
+isempty((x_9)) -> 1 :|: x_9==1
+isempty((x_10)) -> 0 :|: x>=0 && xs>=0 && x_10==1+x+xs && x_10>0
+head((x_11)) -> 1 :|: x_11==1
+head((x_12)) -> x :|: x>=0 && xs>=0 && x_12==1+x+xs && x_12>0
+tail((x_13)) -> 1 :|: x_13==1
+tail((x_14)) -> xs :|: x>=0 && xs>=0 && x_14==1+x+xs && x_14>0
+a -> 1
+a -> 1
+)

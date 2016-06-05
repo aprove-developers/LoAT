@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR L X XS Y YS x x_0 x_1 x_2 x_3 x_4)
+(RULES
+app((x), (YS)) -> YS :|: YS>=0 && x==1
+app((x_0), (YS)) -> (1+X) + app((XS), (YS)) :|: XS>=0 && YS>=0 && X>=0 && x_0==1+XS+X && x_0>0
+from((X)) -> (1+X) + from((1+X)) :|: X>=0
+zWadr((x_1), (YS)) -> 1 :|: YS>=0 && x_1==1
+zWadr((XS), (x_2)) -> 1 :|: XS>=0 && x_2==1
+zWadr((x_3), (x_4)) -> ((1) + app((Y), (2+X))) + zWadr((XS), (YS)) :|: XS>=0 && Y>=0 && YS>=0 && X>=0 && x_3==1+XS+X && x_3>0 && x_4==1+Y+YS && x_4>0
+prefix((L)) -> (2) + zWadr((L), prefix((L))) :|: L>=0
+)

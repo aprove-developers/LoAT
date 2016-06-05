@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR b u v y x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8)
+(RULES
+isLeaf((x)) -> 1 :|: x==1
+isLeaf((x_0)) -> 0 :|: v>=0 && u>=0 && x_0==1+v+u && x_0>0
+left((x_1)) -> u :|: v>=0 && u>=0 && x_1==1+v+u && x_1>0
+right((x_2)) -> v :|: v>=0 && u>=0 && x_2==1+v+u && x_2>0
+concat((x_3), (y)) -> y :|: y>=0 && x_3==1
+concat((x_4), (y)) -> (1+u) + concat((v), (y)) :|: v>=0 && y>=0 && u>=0 && x_4==1+v+u && x_4>0
+less_leaves((u), (v)) -> if1(isLeaf((u)), isLeaf((v)), (u), (v)) :|: v>=0 && u>=0
+if1((b), (x_5), (u), (v)) -> 0 :|: v>=0 && b>=0 && u>=0 && x_5==1
+if1((b), (x_6), (u), (v)) -> if2((b), (u), (v)) :|: v>=0 && b>=0 && u>=0 && x_6==0
+if2((x_7), (u), (v)) -> 1 :|: v>=0 && u>=0 && x_7==1
+if2((x_8), (u), (v)) -> less_leaves(concat(left((u)), right((u))), concat(left((v)), right((v)))) :|: v>=0 && u>=0 && x_8==0
+)

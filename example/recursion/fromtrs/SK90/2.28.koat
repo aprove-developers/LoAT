@@ -1,0 +1,5 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0)
+(RULES
+dfib((x_0), (y)) -> dfib((1+x), dfib((x), (y))) :|: x>=0 && y>=0 && x_0==2+x && x_0>0
+)

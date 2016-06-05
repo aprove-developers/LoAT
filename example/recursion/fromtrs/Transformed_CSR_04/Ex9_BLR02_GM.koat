@@ -1,0 +1,21 @@
+(GOAL COMPLEXITY)
+(VAR M N X X1 X2 X3 Y x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11)
+(RULES
+a__filter((x), (x_0), (M)) -> 2+2*M+Y :|: M>=0 && X>=0 && Y>=0 && x==1+X+Y && x>0 && x_0==0
+a__filter((x_1), (x_2), (M)) -> ((1) + mark((X))) + (1+M+N+Y) :|: M>=0 && N>=0 && X>=0 && Y>=0 && x_1==1+X+Y && x_1>0 && x_2==1+N && x_2>0
+a__sieve((x_3)) -> 2+Y :|: Y>=0 && x_3==1+Y && x_3>0
+a__sieve((x_4)) -> ((1) + ((1) + mark((N)))) + (2+2*N+Y) :|: N>=0 && Y>=0 && x_4==2+N+Y && x_4>0
+a__nats((N)) -> ((1) + mark((N))) + (2+N) :|: N>=0
+a__zprimes -> a__sieve(a__nats((2)))
+mark((x_5)) -> a__filter(mark((X1)), mark((X2)), mark((X3))) :|: X2>=0 && X3>=0 && X1>=0 && x_5==1+X2+X3+X1 && x_5>0
+mark((x_6)) -> a__sieve(mark((X))) :|: X>=0 && x_6==1+X && x_6>0
+mark((x_7)) -> a__nats(mark((X))) :|: X>=0 && x_7==1+X && x_7>0
+mark((x_8)) -> a__zprimes :|: x_8==1
+mark((x_9)) -> ((1) + mark((X1))) + (X2) :|: X2>=0 && X1>=0 && x_9==1+X2+X1 && x_9>0
+mark((x_10)) -> 0 :|: x_10==0
+mark((x_11)) -> (1) + mark((X)) :|: X>=0 && x_11==1+X && x_11>0
+a__filter((X1), (X2), (X3)) -> 1+X2+X3+X1 :|: X2>=0 && X3>=0 && X1>=0
+a__sieve((X)) -> 1+X :|: X>=0
+a__nats((X)) -> 1+X :|: X>=0
+a__zprimes -> 1
+)

@@ -1,0 +1,66 @@
+(GOAL COMPLEXITY)
+(VAR N X XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43)
+(RULES
+U12((x)) -> snd(splitAt((N), (XS))) :|: N>=0 && XS>=0 && x==1
+U161((x_0)) -> 1+N :|: N>=0 && x_0==1
+U172((x_1)) -> head(afterNth((N), (XS))) :|: N>=0 && XS>=0 && x_1==1
+U182((x_2)) -> Y :|: Y>=0 && x_2==1
+U191((x_3)) -> 2+XS :|: XS>=0 && x_3==1
+U203((x_4)) -> U204(splitAt((N), (XS))) :|: N>=0 && XS>=0 && x_4==1
+U204((x_5)) -> 2+X+ZS :|: YS>=0 && X>=0 && ZS>=0 && x_5==1+YS+ZS && x_5>0
+U212((x_6)) -> XS :|: XS>=0 && x_6==1
+U22((x_7)) -> X :|: X>=0 && x_7==1
+U222((x_8)) -> fst(splitAt((N), (XS))) :|: N>=0 && XS>=0 && x_8==1
+U32((x_9)) -> N :|: N>=0 && x_9==1
+U101((x_10)) -> U102(isLNat) :|: x_10==1
+U102((x_11)) -> 1 :|: x_11==1
+U11((x_12)) -> U12(isLNat) :|: x_12==1
+U111((x_13)) -> 1 :|: x_13==1
+U121((x_14)) -> 1 :|: x_14==1
+U131((x_15)) -> U132(isLNat) :|: x_15==1
+U132((x_16)) -> 1 :|: x_16==1
+U141((x_17)) -> U142(isLNat) :|: x_17==1
+U142((x_18)) -> 1 :|: x_18==1
+U151((x_19)) -> U152(isLNat) :|: x_19==1
+U152((x_20)) -> 1 :|: x_20==1
+U171((x_21)) -> U172(isLNat) :|: x_21==1
+U181((x_22)) -> U182(isLNat) :|: x_22==1
+U201((x_23)) -> U202(isNatural) :|: x_23==1
+U202((x_24)) -> U203(isLNat) :|: x_24==1
+U21((x_25)) -> U22(isLNat) :|: x_25==1
+U211((x_26)) -> U212(isLNat) :|: x_26==1
+U221((x_27)) -> U222(isLNat) :|: x_27==1
+U31((x_28)) -> U32(isLNat) :|: x_28==1
+U41((x_29)) -> U42(isLNat) :|: x_29==1
+U42((x_30)) -> 1 :|: x_30==1
+U51((x_31)) -> U52(isLNat) :|: x_31==1
+U52((x_32)) -> 1 :|: x_32==1
+U61((x_33)) -> 1 :|: x_33==1
+U71((x_34)) -> 1 :|: x_34==1
+U81((x_35)) -> 1 :|: x_35==1
+U91((x_36)) -> 1 :|: x_36==1
+afterNth((N), (XS)) -> U11(isNatural) :|: N>=0 && XS>=0
+fst((x_37)) -> U21(isLNat) :|: X>=0 && Y>=0 && x_37==1+X+Y && x_37>0
+head((x_38)) -> U31(isNatural) :|: N>=0 && x_38==1+N && x_38>0
+isLNat -> 1
+isLNat -> U41(isNatural)
+isLNat -> U51(isNatural)
+isLNat -> U61(isPLNat)
+isLNat -> U71(isNatural)
+isLNat -> U81(isPLNat)
+isLNat -> U91(isLNat)
+isLNat -> U101(isNatural)
+isNatural -> 1
+isNatural -> U111(isLNat)
+isNatural -> U121(isNatural)
+isNatural -> U131(isNatural)
+isPLNat -> U141(isLNat)
+isPLNat -> U151(isNatural)
+natsFrom((N)) -> U161(isNatural) :|: N>=0
+sel((N), (XS)) -> U171(isNatural) :|: N>=0 && XS>=0
+snd((x_39)) -> U181(isLNat) :|: X>=0 && Y>=0 && x_39==1+X+Y && x_39>0
+splitAt((x_40), (XS)) -> U191(isLNat) :|: XS>=0 && x_40==0
+splitAt((x_41), (x_42)) -> U201(isNatural) :|: N>=0 && X>=0 && x_41==1+N && x_41>0 && x_42==1+X && x_42>0
+tail((x_43)) -> U211(isNatural) :|: N>=0 && x_43==1+N && x_43>0
+take((N), (XS)) -> U221(isNatural) :|: N>=0 && XS>=0
+)

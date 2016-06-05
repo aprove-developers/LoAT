@@ -1,0 +1,28 @@
+(GOAL COMPLEXITY)
+(VAR M N X x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15)
+(RULES
+U41((x)) -> N :|: N>=0 && x==1
+U51((x_0)) -> (1) + plus((N), (M)) :|: M>=0 && N>=0 && x_0==1
+U71((x_1)) -> plus(x((N), (M)), (N)) :|: M>=0 && N>=0 && x_1==1
+and((x_2)) -> X :|: X>=0 && x_2==1
+U11((x_3)) -> U12(isNat) :|: x_3==1
+U12((x_4)) -> U13(isNat) :|: x_4==1
+U13((x_5)) -> 1 :|: x_5==1
+U21((x_6)) -> U22(isNat) :|: x_6==1
+U22((x_7)) -> 1 :|: x_7==1
+U31((x_8)) -> U32(isNat) :|: x_8==1
+U32((x_9)) -> U33(isNat) :|: x_9==1
+U33((x_10)) -> 1 :|: x_10==1
+U61((x_11)) -> 0 :|: x_11==1
+isNat -> 1
+isNat -> U11(and(isNatKind))
+isNat -> U21(isNatKind)
+isNat -> U31(and(isNatKind))
+isNatKind -> 1
+isNatKind -> and(isNatKind)
+isNatKind -> isNatKind
+plus((N), (x_12)) -> U41(and(isNat)) :|: N>=0 && x_12==0
+plus((N), (x_13)) -> U51(and(and(isNat))) :|: M>=0 && N>=0 && x_13==1+M && x_13>0
+x((N), (x_14)) -> U61(and(isNat)) :|: N>=0 && x_14==0
+x((N), (x_15)) -> U71(and(and(isNat))) :|: M>=0 && N>=0 && x_15==1+M && x_15>0
+)

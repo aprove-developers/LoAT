@@ -1,0 +1,39 @@
+(GOAL COMPLEXITY)
+(VAR A B F F1 F2 Fs G1 G2 Gs Left NF Right V X X0 X1 Xs Ys x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36)
+(RULES
+intersect'ii'in((x), (x_0)) -> 1 :|: X0>=0 && X1>=0 && X>=0 && x==1+X0+X && x>0 && x_0==1+X1+X && x_0>0
+intersect'ii'in((Xs), (x_1)) -> u'1'1(intersect'ii'in((Xs), (Ys))) :|: Ys>=0 && X0>=0 && Xs>=0 && x_1==1+Ys+X0 && x_1>0
+u'1'1((x_2)) -> 1 :|: x_2==1
+intersect'ii'in((x_3), (Ys)) -> u'2'1(intersect'ii'in((Xs), (Ys))) :|: Ys>=0 && X0>=0 && Xs>=0 && x_3==1+X0+Xs && x_3>0
+u'2'1((x_4)) -> 1 :|: x_4==1
+reduce'ii'in((x_5), (NF)) -> u'3'1(reduce'ii'in((4+B+Gs+Fs+A), (NF))) :|: NF>=0 && B>=0 && Gs>=0 && Fs>=0 && A>=0 && x_5==3+B+Gs+Fs+A && x_5>0
+u'3'1((x_6)) -> 1 :|: x_6==1
+reduce'ii'in((x_7), (NF)) -> u'4'1(reduce'ii'in((5+2*B+Gs+Fs+2*A), (NF))) :|: NF>=0 && B>=0 && Gs>=0 && Fs>=0 && A>=0 && x_7==3+B+Gs+Fs+A && x_7>0
+u'4'1((x_8)) -> 1 :|: x_8==1
+reduce'ii'in((x_9), (NF)) -> u'5'1(reduce'ii'in((3+F2+Gs+Fs+F1), (NF))) :|: NF>=0 && F2>=0 && Gs>=0 && Fs>=0 && F1>=0 && x_9==3+F2+Gs+Fs+F1 && x_9>0
+u'5'1((x_10)) -> 1 :|: x_10==1
+reduce'ii'in((x_11), (NF)) -> u'6'1(reduce'ii'in((2+Gs+Fs+F1), (NF)), (F2), (Fs), (Gs), (NF)) :|: NF>=0 && F2>=0 && Gs>=0 && Fs>=0 && F1>=0 && x_11==3+F2+Gs+Fs+F1 && x_11>0
+u'6'1((x_12), (F2), (Fs), (Gs), (NF)) -> u'6'2(reduce'ii'in((2+F2+Gs+Fs), (NF))) :|: NF>=0 && F2>=0 && Gs>=0 && Fs>=0 && x_12==1
+u'6'2((x_13)) -> 1 :|: x_13==1
+reduce'ii'in((x_14), (NF)) -> u'7'1(reduce'ii'in((2+Gs+Fs+F1), (NF))) :|: NF>=0 && Gs>=0 && Fs>=0 && F1>=0 && x_14==3+Gs+Fs+F1 && x_14>0
+u'7'1((x_15)) -> 1 :|: x_15==1
+reduce'ii'in((x_16), (NF)) -> u'8'1(reduce'ii'in((4+B+Gs+Fs+A), (NF))) :|: NF>=0 && B>=0 && Gs>=0 && Fs>=0 && A>=0 && x_16==3+B+Gs+Fs+A && x_16>0
+u'8'1((x_17)) -> 1 :|: x_17==1
+reduce'ii'in((x_18), (NF)) -> u'9'1(reduce'ii'in((5+2*B+Gs+Fs+2*A), (NF))) :|: NF>=0 && B>=0 && Gs>=0 && Fs>=0 && A>=0 && x_18==3+B+Gs+Fs+A && x_18>0
+u'9'1((x_19)) -> 1 :|: x_19==1
+reduce'ii'in((x_20), (x_21)) -> u'10'1(reduce'ii'in((1+Gs+Fs), (3+Right+V+Left))) :|: Right>=0 && Gs>=0 && Fs>=0 && V>=0 && Left>=0 && x_20==3+Gs+Fs+V && x_20>0 && x_21==1+Right+Left && x_21>0
+u'10'1((x_22)) -> 1 :|: x_22==1
+reduce'ii'in((x_23), (NF)) -> u'11'1(reduce'ii'in((3+G2+Gs+Fs+G1), (NF))) :|: NF>=0 && G2>=0 && Gs>=0 && Fs>=0 && G1>=0 && x_23==3+G2+Gs+Fs+G1 && x_23>0
+u'11'1((x_24)) -> 1 :|: x_24==1
+reduce'ii'in((x_25), (NF)) -> u'12'1(reduce'ii'in((2+Gs+Fs+G1), (NF)), (Fs), (G2), (Gs), (NF)) :|: NF>=0 && G2>=0 && Gs>=0 && Fs>=0 && G1>=0 && x_25==3+G2+Gs+Fs+G1 && x_25>0
+u'12'1((x_26), (Fs), (G2), (Gs), (NF)) -> u'12'2(reduce'ii'in((2+G2+Gs+Fs), (NF))) :|: NF>=0 && G2>=0 && Gs>=0 && Fs>=0 && x_26==1
+u'12'2((x_27)) -> 1 :|: x_27==1
+reduce'ii'in((x_28), (NF)) -> u'13'1(reduce'ii'in((2+Gs+Fs+G1), (NF))) :|: NF>=0 && Gs>=0 && Fs>=0 && G1>=0 && x_28==3+Gs+Fs+G1 && x_28>0
+u'13'1((x_29)) -> 1 :|: x_29==1
+reduce'ii'in((x_30), (x_31)) -> u'14'1(reduce'ii'in((2+Gs), (3+Right+V+Left))) :|: Right>=0 && Gs>=0 && V>=0 && Left>=0 && x_30==4+Gs+V && x_30>0 && x_31==1+Right+Left && x_31>0
+u'14'1((x_32)) -> 1 :|: x_32==1
+reduce'ii'in((x_33), (x_34)) -> u'15'1(intersect'ii'in((F1), (F2))) :|: F2>=0 && F1>=0 && x_33==3 && x_34==1+F2+F1 && x_34>0
+u'15'1((x_35)) -> 1 :|: x_35==1
+tautology'i'in((F)) -> u'16'1(reduce'ii'in((4+F), (3))) :|: F>=0
+u'16'1((x_36)) -> 1 :|: x_36==1
+)

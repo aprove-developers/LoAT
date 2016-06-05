@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR l n u v x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+nthtail((n), (l)) -> cond(ge((n), length((l))), (n), (l)) :|: l>=0 && n>=0
+cond((x_0), (n), (l)) -> l :|: l>=0 && n>=0 && x_0==1
+cond((x_1), (n), (l)) -> tail(nthtail((1+n), (l))) :|: l>=0 && n>=0 && x_1==0
+tail((x_2)) -> 1 :|: x_2==1
+tail((x_3)) -> l :|: l>=0 && x>=0 && x_3==1+l+x && x_3>0
+length((x_4)) -> 0 :|: x_4==1
+length((x_5)) -> (1) + length((l)) :|: l>=0 && x>=0 && x_5==1+l+x && x_5>0
+ge((u), (x_6)) -> 1 :|: u>=0 && x_6==0
+ge((x_7), (x_8)) -> 0 :|: v>=0 && x_7==0 && x_8==1+v && x_8>0
+ge((x_9), (x_10)) -> ge((u), (v)) :|: u>=0 && v>=0 && x_9==1+u && x_9>0 && x_10==1+v && x_10>0
+)

@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1 x_2 x_3)
+(RULES
+iwastimes((x), (x_0)) -> ((1) + iwastimes((x), (y))) + iwastimes((x), (z)) :|: z>=0 && x>=0 && y>=0 && x_0==1+z+y && x_0>0
+iwastimes((x_1), (z)) -> ((1) + iwastimes((x), (z))) + iwastimes((y), (z)) :|: z>=0 && x>=0 && y>=0 && x_1==1+x+y && x_1>0
+iwastimes((x), (x_2)) -> x :|: x>=0 && x_2==1
+iwastimes((x_3), (y)) -> y :|: y>=0 && x_3==1
+)

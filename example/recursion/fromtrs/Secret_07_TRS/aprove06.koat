@@ -1,0 +1,28 @@
+(GOAL COMPLEXITY)
+(VAR x xs y ys z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21)
+(RULES
+le((x_0), (x_1)) -> 0 :|: x>=0 && x_0==1+x && x_0>0 && x_1==0
+le((x_2), (y)) -> 1 :|: y>=0 && x_2==0
+le((x_3), (x_4)) -> le((x), (y)) :|: x>=0 && y>=0 && x_3==1+x && x_3>0 && x_4==1+y && x_4>0
+double((x_5)) -> 0 :|: x_5==0
+double((x_6)) -> (1) + ((1) + double((x))) :|: x>=0 && x_6==1+x && x_6>0
+log((x_7)) -> 1 :|: x_7==0
+log((x_8)) -> loop((1+x), (1), (0)) :|: x>=0 && x_8==1+x && x_8>0
+loop((x), (x_9), (z)) -> if(le((x), (1+y)), (x), (1+y), (z)) :|: x>=0 && z>=0 && y>=0 && x_9==1+y && x_9>0
+if((x_10), (x), (y), (z)) -> z :|: x>=0 && z>=0 && y>=0 && x_10==1
+if((x_11), (x), (y), (z)) -> loop((x), double((y)), (1+z)) :|: x>=0 && z>=0 && y>=0 && x_11==0
+maplog((xs)) -> mapIter((xs), (1)) :|: xs>=0
+mapIter((xs), (ys)) -> ifmap(isempty((xs)), (xs), (ys)) :|: ys>=0 && xs>=0
+ifmap((x_12), (xs), (ys)) -> ys :|: ys>=0 && xs>=0 && x_12==1
+ifmap((x_13), (xs), (ys)) -> mapIter(droplast((xs)), (((1) + log(last((xs)))) + (ys))) :|: ys>=0 && xs>=0 && x_13==0
+isempty((x_14)) -> 1 :|: x_14==1
+isempty((x_15)) -> 0 :|: x>=0 && xs>=0 && x_15==1+x+xs && x_15>0
+last((x_16)) -> 1 :|: x_16==1
+last((x_17)) -> x :|: x>=0 && x_17==2+x && x_17>0
+last((x_18)) -> last((1+xs+y)) :|: x>=0 && xs>=0 && y>=0 && x_18==2+x+xs+y && x_18>0
+droplast((x_19)) -> 1 :|: x_19==1
+droplast((x_20)) -> 1 :|: x>=0 && x_20==2+x && x_20>0
+droplast((x_21)) -> (1+x) + droplast((1+xs+y)) :|: x>=0 && xs>=0 && y>=0 && x_21==2+x+xs+y && x_21>0
+a -> 1
+a -> 1
+)

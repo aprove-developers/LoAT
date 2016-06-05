@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+half((x_0)) -> 0 :|: x_0==0
+half((x_1)) -> 0 :|: x_1==1
+half((x_2)) -> (1) + half((x)) :|: x>=0 && x_2==2+x && x_2>0
+lastbit((x_3)) -> 0 :|: x_3==0
+lastbit((x_4)) -> 1 :|: x_4==1
+lastbit((x_5)) -> lastbit((x)) :|: x>=0 && x_5==2+x && x_5>0
+conv((x_6)) -> 2 :|: x_6==0
+conv((x_7)) -> ((1) + conv(half((1+x)))) + lastbit((1+x)) :|: x>=0 && x_7==1+x && x_7>0
+)

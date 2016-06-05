@@ -1,0 +1,16 @@
+(GOAL COMPLEXITY)
+(VAR n x x_ xs xs_ x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+dec((x_0)) -> 1 :|: x_0==3
+dec((x_1)) -> dec((1+xs+x)) :|: xs>=0 && x>=0 && x_1==3+xs+x && x_1>0
+dec((x_2)) -> dec((1)) :|: xs>=0 && x>=0 && x_2==3+xs+x && x_2>0
+dec((x_3)) -> dec((1+xs+x)) :|: x_>=0 && xs>=0 && xs_>=0 && x>=0 && x_3==3+x_+xs+xs_+x && x_3>0
+isNilNil((x_4)) -> 1 :|: x_4==3
+isNilNil((x_5)) -> 1 :|: xs>=0 && x>=0 && x_5==3+xs+x && x_5>0
+isNilNil((x_6)) -> 1 :|: xs>=0 && x>=0 && x_6==3+xs+x && x_6>0
+isNilNil((x_7)) -> 1 :|: x_>=0 && xs>=0 && xs_>=0 && x>=0 && x_7==3+x_+xs+xs_+x && x_7>0
+nestdec((x_8)) -> 35 :|: x_8==1
+nestdec((x_9)) -> nestdec(dec((1+xs+x))) :|: xs>=0 && x>=0 && x_9==1+xs+x && x_9>0
+number17((n)) -> 35 :|: n>=0
+goal((x)) -> nestdec((x)) :|: x>=0
+)

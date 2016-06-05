@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR x xs xs_ ys x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+addlist((x_0), (x_1)) -> (2+x) + addlist((xs_), (xs)) :|: x>=0 && xs>=0 && xs_>=0 && x_0==1+x+xs_ && x_0>0 && x_1==2+xs && x_1>0
+addlist((x_2), (x_3)) -> (2+x) + addlist((xs_), (xs)) :|: x>=0 && xs>=0 && xs_>=0 && x_2==2+xs_ && x_2>0 && x_3==1+x+xs && x_3>0
+addlist((x_4), (ys)) -> 1 :|: ys>=0 && x_4==1
+notEmpty((x_5)) -> 1 :|: x>=0 && xs>=0 && x_5==1+x+xs && x_5>0
+notEmpty((x_6)) -> 1 :|: x_6==1
+goal((xs), (ys)) -> addlist((xs), (ys)) :|: ys>=0 && xs>=0
+)

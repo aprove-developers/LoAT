@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR a k ls x x_0 x_1)
+(RULES
+rev((ls)) -> r1((ls), (1)) :|: ls>=0
+r1((x_0), (a)) -> a :|: a>=0 && x_0==1
+r1((x_1), (a)) -> r1((k), (1+x+a)) :|: x>=0 && a>=0 && k>=0 && x_1==1+x+k && x_1>0
+)

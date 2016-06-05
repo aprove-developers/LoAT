@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR X Y Z x)
+(RULES
+h((X), (Z)) -> f((X), (1+X), (Z)) :|: X>=0 && Z>=0
+f((X), (Y), (x)) -> h((0), (1+X+Y)) :|: X>=0 && Y>=0 && x==1+X+Y && x>0
+)

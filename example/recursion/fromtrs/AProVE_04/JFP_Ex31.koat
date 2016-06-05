@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+active((x_0)) -> 2+3*x :|: x>=0 && x_0==3+x && x_0>0
+active((x_1)) -> (1+x+y) + active((z)) :|: z>=0 && x>=0 && y>=0 && x_1==1+z+x+y && x_1>0
+active((x_2)) -> 2 :|: x_2==1
+active((x_3)) -> 2 :|: x_3==1
+proper((x_4)) -> 2 :|: x_4==1
+proper((x_5)) -> 2 :|: x_5==1
+proper((x_6)) -> 2 :|: x_6==1
+proper((x_7)) -> (((1) + proper((x))) + proper((y))) + proper((z)) :|: z>=0 && x>=0 && y>=0 && x_7==1+z+x+y && x_7>0
+top((x_8)) -> top(proper((x))) :|: x>=0 && x_8==1+x && x_8>0
+top((x_9)) -> top(active((x))) :|: x>=0 && x_9==1+x && x_9>0
+)

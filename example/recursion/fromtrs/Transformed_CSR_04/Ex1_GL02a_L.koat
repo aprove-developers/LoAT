@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR X x x_0 x_1 x_2 x_3)
+(RULES
+eq -> 1
+eq -> eq
+eq -> 0
+inf((X)) -> 1 :|: X>=0
+take((x), (X)) -> 1 :|: X>=0 && x==0
+take((x_0), (x_1)) -> 1 :|: x_0==1 && x_1==1
+length((x_2)) -> 0 :|: x_2==1
+length((x_3)) -> 1 :|: x_3==1
+)

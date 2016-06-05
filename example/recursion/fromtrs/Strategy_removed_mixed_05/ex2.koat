@@ -1,0 +1,5 @@
+(GOAL COMPLEXITY)
+(VAR x y z)
+(RULES
+inf((x)) -> (1+x) + inf((1+x)) :|: x>=0
+)

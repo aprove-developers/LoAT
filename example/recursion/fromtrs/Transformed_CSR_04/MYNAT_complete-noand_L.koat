@@ -1,0 +1,48 @@
+(GOAL COMPLEXITY)
+(VAR M N x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34)
+(RULES
+U104((x)) -> plus(x((N), (M)), (N)) :|: M>=0 && N>=0 && x==1
+U72((x_0)) -> N :|: N>=0 && x_0==1
+U84((x_1)) -> (1) + plus((N), (M)) :|: M>=0 && N>=0 && x_1==1
+U101((x_2)) -> U102(isNatKind) :|: x_2==1
+U102((x_3)) -> U103(isNat) :|: x_3==1
+U103((x_4)) -> U104(isNatKind) :|: x_4==1
+U11((x_5)) -> U12(isNatKind) :|: x_5==1
+U12((x_6)) -> U13(isNatKind) :|: x_6==1
+U13((x_7)) -> U14(isNatKind) :|: x_7==1
+U14((x_8)) -> U15(isNat) :|: x_8==1
+U15((x_9)) -> U16(isNat) :|: x_9==1
+U16((x_10)) -> 1 :|: x_10==1
+U21((x_11)) -> U22(isNatKind) :|: x_11==1
+U22((x_12)) -> U23(isNat) :|: x_12==1
+U23((x_13)) -> 1 :|: x_13==1
+U31((x_14)) -> U32(isNatKind) :|: x_14==1
+U32((x_15)) -> U33(isNatKind) :|: x_15==1
+U33((x_16)) -> U34(isNatKind) :|: x_16==1
+U34((x_17)) -> U35(isNat) :|: x_17==1
+U35((x_18)) -> U36(isNat) :|: x_18==1
+U36((x_19)) -> 1 :|: x_19==1
+U41((x_20)) -> U42(isNatKind) :|: x_20==1
+U42((x_21)) -> 1 :|: x_21==1
+U51((x_22)) -> 1 :|: x_22==1
+U61((x_23)) -> U62(isNatKind) :|: x_23==1
+U62((x_24)) -> 1 :|: x_24==1
+U71((x_25)) -> U72(isNatKind) :|: x_25==1
+U81((x_26)) -> U82(isNatKind) :|: x_26==1
+U82((x_27)) -> U83(isNat) :|: x_27==1
+U83((x_28)) -> U84(isNatKind) :|: x_28==1
+U91((x_29)) -> U92(isNatKind) :|: x_29==1
+U92((x_30)) -> 0 :|: x_30==1
+isNat -> 1
+isNat -> U11(isNatKind)
+isNat -> U21(isNatKind)
+isNat -> U31(isNatKind)
+isNatKind -> 1
+isNatKind -> U41(isNatKind)
+isNatKind -> U51(isNatKind)
+isNatKind -> U61(isNatKind)
+plus((N), (x_31)) -> U71(isNat) :|: N>=0 && x_31==0
+plus((N), (x_32)) -> U81(isNat) :|: M>=0 && N>=0 && x_32==1+M && x_32>0
+x((N), (x_33)) -> U91(isNat) :|: N>=0 && x_33==0
+x((N), (x_34)) -> U101(isNat) :|: M>=0 && N>=0 && x_34==1+M && x_34>0
+)

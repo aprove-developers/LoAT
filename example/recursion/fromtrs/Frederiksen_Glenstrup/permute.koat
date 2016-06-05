@@ -1,0 +1,13 @@
+(GOAL COMPLEXITY)
+(VAR rest revprefix x x_ xs x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+select((x_), (revprefix), (x_0)) -> mapconsapp((x_), permute(revapp((revprefix), (1+xs+x))), select((x), (1+x_+revprefix), (xs))) :|: x_>=0 && xs>=0 && revprefix>=0 && x>=0 && x_0==1+xs+x && x_0>0
+revapp((x_1), (rest)) -> revapp((xs), (1+rest+x)) :|: rest>=0 && xs>=0 && x>=0 && x_1==1+xs+x && x_1>0
+permute((x_2)) -> select((x), (1), (xs)) :|: xs>=0 && x>=0 && x_2==1+xs+x && x_2>0
+mapconsapp((x_), (x_3), (rest)) -> (2+x_+x) + mapconsapp((x_), (xs), (rest)) :|: x_>=0 && rest>=0 && xs>=0 && x>=0 && x_3==1+xs+x && x_3>0
+select((x), (revprefix), (x_4)) -> mapconsapp((x), permute(revapp((revprefix), (1))), (1)) :|: revprefix>=0 && x>=0 && x_4==1
+revapp((x_5), (rest)) -> rest :|: rest>=0 && x_5==1
+permute((x_6)) -> 3 :|: x_6==1
+mapconsapp((x), (x_7), (rest)) -> rest :|: rest>=0 && x>=0 && x_7==1
+goal((xs)) -> permute((xs)) :|: xs>=0
+)

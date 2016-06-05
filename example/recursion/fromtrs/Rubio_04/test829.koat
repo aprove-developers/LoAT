@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0)
+(RULES
+f((x)) -> f((2+X+Y)) :|: X>=0 && Y>=0 && x==2+X+Y && x>0
+g((x_0)) -> f((2+X+Y)) :|: X>=0 && Y>=0 && x_0==2+X+Y && x_0>0
+)

@@ -1,0 +1,5 @@
+(GOAL COMPLEXITY)
+(VAR a s t u x)
+(RULES
+subst((a), (x)) -> a :|: a>=0 && x==1
+)

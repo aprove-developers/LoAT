@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR M N X x x_0 x_1 x_2 x_3 x_4)
+(RULES
+filter((x), (x_0), (M)) -> 1 :|: M>=0 && X>=0 && x==1+X && x>0 && x_0==0
+filter((x_1), (x_2), (M)) -> 1+X :|: M>=0 && N>=0 && X>=0 && x_1==1+X && x_1>0 && x_2==1+N && x_2>0
+sieve((x_3)) -> 1 :|: x_3==1
+sieve((x_4)) -> 2+N :|: N>=0 && x_4==2+N && x_4>0
+nats((N)) -> 1+N :|: N>=0
+zprimes -> sieve(nats((2)))
+)

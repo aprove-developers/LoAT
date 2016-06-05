@@ -1,0 +1,23 @@
+(GOAL COMPLEXITY)
+(VAR M N X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17)
+(RULES
+active((x)) -> 1+X :|: X>=0 && x==2+X && x>0
+active((x_0)) -> 1+N :|: N>=0 && x_0==1+N && x_0>0
+active((x_1)) -> 3+N+M :|: N>=0 && M>=0 && x_1==2+N+M && x_1>0
+active((x_2)) -> 1 :|: N>=0 && x_2==1+N && x_2>0
+active((x_3)) -> 3+2*N+M :|: N>=0 && M>=0 && x_3==2+N+M && x_3>0
+active((x_4)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_4==1+X2+X1 && x_4>0
+active((x_5)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_5==1+X2+X1 && x_5>0
+active((x_6)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_6==1+X2+X1 && x_6>0
+active((x_7)) -> (1) + active((X)) :|: X>=0 && x_7==1+X && x_7>0
+active((x_8)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_8==1+X2+X1 && x_8>0
+active((x_9)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_9==1+X2+X1 && x_9>0
+proper((x_10)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_10==1+X2+X1 && x_10>0
+proper((x_11)) -> 2 :|: x_11==1
+proper((x_12)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_12==1+X2+X1 && x_12>0
+proper((x_13)) -> 1 :|: x_13==0
+proper((x_14)) -> (1) + proper((X)) :|: X>=0 && x_14==1+X && x_14>0
+proper((x_15)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_15==1+X2+X1 && x_15>0
+top((x_16)) -> top(proper((X))) :|: X>=0 && x_16==1+X && x_16>0
+top((x_17)) -> top(active((X))) :|: X>=0 && x_17==1+X && x_17>0
+)

@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+sqr((x_0)) -> 0 :|: x_0==0
+sqr((x_1)) -> iwasplus(sqr((x)), ((1) + double((x)))) :|: x>=0 && x_1==1+x && x_1>0
+double((x_2)) -> 0 :|: x_2==0
+double((x_3)) -> (1) + ((1) + double((x))) :|: x>=0 && x_3==1+x && x_3>0
+iwasplus((x), (x_4)) -> x :|: x>=0 && x_4==0
+iwasplus((x), (x_5)) -> (1) + iwasplus((x), (y)) :|: y>=0 && x>=0 && x_5==1+y && x_5>0
+sqr((x_6)) -> (1) + iwasplus(sqr((x)), double((x))) :|: x>=0 && x_6==1+x && x_6>0
+)

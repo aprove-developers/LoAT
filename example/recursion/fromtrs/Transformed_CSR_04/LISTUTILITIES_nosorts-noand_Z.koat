@@ -1,0 +1,35 @@
+(GOAL COMPLEXITY)
+(VAR N X XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24)
+(RULES
+U11((x), (N), (XS)) -> U12((1), activate((N)), activate((XS))) :|: N>=0 && XS>=0 && x==1
+U12((x_0), (N), (XS)) -> snd(splitAt(activate((N)), activate((XS)))) :|: N>=0 && XS>=0 && x_0==1
+U21((x_1), (X)) -> U22((1), activate((X))) :|: X>=0 && x_1==1
+U22((x_2), (X)) -> activate((X)) :|: X>=0 && x_2==1
+U31((x_3), (N)) -> U32((1), activate((N))) :|: N>=0 && x_3==1
+U32((x_4), (N)) -> activate((N)) :|: N>=0 && x_4==1
+U41((x_5), (N), (XS)) -> U42((1), activate((N)), activate((XS))) :|: N>=0 && XS>=0 && x_5==1
+U42((x_6), (N), (XS)) -> head(afterNth(activate((N)), activate((XS)))) :|: N>=0 && XS>=0 && x_6==1
+U51((x_7), (Y)) -> U52((1), activate((Y))) :|: Y>=0 && x_7==1
+U52((x_8), (Y)) -> activate((Y)) :|: Y>=0 && x_8==1
+U61((x_9), (N), (X), (XS)) -> U62((1), activate((N)), activate((X)), activate((XS))) :|: N>=0 && X>=0 && XS>=0 && x_9==1
+U62((x_10), (N), (X), (XS)) -> U63((1), activate((N)), activate((X)), activate((XS))) :|: N>=0 && X>=0 && XS>=0 && x_10==1
+U63((x_11), (N), (X), (XS)) -> U64(splitAt(activate((N)), activate((XS))), activate((X))) :|: N>=0 && X>=0 && XS>=0 && x_11==1
+U64((x_12), (X)) -> ((1) + (((1) + activate((X))) + (YS))) + (ZS) :|: YS>=0 && X>=0 && ZS>=0 && x_12==1+YS+ZS && x_12>0
+U71((x_13), (XS)) -> U72((1), activate((XS))) :|: XS>=0 && x_13==1
+U72((x_14), (XS)) -> activate((XS)) :|: XS>=0 && x_14==1
+U81((x_15), (N), (XS)) -> U82((1), activate((N)), activate((XS))) :|: N>=0 && XS>=0 && x_15==1
+U82((x_16), (N), (XS)) -> fst(splitAt(activate((N)), activate((XS)))) :|: N>=0 && XS>=0 && x_16==1
+afterNth((N), (XS)) -> U11((1), (N), (XS)) :|: N>=0 && XS>=0
+fst((x_17)) -> U21((1), (X)) :|: Y>=0 && X>=0 && x_17==1+Y+X && x_17>0
+head((x_18)) -> U31((1), (N)) :|: N>=0 && XS>=0 && x_18==1+N+XS && x_18>0
+natsFrom((N)) -> 3+2*N :|: N>=0
+sel((N), (XS)) -> U41((1), (N), (XS)) :|: N>=0 && XS>=0
+snd((x_19)) -> U51((1), (Y)) :|: Y>=0 && X>=0 && x_19==1+Y+X && x_19>0
+splitAt((x_20), (XS)) -> 2+XS :|: XS>=0 && x_20==0
+splitAt((x_21), (x_22)) -> U61((1), (N), (X), activate((XS))) :|: N>=0 && X>=0 && XS>=0 && x_21==1+N && x_21>0 && x_22==1+X+XS && x_22>0
+tail((x_23)) -> U71((1), activate((XS))) :|: N>=0 && XS>=0 && x_23==1+N+XS && x_23>0
+take((N), (XS)) -> U81((1), (N), (XS)) :|: N>=0 && XS>=0
+natsFrom((X)) -> 1+X :|: X>=0
+activate((x_24)) -> natsFrom((X)) :|: X>=0 && x_24==1+X && x_24>0
+activate((X)) -> X :|: X>=0
+)

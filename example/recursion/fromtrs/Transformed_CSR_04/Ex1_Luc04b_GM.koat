@@ -1,0 +1,25 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 XS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+a__nats -> 3
+a__pairs -> 3
+a__odds -> a__incr(a__pairs)
+a__incr((x)) -> ((1) + ((1) + mark((X)))) + (1+XS) :|: XS>=0 && X>=0 && x==1+XS+X && x>0
+a__head((x_0)) -> mark((X)) :|: XS>=0 && X>=0 && x_0==1+XS+X && x_0>0
+a__tail((x_1)) -> mark((XS)) :|: XS>=0 && X>=0 && x_1==1+XS+X && x_1>0
+mark((x_2)) -> a__nats :|: x_2==1
+mark((x_3)) -> a__incr(mark((X))) :|: X>=0 && x_3==1+X && x_3>0
+mark((x_4)) -> a__pairs :|: x_4==1
+mark((x_5)) -> a__odds :|: x_5==1
+mark((x_6)) -> a__head(mark((X))) :|: X>=0 && x_6==1+X && x_6>0
+mark((x_7)) -> a__tail(mark((X))) :|: X>=0 && x_7==1+X && x_7>0
+mark((x_8)) -> ((1) + mark((X1))) + (X2) :|: X2>=0 && X1>=0 && x_8==1+X2+X1 && x_8>0
+mark((x_9)) -> 0 :|: x_9==0
+mark((x_10)) -> (1) + mark((X)) :|: X>=0 && x_10==1+X && x_10>0
+a__nats -> 1
+a__incr((X)) -> 1+X :|: X>=0
+a__pairs -> 1
+a__odds -> 1
+a__head((X)) -> 1+X :|: X>=0
+a__tail((X)) -> 1+X :|: X>=0
+)

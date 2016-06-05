@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x1 x16 x2 x24 x6 x x_0)
+(RULES
+foldliwashash3((x2), (x)) -> x2 :|: x2>=0 && x==1
+foldliwashash3((x16), (x_0)) -> foldliwashash3((1+x24+x16), (x6)) :|: x24>=0 && x6>=0 && x16>=0 && x_0==1+x24+x6 && x_0>0
+main((x1)) -> foldliwashash3((1), (x1)) :|: x1>=0
+)

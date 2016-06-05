@@ -1,0 +1,21 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N X x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+U11((x)) -> (1) + length((L)) :|: L>=0 && x==1
+U31((x_0)) -> 1+N :|: N>=0 && x_0==1
+and((x_1)) -> X :|: X>=0 && x_1==1
+zeros -> 1
+U21((x_2)) -> 1 :|: x_2==1
+isNat -> 1
+isNat -> isNatList
+isNat -> isNat
+isNatIList -> isNatList
+isNatIList -> 1
+isNatIList -> and(isNat)
+isNatList -> 1
+isNatList -> and(isNat)
+length((x_3)) -> 0 :|: x_3==1
+length((x_4)) -> U11(and(isNatList)) :|: N>=0 && x_4==1+N && x_4>0
+take((x_5), (QL)) -> U21(isNatIList) :|: QL>=0 && x_5==0
+take((x_6), (x_7)) -> U31(and(isNatIList)) :|: M>=0 && N>=0 && x_6==1+M && x_6>0 && x_7==1+N && x_7>0
+)

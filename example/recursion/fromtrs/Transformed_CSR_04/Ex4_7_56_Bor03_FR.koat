@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR N X XS x x_0 x_1 x_2 x_3)
+(RULES
+from((X)) -> 3+2*X :|: X>=0
+after((x), (XS)) -> XS :|: XS>=0 && x==0
+after((x_0), (x_1)) -> after((N), activate((XS))) :|: N>=0 && X>=0 && XS>=0 && x_0==1+N && x_0>0 && x_1==1+X+XS && x_1>0
+from((X)) -> 1+X :|: X>=0
+activate((x_2)) -> from(activate((X))) :|: X>=0 && x_2==1+X && x_2>0
+activate((x_3)) -> (1) + activate((X)) :|: X>=0 && x_3==1+X && x_3>0
+activate((X)) -> X :|: X>=0
+)

@@ -142,7 +142,8 @@ public:
     Expression evaluateFunction(const FunctionDefinition &funDef,
                                 Expression *addToCost,
                                 ExpressionVector *addToGuard) const;
-    Expression abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const;
+    Expression abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                            const std::map<FunctionSymbolIndex,int> &specialCases) const;
 
 
     GiNaC::ex toGiNaC(bool subFunSyms = false) const;
@@ -264,7 +265,8 @@ public:
     virtual std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression *addToCost,
                                                    ExpressionVector *addToGuard) const = 0;
-    virtual std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const;
+    virtual std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const;
     virtual std::shared_ptr<Term> substitute(const Substitution &sub) const = 0;
     virtual std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const = 0;
 
@@ -325,7 +327,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -353,7 +356,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -381,7 +385,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -409,7 +414,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -437,7 +443,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -466,7 +473,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 
@@ -500,7 +508,8 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
-    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                               const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
 

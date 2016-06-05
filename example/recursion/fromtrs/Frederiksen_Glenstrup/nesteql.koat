@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR n x xs x_0 x_1 x_2 x_3)
+(RULES
+nesteql((x_0)) -> 35 :|: x_0==1
+nesteql((x_1)) -> nesteql(eql((1+xs+x))) :|: xs>=0 && x>=0 && x_1==1+xs+x && x_1>0
+eql((x_2)) -> 1 :|: x_2==1
+eql((x_3)) -> eql((1+xs+x)) :|: xs>=0 && x>=0 && x_3==1+xs+x && x_3>0
+number17((n)) -> 35 :|: n>=0
+goal((x)) -> nesteql((x)) :|: x>=0
+)

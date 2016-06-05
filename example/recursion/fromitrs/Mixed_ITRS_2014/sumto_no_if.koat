@@ -1,6 +1,6 @@
 (GOAL COMPLEXITY)
 (VAR x y)
 (RULES
-sumto((x), (y)) -> 0 :|: x>=0 && y>=0 && x>y
-sumto((x), (y)) -> (x) + sumto((1+x), (y)) :|: x>=0 && y>=0 && y>=x
+sumto((x), (y)) -> 0 :|: y>=0 && x>=0 && x>y
+sumto((x), (y)) -> (x) + sumto((1+x), (y)) :|: y>=0 && x>=0 && y>=x
 )

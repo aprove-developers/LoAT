@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR L N X x x_0 x_1 x_2 x_3)
+(RULES
+zeros -> 2
+U11((x), (L)) -> U12((1), activate((L))) :|: L>=0 && x==1
+U12((x_0), (L)) -> (1) + length(activate((L))) :|: L>=0 && x_0==1
+length((x_1)) -> 0 :|: x_1==1
+length((x_2)) -> U11((1), activate((L))) :|: N>=0 && L>=0 && x_2==1+N+L && x_2>0
+zeros -> 1
+activate((x_3)) -> zeros :|: x_3==1
+activate((X)) -> X :|: X>=0
+)

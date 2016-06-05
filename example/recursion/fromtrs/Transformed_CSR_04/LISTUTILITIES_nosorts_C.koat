@@ -1,0 +1,57 @@
+(GOAL COMPLEXITY)
+(VAR N X X1 X2 X3 X4 XS Y YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48 x_49 x_50 x_51)
+(RULES
+active((x)) -> 3+XS+N+X :|: XS>=0 && N>=0 && X>=0 && x==2+XS+N+X && x>0
+active((x_0)) -> 3+X+YS+ZS :|: X>=0 && YS>=0 && ZS>=0 && x_0==2+X+YS+ZS && x_0>0
+active((x_1)) -> 3+XS+N :|: XS>=0 && N>=0 && x_1==1+XS+N && x_1>0
+active((x_2)) -> 1+X :|: X>=0 && x_2==2+X && x_2>0
+active((x_3)) -> 1+X :|: Y>=0 && X>=0 && x_3==2+Y+X && x_3>0
+active((x_4)) -> 1+N :|: XS>=0 && N>=0 && x_4==2+XS+N && x_4>0
+active((x_5)) -> 4+2*N :|: N>=0 && x_5==1+N && x_5>0
+active((x_6)) -> 3+XS+N :|: XS>=0 && N>=0 && x_6==1+XS+N && x_6>0
+active((x_7)) -> 1+Y :|: Y>=0 && X>=0 && x_7==2+Y+X && x_7>0
+active((x_8)) -> 3+XS :|: XS>=0 && x_8==1+XS && x_8>0
+active((x_9)) -> 3+XS+N+X :|: XS>=0 && N>=0 && X>=0 && x_9==3+XS+N+X && x_9>0
+active((x_10)) -> 1+XS :|: XS>=0 && N>=0 && x_10==2+XS+N && x_10>0
+active((x_11)) -> 3+XS+N :|: XS>=0 && N>=0 && x_11==1+XS+N && x_11>0
+active((x_12)) -> ((((1) + active((X1))) + (X2)) + (X3)) + (X4) :|: X2>=0 && X3>=0 && X4>=0 && X1>=0 && x_12==1+X2+X3+X4+X1 && x_12>0
+active((x_13)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_13==1+X2+X1 && x_13>0
+active((x_14)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_14==1+X2+X1 && x_14>0
+active((x_15)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_15==1+X2+X1 && x_15>0
+active((x_16)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_16==1+X2+X1 && x_16>0
+active((x_17)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_17==1+X2+X1 && x_17>0
+active((x_18)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_18==1+X2+X1 && x_18>0
+active((x_19)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_19==1+X2+X1 && x_19>0
+active((x_20)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_20==1+X2+X1 && x_20>0
+active((x_21)) -> (1) + active((X)) :|: X>=0 && x_21==1+X && x_21>0
+active((x_22)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_22==1+X2+X1 && x_22>0
+active((x_23)) -> (1) + active((X)) :|: X>=0 && x_23==1+X && x_23>0
+active((x_24)) -> (1) + active((X)) :|: X>=0 && x_24==1+X && x_24>0
+active((x_25)) -> (1) + active((X)) :|: X>=0 && x_25==1+X && x_25>0
+active((x_26)) -> (1) + active((X)) :|: X>=0 && x_26==1+X && x_26>0
+active((x_27)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_27==1+X2+X1 && x_27>0
+active((x_28)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_28==1+X2+X1 && x_28>0
+active((x_29)) -> (1) + active((X)) :|: X>=0 && x_29==1+X && x_29>0
+active((x_30)) -> ((1) + active((X1))) + (X2) :|: X2>=0 && X1>=0 && x_30==1+X2+X1 && x_30>0
+active((x_31)) -> (1+X1) + active((X2)) :|: X2>=0 && X1>=0 && x_31==1+X2+X1 && x_31>0
+proper((x_32)) -> ((((1) + proper((X1))) + proper((X2))) + proper((X3))) + proper((X4)) :|: X2>=0 && X3>=0 && X4>=0 && X1>=0 && x_32==1+X2+X3+X4+X1 && x_32>0
+proper((x_33)) -> 2 :|: x_33==1
+proper((x_34)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_34==1+X2+X1 && x_34>0
+proper((x_35)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_35==1+X2+X1 && x_35>0
+proper((x_36)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_36==1+X2+X1 && x_36>0
+proper((x_37)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_37==1+X2+X1 && x_37>0
+proper((x_38)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_38==1+X2+X1 && x_38>0
+proper((x_39)) -> (1) + proper((X)) :|: X>=0 && x_39==1+X && x_39>0
+proper((x_40)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_40==1+X2+X1 && x_40>0
+proper((x_41)) -> (1) + proper((X)) :|: X>=0 && x_41==1+X && x_41>0
+proper((x_42)) -> (1) + proper((X)) :|: X>=0 && x_42==1+X && x_42>0
+proper((x_43)) -> (1) + proper((X)) :|: X>=0 && x_43==1+X && x_43>0
+proper((x_44)) -> (1) + proper((X)) :|: X>=0 && x_44==1+X && x_44>0
+proper((x_45)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_45==1+X2+X1 && x_45>0
+proper((x_46)) -> 1 :|: x_46==0
+proper((x_47)) -> 2 :|: x_47==1
+proper((x_48)) -> (1) + proper((X)) :|: X>=0 && x_48==1+X && x_48>0
+proper((x_49)) -> ((1) + proper((X1))) + proper((X2)) :|: X2>=0 && X1>=0 && x_49==1+X2+X1 && x_49>0
+top((x_50)) -> top(proper((X))) :|: X>=0 && x_50==1+X && x_50>0
+top((x_51)) -> top(active((X))) :|: X>=0 && x_51==1+X && x_51>0
+)

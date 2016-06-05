@@ -1,0 +1,36 @@
+(GOAL COMPLEXITY)
+(VAR L N V V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21)
+(RULES
+a__zeros -> 2
+a__U11((x), (L)) -> (1) + a__length(mark((L))) :|: L>=0 && x==1
+a__and((x_0), (X)) -> mark((X)) :|: X>=0 && x_0==1
+a__isNat((x_1)) -> 1 :|: x_1==0
+a__isNat((x_2)) -> a__isNatList((V1)) :|: V1>=0 && x_2==1+V1 && x_2>0
+a__isNat((x_3)) -> a__isNat((V1)) :|: V1>=0 && x_3==1+V1 && x_3>0
+a__isNatIList((V)) -> a__isNatList((V)) :|: V>=0
+a__isNatIList((x_4)) -> 1 :|: x_4==1
+a__isNatIList((x_5)) -> a__and(a__isNat((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_5==1+V1+V2 && x_5>0
+a__isNatList((x_6)) -> 1 :|: x_6==1
+a__isNatList((x_7)) -> a__and(a__isNat((V1)), (1+V2)) :|: V1>=0 && V2>=0 && x_7==1+V1+V2 && x_7>0
+a__length((x_8)) -> 0 :|: x_8==1
+a__length((x_9)) -> a__U11(a__and(a__isNatList((L)), (1+N)), (L)) :|: L>=0 && N>=0 && x_9==1+L+N && x_9>0
+mark((x_10)) -> a__zeros :|: x_10==1
+mark((x_11)) -> a__U11(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_11==1+X1+X2 && x_11>0
+mark((x_12)) -> a__length(mark((X))) :|: X>=0 && x_12==1+X && x_12>0
+mark((x_13)) -> a__and(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_13==1+X1+X2 && x_13>0
+mark((x_14)) -> a__isNat((X)) :|: X>=0 && x_14==1+X && x_14>0
+mark((x_15)) -> a__isNatList((X)) :|: X>=0 && x_15==1+X && x_15>0
+mark((x_16)) -> a__isNatIList((X)) :|: X>=0 && x_16==1+X && x_16>0
+mark((x_17)) -> ((1) + mark((X1))) + (X2) :|: X1>=0 && X2>=0 && x_17==1+X1+X2 && x_17>0
+mark((x_18)) -> 0 :|: x_18==0
+mark((x_19)) -> 1 :|: x_19==1
+mark((x_20)) -> (1) + mark((X)) :|: X>=0 && x_20==1+X && x_20>0
+mark((x_21)) -> 1 :|: x_21==1
+a__zeros -> 1
+a__U11((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__length((X)) -> 1+X :|: X>=0
+a__and((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__isNat((X)) -> 1+X :|: X>=0
+a__isNatList((X)) -> 1+X :|: X>=0
+a__isNatIList((X)) -> 1+X :|: X>=0
+)

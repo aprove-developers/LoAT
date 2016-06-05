@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8)
+(RULES
+half((x_0)) -> 0 :|: x_0==0
+half((x_1)) -> 0 :|: x_1==1
+half((x_2)) -> (1) + half((x)) :|: x>=0 && x_2==2+x && x_2>0
+iwasminus((x), (x_3)) -> x :|: x>=0 && x_3==0
+iwasminus((x_4), (x_5)) -> iwasminus((x), (y)) :|: x>=0 && y>=0 && x_4==1+x && x_4>0 && x_5==1+y && x_5>0
+if((x_6), (y), (z)) -> y :|: z>=0 && y>=0 && x_6==0
+if((x_7), (y), (z)) -> z :|: z>=0 && x>=0 && y>=0 && x_7==1+x && x_7>0
+half((x_8)) -> x :|: x>=0 && x_8==1+x && x_8>0
+)

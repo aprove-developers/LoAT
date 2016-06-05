@@ -1,0 +1,21 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N T x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+uTake2((x)) -> 1+N :|: N>=0 && x==1
+uLength((x_0)) -> (1) + length((L)) :|: L>=0 && x_0==1
+and((x_1), (T)) -> T :|: T>=0 && x_1==1
+isNatIList -> isNatList
+isNat -> 1
+isNat -> isNat
+isNat -> isNatList
+isNatIList -> 1
+isNatIList -> and(isNat, isNatIList)
+isNatList -> 1
+isNatList -> and(isNat, isNatList)
+isNatList -> and(isNat, isNatIList)
+zeros -> 1
+take((x_2), (QL)) -> uTake1(isNatIList) :|: QL>=0 && x_2==0
+uTake1((x_3)) -> 1 :|: x_3==1
+take((x_4), (x_5)) -> uTake2(and(isNat, and(isNat, isNatIList))) :|: M>=0 && N>=0 && x_4==1+M && x_4>0 && x_5==1+N && x_5>0
+length((x_6)) -> uLength(and(isNat, isNatList)) :|: N>=0 && x_6==1+N && x_6>0
+)

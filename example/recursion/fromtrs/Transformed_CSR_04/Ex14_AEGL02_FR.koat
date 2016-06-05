@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y x x_0 x_1 x_2 x_3 x_4)
+(RULES
+from((X)) -> cons((X), (2+X)) :|: X>=0
+length((x)) -> 0 :|: x==1
+length((x_0)) -> s(length1(activate((Y)))) :|: Y>=0 && X>=0 && x_0==1+Y+X && x_0>0
+length1((X)) -> length(activate((X))) :|: X>=0
+from((X)) -> 1+X :|: X>=0
+s((X)) -> 1+X :|: X>=0
+nil -> 1
+cons((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_1)) -> from(activate((X))) :|: X>=0 && x_1==1+X && x_1>0
+activate((x_2)) -> s(activate((X))) :|: X>=0 && x_2==1+X && x_2>0
+activate((x_3)) -> nil :|: x_3==1
+activate((x_4)) -> cons(activate((X1)), (X2)) :|: X1>=0 && X2>=0 && x_4==1+X1+X2 && x_4>0
+activate((X)) -> X :|: X>=0
+)

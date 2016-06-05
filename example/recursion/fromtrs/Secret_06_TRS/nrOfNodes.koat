@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(VAR b l m n r x y x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+(RULES
+isEmpty((x_0)) -> 1 :|: x_0==1
+isEmpty((x_1)) -> 0 :|: r>=0 && l>=0 && x_1==1+r+l && x_1>0
+left((x_2)) -> 1 :|: x_2==1
+left((x_3)) -> l :|: r>=0 && l>=0 && x_3==1+r+l && x_3>0
+right((x_4)) -> 1 :|: x_4==1
+right((x_5)) -> r :|: r>=0 && l>=0 && x_5==1+r+l && x_5>0
+inc((x_6)) -> 1 :|: x_6==0
+inc((x_7)) -> (1) + inc((x)) :|: x>=0 && x_7==1+x && x_7>0
+count((n), (x)) -> if(isEmpty((n)), isEmpty(left((n))), right((n)), (((1) + left(left((n)))) + (((1) + right(left((n)))) + right((n)))), (x), inc((x))) :|: x>=0 && n>=0
+if((x_8), (b), (n), (m), (x), (y)) -> x :|: x>=0 && m>=0 && y>=0 && n>=0 && b>=0 && x_8==1
+if((x_9), (x_10), (n), (m), (x), (y)) -> count((m), (x)) :|: x>=0 && m>=0 && y>=0 && n>=0 && x_9==0 && x_10==0
+if((x_11), (x_12), (n), (m), (x), (y)) -> count((n), (y)) :|: x>=0 && m>=0 && y>=0 && n>=0 && x_11==0 && x_12==1
+nrOfNodes((n)) -> count((n), (0)) :|: n>=0
+)

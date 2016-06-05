@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x xs y x_0 x_1)
+(RULES
+anchored((x_0), (y)) -> anchored((xs), (4+y)) :|: x>=0 && xs>=0 && y>=0 && x_0==1+x+xs && x_0>0
+anchored((x_1), (y)) -> y :|: y>=0 && x_1==1
+goal((x), (y)) -> anchored((x), (y)) :|: x>=0 && y>=0
+)

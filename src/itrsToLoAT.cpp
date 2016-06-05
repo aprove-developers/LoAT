@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <map>
 
 #include "expression.h"
 #include "itrs/itrs.h"
@@ -11,6 +12,7 @@ void writeRules(const ITRS &itrs,
     std::vector<FunctionSymbolIndex> allFunSyms;
     std::set<FunctionSymbolIndex> allFunSymsSet;
     for (const ITRSRule &rule : rules) {
+        std::cout << rule.lhs;
         rule.lhs.collectFunctionSymbols(allFunSyms);
         rule.lhs.collectFunctionSymbols(allFunSymsSet);
     }
@@ -106,6 +108,26 @@ int main(int argc, char *argv[]) {
     ITRS itrs = ITRS::loadFromFile(argv[1]);
     itrs.print(std::cout);
 
+    std::map<FunctionSymbolIndex,int> specialCases;
+    if (itrs.hasFunctionSymbol("TRUE")) {
+        specialCases.emplace(itrs.getFunctionSymbolIndex("TRUE"), 1);
+    }
+    if (itrs.hasFunctionSymbol("true")) {
+        specialCases.emplace(itrs.getFunctionSymbolIndex("true"), 1);
+    }
+    if (itrs.hasFunctionSymbol("FALSE")) {
+        specialCases.emplace(itrs.getFunctionSymbolIndex("FALSE"), 0);
+    }
+    if (itrs.hasFunctionSymbol("false")) {
+        specialCases.emplace(itrs.getFunctionSymbolIndex("false"), 0);
+    }
+    if (itrs.hasFunctionSymbol("0")) {
+        specialCases.emplace(itrs.getFunctionSymbolIndex("0"), 0);
+    }
+    if (itrs.hasFunctionSymbol("1")) {
+        specialCases.emplace(itrs.getFunctionSymbolIndex("1"), 1);
+    }
+
     std::set<FunctionSymbolIndex> toAbstract = std::move(findFunctionSymbolsToAbstract(itrs));
 
     std::vector<ITRSRule> modifiedRules;
@@ -134,7 +156,7 @@ int main(int argc, char *argv[]) {
         }
 
         // term size abstraction of the lhs
-        res.lhs = rule.lhs.abstractSize(toAbstract);
+        res.lhs = rule.lhs.abstractSize(toAbstract, specialCases);
         if (!res.lhs.info(TT::InfoFlag::FunctionSymbol)) {
             // the function symbol occured nested in a lhs
             continue;
@@ -144,7 +166,7 @@ int main(int argc, char *argv[]) {
         // move the expressions from the lhs to the guard
         std::vector<TT::Expression> argVariables;
         for (int i = 0; i < res.lhs.nops(); ++i) {
-            const TT::Expression &arg = res.lhs.op(i);
+            const TT::Expression &arg = res.lhs.op(i).ginacify();
 
             if (arg.info(TT::InfoFlag::Variable)) {
                 ExprSymbol ginacSymbol = GiNaC::ex_to<GiNaC::symbol>(res.lhs.op(i).toGiNaC());
@@ -157,8 +179,10 @@ int main(int argc, char *argv[]) {
 
                 res.guard.push_back((TT::Expression(ginacSymbol) == arg).ginacify());
 
-                // Make sure the abstracted term is positive
-                res.guard.push_back((TT::Expression(ginacSymbol) > 0).ginacify());
+                if (!arg.info(TT::InfoFlag::Number)) {
+                    // Make sure the abstracted term is positive
+                    res.guard.push_back((TT::Expression(ginacSymbol) > 0).ginacify());
+                }
             }
         }
 
@@ -168,7 +192,7 @@ int main(int argc, char *argv[]) {
                                  argVariables);
 
         // abstraction of the rhs
-        res.rhs = rule.rhs.abstractSize(toAbstract).ginacify();
+        res.rhs = rule.rhs.abstractSize(toAbstract, specialCases).ginacify();
 
         // copy the cost
         if (!rule.cost.hasNoFunctionSymbols()) {

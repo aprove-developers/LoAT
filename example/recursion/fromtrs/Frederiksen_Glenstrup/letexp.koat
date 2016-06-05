@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR x y)
+(RULES
+letexp((x), (y)) -> letexp((4+x), (y)) :|: x>=0 && y>=0
+goal((x), (y)) -> letexp((x), (y)) :|: x>=0 && y>=0
+)

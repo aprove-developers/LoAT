@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(VAR x xs y ys zs x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+isEmpty((x_0)) -> 1 :|: x_0==1
+isEmpty((x_1)) -> 0 :|: xs>=0 && x>=0 && x_1==1+xs+x && x_1>0
+last((x_2)) -> x :|: x>=0 && x_2==2+x && x_2>0
+last((x_3)) -> last((1+y+ys)) :|: y>=0 && ys>=0 && x>=0 && x_3==2+y+ys+x && x_3>0
+dropLast((x_4)) -> 1 :|: x_4==1
+dropLast((x_5)) -> 1 :|: x>=0 && x_5==2+x && x_5>0
+dropLast((x_6)) -> (1+x) + dropLast((1+y+ys)) :|: y>=0 && ys>=0 && x>=0 && x_6==2+y+ys+x && x_6>0
+append((x_7), (ys)) -> ys :|: ys>=0 && x_7==1
+append((x_8), (ys)) -> (1+x) + append((xs), (ys)) :|: xs>=0 && ys>=0 && x>=0 && x_8==1+xs+x && x_8>0
+reverse((xs)) -> rev((xs), (1)) :|: xs>=0
+rev((xs), (ys)) -> if(isEmpty((xs)), dropLast((xs)), append((ys), last((xs))), (ys)) :|: xs>=0 && ys>=0
+if((x_9), (xs), (ys), (zs)) -> zs :|: zs>=0 && xs>=0 && ys>=0 && x_9==1
+if((x_10), (xs), (ys), (zs)) -> rev((xs), (ys)) :|: zs>=0 && xs>=0 && ys>=0 && x_10==0
+)

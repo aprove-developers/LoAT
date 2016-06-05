@@ -1,0 +1,23 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13)
+(RULES
+a__zeros -> 2
+a__and((x), (X)) -> mark((X)) :|: X>=0 && x==1
+a__length((x_0)) -> 0 :|: x_0==1
+a__length((x_1)) -> (1) + a__length(mark((L))) :|: N>=0 && L>=0 && x_1==1+N+L && x_1>0
+a__take((x_2), (QL)) -> 1 :|: QL>=0 && x_2==0
+a__take((x_3), (x_4)) -> ((1) + mark((N))) + (1+QL+M) :|: N>=0 && QL>=0 && M>=0 && x_3==1+M && x_3>0 && x_4==1+N+QL && x_4>0
+mark((x_5)) -> a__zeros :|: x_5==1
+mark((x_6)) -> a__and(mark((X1)), (X2)) :|: X2>=0 && X1>=0 && x_6==1+X2+X1 && x_6>0
+mark((x_7)) -> a__length(mark((X))) :|: X>=0 && x_7==1+X && x_7>0
+mark((x_8)) -> a__take(mark((X1)), mark((X2))) :|: X2>=0 && X1>=0 && x_8==1+X2+X1 && x_8>0
+mark((x_9)) -> ((1) + mark((X1))) + (X2) :|: X2>=0 && X1>=0 && x_9==1+X2+X1 && x_9>0
+mark((x_10)) -> 0 :|: x_10==0
+mark((x_11)) -> 1 :|: x_11==1
+mark((x_12)) -> 1 :|: x_12==1
+mark((x_13)) -> (1) + mark((X)) :|: X>=0 && x_13==1+X && x_13>0
+a__zeros -> 1
+a__and((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+a__length((X)) -> 1+X :|: X>=0
+a__take((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+)

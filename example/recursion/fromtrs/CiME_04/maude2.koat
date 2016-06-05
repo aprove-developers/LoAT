@@ -1,0 +1,32 @@
+(GOAL COMPLEXITY)
+(VAR M N NzM NzN x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25)
+(RULES
+p((x)) -> N :|: N>=0 && x==1+N && x>0
+iwasplus((N), (x_0)) -> N :|: N>=0 && x_0==0
+iwasplus((x_1), (x_2)) -> (1) + ((1) + iwasplus((N), (M))) :|: M>=0 && N>=0 && x_1==1+N && x_1>0 && x_2==1+M && x_2>0
+iwastimes((N), (x_3)) -> 0 :|: N>=0 && x_3==0
+iwastimes((x_4), (x_5)) -> (1) + iwasplus((N), iwasplus((M), iwastimes((N), (M)))) :|: M>=0 && N>=0 && x_4==1+N && x_4>0 && x_5==1+M && x_5>0
+gt((x_6), (M)) -> 1 :|: M>=0 && x_6==0
+gt((NzN), (x_7)) -> u_4(is_NzNat((NzN))) :|: NzN>=0 && x_7==0
+u_4((x_8)) -> 1 :|: x_8==1
+is_NzNat((x_9)) -> 1 :|: x_9==0
+is_NzNat((x_10)) -> 1 :|: N>=0 && x_10==1+N && x_10>0
+gt((x_11), (x_12)) -> gt((N), (M)) :|: M>=0 && N>=0 && x_11==1+N && x_11>0 && x_12==1+M && x_12>0
+lt((N), (M)) -> gt((M), (N)) :|: M>=0 && N>=0
+d((x_13), (N)) -> N :|: N>=0 && x_13==0
+d((x_14), (x_15)) -> d((N), (M)) :|: M>=0 && N>=0 && x_14==1+N && x_14>0 && x_15==1+M && x_15>0
+quot((N), (NzM)) -> u_11(is_NzNat((NzM)), (N), (NzM)) :|: NzM>=0 && N>=0
+u_11((x_16), (N), (NzM)) -> u_1(gt((N), (NzM)), (N), (NzM)) :|: NzM>=0 && N>=0 && x_16==1
+u_1((x_17), (N), (NzM)) -> (1) + quot(d((N), (NzM)), (NzM)) :|: NzM>=0 && N>=0 && x_17==1
+quot((NzM), (NzM)) -> u_01(is_NzNat((NzM))) :|: NzM>=0
+u_01((x_18)) -> 1 :|: x_18==1
+quot((N), (NzM)) -> u_21(is_NzNat((NzM)), (NzM), (N)) :|: NzM>=0 && N>=0
+u_21((x_19), (NzM), (N)) -> u_2(gt((NzM), (N))) :|: NzM>=0 && N>=0 && x_19==1
+u_2((x_20)) -> 0 :|: x_20==1
+gcd((x_21), (N)) -> 0 :|: N>=0 && x_21==0
+gcd((NzM), (NzM)) -> u_02(is_NzNat((NzM)), (NzM)) :|: NzM>=0
+u_02((x_22), (NzM)) -> NzM :|: NzM>=0 && x_22==1
+gcd((NzN), (NzM)) -> u_31(is_NzNat((NzN)), is_NzNat((NzM)), (NzN), (NzM)) :|: NzM>=0 && NzN>=0
+u_31((x_23), (x_24), (NzN), (NzM)) -> u_3(gt((NzN), (NzM)), (NzN), (NzM)) :|: NzM>=0 && NzN>=0 && x_23==1 && x_24==1
+u_3((x_25), (NzN), (NzM)) -> gcd(d((NzN), (NzM)), (NzM)) :|: NzM>=0 && NzN>=0 && x_25==1
+)

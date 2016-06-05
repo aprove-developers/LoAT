@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR l x y z x_0 x_1 x_2 x_3)
+(RULES
+sum((x_0)) -> 0 :|: x_0==1
+sum((x_1)) -> (1+x) + sum((l)) :|: l>=0 && x>=0 && x_1==1+l+x && x_1>0
+prod((x_2)) -> 1 :|: x_2==1
+prod((x_3)) -> (1+x) + prod((l)) :|: l>=0 && x>=0 && x_3==1+l+x && x_3>0
+)

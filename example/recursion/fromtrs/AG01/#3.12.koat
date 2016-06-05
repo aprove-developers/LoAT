@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR n x y x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+app((x_0), (y)) -> y :|: y>=0 && x_0==1
+app((x_1), (y)) -> (1+n) + app((x), (y)) :|: n>=0 && x>=0 && y>=0 && x_1==1+n+x && x_1>0
+reverse((x_2)) -> 1 :|: x_2==1
+reverse((x_3)) -> app(reverse((x)), (2+n)) :|: n>=0 && x>=0 && x_3==1+n+x && x_3>0
+shuffle((x_4)) -> 1 :|: x_4==1
+shuffle((x_5)) -> (1+n) + shuffle(reverse((x))) :|: n>=0 && x>=0 && x_5==1+n+x && x_5>0
+)

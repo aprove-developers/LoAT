@@ -1,0 +1,46 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N T X X1 X2 X3 X4 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29)
+(RULES
+a__and((x), (T)) -> mark((T)) :|: T>=0 && x==1
+a__isNatIList((QL)) -> a__isNatList((QL)) :|: QL>=0
+a__isNat((x_0)) -> 1 :|: x_0==0
+a__isNat((x_1)) -> a__isNat((N)) :|: N>=0 && x_1==1+N && x_1>0
+a__isNat((x_2)) -> a__isNatList((L)) :|: L>=0 && x_2==1+L && x_2>0
+a__isNatIList((x_3)) -> 1 :|: x_3==1
+a__isNatIList((x_4)) -> a__and(a__isNat((N)), a__isNatIList((QL))) :|: N>=0 && QL>=0 && x_4==1+N+QL && x_4>0
+a__isNatList((x_5)) -> 1 :|: x_5==1
+a__isNatList((x_6)) -> a__and(a__isNat((N)), a__isNatList((L))) :|: L>=0 && N>=0 && x_6==1+L+N && x_6>0
+a__isNatList((x_7)) -> a__and(a__isNat((N)), a__isNatIList((QL))) :|: N>=0 && QL>=0 && x_7==1+N+QL && x_7>0
+a__zeros -> 2
+a__take((x_8), (QL)) -> a__uTake1(a__isNatIList((QL))) :|: QL>=0 && x_8==0
+a__uTake1((x_9)) -> 1 :|: x_9==1
+a__take((x_10), (x_11)) -> a__uTake2(a__and(a__isNat((M)), a__and(a__isNat((N)), a__isNatIList((QL)))), (M), (N), (QL)) :|: M>=0 && N>=0 && QL>=0 && x_10==1+M && x_10>0 && x_11==1+N+QL && x_11>0
+a__uTake2((x_12), (M), (N), (QL)) -> ((1) + mark((N))) + (1+M+QL) :|: M>=0 && N>=0 && QL>=0 && x_12==1
+a__length((x_13)) -> a__uLength(a__and(a__isNat((N)), a__isNatList((L))), (L)) :|: L>=0 && N>=0 && x_13==1+L+N && x_13>0
+a__uLength((x_14), (L)) -> (1) + a__length(mark((L))) :|: L>=0 && x_14==1
+mark((x_15)) -> a__and(mark((X1)), mark((X2))) :|: X2>=0 && X1>=0 && x_15==1+X2+X1 && x_15>0
+mark((x_16)) -> a__isNatIList((X)) :|: X>=0 && x_16==1+X && x_16>0
+mark((x_17)) -> a__isNatList((X)) :|: X>=0 && x_17==1+X && x_17>0
+mark((x_18)) -> a__isNat((X)) :|: X>=0 && x_18==1+X && x_18>0
+mark((x_19)) -> a__length(mark((X))) :|: X>=0 && x_19==1+X && x_19>0
+mark((x_20)) -> a__zeros :|: x_20==1
+mark((x_21)) -> a__take(mark((X1)), mark((X2))) :|: X2>=0 && X1>=0 && x_21==1+X2+X1 && x_21>0
+mark((x_22)) -> a__uTake1(mark((X))) :|: X>=0 && x_22==1+X && x_22>0
+mark((x_23)) -> a__uTake2(mark((X1)), (X2), (X3), (X4)) :|: X2>=0 && X3>=0 && X4>=0 && X1>=0 && x_23==1+X2+X3+X4+X1 && x_23>0
+mark((x_24)) -> a__uLength(mark((X1)), (X2)) :|: X2>=0 && X1>=0 && x_24==1+X2+X1 && x_24>0
+mark((x_25)) -> 1 :|: x_25==1
+mark((x_26)) -> 0 :|: x_26==0
+mark((x_27)) -> (1) + mark((X)) :|: X>=0 && x_27==1+X && x_27>0
+mark((x_28)) -> ((1) + mark((X1))) + (X2) :|: X2>=0 && X1>=0 && x_28==1+X2+X1 && x_28>0
+mark((x_29)) -> 1 :|: x_29==1
+a__and((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+a__isNatIList((X)) -> 1+X :|: X>=0
+a__isNatList((X)) -> 1+X :|: X>=0
+a__isNat((X)) -> 1+X :|: X>=0
+a__length((X)) -> 1+X :|: X>=0
+a__zeros -> 1
+a__take((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+a__uTake1((X)) -> 1+X :|: X>=0
+a__uTake2((X1), (X2), (X3), (X4)) -> 1+X2+X3+X4+X1 :|: X2>=0 && X3>=0 && X4>=0 && X1>=0
+a__uLength((X1), (X2)) -> 1+X2+X1 :|: X2>=0 && X1>=0
+)

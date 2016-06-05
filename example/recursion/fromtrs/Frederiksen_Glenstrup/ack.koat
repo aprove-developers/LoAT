@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR m n x x_ xs xs_ x_0 x_1 x_2 x_3 x_4)
+(RULES
+ack((x_0), (x_1)) -> ack((xs), (3)) :|: xs>=0 && x>=0 && x_0==1+xs+x && x_0>0 && x_1==1
+ack((x_2), (x_3)) -> ack((xs_), ack((1+x_+xs_), (xs))) :|: x_>=0 && xs>=0 && xs_>=0 && x>=0 && x_2==1+x_+xs_ && x_2>0 && x_3==1+xs+x && x_3>0
+ack((x_4), (n)) -> 4+n :|: n>=0 && x_4==1
+goal((m), (n)) -> ack((m), (n)) :|: m>=0 && n>=0
+)

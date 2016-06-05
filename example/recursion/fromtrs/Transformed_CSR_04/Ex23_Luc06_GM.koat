@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR X x x_0 x_1 x_2 x_3)
+(RULES
+a__f((x)) -> 5 :|: x==2
+mark((x_0)) -> a__f(mark((X))) :|: X>=0 && x_0==1+X && x_0>0
+mark((x_1)) -> 1 :|: x_1==1
+mark((x_2)) -> 1+X :|: X>=0 && x_2==1+X && x_2>0
+mark((x_3)) -> (1) + mark((X)) :|: X>=0 && x_3==1+X && x_3>0
+a__f((X)) -> 1+X :|: X>=0
+)

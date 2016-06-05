@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR X Y Z x x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+primes -> sieve(from((2)))
+from((X)) -> (1+X) + from((1+X)) :|: X>=0
+head((x)) -> X :|: X>=0 && Y>=0 && x==1+X+Y && x>0
+tail((x_0)) -> Y :|: X>=0 && Y>=0 && x_0==1+X+Y && x_0>0
+if((x_1), (X), (Y)) -> X :|: X>=0 && Y>=0 && x_1==1
+if((x_2), (X), (Y)) -> Y :|: X>=0 && Y>=0 && x_2==0
+filter((x_3), (x_4)) -> if((3+X+Y), filter((2+X), (Z)), ((1+Y) + filter((X), sieve((Y))))) :|: X>=0 && Y>=0 && Z>=0 && x_3==2+X && x_3>0 && x_4==1+Y+Z && x_4>0
+sieve((x_5)) -> (1+X) + filter((X), sieve((Y))) :|: X>=0 && Y>=0 && x_5==1+X+Y && x_5>0
+)

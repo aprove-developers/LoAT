@@ -1,0 +1,24 @@
+(GOAL COMPLEXITY)
+(VAR L N x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+U62((x)) -> (1) + length((L)) :|: L>=0 && x==1
+zeros -> 1
+U11((x_0)) -> 1 :|: x_0==1
+U21((x_1)) -> 1 :|: x_1==1
+U31((x_2)) -> 1 :|: x_2==1
+U41((x_3)) -> U42(isNatIList) :|: x_3==1
+U42((x_4)) -> 1 :|: x_4==1
+U51((x_5)) -> U52(isNatList) :|: x_5==1
+U52((x_6)) -> 1 :|: x_6==1
+U61((x_7)) -> U62(isNat) :|: x_7==1
+isNat -> 1
+isNat -> U11(isNatList)
+isNat -> U21(isNat)
+isNatIList -> U31(isNatList)
+isNatIList -> 1
+isNatIList -> U41(isNat)
+isNatList -> 1
+isNatList -> U51(isNat)
+length((x_8)) -> 0 :|: x_8==1
+length((x_9)) -> U61(isNatList) :|: N>=0 && x_9==1+N && x_9>0
+)

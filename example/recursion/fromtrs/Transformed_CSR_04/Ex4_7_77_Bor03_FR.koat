@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR X XS x x_0)
+(RULES
+zeros -> 2
+tail((x)) -> activate((XS)) :|: X>=0 && XS>=0 && x==1+X+XS && x>0
+zeros -> 1
+activate((x_0)) -> zeros :|: x_0==1
+activate((X)) -> X :|: X>=0
+)

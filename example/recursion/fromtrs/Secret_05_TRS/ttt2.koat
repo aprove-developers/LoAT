@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR x x_0 x_1)
+(RULES
+iwasplus((x_0), (x)) -> iwasplus(iwasplus((0), (1)), (x)) :|: x>=0 && x_0==1
+iwasplus((x_1), (x)) -> x :|: x>=0 && x_1==0
+)

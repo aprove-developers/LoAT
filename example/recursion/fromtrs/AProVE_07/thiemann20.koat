@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR sum x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+gt((x_0), (y)) -> 0 :|: y>=0 && x_0==0
+gt((x_1), (x_2)) -> 1 :|: x>=0 && x_1==1+x && x_1>0 && x_2==0
+gt((x_3), (x_4)) -> gt((x), (y)) :|: y>=0 && x>=0 && x_3==1+x && x_3>0 && x_4==1+y && x_4>0
+plus((x_5), (y)) -> y :|: y>=0 && x_5==0
+plus((x_6), (y)) -> (1) + plus((x), (y)) :|: y>=0 && x>=0 && x_6==1+x && x_6>0
+double((x_7)) -> 0 :|: x_7==0
+double((x_8)) -> (1) + ((1) + double((x))) :|: x>=0 && x_8==1+x && x_8>0
+average((x), (y)) -> aver(plus((x), (y)), (0)) :|: y>=0 && x>=0
+aver((sum), (z)) -> if(gt((sum), double((z))), (sum), (z)) :|: z>=0 && sum>=0
+if((x_9), (sum), (z)) -> aver((sum), (1+z)) :|: z>=0 && sum>=0 && x_9==1
+if((x_10), (sum), (z)) -> z :|: z>=0 && sum>=0 && x_10==0
+)

@@ -374,7 +374,6 @@ bool RecursionGraph::pruneTransitions() {
             const vector<TransIndex> &parallel = getTransFromTo(pre,node);
 
             set<TransIndex> keep;
-
             if (parallel.size() > PRUNE_MAX_PARALLEL_TRANSITIONS) {
                 priority_queue<TransCpx,std::vector<TransCpx>,decltype(comp)> queue(comp);
 
@@ -387,7 +386,9 @@ bool RecursionGraph::pruneTransitions() {
                     const RightHandSide &rhs = rightHandSides.at(rhsIndex);
 
                     if (!rhs.cost.hasNoFunctionSymbols()) {
-                        keep.insert(trans);
+                        if (keep.size() < PRUNE_MAX_PARALLEL_TRANSITIONS) {
+                            keep.insert(trans);
+                        }
                         continue;
                     }
                     Expression cost = rhs.cost.toGiNaC();
@@ -403,7 +404,9 @@ bool RecursionGraph::pruneTransitions() {
                         guard.push_back(ex.toGiNaC());
                     }
                     if (hasFunSymbol) {
-                        keep.insert(trans);
+                        if (keep.size() < PRUNE_MAX_PARALLEL_TRANSITIONS) {
+                            keep.insert(trans);
+                        }
                         continue;
                     }
 
@@ -415,6 +418,8 @@ bool RecursionGraph::pruneTransitions() {
                     keep.insert(get<0>(queue.top()));
                     queue.pop();
                 }
+
+                debugGraph("KEEP IS " << keep.size());
 
                 bool has_empty = false;
                 for (TransIndex trans : parallel) {
@@ -767,7 +772,7 @@ void RecursionGraph::addRule(const Rule &rule) {
     rhs.cost = rule.cost;
 
     NodeIndex src = (NodeIndex)rule.lhs;
-    std::set<NodeIndex> dsts = std::move(getSuccessorsOfExpression(rhs.term));
+    std::set<NodeIndex> dsts = std::move(getSuccessorsOfRhs(rhs));
 
     RightHandSideIndex rhsIndex = nextRightHandSide++;
     rightHandSides.emplace(rhsIndex, rhs);
@@ -807,7 +812,7 @@ RightHandSideIndex RecursionGraph::addRightHandSide(NodeIndex node, const RightH
     RightHandSideIndex rhsIndex = nextRightHandSide++;
     auto it = rightHandSides.emplace(rhsIndex, rhs).first;
 
-    for (NodeIndex to : getSuccessorsOfExpression(it->second.term)) {
+    for (NodeIndex to : getSuccessorsOfRhs(it->second)) {
         addTrans(node, to, rhsIndex);
     }
 
@@ -819,7 +824,7 @@ RightHandSideIndex RecursionGraph::addRightHandSide(NodeIndex node, const RightH
     RightHandSideIndex rhsIndex = nextRightHandSide++;
     auto it = rightHandSides.emplace(rhsIndex, rhs).first;
 
-    for (NodeIndex to : getSuccessorsOfExpression(it->second.term)) {
+    for (NodeIndex to : getSuccessorsOfRhs(it->second)) {
         addTrans(node, to, rhsIndex);
     }
 
@@ -863,8 +868,15 @@ void RecursionGraph::removeRightHandSide(NodeIndex node, RightHandSideIndex rhs)
 }
 
 
-std::set<NodeIndex> RecursionGraph::getSuccessorsOfExpression(const TT::Expression &ex) {
-    std::set<FunctionSymbolIndex> funSyms = std::move(ex.getFunctionSymbols());
+std::set<NodeIndex> RecursionGraph::getSuccessorsOfRhs(const RightHandSide &rhs) {
+    std::set<FunctionSymbolIndex> funSyms;
+
+    rhs.term.collectFunctionSymbols(funSyms);
+    rhs.cost.collectFunctionSymbols(funSyms);
+    for (const TT::Expression &ex : rhs.guard) {
+        ex.collectFunctionSymbols(funSyms);
+    }
+
     if (funSyms.empty()) {
         funSyms.insert(NULLNODE);
     }
@@ -878,17 +890,24 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
     const FunctionSymbol &funSymbol = itrs.getFunctionSymbol(funSymbolIndex);
     const TT::FunctionDefinition funDef(itrs, funSymbolIndex, followRhs.term, followRhs.cost, followRhs.guard);
 
+    debugGraph("About to chain " << rhs);
+    debugGraph("with " << itrs.getFunctionSymbolName(funSymbolIndex) << " -> " << followRhs);
+
     // perform rewriting on a copy of rhs
     RightHandSide rhsCopy(rhs);
-    // TODO restriction, function calls must appear in the term?
+
+    std::vector<TT::Expression> addToGuard;
     for (int i = 0; i < rhsCopy.guard.size(); ++i) {
            // the following call might add new elements to rhsCopy.guard
-           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction(funDef, nullptr, nullptr).ginacify();
+           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction(funDef, nullptr, &addToGuard).ginacify();
+    }
+    for (TT::Expression &ex : addToGuard) {
+        rhsCopy.guard.push_back(std::move(ex));
     }
     // the following calls might add new element to the guard
-    // that's why we already evaluated the guard
+    // that's why we have already evaluated the guard
     rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
-    rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, nullptr, nullptr).ginacify();
+    rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, nullptr, &rhsCopy.guard).ginacify();
 
 
 
@@ -944,6 +963,7 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
     } else {
         rhs.cost = std::move(rhsCopy.cost);
     }
+
     return true;
 }
 
@@ -1240,25 +1260,22 @@ bool RecursionGraph::chainSimpleLoops(NodeIndex node) {
         RightHandSideIndex simpleLoopRhsIndex = getTransData(simpleLoop);
         const RightHandSide &simpleLoopRhs = rightHandSides.at(simpleLoopRhsIndex);
 
+        for (std::pair<TransIndex,bool> &pair : transitions) {
+            RightHandSideIndex rhsIndex = getTransData(pair.first);
 
-        if (simpleLoopRhs.term.hasExactlyOneFunctionSymbol()) {
-            for (std::pair<TransIndex,bool> &pair : transitions) {
-                RightHandSideIndex rhsIndex = getTransData(pair.first);
-                RightHandSide rhsCopy = rightHandSides.at(rhsIndex);
+            RightHandSide rhsCopy = rightHandSides.at(rhsIndex);
+            if (chainRightHandSides(rhsCopy, node, simpleLoopRhs)) {
+                addRightHandSide(getTransSource(pair.first), rhsCopy);
+                Stats::add(Stats::ContractLinear);
+                pair.second = true;
 
-                if (chainRightHandSides(rhsCopy, node, simpleLoopRhs)) {
-                    addRightHandSide(getTransSource(pair.first), rhsCopy);
-                    Stats::add(Stats::ContractLinear);
-                    pair.second = true;
-
-                    changed = true;
-                }
-
+                changed = true;
             }
 
-            debugGraph("removing simple loop " << simpleLoop);
-            removeTrans(simpleLoop);
         }
+
+        debugGraph("removing rhs for simple loop " << simpleLoop);
+        removeRightHandSide(node, simpleLoopRhsIndex);
     }
 
     for (const std::pair<TransIndex,bool> &pair : transitions) {
@@ -1605,7 +1622,7 @@ bool RecursionGraph::removeConstLeavesAndUnreachable() {
             const RightHandSide &rhs = rightHandSides.at(rhsIndex);
 
             bool allLeaves = true;
-            std::set<NodeIndex> succs = std::move(getSuccessorsOfExpression(rhs.term));
+            std::set<NodeIndex> succs = std::move(getSuccessorsOfRhs(rhs));
             for (NodeIndex succ : succs) {
                 dfs_remove(succ);
 

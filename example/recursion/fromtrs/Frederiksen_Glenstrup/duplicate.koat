@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x xs x_0 x_1)
+(RULES
+duplicate((x_0)) -> (1+x) + ((1+x) + duplicate((xs))) :|: x>=0 && xs>=0 && x_0==1+x+xs && x_0>0
+duplicate((x_1)) -> 1 :|: x_1==1
+goal((x)) -> duplicate((x)) :|: x>=0
+)

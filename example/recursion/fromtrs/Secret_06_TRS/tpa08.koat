@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+iwasminus((x), (x_0)) -> x :|: x>=0 && x_0==0
+iwasminus((x_1), (x_2)) -> iwasminus((x), (y)) :|: y>=0 && x>=0 && x_1==1+x && x_1>0 && x_2==1+y && x_2>0
+iwasplus((x_3), (y)) -> y :|: y>=0 && x_3==0
+iwasplus((x_4), (y)) -> (1) + iwasplus((x), (y)) :|: y>=0 && x>=0 && x_4==1+x && x_4>0
+iwastimes((x), (x_5)) -> 0 :|: x>=0 && x_5==0
+iwastimes((x), (x_6)) -> iwasplus((x), iwastimes((x), (y))) :|: y>=0 && x>=0 && x_6==1+y && x_6>0
+f((x_7)) -> f(iwasminus(iwasplus(iwastimes((1+x), (1+x)), iwastimes((1+x), (3))), iwastimes((2+x), (2+x)))) :|: x>=0 && x_7==1+x && x_7>0
+)

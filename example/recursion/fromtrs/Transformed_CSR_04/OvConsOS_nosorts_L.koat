@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N X x x_0 x_1 x_2 x_3 x_4)
+(RULES
+and((x)) -> X :|: X>=0 && x==1
+length((x_0)) -> (1) + length((L)) :|: N>=0 && L>=0 && x_0==1+N && x_0>0
+zeros -> 1
+length((x_1)) -> 0 :|: x_1==1
+take((x_2), (QL)) -> 1 :|: QL>=0 && x_2==0
+take((x_3), (x_4)) -> 1+N :|: N>=0 && M>=0 && x_3==1+M && x_3>0 && x_4==1+N && x_4>0
+)

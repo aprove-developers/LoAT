@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4)
+(RULES
+fib((x_0)) -> 0 :|: x_0==0
+fib((x_1)) -> 1 :|: x_1==1
+fib((x_2)) -> iwasplus(fib((1+x)), fib((x))) :|: x>=0 && x_2==2+x && x_2>0
+iwasplus((x), (x_3)) -> x :|: x>=0 && x_3==0
+iwasplus((x), (x_4)) -> (1) + iwasplus((x), (y)) :|: x>=0 && y>=0 && x_4==1+y && x_4>0
+)

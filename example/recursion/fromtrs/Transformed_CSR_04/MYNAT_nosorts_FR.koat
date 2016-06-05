@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR M N X x x_0 x_1 x_2 x_3)
+(RULES
+and((x), (X)) -> activate((X)) :|: X>=0 && x==1
+plus((N), (x_0)) -> N :|: N>=0 && x_0==0
+plus((N), (x_1)) -> (1) + plus((N), (M)) :|: M>=0 && N>=0 && x_1==1+M && x_1>0
+x((N), (x_2)) -> 0 :|: N>=0 && x_2==0
+x((N), (x_3)) -> plus(x((N), (M)), (N)) :|: M>=0 && N>=0 && x_3==1+M && x_3>0
+activate((X)) -> X :|: X>=0
+)

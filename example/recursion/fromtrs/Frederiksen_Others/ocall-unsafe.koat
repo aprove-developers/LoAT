@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4)
+(RULES
+dbl((x_0), (x_1)) -> 4 :|: x_0==1 && x_1==1
+unsafe((x_2)) -> dbl(unsafe((x)), (0)) :|: x>=0 && x_2==1+x && x_2>0
+unsafe((x_3)) -> 0 :|: x_3==0
+dbl((x_4), (y)) -> y :|: y>=0 && x_4==0
+)

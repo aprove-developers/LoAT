@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR M N X x x_0 x_1 x_2 x_3)
+(RULES
+U11((x)) -> N :|: N>=0 && x==1
+U21((x_0)) -> (1) + plus((N), (M)) :|: N>=0 && M>=0 && x_0==1
+and((x_1)) -> X :|: X>=0 && x_1==1
+isNat -> 1
+isNat -> and(isNat)
+isNat -> isNat
+plus((N), (x_2)) -> U11(isNat) :|: N>=0 && x_2==0
+plus((N), (x_3)) -> U21(and(isNat)) :|: N>=0 && M>=0 && x_3==1+M && x_3>0
+)

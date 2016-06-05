@@ -1,0 +1,18 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y Z x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8)
+(RULES
+primes -> sieve(from((2)))
+from((X)) -> 3+2*X :|: X>=0
+head((x)) -> X :|: Y>=0 && X>=0 && x==1+Y+X && x>0
+tail((x_0)) -> activate((Y)) :|: Y>=0 && X>=0 && x_0==1+Y+X && x_0>0
+if((x_1), (X), (Y)) -> activate((X)) :|: Y>=0 && X>=0 && x_1==1
+if((x_2), (X), (Y)) -> activate((Y)) :|: Y>=0 && X>=0 && x_2==0
+filter((x_3), (x_4)) -> if((3+Y+X), ((3+X) + activate((Z))), ((1+Y) + ((1+X) + sieve((Y))))) :|: Y>=0 && X>=0 && Z>=0 && x_3==2+X && x_3>0 && x_4==1+Y+Z && x_4>0
+sieve((x_5)) -> (1+X) + ((1+X) + sieve(activate((Y)))) :|: Y>=0 && X>=0 && x_5==1+Y+X && x_5>0
+from((X)) -> 1+X :|: X>=0
+filter((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_6)) -> from((X)) :|: X>=0 && x_6==1+X && x_6>0
+activate((x_7)) -> filter((X1), (X2)) :|: X1>=0 && X2>=0 && x_7==1+X1+X2 && x_7>0
+activate((x_8)) -> 1+X1+X2 :|: X1>=0 && X2>=0 && x_8==1+X1+X2 && x_8>0
+activate((X)) -> X :|: X>=0
+)

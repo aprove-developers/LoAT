@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR x y z x_0 x_1)
+(RULES
+copy((x_0), (y), (z)) -> 1+z :|: y>=0 && z>=0 && x_0==0
+copy((x_1), (y), (z)) -> copy((x), (y), (2+y+z)) :|: x>=0 && y>=0 && z>=0 && x_1==1+x && x_1>0
+)

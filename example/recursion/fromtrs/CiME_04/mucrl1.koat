@@ -1,0 +1,85 @@
+(GOAL COMPLEXITY)
+(VAR B B1 B2 CS1 CS2 Client Client1 Client2 E E1 E2 E3 F0 F1 F2 Field Fields H1 H2 Head List Lock Locks MCRLFree0 MCRLFree1 N1 N2 Name NewF Pending Pendings Pid Record Resource Resources S1 S2 T1 T2 Tail x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46 x_47 x_48 x_49 x_50 x_51 x_52 x_53 x_54 x_55 x_56 x_57 x_58 x_59 x_60 x_61 x_62 x_63 x_64 x_65 x_66 x_67 x_68 x_69 x_70 x_71 x_72 x_73 x_74 x_75 x_76 x_77 x_78 x_79 x_80 x_81 x_82 x_83 x_84 x_85 x_86 x_87 x_88 x_89 x_90 x_91 x_92 x_93)
+(RULES
+or((x), (x_0)) -> 1 :|: x==1 && x_0==1
+or((x_1), (x_2)) -> 1 :|: x_1==1 && x_2==1
+or((x_3), (x_4)) -> 1 :|: x_3==1 && x_4==1
+or((x_5), (x_6)) -> 1 :|: x_5==1 && x_6==1
+and((x_7), (B)) -> B :|: B>=0 && x_7==1
+and((B), (x_8)) -> B :|: B>=0 && x_8==1
+and((x_9), (B)) -> 1 :|: B>=0 && x_9==1
+and((B), (x_10)) -> 1 :|: B>=0 && x_10==1
+imp((x_11), (B)) -> B :|: B>=0 && x_11==1
+imp((x_12), (B)) -> 1 :|: B>=0 && x_12==1
+not((x_13)) -> 1 :|: x_13==1
+not((x_14)) -> 1 :|: x_14==1
+if((x_15), (B1), (B2)) -> B1 :|: B2>=0 && B1>=0 && x_15==1
+if((x_16), (B1), (B2)) -> B2 :|: B2>=0 && B1>=0 && x_16==1
+eq((x_17), (x_18)) -> 1 :|: x_17==1 && x_18==1
+eq((x_19), (x_20)) -> 1 :|: x_19==1 && x_20==1
+eq((x_21), (x_22)) -> 1 :|: x_21==1 && x_22==1
+eq((x_23), (x_24)) -> 1 :|: x_23==1 && x_24==1
+element((x_25), (x_26)) -> T1 :|: T1>=0 && x_25==2 && x_26==1+T1 && x_26>0
+element((x_27), (x_28)) -> T1 :|: T1>=0 && T2>=0 && x_27==2 && x_28==1+T1+T2 && x_28>0
+element((x_29), (x_30)) -> element((2+N1), (T2)) :|: T1>=0 && N1>=0 && T2>=0 && x_29==3+N1 && x_29>0 && x_30==1+T1+T2 && x_30>0
+record_new((x_31)) -> 10 :|: x_31==1
+record_extract((x_32), (x_33), (x_34)) -> 7+F0+F1+F2 :|: F0>=0 && F1>=0 && F2>=0 && x_32==7+F0+F1+F2 && x_32>0 && x_33==1 && x_34==1
+record_update((x_35), (x_36), (x_37), (NewF)) -> 7+NewF+F0+F1 :|: NewF>=0 && F0>=0 && F1>=0 && F2>=0 && x_35==7+F0+F1+F2 && x_35>0 && x_36==1 && x_37==1
+record_updates((Record), (Name), (x_38)) -> Record :|: Record>=0 && Name>=0 && x_38==1
+record_updates((Record), (Name), (x_39)) -> record_updates(record_update((Record), (Name), (Field), (NewF)), (Name), (Fields)) :|: Field>=0 && NewF>=0 && Fields>=0 && Record>=0 && Name>=0 && x_39==3+Field+NewF+Fields && x_39>0
+locker2_map_promote_pending((x_40), (Pending)) -> 1 :|: Pending>=0 && x_40==1
+locker2_map_promote_pending((x_41), (Pending)) -> ((1) + locker2_promote_pending((Lock), (Pending))) + locker2_map_promote_pending((Locks), (Pending)) :|: Lock>=0 && Locks>=0 && Pending>=0 && x_41==1+Lock+Locks && x_41>0
+locker2_map_claim_lock((x_42), (Resources), (Client)) -> 1 :|: Client>=0 && Resources>=0 && x_42==1
+locker2_map_claim_lock((x_43), (Resources), (Client)) -> (2+Lock+Client+Resources) + locker2_map_claim_lock((Locks), (Resources), (Client)) :|: Lock>=0 && Client>=0 && Resources>=0 && Locks>=0 && x_43==1+Lock+Locks && x_43>0
+locker2_map_add_pending((x_44), (Resources), (Client)) -> 1 :|: Client>=0 && Resources>=0 && x_44==1
+locker2_promote_pending((Lock), (Client)) -> case0((Client), (Lock), record_extract((Lock), (1), (1))) :|: Lock>=0 && Client>=0
+case0((Client), (Lock), (x_45)) -> record_updates((Lock), (1), (9+Pendings+Client)) :|: Lock>=0 && Pendings>=0 && Client>=0 && x_45==1+Pendings+Client && x_45>0
+case0((Client), (Lock), (MCRLFree0)) -> Lock :|: Lock>=0 && Client>=0 && MCRLFree0>=0
+locker2_remove_pending((Lock), (Client)) -> record_updates((Lock), (1), (((1) + ((2) + ((1) + subtract(record_extract((Lock), (1), (1)), (2+Client))))) + (1))) :|: Lock>=0 && Client>=0
+locker2_add_pending((Lock), (Resources), (Client)) -> case1((Client), (Resources), (Lock), member(record_extract((Lock), (1), (1)), (Resources))) :|: Lock>=0 && Client>=0 && Resources>=0
+case1((Client), (Resources), (Lock), (x_46)) -> record_updates((Lock), (1), (((1) + ((2) + ((1) + append(record_extract((Lock), (1), (1)), (2+Client))))) + (1))) :|: Lock>=0 && Client>=0 && Resources>=0 && x_46==1
+case1((Client), (Resources), (Lock), (x_47)) -> Lock :|: Lock>=0 && Client>=0 && Resources>=0 && x_47==0
+locker2_release_lock((Lock), (Client)) -> case2((Client), (Lock), gen_modtageq((Client), record_extract((Lock), (1), (1)))) :|: Lock>=0 && Client>=0
+case2((Client), (Lock), (x_48)) -> record_updates((Lock), (1), (5)) :|: Lock>=0 && Client>=0 && x_48==1
+case4((Client), (Lock), (MCRLFree1)) -> 0 :|: Lock>=0 && Client>=0 && MCRLFree1>=0
+locker2_obtainables((x_49), (Client)) -> 1 :|: Client>=0 && x_49==1
+locker2_obtainables((x_50), (Client)) -> case5((Client), (Locks), (Lock), member((Client), record_extract((Lock), (1), (1)))) :|: Lock>=0 && Client>=0 && Locks>=0 && x_50==1+Lock+Locks && x_50>0
+case5((Client), (Locks), (Lock), (x_51)) -> (2+Lock+Client) + locker2_obtainables((Locks), (Client)) :|: Lock>=0 && Client>=0 && Locks>=0 && x_51==1
+case5((Client), (Locks), (Lock), (x_52)) -> locker2_obtainables((Locks), (Client)) :|: Lock>=0 && Client>=0 && Locks>=0 && x_52==0
+locker2_check_available((Resource), (x_53)) -> 0 :|: Resource>=0 && x_53==1
+locker2_check_available((Resource), (x_54)) -> case6((Locks), (Lock), (Resource), ((1+Resource) + record_extract((Lock), (1), (1)))) :|: Lock>=0 && Locks>=0 && Resource>=0 && x_54==1+Lock+Locks && x_54>0
+case6((Locks), (Lock), (Resource), (x_55)) -> ((1) + (((1) + record_extract((Lock), (1), (1))) + (1))) + (((1) + record_extract((Lock), (1), (1))) + (1)) :|: Lock>=0 && Locks>=0 && Resource>=0 && x_55==1
+case6((Locks), (Lock), (Resource), (x_56)) -> locker2_check_available((Resource), (Locks)) :|: Lock>=0 && Locks>=0 && Resource>=0 && x_56==0
+locker2_check_availables((x_57), (Locks)) -> 1 :|: Locks>=0 && x_57==1
+locker2_check_availables((x_58), (Locks)) -> ((1) + locker2_check_available((Resource), (Locks))) + locker2_check_availables((Resources), (Locks)) :|: Resources>=0 && Locks>=0 && Resource>=0 && x_58==1+Resources+Resource && x_58>0
+locker2_adduniq((x_59), (List)) -> List :|: List>=0 && x_59==1
+append((x_60), (List)) -> (1+Head) + append((Tail), (List)) :|: Head>=0 && List>=0 && Tail>=0 && x_60==1+Head+Tail && x_60>0
+subtract((List), (x_61)) -> List :|: List>=0 && x_61==1
+subtract((List), (x_62)) -> subtract(delete((Head), (List)), (Tail)) :|: Head>=0 && List>=0 && Tail>=0 && x_62==1+Head+Tail && x_62>0
+delete((E), (x_63)) -> 1 :|: E>=0 && x_63==1
+delete((E), (x_64)) -> case8((Tail), (Head), (E), (1+E+Head)) :|: E>=0 && Head>=0 && Tail>=0 && x_64==1+Head+Tail && x_64>0
+case8((Tail), (Head), (E), (x_65)) -> Tail :|: E>=0 && Head>=0 && Tail>=0 && x_65==1
+case8((Tail), (Head), (E), (x_66)) -> (1+Head) + delete((E), (Tail)) :|: E>=0 && Head>=0 && Tail>=0 && x_66==0
+gen_tag((Pid)) -> 3+Pid :|: Pid>=0
+gen_modtageq((Client1), (Client2)) -> 1+Client1+Client2 :|: Client1>=0 && Client2>=0
+member((E), (x_67)) -> 0 :|: E>=0 && x_67==1
+member((E), (x_68)) -> case9((Tail), (Head), (E), (1+E+Head)) :|: E>=0 && Head>=0 && Tail>=0 && x_68==1+Head+Tail && x_68>0
+case9((Tail), (Head), (E), (x_69)) -> 1 :|: E>=0 && Head>=0 && Tail>=0 && x_69==1
+case9((Tail), (Head), (E), (x_70)) -> member((E), (Tail)) :|: E>=0 && Head>=0 && Tail>=0 && x_70==0
+eqs((x_71), (x_72)) -> 1 :|: x_71==1 && x_72==1
+eqs((x_73), (x_74)) -> 1 :|: E2>=0 && S2>=0 && x_73==1 && x_74==1+E2+S2 && x_74>0
+eqs((x_75), (x_76)) -> 1 :|: E1>=0 && S1>=0 && x_75==1+E1+S1 && x_75>0 && x_76==1
+eqs((x_77), (x_78)) -> and((1+E1+E2), eqs((S1), (S2))) :|: E1>=0 && S1>=0 && E2>=0 && S2>=0 && x_77==1+E1+S1 && x_77>0 && x_78==1+E2+S2 && x_78>0
+pushs((E1), (S1)) -> 1+E1+S1 :|: E1>=0 && S1>=0
+pops((x_79)) -> S1 :|: E1>=0 && S1>=0 && x_79==1+E1+S1 && x_79>0
+tops((x_80)) -> E1 :|: E1>=0 && S1>=0 && x_80==1+E1+S1 && x_80>0
+istops((E1), (x_81)) -> 1 :|: E1>=0 && x_81==1
+istops((E1), (x_82)) -> 1+E1+E2 :|: E1>=0 && S1>=0 && E2>=0 && x_82==1+S1+E2 && x_82>0
+eqc((x_83), (x_84)) -> 1 :|: x_83==1 && x_84==1
+eqc((x_85), (x_86)) -> 1 :|: E2>=0 && CS2>=0 && S2>=0 && x_85==1 && x_86==1+E2+CS2+S2 && x_86>0
+eqc((x_87), (x_88)) -> 1 :|: E1>=0 && CS1>=0 && S1>=0 && x_87==1+E1+CS1+S1 && x_87>0 && x_88==1
+eqc((x_89), (x_90)) -> and((1+E1+E2), and(eqs((S1), (S2)), eqc((CS1), (CS2)))) :|: E1>=0 && CS1>=0 && S1>=0 && E2>=0 && CS2>=0 && S2>=0 && x_89==1+E1+CS1+S1 && x_89>0 && x_90==1+E2+CS2+S2 && x_90>0
+push((E1), (E2), (x_91)) -> 4+E1+E2 :|: E1>=0 && E2>=0 && x_91==1
+push((E1), (E2), (x_92)) -> push1((E1), (E2), (E3), (S1), (CS1), (1+E1+E3)) :|: E1>=0 && CS1>=0 && S1>=0 && E2>=0 && E3>=0 && x_92==1+CS1+S1+E3 && x_92>0
+push1((E1), (E2), (E3), (S1), (CS1), (x_93)) -> ((1+E3) + pushs((E2), (S1))) + (CS1) :|: E1>=0 && CS1>=0 && S1>=0 && E2>=0 && E3>=0 && x_93==1
+)

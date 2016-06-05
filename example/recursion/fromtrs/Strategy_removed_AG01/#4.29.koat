@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+(RULES
+even((x_0)) -> 1 :|: x_0==0
+even((x_1)) -> 0 :|: x_1==1
+even((x_2)) -> even((x)) :|: x>=0 && x_2==2+x && x_2>0
+half((x_3)) -> 0 :|: x_3==0
+half((x_4)) -> (1) + half((x)) :|: x>=0 && x_4==2+x && x_4>0
+plus((x_5), (y)) -> y :|: y>=0 && x_5==0
+plus((x_6), (y)) -> (1) + plus((x), (y)) :|: x>=0 && y>=0 && x_6==1+x && x_6>0
+times((x_7), (y)) -> 0 :|: y>=0 && x_7==0
+times((x_8), (y)) -> if_times(even((1+x)), (1+x), (y)) :|: x>=0 && y>=0 && x_8==1+x && x_8>0
+if_times((x_9), (x_10), (y)) -> plus(times(half((1+x)), (y)), times(half((1+x)), (y))) :|: x>=0 && y>=0 && x_9==1 && x_10==1+x && x_10>0
+if_times((x_11), (x_12), (y)) -> plus((y), times((x), (y))) :|: x>=0 && y>=0 && x_11==0 && x_12==1+x && x_12>0
+)

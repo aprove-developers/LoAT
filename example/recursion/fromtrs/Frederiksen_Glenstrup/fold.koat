@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR a x xs y x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+foldl((x), (x_0)) -> foldl((1+x), (xs)) :|: xs>=0 && x>=0 && x_0==2+xs && x_0>0
+foldl((x_1), (x_2)) -> foldl((1+x), (xs)) :|: xs>=0 && x>=0 && x_1==1 && x_2==1+xs+x && x_2>0
+foldr((a), (x_3)) -> op((x), foldr((a), (xs))) :|: xs>=0 && a>=0 && x>=0 && x_3==1+xs+x && x_3>0
+foldr((a), (x_4)) -> a :|: a>=0 && x_4==1
+foldl((a), (x_5)) -> a :|: a>=0 && x_5==1
+notEmpty((x_6)) -> 1 :|: xs>=0 && x>=0 && x_6==1+xs+x && x_6>0
+notEmpty((x_7)) -> 1 :|: x_7==1
+op((x), (x_8)) -> 1+x :|: x>=0 && x_8==1
+op((x_9), (y)) -> 1+y :|: y>=0 && x_9==1
+fold((a), (xs)) -> ((1) + foldl((a), (xs))) + (((1) + foldr((a), (xs))) + (1)) :|: xs>=0 && a>=0
+)

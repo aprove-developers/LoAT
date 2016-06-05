@@ -205,7 +205,7 @@ private:
 
     void removeRightHandSide(NodeIndex node, RightHandSideIndex rhs);
 
-    std::set<NodeIndex> getSuccessorsOfExpression(const TT::Expression &ex);
+    std::set<NodeIndex> getSuccessorsOfRhs(const RightHandSide &rhs);
 
     /**
      * Chains transition followTrans into trans

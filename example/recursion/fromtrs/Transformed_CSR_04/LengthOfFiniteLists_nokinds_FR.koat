@@ -1,0 +1,33 @@
+(GOAL COMPLEXITY)
+(VAR L N V V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18)
+(RULES
+zeros -> 2
+U11((x), (L)) -> s(length(activate((L)))) :|: L>=0 && x==1
+and((x_0), (X)) -> activate((X)) :|: X>=0 && x_0==1
+isNat((x_1)) -> 1 :|: x_1==1
+isNat((x_2)) -> isNatList(activate((V1))) :|: V1>=0 && x_2==1+V1 && x_2>0
+isNat((x_3)) -> isNat(activate((V1))) :|: V1>=0 && x_3==1+V1 && x_3>0
+isNatIList((V)) -> isNatList(activate((V))) :|: V>=0
+isNatIList((x_4)) -> 1 :|: x_4==1
+isNatIList((x_5)) -> and(isNat(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_5==1+V2+V1 && x_5>0
+isNatList((x_6)) -> 1 :|: x_6==1
+isNatList((x_7)) -> and(isNat(activate((V1))), ((1) + activate((V2)))) :|: V2>=0 && V1>=0 && x_7==1+V2+V1 && x_7>0
+length((x_8)) -> 0 :|: x_8==1
+length((x_9)) -> U11(and(isNatList(activate((L))), (1+N)), activate((L))) :|: N>=0 && L>=0 && x_9==1+N+L && x_9>0
+zeros -> 1
+length((X)) -> 1+X :|: X>=0
+s((X)) -> 1+X :|: X>=0
+isNatIList((X)) -> 1+X :|: X>=0
+isNatList((X)) -> 1+X :|: X>=0
+isNat((X)) -> 1+X :|: X>=0
+activate((x_10)) -> zeros :|: x_10==1
+activate((x_11)) -> 0 :|: x_11==1
+activate((x_12)) -> length(activate((X))) :|: X>=0 && x_12==1+X && x_12>0
+activate((x_13)) -> s(activate((X))) :|: X>=0 && x_13==1+X && x_13>0
+activate((x_14)) -> ((1) + activate((X1))) + (X2) :|: X1>=0 && X2>=0 && x_14==1+X1+X2 && x_14>0
+activate((x_15)) -> isNatIList((X)) :|: X>=0 && x_15==1+X && x_15>0
+activate((x_16)) -> 1 :|: x_16==1
+activate((x_17)) -> isNatList((X)) :|: X>=0 && x_17==1+X && x_17>0
+activate((x_18)) -> isNat((X)) :|: X>=0 && x_18==1+X && x_18>0
+activate((X)) -> X :|: X>=0
+)

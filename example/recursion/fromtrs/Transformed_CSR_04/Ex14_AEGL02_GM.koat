@@ -1,0 +1,18 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+(RULES
+a__from((X)) -> ((1) + mark((X))) + (2+X) :|: X>=0
+a__length((x)) -> 0 :|: x==1
+a__length((x_0)) -> (1) + a__length1((Y)) :|: Y>=0 && X>=0 && x_0==1+Y+X && x_0>0
+a__length1((X)) -> a__length((X)) :|: X>=0
+mark((x_1)) -> a__from(mark((X))) :|: X>=0 && x_1==1+X && x_1>0
+mark((x_2)) -> a__length((X)) :|: X>=0 && x_2==1+X && x_2>0
+mark((x_3)) -> a__length1((X)) :|: X>=0 && x_3==1+X && x_3>0
+mark((x_4)) -> ((1) + mark((X1))) + (X2) :|: X1>=0 && X2>=0 && x_4==1+X1+X2 && x_4>0
+mark((x_5)) -> (1) + mark((X)) :|: X>=0 && x_5==1+X && x_5>0
+mark((x_6)) -> 1 :|: x_6==1
+mark((x_7)) -> 0 :|: x_7==0
+a__from((X)) -> 1+X :|: X>=0
+a__length((X)) -> 1+X :|: X>=0
+a__length1((X)) -> 1+X :|: X>=0
+)

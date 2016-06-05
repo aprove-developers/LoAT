@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4 x_5)
+(RULES
+merge((x), (x_0)) -> x :|: x>=0 && x_0==1
+merge((x_1), (y)) -> y :|: y>=0 && x_1==1
+merge((x_2), (x_3)) -> (1+x) + merge((y), (3)) :|: x>=0 && y>=0 && x_2==1+x+y && x_2>0 && x_3==3
+merge((x_4), (x_5)) -> (2) + merge((1+x+y), (1)) :|: x>=0 && y>=0 && x_4==1+x+y && x_4>0 && x_5==3
+)

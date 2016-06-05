@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(VAR x xs x_0 x_1 x_2 x_3)
+(RULES
+immatcopy((x_0)) -> (2) + immatcopy((xs)) :|: x>=0 && xs>=0 && x_0==1+x+xs && x_0>0
+nestimeql((x_1)) -> number42((1)) :|: x_1==1
+nestimeql((x_2)) -> nestimeql(immatcopy((1+x+xs))) :|: x>=0 && xs>=0 && x_2==1+x+xs && x_2>0
+immatcopy((x_3)) -> 1 :|: x_3==1
+number42((x)) -> 85 :|: x>=0
+goal((x)) -> nestimeql((x)) :|: x>=0
+)

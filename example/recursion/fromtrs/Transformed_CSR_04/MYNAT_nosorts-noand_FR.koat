@@ -1,0 +1,13 @@
+(GOAL COMPLEXITY)
+(VAR M N X x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+U11((x), (M), (N)) -> U12((1), activate((M)), activate((N))) :|: M>=0 && N>=0 && x==1
+U12((x_0), (M), (N)) -> (1) + plus(activate((N)), activate((M))) :|: M>=0 && N>=0 && x_0==1
+U21((x_1), (M), (N)) -> U22((1), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_1==1
+U22((x_2), (M), (N)) -> plus(x(activate((N)), activate((M))), activate((N))) :|: M>=0 && N>=0 && x_2==1
+plus((N), (x_3)) -> N :|: N>=0 && x_3==0
+plus((N), (x_4)) -> U11((1), (M), (N)) :|: M>=0 && N>=0 && x_4==1+M && x_4>0
+x((N), (x_5)) -> 0 :|: N>=0 && x_5==0
+x((N), (x_6)) -> U21((1), (M), (N)) :|: M>=0 && N>=0 && x_6==1+M && x_6>0
+activate((X)) -> X :|: X>=0
+)

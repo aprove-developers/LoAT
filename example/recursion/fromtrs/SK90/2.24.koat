@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(VAR x x_0 x_1 x_2)
+(RULES
+fib((x_0)) -> 0 :|: x_0==0
+fib((x_1)) -> 1 :|: x_1==1
+fib((x_2)) -> ((1) + fib((1+x))) + fib((x)) :|: x>=0 && x_2==2+x && x_2>0
+)

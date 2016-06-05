@@ -41,8 +41,7 @@ do
         else
             printf " [Success]"
         fi
-    printf "\n"
-
+        printf "\n"
     fi
 
 done

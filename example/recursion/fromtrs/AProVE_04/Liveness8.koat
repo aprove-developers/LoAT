@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR x y x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+top((x_0)) -> top((2)) :|: x_0==2
+top((x_1)) -> top(check((x))) :|: x>=0 && x_1==1+x && x_1>0
+check((x_2)) -> (1) + check((x)) :|: x>=0 && x_2==1+x && x_2>0
+check((x)) -> start(match((2), (x))) :|: x>=0
+match((x_3), (x_4)) -> (1) + match((x), (y)) :|: y>=0 && x>=0 && x_3==1+x && x_3>0 && x_4==1+y && x_4>0
+match((x_5), (x)) -> proper((x)) :|: x>=0 && x_5==1
+proper((x_6)) -> 2 :|: x_6==1
+proper((x_7)) -> (1) + proper((x)) :|: x>=0 && x_7==1+x && x_7>0
+start((x_8)) -> 1+x :|: x>=0 && x_8==1+x && x_8>0
+top((x_9)) -> top((1+x)) :|: x>=0 && x_9==1+x && x_9>0
+)

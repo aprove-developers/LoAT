@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(VAR X)
+(RULES
+f((X)) -> f(c) :|: X>=0
+c -> 1
+)

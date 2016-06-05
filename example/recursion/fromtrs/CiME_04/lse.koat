@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(VAR k m n psi s t u x xi y x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+Frozen((m), (x_0), (n), (s)) -> 1+s+m :|: n>=0 && s>=0 && m>=0 && x_0==2
+Frozen((m), (x_1), (n), (s)) -> 1+n+s :|: n>=0 && s>=0 && m>=0 && x_1==2
+Frozen((m), (x_2), (n), (s)) -> 3+n+2*s+m+xi :|: n>=0 && s>=0 && m>=0 && xi>=0 && x_2==1+xi && x_2>0
+Sum_sub((xi), (x_3)) -> 1+xi :|: xi>=0 && x_3==1
+Sum_sub((xi), (x_4)) -> 1+k :|: psi>=0 && k>=0 && s>=0 && xi>=0 && x_4==1+psi+k+s && x_4>0
+Sum_sub((xi), (x_5)) -> Sum_sub((xi), (s)) :|: psi>=0 && k>=0 && s>=0 && xi>=0 && x_5==1+psi+k+s && x_5>0
+Sum_sub((xi), (x_6)) -> Sum_sub((xi), (s)) :|: y>=0 && s>=0 && m>=0 && xi>=0 && x_6==1+y+s+m && x_6>0
+)

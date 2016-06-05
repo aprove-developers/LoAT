@@ -329,8 +329,9 @@ Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
 }
 
 
-Expression Expression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
-    return Expression(root->abstractSize(funSyms));
+Expression Expression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                    const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    return Expression(root->abstractSize(funSyms, specialCases));
 }
 
 
@@ -739,7 +740,8 @@ bool Term::hasExactlyOneFunctionSymbolOnce() const {
 }
 
 
-std::shared_ptr<Term> Term::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+std::shared_ptr<Term> Term::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                         const std::map<FunctionSymbolIndex,int> &specialCases) const {
     throw UnsupportedOperationException();
 }
 
@@ -1052,9 +1054,10 @@ std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDe
 }
 
 
-std::shared_ptr<Term> Addition::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
-    return std::make_shared<Addition>(l->abstractSize(funSyms),
-                                      r->abstractSize(funSyms));
+std::shared_ptr<Term> Addition::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                             const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    return std::make_shared<Addition>(l->abstractSize(funSyms, specialCases),
+                                      r->abstractSize(funSyms, specialCases));
 }
 
 
@@ -1150,9 +1153,10 @@ std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &fu
 }
 
 
-std::shared_ptr<Term> Subtraction::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
-    return std::make_shared<Subtraction>(l->abstractSize(funSyms),
-                                         r->abstractSize(funSyms));
+std::shared_ptr<Term> Subtraction::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                                const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    return std::make_shared<Subtraction>(l->abstractSize(funSyms, specialCases),
+                                         r->abstractSize(funSyms, specialCases));
 }
 
 
@@ -1248,9 +1252,10 @@ std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition 
 }
 
 
-std::shared_ptr<Term> Multiplication::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
-    return std::make_shared<Multiplication>(l->abstractSize(funSyms),
-                                      r->abstractSize(funSyms));
+std::shared_ptr<Term> Multiplication::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                                   const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    return std::make_shared<Multiplication>(l->abstractSize(funSyms, specialCases),
+                                            r->abstractSize(funSyms, specialCases));
 }
 
 
@@ -1346,9 +1351,10 @@ std::shared_ptr<Term> Power::evaluateFunction(const FunctionDefinition &funDef,
 }
 
 
-std::shared_ptr<Term> Power::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
-    return std::make_shared<Power>(l->abstractSize(funSyms),
-                                   r->abstractSize(funSyms));
+std::shared_ptr<Term> Power::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                          const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    return std::make_shared<Power>(l->abstractSize(funSyms, specialCases),
+                                   r->abstractSize(funSyms, specialCases));
 }
 
 
@@ -1434,8 +1440,9 @@ std::shared_ptr<Term> Factorial::evaluateFunction(const FunctionDefinition &funD
 }
 
 
-std::shared_ptr<Term> Factorial::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
-    return std::make_shared<Factorial>(n->abstractSize(funSyms));
+std::shared_ptr<Term> Factorial::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                              const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    return std::make_shared<Factorial>(n->abstractSize(funSyms, specialCases));
 }
 
 
@@ -1577,11 +1584,17 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
 }
 
 
-std::shared_ptr<Term> FunctionSymbol::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+std::shared_ptr<Term> FunctionSymbol::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                                                   const std::map<FunctionSymbolIndex,int> &specialCases) const {
+    auto it = specialCases.find(functionSymbol);
+    if (it != specialCases.end()) {
+        return std::make_shared<GiNaCExpression>(GiNaC::numeric(it->second));
+    }
+
     // abstract arguments first
     std::vector<std::shared_ptr<Term>> newArgs;
     for (const std::shared_ptr<Term> &arg : args) {
-        newArgs.push_back(arg->abstractSize(funSyms));
+        newArgs.push_back(arg->abstractSize(funSyms, specialCases));
     }
 
     if (funSyms.count(functionSymbol) == 1) {
@@ -1755,7 +1768,8 @@ std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition
 }
 
 
-std::shared_ptr<Term> GiNaCExpression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+std::shared_ptr<Term> GiNaCExpression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
+                            const std::map<FunctionSymbolIndex,int> &specialCases) const {
     return copy();
 }
 

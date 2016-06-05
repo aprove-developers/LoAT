@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR x x_0 x_1 x_2 x_3)
+(RULES
+odd((x_0)) -> even((x)) :|: x>=0 && x_0==1+x && x_0>0
+even((x_1)) -> odd((x)) :|: x>=0 && x_1==1+x && x_1>0
+odd((x_2)) -> 0 :|: x_2==0
+even((x_3)) -> 1 :|: x_3==0
+)

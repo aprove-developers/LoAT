@@ -1,0 +1,27 @@
+(GOAL COMPLEXITY)
+(VAR n r rest x x1 x2 x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21)
+(RULES
+revconsapp((x_0), (r)) -> revconsapp((x2), (1+x1+r)) :|: x1>=0 && r>=0 && x2>=0 && x_0==1+x1+x2 && x_0>0
+deeprevapp((x_1), (rest)) -> deeprevapp((x2), (1+x1+rest)) :|: x1>=0 && x2>=0 && rest>=0 && x_1==1+x1+x2 && x_1>0
+deeprevapp((x_2), (rest)) -> revconsapp((rest), (1+n)) :|: n>=0 && rest>=0 && x_2==1+n && x_2>0
+deeprevapp((x_3), (rest)) -> rest :|: rest>=0 && x_3==1
+revconsapp((x_4), (r)) -> r :|: n>=0 && r>=0 && x_4==1+n && x_4>0
+revconsapp((x_5), (r)) -> r :|: r>=0 && x_5==1
+deeprev((x_6)) -> deeprevapp((1+x1+x2), (1)) :|: x1>=0 && x2>=0 && x_6==1+x1+x2 && x_6>0
+deeprev((x_7)) -> 1+n :|: n>=0 && x_7==1+n && x_7>0
+deeprev((x_8)) -> 1 :|: x_8==1
+second((x_9)) -> 1 :|: n>=0 && x_9==1+n && x_9>0
+second((x_10)) -> x2 :|: x1>=0 && x2>=0 && x_10==1+x1+x2 && x_10>0
+isVal((x_11)) -> 1 :|: x1>=0 && x2>=0 && x_11==1+x1+x2 && x_11>0
+isVal((x_12)) -> 1 :|: n>=0 && x_12==1+n && x_12>0
+isVal((x_13)) -> 1 :|: x_13==1
+isNotEmptyT((x_14)) -> 1 :|: x1>=0 && x2>=0 && x_14==1+x1+x2 && x_14>0
+isNotEmptyT((x_15)) -> 1 :|: n>=0 && x_15==1+n && x_15>0
+isNotEmptyT((x_16)) -> 1 :|: x_16==1
+isEmptyT((x_17)) -> 1 :|: x1>=0 && x2>=0 && x_17==1+x1+x2 && x_17>0
+isEmptyT((x_18)) -> 1 :|: n>=0 && x_18==1+n && x_18>0
+isEmptyT((x_19)) -> 1 :|: x_19==1
+first((x_20)) -> 1 :|: n>=0 && x_20==1+n && x_20>0
+first((x_21)) -> x1 :|: x1>=0 && x2>=0 && x_21==1+x1+x2 && x_21>0
+goal((x)) -> deeprev((x)) :|: x>=0
+)

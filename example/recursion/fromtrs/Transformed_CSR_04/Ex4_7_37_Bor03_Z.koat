@@ -1,0 +1,19 @@
+(GOAL COMPLEXITY)
+(VAR N X X1 X2 XS Y YS x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15)
+(RULES
+from((X)) -> 3+2*X :|: X>=0
+sel((x), (x_0)) -> X :|: XS>=0 && X>=0 && x==0 && x_0==1+XS+X && x_0>0
+sel((x_1), (x_2)) -> sel((N), activate((XS))) :|: XS>=0 && X>=0 && N>=0 && x_1==1+N && x_1>0 && x_2==1+XS+X && x_2>0
+minus((X), (x_3)) -> 0 :|: X>=0 && x_3==0
+minus((x_4), (x_5)) -> minus((X), (Y)) :|: X>=0 && Y>=0 && x_4==1+X && x_4>0 && x_5==1+Y && x_5>0
+quot((x_6), (x_7)) -> 0 :|: Y>=0 && x_6==0 && x_7==1+Y && x_7>0
+quot((x_8), (x_9)) -> (1) + quot(minus((X), (Y)), (1+Y)) :|: X>=0 && Y>=0 && x_8==1+X && x_8>0 && x_9==1+Y && x_9>0
+zWquot((XS), (x_10)) -> 1 :|: XS>=0 && x_10==1
+zWquot((x_11), (XS)) -> 1 :|: XS>=0 && x_11==1
+zWquot((x_12), (x_13)) -> ((1) + quot((X), (Y))) + (((1) + activate((XS))) + activate((YS))) :|: XS>=0 && X>=0 && Y>=0 && YS>=0 && x_12==1+XS+X && x_12>0 && x_13==1+Y+YS && x_13>0
+from((X)) -> 1+X :|: X>=0
+zWquot((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_14)) -> from((X)) :|: X>=0 && x_14==1+X && x_14>0
+activate((x_15)) -> zWquot((X1), (X2)) :|: X1>=0 && X2>=0 && x_15==1+X1+X2 && x_15>0
+activate((X)) -> X :|: X>=0
+)

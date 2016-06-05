@@ -1,0 +1,33 @@
+(GOAL COMPLEXITY)
+(VAR QL L M N x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18)
+(RULES
+U72((x)) -> (1) + length((L)) :|: L>=0 && x==1
+U93((x_0)) -> 1+N :|: N>=0 && x_0==1
+zeros -> 1
+U11((x_1)) -> 1 :|: x_1==1
+U21((x_2)) -> 1 :|: x_2==1
+U31((x_3)) -> 1 :|: x_3==1
+U41((x_4)) -> U42(isNatIList) :|: x_4==1
+U42((x_5)) -> 1 :|: x_5==1
+U51((x_6)) -> U52(isNatList) :|: x_6==1
+U52((x_7)) -> 1 :|: x_7==1
+U61((x_8)) -> U62(isNatIList) :|: x_8==1
+U62((x_9)) -> 1 :|: x_9==1
+U71((x_10)) -> U72(isNat) :|: x_10==1
+U81((x_11)) -> 1 :|: x_11==1
+U91((x_12)) -> U92(isNat) :|: x_12==1
+U92((x_13)) -> U93(isNat) :|: x_13==1
+isNat -> 1
+isNat -> U11(isNatList)
+isNat -> U21(isNat)
+isNatIList -> U31(isNatList)
+isNatIList -> 1
+isNatIList -> U41(isNat)
+isNatList -> 1
+isNatList -> U51(isNat)
+isNatList -> U61(isNat)
+length((x_14)) -> 0 :|: x_14==1
+length((x_15)) -> U71(isNatList) :|: N>=0 && x_15==1+N && x_15>0
+take((x_16), (QL)) -> U81(isNatIList) :|: QL>=0 && x_16==0
+take((x_17), (x_18)) -> U91(isNatIList) :|: M>=0 && N>=0 && x_17==1+M && x_17>0 && x_18==1+N && x_18>0
+)

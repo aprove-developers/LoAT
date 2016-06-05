@@ -1,0 +1,20 @@
+(GOAL COMPLEXITY)
+(VAR X X1 X2 Y Z x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+(RULES
+fst((x), (Z)) -> 1 :|: Z>=0 && x==0
+fst((x_0), (x_1)) -> (1+Y) + (((1) + activate((X))) + activate((Z))) :|: Y>=0 && X>=0 && Z>=0 && x_0==1+X && x_0>0 && x_1==1+Y+Z && x_1>0
+from((X)) -> 3+2*X :|: X>=0
+add((x_2), (X)) -> X :|: X>=0 && x_2==0
+add((x_3), (Y)) -> (1) + (((1) + activate((X))) + (Y)) :|: Y>=0 && X>=0 && x_3==1+X && x_3>0
+len((x_4)) -> 0 :|: x_4==1
+len((x_5)) -> (1) + ((1) + activate((Z))) :|: X>=0 && Z>=0 && x_5==1+X+Z && x_5>0
+fst((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+from((X)) -> 1+X :|: X>=0
+add((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+len((X)) -> 1+X :|: X>=0
+activate((x_6)) -> fst((X1), (X2)) :|: X1>=0 && X2>=0 && x_6==1+X1+X2 && x_6>0
+activate((x_7)) -> from((X)) :|: X>=0 && x_7==1+X && x_7>0
+activate((x_8)) -> add((X1), (X2)) :|: X1>=0 && X2>=0 && x_8==1+X1+X2 && x_8>0
+activate((x_9)) -> len((X)) :|: X>=0 && x_9==1+X && x_9>0
+activate((X)) -> X :|: X>=0
+)

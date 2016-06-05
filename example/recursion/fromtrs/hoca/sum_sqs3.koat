@@ -1,0 +1,16 @@
+(GOAL COMPLEXITY)
+(VAR x1 x2 x4 x5 x8 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+sumiwashash1((x)) -> 0 :|: x==1
+sumiwashash1((x_0)) -> plusiwashash2((x2), sumiwashash1((x1))) :|: x1>=0 && x2>=0 && x_0==1+x1+x2 && x_0>0
+mapiwashash2((x_1)) -> 1 :|: x_1==1
+mapiwashash2((x_2)) -> ((1) + multiwashash2((x2), (x2))) + mapiwashash2((x5)) :|: x5>=0 && x2>=0 && x_2==1+x5+x2 && x_2>0
+unfoldriwashash2((x_3)) -> 1 :|: x_3==0
+unfoldriwashash2((x_4)) -> (1+x2) + unfoldriwashash2((x2)) :|: x2>=0 && x_4==1+x2 && x_4>0
+multiwashash2((x_5), (x2)) -> 0 :|: x2>=0 && x_5==0
+multiwashash2((x_6), (x2)) -> plusiwashash2((x2), multiwashash2((x4), (x2))) :|: x2>=0 && x4>=0 && x_6==1+x4 && x_6>0
+plusiwashash2((x_7), (x8)) -> x8 :|: x8>=0 && x_7==0
+plusiwashash2((x_8), (x2)) -> (1) + plusiwashash2((x4), (x2)) :|: x2>=0 && x4>=0 && x_8==1+x4 && x_8>0
+main((x_9)) -> 0 :|: x_9==0
+main((x_10)) -> sumiwashash1(mapiwashash2(((2+x1) + unfoldriwashash2((1+x1))))) :|: x1>=0 && x_10==1+x1 && x_10>0
+)

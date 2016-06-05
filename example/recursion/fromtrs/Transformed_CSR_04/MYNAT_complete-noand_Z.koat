@@ -1,0 +1,55 @@
+(GOAL COMPLEXITY)
+(VAR M N V1 V2 X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 x_13 x_14 x_15 x_16 x_17 x_18 x_19 x_20 x_21 x_22 x_23 x_24 x_25 x_26 x_27 x_28 x_29 x_30 x_31 x_32 x_33 x_34 x_35 x_36 x_37 x_38 x_39 x_40 x_41 x_42 x_43 x_44 x_45 x_46)
+(RULES
+U101((x), (M), (N)) -> U102(isNatKind(activate((M))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x==1
+U102((x_0), (M), (N)) -> U103(isNat(activate((N))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_0==1
+U103((x_1), (M), (N)) -> U104(isNatKind(activate((N))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_1==1
+U104((x_2), (M), (N)) -> plus(x(activate((N)), activate((M))), activate((N))) :|: M>=0 && N>=0 && x_2==1
+U11((x_3), (V1), (V2)) -> U12(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_3==1
+U12((x_4), (V1), (V2)) -> U13(isNatKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_4==1
+U13((x_5), (V1), (V2)) -> U14(isNatKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_5==1
+U14((x_6), (V1), (V2)) -> U15(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_6==1
+U15((x_7), (V2)) -> U16(isNat(activate((V2)))) :|: V2>=0 && x_7==1
+U16((x_8)) -> 1 :|: x_8==1
+U21((x_9), (V1)) -> U22(isNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_9==1
+U22((x_10), (V1)) -> U23(isNat(activate((V1)))) :|: V1>=0 && x_10==1
+U23((x_11)) -> 1 :|: x_11==1
+U31((x_12), (V1), (V2)) -> U32(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_12==1
+U32((x_13), (V1), (V2)) -> U33(isNatKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_13==1
+U33((x_14), (V1), (V2)) -> U34(isNatKind(activate((V2))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_14==1
+U34((x_15), (V1), (V2)) -> U35(isNat(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_15==1
+U35((x_16), (V2)) -> U36(isNat(activate((V2)))) :|: V2>=0 && x_16==1
+U36((x_17)) -> 1 :|: x_17==1
+U41((x_18), (V2)) -> U42(isNatKind(activate((V2)))) :|: V2>=0 && x_18==1
+U42((x_19)) -> 1 :|: x_19==1
+U51((x_20)) -> 1 :|: x_20==1
+U61((x_21), (V2)) -> U62(isNatKind(activate((V2)))) :|: V2>=0 && x_21==1
+U62((x_22)) -> 1 :|: x_22==1
+U71((x_23), (N)) -> U72(isNatKind(activate((N))), activate((N))) :|: N>=0 && x_23==1
+U72((x_24), (N)) -> activate((N)) :|: N>=0 && x_24==1
+U81((x_25), (M), (N)) -> U82(isNatKind(activate((M))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_25==1
+U82((x_26), (M), (N)) -> U83(isNat(activate((N))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_26==1
+U83((x_27), (M), (N)) -> U84(isNatKind(activate((N))), activate((M)), activate((N))) :|: M>=0 && N>=0 && x_27==1
+U84((x_28), (M), (N)) -> (1) + plus(activate((N)), activate((M))) :|: M>=0 && N>=0 && x_28==1
+U91((x_29), (N)) -> U92(isNatKind(activate((N)))) :|: N>=0 && x_29==1
+U92((x_30)) -> 0 :|: x_30==1
+isNat((x_31)) -> 1 :|: x_31==1
+isNat((x_32)) -> U11(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_32==1+V2+V1 && x_32>0
+isNat((x_33)) -> U21(isNatKind(activate((V1))), activate((V1))) :|: V1>=0 && x_33==1+V1 && x_33>0
+isNat((x_34)) -> U31(isNatKind(activate((V1))), activate((V1)), activate((V2))) :|: V2>=0 && V1>=0 && x_34==1+V2+V1 && x_34>0
+isNatKind((x_35)) -> 1 :|: x_35==1
+isNatKind((x_36)) -> U41(isNatKind(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_36==1+V2+V1 && x_36>0
+isNatKind((x_37)) -> U51(isNatKind(activate((V1)))) :|: V1>=0 && x_37==1+V1 && x_37>0
+isNatKind((x_38)) -> U61(isNatKind(activate((V1))), activate((V2))) :|: V2>=0 && V1>=0 && x_38==1+V2+V1 && x_38>0
+plus((N), (x_39)) -> U71(isNat((N)), (N)) :|: N>=0 && x_39==0
+plus((N), (x_40)) -> U81(isNat((M)), (M), (N)) :|: M>=0 && N>=0 && x_40==1+M && x_40>0
+x((N), (x_41)) -> U91(isNat((N)), (N)) :|: N>=0 && x_41==0
+x((N), (x_42)) -> U101(isNat((M)), (M), (N)) :|: M>=0 && N>=0 && x_42==1+M && x_42>0
+plus((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+x((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+activate((x_43)) -> 0 :|: x_43==1
+activate((x_44)) -> plus((X1), (X2)) :|: X1>=0 && X2>=0 && x_44==1+X1+X2 && x_44>0
+activate((x_45)) -> 1+X :|: X>=0 && x_45==1+X && x_45>0
+activate((x_46)) -> x((X1), (X2)) :|: X1>=0 && X2>=0 && x_46==1+X1+X2 && x_46>0
+activate((X)) -> X :|: X>=0
+)

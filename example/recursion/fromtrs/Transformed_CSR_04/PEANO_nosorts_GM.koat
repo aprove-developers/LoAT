@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(VAR M N X X1 X2 x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+a__and((x), (X)) -> mark((X)) :|: X>=0 && x==1
+a__plus((N), (x_0)) -> mark((N)) :|: N>=0 && x_0==0
+a__plus((N), (x_1)) -> (1) + a__plus(mark((N)), mark((M))) :|: M>=0 && N>=0 && x_1==1+M && x_1>0
+mark((x_2)) -> a__and(mark((X1)), (X2)) :|: X1>=0 && X2>=0 && x_2==1+X1+X2 && x_2>0
+mark((x_3)) -> a__plus(mark((X1)), mark((X2))) :|: X1>=0 && X2>=0 && x_3==1+X1+X2 && x_3>0
+mark((x_4)) -> 1 :|: x_4==1
+mark((x_5)) -> 0 :|: x_5==0
+mark((x_6)) -> (1) + mark((X)) :|: X>=0 && x_6==1+X && x_6>0
+a__and((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+a__plus((X1), (X2)) -> 1+X1+X2 :|: X1>=0 && X2>=0
+)

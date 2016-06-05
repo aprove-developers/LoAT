@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(VAR N X XS YS ZS x x_0 x_1 x_2 x_3 x_4 x_5 x_6)
+(RULES
+splitAt((x), (x_0)) -> u(splitAt((N), (XS))) :|: X>=0 && XS>=0 && N>=0 && x==1+N && x>0 && x_0==1+X && x_0>0
+u((x_1)) -> 2+ZS+X :|: ZS>=0 && X>=0 && YS>=0 && x_1==1+ZS+YS && x_1>0
+tail((x_2)) -> XS :|: XS>=0 && N>=0 && x_2==1+N && x_2>0
+natsFrom((N)) -> 1+N :|: N>=0
+fst((x_3)) -> XS :|: XS>=0 && YS>=0 && x_3==1+XS+YS && x_3>0
+snd((x_4)) -> YS :|: XS>=0 && YS>=0 && x_4==1+XS+YS && x_4>0
+splitAt((x_5), (XS)) -> 2+XS :|: XS>=0 && x_5==0
+head((x_6)) -> N :|: N>=0 && x_6==1+N && x_6>0
+sel((N), (XS)) -> head(afterNth((N), (XS))) :|: XS>=0 && N>=0
+take((N), (XS)) -> fst(splitAt((N), (XS))) :|: XS>=0 && N>=0
+afterNth((N), (XS)) -> snd(splitAt((N), (XS))) :|: XS>=0 && N>=0
+)

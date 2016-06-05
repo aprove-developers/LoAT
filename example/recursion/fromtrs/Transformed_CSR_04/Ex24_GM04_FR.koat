@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(VAR X Y x x_0 x_1)
+(RULES
+f((X), (x), (Y)) -> f(activate((Y)), activate((Y)), activate((Y))) :|: Y>=0 && X>=0 && x==1+X && x>0
+g((x_0)) -> 1 :|: x_0==1
+g((X)) -> 1+X :|: X>=0
+activate((x_1)) -> g(activate((X))) :|: X>=0 && x_1==1+X && x_1>0
+activate((X)) -> X :|: X>=0
+)

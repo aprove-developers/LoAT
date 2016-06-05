@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(VAR n x y z x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+null((x_0)) -> 1 :|: x_0==1
+null((x_1)) -> 0 :|: n>=0 && x>=0 && x_1==1+n+x && x_1>0
+tail((x_2)) -> x :|: n>=0 && x>=0 && x_2==1+n+x && x_2>0
+tail((x_3)) -> 1 :|: x_3==1
+head((x_4)) -> n :|: n>=0 && x>=0 && x_4==1+n+x && x_4>0
+app((x_5), (y)) -> y :|: y>=0 && x_5==1
+app((x_6), (y)) -> (1+n) + app((x), (y)) :|: y>=0 && n>=0 && x>=0 && x_6==1+n+x && x_6>0
+reverse((x_7)) -> 1 :|: x_7==1
+reverse((x_8)) -> app(reverse((x)), (2+n)) :|: n>=0 && x>=0 && x_8==1+n+x && x_8>0
+shuffle((x)) -> shuff((x), (1)) :|: x>=0
+shuff((x), (y)) -> if(null((x)), (x), (y), app((y), (((1) + head((x))) + (1)))) :|: y>=0 && x>=0
+if((x_9), (x), (y), (z)) -> y :|: y>=0 && z>=0 && x>=0 && x_9==1
+if((x_10), (x), (y), (z)) -> shuff(reverse(tail((x))), (z)) :|: y>=0 && z>=0 && x>=0 && x_10==0
+)

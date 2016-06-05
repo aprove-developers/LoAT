@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(VAR x1 x2 x3 x4 x5 x7 x9 x x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+(RULES
+walkiwashash1((x)) -> 1+x2 :|: x2>=0 && x==1+x2 && x>0
+walkiwashash1((x_0)) -> ((1) + walkiwashash1((x5))) + walkiwashash1((x3)) :|: x5>=0 && x3>=0 && x_0==1+x5+x3 && x_0>0
+comp_f_giwashash1((x_1), (x_2), (x1)) -> comp_f_giwashash1((x4), (x5), comp_f_giwashash1((x2), (x3), (x1))) :|: x5>=0 && x2>=0 && x3>=0 && x4>=0 && x1>=0 && x_1==1+x5+x4 && x_1>0 && x_2==1+x2+x3 && x_2>0
+comp_f_giwashash1((x_3), (x_4), (x4)) -> comp_f_giwashash1((x7), (x9), (1+x2+x4)) :|: x2>=0 && x7>=0 && x9>=0 && x4>=0 && x_3==1+x7+x9 && x_3>0 && x_4==1+x2 && x_4>0
+comp_f_giwashash1((x_5), (x_6), (x3)) -> (1+x2) + comp_f_giwashash1((x5), (x7), (x3)) :|: x5>=0 && x2>=0 && x7>=0 && x3>=0 && x_5==1+x2 && x_5>0 && x_6==1+x5+x7 && x_6>0
+comp_f_giwashash1((x_7), (x_8), (x4)) -> 2+x5+x2+x4 :|: x5>=0 && x2>=0 && x4>=0 && x_7==1+x5 && x_7>0 && x_8==1+x2 && x_8>0
+main((x_9)) -> 2+x4 :|: x4>=0 && x_9==1+x4 && x_9>0
+main((x_10)) -> comp_f_giwashash1(walkiwashash1((x9)), walkiwashash1((x5)), (1)) :|: x5>=0 && x9>=0 && x_10==1+x5+x9 && x_10>0
+)

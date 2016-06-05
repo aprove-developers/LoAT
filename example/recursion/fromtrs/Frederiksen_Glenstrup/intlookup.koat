@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR e p x x_ xs xs_ x_0 x_1 x_2 x_3)
+(RULES
+lookup((x_0), (x_1)) -> lookup((xs_), (xs)) :|: xs_>=0 && x>=0 && x_>=0 && xs>=0 && x_0==1+xs_+x_ && x_0>0 && x_1==1+x+xs && x_1>0
+lookup((x_2), (x_3)) -> x :|: x>=0 && xs>=0 && x_2==1 && x_3==1+x+xs && x_3>0
+run((e), (p)) -> intlookup((e), (p)) :|: p>=0 && e>=0
+intlookup((e), (p)) -> intlookup(lookup((e), (p)), (p)) :|: p>=0 && e>=0
+)
