@@ -6,12 +6,12 @@
 
 #include "expression.h"
 #include "term.h"
+#include "recursiongraph.h"
 
 namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 class FunctionSymbol;
 class ITRSProblem;
-class RightHandSide;
 
 typedef std::map<Purrs::index_type,Purrs::Expr> PurrsBaseCases;
 
@@ -28,6 +28,7 @@ public:
 private:
     bool solveRecursionInOneVar();
     bool solveRecursionInTwoVars();
+    void instantiateACandidate();
     bool updatesHaveConstDifference(const TT::Expression &term) const;
     bool findRecursions();
     bool findRealVars(const TT::Expression &term);
@@ -51,6 +52,7 @@ private:
     // attributes
     std::vector<const RightHandSide*> recursions;
     const RightHandSide *recursion;
+    RightHandSide recursionCopy;
 
     int realVarIndex;
     VariableIndex realVar;
@@ -60,9 +62,14 @@ private:
     VariableIndex realVar2;
     ExprSymbol realVar2GiNaC;
 
+    GiNaC::symbol constDiff;
     // realVar2 -> realVar - constDiff
     GiNaC::exmap realVarSub;
     std::map<Purrs::index_type,const RightHandSide*> baseCases;
+
+    ExprSymbolSet instCandidates;
+    // z -> 5
+    GiNaC::exmap instSub;
 };
 
 #endif // RECURSION_H
