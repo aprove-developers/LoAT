@@ -32,6 +32,7 @@ class Addition;
 class Subtraction;
 class Multiplication;
 class Power;
+class Factorial;
 class FunctionSymbol;
 class GiNaCExpression;
 class FunctionDefinition;
@@ -51,6 +52,7 @@ enum class InfoFlag {
     Subtraction,
     Multiplication,
     Power,
+    Factorial,
     FunctionSymbol,
     Number,
     Variable
@@ -133,6 +135,8 @@ public:
     // e.g., f(f(x)) has exactly one function symbol
     bool hasExactlyOneFunctionSymbol() const;
 
+    bool hasExactlyOneFunctionSymbolOnce() const;
+
     Expression substitute(const Substitution &sub) const;
     Expression substitute(const GiNaC::exmap &sub) const;
     Expression evaluateFunction(const FunctionDefinition &funDef,
@@ -208,6 +212,9 @@ public:
     virtual void visitIn(const Power &pow) {};
     virtual void visitPost(const Power &pow) {};
 
+    virtual void visitPre(const Factorial &fact) {};
+    virtual void visitPost(const Factorial &fact) {};
+
     virtual void visitPre(const FunctionSymbol &funcSym) {};
     virtual void visitIn(const FunctionSymbol &funcSym) {};
     virtual void visitPost(const FunctionSymbol &funcSym) {};
@@ -248,6 +255,8 @@ public:
 
     bool hasNoFunctionSymbols() const;
     bool hasExactlyOneFunctionSymbol() const;
+
+    bool hasExactlyOneFunctionSymbolOnce() const;
 
     virtual bool info(InfoFlag info) const = 0;
 
@@ -411,6 +420,34 @@ public:
 
 private:
     std::shared_ptr<Term> l, r;
+};
+
+
+class Factorial : public Term {
+public:
+    Factorial(const std::shared_ptr<Term> &n);
+    void traverse(ConstVisitor &visitor) const override;
+
+    int nops() const override;
+    std::shared_ptr<Term> op(int i) const override;
+
+    bool info(InfoFlag info) const override;
+
+    std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
+                                           Expression *addToCost,
+                                           ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const override;
+    std::shared_ptr<Term> substitute(const Substitution &sub) const override;
+    std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+
+    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    Purrs::Expr toPurrs(int i) const override;
+    std::shared_ptr<Term> ginacify() const override;
+    std::shared_ptr<Term> unGinacify() const override;
+
+private:
+    std::shared_ptr<Term> n;
 };
 
 

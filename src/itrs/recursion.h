@@ -27,6 +27,8 @@ public:
 
 private:
     bool solveRecursionInOneVar();
+    bool solveRecursionInTwoVars();
+    bool updatesHaveConstDifference(const TT::Expression &term) const;
     bool findRecursions();
     bool findRealVars(const TT::Expression &term);
     bool findBaseCases();
@@ -49,9 +51,17 @@ private:
     // attributes
     std::vector<const RightHandSide*> recursions;
     const RightHandSide *recursion;
+
     int realVarIndex;
     VariableIndex realVar;
     ExprSymbol realVarGiNaC;
+
+    int realVar2Index;
+    VariableIndex realVar2;
+    ExprSymbol realVar2GiNaC;
+
+    // realVar2 -> realVar - constDiff
+    GiNaC::exmap realVarSub;
     std::map<Purrs::index_type,const RightHandSide*> baseCases;
 };
 

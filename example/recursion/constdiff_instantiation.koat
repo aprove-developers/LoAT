@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y z)
+(RULES
+f(z,x,y) -> f(z,x-1,y-1) :|: x > 0 && x > z
+f(z,x,y) -> y :|: x <= 0
+)

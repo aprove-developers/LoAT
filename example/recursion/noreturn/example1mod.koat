@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS main))
+(VAR x y z)
+(RULES
+main(z) -> main2(f(z, z))
+f(x,z) -> f1(x, 0, z)
+f1(x,y,z) -> f2(x, y, z) :|: x > 0
+f1(x,y,z) -> fexit(x, y, z) :|: x <= 0
+f2(x,y,z) -> floop(x, 2, z)
+floop(x,y,z) -> f4(x,y,z) :|: y >= 0
+floop(x,y,z) -> fexit(x,y,z) :|: y < 0
+f4(x,y,z) -> f5(x, y, z - 1)
+f5(x,y,z) -> f6(x, y, f(x - y, z))
+f6(x,y,z) -> f7(x, y - 1, z)
+f7(x,y,z) -> floop(x, y, z)
+fexit(x,y,z) -> z
+)

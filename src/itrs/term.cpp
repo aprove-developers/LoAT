@@ -238,7 +238,7 @@ bool Expression::has(const ExprSymbol &sym) const {
 
 
 bool Expression::isSimple() const {
-    return info(InfoFlag::FunctionSymbol) && hasExactlyOneFunctionSymbol();
+    return info(InfoFlag::FunctionSymbol) && hasExactlyOneFunctionSymbolOnce();
 }
 
 
@@ -304,6 +304,11 @@ bool Expression::hasNoFunctionSymbols() const {
 
 bool Expression::hasExactlyOneFunctionSymbol() const {
     return root->hasExactlyOneFunctionSymbol();
+}
+
+
+bool Expression::hasExactlyOneFunctionSymbolOnce() const {
+    return root->hasExactlyOneFunctionSymbolOnce();
 }
 
 
@@ -453,7 +458,19 @@ std::shared_ptr<Term> Term::fromGiNaC(const GiNaC::ex &ex) {
 
         res = std::make_shared<Relation>(type, fromGiNaC(ex.op(0)), fromGiNaC(ex.op(1)));
 
+    }  else if (GiNaC::is_a<GiNaC::function>(ex)) {
+        GiNaC::ex factWildCard = GiNaC::factorial(GiNaC::wild());
+
+        if (ex.match(factWildCard)) {
+            res = std::make_shared<Factorial>(fromGiNaC(ex.op(0)));
+
+        } else {
+            throw UnsupportedExpressionException("Unknown function");
+        }
+
     } else {
+        debugTerm("FOO");
+        debugTerm(ex);
         throw UnsupportedExpressionException();
     }
 
@@ -688,6 +705,40 @@ bool Term::hasExactlyOneFunctionSymbol() const {
 }
 
 
+bool Term::hasExactlyOneFunctionSymbolOnce() const {
+    class ExactlyOneOnceFunSymbolVisitor : public ConstVisitor {
+    public:
+        ExactlyOneOnceFunSymbolVisitor(bool &oneFunSymbol)
+            : oneFunSymbol(oneFunSymbol) {
+            oneFunSymbol = false;
+            moreThanOne = false;
+        }
+
+        void visitPre(const FunctionSymbol &fs) override {
+            if (!moreThanOne) {
+                if (!oneFunSymbol) {
+                    oneFunSymbol = true;
+
+                } else {
+                    moreThanOne = true;
+                    oneFunSymbol = false;
+                }
+            }
+        }
+
+    private:
+        bool &oneFunSymbol;
+        bool moreThanOne;
+    };
+
+    bool oneFunSymbol;
+    ExactlyOneOnceFunSymbolVisitor visitor(oneFunSymbol);
+    traverse(visitor);
+
+    return oneFunSymbol;
+}
+
+
 std::shared_ptr<Term> Term::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
     throw UnsupportedOperationException();
 }
@@ -753,6 +804,12 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
         }
         void visitPost(const Power &pow) override {
             os << ")";
+        }
+        void visitPre(const Factorial &fact) override {
+            os << "(";
+        }
+        void visitPost(const Factorial &fact) override {
+            os << "!)";
         }
         void visitPre(const FunctionSymbol &funcSymbol) override {
             os << funcSymbol.getName();
@@ -1330,6 +1387,90 @@ std::shared_ptr<Term> Power::ginacify() const {
         std::shared_ptr<Term> newL = l->ginacify();
         std::shared_ptr<Term> newR = r->ginacify();
         return std::make_shared<Power>(newL, newR);
+    }
+}
+
+
+Factorial::Factorial(const std::shared_ptr<Term> &n)
+    : n(n) {
+}
+
+
+void Factorial::traverse(ConstVisitor &visitor) const {
+    visitor.visitPre(*this);
+
+    n->traverse(visitor);
+
+    visitor.visitPost(*this);
+}
+
+
+int Factorial::nops() const {
+    return 1;
+}
+
+
+std::shared_ptr<Term> Factorial::op(int i) const {
+    assert(i >= 0 && i < nops());
+
+    return n;
+}
+
+
+bool Factorial::info(InfoFlag info) const {
+    return info == InfoFlag::Factorial;
+}
+
+
+std::shared_ptr<Term> Factorial::copy() const {
+    return std::make_shared<Factorial>(n);
+}
+
+
+std::shared_ptr<Term> Factorial::evaluateFunction(const FunctionDefinition &funDef,
+                                                  Expression *addToCost,
+                                                  ExpressionVector *addToGuard) const {
+    return std::make_shared<Factorial>(n->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Factorial::abstractSize(const std::set<FunctionSymbolIndex> &funSyms) const {
+    return std::make_shared<Factorial>(n->abstractSize(funSyms));
+}
+
+
+std::shared_ptr<Term> Factorial::substitute(const Substitution &sub) const {
+    return std::make_shared<Factorial>(n->substitute(sub));
+}
+
+
+std::shared_ptr<Term> Factorial::substitute(const GiNaC::exmap &sub) const {
+    return std::make_shared<Factorial>(n->substitute(sub));
+}
+
+
+GiNaC::ex Factorial::toGiNaC(bool subFunSyms) const {
+    return GiNaC::factorial(n->toGiNaC(subFunSyms));
+}
+
+
+std::shared_ptr<Term> Factorial::unGinacify() const {
+    return std::make_shared<Factorial>(n->unGinacify());
+}
+
+
+Purrs::Expr Factorial::toPurrs(int i) const {
+    return Purrs::factorial(n->toPurrs(i));
+}
+
+
+std::shared_ptr<Term> Factorial::ginacify() const {
+    if (hasNoFunctionSymbols()) {
+        return std::make_shared<GiNaCExpression>(toGiNaC());
+
+    } else {
+        std::shared_ptr<Term> newN = n->ginacify();
+        return std::make_shared<Factorial>(newN);
     }
 }
 
