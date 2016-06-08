@@ -4,6 +4,7 @@
 #include <memory>
 #include <ostream>
 #include <set>
+#include <utility>
 #include <vector>
 
 #include <ginac/ginac.h>
@@ -26,6 +27,7 @@ class Expression;
 
 typedef std::map<ExprSymbol,TT::Expression,GiNaC::ex_is_less> Substitution;
 typedef std::vector<TT::Expression> ExpressionVector;
+typedef std::vector<std::pair<TT::Expression,ExprSymbol>> FunToVarSub;
 
 class Relation;
 class Addition;
@@ -131,6 +133,7 @@ public:
     void collectFunctionApplications(std::vector<Expression> &app) const;
     std::vector<Expression> getFunctionApplications() const;
 
+    bool hasFunctionSymbol(FunctionSymbolIndex funSym) const;
     bool hasNoFunctionSymbols() const;
     // e.g., f(f(x)) has exactly one function symbol
     bool hasExactlyOneFunctionSymbol() const;
@@ -139,6 +142,7 @@ public:
 
     Expression substitute(const Substitution &sub) const;
     Expression substitute(const GiNaC::exmap &sub) const;
+    Expression substitute(FunctionSymbolIndex fs, const Expression &ex) const;
     Expression evaluateFunction(const FunctionDefinition &funDef,
                                 Expression *addToCost,
                                 ExpressionVector *addToGuard) const;
@@ -146,10 +150,12 @@ public:
                             const std::map<FunctionSymbolIndex,int> &specialCases) const;
 
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const;
     Purrs::Expr toPurrs(int i = -1) const;
     Expression ginacify() const ;
     Expression unGinacify() const;
+
+    bool equals(const Expression &other) const;
 
 private:
     Expression(std::shared_ptr<Term> root);
@@ -254,6 +260,7 @@ public:
     void collectFunctionApplications(std::vector<Expression> &updates) const;
     std::vector<Expression> getFunctionApplications() const;
 
+    bool hasFunctionSymbol(FunctionSymbolIndex funSym) const;
     bool hasNoFunctionSymbols() const;
     bool hasExactlyOneFunctionSymbol() const;
 
@@ -269,12 +276,25 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const;
     virtual std::shared_ptr<Term> substitute(const Substitution &sub) const = 0;
     virtual std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const = 0;
+    virtual std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const = 0;
+
 
     EXCEPTION(UnsupportedOperationException, CustomException);
-    virtual GiNaC::ex toGiNaC(bool subFunSyms = false) const;
+    virtual GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const;
     virtual Purrs::Expr toPurrs(int i) const;
     virtual std::shared_ptr<Term> ginacify() const = 0;
     virtual std::shared_ptr<Term> unGinacify() const = 0;
+
+    bool equals(const std::shared_ptr<Term> other) const;
+    virtual bool equals(const Term &term) const = 0; // use double dispatch
+    virtual bool equals(const Relation &term) const;
+    virtual bool equals(const Addition &term) const;
+    virtual bool equals(const Subtraction &term) const;
+    virtual bool equals(const Multiplication &term) const;
+    virtual bool equals(const Power &term) const;
+    virtual bool equals(const Factorial &term) const;
+    virtual bool equals(const FunctionSymbol &term) const;
+    virtual bool equals(const GiNaCExpression &term) const;
 };
 
 std::ostream& operator<<(std::ostream &os, const Term &term);
@@ -300,13 +320,17 @@ public:
                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
     Type getType() const;
     InfoFlag getTypeInfoFlag() const;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const Relation &term) const override;
 
 private:
     Type type;
@@ -331,11 +355,15 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const Addition &term) const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -360,11 +388,15 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const Subtraction &term) const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -389,11 +421,15 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const Multiplication &term) const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -418,11 +454,15 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const Power &term) const override;
 
 private:
     std::shared_ptr<Term> l, r;
@@ -447,11 +487,15 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const Factorial &term) const override;
 
 private:
     std::shared_ptr<Term> n;
@@ -477,15 +521,19 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
     FunctionSymbolIndex getFunctionSymbol() const;
     std::string getName() const;
     const std::vector<std::shared_ptr<Term>>& getArguments() const;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const FunctionSymbol &term) const override;
 
 private:
     FunctionSymbolIndex functionSymbol;
@@ -512,14 +560,18 @@ public:
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
+    std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
     GiNaC::ex getExpression() const;
     void setExpression(const GiNaC::ex &expr);
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
+
+    bool equals(const Term &term) const override;
+    bool equals(const GiNaCExpression &term) const override;
 
 private:
     GiNaC::ex expression;

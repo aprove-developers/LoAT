@@ -5,6 +5,7 @@
 
 #include "guardtoolbox.h"
 #include "recursiongraph.h"
+#include "term.h"
 #include "z3toolbox.h"
 
 namespace GT = GuardToolbox;
@@ -93,9 +94,23 @@ bool Recursion::solveRecursionInOneVar() {
         debugRecursion("===Trying to solve recursion===");
         debugRecursion("Recursion: " << *recursion);
 
+        // Remove self-referential conditions from the guard
+        TT::ExpressionVector selfReferentialGuard;
+        TT::ExpressionVector &rcGuard = recursionCopy.guard;
+        auto it = rcGuard.begin();
+        while (it != rcGuard.end()) {
+            if (it->hasFunctionSymbol(funSymbolIndex)) {
+                selfReferentialGuard.push_back(std::move(*it));
+                it = rcGuard.erase(it);
+
+            } else {
+                ++it;
+            }
+        }
+
         // try to instantiate variables if the base cases are not sufficient
         instCandidates.clear();
-        for (TT::Expression &ex : recursionCopy.guard) {
+        for (TT::Expression &ex : rcGuard) {
             ex.substitute(realVarSub).collectVariables(instCandidates);
         }
         instCandidates.erase(realVarGiNaC);
@@ -111,6 +126,7 @@ bool Recursion::solveRecursionInOneVar() {
             debugRecursion("Base cases are not sufficient");
             return false;
         }
+
 
         debugRecursion("===Solving recursion===");
         GiNaC::exmap varSub;
@@ -139,46 +155,19 @@ bool Recursion::solveRecursionInOneVar() {
 
 
         debugRecursion("===Constructing guard===");
-        debugRecursion("using guard of recursion:");
+        debugRecursion("using (non-self-referential) guard of recursion:");
         TT::ExpressionVector preEvaluatedGuard;
-        for (const TT::Expression &ex : recursion->guard) {
-            TT::Expression exSub = ex.substitute(instSub);
-            debugRecursion(exSub);
-            res.guard.push_back(exSub);
-            preEvaluatedGuard.push_back(exSub);
+        for (const TT::Expression &ex : rcGuard) {
+            debugRecursion(ex);
+            res.guard.push_back(ex);
         }
 
         // We already have the definition for this function symbol
-        // Evaluate all occurences in the guard and the cost
+        // Evaluate all occurences in the cost
         TT::Expression dummy(GiNaC::numeric(0));
-        TT::FunctionDefinition funDef(itrs, funSymbolIndex, res.term, dummy, res.guard);
-
-        debugRecursion("Pre-evaluated guard:");
-        for (int i = 0; i < preEvaluatedGuard.size(); ++i) {
-            preEvaluatedGuard[i] = preEvaluatedGuard[i].evaluateFunction(funDef, nullptr, nullptr).ginacify();
-            debugRecursion(preEvaluatedGuard[i]);
-        }
-        // Update funDef
-        // TODO optimize
-        funDef = TT::FunctionDefinition(itrs, funSymbolIndex, res.term, dummy, preEvaluatedGuard);
-
-        debugRecursion("Evaluated guard:");
-        for (int i = 0; i < res.guard.size(); ++i) {
-            TT::Expression temp = std::move(res.guard[i]);
-            res.guard[i] = std::move(temp.evaluateFunction(funDef, nullptr, &res.guard).ginacify());
-
-            debugRecursion(res.guard[i]);
-        }
-
-        int oldSize = res.guard.size();
-        TT::Expression costRecurrence = recursionCopy.cost.evaluateFunction(funDef, nullptr, &res.guard).ginacify();
-        for (int i = oldSize; i < res.guard.size(); ++i) {
-            res.guard[i] = res.guard[i].ginacify();
-        }
-        debugRecursion("After evaluating cost:");
-        for (const TT::Expression &ex : res.guard) {
-            debugRecursion(ex);
-        }
+        TT::ExpressionVector dummyVector;
+        TT::FunctionDefinition funDef(itrs, funSymbolIndex, res.term, dummy, dummyVector);
+        TT::Expression costRecurrence = recursionCopy.cost.evaluateFunction(funDef, nullptr, nullptr).ginacify();
 
 
         debugRecursion("===Solving cost===");
@@ -200,11 +189,19 @@ bool Recursion::solveRecursionInOneVar() {
         }
 
         if (!solve(recurrence, baseCasesPurrs)) {
-            debugRecursion("Could not solve recurrence");
+            debugRecursion("Could not solve cost recurrence");
             return false;
         }
 
         res.cost = TT::Expression(recurrence.toGiNaC().subs(varReSub));
+
+
+        // Make sure that removing the self-references from the guard is sound
+        if (!selfReferentialGuard.empty() && !removingSelfReferentialGuardIsSound(selfReferentialGuard)) {
+            debugRecursion("removing self-referential parts of the guard is possibly not sound, aborting");
+            return false;
+        }
+
 
         // Add all instantiations to the guard
         for (auto const &pair : instSub) {
@@ -559,5 +556,64 @@ bool Recursion::solve(Purrs::Expr &recurrence, const PurrsBaseCases &bc) {
     debugRecursion("solution: " << exact);
 
     recurrence = exact;
+    return true;
+}
+
+
+bool Recursion::removingSelfReferentialGuardIsSound(const TT::ExpressionVector &srGuard) const {
+    debugRecursion("===Checking if removing the self-referential parts of the guard is sound===");
+    TT::Expression dummy(GiNaC::numeric(0));
+    TT::ExpressionVector dummyVector;
+
+    // IB: For every base case: selfReferentialGuard[funSymbol/baseCase] holds
+    for (auto const &pair : baseCases) {
+        TT::FunctionDefinition funDef(itrs, funSymbolIndex, pair.second->term, dummy, dummyVector);
+
+        std::vector<Expression> query;
+        for (const TT::Expression &ex : srGuard) {
+            TT::Expression query = std::move(ex.substitute(instSub).evaluateFunction(funDef, nullptr, nullptr));
+            GiNaC::ex asGiNaC = std::move(query.toGiNaC(true));
+
+            if (!Z3Toolbox::checkTautology(asGiNaC)) {
+                debugRecursion("query: " << asGiNaC << ": FALSE");
+                debugRecursion("Potentially not sound");
+                return false;
+
+            }
+            debugRecursion("query: " << asGiNaC << ": TRUE");
+        }
+    }
+
+    // IS: For the recursion: guard && srGuard => recursion.term
+    TT::FunToVarSub sub; // make sure that identical function calls are substituted by the same variable
+    std::vector<Expression> lhs;
+    for (const TT::Expression &ex : recursionCopy.guard) {
+        lhs.push_back(ex.toGiNaC(true, &sub));
+    }
+    for (const TT::Expression &ex : srGuard) {
+        lhs.push_back(ex.toGiNaC(true, &sub));
+    }
+
+    debugRecursion("LHS:");
+    for (const Expression &ex : lhs) {
+        debugRecursion(ex);
+    }
+
+    for (const TT::Expression &ex : srGuard) {
+        Expression rhs = ex.substitute(funSymbolIndex, recursionCopy.term).toGiNaC(true, &sub);
+
+        if (!Z3Toolbox::checkTautologicImplication(lhs, rhs)) {
+            debugRecursion("query: LHS => " << rhs << ": FALSE");
+            debugRecursion("Potentially not sound");
+            return false;
+        }
+        debugRecursion("query: LHS => " << rhs << ": TRUE");
+    }
+
+    debugRecursion("It is sound to remove the following parts of the guard:");
+    for (const TT::Expression &ex : srGuard) {
+        debugRecursion(ex);
+    }
+
     return true;
 }

@@ -35,6 +35,7 @@ private:
     void normalizeGuard();
     void createInitialLimitProblem();
     void propagateBounds();
+    void substituteWhileAvoidingDivByZero(LimitProblem &limitProblem, int sub);
     GiNaC::exmap calcSolution(const LimitProblem &limitProblem);
     int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);

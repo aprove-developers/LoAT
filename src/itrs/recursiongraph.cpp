@@ -78,6 +78,26 @@ std::ostream& operator<<(std::ostream &s, const Transition &trans) {
     return s;
 }
 
+
+bool RightHandSide::isLegacyTransition() const {
+    if (!term.isSimple()) {
+        return false;
+    }
+
+    if (!cost.hasNoFunctionSymbols()) {
+        return false;
+    }
+
+    for (const TT::Expression &ex : guard) {
+        if (!ex.hasNoFunctionSymbols()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
                                                    FunctionSymbolIndex funSym) const {
     Transition trans;
@@ -1295,7 +1315,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
     for (TransIndex trans : getTransFromTo(node, node)) {
         const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
 
-        if (rhs.term.isSimple()) {
+        if (rhs.isLegacyTransition()) {
             loops.push_back(trans);
 
         }

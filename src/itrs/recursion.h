@@ -35,6 +35,7 @@ private:
     bool findBaseCases();
     bool baseCasesAreSufficient();
     bool solve(Purrs::Expr &recurrence, const PurrsBaseCases &bc);
+    bool removingSelfReferentialGuardIsSound(const TT::ExpressionVector &srGuard) const;
 
 private:
     // paramters passed to this object
@@ -53,6 +54,7 @@ private:
     std::vector<const RightHandSide*> recursions;
     const RightHandSide *recursion;
     RightHandSide recursionCopy;
+    TT::ExpressionVector selfReferentialGuard;
 
     int realVarIndex;
     VariableIndex realVar;

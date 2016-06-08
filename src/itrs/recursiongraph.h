@@ -47,6 +47,8 @@ struct RightHandSide {
     TT::Expression term;
     TT::Expression cost;
 
+    bool isLegacyTransition() const;
+
     Transition toLegacyTransition(const ITRSProblem &itrs, FunctionSymbolIndex funSym) const;
 };
 

@@ -195,6 +195,7 @@ void AsymptoticBound::propagateBounds() {
         }
     }
 
+    int oldSubstitutionsSize = substitutions.size();
     // build all possible combinations of substitutions (resulting from inequalites)
     int numOfSubstitutions = substitutions.size() - numOfEquations;
     if (finalCheck && numOfSubstitutions <= 10) { // must be smaller than 32
@@ -214,8 +215,7 @@ void AsymptoticBound::propagateBounds() {
 
             for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
                 if (combination & (1 << bitPos)) {
-                    limitProblem.substitute(substitutions[numOfEquations + bitPos],
-                                            numOfEquations + bitPos);
+                    substituteWhileAvoidingDivByZero(limitProblem, numOfEquations + bitPos);
                 }
             }
 
@@ -238,17 +238,43 @@ void AsymptoticBound::propagateBounds() {
     LimitProblem &limitProblem = limitProblems.back();
 
     debugAsymptoticBound("combination of substitutions:");
-    for (int i = numOfEquations; i < substitutions.size(); ++i) {
+    for (int i = numOfEquations; i < oldSubstitutionsSize; ++i) {
         debugAsymptoticBound(substitutions[i]);
     }
 
-    for (int i = numOfEquations; i < substitutions.size(); ++i) {
-        limitProblem.substitute(substitutions[i], i);
+    for (int i = numOfEquations; i < oldSubstitutionsSize; ++i) {
+        substituteWhileAvoidingDivByZero(limitProblem, i);
     }
 
     if (limitProblem.isUnsolvable()) {
         limitProblems.pop_back();
     }
+}
+
+void AsymptoticBound::substituteWhileAvoidingDivByZero(LimitProblem &limitProblem, int sub) {
+    LimitProblem copy(limitProblem);
+
+    bool repeat;
+    do {
+        repeat = false;
+
+        try {
+            limitProblem.substitute(substitutions[sub], sub);
+
+        } catch (const GiNaC::pole_error &) { // div by zero
+            debugAsymptoticBound("division by zero while propagating bounds");
+            limitProblem = copy;
+
+            exmap newSub;
+            for (auto const &pair : substitutions[sub]) {
+                newSub.emplace(pair.first, pair.second + 1);
+            }
+            sub = substitutions.size();
+            substitutions.push_back(std::move(newSub));
+
+            repeat = true;
+        }
+    } while (repeat);
 }
 
 GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
@@ -878,13 +904,13 @@ bool AsymptoticBound::tryInstantiatingVariable() {
                     Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
 
                 exmap sub;
-                sub.insert(std::make_pair(var, rational));
+                sub.emplace(var, rational);
                 substitutions.push_back(std::move(sub));
 
                 debugAsymptoticBound("instantiating " << var << " with " << rational);
 
                 createBacktrackingPoint(it, POS_INF);
-                currentLP.substitute(substitutions.back(), substitutions.size() - 1);
+                substituteWhileAvoidingDivByZero(currentLP, substitutions.size() - 1);
 
             } else {
                 debugAsymptoticBound("Z3: limit problem is unknown");

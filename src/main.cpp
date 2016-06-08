@@ -222,6 +222,14 @@ int main(int argc, char *argv[]) {
             do {
                 changed = false;
 
+                if (g.chainLinear()) {
+                    changed = true;
+                    proofout << endl <<  "Eliminated locations (linear):" << endl;
+                    g.printForProof();
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (linear)");
+                }
+                if (Timeout::soft()) break;
+
                 if (g.solveRecursions()) {
                     changed = true;
                     proofout << endl << "solved recursions" << endl;
@@ -247,14 +255,6 @@ int main(int argc, char *argv[]) {
                     }
                     if (Timeout::soft()) break;
                 }
-
-                if (g.chainLinear()) {
-                    changed = true;
-                    proofout << endl <<  "Eliminated locations (linear):" << endl;
-                    g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (linear)");
-                }
-                if (Timeout::soft()) break;
 
             } while (changed);
 

@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR x y)
+(RULES
+start(x,y) -> pow(x,y)
+pow(x,y) -> times(pow(x, y-1), x) :|: y > 0
+pow(x,0) -> 1
+times(x,y) -> plus(x, times(x,y-1)) :|: y > 0
+times(x,0) -> 0
+plus(x,y) -> plus(x-1,y) + 1 :|: x > 0
+plus(0,y) -> y
+)

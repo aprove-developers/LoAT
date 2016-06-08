@@ -297,6 +297,11 @@ std::vector<Expression> Expression::getFunctionApplications() const {
 }
 
 
+bool Expression::hasFunctionSymbol(FunctionSymbolIndex funSym) const {
+    return root->hasFunctionSymbol(funSym);
+}
+
+
 bool Expression::hasNoFunctionSymbols() const {
     return root->hasNoFunctionSymbols();
 }
@@ -322,6 +327,11 @@ Expression Expression::substitute(const GiNaC::exmap &sub) const {
 }
 
 
+Expression Expression::substitute(FunctionSymbolIndex fs, const Expression &ex) const {
+    return Expression(root->substitute(fs, ex.getTermTree()));
+}
+
+
 Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
                                         Expression *addToCost,
                                         ExpressionVector *addToGuard) const {
@@ -335,8 +345,8 @@ Expression Expression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms
 }
 
 
-GiNaC::ex Expression::toGiNaC(bool subFunSyms) const {
-    return root->toGiNaC(subFunSyms);
+GiNaC::ex Expression::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    return root->toGiNaC(subFunSyms, sub);
 }
 
 
@@ -352,6 +362,11 @@ Expression Expression::ginacify() const {
 
 Expression Expression::unGinacify() const {
     return Expression(root->unGinacify());
+}
+
+
+bool Expression::equals(const Expression &other) const {
+    return root->equals(other.root);
 }
 
 
@@ -647,6 +662,35 @@ std::vector<Expression> Term::getFunctionApplications() const {
 }
 
 
+bool Term::hasFunctionSymbol(FunctionSymbolIndex funSym) const {
+    class FuncSymbolsVisitor : public ConstVisitor {
+    public:
+        FuncSymbolsVisitor(FunctionSymbolIndex funSymbol)
+            : funSymbol(funSymbol) {
+            hasThisFunSym = false;
+        }
+
+        void visitPre(const FunctionSymbol &funSym) override {
+            if (funSymbol == funSym.getFunctionSymbol()) {
+                hasThisFunSym = true;
+            }
+        }
+
+        bool hasThisFunctionSymbol() const {
+            return hasThisFunSym;
+        }
+
+    private:
+        FunctionSymbolIndex funSymbol;
+        bool hasThisFunSym;
+    };
+
+    FuncSymbolsVisitor visitor(funSym);
+    traverse(visitor);
+    return visitor.hasThisFunctionSymbol();
+}
+
+
 bool Term::hasNoFunctionSymbols() const {
     class NoFuncSymbolsVisitor : public ConstVisitor {
     public:
@@ -746,7 +790,7 @@ std::shared_ptr<Term> Term::abstractSize(const std::set<FunctionSymbolIndex> &fu
 }
 
 
-GiNaC::ex Term::toGiNaC(bool subFunSyms) const {
+GiNaC::ex Term::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
     throw UnsupportedOperationException();
 }
 
@@ -849,6 +893,52 @@ std::ostream& operator<<(std::ostream &os, const Term &term) {
     return os;
 }
 
+
+bool Term::equals(const std::shared_ptr<Term> other) const {
+    return equals(*other);
+}
+
+
+bool Term::equals(const Relation &term) const {
+    return false;
+}
+
+
+bool Term::equals(const Addition &term) const {
+    return false;
+}
+
+
+bool Term::equals(const Subtraction &term) const {
+    return false;
+}
+
+
+bool Term::equals(const Multiplication &term) const {
+    return false;
+}
+
+
+bool Term::equals(const Power &term) const {
+    return false;
+}
+
+
+bool Term::equals(const Factorial &term) const {
+    return false;
+}
+
+
+bool Term::equals(const FunctionSymbol &term) const {
+    return false;
+}
+
+
+bool Term::equals(const GiNaCExpression &term) const {
+    return false;
+}
+
+
 const char* Relation::TypeNames[] = { "==", "!=", ">", ">=", "<", "<=" };
 
 Relation::Relation(Type type, const std::shared_ptr<Term> &l, const std::shared_ptr<Term> &r)
@@ -919,6 +1009,11 @@ std::shared_ptr<Term> Relation::substitute(const GiNaC::exmap &sub) const {
 }
 
 
+std::shared_ptr<Term> Relation::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return std::make_shared<Relation>(type, l->substitute(fs, ex), r->substitute(fs, ex));
+}
+
+
 Relation::Type Relation::getType() const {
     return type;
 }
@@ -956,9 +1051,9 @@ InfoFlag Relation::getTypeInfoFlag() const {
 }
 
 
-GiNaC::ex Relation::toGiNaC(bool subFunSyms) const {
-    GiNaC::ex newL = l->toGiNaC(subFunSyms);
-    GiNaC::ex newR = r->toGiNaC(subFunSyms);
+GiNaC::ex Relation::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    GiNaC::ex newL = l->toGiNaC(subFunSyms, sub);
+    GiNaC::ex newR = r->toGiNaC(subFunSyms, sub);
 
     if (type == EQUAL) {
         return newL == newR;
@@ -998,6 +1093,16 @@ std::shared_ptr<Term> Relation::ginacify() const {
 
 std::shared_ptr<Term> Relation::unGinacify() const {
     return std::make_shared<Relation>(type, l->unGinacify(), r->unGinacify());
+}
+
+
+bool Relation::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool Relation::equals(const Relation &term) const {
+    return l->equals(*term.l) && r->equals(*term.r);
 }
 
 
@@ -1073,8 +1178,13 @@ std::shared_ptr<Term> Addition::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Addition::toGiNaC(bool subFunSyms) const {
-    return l->toGiNaC(subFunSyms) + r->toGiNaC(subFunSyms);
+std::shared_ptr<Term> Addition::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return std::make_shared<Addition>(l->substitute(fs, ex), r->substitute(fs, ex));
+}
+
+
+GiNaC::ex Addition::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    return l->toGiNaC(subFunSyms, sub) + r->toGiNaC(subFunSyms, sub);
 }
 
 
@@ -1097,6 +1207,16 @@ std::shared_ptr<Term> Addition::ginacify() const {
 
 std::shared_ptr<Term> Addition::unGinacify() const {
     return std::make_shared<Addition>(l->unGinacify(), r->unGinacify());
+}
+
+
+bool Addition::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool Addition::equals(const Addition &term) const {
+    return l->equals(*term.l) && r->equals(*term.r);
 }
 
 
@@ -1172,8 +1292,13 @@ std::shared_ptr<Term> Subtraction::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Subtraction::toGiNaC(bool subFunSyms) const {
-    return l->toGiNaC(subFunSyms) - r->toGiNaC(subFunSyms);
+std::shared_ptr<Term> Subtraction::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return std::make_shared<Subtraction>(l->substitute(fs, ex), r->substitute(fs, ex));
+}
+
+
+GiNaC::ex Subtraction::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    return l->toGiNaC(subFunSyms, sub) - r->toGiNaC(subFunSyms, sub);
 }
 
 
@@ -1196,6 +1321,16 @@ std::shared_ptr<Term> Subtraction::ginacify() const {
 
 std::shared_ptr<Term> Subtraction::unGinacify() const {
     return std::make_shared<Subtraction>(l->unGinacify(), r->unGinacify());
+}
+
+
+bool Subtraction::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool Subtraction::equals(const Subtraction &term) const {
+    return l->equals(*term.l) && r->equals(*term.r);
 }
 
 
@@ -1271,8 +1406,13 @@ std::shared_ptr<Term> Multiplication::substitute(const GiNaC::exmap &sub) const 
 }
 
 
-GiNaC::ex Multiplication::toGiNaC(bool subFunSyms) const {
-    return l->toGiNaC(subFunSyms) * r->toGiNaC(subFunSyms);
+std::shared_ptr<Term> Multiplication::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return std::make_shared<Multiplication>(l->substitute(fs, ex), r->substitute(fs, ex));
+}
+
+
+GiNaC::ex Multiplication::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    return l->toGiNaC(subFunSyms, sub) * r->toGiNaC(subFunSyms, sub);
 }
 
 
@@ -1295,6 +1435,16 @@ std::shared_ptr<Term> Multiplication::ginacify() const {
         std::shared_ptr<Term> newR = r->ginacify();
         return std::make_shared<Multiplication>(newL, newR);
     }
+}
+
+
+bool Multiplication::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool Multiplication::equals(const Multiplication &term) const {
+    return l->equals(*term.l) && r->equals(*term.r);
 }
 
 
@@ -1370,8 +1520,13 @@ std::shared_ptr<Term> Power::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Power::toGiNaC(bool subFunSyms) const {
-    return GiNaC::pow(l->toGiNaC(subFunSyms), r->toGiNaC(subFunSyms));
+std::shared_ptr<Term> Power::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return std::make_shared<Power>(l->substitute(fs, ex), r->substitute(fs, ex));
+}
+
+
+GiNaC::ex Power::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    return GiNaC::pow(l->toGiNaC(subFunSyms, sub), r->toGiNaC(subFunSyms, sub));
 }
 
 
@@ -1394,6 +1549,16 @@ std::shared_ptr<Term> Power::ginacify() const {
         std::shared_ptr<Term> newR = r->ginacify();
         return std::make_shared<Power>(newL, newR);
     }
+}
+
+
+bool Power::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool Power::equals(const Power &term) const {
+    return l->equals(*term.l) && r->equals(*term.r);
 }
 
 
@@ -1456,8 +1621,13 @@ std::shared_ptr<Term> Factorial::substitute(const GiNaC::exmap &sub) const {
 }
 
 
-GiNaC::ex Factorial::toGiNaC(bool subFunSyms) const {
-    return GiNaC::factorial(n->toGiNaC(subFunSyms));
+std::shared_ptr<Term> Factorial::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return std::make_shared<Factorial>(n->substitute(fs, ex));
+}
+
+
+GiNaC::ex Factorial::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+    return GiNaC::factorial(n->toGiNaC(subFunSyms, sub));
 }
 
 
@@ -1479,6 +1649,16 @@ std::shared_ptr<Term> Factorial::ginacify() const {
         std::shared_ptr<Term> newN = n->ginacify();
         return std::make_shared<Factorial>(newN);
     }
+}
+
+
+bool Factorial::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool Factorial::equals(const Factorial &term) const {
+    return n->equals(*term.n);
 }
 
 
@@ -1646,9 +1826,37 @@ std::shared_ptr<Term> FunctionSymbol::substitute(const GiNaC::exmap &sub) const 
 }
 
 
-GiNaC::ex FunctionSymbol::toGiNaC(bool subFunSyms) const {
+std::shared_ptr<Term> FunctionSymbol::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    if (functionSymbol == fs) {
+        return ex;
+
+    } else {
+        std::vector<std::shared_ptr<Term>> newArgs;
+        for (const std::shared_ptr<Term> &arg : args) {
+            newArgs.push_back(arg->substitute(fs, ex));
+        }
+
+        return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
+    }
+}
+
+
+GiNaC::ex FunctionSymbol::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
     if (subFunSyms) {
-        return ExprSymbol();
+        if (sub != nullptr) {
+            for (auto const &pair : *sub) {
+                if (pair.first.getTermTree()->equals(*this)) {
+                    return pair.second;
+                }
+            }
+
+            ExprSymbol symbol;
+            sub->emplace_back(Expression(copy()), symbol);
+            return symbol;
+
+        } else {
+            return ExprSymbol();
+        }
 
     } else {
         throw UnsupportedOperationException();
@@ -1687,6 +1895,27 @@ std::shared_ptr<Term> FunctionSymbol::unGinacify() const {
     }
 
     return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
+}
+
+
+bool FunctionSymbol::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool FunctionSymbol::equals(const FunctionSymbol &term) const {
+    if (functionSymbol != term.functionSymbol) {
+        return false;
+    }
+
+    assert(args.size() == term.args.size());
+    for (int i = 0; i < args.size(); ++i) {
+        if (!args[i]->equals(*term.args[i])) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 
@@ -1803,7 +2032,12 @@ std::shared_ptr<Term> GiNaCExpression::substitute(const GiNaC::exmap &sub) const
 }
 
 
-GiNaC::ex GiNaCExpression::toGiNaC(bool subFunSyms) const {
+std::shared_ptr<Term> GiNaCExpression::substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const {
+    return copy();
+}
+
+
+GiNaC::ex GiNaCExpression::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
     return expression;
 }
 
@@ -1820,6 +2054,16 @@ std::shared_ptr<Term> GiNaCExpression::ginacify() const {
 
 std::shared_ptr<Term> GiNaCExpression::unGinacify() const {
     return fromGiNaC(expression);
+}
+
+
+bool GiNaCExpression::equals(const Term &term) const {
+    return term.equals(*this); // double dispatch
+}
+
+
+bool GiNaCExpression::equals(const GiNaCExpression &term) const {
+    return expression.is_equal(term.expression);
 }
 
 };

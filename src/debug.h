@@ -92,7 +92,7 @@ struct DebugStream {
 #define DEBUG_EXPRESSION
 
 //debugging for the Term class
-#define DEBUG_TERM
+//#define DEBUG_TERM
 
 //debugging for the ITS problem parser
 #define DEBUG_PARSER

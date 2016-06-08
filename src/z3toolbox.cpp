@@ -160,6 +160,9 @@ bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const 
     for (const Expression &ex : lhs) lhsList.push_back(ex.toZ3(context));
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(!rhsExpr && concatExpressions(context,lhsList,ConcatAnd));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
 }
@@ -186,6 +189,22 @@ bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const 
     }
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(concatExpressions(context, rhsList, ConcatAnd) && concatExpressions(context, lhsList, ConcatAnd));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
+}
+
+
+bool Z3Toolbox::checkTautology(const Expression &ex) {
+    using namespace z3; //for z3::implies, due to a z3 bug
+    Z3VariableContext context;
+
+    Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
+    solver.add(!ex.toZ3(context));
+    return solver.check() == z3::unsat;
 }
