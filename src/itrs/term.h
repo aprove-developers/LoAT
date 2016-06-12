@@ -147,6 +147,9 @@ public:
     Expression evaluateFunction(const FunctionDefinition &funDef,
                                 Expression *addToCost,
                                 ExpressionVector *addToGuard) const;
+    Expression evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                       const TT::ExpressionVector &guard,
+                                       Expression *addToCost) const;
     Expression abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                             const std::map<FunctionSymbolIndex,int> &specialCases) const;
 
@@ -273,12 +276,14 @@ public:
     virtual std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression *addToCost,
                                                    ExpressionVector *addToGuard) const = 0;
+    virtual std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                          const TT::ExpressionVector &guard,
+                                                          Expression *addToCost) const = 0;
     virtual std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const;
     virtual std::shared_ptr<Term> substitute(const Substitution &sub) const = 0;
     virtual std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const = 0;
     virtual std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const = 0;
-
 
     EXCEPTION(UnsupportedOperationException, CustomException);
     virtual GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const;
@@ -319,6 +324,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
@@ -352,6 +360,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -385,6 +396,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -418,6 +432,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -451,6 +468,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -484,6 +504,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -518,6 +541,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -557,6 +583,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                  const TT::ExpressionVector &guard,
+                                                  Expression *addToCost) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;

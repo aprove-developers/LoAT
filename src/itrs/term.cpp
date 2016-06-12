@@ -4,6 +4,7 @@
 
 #include "itrsproblem.h"
 #include "expression.h"
+#include "z3toolbox.h"
 
 namespace TT {
 
@@ -341,6 +342,13 @@ Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
                                         Expression *addToCost,
                                         ExpressionVector *addToGuard) const {
     return Expression(root->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+Expression Expression::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                               const TT::ExpressionVector &guard,
+                                               Expression *addToCost) const {
+    return Expression(root->evaluateFunctionIfLegal(funDef, guard, addToCost));
 }
 
 
@@ -1000,6 +1008,15 @@ std::shared_ptr<Term> Relation::evaluateFunction(const FunctionDefinition &funDe
 }
 
 
+std::shared_ptr<Term> Relation::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                        const TT::ExpressionVector &guard,
+                                                        Expression *addToCost) const {
+    return std::make_shared<Relation>(type,
+                                      l->evaluateFunctionIfLegal(funDef, guard, addToCost),
+                                      r->evaluateFunctionIfLegal(funDef, guard, addToCost));
+}
+
+
 std::shared_ptr<Term> Relation::substitute(const Substitution &sub) const {
     return std::make_shared<Relation>(type,
                                       l->substitute(sub),
@@ -1164,6 +1181,14 @@ std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDe
 }
 
 
+std::shared_ptr<Term> Addition::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                        const TT::ExpressionVector &guard,
+                                                        Expression *addToCost) const {
+    return std::make_shared<Addition>(l->evaluateFunctionIfLegal(funDef, guard, addToCost),
+                                      r->evaluateFunctionIfLegal(funDef, guard, addToCost));
+}
+
+
 std::shared_ptr<Term> Addition::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                              const std::map<FunctionSymbolIndex,int> &specialCases) const {
     return std::make_shared<Addition>(l->abstractSize(funSyms, specialCases),
@@ -1275,6 +1300,14 @@ std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &fu
                                                  ExpressionVector *addToGuard) const {
     return std::make_shared<Subtraction>(l->evaluateFunction(funDef, addToCost, addToGuard),
                                          r->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Subtraction::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                        const TT::ExpressionVector &guard,
+                                                        Expression *addToCost) const {
+    return std::make_shared<Subtraction>(l->evaluateFunctionIfLegal(funDef, guard, addToCost),
+                                         r->evaluateFunctionIfLegal(funDef, guard, addToCost));
 }
 
 
@@ -1392,6 +1425,14 @@ std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition 
 }
 
 
+std::shared_ptr<Term> Multiplication::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                        const TT::ExpressionVector &guard,
+                                                        Expression *addToCost) const {
+    return std::make_shared<Multiplication>(l->evaluateFunctionIfLegal(funDef, guard, addToCost),
+                                            r->evaluateFunctionIfLegal(funDef, guard, addToCost));
+}
+
+
 std::shared_ptr<Term> Multiplication::abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                    const std::map<FunctionSymbolIndex,int> &specialCases) const {
     return std::make_shared<Multiplication>(l->abstractSize(funSyms, specialCases),
@@ -1501,8 +1542,16 @@ std::shared_ptr<Term> Power::copy() const {
 std::shared_ptr<Term> Power::evaluateFunction(const FunctionDefinition &funDef,
                                                  Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
-    return std::make_shared<Power>(      l->evaluateFunction(funDef, addToCost, addToGuard),
-                                            r->evaluateFunction(funDef, addToCost, addToGuard));
+    return std::make_shared<Power>(l->evaluateFunction(funDef, addToCost, addToGuard),
+                                   r->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Power::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                        const TT::ExpressionVector &guard,
+                                                        Expression *addToCost) const {
+    return std::make_shared<Power>(l->evaluateFunctionIfLegal(funDef, guard, addToCost),
+                                   r->evaluateFunctionIfLegal(funDef, guard, addToCost));
 }
 
 
@@ -1607,6 +1656,13 @@ std::shared_ptr<Term> Factorial::evaluateFunction(const FunctionDefinition &funD
                                                   Expression *addToCost,
                                                   ExpressionVector *addToGuard) const {
     return std::make_shared<Factorial>(n->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Factorial::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                        const TT::ExpressionVector &guard,
+                                                        Expression *addToCost) const {
+    return std::make_shared<Factorial>(n->evaluateFunctionIfLegal(funDef, guard, addToCost));
 }
 
 
@@ -1755,6 +1811,68 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
             for (const Expression &ex : funDef.getGuard()) {
                 addToGuard->push_back(ex.substitute(sub));
             }
+        }
+
+        debugTerm("funDef: " << funDef.getDefinition());
+        std::shared_ptr<Term> result = funDef.getDefinition().getTermTree()->substitute(sub);
+        debugTerm("result: " << *result);
+
+        return result;
+
+    } else {
+        return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
+    }
+}
+
+
+std::shared_ptr<Term> FunctionSymbol::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                              const TT::ExpressionVector &guard,
+                                                              Expression *addToCost) const {
+    debugTerm("evaluateIfLegal: at " << *this);
+    // evaluate arguments first
+    std::vector<std::shared_ptr<Term>> newArgs;
+    for (const std::shared_ptr<Term> &arg : args) {
+        newArgs.push_back(arg->evaluateFunctionIfLegal(funDef, guard, addToCost));
+    }
+
+    FunctionSymbolIndex funSymbolIndex = funDef.getFunctionSymbol();
+    if (funSymbolIndex == functionSymbol) {
+        const ::FunctionSymbol &funSymbol = funDef.getITRSProblem().getFunctionSymbol(funSymbolIndex);
+        const std::vector<VariableIndex> &vars = funSymbol.getArguments();
+        assert(vars.size() == args.size());
+
+        // build the substitution: variable -> passed argument
+        debugTerm("\tbuilding substitution");
+        Substitution sub;
+        for (int i = 0; i < vars.size(); ++i) {
+            ExprSymbol var = funDef.getITRSProblem().getGinacSymbol(vars[i]);
+            sub.emplace(var, Expression(newArgs[i]));
+            debugTerm("\t" << var << "\\" << *newArgs[i]);
+        }
+
+
+        // check if it is legal to apply this function definition,
+        // i.e., guard => funDef.guard [sub]
+        debugTerm("TERM LHS:");
+        std::vector<::Expression> lhs;
+        for (const TT::Expression &ex : guard) {
+            lhs.push_back(ex.toGiNaC(true));
+        }
+        for (const TT::Expression &ex : funDef.getGuard()) {
+            ::Expression rhs = ex.substitute(sub).toGiNaC(true);
+            debugTerm("TERM RHS: " << rhs);
+
+            if (!Z3Toolbox::checkTautologicImplication(lhs, rhs)) {
+                debugTerm("FALSE");
+                return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
+            }
+            debugTerm("TRUE");
+        }
+
+
+        // apply the sub
+        if (addToCost) {
+            *addToCost = *addToCost + funDef.getCost().substitute(sub);
         }
 
         debugTerm("funDef: " << funDef.getDefinition());
@@ -1998,6 +2116,13 @@ std::shared_ptr<Term> GiNaCExpression::copy() const {
 std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
                                                         Expression *addToCost,
                                                         ExpressionVector *addToGuard) const {
+    return copy();
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
+                                                               const TT::ExpressionVector &guard,
+                                                               Expression *addToCost) const {
     return copy();
 }
 

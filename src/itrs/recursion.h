@@ -29,6 +29,7 @@ private:
     bool solveRecursionInOneVar();
     bool solveRecursionInTwoVars();
     void substituteFreeVariables();
+    void evaluateConstantRecursiveCalls();
     void instantiateACandidate();
     bool updatesHaveConstDifference(const TT::Expression &term) const;
     bool updatesHaveConstSum(const TT::Expression &term) const;
@@ -74,6 +75,8 @@ private:
     GiNaC::exmap instSub;
 
     GiNaC::exmap freeVarSub;
+
+    TT::Substitution conRecCallsSub;
 };
 
 #endif // RECURSION_H

@@ -129,6 +129,8 @@ bool Recursion::solveRecursionInOneVar() {
             return false;
         }
 
+        evaluateConstantRecursiveCalls();
+
 
         debugRecursion("===Solving recursion===");
         GiNaC::exmap varSub;
@@ -171,13 +173,13 @@ bool Recursion::solveRecursionInOneVar() {
         TT::FunctionDefinition funDef(itrs, funSymbolIndex, res.term, dummy, dummyVector);
         TT::Expression costRecurrence = recursionCopy.cost.evaluateFunction(funDef, nullptr, nullptr).ginacify();
 
-
         debugRecursion("===Solving cost===");
-        for (const TT::Expression &funApp : recursion->term.getFunctionApplications()) {
+        for (const TT::Expression &funApp : recursionCopy.term.getFunctionApplications()) {
             TT::Expression update = funApp.op(realVarIndex);
             std::vector<TT::Expression> updateAsVector;
             updateAsVector.push_back(update);
             costRecurrence = costRecurrence + TT::Expression(funSymbolIndex, itrs.getFunctionSymbolName(funSymbolIndex), updateAsVector);
+
         }
         recurrence = costRecurrence.substitute(varSub).toPurrs(0);
 
@@ -361,6 +363,21 @@ void Recursion::substituteFreeVariables() {
     }
 
     recursionCopy.substitute(freeVarSub);
+}
+
+
+void Recursion::evaluateConstantRecursiveCalls() {
+    debugRecursion("===Trying to evaluate constant recursive calls");
+
+    for (auto const &pair : baseCases) {
+        const RightHandSide &rhs = *pair.second;
+
+        TT::FunctionDefinition funDef(itrs, funSymbolIndex, rhs.term, rhs.cost, rhs.guard);
+
+        debugRecursion("Before: " << recursionCopy.term);
+        recursionCopy.term = recursionCopy.term.evaluateFunctionIfLegal(funDef, recursionCopy.guard, &recursionCopy.cost);
+        debugRecursion("After: " << recursionCopy.term);
+    }
 }
 
 
@@ -600,7 +617,7 @@ bool Recursion::baseCasesAreSufficient() {
     std::vector<TT::Expression> funApps = std::move(recursion->term.getFunctionApplications());
 
     for (const TT::Expression &funApp : funApps) {
-        TT::Expression update = funApp.op(realVarIndex);
+        TT::Expression update = funApp.op(realVarIndex).substitute(freeVarSub).substitute(instSub);
         debugRecursion("Update: " << update);
         assert(update.hasNoFunctionSymbols());
         GiNaC::exmap updateSub;
