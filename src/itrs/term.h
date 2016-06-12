@@ -134,6 +134,7 @@ public:
     std::vector<Expression> getFunctionApplications() const;
 
     bool hasFunctionSymbol(FunctionSymbolIndex funSym) const;
+    bool hasFunctionSymbol() const;
     bool hasNoFunctionSymbols() const;
     // e.g., f(f(x)) has exactly one function symbol
     bool hasExactlyOneFunctionSymbol() const;

@@ -28,14 +28,17 @@ public:
 private:
     bool solveRecursionInOneVar();
     bool solveRecursionInTwoVars();
+    void substituteFreeVariables();
     void instantiateACandidate();
     bool updatesHaveConstDifference(const TT::Expression &term) const;
+    bool updatesHaveConstSum(const TT::Expression &term) const;
     bool findRecursions();
-    bool findRealVars(const TT::Expression &term);
+    std::set<int> findRealVars(const TT::Expression &term);
     bool findBaseCases();
     bool baseCasesAreSufficient();
     bool solve(Purrs::Expr &recurrence, const PurrsBaseCases &bc);
     bool removingSelfReferentialGuardIsSound(const TT::ExpressionVector &srGuard) const;
+    void mergeBaseCaseGuards(TT::ExpressionVector &recGuard) const;
 
 private:
     // paramters passed to this object
@@ -45,10 +48,6 @@ private:
     std::set<const RightHandSide*> &wereUsed;
     std::vector<RightHandSide> &result;
     const FunctionSymbol& funSymbol;
-
-    // findRealVars()
-    // stores the indices of the "real" recursion variables
-    std::set<int> realVars;
 
     // attributes
     std::vector<const RightHandSide*> recursions;
@@ -66,12 +65,15 @@ private:
 
     GiNaC::symbol constDiff;
     // realVar2 -> realVar - constDiff
+    // or realVar2 -> constDiff - realVar
     GiNaC::exmap realVarSub;
     std::map<Purrs::index_type,const RightHandSide*> baseCases;
 
     ExprSymbolSet instCandidates;
     // z -> 5
     GiNaC::exmap instSub;
+
+    GiNaC::exmap freeVarSub;
 };
 
 #endif // RECURSION_H

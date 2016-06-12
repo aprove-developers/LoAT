@@ -302,6 +302,11 @@ bool Expression::hasFunctionSymbol(FunctionSymbolIndex funSym) const {
 }
 
 
+bool Expression::hasFunctionSymbol() const {
+    return !root->hasNoFunctionSymbols();
+}
+
+
 bool Expression::hasNoFunctionSymbols() const {
     return root->hasNoFunctionSymbols();
 }

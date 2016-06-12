@@ -123,6 +123,14 @@ Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
     return trans;
 }
 
+void RightHandSide::substitute(const GiNaC::exmap &sub) {
+    term = std::move(term.substitute(sub));
+    cost = std::move(cost.substitute(sub));
+    for (TT::Expression &ex : guard) {
+        ex = std::move(ex.substitute(sub));
+    }
+}
+
 std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs) {
     os << rhs.term << ", [";
     for (int i = 0; i < rhs.guard.size(); ++i) {
@@ -1029,16 +1037,15 @@ bool RecursionGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
                         for (int i = 1; i < dstOut.size(); i++) {
                             addTrans(*dstPred.begin(), getTransTarget(dstOut[i]), rhsIndex);
                         }
-
-                        // removing dst also removes all outgoing transitions
-                        removeNode(dst);
-                        nodes.erase(dst);
-                        // remove the chained rhs
-                        rightHandSides.erase(followRhsIndex);
-                        changed = true;
-                        Stats::add(Stats::ContractLinear);
                     }
 
+                    // removing dst also removes all outgoing transitions
+                    removeNode(dst);
+                    nodes.erase(dst);
+                    // remove the chained rhs
+                    rightHandSides.erase(followRhsIndex);
+                    changed = true;
+                    Stats::add(Stats::ContractLinear);
                 }
             }
         }
@@ -1187,9 +1194,11 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
                         // replace function symbol "mid" by a new one
                         // by rewriting using the rule mid(x_1, ..., x_n) -> mid'(x_1, ..., x_n)
                         FunctionSymbolIndex oldIndex = (FunctionSymbolIndex)mid;
-                        const FunctionSymbol &oldFunSym = itrs.getFunctionSymbol(oldIndex);
                         FunctionSymbolIndex newIndex = itrs.addFunctionSymbolVariant(oldIndex);
                         nodes.insert((NodeIndex)newIndex);
+                        // Important: These calls happen after addFunctionSymbolVariant()
+                        // (adding a new function symbol to the vector might move the old ones in memory)
+                        const FunctionSymbol &oldFunSym = itrs.getFunctionSymbol(oldIndex);
                         const FunctionSymbol &newFunSym = itrs.getFunctionSymbol(newIndex);
 
                         // build the definition needed for replacing mid by mid'
@@ -1206,6 +1215,10 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
 
                         // evaluate the function
                         rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, nullptr, nullptr);
+                        rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, nullptr, nullptr);
+                        for (TT::Expression &ex : rhsCopy.guard) {
+                            ex = ex.evaluateFunction(funDef, nullptr, nullptr);
+                        }
 
                         addRightHandSide(node, std::move(rhsCopy));
                     }

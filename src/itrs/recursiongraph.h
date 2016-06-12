@@ -50,6 +50,7 @@ struct RightHandSide {
     bool isLegacyTransition() const;
 
     Transition toLegacyTransition(const ITRSProblem &itrs, FunctionSymbolIndex funSym) const;
+    void substitute(const GiNaC::exmap &sub);
 };
 
 std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs);

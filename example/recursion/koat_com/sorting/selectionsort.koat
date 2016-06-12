@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR A)
+(RULES
+  findmin(A) -> findmin(A - 1) + 1 :|: A >= 2
+  findmin(A) -> 0 :|: A = 1
+  selsort(A) -> selsort(findmin(A)) :|: A >= 1
+  selsort(A) -> 0 :|: A = 0
+  start(A) -> selsort(A)
+)

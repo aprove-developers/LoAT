@@ -29,54 +29,54 @@ bool Recursion::solve() {
         return false;
     }
 
-    if (realVars.size() == 1) {
-        realVarIndex = *realVars.begin();
-        realVar = funSymbol.getArguments()[realVarIndex];
-        realVarGiNaC = itrs.getGinacSymbol(realVar);
+    for (const RightHandSide *rhs : recursions) {
+        recursion = rhs;
+        std::set<int> realVars = std::move(findRealVars(recursion->term));
 
-        if (!findBaseCases()) {
-            debugRecursion("Found no usable base cases");
-            return false;
-        }
+        if (realVars.empty()) {
+            debugRecursion("Recursion has no real vars!");
 
-        for (const RightHandSide *rhs : recursions) {
-            recursion = rhs;
+        } else if (realVars.size() == 1) {
+            realVarIndex = *realVars.begin();
+            realVar = funSymbol.getArguments()[realVarIndex];
+            realVarGiNaC = itrs.getGinacSymbol(realVar);
+
+            if (!findBaseCases()) {
+                debugRecursion("Found no usable base cases");
+                return false;
+            }
+
             recursionCopy = *rhs;
-
             if (solveRecursionInOneVar()) {
                 wereUsed.insert(rhs);
             }
-        }
 
-    } else {
-        realVarIndex = *realVars.begin();
-        realVar = funSymbol.getArguments()[realVarIndex];
-        realVarGiNaC = itrs.getGinacSymbol(realVar);
+        } else if (realVars.size() == 2) {
+            realVarIndex = *realVars.begin();
+            realVar = funSymbol.getArguments()[realVarIndex];
+            realVarGiNaC = itrs.getGinacSymbol(realVar);
 
-        realVar2Index = *(++realVars.begin());
-        realVar2 = funSymbol.getArguments()[realVar2Index];
-        realVar2GiNaC = itrs.getGinacSymbol(realVar2);
-
-        for (const RightHandSide *rhs : recursions) {
-            recursion = rhs;
+            realVar2Index = *(++realVars.begin());
+            realVar2 = funSymbol.getArguments()[realVar2Index];
+            realVar2GiNaC = itrs.getGinacSymbol(realVar2);
 
             // solveRecursionInTwoVars makes the copy
             if (solveRecursionInTwoVars()) {
                 wereUsed.insert(rhs);
             }
-        }
 
-        std::swap(realVarIndex, realVar2Index);
-        std::swap(realVar, realVar2);
-        std::swap(realVarGiNaC, realVar2GiNaC);
-
-        for (const RightHandSide *rhs : recursions) {
-            recursion = rhs;
+            // Second try: Swap the variables
+            std::swap(realVarIndex, realVar2Index);
+            std::swap(realVar, realVar2);
+            std::swap(realVarGiNaC, realVar2GiNaC);
 
             // solveRecursionInTwoVars makes the copy
             if (solveRecursionInTwoVars()) {
                 wereUsed.insert(rhs);
             }
+
+        } else {
+            debugRecursion("recursion contains too many real vars");
         }
     }
 
@@ -93,6 +93,8 @@ bool Recursion::solve() {
 bool Recursion::solveRecursionInOneVar() {
         debugRecursion("===Trying to solve recursion===");
         debugRecursion("Recursion: " << *recursion);
+
+        substituteFreeVariables();
 
         // Remove self-referential conditions from the guard
         TT::ExpressionVector selfReferentialGuard;
@@ -156,10 +158,10 @@ bool Recursion::solveRecursionInOneVar() {
 
         debugRecursion("===Constructing guard===");
         debugRecursion("using (non-self-referential) guard of recursion:");
-        TT::ExpressionVector preEvaluatedGuard;
         for (const TT::Expression &ex : rcGuard) {
-            debugRecursion(ex);
-            res.guard.push_back(ex);
+            TT::Expression freeVarEx = std::move(ex.substitute(freeVarSub));
+            debugRecursion(freeVarEx);
+            res.guard.push_back(freeVarEx);
         }
 
         // We already have the definition for this function symbol
@@ -208,6 +210,9 @@ bool Recursion::solveRecursionInOneVar() {
             res.guard.push_back(TT::Expression(pair.first == pair.second));
         }
 
+        // Use heuristic to merge guards
+        mergeBaseCaseGuards(res.guard);
+
         debugRecursion("===Resulting rhs===");
         debugRecursion(res);
 
@@ -222,43 +227,140 @@ bool Recursion::solveRecursionInTwoVars() {
 
     // TODO: const sum
     // check for constant difference, e.g., f(x,y) = f(x-1,y-1)
-    if (!updatesHaveConstDifference(recursion->term)) {
-        debugRecursion("constDiff fail: " << *recursion);
-        return false;
-    }
+    if (updatesHaveConstDifference(recursion->term)) {
+        debugRecursion("constant difference");
 
-    // rewrite the recursion
-    realVarSub.clear();
-    realVarSub.emplace(realVar2GiNaC, realVarGiNaC - constDiff);
+        // rewrite the recursion
+        realVarSub.clear();
+        realVarSub.emplace(realVar2GiNaC, realVarGiNaC - constDiff);
 
-    recursionCopy.term = recursion->term.substitute(realVarSub);
-    recursionCopy.cost = recursion->cost.substitute(realVarSub);
-    recursionCopy.guard.clear();
-    for (const TT::Expression &ex : recursion->guard) {
-        recursionCopy.guard.push_back(ex.substitute(realVarSub));
-    }
-
-    if (!findBaseCases()) {
-        debugRecursion("Found no usable base cases [2 real variables]");
-        return false;
-    }
-
-    if (solveRecursionInOneVar()) {
-        // Substitute constDiff
-        GiNaC::exmap constDiffSub;
-        constDiffSub.emplace(constDiff, realVarGiNaC - realVar2GiNaC);
-
-        RightHandSide &resRhs = result.back();
-        resRhs.term = resRhs.term.substitute(constDiffSub);
-        resRhs.cost = resRhs.cost.substitute(constDiffSub);
-        for (TT::Expression &ex : resRhs.guard) {
-            ex = ex.substitute(constDiffSub);
+        recursionCopy.term = recursion->term.substitute(realVarSub);
+        recursionCopy.cost = recursion->cost.substitute(realVarSub);
+        recursionCopy.guard.clear();
+        for (const TT::Expression &ex : recursion->guard) {
+            recursionCopy.guard.push_back(ex.substitute(realVarSub));
         }
 
-        return true;
+        if (!findBaseCases()) {
+            debugRecursion("Found no usable base cases [2 real variables]");
+            return false;
+        }
+
+        if (solveRecursionInOneVar()) {
+            // Substitute constDiff
+            GiNaC::exmap constDiffSub;
+            constDiffSub.emplace(constDiff, realVarGiNaC - realVar2GiNaC);
+
+            RightHandSide &resRhs = result.back();
+            resRhs.term = resRhs.term.substitute(constDiffSub);
+            resRhs.cost = resRhs.cost.substitute(constDiffSub);
+            for (TT::Expression &ex : resRhs.guard) {
+                ex = ex.substitute(constDiffSub);
+            }
+
+            return true;
+        }
+
+    } else if (updatesHaveConstSum(recursion->term)) {
+        debugRecursion("constant sum");
+
+        // rewrite the recursion
+        realVarSub.clear();
+        realVarSub.emplace(realVar2GiNaC, constDiff - realVarGiNaC);
+
+        recursionCopy.term = recursion->term.substitute(realVarSub);
+        recursionCopy.cost = recursion->cost.substitute(realVarSub);
+        recursionCopy.guard.clear();
+        for (const TT::Expression &ex : recursion->guard) {
+            recursionCopy.guard.push_back(ex.substitute(realVarSub));
+        }
+
+        if (!findBaseCases()) {
+            debugRecursion("Found no usable base cases [2 real variables]");
+            return false;
+        }
+
+        if (solveRecursionInOneVar()) {
+            // Substitute constDiff
+            GiNaC::exmap constDiffSub;
+            constDiffSub.emplace(constDiff, realVarGiNaC + realVar2GiNaC);
+
+            RightHandSide &resRhs = result.back();
+            resRhs.term = resRhs.term.substitute(constDiffSub);
+            resRhs.cost = resRhs.cost.substitute(constDiffSub);
+            for (TT::Expression &ex : resRhs.guard) {
+                ex = ex.substitute(constDiffSub);
+            }
+
+            return true;
+        }
+
+    } else {
+        debugRecursion("neither constant difference nor constant sum");
     }
 
     return false;
+}
+
+void Recursion::substituteFreeVariables() {
+    debugRecursion("===Substituting free variables===");
+    ExprSymbolSet freeVars;
+
+    recursionCopy.term.collectVariables(freeVars);
+    recursionCopy.cost.collectVariables(freeVars);
+    for (const TT::Expression &ex : recursionCopy.guard) {
+        ex.collectVariables(freeVars);
+    }
+
+    auto it = freeVars.begin();
+    while (it != freeVars.end()) {
+        if (itrs.isFreeVariable(*it)) {
+            ++it;
+
+        } else {
+            it = freeVars.erase(it);
+        }
+    }
+
+    freeVarSub.clear();
+    for (const ExprSymbol &symbol : freeVars) {
+        for (const TT::Expression &ex : recursionCopy.guard) {
+            TT::Expression lessEqOrEq;
+
+            if (ex.info(TT::InfoFlag::RelationEqual)) {
+                lessEqOrEq = ex;
+
+            } else if (!ex.info(TT::InfoFlag::RelationNotEqual)) {
+                lessEqOrEq = GuardToolbox::makeLessEqual(ex);
+
+            } else {
+                continue;
+            }
+
+            TT::Expression lhs = lessEqOrEq.op(0);
+            TT::Expression rhs = lessEqOrEq.op(1);
+            TT::Expression symbolEx = TT::Expression(symbol);
+
+            if (lhs.equals(symbolEx) && rhs.hasNoFunctionSymbols()) {
+                freeVarSub.emplace(symbol, rhs.toGiNaC());
+                break;
+
+            } else if (rhs.equals(symbolEx) && lhs.hasNoFunctionSymbols()) {
+                freeVarSub.emplace(symbol, lhs.toGiNaC());
+                break;
+            }
+        }
+
+        if (freeVarSub.count(symbol) == 0) {
+            freeVarSub.emplace(symbol, GiNaC::numeric(1));
+        }
+    }
+
+    for (auto const &pair : freeVarSub) {
+        debugRecursion(pair.first << " -> " << pair.second);
+    }
+
+    recursionCopy.substitute(freeVarSub);
 }
 
 
@@ -291,12 +393,7 @@ void Recursion::instantiateACandidate() {
         debugRecursion(toInst << " -> " << 0);
     }
 
-
-    recursionCopy.term = recursionCopy.term.substitute(instSub);
-    recursionCopy.cost = recursionCopy.cost.substitute(instSub);
-    for (TT::Expression &ex : recursionCopy.guard) {
-        ex = ex.substitute(instSub);
-    }
+    recursionCopy.substitute(instSub);
 }
 
 
@@ -334,6 +431,41 @@ bool Recursion::updatesHaveConstDifference(const TT::Expression &term) const {
 }
 
 
+bool Recursion::updatesHaveConstSum(const TT::Expression &term) const {
+    debugRecursion("===Checking if updates have constant sum===");
+    std::vector<TT::Expression> funApps = std::move(term.getFunctionApplications());
+
+    for (const TT::Expression &funApp : funApps) {
+        TT::Expression update = std::move(funApp.op(realVarIndex));
+        TT::Expression update2 = std::move(funApp.op(realVar2Index));
+        debugRecursion("Update: " << update << ", update 2: " << update2);
+        assert(update.hasNoFunctionSymbols());
+        assert(update2.hasNoFunctionSymbols());
+        GiNaC::ex updateGiNaC = update.toGiNaC();
+        GiNaC::ex update2GiNaC = update2.toGiNaC();
+
+        // e.g. (x - 1) + (y + 1) = x + y
+        GiNaC::ex sum = updateGiNaC + update2GiNaC;
+        // e.g. x + y
+        GiNaC::ex varSum = realVarGiNaC + realVar2GiNaC;
+
+        if (!sum.is_equal(varSum)) {
+            return false;
+        }
+
+        // x - 1 - ((y + 1)[y/x]) is a number
+        GiNaC::exmap sub;
+        sub.emplace(realVar2GiNaC, realVarGiNaC);
+        GiNaC::ex ex = updateGiNaC - update2GiNaC.subs(sub);
+        if (!GiNaC::is_a<GiNaC::numeric>(ex)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 bool Recursion::findRecursions() {
     debugRecursion("===Finding recursions===");
 
@@ -342,6 +474,15 @@ bool Recursion::findRecursions() {
 
         if (funSymbols.size() == 1 && funSymbols.count(funSymbolIndex) == 1) {
             debugRecursion("Found recursion: " << *rhs);
+
+            // Make sure that there are no nested function symbols
+            std::vector<TT::Expression> updates = std::move(rhs->term.getUpdates());
+            for (const TT::Expression ex : updates) {
+                if (ex.hasFunctionSymbol()) {
+                    debugRecursion("recursion has nested function symbol");
+                    continue;
+                }
+            }
 
             // Check if there are any function symbols besides funSymbol in the cost/guard
             funSymbols = std::move(rhs->term.getFunctionSymbols());
@@ -362,10 +503,8 @@ bool Recursion::findRecursions() {
                 }
             }
 
-            if (findRealVars(rhs->term)) {
-                debugRecursion("Recursion is suitable");
-                recursions.push_back(rhs);
-            }
+            debugRecursion("Recursion is suitable");
+            recursions.push_back(rhs);
         }
     }
 
@@ -377,8 +516,9 @@ bool Recursion::findRecursions() {
 }
 
 
-bool Recursion::findRealVars(const TT::Expression &term) {
+std::set<int> Recursion::findRealVars(const TT::Expression &term) {
     debugRecursion("===Finding real recursion variables===");
+    std::set<int> realVars;
     const std::vector<VariableIndex> &vars = funSymbol.getArguments();
 
     std::vector<TT::Expression> funApps = std::move(term.getFunctionApplications());
@@ -392,10 +532,7 @@ bool Recursion::findRealVars(const TT::Expression &term) {
 
             TT::Expression update = funApp.op(i);
             debugRecursion("update: " << update);
-            if (!update.hasNoFunctionSymbols()) {
-                debugRecursion("Update contains function symbol, cannot continue");
-                return false;
-            }
+            assert(update.hasNoFunctionSymbols());
 
             if (var != update.toGiNaC()) {
                 debugRecursion("real");
@@ -404,7 +541,7 @@ bool Recursion::findRealVars(const TT::Expression &term) {
         }
     }
 
-    return realVars.size() >= 1 && realVars.size() <= 2;
+    return realVars;
 }
 
 
@@ -616,4 +753,38 @@ bool Recursion::removingSelfReferentialGuardIsSound(const TT::ExpressionVector &
     }
 
     return true;
+}
+
+void Recursion::mergeBaseCaseGuards(TT::ExpressionVector &recGuard) const {
+    debugRecursion("===Merging base case guards===");
+
+    for (auto const &pair : baseCases) {
+        const RightHandSide &rhs = *pair.second;
+
+        if (rhs.guard.size() == 1) {
+            TT::Expression bcGuard = rhs.guard[0].substitute(realVarSub);
+
+            if (bcGuard.info(TT::InfoFlag::RelationEqual)) {
+                TT::Expression bcLhs = bcGuard.op(0).ginacify();
+                TT::Expression bcRhs = bcGuard.op(1).ginacify();
+
+                for (TT::Expression &ex : recGuard) {
+                    assert(ex.info(TT::InfoFlag::Relation));
+                    TT::Expression lhs = ex.op(0).ginacify();
+                    TT::Expression rhs = ex.op(1).ginacify();
+
+                    if (ex.info(TT::InfoFlag::RelationGreater)
+                        && lhs.equals(bcLhs)
+                        && rhs.equals(bcRhs)) { // e.g., A == 0 and A > 0
+                        ex = lhs >= rhs;
+
+                    } else if (ex.info(TT::InfoFlag::RelationGreaterEqual)
+                               && lhs.equals(bcLhs)
+                               && rhs.equals((bcRhs + 1).ginacify())) { // e.g., A == 0 and A >= 1
+                        ex = lhs >= bcRhs;
+                    }
+                }
+            }
+        }
+    }
 }
