@@ -120,13 +120,6 @@ void ITRSProblem::processRules() {
         replaceUnboundedWithFresh(res.cost.getVariables(), boundSymbols, freeVarSub);
         res.cost = res.cost.substitute(freeVarSub);
 
-        // make sure that user-given costs are always positive
-        GiNaC::numeric one(1);
-        if (!(res.cost.info(TT::InfoFlag::Number)
-              && res.cost.toGiNaC().is_equal(one))) {
-            res.guard.push_back(TT::Expression(res.cost > 0).ginacify());
-        }
-
         // process the guard
         for (const TT::Expression &ex : rule.guard) {
             if (!ex.hasNoFunctionSymbols()) {
