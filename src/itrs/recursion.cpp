@@ -30,8 +30,29 @@ bool Recursion::solve() {
     }
 
     for (const RightHandSide *rhs : recursions) {
+        defTerm = recursion->term;
+        TT::Substitution sub;
+        std::vector<int> ignoreInGuard;
+        for (int i = 0; i < rhs->guard.size(); ++i) {
+            const TT::Expression &ex = rhs->guard[i];
+
+            if (ex.info(TT::InfoFlag::RelationEqual)) {
+                TT::Expression lhs = ex.op(0);
+                if (lhs.info(TT::InfoFlag::Variable)) {
+                    ExprSymbol var = GiNaC::ex_to<GiNaC::symbol>(lhs.toGiNaC());
+                    if (itrs.isFreeVariable(var)) {
+                        if (sub.count(var) == 0) {
+                            sub.emplace(var, ex.op(1));
+                            defTerm = defTerm.unGinacify().substitute(sub);
+                            ignoreInGuard.push_back(i);
+                        }
+                    }
+                }
+            }
+        }
+
         recursion = rhs;
-        std::set<int> realVars = std::move(findRealVars(recursion->term));
+        std::set<int> realVars = std::move(findRealVars(defTerm));
 
         if (realVars.empty()) {
             debugRecursion("Recursion has no real vars!");
@@ -47,6 +68,14 @@ bool Recursion::solve() {
             }
 
             recursionCopy = *rhs;
+            for (int i = ignoreInGuard.size() - 1; i >= 0; i--) {
+                recursionCopy.guard.erase(recursionCopy.guard.begin() + ignoreInGuard[i]);
+            }
+            for (TT::Expression &ex : recursionCopy.guard) {
+                ex = ex.unGinacify().substitute(sub);
+            }
+            recursionCopy.cost = recursionCopy.cost.unGinacify().substitute(sub);
+
             if (solveRecursionInOneVar()) {
                 wereUsed.insert(rhs);
             }
