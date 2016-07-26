@@ -11,7 +11,7 @@
 namespace GT = GuardToolbox;
 namespace Z3T = Z3Toolbox;
 
-Recursion::Recursion(const ITRSProblem &itrs,
+Recursion::Recursion(ITRSProblem &itrs,
                      FunctionSymbolIndex funSymbolIndex,
                      const std::set<const RightHandSide*> &rightHandSides,
                      std::set<const RightHandSide*> &wereUsed,

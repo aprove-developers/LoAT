@@ -121,6 +121,9 @@ public:
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
 
+    void collectVariables(std::vector<ExprSymbol> &vector) const;
+    std::vector<ExprSymbol> getVariablesAsVector() const;
+
     void collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const;
     std::set<FunctionSymbolIndex> getFunctionSymbols() const;
 
@@ -147,6 +150,9 @@ public:
     Expression evaluateFunction(const FunctionDefinition &funDef,
                                 Expression *addToCost,
                                 ExpressionVector *addToGuard) const;
+    Expression evaluateFunction2(const FunctionDefinition &funDef,
+                                 Expression *addToCost,
+                                 ExpressionVector *addToGuard) const;
     Expression evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                        const TT::ExpressionVector &guard,
                                        Expression *addToCost) const;
@@ -181,19 +187,19 @@ std::ostream& operator<<(std::ostream &os, const Expression &ex);
 // helper class for evaluateFunction()
 class FunctionDefinition {
 public:
-    FunctionDefinition(const ITRSProblem &itrs,
+    FunctionDefinition(ITRSProblem &itrs,
                        const FunctionSymbolIndex index,
                        const Expression &def,
                        const Expression &cost,
                        const ExpressionVector &guard);
-    const ITRSProblem& getITRSProblem() const;
+    ITRSProblem& getITRSProblem() const;
     const FunctionSymbolIndex getFunctionSymbol() const;
     const Expression& getDefinition() const;
     const Expression& getCost() const;
     const ExpressionVector& getGuard() const;
 
 private:
-    const ITRSProblem *itrs;
+    ITRSProblem *itrs;
     FunctionSymbolIndex functionSymbol;
     Expression definition;
     Expression cost;
@@ -252,6 +258,9 @@ public:
     void collectVariables(ExprSymbolSet &set) const;
     ExprSymbolSet getVariables() const;
 
+    void collectVariables(std::vector<ExprSymbol> &vector) const;
+    std::vector<ExprSymbol> getVariablesAsVector() const;
+
     void collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const;
     std::set<FunctionSymbolIndex> getFunctionSymbols() const;
 
@@ -276,6 +285,9 @@ public:
     virtual std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    Expression *addToCost,
                                                    ExpressionVector *addToGuard) const = 0;
+    virtual std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                                    Expression *addToCost,
+                                                    ExpressionVector *addToGuard) const = 0;
     virtual std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                           const TT::ExpressionVector &guard,
                                                           Expression *addToCost) const = 0;
@@ -324,6 +336,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -360,6 +375,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -396,6 +414,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -432,6 +453,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -468,6 +492,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -504,6 +531,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -541,6 +571,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;
@@ -583,6 +616,9 @@ public:
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
+    std::shared_ptr<Term> evaluateFunction2(const FunctionDefinition &funDef,
+                                            Expression *addToCost,
+                                            ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
                                                   Expression *addToCost) const override;

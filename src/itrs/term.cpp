@@ -258,6 +258,16 @@ ExprSymbolSet Expression::getVariables() const {
 }
 
 
+void Expression::collectVariables(std::vector<ExprSymbol> &vector) const {
+    root->collectVariables(vector);
+}
+
+
+std::vector<ExprSymbol> Expression::getVariablesAsVector() const {
+    return root->getVariablesAsVector();
+}
+
+
 void Expression::collectFunctionSymbols(std::set<FunctionSymbolIndex> &set) const {
     root->collectFunctionSymbols(set);
 }
@@ -345,6 +355,13 @@ Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
 }
 
 
+Expression Expression::evaluateFunction2(const FunctionDefinition &funDef,
+                                        Expression *addToCost,
+                                        ExpressionVector *addToGuard) const {
+    return Expression(root->evaluateFunction2(funDef, addToCost, addToGuard));
+}
+
+
 Expression Expression::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                const TT::ExpressionVector &guard,
                                                Expression *addToCost) const {
@@ -399,7 +416,7 @@ std::ostream& operator<<(std::ostream &os, const Expression &ex) {
 }
 
 
-FunctionDefinition::FunctionDefinition(const ITRSProblem &itrs,
+FunctionDefinition::FunctionDefinition(ITRSProblem &itrs,
                                        const FunctionSymbolIndex fs,
                                        const Expression &def,
                                        const Expression &cost,
@@ -411,7 +428,7 @@ FunctionDefinition::FunctionDefinition(const ITRSProblem &itrs,
 }
 
 
-const ITRSProblem& FunctionDefinition::getITRSProblem() const {
+ITRSProblem& FunctionDefinition::getITRSProblem() const {
     return *itrs;
 }
 
@@ -562,6 +579,34 @@ ExprSymbolSet Term::getVariables() const {
     ExprSymbolSet set;
     collectVariables(set);
     return set;
+}
+
+
+void Term::collectVariables(std::vector<ExprSymbol> &vector) const {
+    class CollectingVisitor : public ConstVisitor {
+    public:
+        CollectingVisitor(std::vector<ExprSymbol> &vector)
+            : vector(vector) {
+        }
+
+        void visit(const GiNaCExpression &expr) override {
+            ::Expression customExpr(expr.getExpression());
+            customExpr.collectVariables(vector);
+        }
+
+    private:
+        std::vector<ExprSymbol> &vector;
+    };
+
+    CollectingVisitor visitor(vector);
+    traverse(visitor);
+}
+
+
+std::vector<ExprSymbol> Term::getVariablesAsVector() const {
+    std::vector<ExprSymbol> vector;
+    collectVariables(vector);
+    return vector;
 }
 
 
@@ -1008,6 +1053,15 @@ std::shared_ptr<Term> Relation::evaluateFunction(const FunctionDefinition &funDe
 }
 
 
+std::shared_ptr<Term> Relation::evaluateFunction2(const FunctionDefinition &funDef,
+                                                  Expression *addToCost,
+                                                  ExpressionVector *addToGuard) const {
+    return std::make_shared<Relation>(type,
+                                      l->evaluateFunction2(funDef, addToCost, addToGuard),
+                                      r->evaluateFunction2(funDef, addToCost, addToGuard));
+}
+
+
 std::shared_ptr<Term> Relation::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
                                                         Expression *addToCost) const {
@@ -1181,6 +1235,14 @@ std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDe
 }
 
 
+std::shared_ptr<Term> Addition::evaluateFunction2(const FunctionDefinition &funDef,
+                                                  Expression *addToCost,
+                                                  ExpressionVector *addToGuard) const {
+    return std::make_shared<Addition>(l->evaluateFunction2(funDef, addToCost, addToGuard),
+                                      r->evaluateFunction2(funDef, addToCost, addToGuard));
+}
+
+
 std::shared_ptr<Term> Addition::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
                                                         Expression *addToCost) const {
@@ -1300,6 +1362,14 @@ std::shared_ptr<Term> Subtraction::evaluateFunction(const FunctionDefinition &fu
                                                  ExpressionVector *addToGuard) const {
     return std::make_shared<Subtraction>(l->evaluateFunction(funDef, addToCost, addToGuard),
                                          r->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Subtraction::evaluateFunction2(const FunctionDefinition &funDef,
+                                                     Expression *addToCost,
+                                                     ExpressionVector *addToGuard) const {
+    return std::make_shared<Subtraction>(l->evaluateFunction2(funDef, addToCost, addToGuard),
+                                         r->evaluateFunction2(funDef, addToCost, addToGuard));
 }
 
 
@@ -1425,6 +1495,14 @@ std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition 
 }
 
 
+std::shared_ptr<Term> Multiplication::evaluateFunction2(const FunctionDefinition &funDef,
+                                                        Expression *addToCost,
+                                                        ExpressionVector *addToGuard) const {
+    return std::make_shared<Multiplication>(l->evaluateFunction2(funDef, addToCost, addToGuard),
+                                            r->evaluateFunction2(funDef, addToCost, addToGuard));
+}
+
+
 std::shared_ptr<Term> Multiplication::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
                                                         Expression *addToCost) const {
@@ -1547,6 +1625,14 @@ std::shared_ptr<Term> Power::evaluateFunction(const FunctionDefinition &funDef,
 }
 
 
+std::shared_ptr<Term> Power::evaluateFunction2(const FunctionDefinition &funDef,
+                                               Expression *addToCost,
+                                               ExpressionVector *addToGuard) const {
+    return std::make_shared<Power>(l->evaluateFunction2(funDef, addToCost, addToGuard),
+                                   r->evaluateFunction2(funDef, addToCost, addToGuard));
+}
+
+
 std::shared_ptr<Term> Power::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
                                                         Expression *addToCost) const {
@@ -1656,6 +1742,13 @@ std::shared_ptr<Term> Factorial::evaluateFunction(const FunctionDefinition &funD
                                                   Expression *addToCost,
                                                   ExpressionVector *addToGuard) const {
     return std::make_shared<Factorial>(n->evaluateFunction(funDef, addToCost, addToGuard));
+}
+
+
+std::shared_ptr<Term> Factorial::evaluateFunction2(const FunctionDefinition &funDef,
+                                                   Expression *addToCost,
+                                                   ExpressionVector *addToGuard) const {
+    return std::make_shared<Factorial>(n->evaluateFunction2(funDef, addToCost, addToGuard));
 }
 
 
@@ -1799,6 +1892,113 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction(const FunctionDefinition 
             ExprSymbol var = funDef.getITRSProblem().getGinacSymbol(vars[i]);
             sub.emplace(var, Expression(newArgs[i]));
             debugTerm("\t" << var << "\\" << *newArgs[i]);
+        }
+
+
+        // apply the sub
+        if (addToCost) {
+            *addToCost = *addToCost + funDef.getCost().substitute(sub);
+        }
+
+        if (addToGuard) {
+            for (const Expression &ex : funDef.getGuard()) {
+                addToGuard->push_back(ex.substitute(sub));
+            }
+        }
+
+        debugTerm("funDef: " << funDef.getDefinition());
+        std::shared_ptr<Term> result = funDef.getDefinition().getTermTree()->substitute(sub);
+        debugTerm("result: " << *result);
+
+        return result;
+
+    } else {
+        return std::make_shared<FunctionSymbol>(functionSymbol, name, newArgs);
+    }
+}
+
+
+std::shared_ptr<Term> FunctionSymbol::evaluateFunction2(const FunctionDefinition &funDef,
+                                                        Expression *addToCost,
+                                                        ExpressionVector *addToGuard) const {
+    debugTerm("evaluate: at " << *this);
+    // evaluate arguments first
+    std::vector<std::shared_ptr<Term>> newArgs;
+    for (const std::shared_ptr<Term> &arg : args) {
+        newArgs.push_back(arg->evaluateFunction(funDef, addToCost, addToGuard));
+    }
+
+    FunctionSymbolIndex funSymbolIndex = funDef.getFunctionSymbol();
+    if (funSymbolIndex == functionSymbol) {
+        const ::FunctionSymbol &funSymbol = funDef.getITRSProblem().getFunctionSymbol(funSymbolIndex);
+        const std::vector<VariableIndex> &vars = funSymbol.getArguments();
+        assert(vars.size() == args.size());
+
+        // collect all variables in the rule
+        // one should do this before calling this method (in the def class)
+        std::vector<ExprSymbol> varsInRule;
+        funDef.getDefinition().collectVariables(varsInRule);
+        for (const TT::Expression &ex : funDef.getGuard()) {
+            ex.collectVariables(varsInRule);
+        }
+        std::vector<ExprSymbol> varsInCost;;
+        funDef.getCost().collectVariables(varsInCost);
+
+
+        // build the substitution: variable -> passed argument
+        debugTerm("\tbuilding substitution");
+        Substitution sub;
+        for (int i = 0; i < vars.size(); ++i) {
+            ExprSymbol var = funDef.getITRSProblem().getGinacSymbol(vars[i]);
+            const std::shared_ptr<Term> arg = newArgs[i];
+            bool moveToGuard = true;
+            if (arg->hasNoFunctionSymbols()) {
+                moveToGuard = false;
+            }
+            if (moveToGuard) {
+                bool occursInCost = false;
+                for (const ExprSymbol &sym : varsInCost) {
+                    if (sym == var) {
+                        occursInCost = true;
+                        break;
+                    }
+                }
+
+                if (!occursInCost) {
+                    bool exactlyOnce = false;
+                    for (const ExprSymbol &sym : varsInRule) {
+                        if (sym == var) {
+                            if (!exactlyOnce) {
+                                exactlyOnce = true;
+                            } else {
+                                exactlyOnce = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (exactlyOnce) {
+                        moveToGuard = false;
+                    }
+                }
+            }
+
+            if (moveToGuard) {
+                VariableIndex freshIndex = funDef.getITRSProblem().addFreshFreeVariable("z");
+                ExprSymbol fresh = funDef.getITRSProblem().getGinacSymbol(freshIndex);
+                sub.emplace(var, Expression(fresh));
+                TT::Expression t = (TT::Expression(fresh) == TT::Expression(arg));
+                addToGuard->push_back(t);
+
+                debugTerm("moving to guard");
+                debugTerm("(adding " << t << ")");
+                debugTerm("\t" << var << "\\" << fresh);
+
+            } else {
+                sub.emplace(var, Expression(newArgs[i]));
+
+                debugTerm("not moving to guard");
+                debugTerm("\t" << var << "\\" << *newArgs[i]);
+            }
         }
 
 
@@ -2118,6 +2318,13 @@ std::shared_ptr<Term> GiNaCExpression::copy() const {
 std::shared_ptr<Term> GiNaCExpression::evaluateFunction(const FunctionDefinition &funDef,
                                                         Expression *addToCost,
                                                         ExpressionVector *addToGuard) const {
+    return copy();
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::evaluateFunction2(const FunctionDefinition &funDef,
+                                                         Expression *addToCost,
+                                                         ExpressionVector *addToGuard) const {
     return copy();
 }
 

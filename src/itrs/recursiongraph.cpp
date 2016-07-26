@@ -937,20 +937,13 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
     // perform rewriting on a copy of rhs
     RightHandSide rhsCopy(rhs);
 
-    std::vector<TT::Expression> addToGuard;
-    for (int i = 0; i < rhsCopy.guard.size(); ++i) {
+    rhsCopy.term = rhsCopy.term.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
+    int oldSize = rhsCopy.guard.size();
+    for (int i = 0; i < oldSize; ++i) {
            // the following call might add new elements to rhsCopy.guard
-           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction(funDef, nullptr, &addToGuard).ginacify();
+           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
     }
-    for (TT::Expression &ex : addToGuard) {
-        rhsCopy.guard.push_back(std::move(ex));
-    }
-    // the following calls might add new element to the guard
-    // that's why we have already evaluated the guard
-    rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
-    rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, nullptr, &rhsCopy.guard).ginacify();
-
-
+    // We do not evaluate the guard because we avoid moving function symbols there
 
     GuardList funSymbolFreeGuard;
     for (const TT::Expression &ex : rhsCopy.guard) {

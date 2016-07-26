@@ -287,6 +287,20 @@ void Expression::collectVariables(ExprSymbolSet &res) const {
 }
 
 
+void Expression::collectVariables(std::vector<ExprSymbol> &res) const {
+    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+        SymbolVisitor(std::vector<ExprSymbol> &t) : target(t) {}
+        void visit(const GiNaC::symbol &sym) {
+            if (sym != Infty) target.push_back(sym);
+        }
+    private:
+        std::vector<ExprSymbol> &target;
+    };
+
+    SymbolVisitor v(res);
+    traverse(v);
+}
+
 
 set<string> Expression::getVariableNames() const {
     set<string> res;

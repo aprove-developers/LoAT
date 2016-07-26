@@ -178,6 +178,12 @@ public:
     void collectVariables(ExprSymbolSet &res) const;
 
     /**
+     * Returns a set of all ginac symbols that occur in this expression
+     * (similar to collectVariableNames)
+     */
+    void collectVariables(std::vector<ExprSymbol> &res) const;
+
+    /**
      * Convenience method for collectVariables
      */
     ExprSymbolSet getVariables() const;

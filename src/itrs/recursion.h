@@ -17,7 +17,7 @@ typedef std::map<Purrs::index_type,Purrs::Expr> PurrsBaseCases;
 
 class Recursion {
 public:
-    Recursion(const ITRSProblem &itrs,
+    Recursion(ITRSProblem &itrs,
               FunctionSymbolIndex funSymbolIndex,
               const std::set<const RightHandSide*> &rightHandSides,
               std::set<const RightHandSide*> &wereUsed,
@@ -43,7 +43,7 @@ private:
 
 private:
     // paramters passed to this object
-    const ITRSProblem &itrs;
+    ITRSProblem &itrs;
     const FunctionSymbolIndex funSymbolIndex;
     std::set<const RightHandSide*> rightHandSides;
     std::set<const RightHandSide*> &wereUsed;
