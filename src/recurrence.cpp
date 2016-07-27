@@ -107,6 +107,31 @@ bool Recurrence::findUpdateRecurrence(Expression update, ExprSymbol target, Expr
     return true;
 }
 
+bool Recurrence::findOuterUpdateRecurrence(Expression update, ExprSymbol target, Expression &result) {
+    Timing::Scope timer(Timing::Purrs);
+    Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
+    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(update.subs(knownPreRecurrences).subs(target == last));
+    Purrs::Expr exact;
+
+    try {
+        Purrs::Recurrence rec(rhs);
+        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(update)} });
+
+        auto res = rec.compute_exact_solution();
+        if (res != Purrs::Recurrence::SUCCESS) {
+            return false;
+        }
+        rec.exact_solution(exact);
+    } catch (...) {
+        //purrs throws a runtime exception if the recurrence is too difficult
+        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << target << " for update " << update);
+        return false;
+    }
+
+    result = exact.toGiNaC();
+    return true;
+}
+
 
 bool Recurrence::findCostRecurrence(Expression cost, Expression &result) {
     Timing::Scope timer(Timing::Purrs);
@@ -179,12 +204,31 @@ bool Recurrence::calcIteratedCost(const Expression &cost, const Expression &mete
 }
 
 
+bool Recurrence::calcIteratedOuterUpdate(const Expression &outerUpdate,
+                                         const ExprSymbol& outerUpdateVar,
+                                         const Expression &meterfunc,
+                                         Expression &newOuterUpdate) {
+    Expression outerRec;
+    if (!findOuterUpdateRecurrence(outerUpdate, outerUpdateVar, outerRec)) {
+        return false;
+    }
+    newOuterUpdate = outerRec.subs(ginacN == meterfunc);
+    return true;
+}
+
+
 bool Recurrence::calcIterated(const ITRSProblem &its, Transition &trans, const Expression &meterfunc) {
     Recurrence rec(its);
 
     UpdateMap newUpdate;
     if (!rec.calcIteratedUpdate(trans.update,meterfunc,newUpdate)) {
         debugPurrs("calcIterated: failed to calculate update recurrence");
+        return false;
+    }
+
+    Expression newOuterUpdate;
+    if (!rec.calcIteratedOuterUpdate(trans.outerUpdate, trans.outerUpdateVar, meterfunc, newOuterUpdate)) {
+        debugPurrs("calcIterated: failed to calculate outer update recurrence");
         return false;
     }
 
@@ -195,6 +239,7 @@ bool Recurrence::calcIterated(const ITRSProblem &its, Transition &trans, const E
     }
 
     trans.update = std::move(newUpdate);
+    trans.outerUpdate = std::move(newOuterUpdate);
     trans.cost = newCost;
     trans.guard.insert(trans.guard.end(),rec.addGuard.begin(),rec.addGuard.end());
     return true;

@@ -742,10 +742,10 @@ bool Recursion::removingSelfReferentialGuardIsSound(const TT::ExpressionVector &
     TT::FunToVarSub sub; // make sure that identical function calls are substituted by the same variable
     std::vector<Expression> lhs;
     for (const TT::Expression &ex : recursionCopy.guard) {
-        lhs.push_back(ex.toGiNaC(true, &sub));
+        lhs.push_back(ex.toGiNaC(true, nullptr, &sub));
     }
     for (const TT::Expression &ex : srGuard) {
-        lhs.push_back(ex.toGiNaC(true, &sub));
+        lhs.push_back(ex.toGiNaC(true, nullptr, &sub));
     }
 
     debugRecursion("LHS:");
@@ -754,7 +754,7 @@ bool Recursion::removingSelfReferentialGuardIsSound(const TT::ExpressionVector &
     }
 
     for (const TT::Expression &ex : srGuard) {
-        Expression rhs = ex.substitute(funSymbolIndex, recursionCopy.term).toGiNaC(true, &sub);
+        Expression rhs = ex.substitute(funSymbolIndex, recursionCopy.term).toGiNaC(true, nullptr, &sub);
 
         if (!Z3Toolbox::checkTautologicImplication(lhs, rhs)) {
             debugRecursion("query: LHS => " << rhs << ": FALSE");

@@ -55,6 +55,11 @@ private:
      */
     bool calcIteratedCost(const Expression &cost, const Expression &meterfunc, Expression &newCost);
 
+
+    bool calcIteratedOuterUpdate(const Expression &outerUpdate,
+                                 const ExprSymbol& outerUpdateVar,
+                                 const Expression &meterfunc,
+                                 Expression &newOuterUpdate);
 private:
     /**
      * Tries to find an order to calculate recurrence equations.
@@ -69,6 +74,7 @@ private:
      * @return true if successful and result has been set
      */
     bool findUpdateRecurrence(Expression update, ExprSymbol target, Expression &result);
+    bool findOuterUpdateRecurrence(Expression update, ExprSymbol target, Expression &result);
 
     /**
      * Tries to find a recurrence for the given cost term.

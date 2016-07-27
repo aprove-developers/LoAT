@@ -358,8 +358,8 @@ Expression Expression::abstractSize(const std::set<FunctionSymbolIndex> &funSyms
 }
 
 
-GiNaC::ex Expression::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    return root->toGiNaC(subFunSyms, sub);
+GiNaC::ex Expression::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    return root->toGiNaC(subFunSyms, singleVar, sub);
 }
 
 
@@ -803,7 +803,7 @@ std::shared_ptr<Term> Term::abstractSize(const std::set<FunctionSymbolIndex> &fu
 }
 
 
-GiNaC::ex Term::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+GiNaC::ex Term::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
     throw UnsupportedOperationException();
 }
 
@@ -1073,9 +1073,9 @@ InfoFlag Relation::getTypeInfoFlag() const {
 }
 
 
-GiNaC::ex Relation::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    GiNaC::ex newL = l->toGiNaC(subFunSyms, sub);
-    GiNaC::ex newR = r->toGiNaC(subFunSyms, sub);
+GiNaC::ex Relation::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    GiNaC::ex newL = l->toGiNaC(subFunSyms, singleVar, sub);
+    GiNaC::ex newR = r->toGiNaC(subFunSyms, singleVar, sub);
 
     if (type == EQUAL) {
         return newL == newR;
@@ -1213,8 +1213,8 @@ std::shared_ptr<Term> Addition::substitute(FunctionSymbolIndex fs, const std::sh
 }
 
 
-GiNaC::ex Addition::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    return l->toGiNaC(subFunSyms, sub) + r->toGiNaC(subFunSyms, sub);
+GiNaC::ex Addition::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    return l->toGiNaC(subFunSyms, singleVar, sub) + r->toGiNaC(subFunSyms, singleVar, sub);
 }
 
 
@@ -1335,8 +1335,8 @@ std::shared_ptr<Term> Subtraction::substitute(FunctionSymbolIndex fs, const std:
 }
 
 
-GiNaC::ex Subtraction::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    return l->toGiNaC(subFunSyms, sub) - r->toGiNaC(subFunSyms, sub);
+GiNaC::ex Subtraction::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    return l->toGiNaC(subFunSyms, singleVar, sub) - r->toGiNaC(subFunSyms, singleVar, sub);
 }
 
 
@@ -1457,8 +1457,8 @@ std::shared_ptr<Term> Multiplication::substitute(FunctionSymbolIndex fs, const s
 }
 
 
-GiNaC::ex Multiplication::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    return l->toGiNaC(subFunSyms, sub) * r->toGiNaC(subFunSyms, sub);
+GiNaC::ex Multiplication::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    return l->toGiNaC(subFunSyms, singleVar, sub) * r->toGiNaC(subFunSyms, singleVar, sub);
 }
 
 
@@ -1579,8 +1579,8 @@ std::shared_ptr<Term> Power::substitute(FunctionSymbolIndex fs, const std::share
 }
 
 
-GiNaC::ex Power::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    return GiNaC::pow(l->toGiNaC(subFunSyms, sub), r->toGiNaC(subFunSyms, sub));
+GiNaC::ex Power::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    return GiNaC::pow(l->toGiNaC(subFunSyms, singleVar, sub), r->toGiNaC(subFunSyms, singleVar, sub));
 }
 
 
@@ -1687,8 +1687,8 @@ std::shared_ptr<Term> Factorial::substitute(FunctionSymbolIndex fs, const std::s
 }
 
 
-GiNaC::ex Factorial::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
-    return GiNaC::factorial(n->toGiNaC(subFunSyms, sub));
+GiNaC::ex Factorial::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
+    return GiNaC::factorial(n->toGiNaC(subFunSyms, singleVar, sub));
 }
 
 
@@ -1964,9 +1964,11 @@ std::shared_ptr<Term> FunctionSymbol::substitute(FunctionSymbolIndex fs, const s
 }
 
 
-GiNaC::ex FunctionSymbol::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+GiNaC::ex FunctionSymbol::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
     if (subFunSyms) {
-        if (sub != nullptr) {
+        if (singleVar != nullptr) {
+            return *singleVar;
+        } else if (sub != nullptr) {
             for (auto const &pair : *sub) {
                 if (pair.first.getTermTree()->equals(*this)) {
                     return pair.second;
@@ -2167,7 +2169,7 @@ std::shared_ptr<Term> GiNaCExpression::substitute(FunctionSymbolIndex fs, const 
 }
 
 
-GiNaC::ex GiNaCExpression::toGiNaC(bool subFunSyms, FunToVarSub *sub) const {
+GiNaC::ex GiNaCExpression::toGiNaC(bool subFunSyms,const ExprSymbol *singleVar, FunToVarSub *sub) const {
     return expression;
 }
 

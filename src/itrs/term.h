@@ -154,7 +154,7 @@ public:
                             const std::map<FunctionSymbolIndex,int> &specialCases) const;
 
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const;
     Purrs::Expr toPurrs(int i = -1) const;
     Expression ginacify() const ;
     Expression unGinacify() const;
@@ -286,7 +286,7 @@ public:
     virtual std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const = 0;
 
     EXCEPTION(UnsupportedOperationException, CustomException);
-    virtual GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const;
+    virtual GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const;
     virtual Purrs::Expr toPurrs(int i) const;
     virtual std::shared_ptr<Term> ginacify() const = 0;
     virtual std::shared_ptr<Term> unGinacify() const = 0;
@@ -334,7 +334,7 @@ public:
     Type getType() const;
     InfoFlag getTypeInfoFlag() const;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
 
@@ -369,7 +369,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
@@ -405,7 +405,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
@@ -441,7 +441,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
@@ -477,7 +477,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
@@ -513,7 +513,7 @@ public:
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
@@ -554,7 +554,7 @@ public:
     std::string getName() const;
     const std::vector<std::shared_ptr<Term>>& getArguments() const;
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;
@@ -595,7 +595,7 @@ public:
     GiNaC::ex getExpression() const;
     void setExpression(const GiNaC::ex &expr);
 
-    GiNaC::ex toGiNaC(bool subFunSyms = false, FunToVarSub *sub = nullptr) const override;
+    GiNaC::ex toGiNaC(bool subFunSyms = false, const ExprSymbol *singleVar = nullptr, FunToVarSub *sub = nullptr) const override;
     Purrs::Expr toPurrs(int i) const override;
     std::shared_ptr<Term> ginacify() const override;
     std::shared_ptr<Term> unGinacify() const override;

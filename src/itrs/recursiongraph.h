@@ -37,6 +37,10 @@ struct Transition {
     UpdateMap update;
     Expression cost;
 
+    Expression outerUpdate;
+    int numberOfCalls;
+    ExprSymbol outerUpdateVar;
+
     RightHandSide toRightHandSide(const ITRSProblem &itrs, FunctionSymbolIndex funSym) const;
 };
 
@@ -47,9 +51,11 @@ struct RightHandSide {
     TT::Expression term;
     TT::Expression cost;
 
-    bool isLegacyTransition() const;
+    bool isLegacyTransition(const ITRSProblem &itrs) const;
 
-    Transition toLegacyTransition(const ITRSProblem &itrs, FunctionSymbolIndex funSym) const;
+    Transition toLegacyTransition(const ITRSProblem &itrs,
+                                  const ExprSymbol &outerUpVar,
+                                  FunctionSymbolIndex funSym) const;
     void substitute(const GiNaC::exmap &sub);
 };
 
@@ -297,6 +303,9 @@ private:
     // accelerateSimpleLoops() uses the following set to communicate
     // with chainSimpleLoops().
     std::set<NodeIndex> addTransitionToSkipLoops;
+
+    // special variable used when handling the outer update
+    ExprSymbol outerUpdateVar;
 };
 
 #endif // RECURSIONGRAPH_H

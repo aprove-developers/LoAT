@@ -56,7 +56,11 @@ RightHandSide Transition::toRightHandSide(const ITRSProblem &itrs,
         }
     }
 
-    rhs.term = TT::Expression(funSym, itrs.getFunctionSymbolName(funSym), args);
+    TT::Expression call = TT::Expression(funSym, itrs.getFunctionSymbolName(funSym), args);
+    TT::Substitution sub;
+    sub.emplace(outerUpdateVar, call);
+    TT::Expression outer = TT::Expression(outerUpdate);
+    rhs.term = outer.unGinacify().substitute(sub).ginacify();
 
     return rhs;
 }
@@ -79,17 +83,34 @@ std::ostream& operator<<(std::ostream &s, const Transition &trans) {
 }
 
 
-bool RightHandSide::isLegacyTransition() const {
-    if (!term.isSimple()) {
+bool RightHandSide::isLegacyTransition(const ITRSProblem &itrs) const {
+    std::set<FunctionSymbolIndex> funSyms = std::move(term.getFunctionSymbols());
+    if (funSyms.size() != 1) {
         return false;
     }
 
-    if (!cost.hasNoFunctionSymbols()) {
+    if (cost.hasFunctionSymbol()) {
         return false;
     }
 
     for (const TT::Expression &ex : guard) {
-        if (!ex.hasNoFunctionSymbols()) {
+        if (ex.hasFunctionSymbol()) {
+            return false;
+        }
+    }
+
+    const FunctionSymbol &fs = itrs.getFunctionSymbol(*funSyms.begin());
+    int arity = fs.getArguments().size();
+    assert(arity >= 0);
+    std::vector<TT::Expression> updates = std::move(term.getUpdates());
+
+    if (arity == updates.size()) {
+        return true;
+    }
+
+    // Make sure that the updates are equal for each call
+    for (int i = arity; i < updates.size(); ++i) {
+        if (!updates[i].equals(updates[i % arity])) {
             return false;
         }
     }
@@ -99,6 +120,7 @@ bool RightHandSide::isLegacyTransition() const {
 
 
 Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
+                                             const ExprSymbol &outerUpVar,
                                                    FunctionSymbolIndex funSym) const {
     Transition trans;
     assert(cost.hasNoFunctionSymbols());
@@ -109,16 +131,24 @@ Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
         trans.guard.push_back(ex.toGiNaC());
     }
 
-    assert(term.isSimple());
+    assert(isLegacyTransition(itrs));
     const FunctionSymbol &funSymbol = itrs.getFunctionSymbol(funSym);
-    for (int i = 0; i < term.nops(); ++i) {
-        Expression arg = term.op(i).toGiNaC();
+    int arity = funSymbol.getArguments().size();
+    assert(arity >= 0);
+    std::vector<TT::Expression> updates = std::move(term.getUpdates());
+    for (int i = 0; i < arity; ++i) {
+        Expression arg = updates[i].toGiNaC();
         VariableIndex varIndex = funSymbol.getArguments()[i];
 
         if (!arg.is_equal(itrs.getGinacSymbol(varIndex))) {
             trans.update.emplace(varIndex, arg);
         }
     }
+
+    trans.outerUpdate = term.toGiNaC(true, &outerUpVar);
+    trans.outerUpdateVar = outerUpVar;
+    trans.numberOfCalls = updates.size() / arity;
+    assert(updates.size() % arity == 0);
 
     return trans;
 }
@@ -146,7 +176,7 @@ std::ostream& operator<<(std::ostream &os, const RightHandSide &rhs) {
 }
 
 RecursionGraph::RecursionGraph(ITRSProblem &itrs)
-    : itrs(itrs), nextRightHandSide(0) {
+    : itrs(itrs), nextRightHandSide(0), outerUpdateVar("t") {
     nodes.insert(NULLNODE);
 
     for (FunctionSymbolIndex i = 0; i < itrs.getFunctionSymbolCount(); ++i) {
@@ -599,7 +629,7 @@ RuntimeResult RecursionGraph::getMaxPartialResult() {
         //get current max cost (with infinity check)
         for (TransIndex trans : getTransFrom(initial)) {
             const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
-            Transition legacy = rhs.toLegacyTransition(itrs, initial);
+            Transition legacy = rhs.toLegacyTransition(itrs, outerUpdateVar, initial);
 
             if (legacy.cost.getComplexity() <= max(res.cpx,Complexity(0))) continue;
 
@@ -815,7 +845,6 @@ TransIndex RecursionGraph::addLegacyTransition(NodeIndex from,
                                                NodeIndex to,
                                                const Transition &trans) {
     RightHandSide rhs = std::move(trans.toRightHandSide(itrs, to));
-    assert(rhs.term.isSimple());
 
     RightHandSideIndex rhsIndex = nextRightHandSide++;
     rightHandSides.emplace(rhsIndex, std::move(rhs)).first;
@@ -1257,7 +1286,7 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
 bool RecursionGraph::canNest(const RightHandSide &inner, FunctionSymbolIndex index, const RightHandSide &outer) const {
     set<string> innerguard;
     for (const TT::Expression &ex : inner.guard) Expression(ex.toGiNaC()).collectVariableNames(innerguard);
-    for (const auto &it : outer.toLegacyTransition(itrs, index).update) {
+    for (const auto &it : outer.toLegacyTransition(itrs, outerUpdateVar, index).update) {
         if (innerguard.count(itrs.getVariableName(it.first)) > 0) {
             return true;
         }
@@ -1328,7 +1357,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
     for (TransIndex trans : getTransFromTo(node, node)) {
         const RightHandSide &rhs = rightHandSides.at(getTransData(trans));
 
-        if (rhs.isLegacyTransition()) {
+        if (rhs.isLegacyTransition(itrs)) {
             loops.push_back(trans);
 
         }
@@ -1397,7 +1426,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
 
         Expression rankfunc;
         pair<VariableIndex,VariableIndex> conflictVar;
-        Transition data = rhs.toLegacyTransition(itrs, node); //note: data possibly modified by instantiation in farkas
+        Transition data = rhs.toLegacyTransition(itrs, outerUpdateVar, node); //note: data possibly modified by instantiation in farkas
         FarkasMeterGenerator::Result result = FarkasMeterGenerator::generate(itrs,data,rankfunc,&conflictVar);
 
         //this is a second attempt for one selfloop, so ignore it if it was not successful
@@ -1508,7 +1537,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
                 if (chainRightHandSides(loop, node, outerRhs)) {
                     Complexity oldcpx = Expression(loop.cost.toGiNaC()).getComplexity();
 
-                    Transition loopLegacy = loop.toLegacyTransition(itrs, node);
+                    Transition loopLegacy = loop.toLegacyTransition(itrs, outerUpdateVar, node);
                     if (try_rank(loopLegacy) && loopLegacy.cost.getComplexity() > oldcpx) {
                         proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
                         changed = true;
@@ -1534,7 +1563,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
                 if (chainRightHandSides(loop, node, innerRhs)) {
                     Complexity oldcpx = Expression(loop.cost.toGiNaC()).getComplexity();
 
-                    Transition loopLegacy = loop.toLegacyTransition(itrs, node);
+                    Transition loopLegacy = loop.toLegacyTransition(itrs, outerUpdateVar, node);
                     if (try_rank(loopLegacy) && loopLegacy.cost.getComplexity() > oldcpx) {
                         proofout << "  and nested parallel self-loops " << outer << " (outer loop) and " << inner << " (inner loop), obtaining the new transitions: ";
                         changed = true;
