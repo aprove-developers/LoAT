@@ -141,8 +141,11 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     if (pos != string::npos) {
         //-{ cost }> sytnax
         auto endpos = line.find("}>");
-        if (endpos == string::npos) throw ITRSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
-        cost = line.substr(pos+2,endpos-(pos+2));
+        auto midpos = line.find(",",pos);
+        if (endpos == string::npos || midpos == string::npos || midpos >= endpos) {
+            throw ITRSProblem::FileError("Invalid rule, malformed -{ lowerbound, upperbound }>: "+line);
+        }
+        cost = line.substr(pos+2,midpos-(pos+2));
         lhs = line.substr(0,pos);
         rhs = line.substr(endpos+2);
     } else {
