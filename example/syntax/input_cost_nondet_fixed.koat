@@ -6,5 +6,5 @@
   start(x, y) -> f(x, y)
 
 # linear loop, every iteration has fixed cost 42, expressed indirectly using a free variable
-  f(x, y) -{z}> f(x-1, y) [ x > 0 && z == 42 ]
+  f(x, y) -{z,z}> f(x-1, y) [ x > 0 && z == 42 ]
 )

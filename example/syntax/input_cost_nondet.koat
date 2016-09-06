@@ -6,5 +6,5 @@
   start(x, y) -> f(x, y)
 
 # linear loop, but every iteration has unbounded cost
-  f(x, y) -{z}> f(x-1, y) [ x > 0 && z > 0 ]
+  f(x, y) -{z,z}> f(x-1, y) [ x > 0 && z > 0 ]
 )
