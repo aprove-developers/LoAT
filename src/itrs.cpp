@@ -270,7 +270,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     }
     //ensure user given costs are positive
     if (!cost.empty()) {
-        rule.guard.push_back(rule.cost > 0);
+        rule.guard.push_back(rule.cost >= 0);
     }
 
     this->rules.push_back(rule);
