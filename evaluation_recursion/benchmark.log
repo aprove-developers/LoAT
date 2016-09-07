@@ -1,0 +1,48 @@
+===== Complexity Score Benchmark ======
+Launched: Mi 7. Sep 21:14:20 CEST 2016
+Compiled with configuration:
+ Contract check SAT:                 YES
+ Contract approximate SAT:           YES
+ Z3 treat power as mult up to:       5
+ Simplify before every loop ranking: YES
+ Instantiation max number of bounds: 3
+ Farkas retry with extended guard:   NO
+ Always try nonexecution of loops:   NO
+ Max loop nesting iterations:        3
+ Try chaining parallel selfloops:    NO
+ Enable pruning to reduce runtime:   YES
+ Pruning max # of parallel edges:    5
+ Final infinity check:               NO
+Timeout is 30 seconds
+evaluation_recursion/fromkoat/ArrayReverse.koat	1
+evaluation_recursion/fromkoat/Cons.koat	0
+evaluation_recursion/fromkoat/DivByTwo.koat	0
+evaluation_recursion/fromkoat/div.koat	0
+evaluation_recursion/fromkoat/duplicates.koat	1
+evaluation_recursion/fromkoat/dyade.koat	2
+evaluation_recursion/fromkoat/eratosthenes.koat	2
+evaluation_recursion/fromkoat/insertionsort.koat	2
+evaluation_recursion/fromkoat/ListInter.koat	1
+evaluation_recursion/fromkoat/ListReverse.koat	1
+evaluation_recursion/fromkoat/no_cover_point.koat	0
+evaluation_recursion/fromkoat/Power.koat	0
+evaluation_recursion/fromkoat/quadratic.koat	2
+evaluation_recursion/fromkoat/quicksort.koat	2
+evaluation_recursion/fromkoat/selectionsort.koat	2
+evaluation_recursion/handcrafted/bin.koat	0
+evaluation_recursion/handcrafted/bubblesort.koat	2
+evaluation_recursion/handcrafted/exp-calls.koat	1000
+evaluation_recursion/handcrafted/fact.koat	1
+evaluation_recursion/handcrafted/fib.koat	0
+evaluation_recursion/handcrafted/hanoi.koat	1
+evaluation_recursion/handcrafted/leading.koat	4
+evaluation_recursion/handcrafted/merge.koat	1
+evaluation_recursion/handcrafted/mergesort.koat	0
+evaluation_recursion/handcrafted/mutual.koat	1
+evaluation_recursion/handcrafted/power2.koat	0
+evaluation_recursion/handcrafted/power.koat	1
+evaluation_recursion/handcrafted/split.koat	0
+evaluation_recursion/handcrafted/timesplus2.koat	0
+evaluation_recursion/handcrafted/timesplus.koat	2
+Total Score: 1029
+===== Complexity Score Benchmark ======

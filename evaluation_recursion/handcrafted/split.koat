@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR A B C)
+(RULES
+  split(A) -> split(A - 2) + 1 :|: A >= 2
+  split(A) -> 0 :|: A = 1
+  split(A) -> 0 :|: A = 0
+  start(A) -> split(A)
+)

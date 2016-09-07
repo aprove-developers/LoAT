@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR list pos sorted len)
+(RULES
+  insert(list,pos) -> insert(list - 1, pos - 1) + 1 :|: pos > 0
+  insert(list,pos) -> list + 1 :|: pos = 0
+  insertionsort(sorted, list) -> insert(sorted, pos) + insertionsort(sorted + 1, list - 1):|: list > 0 && pos <= sorted
+  insertionsort(sorted, list) -> 0 :|: list = 0
+  start(len) -> insertionsort(0, len)
+)

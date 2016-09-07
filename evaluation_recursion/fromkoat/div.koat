@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(VAR x y)
+(RULES
+start(x,y) -> isdiv(x,y)
+isdiv(x, y) -> 1 :|: x>=0 && y==0
+isdiv(x, y) -> 0 :|: y>=0 && x>=0 && x>y
+isdiv(x, y) -> isdiv(x, y-x) :|: y>=0 && x>=0 && y>=x
+)

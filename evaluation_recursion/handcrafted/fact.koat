@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS fact))
+(VAR x y)
+(RULES
+    fact(x) -> fact2(x, fact(x - 1)) :|: x > 1
+    fact(x) -> 1 :|: x <= 1
+    fact2(x, y) -> x * y
+)

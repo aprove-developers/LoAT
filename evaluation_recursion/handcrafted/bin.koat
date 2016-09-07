@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR x y n k)
+(RULES
+    start(x,y) -> bin(x,y)
+    bin(n,k) -> bin(n - 1, k -1) + bin(n - 1, k) :|: k >= 1 && k <= n - 1 && n > 0
+    bin(n,k) -> 1 :|: k = 0 && n >= 0
+    bin(n,k) -> 1 :|: n = k && n >= 0
+)

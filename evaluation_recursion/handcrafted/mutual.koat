@@ -1,0 +1,10 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR n)
+(RULES
+    start(n) -> even(n)
+    even(n) -> odd(n - 1) :|: n > 0
+    even(n) -> 1 :|: n = 0
+    odd(n) -> even(n - 1) :|: n > 0
+    odd(n) -> 0 :|: n = 0
+)

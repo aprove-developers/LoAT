@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR x n)
+(RULES
+start(x) -> hanoi(x)
+hanoi(n) -> 2*hanoi(n-1) + 1 :|: n > 1
+hanoi(1) -> 1
+)

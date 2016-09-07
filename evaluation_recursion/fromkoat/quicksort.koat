@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR A B C D E F G)
+(RULES
+  append(A,B) -> append(A - 1, B) + 1 :|: A >= 1
+  append(A,B) -> B :|: A == 0
+  split(A) -> split(A - 1) :|: A >= 1
+  split(A) -> 0 :|: A == 0
+  qs(A) -> split(A) + append(qs(E - 1) + 1, qs(F)) :|: A >= 1 && A == E + F && E >= 1 && F >= 0
+  qs(A) -> 0 :|: A == 0
+  start(A) -> qs(A)
+)

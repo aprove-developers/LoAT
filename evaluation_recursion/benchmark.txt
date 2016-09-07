@@ -1,0 +1,7 @@
+===== Complexity Score Benchmark ======
+Score     Samples   Average   Errors    Timeouts  Time      Directory
+   16      15       1.06      0 err     0 tout     3.855 s  evaluation_recursion/fromkoat
+ 1013      15       67.53     0 err     0 tout     1.523 s  evaluation_recursion/handcrafted
+
+Total Score: 1029
+===== Complexity Score Benchmark ======

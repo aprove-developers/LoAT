@@ -1,0 +1,16 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS arrayReverse))
+(VAR A B)
+(RULES
+  arrayReverse(A) -> m2(A)
+  m0(A) -> m1(A)
+  m5(A) -> foo(m3(B),m0(B)) :|: A >= B && B >= A
+  m2(A) -> m5(A)
+  m6(A) -> m0(B) :|: B >= 0 && A >= B + 1 && 1 + B >= A
+  m1(A) -> m6(A)
+  m1(A) -> m4(A)
+  foo(A,B) -> A + B
+  m3(A) -> 0
+  m6(A) -> m2(A)
+  m4(A) -> m2(A)
+)
