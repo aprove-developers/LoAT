@@ -77,7 +77,7 @@ struct DebugStream {
 #define DEBUG_RECURSION_GRAPH
 
 //debugging for Farkas processor
-#define DEBUG_FARKAS
+//#define DEBUG_FARKAS
 
 //debugging for final infinity check
 #define DEBUG_INFINITY

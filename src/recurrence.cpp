@@ -90,7 +90,7 @@ bool Recurrence::findUpdateRecurrence(Expression update, ExprSymbol target, Expr
 
     try {
         Purrs::Recurrence rec(rhs);
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(update)} });
+        rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(target)} });
 
         auto res = rec.compute_exact_solution();
         if (res != Purrs::Recurrence::SUCCESS) {
@@ -107,15 +107,24 @@ bool Recurrence::findUpdateRecurrence(Expression update, ExprSymbol target, Expr
     return true;
 }
 
-bool Recurrence::findOuterUpdateRecurrence(Expression update, ExprSymbol target, Expression &result) {
+bool Recurrence::findOuterUpdateRecurrence(Expression outerUpdate, ExprSymbol target, Expression &result) {
     Timing::Scope timer(Timing::Purrs);
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
-    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(update.subs(knownPreRecurrences).subs(target == last));
+    ExprSymbol sum("s");
+    Expression k = sum - ginacN;
+
+    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(outerUpdate.subs(knownPreRecurrences)
+                                                        .subs(ginacN == (ginacN + 1)) // kPR has the values for n+1
+                                                        .subs(ginacN == k)
+                                                        .subs(target == last));
     Purrs::Expr exact;
 
     try {
         Purrs::Recurrence rec(rhs);
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(update)} });
+        rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(target)} });
+
+        debugPurrs("OUTER REC: " << rhs);
+        debugPurrs("INITIAL CONDITION: " << target);
 
         auto res = rec.compute_exact_solution();
         if (res != Purrs::Recurrence::SUCCESS) {
@@ -124,11 +133,11 @@ bool Recurrence::findOuterUpdateRecurrence(Expression update, ExprSymbol target,
         rec.exact_solution(exact);
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
-        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << target << " for update " << update);
+        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << target << " for update " << outerUpdate);
         return false;
     }
 
-    result = exact.toGiNaC();
+    result = exact.toGiNaC().subs(sum == ginacN);
     return true;
 }
 

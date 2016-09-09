@@ -99,23 +99,7 @@ bool RightHandSide::isLegacyTransition(const ITRSProblem &itrs) const {
         }
     }
 
-    const FunctionSymbol &fs = itrs.getFunctionSymbol(*funSyms.begin());
-    int arity = fs.getArguments().size();
-    assert(arity >= 0);
-    std::vector<TT::Expression> updates = std::move(term.getUpdates());
-
-    if (arity == updates.size()) {
-        return true;
-    }
-
-    // Make sure that the updates are equal for each call
-    for (int i = arity; i < updates.size(); ++i) {
-        if (!updates[i].equals(updates[i % arity])) {
-            return false;
-        }
-    }
-
-    return true;
+    return term.hasExactlyOneFunctionSymbolOnce();
 }
 
 
