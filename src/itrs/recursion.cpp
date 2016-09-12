@@ -289,7 +289,8 @@ std::set<int> Recursion::findRealVars(const RightHandSide &rhs) {
     std::set<int> realVars;
     const std::vector<VariableIndex> &vars = funSymbol.getArguments();
 
-    std::vector<TT::Expression> funApps = std::move(rhs.term.getFunctionApplications());
+    std::vector<TT::Expression> funApps;
+    assert(!rhs.term.hasFunctionSymbol());
     for (const TT::Expression &ex : rhs.guard) {
         ex.collectFunctionApplications(funApps);
     }
@@ -320,26 +321,160 @@ std::set<int> Recursion::findRealVars(const RightHandSide &rhs) {
 void Recursion::solveRecursionWithMainVar(const RightHandSide &rhs, int mainVarIndex) {
     debugRecursion("=== Trying to solve recursion ===");
     debugRecursion("mainVarIndex: " << mainVarIndex);
-
     VariableIndex mainVar = funSymbol.getArguments()[mainVarIndex];
     ExprSymbol mainVarGiNaC = itrs.getGinacSymbol(mainVar);
 
-    if (!findBaseCases()) {
+    BaseCaseIndexMap baseCaseIndexMap = analyzeBaseCases(mainVar);
+    if (baseCaseIndexMap.empty()) {
         debugRecursion("Found no usable base cases");
-        return false;
+        return;
     }
 
-    if (solveRecursionInOneVar()) {
-        wereUsed.insert(rhs);
+    BaseCaseRhsMap baseCaseMap;
+    for (const auto &pair : baseCaseIndexMap) {
+        Purrs::index_type val = pair.first;
+        baseCaseMap.emplace(val, baseCases[pair.second]);
+
+        GiNaC::exmap sub;
+        sub.emplace(mainVarGiNaC, val);
+        baseCaseMap[val].substitute(sub);
+        baseCaseMap[val].guard.push_back(mainVarGiNaC == GiNaC::numeric(val));
     }
+
+
+}
+
+
+BaseCaseIndexMap Recursion::analyzeBaseCases(ExprSymbol mainVar) {
+    debugRecursion("=== analyzing base cases ===");
+    debugRecursion("mainVar: " << mainVar);
+    BaseCaseIndexMap map;
+
+    for (int i = 0; i < baseCases.size(); ++i) {
+        const RightHandSide &bc = baseCases[i];
+        std::vector<Expression> query;
+        for (const TT::Expression &ex : rhs->guard) {
+            assert(ex.hasNoFunctionSymbols());
+            query.push_back(ex.toGiNaC());
+        }
+
+        Z3VariableContext context;
+        z3::model model(context, Z3_model());
+        z3::check_result result;
+        result = Z3Toolbox::checkExpressionsSAT(query, context, &model);
+
+        debugRecursion("analyzing " << bc << " as a potential base case");
+        if (result == z3::sat) {
+            Expression value = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(mainVar, context));
+            if (value.info(GiNaC::info_flags::integer)
+                && value.info(GiNaC::info_flags::nonnegative)) {
+                // Check range?
+                Purrs::index_type asUInt = GiNaC::ex_to<GiNaC::numeric>(value).to_int();
+                if (map.count(asUInt) == 0) {
+                    // Try to derive more base cases from one rhs?
+                    debugRecursion("is a potential base case for " << mainVar << " = " << asUInt);
+                    map.emplace(asUInt, i);
+                    continue;
+
+                } else {
+                    debugRecursion("Discarding potential base case for " << mainVar << " = " << asUInt);
+                }
+
+            } else {
+                debugRecursion("Error, " << value << " is not a natural number");
+            }
+
+        } else {
+            debugRecursion("Z3 was not sat");
+        }
+    }
+
+    return map;
+}
+
+
+bool Recursion::baseCasesMatch(const BaseCaseRhsMap &bcs, const RightHandSide &recursion) {
+    debugRecursion("=== Checking if base cases match ===");
+    debugRecursion("Base Cases:");
+    for (const auto &pair : bcs) {
+        debugRecursion(pair.first << ": " << pair.second);
+    }
+    debugRecursion("Recursion:");
+    debugRecursion(recursion);
+
+    std::vector<TT::Expression> funApps;
+    assert(!recursion.term.hasFunctionSymbol());
+    for (const TT::Expression &ex : recursion.guard) {
+        ex.collectFunctionApplications(funApps);
+    }
+
+    for (const TT::Expression &funApp : funApps) {
+        TT::Expression update = funApp.op(realVarIndex).substitute(freeVarSub).substitute(instSub);
+        debugRecursion("Update: " << update);
+        assert(update.hasNoFunctionSymbols());
+        GiNaC::exmap updateSub;
+        updateSub.emplace(realVarGiNaC, update.toGiNaC());
+
+        std::vector<std::vector<Expression>> queryRhs; // disjunction of conjunctions
+        debugRecursion("RHS:");
+        for (auto const &pair : baseCases) {
+            debugRecursion("OR (updated base case guard)");
+            std::vector<Expression> updatedGuard;
+            for (const TT::Expression &ex : pair.second->guard) {
+                if (!ex.hasNoFunctionSymbols()) {
+                    debugRecursion("Warning: guard contains function symbol, substituting by variable");
+                }
+
+                // Using toGiNaC(true) to substitute function symbols by variables
+                updatedGuard.push_back(ex.toGiNaC(true).subs(realVarSub).subs(updateSub));
+                debugRecursion("\tAND " << updatedGuard.back());
+            }
+            Expression forceCritVar(realVarGiNaC == pair.first);
+            updatedGuard.push_back(forceCritVar.subs(updateSub));
+            debugRecursion("\tAND (forcing realVar) " << updatedGuard.back());
+
+            queryRhs.push_back(std::move(updatedGuard));
+        }
+
+        std::vector<Expression> queryLhs; // conjunction
+        for (const TT::Expression &ex : recursionCopy.guard) {
+            if (!ex.hasNoFunctionSymbols()) {
+                debugRecursion("Warning: guard contains function symbol, substituting by variable");
+            }
+
+            // Using toGiNaC(true) to substitute function symbols by variables
+
+            queryLhs.push_back(ex.toGiNaC(true));
+        }
+
+        for (const TT::Expression &negateEx : recursionCopy.guard) {
+            debugRecursion("negateEx: " << negateEx);
+            // Using toGiNaC(true) to substitute function symbols by variables
+            Expression toNegate = negateEx.toGiNaC(true).subs(updateSub);
+            debugRecursion("toNegate: " << toNegate);
+            queryLhs.push_back(GT::negate(toNegate));
+
+            debugRecursion("LHS:");
+            for (const Expression &ex : queryLhs) {
+                debugRecursion("AND " << ex);
+            }
+
+            if (!Z3T::checkTautologicImplication(queryLhs, queryRhs)) {
+                debugRecursion("FALSE");
+                return false;
+            }
+
+            debugRecursion("TRUE");
+
+            queryLhs.pop_back();
+        }
+    }
+
+    return true;
 }
 
 
 bool Recursion::solveRecursionInOneVar() {
-        debugRecursion("===Trying to solve recursion===");
-        debugRecursion("Recursion: " << *recursion);
-
-        substituteFreeVariables();
 
         // Remove self-referential conditions from the guard
         TT::ExpressionVector selfReferentialGuard;
@@ -550,54 +685,6 @@ bool Recursion::solveRecursionInTwoVars() {
 }
 
 
-void Recursion::evaluateConstantRecursiveCalls() {
-    debugRecursion("===Trying to evaluate constant recursive calls");
-
-    for (auto const &pair : baseCases) {
-        const RightHandSide &rhs = *pair.second;
-
-        TT::FunctionDefinition funDef(itrs, funSymbolIndex, rhs.term, rhs.cost, rhs.guard);
-
-        debugRecursion("Before: " << recursionCopy.term);
-        recursionCopy.term = recursionCopy.term.evaluateFunctionIfLegal(funDef, recursionCopy.guard, &recursionCopy.cost);
-        debugRecursion("After: " << recursionCopy.term);
-    }
-}
-
-
-void Recursion::instantiateACandidate() {
-    debugRecursion("===Instantiating a variable===");
-    assert(!instCandidates.empty());
-    auto it = instCandidates.begin();
-    ExprSymbol toInst = *it;
-    instCandidates.erase(it);
-
-    std::vector<Expression> query;
-    for (const TT::Expression &ex : recursionCopy.guard) {
-        if (ex.hasNoFunctionSymbols()) {
-            query.push_back(ex.toGiNaC().subs(realVarSub));
-        }
-    }
-
-    Z3VariableContext context;
-    z3::model model(context, Z3_model());
-    z3::check_result result;
-    result = Z3Toolbox::checkExpressionsSAT(query, context, &model);
-
-    if (result == z3::sat) {
-        Expression value = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(realVarGiNaC, context));
-        instSub.emplace(toInst, value);
-        debugRecursion(toInst << " -> " << value);
-
-    } else {
-        instSub.emplace(toInst, GiNaC::numeric(0));
-        debugRecursion(toInst << " -> " << 0);
-    }
-
-    recursionCopy.substitute(instSub);
-}
-
-
 bool Recursion::updatesHaveConstDifference(const TT::Expression &term) const {
     debugRecursion("===Checking if updates have constant difference===");
     std::vector<TT::Expression> funApps = std::move(term.getFunctionApplications());
@@ -660,126 +747,6 @@ bool Recursion::updatesHaveConstSum(const TT::Expression &term) const {
         GiNaC::ex ex = updateGiNaC - update2GiNaC.subs(sub);
         if (!GiNaC::is_a<GiNaC::numeric>(ex)) {
             return false;
-        }
-    }
-
-    return true;
-}
-
-
-bool Recursion::findBaseCases() {
-    debugRecursion("===Searching for base cases===");
-
-    baseCases.clear();
-    for (const RightHandSide *rhs : rightHandSides) {
-        if (!rhs->term.hasNoFunctionSymbols()) {
-            continue;
-        }
-
-        std::vector<Expression> query;
-        for (const TT::Expression &ex : rhs->guard) {
-            assert(ex.hasNoFunctionSymbols());
-            query.push_back(ex.toGiNaC().subs(realVarSub));
-        }
-
-        Z3VariableContext context;
-        z3::model model(context, Z3_model());
-        z3::check_result result;
-        result = Z3Toolbox::checkExpressionsSAT(query, context, &model);
-
-        debugRecursion("Examining " << *rhs << " as a potential base case");
-        if (result == z3::sat) {
-            Expression value = Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(realVarGiNaC, context));
-            if (value.info(GiNaC::info_flags::integer)
-                && value.info(GiNaC::info_flags::nonnegative)) {
-                // TODO Check range
-                Purrs::index_type asUInt = GiNaC::ex_to<GiNaC::numeric>(value).to_int();
-                if (baseCases.count(asUInt) == 0) {
-                    // TODO Try to derive more base cases from one rhs
-                    debugRecursion("is a potential base case for " << realVarGiNaC << " = " << asUInt);
-                    baseCases.emplace(asUInt, rhs);
-                    continue;
-
-                } else {
-                    debugRecursion("Discarding potential base case for " << realVarGiNaC << " = " << asUInt);
-                }
-
-            } else {
-                debugRecursion("Error, " << value << " is not a natural number");
-            }
-
-        } else {
-            debugRecursion("Z3 was not sat");
-        }
-    }
-
-    return !baseCases.empty();
-}
-
-
-bool Recursion::baseCasesAreSufficient() {
-    debugRecursion("===Checking if base cases are sufficient===");
-    std::vector<TT::Expression> funApps = std::move(recursion->term.getFunctionApplications());
-
-    for (const TT::Expression &funApp : funApps) {
-        TT::Expression update = funApp.op(realVarIndex).substitute(freeVarSub).substitute(instSub);
-        debugRecursion("Update: " << update);
-        assert(update.hasNoFunctionSymbols());
-        GiNaC::exmap updateSub;
-        updateSub.emplace(realVarGiNaC, update.toGiNaC());
-
-        std::vector<std::vector<Expression>> queryRhs; // disjunction of conjunctions
-        debugRecursion("RHS:");
-        for (auto const &pair : baseCases) {
-            debugRecursion("OR (updated base case guard)");
-            std::vector<Expression> updatedGuard;
-            for (const TT::Expression &ex : pair.second->guard) {
-                if (!ex.hasNoFunctionSymbols()) {
-                    debugRecursion("Warning: guard contains function symbol, substituting by variable");
-                }
-
-                // Using toGiNaC(true) to substitute function symbols by variables
-                updatedGuard.push_back(ex.toGiNaC(true).subs(realVarSub).subs(updateSub));
-                debugRecursion("\tAND " << updatedGuard.back());
-            }
-            Expression forceCritVar(realVarGiNaC == pair.first);
-            updatedGuard.push_back(forceCritVar.subs(updateSub));
-            debugRecursion("\tAND (forcing realVar) " << updatedGuard.back());
-
-            queryRhs.push_back(std::move(updatedGuard));
-        }
-
-        std::vector<Expression> queryLhs; // conjunction
-        for (const TT::Expression &ex : recursionCopy.guard) {
-            if (!ex.hasNoFunctionSymbols()) {
-                debugRecursion("Warning: guard contains function symbol, substituting by variable");
-            }
-
-            // Using toGiNaC(true) to substitute function symbols by variables
-
-            queryLhs.push_back(ex.toGiNaC(true));
-        }
-
-        for (const TT::Expression &negateEx : recursionCopy.guard) {
-            debugRecursion("negateEx: " << negateEx);
-            // Using toGiNaC(true) to substitute function symbols by variables
-            Expression toNegate = negateEx.toGiNaC(true).subs(updateSub);
-            debugRecursion("toNegate: " << toNegate);
-            queryLhs.push_back(GT::negate(toNegate));
-
-            debugRecursion("LHS:");
-            for (const Expression &ex : queryLhs) {
-                debugRecursion("AND " << ex);
-            }
-
-            if (!Z3T::checkTautologicImplication(queryLhs, queryRhs)) {
-                debugRecursion("FALSE");
-                return false;
-            }
-
-            debugRecursion("TRUE");
-
-            queryLhs.pop_back();
         }
     }
 

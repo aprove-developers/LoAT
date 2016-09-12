@@ -13,7 +13,8 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 class FunctionSymbol;
 class ITRSProblem;
 
-typedef std::map<Purrs::index_type,Purrs::Expr> PurrsBaseCases;
+typedef std::map<Purrs::index_type,int> BaseCaseIndexMap;
+typedef std::map<Purrs::index_type,RightHandSide> BaseCaseRhsMap;
 
 class Recursion {
 public:
@@ -44,14 +45,16 @@ private:
 
     void solveRecursionWithMainVar(const RightHandSide &rhs, int mainVarIndex);
 
+    BaseCaseIndexMap analyzeBaseCases(ExprSymbol mainVar);
+
+    bool baseCasesMatch(const BaseCaseRhsMap &bcs, const RightHandSide &recursion);
+
+
     bool solveRecursionInOneVar();
     bool solveRecursionInTwoVars();
     void evaluateConstantRecursiveCalls();
-    void instantiateACandidate();
     bool updatesHaveConstDifference(const TT::Expression &term) const;
     bool updatesHaveConstSum(const TT::Expression &term) const;
-    bool findBaseCases();
-    bool baseCasesAreSufficient();
     bool solve(Purrs::Expr &recurrence, const PurrsBaseCases &bc);
     bool removingSelfReferentialGuardIsSound(const TT::ExpressionVector &srGuard) const;
     void mergeBaseCaseGuards(TT::ExpressionVector &recGuard) const;
@@ -71,35 +74,6 @@ private:
     std::vector<RightHandSide> recursions;
     std::vector<RightHandSide> baseCases;
     std::vector<RightHandSide> closedForms;
-
-    // attributes
-    std::vector<const RightHandSide*> recursions;
-    const RightHandSide *recursion;
-    TT::Expression defTerm;
-    RightHandSide recursionCopy;
-    TT::ExpressionVector selfReferentialGuard;
-
-    int realVarIndex;
-    VariableIndex realVar;
-    ExprSymbol realVarGiNaC;
-
-    int realVar2Index;
-    VariableIndex realVar2;
-    ExprSymbol realVar2GiNaC;
-
-    GiNaC::symbol constDiff;
-    // realVar2 -> realVar - constDiff
-    // or realVar2 -> constDiff - realVar
-    GiNaC::exmap realVarSub;
-    std::map<Purrs::index_type,const RightHandSide*> baseCases;
-
-    ExprSymbolSet instCandidates;
-    // z -> 5
-    GiNaC::exmap instSub;
-
-    GiNaC::exmap freeVarSub;
-
-    TT::Substitution conRecCallsSub;
 };
 
 #endif // RECURSION_H
