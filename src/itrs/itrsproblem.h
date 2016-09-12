@@ -103,6 +103,10 @@ public:
      */
     VariableIndex addFreshFreeVariable(const std::string &basename);
 
+    VariableIndex addChainingVariable();
+    bool isChainingVariable(VariableIndex index) const;
+    bool isChainingVariable(const ExprSymbol &var) const;
+
     /**
      * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the ITS variables
      * @return the newly created symbol (_not_ associated with a variable index!)
@@ -134,6 +138,7 @@ private:
     std::vector<FunctionSymbol> functionSymbols;
 
     std::set<VariableIndex> freeVariables;
+    std::set<VariableIndex> chainingVariables;
 };
 
 #endif // ITRSPROBLEM_H

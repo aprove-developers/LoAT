@@ -26,20 +26,37 @@ public:
     bool solve();
 
 private:
+    // search for possible recursion and place them in "recursions"
+    bool findRecursions();
+    bool findBaseCases();
+
+    // for every rhs in "recursions", every call in the term is moved to the guard
+    void moveRecursiveCallsToGuard();
+
+    // instantiates all non-chaining free variables of rules in "recursions"
+    void instantiateFreeVariables();
+    bool instantiateAFreeVariableOf(const RightHandSide &rhs);
+
+    void evaluateSpecificRecursiveCalls();
+    bool evaluateASpecificRecursiveCallOf(const RightHandSide &rhs);
+
+    std::set<int> findRealVars(const RightHandSide &rhs);
+
+    void solveRecursionWithMainVar(const RightHandSide &rhs, int mainVarIndex);
+
     bool solveRecursionInOneVar();
     bool solveRecursionInTwoVars();
-    void substituteFreeVariables();
     void evaluateConstantRecursiveCalls();
     void instantiateACandidate();
     bool updatesHaveConstDifference(const TT::Expression &term) const;
     bool updatesHaveConstSum(const TT::Expression &term) const;
-    bool findRecursions();
-    std::set<int> findRealVars(const TT::Expression &term);
     bool findBaseCases();
     bool baseCasesAreSufficient();
     bool solve(Purrs::Expr &recurrence, const PurrsBaseCases &bc);
     bool removingSelfReferentialGuardIsSound(const TT::ExpressionVector &srGuard) const;
     void mergeBaseCaseGuards(TT::ExpressionVector &recGuard) const;
+
+    void dumpRightHandSides() const;
 
 private:
     // paramters passed to this object
@@ -51,8 +68,14 @@ private:
     const FunctionSymbol& funSymbol;
 
     // attributes
+    std::vector<RightHandSide> recursions;
+    std::vector<RightHandSide> baseCases;
+    std::vector<RightHandSide> closedForms;
+
+    // attributes
     std::vector<const RightHandSide*> recursions;
     const RightHandSide *recursion;
+    TT::Expression defTerm;
     RightHandSide recursionCopy;
     TT::ExpressionVector selfReferentialGuard;
 

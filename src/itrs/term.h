@@ -155,7 +155,9 @@ public:
                                  ExpressionVector *addToGuard) const;
     Expression evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                        const TT::ExpressionVector &guard,
-                                       Expression *addToCost) const;
+                                       Expression *addToCost,
+                                       bool &modified) const;
+    Expression moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard);
     Expression abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                             const std::map<FunctionSymbolIndex,int> &specialCases) const;
 
@@ -274,6 +276,7 @@ public:
     std::vector<Expression> getFunctionApplications() const;
 
     bool hasFunctionSymbol(FunctionSymbolIndex funSym) const;
+    bool hasFunctionSymbol() const;
     bool hasNoFunctionSymbols() const;
     bool hasExactlyOneFunctionSymbol() const;
 
@@ -290,7 +293,9 @@ public:
                                                     ExpressionVector *addToGuard) const = 0;
     virtual std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                           const TT::ExpressionVector &guard,
-                                                          Expression *addToCost) const = 0;
+                                                          Expression *addToCost,
+                                                          bool &modified) const = 0;
+    virtual std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const = 0;
     virtual std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const;
     virtual std::shared_ptr<Term> substitute(const Substitution &sub) const = 0;
@@ -341,7 +346,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
     std::shared_ptr<Term> substitute(const GiNaC::exmap &sub) const override;
     std::shared_ptr<Term> substitute(FunctionSymbolIndex fs, const std::shared_ptr<Term> ex) const override;
@@ -380,7 +387,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -419,7 +428,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -458,7 +469,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -497,7 +510,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -536,7 +551,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -576,7 +593,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;
@@ -621,7 +640,9 @@ public:
                                             ExpressionVector *addToGuard) const override;
     std::shared_ptr<Term> evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                   const TT::ExpressionVector &guard,
-                                                  Expression *addToCost) const override;
+                                                  Expression *addToCost,
+                                                  bool &modified) const override;
+    std::shared_ptr<Term> moveFunctionSymbolsToGuard(ITRSProblem &itrs, TT::ExpressionVector &guard) const override;
     std::shared_ptr<Term> abstractSize(const std::set<FunctionSymbolIndex> &funSyms,
                                                const std::map<FunctionSymbolIndex,int> &specialCases) const override;
     std::shared_ptr<Term> substitute(const Substitution &sub) const override;

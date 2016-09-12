@@ -180,6 +180,28 @@ VariableIndex ITRSProblem::addFreshFreeVariable(const std::string &basename) {
 }
 
 
+VariableIndex ITRSProblem::addChainingVariable() {
+    VariableIndex vi = addFreshFreeVariable("z");
+    chainingVariables.insert(vi);
+    return vi;
+}
+
+bool ITRSProblem::isChainingVariable(VariableIndex index) const {
+    return chainingVariables.count(index) > 0;
+}
+
+
+bool ITRSProblem::isChainingVariable(const ExprSymbol &var) const {
+    for (VariableIndex i : chainingVariables) {
+        if (var == getGinacSymbol(i)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 ExprSymbol ITRSProblem::getFreshSymbol(const std::string &basename) const {
     return ExprSymbol(getFreshName(basename));
 }

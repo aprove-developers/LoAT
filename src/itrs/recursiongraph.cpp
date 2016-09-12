@@ -936,22 +936,49 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     // perform rewriting on a copy of rhs
     RightHandSide rhsCopy(rhs);
+    GiNaC::exmap guardSubs;
+    std::vector<int> removeFromGuard;
 
     rhsCopy.term = rhsCopy.term.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
     int oldSize = rhsCopy.guard.size();
     for (int i = 0; i < oldSize; ++i) {
-           // the following call might add new elements to rhsCopy.guard
-           rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
+        // the following call might add new elements to rhsCopy.guard
+        rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
+        TT::Expression &ex = rhsCopy.guard[i];
+        if (!ex.hasFunctionSymbol()) {
+            // apply guard sub
+            assert(ex.info(TT::InfoFlag::RelationEqual));
+            TT::Expression lhs = ex.op(0);
+            TT::Expression rhs = ex.op(1);
+            assert(lhs.info(TT::InfoFlag::Variable));
+            assert(!rhs.hasFunctionSymbol());
+            guardSubs.emplace(GiNaC::ex_to<ExprSymbol>(lhs.toGiNaC()),
+                              rhs.toGiNaC());
+            removeFromGuard.push_back(i);
+        }
     }
-    // We do not evaluate the guard because we avoid moving function symbols there
 
-    GuardList funSymbolFreeGuard;
-    for (const TT::Expression &ex : rhsCopy.guard) {
-        // toGiNaC(true) -> Substitute function symbols by fresh variables
-        funSymbolFreeGuard.push_back(ex.toGiNaC(true));
+    // remove equations we are applying as a guard sub
+    for (auto it = removeFromGuard.rbegin(); it != removeFromGuard.rend(); ++it) {
+        rhsCopy.guard.erase(rhsCopy.guard.begin() + *it);
     }
+
+    // apply the guard subs
+    rhsCopy.term = rhsCopy.term.substitute(guardSubs);
+    for (TT::Expression &ex : rhsCopy.guard) {
+        ex = ex.substitute(guardSubs);
+    }
+    rhsCopy.cost = rhsCopy.cost.substitute(guardSubs);
+
 
 #ifdef CONTRACT_CHECK_SAT
+    GuardList funSymbolFreeGuard;
+    for (const TT::Expression &ex : rhsCopy.guard) {
+        if (!ex.hasFunctionSymbol()) {
+            funSymbolFreeGuard.push_back(ex.toGiNaC());
+        }
+    }
+
     auto z3res = Z3Toolbox::checkExpressionsSAT(funSymbolFreeGuard);
 
 #ifdef CONTRACT_CHECK_SAT_APPROXIMATE
