@@ -942,19 +942,22 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
     rhsCopy.term = rhsCopy.term.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
     int oldSize = rhsCopy.guard.size();
     for (int i = 0; i < oldSize; ++i) {
-        // the following call might add new elements to rhsCopy.guard
-        rhsCopy.guard[i] = rhsCopy.guard[i].evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
         TT::Expression &ex = rhsCopy.guard[i];
-        if (!ex.hasFunctionSymbol()) {
-            // apply guard sub
-            assert(ex.info(TT::InfoFlag::RelationEqual));
-            TT::Expression lhs = ex.op(0);
-            TT::Expression rhs = ex.op(1);
-            assert(lhs.info(TT::InfoFlag::Variable));
-            assert(!rhs.hasFunctionSymbol());
-            guardSubs.emplace(GiNaC::ex_to<ExprSymbol>(lhs.toGiNaC()),
-                              rhs.toGiNaC());
-            removeFromGuard.push_back(i);
+        if (ex.hasFunctionSymbol()) {
+            // the following call might add new elements to rhsCopy.guard
+            ex = ex.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
+
+            if (!ex.hasFunctionSymbol()) {
+                // apply guard sub
+                assert(ex.info(TT::InfoFlag::RelationEqual));
+                TT::Expression lhs = ex.op(0);
+                TT::Expression rhs = ex.op(1);
+                assert(lhs.info(TT::InfoFlag::Variable));
+                assert(!rhs.hasFunctionSymbol());
+                guardSubs.emplace(GiNaC::ex_to<ExprSymbol>(lhs.toGiNaC()),
+                                  rhs.toGiNaC());
+                removeFromGuard.push_back(i);
+            }
         }
     }
 
@@ -1060,17 +1063,13 @@ bool RecursionGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
                 if (onlyOneRhs
                     && dstPred.size() == 1
                     && getTransFromTo(*dstPred.begin(), dst).size() == 1) {
-                    RightHandSide &rhs = rightHandSides.at(rhsIndex);
+                    RightHandSide rhsCopy = rightHandSides.at(rhsIndex);
                     const RightHandSide &followRhs = rightHandSides.at(followRhsIndex);
 
-                    if (chainRightHandSides(rhs, dst, followRhs)) {
-                        // change the target of t so that one does not have to remove it
-                        changeTransTarget(t, getTransTarget(dstOut[0]));
-                        // add new for the remaining function symbols
-                        for (int i = 1; i < dstOut.size(); i++) {
-                            addTrans(*dstPred.begin(), getTransTarget(dstOut[i]), rhsIndex);
-                        }
+                    if (chainRightHandSides(rhsCopy, dst, followRhs)) {
+                        addRightHandSide(node, std::move(rhsCopy));
                     }
+                    removeRightHandSide(node, rhsIndex);
 
                     // removing dst also removes all outgoing transitions
                     removeNode(dst);

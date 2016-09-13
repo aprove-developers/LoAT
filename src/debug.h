@@ -102,6 +102,7 @@ struct DebugStream {
 
 //debugging for recursion solving
 #define DEBUG_RECURSION
+//#define DEBUG_RECURSION_DETAILED
 
 //debugging for PURRS
 //#define DEBUG_PURRS
@@ -141,6 +142,12 @@ struct DebugStream {
 #define debugRecursion(output) do { std::cout << output << std::endl; } while(0)
 #else
 #define debugRecursion(output) (void(0))
+#endif
+
+#ifdef DEBUG_RECURSION_DETAILED
+#define debugRecursionDetailed(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugRecursionDetailed(output) (void(0))
 #endif
 
 #ifdef DEBUG_PURRS

@@ -1402,8 +1402,8 @@ std::shared_ptr<Term> Subtraction::evaluateFunction2(const FunctionDefinition &f
 
 std::shared_ptr<Term> Subtraction::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
-                                                        Expression *addToCost) c,
-bool &modifiedonst {
+                                                        Expression *addToCost,
+                                                        bool &modified) const {
     return std::make_shared<Subtraction>(l->evaluateFunctionIfLegal(funDef, guard, addToCost, modified),
                                          r->evaluateFunctionIfLegal(funDef, guard, addToCost, modified));
 }
@@ -1540,8 +1540,8 @@ std::shared_ptr<Term> Multiplication::evaluateFunction2(const FunctionDefinition
 
 std::shared_ptr<Term> Multiplication::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
-                                                        Expression *addToCost) cons,
-bool &modifiedt {
+                                                        Expression *addToCost,
+                                                        bool &modified) const {
     return std::make_shared<Multiplication>(l->evaluateFunctionIfLegal(funDef, guard, addToCost, modified),
                                             r->evaluateFunctionIfLegal(funDef, guard, addToCost, modified));
 }
@@ -1678,8 +1678,8 @@ std::shared_ptr<Term> Power::evaluateFunction2(const FunctionDefinition &funDef,
 
 std::shared_ptr<Term> Power::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
-                                                        Expression *addToC,
-                                                        bool &modifiedost) const {
+                                                        Expression *addToCost,
+                                                        bool &modified) const {
     return std::make_shared<Power>(l->evaluateFunctionIfLegal(funDef, guard, addToCost, modified),
                                    r->evaluateFunctionIfLegal(funDef, guard, addToCost, modified));
 }
@@ -1805,8 +1805,8 @@ std::shared_ptr<Term> Factorial::evaluateFunction2(const FunctionDefinition &fun
 
 std::shared_ptr<Term> Factorial::evaluateFunctionIfLegal(const FunctionDefinition &funDef,
                                                         const TT::ExpressionVector &guard,
-                                                        Expression *addToCost),
-                                                        bool &modified const {
+                                                        Expression *addToCost,
+                                                        bool &modified) const {
     return std::make_shared<Factorial>(n->evaluateFunctionIfLegal(funDef, guard, addToCost, modified));
 }
 
@@ -2060,7 +2060,7 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunctionIfLegal(const FunctionDefi
     // evaluate arguments first
     std::vector<std::shared_ptr<Term>> newArgs;
     for (const std::shared_ptr<Term> &arg : args) {
-        newArgs.push_back(arg->evaluateFunctionIfLegal(funDef, guard, addToCost));
+        newArgs.push_back(arg->evaluateFunctionIfLegal(funDef, guard, addToCost, modified));
     }
 
     FunctionSymbolIndex funSymbolIndex = funDef.getFunctionSymbol();
@@ -2125,8 +2125,9 @@ std::shared_ptr<Term> FunctionSymbol::moveFunctionSymbolsToGuard(ITRSProblem &it
 
     VariableIndex vi = itrs.addChainingVariable();
     ExprSymbol var = itrs.getGinacSymbol(vi);
-    TT::Expression thisTerm = TT::Expression(std::make_shared<FunctionSymbol>(functionSymbol, name, args))
-    guard.push_back(var == thisTerm);
+    TT::Expression thisTerm = TT::Expression(std::make_shared<FunctionSymbol>(functionSymbol, name, args));
+    TT::Expression inGuard = TT::Expression(var) == thisTerm;
+    guard.push_back(inGuard);
 
     return std::make_shared<GiNaCExpression>(var);
 }
