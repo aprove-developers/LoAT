@@ -1040,8 +1040,13 @@ bool RecursionGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
     do {
         changed = false;
         vector<TransIndex> out = std::move(getTransFrom(node));
+        std::set<TransIndex> alreadyHandledThese;
         for (TransIndex t : out) {
+            if (alreadyHandledThese.count(t) > 0) {
+                continue;
+            }
             RightHandSideIndex rhsIndex = getTransData(t);
+
             NodeIndex dst = getTransTarget(t);
             if (dst == initial) continue; //avoid isolating the initial node (has an implicit "incoming edge")
 
@@ -1069,12 +1074,17 @@ bool RecursionGraph::chainLinearPaths(NodeIndex node, set<NodeIndex> &visited) {
                     if (chainRightHandSides(rhsCopy, dst, followRhs)) {
                         addRightHandSide(node, std::move(rhsCopy));
                     }
+
+                    for (TransIndex trans : getTransFrom(node)) {
+                        if (getTransData(trans) == rhsIndex) {
+                            alreadyHandledThese.insert(trans);
+                        }
+                    }
                     removeRightHandSide(node, rhsIndex);
 
                     // removing dst also removes all outgoing transitions
                     removeNode(dst);
                     nodes.erase(dst);
-                    // remove the chained rhs
                     rightHandSides.erase(followRhsIndex);
                     changed = true;
                     Stats::add(Stats::ContractLinear);
