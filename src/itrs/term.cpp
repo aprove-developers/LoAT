@@ -1983,7 +1983,7 @@ std::shared_ptr<Term> FunctionSymbol::evaluateFunction2(const FunctionDefinition
     // evaluate arguments first
     std::vector<std::shared_ptr<Term>> newArgs;
     for (const std::shared_ptr<Term> &arg : args) {
-        newArgs.push_back(arg->evaluateFunction(funDef, addToCost, addToGuard));
+        newArgs.push_back(arg->evaluateFunction2(funDef, addToCost, addToGuard));
     }
 
     FunctionSymbolIndex funSymbolIndex = funDef.getFunctionSymbol();

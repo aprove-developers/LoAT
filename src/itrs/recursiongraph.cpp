@@ -915,31 +915,52 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     debugGraph("About to chain " << rhs);
     debugGraph("with " << itrs.getFunctionSymbolName(funSymbolIndex) << " -> " << followRhs);
+    ExprSymbolSet freeVarsOne = getFreeVariablesOf(rhs);
+    ExprSymbolSet freeVarsTwo = getFreeVariablesOf(followRhs);
+    GiNaC::exmap freeVarSub;
+    for (const ExprSymbol &sym : freeVarsOne) {
+        if (freeVarsTwo.count(sym) > 0) {
+            if (itrs.isChainingVariable(sym)) {
+                VariableIndex cVar = itrs.addChainingVariable();
+                ExprSymbol cVarGiNaC = itrs.getGinacSymbol(cVar);
+                freeVarSub.emplace(sym, cVarGiNaC);
+
+            } else {
+                VariableIndex fVar = itrs.addFreshFreeVariable(sym.get_name());
+                ExprSymbol fVarGiNaC = itrs.getGinacSymbol(fVar);
+                freeVarSub.emplace(sym, fVarGiNaC);
+            }
+        }
+    }
 
     // perform rewriting on a copy of rhs
     RightHandSide rhsCopy(rhs);
+    rhsCopy.substitute(freeVarSub);
     GiNaC::exmap guardSubs;
     std::vector<int> removeFromGuard;
 
-    rhsCopy.term = rhsCopy.term.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
     int oldSize = rhsCopy.guard.size();
+    rhsCopy.term = rhsCopy.term.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
     for (int i = 0; i < oldSize; ++i) {
-        TT::Expression &ex = rhsCopy.guard[i];
-        if (ex.hasFunctionSymbol()) {
+        TT::Expression exCopy = rhsCopy.guard[i];
+        if (exCopy.hasFunctionSymbol()) {
+            debugGraph("has fs: " << exCopy);
             // the following call might add new elements to rhsCopy.guard
-            ex = ex.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
+            exCopy = exCopy.evaluateFunction2(funDef, &rhsCopy.cost, &rhsCopy.guard).ginacify();
 
-            if (!ex.hasFunctionSymbol()) {
+            if (!exCopy.hasFunctionSymbol()) {
+                debugGraph("after: " << exCopy);
                 // apply guard sub
-                assert(ex.info(TT::InfoFlag::RelationEqual));
-                TT::Expression lhs = ex.op(0);
-                TT::Expression rhs = ex.op(1);
+                assert(exCopy.info(TT::InfoFlag::RelationEqual));
+                TT::Expression lhs = exCopy.op(0);
+                TT::Expression rhs = exCopy.op(1);
                 assert(lhs.info(TT::InfoFlag::Variable));
                 assert(!rhs.hasFunctionSymbol());
                 guardSubs.emplace(GiNaC::ex_to<ExprSymbol>(lhs.toGiNaC()),
                                   rhs.toGiNaC());
                 removeFromGuard.push_back(i);
             }
+            rhsCopy.guard[i] = exCopy;
         }
     }
 
@@ -954,7 +975,6 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
         ex = ex.substitute(guardSubs);
     }
     rhsCopy.cost = rhsCopy.cost.subs(guardSubs);
-
 
 #ifdef CONTRACT_CHECK_SAT
     GuardList funSymbolFreeGuard;
@@ -1759,4 +1779,26 @@ bool RecursionGraph::rightHandSideIsEmpty(NodeIndex node, const RightHandSide &r
     }
 
     return true;
+}
+
+ExprSymbolSet RecursionGraph::getFreeVariablesOf(const RightHandSide &rule) const {
+    ExprSymbolSet freeVars;
+    rule.term.collectVariables(freeVars);
+    rule.cost.collectVariables(freeVars);
+    for (const TT::Expression &ex : rule.guard) {
+        ex.collectVariables(freeVars);
+    }
+
+    // delete all non-free variables and all chaining variables
+    auto it = freeVars.begin();
+    while (it != freeVars.end()) {
+        if (itrs.isFreeVariable(*it)) {
+            ++it;
+
+        } else {
+            it = freeVars.erase(it);
+        }
+    }
+
+    return freeVars;
 }

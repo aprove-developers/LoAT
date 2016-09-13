@@ -291,6 +291,8 @@ private:
 
     bool rightHandSideIsEmpty(NodeIndex node, const RightHandSide &rhs) const;
 
+    ExprSymbolSet getFreeVariablesOf(const RightHandSide &rule) const;
+
 private:
     ITRSProblem &itrs;
 
