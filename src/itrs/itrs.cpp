@@ -259,7 +259,6 @@ void ITRS::verifyFunctionSymbolArity() {
     for (const ITRSRule &rule : rules) {
         rule.lhs.traverse(visitor);
         rule.rhs.traverse(visitor);
-        rule.cost.traverse(visitor);
 
         for (const TT::Expression &ex : rule.guard) {
             ex.traverse(visitor);
@@ -369,10 +368,10 @@ void ITRS::parseRightHandSide(const std::string &rhs) {
 
 void ITRS::parseCost(const std::string &cost) {
     if (cost.empty()) {
-        newRule.cost = TT::Expression(1);
+        newRule.cost = GiNaC::numeric(1);
 
     } else {
-        newRule.cost = std::move(parseTerm(cost).ginacify());
+        newRule.cost = parseTerm(cost).toGiNaC();
     }
 }
 

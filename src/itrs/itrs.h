@@ -37,7 +37,7 @@ struct ITRSRule {
     TT::Expression lhs;
     TT::Expression rhs;
     TT::ExpressionVector guard;
-    TT::Expression cost;
+    Expression cost;
 };
 
 enum Symbol {

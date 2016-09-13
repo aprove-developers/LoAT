@@ -109,14 +109,14 @@ bool PreprocessITRS::eliminateFreeVars(const ITRSProblem &itrs, RightHandSide &r
             equalSubs.clear();
             changed = GuardToolbox::propagateEqualities(itrs,rhs.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
             rhs.term = rhs.term.substitute(equalSubs);
-            rhs.cost = rhs.cost.substitute(equalSubs);
+            rhs.cost = rhs.cost.subs(equalSubs);
         } while (!equalSubs.empty());
 
         //try to remove free variables from equalities
         equalSubs.clear();
         changed = GuardToolbox::propagateEqualities(itrs,rhs.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
         rhs.term = rhs.term.substitute(equalSubs);
-        rhs.cost = rhs.cost.substitute(equalSubs);
+        rhs.cost = rhs.cost.subs(equalSubs);
 
         //find all free variables that do not occur in update and cost
         auto sym_is_free_onlyguard = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0 && !rhs.cost.has(sym); };

@@ -38,7 +38,7 @@ const NodeIndex RecursionGraph::NULLNODE = -1;
 RightHandSide Transition::toRightHandSide(const ITRSProblem &itrs,
                                                 FunctionSymbolIndex funSym) const {
     RightHandSide rhs;
-    rhs.cost = TT::Expression(cost);
+    rhs.cost = cost;
     for (const Expression &ex : guard) {
         rhs.guard.push_back(TT::Expression(ex));
     }
@@ -89,10 +89,6 @@ bool RightHandSide::isLegacyTransition(const ITRSProblem &itrs) const {
         return false;
     }
 
-    if (cost.hasFunctionSymbol()) {
-        return false;
-    }
-
     for (const TT::Expression &ex : guard) {
         if (ex.hasFunctionSymbol()) {
             return false;
@@ -107,8 +103,7 @@ Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
                                              const ExprSymbol &outerUpVar,
                                                    FunctionSymbolIndex funSym) const {
     Transition trans;
-    assert(cost.hasNoFunctionSymbols());
-    trans.cost = cost.toGiNaC();
+    trans.cost = cost;
 
     for (const TT::Expression &ex : guard) {
         assert(ex.hasNoFunctionSymbols());
@@ -139,7 +134,7 @@ Transition RightHandSide::toLegacyTransition(const ITRSProblem &itrs,
 
 void RightHandSide::substitute(const GiNaC::exmap &sub) {
     term = std::move(term.substitute(sub));
-    cost = std::move(cost.substitute(sub));
+    cost = cost.subs(sub);
     for (TT::Expression &ex : guard) {
         ex = std::move(ex.substitute(sub));
     }
@@ -190,7 +185,7 @@ RecursionGraph::RecursionGraph(ITRSProblem &itrs)
         // initial(x_1, ..., x_n)
         rhs.term = TT::Expression(initial, itrs.getFunctionSymbolName(initial), vars);
         // cost 0
-        rhs.cost = TT::Expression(GiNaC::numeric(0));
+        rhs.cost = GiNaC::numeric(0);
 
         addRightHandSide(newInitialIndex, std::move(rhs));
 
@@ -427,14 +422,6 @@ bool RecursionGraph::pruneTransitions() {
                     RightHandSideIndex rhsIndex = getTransData(trans);
                     const RightHandSide &rhs = rightHandSides.at(rhsIndex);
 
-                    if (!rhs.cost.hasNoFunctionSymbols()) {
-                        if (keep.size() < PRUNE_MAX_PARALLEL_TRANSITIONS) {
-                            keep.insert(trans);
-                        }
-                        continue;
-                    }
-                    Expression cost = rhs.cost.toGiNaC();
-
                     bool hasFunSymbol = false;
                     std::vector<Expression> guard;
                     for (const TT::Expression &ex : rhs.guard) {
@@ -452,7 +439,7 @@ bool RecursionGraph::pruneTransitions() {
                         continue;
                     }
 
-                    auto res = AsymptoticBound::determineComplexity(itrs, guard, cost, false);
+                    auto res = AsymptoticBound::determineComplexity(itrs, guard, rhs.cost, false);
                     queue.push(make_tuple(trans,res.cpx,res.inftyVars));
                 }
 
@@ -531,27 +518,23 @@ RuntimeResult RecursionGraph::getMaxRuntime() {
             continue;
         }
 
-        if (!rhs.cost.hasNoFunctionSymbols()) {
-            continue;
-        }
         // TODO do the same for the parital function
-        Expression costGiNaC = rhs.cost.toGiNaC();
         std::vector<Expression> guardGiNaC;
         for (const TT::Expression &ex : rhs.guard) {
             guardGiNaC.push_back(ex.toGiNaC());
         }
 
-        Complexity oldCpx = costGiNaC.getComplexity();
+        Complexity oldCpx = rhs.cost.getComplexity();
 
 #ifdef DEBUG_PROBLEMS
         if (oldCpx > oldMaxCpx) {
             oldMaxCpx = oldCpx;
-            oldMaxExpr = costGiNaC;
+            oldMaxExpr = rhs.cost;
         }
 #endif
         //avoid infinity checks that cannot improve the result
         bool containsFreeVar = false;
-        for (const ExprSymbol &var : costGiNaC.getVariables()) {
+        for (const ExprSymbol &var : rhs.cost.getVariables()) {
             if (itrs.isFreeVariable(var)) {
                 // we try to achieve ComplexInfty
                 containsFreeVar = true;
@@ -563,7 +546,7 @@ RuntimeResult RecursionGraph::getMaxRuntime() {
         //check if this transition allows infinitely many guards
         debugGraph(endl << "INFINITY CHECK");
 
-        auto checkRes = AsymptoticBound::determineComplexity(itrs, guardGiNaC, costGiNaC, true);
+        auto checkRes = AsymptoticBound::determineComplexity(itrs, guardGiNaC, rhs.cost, true);
         debugGraph("RES: " << checkRes.cpx << " because: " << checkRes.reason);
         if (checkRes.cpx == Expression::ComplexNone) {
             debugGraph("INFINITY: FAIL");
@@ -913,7 +896,6 @@ std::set<NodeIndex> RecursionGraph::getSuccessorsOfRhs(const RightHandSide &rhs)
     std::set<FunctionSymbolIndex> funSyms;
 
     rhs.term.collectFunctionSymbols(funSyms);
-    rhs.cost.collectFunctionSymbols(funSyms);
     for (const TT::Expression &ex : rhs.guard) {
         ex.collectFunctionSymbols(funSyms);
     }
@@ -971,7 +953,7 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
     for (TT::Expression &ex : rhsCopy.guard) {
         ex = ex.substitute(guardSubs);
     }
-    rhsCopy.cost = rhsCopy.cost.substitute(guardSubs);
+    rhsCopy.cost = rhsCopy.cost.subs(guardSubs);
 
 
 #ifdef CONTRACT_CHECK_SAT
@@ -994,8 +976,7 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 #endif
 
 #ifdef CONTRACT_CHECK_EXP_OVER_UNKNOWN
-    Expression funSymbolFreeCost = rhsCopy.cost.toGiNaC(true);
-    if (z3res == z3::unknown && funSymbolFreeCost.getComplexity() == Expression::ComplexExp) {
+    if (z3res == z3::unknown && rhsCopy.cost.getComplexity() == Expression::ComplexExp) {
         debugGraph("Contract: keeping unknown because of EXP cost");
         z3res = z3::sat;
     }
@@ -1020,9 +1001,8 @@ bool RecursionGraph::chainRightHandSides(RightHandSide &rhs,
 
     // move cost, but keep INF if present
     // TODO optimize (isInfinity() member function)
-    if ((rhs.cost.hasNoFunctionSymbols() && Expression(rhs.cost.toGiNaC()).isInfty())
-        || (followRhs.cost.hasNoFunctionSymbols() && Expression(followRhs.cost.toGiNaC()).isInfty())) {
-        rhs.cost = TT::Expression(Expression::Infty);
+    if (rhs.cost.isInfty() || followRhs.cost.isInfty()) {
+        rhs.cost = Expression::Infty;
 
     } else {
         rhs.cost = std::move(rhsCopy.cost);
@@ -1230,7 +1210,7 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
 
                 } else {
                     //if UNSAT, add a new dummy node to keep the first part of the transition (which is removed below)
-                    if (Expression(rhsCopy.cost.toGiNaC(true)).getComplexity() > 0) {
+                    if (rhsCopy.cost.getComplexity() > 0) {
                         assert(mid != NULLNODE);
 
                         // replace function symbol "mid" by a new one
@@ -1251,13 +1231,12 @@ bool RecursionGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited)
 
                         // mid'(x_1, ..., x_n)
                         TT::Expression def(newIndex, newFunSym.getName(), args);
-                        TT::Expression null(GiNaC::numeric(0));
+                        Expression null(GiNaC::numeric(0));
                         std::vector<TT::Expression> nullVector;
                         TT::FunctionDefinition funDef(itrs, oldIndex, def, null, nullVector);
 
                         // evaluate the function
                         rhsCopy.term = rhsCopy.term.evaluateFunction(funDef, nullptr, nullptr);
-                        rhsCopy.cost = rhsCopy.cost.evaluateFunction(funDef, nullptr, nullptr);
                         for (TT::Expression &ex : rhsCopy.guard) {
                             ex = ex.evaluateFunction(funDef, nullptr, nullptr);
                         }
@@ -1423,7 +1402,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
         todo_remove.insert(tidx);
 
         //abort early on INF selfloops
-        if (Expression(rhs.cost.toGiNaC()).isInfty()) {
+        if (rhs.cost.isInfty()) {
             addRightHandSide(node, rhs);
             continue;
         }
@@ -1540,7 +1519,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
                 const RightHandSide &outerRhs = rightHandSides.at(getTransData(outer));
 
                 //dont nest if the inner loop has constant runtime
-                if (Expression(innerRhs.cost.toGiNaC()).getComplexity() == 0) continue;
+                if (innerRhs.cost.getComplexity() == 0) continue;
 
                 //check if we can nest at all
                 if (!canNest(innerRhs, node, outerRhs)) continue;
@@ -1548,7 +1527,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
                 //inner loop first
                 RightHandSide loop = innerRhs;
                 if (chainRightHandSides(loop, node, outerRhs)) {
-                    Complexity oldcpx = Expression(loop.cost.toGiNaC()).getComplexity();
+                    Complexity oldcpx = loop.cost.getComplexity();
 
                     Transition loopLegacy = loop.toLegacyTransition(itrs, outerUpdateVar, node);
                     if (try_rank(loopLegacy) && loopLegacy.cost.getComplexity() > oldcpx) {
@@ -1574,7 +1553,7 @@ bool RecursionGraph::accelerateSimpleLoops(NodeIndex node) {
                 //outer loop first
                 loop = outerRhs;
                 if (chainRightHandSides(loop, node, innerRhs)) {
-                    Complexity oldcpx = Expression(loop.cost.toGiNaC()).getComplexity();
+                    Complexity oldcpx = loop.cost.getComplexity();
 
                     Transition loopLegacy = loop.toLegacyTransition(itrs, outerUpdateVar, node);
                     if (try_rank(loopLegacy) && loopLegacy.cost.getComplexity() > oldcpx) {
@@ -1656,11 +1635,8 @@ bool RecursionGraph::compareRightHandSides(RightHandSideIndex indexA, RightHandS
     const RightHandSide &a = rightHandSides.at(indexA);
     const RightHandSide &b = rightHandSides.at(indexB);
     if (a.guard.size() != b.guard.size()) return false;
-    if (!a.cost.hasNoFunctionSymbols() || !b.cost.hasNoFunctionSymbols()) {
-        return false;
-    }
 
-    if (!GiNaC::is_a<GiNaC::numeric>(a.cost.toGiNaC()-b.cost.toGiNaC())) return false; //cost equal up to constants
+    if (!GiNaC::is_a<GiNaC::numeric>(a.cost-b.cost)) return false; //cost equal up to constants
     if (a.term.isSimple() && b.term.isSimple()) {
         for (int i = 0; i < a.term.nops(); i++) {
             if (!a.term.op(i).toGiNaC().is_equal(b.term.op(i).toGiNaC())) {
@@ -1709,8 +1685,7 @@ bool RecursionGraph::removeConstLeavesAndUnreachable() {
 
             if (allLeaves) {
                 // toGiNaC(true) -> Substitute function symbols by variables
-                Expression costGiNaC = rhs.cost.toGiNaC(true);
-                if (costGiNaC.getComplexity() <= 0) {
+                if (rhs.cost.getComplexity() <= 0) {
                     removeRightHandSide(curr, rhsIndex);
                     changed = true;
                 }
@@ -1744,7 +1719,7 @@ bool RecursionGraph::removeIrrelevantTransitions(NodeIndex curr, set<NodeIndex> 
                 RightHandSideIndex rhsIndex = getTransData(trans);
                 const RightHandSide &rhs = rightHandSides.at(rhsIndex);
 
-                if (Expression(rhs.cost.toGiNaC()).getComplexity() <= 0)  {
+                if (rhs.cost.getComplexity() <= 0)  {
                     removeRightHandSide(curr, rhsIndex);
                 }
             }
@@ -1759,7 +1734,7 @@ bool RecursionGraph::rightHandSideIsEmpty(NodeIndex node, const RightHandSide &r
         return false;
     }
 
-    if (!(rhs.cost.info(TT::InfoFlag::Number) && rhs.cost.toGiNaC().is_zero())) {
+    if (!(rhs.cost.is_zero())) {
         return false;
     }
 

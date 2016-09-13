@@ -110,20 +110,16 @@ void ITRSProblem::processRules() {
         res.rhs = res.rhs.substitute(freeVarSub);
 
         // process the cost
-        if (!rule.cost.hasNoFunctionSymbols()) {
-            throw UnsupportedITRSException("cost contains function symbols");
-        }
-        if (!rule.cost.toGiNaC().is_polynomial(getGinacVarList())) {
+        if (!rule.cost.is_polynomial(getGinacVarList())) {
             throw UnsupportedITRSException("non-polynomial cost");
         }
-        res.cost = rule.cost.substitute(symbolSub);
+        res.cost = rule.cost.subs(symbolSub);
         replaceUnboundedWithFresh(res.cost.getVariables(), boundSymbols, freeVarSub);
-        res.cost = res.cost.substitute(freeVarSub);
+        res.cost = res.cost.subs(freeVarSub);
 
         // make sure that user-given costs are always positive
-        GiNaC::numeric one(1);
-        if (!(res.cost.info(TT::InfoFlag::Number)
-              && res.cost.toGiNaC().is_equal(one))) {
+        if (!(GiNaC::is_a<GiNaC::numeric>(res.cost)
+              && GiNaC::ex_to<GiNaC::numeric>(res.cost).is_positive())) {
             res.guard.push_back(TT::Expression(res.cost > 0).ginacify());
         }
 

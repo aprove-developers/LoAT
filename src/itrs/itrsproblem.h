@@ -41,7 +41,7 @@ struct Rule {
     FunctionSymbolIndex lhs;
     TT::Expression rhs;
     TT::ExpressionVector guard;
-    TT::Expression cost;
+    Expression cost;
 };
 
 

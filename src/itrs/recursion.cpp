@@ -177,7 +177,7 @@ void Recursion::solveRecursionWithMainVar(const ORightHandSide &recursion, const
     }
     debugRecursion("Closed form of the RHSs: " << closedRHSs);
 
-    TT::Expression closedCosts;
+    Expression closedCosts;
     if (!computeClosedFormOfTheCosts(closedCosts, closedRHSs, recursion, mainVarIndex, config, recCallMap, recCalls, baseCaseMap)) {
         debugRecursion("Failed to compute a closed form of the RHSs");
     }
@@ -389,13 +389,13 @@ bool Recursion::evaluateASpecificRecursiveCallOf(const ORightHandSide &recursion
         for (int i = 0; i < recursion.guard.size(); ++i) {
             bool modified = false;
             TT::Expression eval;
-            TT::Expression addToCost = TT::Expression(GiNaC::numeric(0));
+            Expression addToCost = GiNaC::numeric(0);
             eval = recursion.guard[i].evaluateFunctionIfLegal(funDef, recursion.guard, &addToCost, modified);
             if (modified) {
                 recursions.push_back(recursion);
                 RightHandSide &newRhs = recursions.back();
                 newRhs.guard[i] = eval;
-                newRhs.cost = newRhs.cost + addToCost;
+                newRhs.cost += addToCost;
                 addedNew = true;
 
                 // Check if a guard substitution is possible now
@@ -721,7 +721,7 @@ bool Recursion::selfReferentialGuardIsInductivelyValid(const TT::ExpressionVecto
                                                        const BaseCaseRhsMap &baseCaseMap,
                                                        const TT::ExpressionVector &srGuard) const {
     debugRecursion("=== Checking if the self-referential guard is inductively valid ===");
-    TT::Expression dummy(GiNaC::numeric(0));
+    Expression dummy(GiNaC::numeric(0));
     TT::ExpressionVector dummyVector;
 
     // IB: For every base case: selfReferentialGuard[funSymbol/baseCase] holds
@@ -826,7 +826,7 @@ bool Recursion::computeClosedFormOfTheRHSs(TT::Expression &closed,
 }
 
 
-bool Recursion::computeClosedFormOfTheCosts(TT::Expression &closed,
+bool Recursion::computeClosedFormOfTheCosts(Expression &closed,
                                             const TT::Expression &closedRHSs,
                                             const RightHandSide &recursion,
                                             int mainVarIndex,
@@ -837,7 +837,7 @@ bool Recursion::computeClosedFormOfTheCosts(TT::Expression &closed,
     debugRecursion("=== Computing closed form of the costs ===");
     VariableIndex mainVar = funSymbol.getArguments()[mainVarIndex];
     ExprSymbol mainVarGiNaC = itrs.getGinacSymbol(mainVar);
-    TT::Expression dummy(GiNaC::numeric(0));
+    Expression dummy(GiNaC::numeric(0));
     TT::ExpressionVector dummyVector;
 
     // evaluate recursive calls using closed form
@@ -850,7 +850,7 @@ bool Recursion::computeClosedFormOfTheCosts(TT::Expression &closed,
     }
 
     // insert them into the cost
-    TT::Expression costRecurrence = recursion.cost.substitute(evaluatedRecursiveCalls);
+    TT::Expression costRecurrence = TT::Expression(recursion.cost).substitute(evaluatedRecursiveCalls);
 
     // add the recursive calls
     for (TT::Expression recCall : recCalls) {
@@ -868,7 +868,7 @@ bool Recursion::computeClosedFormOfTheCosts(TT::Expression &closed,
     PurrsBaseCases baseCasesPurrs;
     for (auto const &pair : baseCaseMap) {
         // Substitute non-main variables
-        TT::Expression res = pair.second.cost.substitute(config.sub);
+        TT::Expression res = pair.second.cost.subs(config.sub);
         baseCasesPurrs.emplace(pair.first, res.toPurrs());
     }
 
@@ -880,10 +880,10 @@ bool Recursion::computeClosedFormOfTheCosts(TT::Expression &closed,
     // re-substitute n
     GiNaC::exmap purrsReSub;
     purrsReSub.emplace(Purrs::Expr(Purrs::Recurrence::n).toGiNaC(), mainVarGiNaC);
-    closed = TT::Expression(recurrence.toGiNaC().subs(purrsReSub));
+    closed = recurrence.toGiNaC().subs(purrsReSub);
 
     // re-substitute non-main variables
-    closed = closed.substitute(config.reSub);
+    closed = closed.subs(config.reSub);
 
     return true;
 }

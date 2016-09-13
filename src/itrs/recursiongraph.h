@@ -49,7 +49,7 @@ std::ostream& operator<<(std::ostream &, const Transition &);
 struct RightHandSide {
     TT::ExpressionVector guard;
     TT::Expression term;
-    TT::Expression cost;
+    Expression cost;
 
     bool isLegacyTransition(const ITRSProblem &itrs) const;
 

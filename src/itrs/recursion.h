@@ -105,7 +105,7 @@ private:
                                     const RecursiveCallMap &recCallMap,
                                     const BaseCaseRhsMap &baseCaseMap);
 
-    bool computeClosedFormOfTheCosts(TT::Expression &closed,
+    bool computeClosedFormOfTheCosts(Expression &closed,
                                      const TT::Expression &closedRHSs,
                                      const RightHandSide &recursion,
                                      int mainVarIndex,
