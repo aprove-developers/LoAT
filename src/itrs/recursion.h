@@ -15,6 +15,17 @@ class ITRSProblem;
 
 typedef std::map<Purrs::index_type,int> BaseCaseIndexMap;
 typedef std::map<Purrs::index_type,RightHandSide> BaseCaseRhsMap;
+typedef std::map<ExprSymbol, TT::Expression, GiNaC::ex_is_less> RecursiveCallMap;
+
+struct VariableConfig {
+    VariableConfig() {
+        error = false;
+    }
+
+    GiNaC::exmap sub;
+    GiNaC::exmap reSub;
+    bool error;
+};
 
 class Recursion {
 public:
@@ -43,12 +54,13 @@ private:
 
     std::set<int> findRealVars(const RightHandSide &rhs);
 
-    void solveRecursionWithMainVar(const RightHandSide &rhs, int mainVarIndex);
+    void solveRecursionWithMainVar(const RightHandSide &rhs, const std::set<int> &realVars, int mainVarIndex);
 
     BaseCaseIndexMap analyzeBaseCases(ExprSymbol mainVar);
 
-    bool baseCasesMatch(const BaseCaseRhsMap &bcs, const RightHandSide &recursion);
+    bool baseCasesMatch(const BaseCaseRhsMap &bcs, const std::vector<TT::Expression> &recCalls, const TT::Expression &normalGuard);
 
+    VariableConfig generateMultiVarConfig();
 
     bool solveRecursionInOneVar();
     bool solveRecursionInTwoVars();
@@ -59,6 +71,8 @@ private:
     bool removingSelfReferentialGuardIsSound(const TT::ExpressionVector &srGuard) const;
     void mergeBaseCaseGuards(TT::ExpressionVector &recGuard) const;
 
+    ExprSymbolSet getNonChainingFreeVariablesOf(const RightHandSide &rule);
+    ExprSymbolSet getChainingVariablesOf(const RightHandSide &rule);
     void dumpRightHandSides() const;
 
 private:
