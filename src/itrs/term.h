@@ -147,6 +147,7 @@ public:
     Expression substitute(const Substitution &sub) const;
     Expression substitute(const GiNaC::exmap &sub) const;
     Expression substitute(FunctionSymbolIndex fs, const Expression &ex) const;
+    Expression subsFirstFunAppByExpression(const Expression &ex) const;
     Expression evaluateFunction(const FunctionDefinition &funDef,
                                 ::Expression *addToCost,
                                 ExpressionVector *addToGuard) const;
@@ -285,6 +286,7 @@ public:
     virtual bool info(InfoFlag info) const = 0;
 
     virtual std::shared_ptr<Term> copy() const = 0;
+    virtual std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const = 0;
     virtual std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                                    ::Expression *addToCost,
                                                    ExpressionVector *addToGuard) const = 0;
@@ -338,6 +340,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -379,6 +382,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -420,6 +424,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -461,6 +466,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -502,6 +508,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -543,6 +550,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -585,6 +593,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;
@@ -632,6 +641,7 @@ public:
     bool info(InfoFlag info) const override;
 
     std::shared_ptr<Term> copy() const override;
+    std::shared_ptr<Term> subsFirstFunAppByExpression(const std::shared_ptr<Term> ex, bool &already) const override;
     std::shared_ptr<Term> evaluateFunction(const FunctionDefinition &funDef,
                                            ::Expression *addToCost,
                                            ExpressionVector *addToGuard) const override;

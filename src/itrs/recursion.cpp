@@ -104,6 +104,7 @@ void Recursion::solveRecursionWithMainVar(const ORightHandSide &recursion, const
             assert(!ex.hasFunctionSymbol());
 
         } else if (ex.hasFunctionSymbol()) { // recursive call
+            assert(chainVars.size() == 1);
             assert(ex.info(TT::InfoFlag::RelationEqual));
             TT::Expression lhs = ex.op(0);
             TT::Expression rhs = ex.op(1);
@@ -160,8 +161,8 @@ void Recursion::solveRecursionWithMainVar(const ORightHandSide &recursion, const
     debugRecursion("The base cases match!");
 
     // check if the self-referential guard is inductively valid
-    if (!selfReferentialGuardIsInductivelyValid(normalGuard, recCallMap, baseCaseMap, srGuard)) {
-        debugRecursion("The sr-guard is NOT inductively valid!");
+    if (!selfReferentialGuardIsInductivelyValid(recursion, normalGuard, srGuard, recCallMap, updates, baseCaseMap)) {
+        debugRecursion("The sr-guard is possibly NOT inductively valid!");
         return;
     }
     debugRecursion("The self-referential guard is inductively valid!");
@@ -716,68 +717,165 @@ bool Recursion::updatesHaveConstSum(const UpdateVector &updates, int mainVarInde
 }
 
 
-bool Recursion::selfReferentialGuardIsInductivelyValid(const TT::ExpressionVector &normalGuard,
+bool Recursion::selfReferentialGuardIsInductivelyValid(const ORightHandSide &recursion,
+                                                       const TT::ExpressionVector &normalGuard,
+                                                       const TT::ExpressionVector &srGuard,
                                                        const RecursiveCallMap &recCallMap,
-                                                       const BaseCaseRhsMap &baseCaseMap,
-                                                       const TT::ExpressionVector &srGuard) const {
+                                                       const UpdateVector &updates,
+                                                       const BaseCaseRhsMap &baseCaseMap) const {
     debugRecursion("=== Checking if the self-referential guard is inductively valid ===");
-    Expression dummy(GiNaC::numeric(0));
-    TT::ExpressionVector dummyVector;
+    if (srGuard.empty()) {
+        debugRecursion("There is no self-referential guard");
+        return true;
+    }
 
-    // IB: For every base case: selfReferentialGuard[funSymbol/baseCase] holds
-    for (auto const &pair : baseCaseMap) {
-        TT::FunctionDefinition funDef(itrs, funSymbolIndex, pair.second.term, dummy, dummyVector);
-        GiNaC::exmap evaluatedRecursiveCalls;
+    // Build renamings
+    std::vector<GiNaC::exmap> renamings;
+    for (int i = 0; i < updates.size(); ++i) {
+        GiNaC::exmap renaming;
         for (const auto &pair : recCallMap) {
-            TT::Expression eval = pair.second.evaluateFunction(funDef, nullptr, nullptr);
-            assert(!eval.hasFunctionSymbol());
-            evaluatedRecursiveCalls.emplace(pair.first, eval.toGiNaC());
+            ExprSymbol renVar(pair.first.get_name() + "_ren" + std::to_string(i));
+            renaming.emplace(pair.first, renVar);
+        }
+        renamings.push_back(std::move(renaming));
+    }
+
+    const int m = baseCaseMap.size();
+    std::vector<int> selector(updates.size(), 0);
+
+    do {
+        // Construct the lhs
+        std::vector<Expression> lhs;
+        for (const TT::Expression &ex : normalGuard) {
+            lhs.push_back(ex.toGiNaC());
         }
 
-        std::vector<Expression> evaluatedSRGuard;
-        for (const TT::Expression &ex : srGuard) {
-            assert(!ex.hasFunctionSymbol());
-            evaluatedSRGuard.push_back(ex.toGiNaC().subs(evaluatedRecursiveCalls));
+        for (int i = 0; i < updates.size(); ++i) {
+            addMu(lhs, normalGuard, srGuard, updates, renamings, baseCaseMap, i, selector[i]);
         }
 
-        std::vector<Expression> query;
-        for (const Expression &ex : evaluatedSRGuard) {
-            if (!Z3Toolbox::checkTautology(ex)) {
-                debugRecursionDetailed("query: " << ex << ": FALSE");
-                return false;
+        std::ostringstream lhsStream;
+        std::string delim = "";
+        for (const Expression &ex : lhs) {
+            lhsStream << delim;
+            lhsStream << ex;
+            delim = " /\\ ";
+        }
+        debugRecursion(lhsStream.str());
 
+        // Now, we construct the substitution that we have to insert into the sr guard
+        GiNaC::exmap rhsSub;
+        int i = 0;
+        for (const auto &pair : recCallMap) {
+            // it is important that we do this in the order in that we obtained the updates
+            // i.e., the positions in the recCallMap must not have changed
+            // and evaluateFunction has to traverse the term in the same order as collectFunApps does
+
+            TT::Expression t = pair.second;
+            while (t.hasFunctionSymbol()) {
+                assert(i < updates.size());
+                t = t.subsFirstFunAppByExpression(getS(recursion, updates, renamings, baseCaseMap, i, selector[i]));
+                ++i;
             }
-            debugRecursionDetailed("query: " << ex << ": TRUE");
+
+            rhsSub.emplace(pair.first, t.toGiNaC());
         }
-    }
 
-    // IS: For the recursion: guard && srGuard => recursion.term
-    /*TT::FunToVarSub sub; // make sure that identical function calls are substituted by the same variable
-    std::vector<Expression> lhs;
-    for (const TT::Expression &ex : recursionCopy.guard) {
-        lhs.push_back(ex.toGiNaC(true, nullptr, &sub));
-    }
-    for (const TT::Expression &ex : srGuard) {
-        lhs.push_back(ex.toGiNaC(true, nullptr, &sub));
-    }
+        // Construct the rhs / check whether the implication holds for each literal
+        for (const TT::Expression &ex : srGuard) {
+            Expression rhs = ex.toGiNaC().subs(rhsSub);
+            std::ostringstream rhsStream;
+            rhsStream << "\t=> " << rhs;
 
-    debugRecursion("LHS:");
-    for (const Expression &ex : lhs) {
-        debugRecursion(ex);
-    }
+            if (!Z3Toolbox::checkTautologicImplication(lhs, rhs)) {
+                rhsStream << ": (possibly) FALSE";
+                debugRecursion(rhsStream.str());
+                return false;
+            }
 
-    for (const TT::Expression &ex : srGuard) {
-        Expression rhs = ex.substitute(funSymbolIndex, recursionCopy.term).toGiNaC(true, nullptr, &sub);
-
-        if (!Z3Toolbox::checkTautologicImplication(lhs, rhs)) {
-            debugRecursion("query: LHS => " << rhs << ": FALSE");
-            debugRecursion("Potentially not sound");
-            return false;
+            rhsStream << ": TRUE";
+            debugRecursion(rhsStream.str());
         }
-        debugRecursion("query: LHS => " << rhs << ": TRUE");
-    }*/
+
+    } while (advance(selector, m));
 
     return true;
+}
+
+bool Recursion::advance(std::vector<int> &selector, const int m) const {
+    for (int i = 0; i < selector.size(); ++i) {
+        if (selector[i] < m) {
+            ++selector[i];
+            return true;
+
+        } else {
+            selector[i] = 0;
+        }
+    }
+
+    return false;
+}
+
+
+void Recursion::addMu(std::vector<Expression> &addTo,
+                      const TT::ExpressionVector &normalGuard,
+                      const TT::ExpressionVector &srGuard,
+                      const UpdateVector &updates,
+                      const std::vector<GiNaC::exmap> &renamings,
+                      const BaseCaseRhsMap &baseCaseMap,
+                      int i,
+                      int j) const {
+    assert(i >= 0);
+    assert(i < updates.size());
+    assert(j >= 0);
+    assert(j <= baseCaseMap.size());
+
+    if (j == 0) {
+        for (const TT::Expression &ex : normalGuard) {
+            addTo.push_back(ex.toGiNaC().subs(updates[i]));
+        }
+
+        // induction hypothesis
+        for (const TT::Expression &ex : srGuard) {
+            addTo.push_back(ex.toGiNaC().subs(renamings[i]).subs(updates[i]));
+        }
+
+    } else {
+        auto it = baseCaseMap.cbegin();
+        while (j > 1) {
+            ++it;
+            --j;
+        }
+        for (const TT::Expression &ex : it->second.guard) {
+            addTo.push_back(ex.toGiNaC().subs(updates[i]));
+        }
+    }
+}
+
+
+Expression Recursion::getS(const ORightHandSide &recursion,
+                           const UpdateVector &updates,
+                           const std::vector<GiNaC::exmap> &renamings,
+                           const BaseCaseRhsMap &baseCaseMap,
+                           int i,
+                           int j) const {
+    assert(i >= 0);
+    assert(i < updates.size());
+    assert(j >= 0);
+    assert(j <= baseCaseMap.size());
+
+    if (j == 0) {
+        return recursion.term.toGiNaC().subs(renamings[i]).subs(updates[i]);
+
+    } else {
+        auto it = baseCaseMap.cbegin();
+        while (j > 1) {
+            ++it;
+            --j;
+        }
+
+        return it->second.term.toGiNaC().subs(updates[i]);
+    }
 }
 
 

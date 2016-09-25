@@ -347,6 +347,11 @@ Expression Expression::substitute(FunctionSymbolIndex fs, const Expression &ex) 
     return Expression(root->substitute(fs, ex.getTermTree()));
 }
 
+Expression Expression::subsFirstFunAppByExpression(const Expression &ex) const {
+    bool already = false;
+    return Expression(root->subsFirstFunAppByExpression(ex.getTermTree(), already));
+}
+
 
 Expression Expression::evaluateFunction(const FunctionDefinition &funDef,
                                         ::Expression *addToCost,
@@ -1054,6 +1059,14 @@ std::shared_ptr<Term> Relation::copy() const {
 }
 
 
+std::shared_ptr<Term> Relation::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                            bool &already) const {
+    return std::make_shared<Relation>(type,
+                                      l->subsFirstFunAppByExpression(ex, already),
+                                      r->subsFirstFunAppByExpression(ex, already));
+}
+
+
 std::shared_ptr<Term> Relation::evaluateFunction(const FunctionDefinition &funDef,
                                                  ::Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
@@ -1246,6 +1259,13 @@ std::shared_ptr<Term> Addition::copy() const {
 }
 
 
+std::shared_ptr<Term> Addition::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                            bool &already) const {
+    return std::make_shared<Addition>(l->subsFirstFunAppByExpression(ex, already),
+                                      r->subsFirstFunAppByExpression(ex, already));
+}
+
+
 std::shared_ptr<Term> Addition::evaluateFunction(const FunctionDefinition &funDef,
                                                  ::Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
@@ -1381,6 +1401,13 @@ bool Subtraction::info(InfoFlag info) const {
 
 std::shared_ptr<Term> Subtraction::copy() const {
     return std::make_shared<Subtraction>(l, r);
+}
+
+
+std::shared_ptr<Term> Subtraction::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                            bool &already) const {
+    return std::make_shared<Subtraction>(l->subsFirstFunAppByExpression(ex, already),
+                                         r->subsFirstFunAppByExpression(ex, already));
 }
 
 
@@ -1522,6 +1549,13 @@ std::shared_ptr<Term> Multiplication::copy() const {
 }
 
 
+std::shared_ptr<Term> Multiplication::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                            bool &already) const {
+    return std::make_shared<Multiplication>(l->subsFirstFunAppByExpression(ex, already),
+                                            r->subsFirstFunAppByExpression(ex, already));
+}
+
+
 std::shared_ptr<Term> Multiplication::evaluateFunction(const FunctionDefinition &funDef,
                                                  ::Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
@@ -1660,6 +1694,13 @@ std::shared_ptr<Term> Power::copy() const {
 }
 
 
+std::shared_ptr<Term> Power::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                            bool &already) const {
+    return std::make_shared<Power>(l->subsFirstFunAppByExpression(ex, already),
+                                   r->subsFirstFunAppByExpression(ex, already));
+}
+
+
 std::shared_ptr<Term> Power::evaluateFunction(const FunctionDefinition &funDef,
                                                  ::Expression *addToCost,
                                                  ExpressionVector *addToGuard) const {
@@ -1786,6 +1827,12 @@ bool Factorial::info(InfoFlag info) const {
 
 std::shared_ptr<Term> Factorial::copy() const {
     return std::make_shared<Factorial>(n);
+}
+
+
+std::shared_ptr<Term> Factorial::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                            bool &already) const {
+    return std::make_shared<Factorial>(n->subsFirstFunAppByExpression(ex, already));
 }
 
 
@@ -1924,6 +1971,18 @@ bool FunctionSymbol::info(InfoFlag info) const {
 
 std::shared_ptr<Term> FunctionSymbol::copy() const {
     return std::make_shared<FunctionSymbol>(functionSymbol, name, args);
+}
+
+
+std::shared_ptr<Term> FunctionSymbol::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                                  bool &already) const {
+    if (!already) {
+        already = true;
+        return ex;
+
+    } else {
+        return copy();
+    }
 }
 
 
@@ -2364,6 +2423,12 @@ bool GiNaCExpression::info(InfoFlag info) const {
 
 std::shared_ptr<Term> GiNaCExpression::copy() const {
     return std::make_shared<GiNaCExpression>(expression);
+}
+
+
+std::shared_ptr<Term> GiNaCExpression::subsFirstFunAppByExpression(const std::shared_ptr<Term> ex,
+                                                                   bool &already) const {
+    return copy();
 }
 
 

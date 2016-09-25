@@ -93,10 +93,30 @@ private:
     bool updatesHaveConstDifference(const UpdateVector &updates, int mainVarIndex, int varIndex) const;
     bool updatesHaveConstSum(const UpdateVector &updates, int mainVarIndex, int varIndex) const;
 
-    bool selfReferentialGuardIsInductivelyValid(const TT::ExpressionVector &normalGuard,
+    bool selfReferentialGuardIsInductivelyValid(const ORightHandSide &recursion,
+                                                const TT::ExpressionVector &normalGuard,
+                                                const TT::ExpressionVector &srGuard,
                                                 const RecursiveCallMap &recCallMap,
-                                                const BaseCaseRhsMap &baseCaseMap,
-                                                const TT::ExpressionVector &srGuard) const;
+                                                const UpdateVector &updates,
+                                                const BaseCaseRhsMap &baseCaseMap) const;
+
+    bool advance(std::vector<int> &selector, const int m) const;
+
+    void addMu(std::vector<Expression> &addTo,
+               const TT::ExpressionVector &normalGuard,
+               const TT::ExpressionVector &srGuard,
+               const UpdateVector &updates,
+               const std::vector<GiNaC::exmap> &renamings,
+               const BaseCaseRhsMap &baseCaseMap,
+               int i,
+               int j) const;
+
+    Expression getS(const ORightHandSide &recursion,
+                    const UpdateVector &updates,
+                    const std::vector<GiNaC::exmap> &renamings,
+                    const BaseCaseRhsMap &baseCaseMap,
+                    int i,
+                    int j) const;
 
     bool computeClosedFormOfTheRHSs(TT::Expression &closed,
                                     const RightHandSide &recursion,
