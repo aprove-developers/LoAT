@@ -29,7 +29,7 @@ typedef int RightHandSideIndex;
 struct RightHandSide;
 
 /**
- * Represents one transition in the graph with the given target, guards and updates
+ * Represents a rule that is also a transition of an ITS (up to an outer update)
  */
 struct Transition {
     Transition() : cost(1) {}
@@ -46,6 +46,9 @@ struct Transition {
 
 std::ostream& operator<<(std::ostream &, const Transition &);
 
+/**
+ * Represents a right-hand side of a rule
+ */
 struct RightHandSide {
     TT::ExpressionVector guard;
     TT::Expression term;
@@ -74,7 +77,7 @@ struct RuntimeResult {
 };
 
 /**
- * Flow graph for an ITS.
+ * Flow graph for an IP.
  * This class implements the main logic of chaining and metering.
  */
 class RecursionGraph : private Graph<RightHandSideIndex> {
@@ -195,25 +198,64 @@ public:
 private:
 
     /**
-     * Adds the given rule to this graph, calculating the required update
+     * Adds the given rule to this graph.
+     * @param rule the rule to add
      */
     void addRule(const Rule &rule);
 
+    /*
+     * Add the given transition to this graph.
+     * @param from the function symbol of the lhs
+     * @param to the function symbol of the rhs
+     * @param trans the transition
+     */
     TransIndex addLegacyTransition(NodeIndex from,
                                    NodeIndex to,
                                    const Transition &trans);
 
+    /*
+     * Add the given right-hand side (that represents a transition) to this graph.
+     * @param from the function symbol of the lhs
+     * @param to the function symbol of the rhs
+     * @param trans the transition
+     */
     TransIndex addLegacyRightHandSide(NodeIndex from,
                                       NodeIndex to,
                                       const RightHandSide &trans);
 
+    /*
+     * Add the given right-hand side to this graph.
+     * @param node the function symbol of the lhs
+     * @param rhs the right-hand side
+     */
     RightHandSideIndex addRightHandSide(NodeIndex node, const RightHandSide &rhs);
+
+    /*
+     * Add the given right-hand side to this graph.
+     * @param node the function symbol of the lhs
+     * @param rhs the right-hand side (rvalue reference)
+     */
     RightHandSideIndex addRightHandSide(NodeIndex node, const RightHandSide &&rhs);
 
+    /*
+     * Checks if the given left-hand side has exactly one right-hand side.
+     * @param node the left-hand side
+     */
     bool hasExactlyOneRightHandSide(NodeIndex node);
 
+    /*
+     * Remove the given right-hand side.
+     * @param node the function symbol of the lhs
+     * @param rhs the right-hand side
+     */
     void removeRightHandSide(NodeIndex node, RightHandSideIndex rhs);
 
+
+    /*
+     * Get all nodes that are a sucessor of the given right-hand side.
+     * @param rhs a right-hand side
+     * @return the set of all sucessor nodes (might be the set containing exactly the null node)
+     */
     std::set<NodeIndex> getSuccessorsOfRhs(const RightHandSide &rhs);
 
     /**
@@ -289,8 +331,20 @@ private:
      */
     bool removeIrrelevantTransitions(NodeIndex curr, std::set<NodeIndex> &visited);
 
+
+    /*
+     * Check whether the given right-hand side is "empty", i.e., it does nothing.
+     * Used for pruning. Check the implementation for details.
+     * @param node the function symbol of the lhs
+     * @param rhs the right-hand side
+     */
     bool rightHandSideIsEmpty(NodeIndex node, const RightHandSide &rhs) const;
 
+    /*
+     * Get all free variables of a right-hand side with the exception of chaining variables.
+     * @param rule the right-hand side
+     * @return the free variable of the right-hand side (excluding chaining variables)
+     */
     ExprSymbolSet getFreeVariablesOf(const RightHandSide &rule) const;
 
 private:
