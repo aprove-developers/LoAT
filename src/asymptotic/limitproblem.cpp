@@ -56,8 +56,9 @@ LimitProblem::LimitProblem(LimitProblem &&other)
     : set(std::move(other.set)),
       variableN(other.variableN),
       substitutions(std::move(other.substitutions)),
-      log(std::move(other.log)),
       unsolvable(other.unsolvable) {
+    //copy logging data (std::move on ostringstream only possible since gcc 5)
+    log.str(other.log.str());
 }
 
 
@@ -66,9 +67,11 @@ LimitProblem& LimitProblem::operator=(LimitProblem &&other) {
         set = std::move(other.set);
         variableN = other.variableN;
         substitutions = std::move(other.substitutions);
-        log = std::move(other.log);
+        //copy logging data (std::move on ostringstream only possible since gcc 5)
+        log.str(other.log.str());
         unsolvable = other.unsolvable;
     }
+
 
     return *this;
 }
