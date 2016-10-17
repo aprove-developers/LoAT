@@ -46,6 +46,13 @@ static void escapeVarname(string &name) {
     }
 }
 
+bool isNonVariableChar(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '^' //operators
+        || c == '>' || c == '<' || c == '=' //relations
+        || c == ' ' || c == '&' || c == ':' || c == ',' //separators
+        || c == '(' || c == ')' || c == '[' || c == ']'; //brackets
+}
+
 void ITRSProblem::substituteVarnames(string &line) const {
     set<size_t> replacedPositions;
     for (auto it : escapeSymbols) {
@@ -56,7 +63,7 @@ void ITRSProblem::substituteVarnames(string &line) const {
             size_t nextpos = pos+it.first.length();
             if (replacedPositions.count(pos) > 0
                || (pos > 0 && (line[pos-1] == '_' || isalnum(line[pos-1])))
-               || (nextpos < line.length() && (line[nextpos] == '_' || isalnum(line[nextpos])))) {
+               || (nextpos < line.length() && !isNonVariableChar(line[nextpos]))) {
                 pos++;
                 continue;
             }
