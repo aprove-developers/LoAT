@@ -1149,6 +1149,67 @@ void FlowGraph::printForProof() const {
 }
 
 
+void FlowGraph::printKoAT() const {
+    using namespace GiNaC;
+    auto printNode = [&](NodeIndex n) {
+        if (n < itrs.getTermCount()) proofout << itrs.getTerm(n).name; else proofout << "loc" << n << "'";
+    };
+
+    proofout << "(GOAL COMPLEXITY)" << endl;
+    proofout << "(STARTTERM (FUNCTIONSYMBOLS "; printNode(initial); proofout << "))" << endl;
+    proofout << "(VAR";
+    for (const ex &var : itrs.getGinacVarList()) {
+        proofout << " " << ex_to<symbol>(var).get_name();
+    }
+    proofout << ")" << endl << "(RULES" << endl;
+
+    for (NodeIndex n : nodes) {
+        //find suitable arity for location n
+        set<VariableIndex> relevantVars;
+        for (TransIndex trans : getTransFrom(n)) {
+            for (const auto &it : getTransData(trans).update) {
+                relevantVars.insert(it.first);
+            }
+        }
+        //write transition in KoAT format (note that relevantVars is an ordered set)
+        for (TransIndex trans : getTransFrom(n)) {
+            const Transition &data = getTransData(trans);
+            printNode(n);
+            bool first = true;
+            for (VariableIndex var : relevantVars) {
+                proofout << ((first) ? "(" : ",");
+                proofout << itrs.getVarname(var);
+                first = false;
+            }
+
+            proofout << ") -{" << data.cost << "," << data.cost << "}> ";
+
+            printNode(getTransTarget(trans));
+            first = true;
+            for (VariableIndex var : relevantVars) {
+                proofout << ((first) ? "(" : ",");
+                auto it = data.update.find(var);
+                if (it != data.update.end()) {
+                    proofout << it->second;
+                } else {
+                    proofout << itrs.getVarname(var);
+                }
+                first = false;
+            }
+
+            proofout << ") :|: ";
+
+            for (int i=0; i < data.guard.size(); ++i) {
+                if (i > 0) proofout << " && ";
+                proofout << data.guard[i];
+            }
+            proofout << endl;
+        }
+    }
+    proofout << ")" << endl;
+}
+
+
 void FlowGraph::printDot(ostream &s, int step, const string &desc) const {
     auto printNodeName = [&](NodeIndex n) { if (n < itrs.getTermCount()) s << itrs.getTerm(n).name; else s << "[" << n << "]"; };
     auto printNode = [&](NodeIndex n) { s << "node_" << step << "_" << n; };

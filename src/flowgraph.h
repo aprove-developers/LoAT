@@ -75,6 +75,11 @@ public:
     void printForProof() const;
 
     /**
+     * Print the graph in KoAT format (i.e. LoAT's input format)
+     */
+    void printKoAT() const;
+
+    /**
      * Print the graph as dot outpus
      * @param s the output stream to print to (the dotfile)
      * @param step the number of the subgraph (should increase for every call)

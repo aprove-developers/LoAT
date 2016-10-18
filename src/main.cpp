@@ -112,10 +112,11 @@ void printConfig() {
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --timeout <sec>  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --dot <file>     Dump dot output to given file" << endl;
-    cout << "  --stats          Print some statistics about the performed steps" << endl;
-    cout << "  --timing         Print information about time usage" << endl;
+    cout << "  --timeout <sec>    Timeout (in seconds), minimum: 10" << endl;
+    cout << "  --dot <file>       Dump dot output to given file" << endl;
+    cout << "  --stats            Print some statistics about the performed steps" << endl;
+    cout << "  --timing           Print information about time usage" << endl;
+    cout << "  --print-simplified Print simplfied program in the input format" << endl;
 }
 
 
@@ -130,6 +131,7 @@ int main(int argc, char *argv[]) {
     string dotFile;
     bool printStats = false;
     bool printTiming = false;
+    bool printSimplified = false;
     string filename;
     int timeout = 0;
 
@@ -155,6 +157,8 @@ int main(int argc, char *argv[]) {
             printStats = true;
         } else if (strcmp("--timing",argv[arg]) == 0) {
             printTiming = true;
+        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
+            printSimplified = true;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -274,6 +278,12 @@ int main(int argc, char *argv[]) {
         proofout << endl << "Final control flow graph problem, now checking costs for infinitely many models:" << endl;
         g.printForProof();
         if (dotOutput) g.printDot(dotStream,dotStep++,"Final");
+
+        if (printSimplified) {
+            proofout << endl << "Simplified program in input format:" << endl;
+            g.printKoAT();
+            proofout << endl;
+        }
 
         if (!g.isFullyChained()) {
             //handling for timeouts
