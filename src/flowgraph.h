@@ -155,14 +155,6 @@ public:
     bool accelerateSimpleLoops();
 
     /**
-     * Tries to identify and remove duplicate transitions
-     * @param trans list of transitions that are checked
-     * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
-     * @return true iff the graph was modified (i.e. a duplicate got deleted)
-     */
-    bool removeDuplicateTransitions(const std::vector<TransIndex> &trans);
-
-    /**
      * Reduces the number of parallel transitions by applying some greedy heuristic to find the "best" transitions
      * @note also removes unreachable nodes and irrelevant const transitions using removeConstLeafsAndUnreachable()
      * @return true iff the graph was modified (transitions were deleted)
@@ -245,10 +237,20 @@ private:
     bool accelerateSimpleLoops(NodeIndex node);
 
     /**
-     * A simple syntactic comparision. If it returns true, a and b are guaranteed to be equal.
+     * A simple syntactic comparision. Returns true iff a and b are equal up to constants
+     * in the cost term.
      * @note as this is a syntactic check, false has no guaranteed meaning
+     * @param compareUpdate if false, the update is not compared (i.e. transitions with different update might be equal)
      */
-    bool compareTransitions(TransIndex a, TransIndex b) const;
+    bool compareTransitions(TransIndex a, TransIndex b, bool compareUpdate = true) const;
+
+    /**
+     * Tries to identify and remove duplicate transitions
+     * @param trans list of transitions that are checked
+     * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
+     * @return true iff the graph was modified (i.e. a duplicate got deleted)
+     */
+    bool removeDuplicateTransitions(const std::vector<TransIndex> &trans, bool compareUpdate = true);
 
     /**
      * Removes all unreachable nodes and transitions to leaves with constant cost, as they have no impact on the runtime

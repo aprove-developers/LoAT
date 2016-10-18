@@ -146,7 +146,8 @@ bool FlowGraph::reduceInitialTransitions() {
 
 
 bool FlowGraph::removeDuplicateInitialTransitions() {
-    return removeDuplicateTransitions(getTransFrom(initial));
+    //remove duplicates and ignore the update for the comparison
+    return removeDuplicateTransitions(getTransFrom(initial),false);
 }
 
 
@@ -251,16 +252,19 @@ bool FlowGraph::accelerateSimpleLoops() {
 }
 
 
-bool FlowGraph::compareTransitions(TransIndex ia, TransIndex ib) const {
+bool FlowGraph::compareTransitions(TransIndex ia, TransIndex ib, bool compareUpdate) const {
     const Transition &a = getTransData(ia);
     const Transition &b = getTransData(ib);
     if (a.guard.size() != b.guard.size()) return false;
-    if (a.update.size() != b.update.size()) return false;
+    if (compareUpdate && a.update.size() != b.update.size()) return false;
     if (!GiNaC::is_a<GiNaC::numeric>(a.cost-b.cost)) return false; //cost equal up to constants
-    for (const auto &itA : a.update) {
-        auto itB = b.update.find(itA.first);
-        if (itB == b.update.end()) return false;
-        if (!itB->second.is_equal(itA.second)) return false;
+
+    if (compareUpdate) {
+        for (const auto &itA : a.update) {
+            auto itB = b.update.find(itA.first);
+            if (itB == b.update.end()) return false;
+            if (!itB->second.is_equal(itA.second)) return false;
+        }
     }
     for (int i=0; i < a.guard.size(); ++i) {
         if (!a.guard[i].is_equal(b.guard[i])) return false;
@@ -269,20 +273,29 @@ bool FlowGraph::compareTransitions(TransIndex ia, TransIndex ib) const {
 }
 
 
-bool FlowGraph::removeDuplicateTransitions(const std::vector<TransIndex> &trans) {
-    bool changed = false;
+bool FlowGraph::removeDuplicateTransitions(const std::vector<TransIndex> &trans, bool compareUpdate) {
+    set<TransIndex> toRemove;
     for (int i=0; i < trans.size(); ++i) {
         for (int j=i+1; j < trans.size(); ++j) {
-            if (compareTransitions(trans[i],trans[j])) {
-                proofout << "Removing duplicate transition: " << trans[i] << "." << endl;
-                removeTrans(trans[i]);
-                changed = true;
-                goto nextouter; //do not remove trans[i] again
+            if (compareTransitions(trans[i],trans[j],compareUpdate)) {
+                //transitions identical up to cost, keep the one with the higher cost (worst case)
+                Expression ci = getTransData(trans[i]).cost;
+                Expression cj = getTransData(trans[j]).cost;
+                if (GiNaC::ex_to<GiNaC::numeric>(ci-cj).is_positive()) {
+                    toRemove.insert(j);
+                } else {
+                    toRemove.insert(i);
+                    goto nextouter; //do not remove trans[i] again
+                }
             }
         }
 nextouter:;
     }
-    return changed;
+    for (TransIndex idx : toRemove) {
+        proofout << "Removing duplicate transition: " << trans[idx] << "." << endl;
+        removeTrans(trans[idx]);
+    }
+    return !toRemove.empty();
 }
 
 
