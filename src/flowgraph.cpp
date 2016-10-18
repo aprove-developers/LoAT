@@ -145,6 +145,11 @@ bool FlowGraph::reduceInitialTransitions() {
 }
 
 
+bool FlowGraph::removeDuplicateInitialTransitions() {
+    return removeDuplicateTransitions(getTransFrom(initial));
+}
+
+
 bool FlowGraph::chainLinear() {
     Timing::Scope timer(Timing::Contract);
     assert(check(&nodes) == Graph::Valid);

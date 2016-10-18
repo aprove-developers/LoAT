@@ -275,6 +275,11 @@ int main(int argc, char *argv[]) {
 
         if (Timeout::soft()) proofout << "Aborted due to lack of remaining time" << endl << endl;
 
+        //simplify the simplified program
+        if (g.isFullyChained()) {
+            g.removeDuplicateInitialTransitions();
+        }
+
         proofout << endl << "Final control flow graph problem, now checking costs for infinitely many models:" << endl;
         g.printForProof();
         if (dotOutput) g.printDot(dotStream,dotStep++,"Final");

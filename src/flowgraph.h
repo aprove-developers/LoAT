@@ -114,6 +114,12 @@ public:
     bool reduceInitialTransitions();
 
     /**
+     * Removes identical transitions from the initial node (syntactical check!)
+     * @return true iff the graph was modified
+     */
+    bool removeDuplicateInitialTransitions();
+
+    /**
      * Apply simple chaining (i.e. only linear paths)
      * @return true iff the graph was modified
      */
