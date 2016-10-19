@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
     if (!g.isEmpty()) {
         //do some preprocessing
         if (doPreprocessing) {
-            if (g.simplifyTransitions()) {
+            if (g.preprocessTransitions(checkCosts)) {
                 proofout << endl <<  "Simplified the transitions:" << endl;
                 g.printForProof();
                 if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");

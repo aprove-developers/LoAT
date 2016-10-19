@@ -103,9 +103,10 @@ public:
     /**
      * Performs extensive preprocessing to simplify the graph (i.e. remove unreachable nodes, simplify guards)
      * @note this is a slow operation and should be used rarely (e.g. only once before the processing begins)
+     * @param eliminateCostConstraints if true, the terms "cost >= 0" are removed from the guard if they are implied by it
      * @return true iff the graph was modified
      */
-    bool simplifyTransitions();
+    bool preprocessTransitions(bool eliminateCostConstraints);
 
     /**
      * Checks initial transitions for satisfiability, removes unsat transitions.

@@ -113,13 +113,16 @@ bool FlowGraph::isEmpty() const {
 }
 
 
-bool FlowGraph::simplifyTransitions() {
+bool FlowGraph::preprocessTransitions(bool eliminateCostConstraints) {
     Timing::Scope _timer(Timing::Preprocess);
     //remove unreachable transitions/nodes
     bool changed = removeConstLeafsAndUnreachable();
     //update/guard preprocessing
     for (TransIndex idx : getAllTrans()) {
         if (Timeout::preprocessing()) return changed;
+        if (eliminateCostConstraints) {
+            changed = Preprocess::tryToRemoveCost(itrs,getTransData(idx).guard) || changed;
+        }
         changed = Preprocess::simplifyTransition(itrs,getTransData(idx)) || changed;
     }
     //remove duplicates

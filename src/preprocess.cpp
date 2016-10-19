@@ -26,6 +26,17 @@
 using namespace std;
 
 
+bool Preprocess::tryToRemoveCost(const ITRSProblem &itrs, GuardList &guard) {
+    if (guard.empty()) return false;
+    GuardList realGuard(guard.begin(),guard.end()-1);
+    if (Z3Toolbox::checkTautologicImplication(realGuard, guard.back())) {
+        guard.pop_back();
+        return true;
+    }
+    return false;
+}
+
+
 bool Preprocess::simplifyTransition(const ITRSProblem &itrs, Transition &trans) {
     bool result = false;
     bool changed;
