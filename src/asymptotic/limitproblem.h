@@ -194,7 +194,7 @@ private:
     InftyExpressionSet set;
     ExprSymbol variableN;
     std::vector<int> substitutions;
-    std::ostringstream log;
+    std::unique_ptr<std::ostringstream> log; //use unique_ptr, as gcc < 5 is lacking std::move on ostringstream
     bool unsolvable;
 };
 
