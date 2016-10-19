@@ -47,7 +47,7 @@ static void escapeVarname(string &name) {
 }
 
 bool isNonVariableChar(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '^' //operators
+    return c == '+' || c == '-' || c == '*' || c == '^' || c == '/' //operators
         || c == '>' || c == '<' || c == '=' //relations
         || c == ' ' || c == '&' || c == ':' || c == ',' //separators
         || c == '(' || c == ')' || c == '[' || c == ']'; //brackets
@@ -227,7 +227,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     rule.rhsTerm = getTermIndex(fun);
     for (string &v : args) {
         substituteVarnames(v);
-        if (v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        if (!allowDivision && v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
         Expression argterm = Expression::fromString(v,this->varSymbolList).subs(symbolSubs);
         argterm.collectVariables(rhsSymbols);
         rule.rhsArgs.push_back(argterm);
@@ -236,7 +236,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     /* cost */
     if (!cost.empty()) {
         substituteVarnames(cost);
-        if (cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        if (!allowDivision && cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
         rule.cost = Expression::fromString(cost,this->varSymbolList).subs(symbolSubs);
         if (!rule.cost.is_polynomial(this->varSymbolList)) throw ITRSProblem::FileError("Non polynomial cost in the input");
         rule.cost.collectVariables(rhsSymbols);
@@ -284,8 +284,8 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
 }
 
 
-ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
-    ITRSProblem res;
+ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision) {
+    ITRSProblem res(allowDivision);
     string startTerm;
     map<string,TermIndex> knownTerms;
     map<string,VariableIndex> knownVars;
@@ -395,8 +395,8 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
 
 
 
-ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules) {
-    ITRSProblem res;
+ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules, bool allowDivision) {
+    ITRSProblem res(allowDivision);
     map<string,TermIndex> knownTerms;
 
     //create vars

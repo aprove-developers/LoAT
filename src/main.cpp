@@ -117,6 +117,8 @@ void printHelp(char *arg0) {
     cout << "  --stats            Print some statistics about the performed steps" << endl;
     cout << "  --timing           Print information about time usage" << endl;
     cout << "  --print-simplified Print simplfied program in the input format" << endl;
+    cout << "  --allow-division   Allows division to occur in the input program" << endl;
+    cout << "                     Note: LoAT is not sound for division in general" << endl;
 }
 
 
@@ -132,6 +134,7 @@ int main(int argc, char *argv[]) {
     bool printStats = false;
     bool printTiming = false;
     bool printSimplified = false;
+    bool allowDivision = false;
     string filename;
     int timeout = 0;
 
@@ -159,6 +162,8 @@ int main(int argc, char *argv[]) {
             printTiming = true;
         } else if (strcmp("--print-simplified",argv[arg]) == 0) {
             printSimplified = true;
+        } else if (strcmp("--allow-division",argv[arg]) == 0) {
+            allowDivision = true;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -179,6 +184,11 @@ int main(int argc, char *argv[]) {
         Timeout::setTimeouts(timeout);
     }
 
+    if (allowDivision) {
+        cout << endl << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
+        cout << "Division is only sound if the result of a term is always an integer" << endl << endl;
+    }
+
     // ### Start analyzing ###
 
     int dotStep=0;
@@ -196,7 +206,7 @@ int main(int argc, char *argv[]) {
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-    ITRSProblem res = ITRSProblem::loadFromFile(filename);
+    ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision);
     FlowGraph g(res);
 
     proofout << endl << "Initial Control flow graph problem:" << endl;
