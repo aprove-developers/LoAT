@@ -53,6 +53,15 @@ bool isNonVariableChar(char c) {
         || c == '(' || c == ')' || c == '[' || c == ']'; //brackets
 }
 
+bool isValidVarname(const std::string &name) {
+    for (char c : name) {
+        if (isNonVariableChar(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void ITRSProblem::substituteVarnames(string &line) const {
     set<size_t> replacedPositions;
     for (auto it : escapeSymbols) {
@@ -348,6 +357,7 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision
                 stringstream ss(line.substr(4,line.length()-1-4));
                 string varname;
                 while (ss >> varname) {
+                    if (!isValidVarname(varname)) throw FileError("Invalid variable name: "+varname);
                     string escapedname = varname;
                     escapeVarname(escapedname);
                     VariableIndex vi = res.addFreshVariable(escapedname);
