@@ -69,6 +69,16 @@ bool Z3VariableContext::hasVariable(string name, VariableType type) const {
     return it != variables.end() && isTypeEqual(it->second,type);
 }
 
+bool Z3VariableContext::hasVariableOfAnyType(string name, VariableType &typeOut) const {
+    auto it = variables.find(name);
+    if (it == variables.end()) {
+        return false;
+    } else {
+        typeOut = (it->second.get_sort().is_int()) ? Integer : Real;
+        return true;
+    }
+}
+
 bool Z3VariableContext::isTypeEqual(const z3::expr &expr, VariableType type) const {
     const z3::sort sort = expr.get_sort();
     return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
