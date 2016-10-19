@@ -72,6 +72,21 @@ public:
      */
     static bool prepareGuard(ITRSProblem &itrs, Transition &t);
 
+
+    /**
+     * Applies farkas lemma to transform the given constraints into z3 constraints
+     * @param constraints Of the form "linear term <= constant", such that they can be written as "A * x <= b"
+     * @param vars List of variables "x"
+     * @param coeff A z3 symbol representing the coefficient for every variable (same size as vars)
+     * @param c0 The z3 symbol for the absolute coefficient
+     * @param delta integer value such that "A * x <= b" implies "coefficients * x <= delta"
+     * @param context the Z3 context to create variables
+     * @return the resulting z3 expression without all quantors
+     */
+    static z3::expr applyFarkas(const std::vector<Expression> &constraints, const std::vector<ExprSymbol> &vars,
+                                const std::vector<z3::expr> &coeff, z3::expr c0, int delta,
+                                Z3VariableContext &context);
+
 private:
     FarkasMeterGenerator(ITRSProblem &itrs, const Transition &t);
 
@@ -149,17 +164,6 @@ private:
      * Creates z3 symbols for the coefficients for all relevant variables
      */
     void createCoefficients(Z3VariableContext::VariableType type);
-
-    /**
-     * Applies farkas lemma to transform the given constraints into z3 constraints
-     * @param constraints Of the form "linear term <= constant", such that they can be written as "A * x <= b"
-     * @param vars List of variables "x"
-     * @param coeff A z3 symbol representing the coefficient for every variable (same size as vars)
-     * @param c0 The z3 symbol for the absolute coefficient
-     * @param delta integer value such that "A * x <= b" implies "coefficients * x <= delta"
-     * @return the resulting z3 expression without all quantors
-     */
-    z3::expr applyFarkas(const std::vector<Expression> &constraints, const std::vector<ExprSymbol> &vars, const std::vector<z3::expr> &coeff, z3::expr c0, int delta) const;
 
     /**
      * Helper to build the implication: "(G and U) --> f(x)-f(x') <= 1" using applyFarkas

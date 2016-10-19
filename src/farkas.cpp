@@ -409,7 +409,7 @@ void FarkasMeterGenerator::buildConstraints() {
 /* ### Apply Farkas Lemma to formulate the constraints for the metering function ### */
 
 
-z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints, const vector<ExprSymbol> &vars, const vector<z3::expr> &coeff, z3::expr c0, int delta) const {
+z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints, const vector<ExprSymbol> &vars, const vector<z3::expr> &coeff, z3::expr c0, int delta, Z3VariableContext &context) {
     assert(vars.size() == coeff.size());
 
 #ifdef DEBUG_FARKAS
@@ -424,6 +424,7 @@ z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints
     vector<z3::expr> lambda;
     //create lambda variables, add lambda >= 0
     for (int i=0; i < constraints.size(); ++i) {
+        assert(constraints[i].info(GiNaC::info_flags::relation_less_or_equal));
         lambda.push_back(context.getFreshVariable("l",Z3VariableContext::Real));
         res.push_back(lambda[i] >= 0);
     }
@@ -477,7 +478,7 @@ z3::expr FarkasMeterGenerator::genNotGuardImplication() const {
     vector<Expression> lhs;
     for (Expression g : constraints.reducedGuard) {
         lhs.push_back(GuardToolbox::negateLessEqualInequality(g)); //the important negated constraint
-        res.push_back(applyFarkas(lhs,symbols,coeffs,coeff0,0));
+        res.push_back(applyFarkas(lhs,symbols,coeffs,coeff0,0,context));
         lhs.pop_back();
     }
     return Z3Toolbox::concatExpressions(context,res,Z3Toolbox::ConcatAnd);
@@ -491,7 +492,7 @@ z3::expr FarkasMeterGenerator::genGuardPositiveImplication(bool strict) const {
     for (z3::expr coeff : coeffs) {
         negCoeff.push_back(-coeff);
     }
-    return applyFarkas(constraints.guard,symbols,negCoeff,-coeff0,strict ? -1 : -0);
+    return applyFarkas(constraints.guard,symbols,negCoeff,-coeff0,strict ? -1 : -0,context);
 }
 
 
@@ -508,7 +509,7 @@ z3::expr FarkasMeterGenerator::genUpdateImplication() const {
         coeff.push_back( coeffs[i]);    //coeff for x
         coeff.push_back(-coeffs[i]);    //coeff for x', i.e. negative coeff for x
     }
-    return applyFarkas(constraints.guardUpdate,var,coeff,context.real_val(0),1);
+    return applyFarkas(constraints.guardUpdate,var,coeff,context.real_val(0),1,context);
 }
 
 
