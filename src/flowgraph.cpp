@@ -1087,6 +1087,26 @@ done:
 
 /* ### Output ### */
 
+set<VariableIndex> FlowGraph::getBoundVariables(const Transition &trans) const {
+    set<VariableIndex> res;
+    //updated variables are always bound
+    for (const auto &it : trans.update) {
+        res.insert(it.first);
+    }
+    //collect non-free variables from guard and cost
+    ExprSymbolSet symbols;
+    for (const Expression &ex : trans.guard) {
+        ex.collectVariables(symbols);
+    }
+    trans.cost.collectVariables(symbols);
+    for (const ExprSymbol &var : symbols) {
+        if (!itrs.isFreeVar(var)) {
+            res.insert(itrs.getVarindex(var.get_name()));
+        }
+    }
+    return res;
+}
+
 void FlowGraph::print(ostream &s) const {
     auto printVar = [&](VariableIndex vi) {
         s << vi;
@@ -1166,7 +1186,6 @@ void FlowGraph::printForProof() const {
     proofout << endl;
 }
 
-
 void FlowGraph::printKoAT() const {
     using namespace GiNaC;
     auto printNode = [&](NodeIndex n) {
@@ -1182,16 +1201,12 @@ void FlowGraph::printKoAT() const {
     proofout << ")" << endl << "(RULES" << endl;
 
     for (NodeIndex n : nodes) {
-        //find suitable arity for location n
-        set<VariableIndex> relevantVars;
-        for (TransIndex trans : getTransFrom(n)) {
-            for (const auto &it : getTransData(trans).update) {
-                relevantVars.insert(it.first);
-            }
-        }
         //write transition in KoAT format (note that relevantVars is an ordered set)
         for (TransIndex trans : getTransFrom(n)) {
             const Transition &data = getTransData(trans);
+            set<VariableIndex> relevantVars = getBoundVariables(data);
+
+            //lhs
             printNode(n);
             bool first = true;
             for (VariableIndex var : relevantVars) {
@@ -1200,8 +1215,10 @@ void FlowGraph::printKoAT() const {
                 first = false;
             }
 
+            //cost
             proofout << ") -{" << data.cost << "," << data.cost << "}> ";
 
+            //rhs update
             printNode(getTransTarget(trans));
             first = true;
             for (VariableIndex var : relevantVars) {
@@ -1215,8 +1232,8 @@ void FlowGraph::printKoAT() const {
                 first = false;
             }
 
+            //rhs guard
             proofout << ") :|: ";
-
             for (int i=0; i < data.guard.size(); ++i) {
                 if (i > 0) proofout << " && ";
                 proofout << data.guard[i];

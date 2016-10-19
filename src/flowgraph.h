@@ -265,6 +265,11 @@ private:
      */
     bool removeIrrelevantTransitions(NodeIndex curr, std::set<NodeIndex> &visited);
 
+    /**
+     * Helper for program output. Determines the set of bound variables of a transition.
+     */
+    std::set<VariableIndex> getBoundVariables(const Transition &trans) const;
+
 private:
     NodeIndex initial;
     std::set<NodeIndex> nodes;
