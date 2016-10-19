@@ -88,9 +88,15 @@ z3::expr Expression::ginacToZ3(const GiNaC::ex &term, Z3VariableContext &context
         } catch (...) { throw GinacZ3ConversionError("Invalid numeric constant (value too large)"); }
     }
     else if (GiNaC::is_a<GiNaC::symbol>(term)) {
-        Z3VariableContext::VariableType type = (reals) ? Z3VariableContext::Real : Z3VariableContext::Integer;
         const GiNaC::symbol &sym = GiNaC::ex_to<GiNaC::symbol>(term);
-        return fresh ? context.getFreshVariable(sym.get_name(),type) : context.getVariable(sym.get_name(),type);
+        //check if the symbol is already known (and keep the type in this case)
+        Z3VariableContext::VariableType type;
+        if (!fresh && context.hasVariableOfAnyType(sym.get_name(), type)) {
+            return context.getVariable(sym.get_name(),type);
+        }
+        //otherwise create a new one
+        type = (reals) ? Z3VariableContext::Real : Z3VariableContext::Integer;
+        return context.getFreshVariable(sym.get_name(),type);
     }
     else if (GiNaC::is_a<GiNaC::relational>(term)) {
         assert(term.nops() == 2);

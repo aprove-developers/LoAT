@@ -213,7 +213,8 @@ public:
     /**
      * Converts this term from a GiNaC::ex to a Z3 expression
      * @param fresh whether to use fresh variables. If false, existing variables from the context are re-used (by name)
-     * @param reals if true, all variables and constants are encoded as reals (otherwise variables are integers and only real coefficients as 1/2 are used)
+     * @param reals if true, all NEWLY created variables and constants are encoded as reals (otherwise variables are integers and only real coefficients as 1/2 are used)
+     * @note if a variable name is already known and of type integer, this type is kept (unless fresh is true)
      * @return newly created z3 expression
      */
     z3::expr toZ3(Z3VariableContext &context, bool fresh=false, bool reals=false) const { return ginacToZ3(*this,context,fresh,reals); }
