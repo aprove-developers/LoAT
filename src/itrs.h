@@ -122,6 +122,10 @@ private:
     //applies replacement map escapeSymbols to the given string (modified by reference)
     void substituteVarnames(std::string &line) const;
 
+    //replaces unbounded variables (not in boundVars) by fresh variables (according to and by modifying unboundedSubs)
+    //ex is modified (substitution is applied) and unboundedSubs is extended if new unbound variables are encountered.
+    void replaceUnboundedWithFresh(Expression &ex, GiNaC::exmap &unboundedSubs, const ExprSymbolSet &boundVars);
+
     //used internally by the (not very cleanly written) parser
     void parseRule(std::map<std::string,TermIndex> &knownTerms,
                    std::map<std::string,VariableIndex> &knownVars,
