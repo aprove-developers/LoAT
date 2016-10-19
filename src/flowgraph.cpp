@@ -1219,7 +1219,7 @@ void FlowGraph::printKoAT() const {
             }
 
             //cost
-            proofout << ") -{" << data.cost << "," << data.cost << "}> ";
+            proofout << ") -{" << data.cost.expand() << "," << data.cost.expand() << "}> ";
 
             //rhs update
             printNode(getTransTarget(trans));
@@ -1228,7 +1228,7 @@ void FlowGraph::printKoAT() const {
                 proofout << ((first) ? "(" : ",");
                 auto it = data.update.find(var);
                 if (it != data.update.end()) {
-                    proofout << it->second;
+                    proofout << it->second.expand();
                 } else {
                     proofout << itrs.getVarname(var);
                 }
@@ -1239,7 +1239,7 @@ void FlowGraph::printKoAT() const {
             proofout << ") :|: ";
             for (int i=0; i < data.guard.size(); ++i) {
                 if (i > 0) proofout << " && ";
-                proofout << data.guard[i];
+                proofout << data.guard[i].expand();
             }
             proofout << endl;
         }
