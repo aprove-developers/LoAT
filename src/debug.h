@@ -28,7 +28,7 @@
 
 /* ### Global debugging output flag ### */
 
-//#define DEBUG_DISABLE_ALL
+#define DEBUG_DISABLE_ALL
 
 
 /* ### Make sure assertions are enabled ### */
@@ -53,7 +53,7 @@ struct DebugStream {
 
 /* ### Define for the proof output (can be used to disable proof output) ### */
 
-#define proofout cout
+#define proofout std::cout
 //#define proofout DebugStream::dummy
 
 
