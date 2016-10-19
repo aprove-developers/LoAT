@@ -119,6 +119,7 @@ void printHelp(char *arg0) {
     cout << "  --print-simplified Print simplfied program in the input format" << endl;
     cout << "  --allow-division   Allows division to occur in the input program" << endl;
     cout << "                     Note: LoAT is not sound for division in general" << endl;
+    cout << "  --no-preprocessing Don't try to simplify the program first (involves SMT)" << endl;
 }
 
 
@@ -135,6 +136,7 @@ int main(int argc, char *argv[]) {
     bool printTiming = false;
     bool printSimplified = false;
     bool allowDivision = false;
+    bool doPreprocessing = true;
     string filename;
     int timeout = 0;
 
@@ -164,6 +166,8 @@ int main(int argc, char *argv[]) {
             printSimplified = true;
         } else if (strcmp("--allow-division",argv[arg]) == 0) {
             allowDivision = true;
+        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
+            doPreprocessing = false;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -222,11 +226,12 @@ int main(int argc, char *argv[]) {
     RuntimeResult runtime;
     if (!g.isEmpty()) {
         //do some preprocessing
-        bool changed = g.simplifyTransitions();
-        if (changed) {
-            proofout << endl <<  "Simplified the transitions:" << endl;
-            g.printForProof();
-            if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");
+        if (doPreprocessing) {
+            if (g.simplifyTransitions()) {
+                proofout << endl <<  "Simplified the transitions:" << endl;
+                g.printForProof();
+                if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");
+            }
         }
 
         while (!g.isFullyChained()) {
