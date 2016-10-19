@@ -336,6 +336,13 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
 }
 
 
+void LimitProblem::removeAllConstraints() {
+    log << "removing all constraints (solved by SMT)" << std::endl;
+    set.clear();
+    log << "resulting limit problem: " << *this << std::endl << std::endl;
+}
+
+
 bool LimitProblem::isUnsolvable() const {
     return unsolvable;
 }
@@ -400,12 +407,22 @@ const std::vector<int>& LimitProblem::getSubstitutions() const {
 }
 
 
-InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex) {
+InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex) const {
     return set.find(ex);
 }
 
 
-std::vector<Expression> LimitProblem::getQuery() {
+ExprSymbolSet LimitProblem::getVariables() const {
+    ExprSymbolSet res;
+    for (const InftyExpression &ex : set) {
+        ExprSymbolSet exVars = ex.getVariables();
+        res.insert(exVars.cbegin(),exVars.cend());
+    }
+    return res;
+}
+
+
+std::vector<Expression> LimitProblem::getQuery() const {
     std::vector<Expression> query;
 
     for (const InftyExpression &ex : set) {
@@ -420,8 +437,18 @@ std::vector<Expression> LimitProblem::getQuery() {
 }
 
 
-bool LimitProblem::isUnsat() {
+bool LimitProblem::isUnsat() const {
     return Z3Toolbox::checkExpressionsSAT(getQuery()) == z3::unsat;
+}
+
+
+bool LimitProblem::isLinear(const GiNaC::lst &vars) const {
+    for (const InftyExpression &ex : set) {
+        if (!ex.isLinear(vars)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 
@@ -526,12 +553,12 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
                                 || it->hasAtLeastTwoVariables());
 }
 
-InftyExpressionSet::size_type LimitProblem::getSize() {
+InftyExpressionSet::size_type LimitProblem::getSize() const {
     return set.size();
 }
 
 
-std::string LimitProblem::getProof() {
+std::string LimitProblem::getProof() const {
     return log->str();
 }
 
