@@ -267,7 +267,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
         } while (pos != string::npos);
     }
     //ensure user given costs are positive
-    if (!cost.empty()) {
+    if (!cost.empty() && checkCosts) {
         rule.guard.push_back(rule.cost >= 0);
     }
 
@@ -275,8 +275,8 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
 }
 
 
-ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision) {
-    ITRSProblem res(allowDivision);
+ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision, bool checkCosts) {
+    ITRSProblem res(allowDivision,checkCosts);
     string startTerm;
     map<string,TermIndex> knownTerms;
     map<string,VariableIndex> knownVars;
@@ -387,8 +387,8 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision
 
 
 
-ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules, bool allowDivision) {
-    ITRSProblem res(allowDivision);
+ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules, bool allowDivision, bool checkCosts) {
+    ITRSProblem res(allowDivision,checkCosts);
     map<string,TermIndex> knownTerms;
 
     //create vars

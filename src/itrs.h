@@ -64,20 +64,21 @@ class ITRSProblem {
     friend class Preprocessor; //allow direct access for the preprocessing
 
 private:
-    ITRSProblem(bool allowDiv) : allowDivision(allowDiv) {}
+    ITRSProblem(bool allowDiv, bool checkCosts) : allowDivision(allowDiv), checkCosts(checkCosts) {}
 
 public:
     /**
      * Loads the ITRS data from the given file
      */
-    static ITRSProblem loadFromFile(const std::string &filename, bool allowDivision = false);
+    static ITRSProblem loadFromFile(const std::string &filename, bool allowDivision = false, bool checkCosts = true);
     EXCEPTION(FileError,CustomException);
 
     /**
      * Creates a dummy ITRSProblem that contains just the given rule
      * @note is not very robust and should _only_ be used for testing
      */
-    static ITRSProblem dummyITRSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules, bool allowDivision = false);
+    static ITRSProblem dummyITRSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules,
+                                           bool allowDivision = false, bool checkCosts = true);
 
     //simple getters
     inline TermIndex getStartTerm() const { return startTerm; }
@@ -141,6 +142,7 @@ private:
 
     /* settings */
     bool allowDivision;
+    bool checkCosts;
 
     /* for lookup efficiency */
     std::map<std::string,VariableIndex> varMap;

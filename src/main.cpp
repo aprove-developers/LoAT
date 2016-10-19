@@ -119,6 +119,7 @@ void printHelp(char *arg0) {
     cout << "  --print-simplified Print simplfied program in the input format" << endl;
     cout << "  --allow-division   Allows division to occur in the input program" << endl;
     cout << "                     Note: LoAT is not sound for division in general" << endl;
+    cout << "  --no-cost-check    Don't check if costs are nonnegative (potentially unsound)" << endl;
     cout << "  --no-preprocessing Don't try to simplify the program first (involves SMT)" << endl;
 }
 
@@ -136,6 +137,7 @@ int main(int argc, char *argv[]) {
     bool printTiming = false;
     bool printSimplified = false;
     bool allowDivision = false;
+    bool checkCosts = true;
     bool doPreprocessing = true;
     string filename;
     int timeout = 0;
@@ -168,6 +170,8 @@ int main(int argc, char *argv[]) {
             allowDivision = true;
         } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
             doPreprocessing = false;
+        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
+            checkCosts = false;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -193,6 +197,11 @@ int main(int argc, char *argv[]) {
         cout << "Division is only sound if the result of a term is always an integer" << endl << endl;
     }
 
+    if (!checkCosts) {
+        cout << endl << "WARNING: Not checking the costs can yield unsound results!" << endl;
+        cout << "This is only safe if costs in the input program are guaranteed to be nonnegative" << endl << endl;
+    }
+
     // ### Start analyzing ###
 
     int dotStep=0;
@@ -210,7 +219,7 @@ int main(int argc, char *argv[]) {
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-    ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision);
+    ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision,checkCosts);
     FlowGraph g(res);
 
     proofout << endl << "Initial Control flow graph problem:" << endl;
