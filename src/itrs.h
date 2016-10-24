@@ -64,20 +64,21 @@ class ITRSProblem {
     friend class Preprocessor; //allow direct access for the preprocessing
 
 private:
-    ITRSProblem() {}
+    ITRSProblem(bool allowDiv, bool checkCosts) : allowDivision(allowDiv), checkCosts(checkCosts) {}
 
 public:
     /**
      * Loads the ITRS data from the given file
      */
-    static ITRSProblem loadFromFile(const std::string &filename);
+    static ITRSProblem loadFromFile(const std::string &filename, bool allowDivision = false, bool checkCosts = true);
     EXCEPTION(FileError,CustomException);
 
     /**
      * Creates a dummy ITRSProblem that contains just the given rule
      * @note is not very robust and should _only_ be used for testing
      */
-    static ITRSProblem dummyITRSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules);
+    static ITRSProblem dummyITRSforTesting(const std::vector<std::string> vars, const std::vector<std::string> &rules,
+                                           bool allowDivision = false, bool checkCosts = true);
 
     //simple getters
     inline TermIndex getStartTerm() const { return startTerm; }
@@ -91,6 +92,7 @@ public:
 
     inline const std::set<VariableIndex>& getFreeVars() const { return freeVars; }
     inline bool isFreeVar(VariableIndex idx) const { return freeVars.count(idx) > 0; }
+    bool isFreeVar(const ExprSymbol &var) const;
 
     inline ExprSymbol getGinacSymbol(VariableIndex idx) const { return varSymbols[idx]; }
     inline ExprList getGinacVarList() const { return varSymbolList; }
@@ -121,6 +123,10 @@ private:
     //applies replacement map escapeSymbols to the given string (modified by reference)
     void substituteVarnames(std::string &line) const;
 
+    //replaces unbounded variables (not in boundVars) by fresh variables (according to and by modifying unboundedSubs)
+    //ex is modified (substitution is applied) and unboundedSubs is extended if new unbound variables are encountered.
+    void replaceUnboundedWithFresh(Expression &ex, GiNaC::exmap &unboundedSubs, const ExprSymbolSet &boundVars);
+
     //used internally by the (not very cleanly written) parser
     void parseRule(std::map<std::string,TermIndex> &knownTerms,
                    std::map<std::string,VariableIndex> &knownVars,
@@ -133,6 +139,10 @@ private:
     std::vector<Term> terms;
     std::vector<Rule> rules;
     TermIndex startTerm;
+
+    /* settings */
+    bool allowDivision;
+    bool checkCosts;
 
     /* for lookup efficiency */
     std::map<std::string,VariableIndex> varMap;

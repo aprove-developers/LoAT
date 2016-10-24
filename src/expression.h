@@ -118,6 +118,11 @@ public:
     }
 
     /**
+     * Version of ex::find() that searches also in subexpressions of a match
+     */
+    bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;
+
+    /**
      * Returns true iff this expression is the given variable (or with trivial arithmetic, which is resolved by GiNaC)
      */
     bool equalsVariable(const GiNaC::symbol &var) const;
@@ -131,6 +136,23 @@ public:
      * Returns true iff this expression is linear in the given variables
      */
     bool isLinear(const GiNaC::lst &vars) const;
+
+    /**
+     * Returns true iff this expression is a proper rational number,
+     * i.e., a rational number that is not an integer.
+     */
+    bool isProperRational() const;
+
+    /**
+     * Returns true iff this expression is a proper natural power,
+     * i.e., of the form expresion^n for some natural n >= 2.
+     */
+    bool isProperNaturalPower() const;
+
+    /**
+     * Returns the highest degree of any variable in this polynomial expression
+     */
+    int getMaxDegree() const;
 
     /**
      * Returns the highest degree of any of the given variables in this polynomial expression
@@ -158,6 +180,35 @@ public:
      * Convenience method for collectVariables
      */
     ExprSymbolSet getVariables() const;
+
+    /**
+     * Returns true iff this Expression does not contain any variables, i.e.,
+     * getVariables():size() == 0
+     */
+    bool hasNoVariables() const;
+
+    /**
+     * Returns true iff this Expression contains exactly one variable, i.e.,
+     * getVariables().size() == 1
+     */
+    bool hasExactlyOneVariable() const;
+
+    /**
+     * Returns a variable that occurs in this Expression (if there is one)
+     */
+    ExprSymbol getAVariable() const;
+
+    /**
+     * Returns true iff this Expression contains at most one variable, i.e.,
+     * getVariables().size() <= 1
+     */
+    bool hasAtMostOneVariable() const;
+
+    /**
+     * Returns true iff this Expression contains at most one variable, i.e.,
+     * getVariables().size() >= 2
+     */
+    bool hasAtLeastTwoVariables() const;
 
     /**
      * Converts this term from a GiNaC::ex to a Z3 expression

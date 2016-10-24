@@ -6,5 +6,5 @@
   start(x, y) -> f(x, y)
 
 # linear loop, but every iteration has cost y, resulting in x*y, i.e. quadratic
-  f(x, y) -{ y }> f(x-1, y) [ x > 0 ]
+  f(x, y) -{ y, y }> f(x-1, y) [ x > 0 ]
 )

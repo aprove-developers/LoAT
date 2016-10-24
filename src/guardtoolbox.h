@@ -121,6 +121,12 @@ namespace GuardToolbox {
 
 
     /**
+     * Returns true iff term is a <,<=,>=,> relational with 2 arguments (not == or !=)
+     */
+    bool isNormalizedInequality(const Expression &term);
+
+
+    /**
      * Returns true iff term contains a free variable (note that this is possibly not very efficient)
      */
     bool containsFreeVar(const ITRSProblem &itrs, const Expression &term);
@@ -140,9 +146,28 @@ namespace GuardToolbox {
 
 
     /**
-     * Given a valid inequality, transforms it into only using the <= operator
+     * Given a valid inequality, transforms it into one only using the <= operator
      */
     Expression makeLessEqual(Expression term);
+
+
+    /**
+     * Given a valid inequality, transforms it into one only using the > operator
+     */
+    Expression makeGreater(Expression term);
+
+
+    /**
+     * Given a valid inequality, transforms it into one of the form lhs > 0
+     */
+    Expression normalize(Expression term);
+
+    /**
+     * Given a valid inequality using the operator > or >=,
+     * transforms it into one using the operator < or <=.
+     * Does not change equations or inequalities using the operator < or <=.
+     */
+    Expression turnToLess(Expression term);
 
 
     /**
@@ -163,6 +188,11 @@ namespace GuardToolbox {
      * or if lhs and rhs are the same (e.g. 0 <= 0 or 42 <= 127 or x <= x)
      */
     bool isTrivialInequality(const Expression &term);
+
+    /**
+     *
+     */
+    GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
 }
 
 #endif // GUARDTOOLBOX_H

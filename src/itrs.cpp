@@ -46,6 +46,22 @@ static void escapeVarname(string &name) {
     }
 }
 
+bool isNonVariableChar(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '^' || c == '/' //operators
+        || c == '>' || c == '<' || c == '=' //relations
+        || c == ' ' || c == '&' || c == ':' || c == ',' //separators
+        || c == '(' || c == ')' || c == '[' || c == ']'; //brackets
+}
+
+bool isValidVarname(const std::string &name) {
+    for (char c : name) {
+        if (isNonVariableChar(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void ITRSProblem::substituteVarnames(string &line) const {
     set<size_t> replacedPositions;
     for (auto it : escapeSymbols) {
@@ -56,7 +72,7 @@ void ITRSProblem::substituteVarnames(string &line) const {
             size_t nextpos = pos+it.first.length();
             if (replacedPositions.count(pos) > 0
                || (pos > 0 && (line[pos-1] == '_' || isalnum(line[pos-1])))
-               || (nextpos < line.length() && (line[nextpos] == '_' || isalnum(line[nextpos])))) {
+               || (nextpos < line.length() && !isNonVariableChar(line[nextpos]))) {
                 pos++;
                 continue;
             }
@@ -96,6 +112,19 @@ static void parseFunapp(const string &line, string &fun, vector<string> &args) {
     }
 }
 
+
+void ITRSProblem::replaceUnboundedWithFresh(Expression &ex, GiNaC::exmap &unboundedSubs, const ExprSymbolSet &boundVars) {
+    for (const ExprSymbol &sym : ex.getVariables()) {
+        if (boundVars.count(sym) == 0 && unboundedSubs.count(sym) == 0) {
+            VariableIndex vFree = addFreshVariable("free");
+            this->freeVars.insert(vFree);
+            ExprSymbol freeSym = getGinacSymbol(vFree);
+            unboundedSubs[sym] = freeSym;
+        }
+    }
+    ex = ex.subs(unboundedSubs);
+}
+
 /**
  * Parses a rule in the ITRS file format reading from line.
  * @param res the current state of the ITRS that is read (read and modified)
@@ -116,24 +145,9 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
         return knownTerms[s];
     };
 
-    GiNaC::exmap symbolSubs;
+    GiNaC::exmap unboundedSubs; //replace unbounded by fresh variables
+    GiNaC::exmap unifyArgSubs; //unify arguments across rules
     ExprSymbolSet boundSymbols;
-
-    //setup substitution for unbound variables (i.e. not on lhs) by new fresh variables
-    auto replaceUnboundedWithFresh = [&](const ExprSymbolSet &checkSymbols) -> bool {
-        bool added = false;
-        for (const ExprSymbol &sym : checkSymbols) {
-            if (boundSymbols.count(sym) == 0) {
-                VariableIndex vFree = addFreshVariable("free");
-                this->freeVars.insert(vFree);
-                ExprSymbol freeSym = getGinacSymbol(vFree);
-                symbolSubs[sym] = freeSym;
-                boundSymbols.insert(freeSym);
-                added = true;
-            }
-        }
-        return added;
-    };
 
     /* split string into lhs, rhs (and possibly cost in between) */
     string lhs,rhs,cost;
@@ -141,8 +155,11 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     if (pos != string::npos) {
         //-{ cost }> sytnax
         auto endpos = line.find("}>");
-        if (endpos == string::npos) throw ITRSProblem::FileError("Invalid rule, malformed -{ cost }>: "+line);
-        cost = line.substr(pos+2,endpos-(pos+2));
+        auto midpos = line.find(",",pos);
+        if (endpos == string::npos || midpos == string::npos || midpos >= endpos) {
+            throw ITRSProblem::FileError("Invalid rule, malformed -{ lowerbound, upperbound }>: "+line);
+        }
+        cost = line.substr(pos+2,midpos-(pos+2));
         lhs = line.substr(0,pos);
         rhs = line.substr(endpos+2);
     } else {
@@ -188,6 +205,7 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
         auto it = knownVars.find(v);
         if (it == knownVars.end()) throw ITRSProblem::FileError("Unknown variable in lhs: " + v);
         argVars.push_back(it->second);
+        boundSymbols.insert(getGinacSymbol(it->second));
     }
     //check if variable names differ from previous occurences and provide substitution if necessary
     rule.lhsTerm = getTermIndex(fun);
@@ -201,14 +219,11 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
             VariableIndex vOld = this->terms[rule.lhsTerm].args[i];
             VariableIndex vNew = argVars[i];
             if (vOld != vNew) {
-                symbolSubs[getGinacSymbol(vNew)] = getGinacSymbol(vOld);
+                unifyArgSubs[getGinacSymbol(vNew)] = getGinacSymbol(vOld); //must be applied after renaming fresh variables
             }
         }
-        if (!symbolSubs.empty()) debugParser("ITRS Warning: funapp redeclared with different arguments: " << fun);
+        if (!unifyArgSubs.empty()) debugParser("ITRS Warning: funapp redeclared with different arguments: " << fun);
     }
-    //collect the lhs variables that are used (i.e. the ones of the previous occurence)
-    for (VariableIndex vi : this->terms[rule.lhsTerm].args) boundSymbols.insert(getGinacSymbol(vi));
-
 
     /* rhs */
     args.clear();
@@ -217,27 +232,20 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
     rule.rhsTerm = getTermIndex(fun);
     for (string &v : args) {
         substituteVarnames(v);
-        if (v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
-        Expression argterm = Expression::fromString(v,this->varSymbolList).subs(symbolSubs);
-        argterm.collectVariables(rhsSymbols);
-        rule.rhsArgs.push_back(argterm);
+        if (!allowDivision && v.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        Expression argterm = Expression::fromString(v,this->varSymbolList);
+        replaceUnboundedWithFresh(argterm, unboundedSubs, boundSymbols);
+        rule.rhsArgs.push_back(argterm.subs(unifyArgSubs));
     }
 
     /* cost */
     if (!cost.empty()) {
         substituteVarnames(cost);
-        if (cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
-        rule.cost = Expression::fromString(cost,this->varSymbolList).subs(symbolSubs);
+        if (!allowDivision && cost.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
+        rule.cost = Expression::fromString(cost,this->varSymbolList);
         if (!rule.cost.is_polynomial(this->varSymbolList)) throw ITRSProblem::FileError("Non polynomial cost in the input");
-        rule.cost.collectVariables(rhsSymbols);
-    }
-
-    //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
-    if (replaceUnboundedWithFresh(rhsSymbols)) {
-        for (Expression &argExpr : rule.rhsArgs) {
-            argExpr = argExpr.subs(symbolSubs);
-        }
-        rule.cost = rule.cost.subs(symbolSubs);
+        replaceUnboundedWithFresh(rule.cost, unboundedSubs, boundSymbols);
+        rule.cost = rule.cost.subs(unifyArgSubs);
     }
 
     /* guard */
@@ -253,29 +261,22 @@ void ITRSProblem::parseRule(map<string,TermIndex> &knownTerms, map<string,Variab
             if (term == "TRUE" || term.empty()) continue;
             substituteVarnames(term);
             if (term.find('/') != string::npos) throw ITRSProblem::FileError("Divison is not allowed in the input");
-            Expression guardTerm = Expression::fromString(term,this->varSymbolList).subs(symbolSubs);
-            guardTerm.collectVariables(guardSymbols);
-            rule.guard.push_back(guardTerm);
+            Expression guardTerm = Expression::fromString(term,this->varSymbolList);
+            replaceUnboundedWithFresh(guardTerm, unboundedSubs, boundSymbols);
+            rule.guard.push_back(guardTerm.subs(unifyArgSubs));
         } while (pos != string::npos);
     }
-    //replace unbound variables (not on lhs) by new fresh variables to ensure correctness
-    if (replaceUnboundedWithFresh(guardSymbols)) {
-        debugParser("ITRS Note: free variables in guard: " << guard);
-        for (Expression &guardExpr : rule.guard) {
-            guardExpr = guardExpr.subs(symbolSubs);
-        }
-    }
     //ensure user given costs are positive
-    if (!cost.empty()) {
-        rule.guard.push_back(rule.cost > 0);
+    if (!cost.empty() && checkCosts) {
+        rule.guard.push_back(rule.cost >= 0);
     }
 
     this->rules.push_back(rule);
 }
 
 
-ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
-    ITRSProblem res;
+ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision, bool checkCosts) {
+    ITRSProblem res(allowDivision,checkCosts);
     string startTerm;
     map<string,TermIndex> knownTerms;
     map<string,VariableIndex> knownVars;
@@ -338,6 +339,7 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
                 stringstream ss(line.substr(4,line.length()-1-4));
                 string varname;
                 while (ss >> varname) {
+                    if (!isValidVarname(varname)) throw FileError("Invalid variable name: "+varname);
                     string escapedname = varname;
                     escapeVarname(escapedname);
                     VariableIndex vi = res.addFreshVariable(escapedname);
@@ -385,8 +387,8 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename) {
 
 
 
-ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules) {
-    ITRSProblem res;
+ITRSProblem ITRSProblem::dummyITRSforTesting(const vector<string> vars, const vector<string> &rules, bool allowDivision, bool checkCosts) {
+    ITRSProblem res(allowDivision,checkCosts);
     map<string,TermIndex> knownTerms;
 
     //create vars
@@ -440,6 +442,17 @@ string ITRSProblem::getFreshName(string basename) const {
         num++;
     }
     return name;
+}
+
+
+bool ITRSProblem::isFreeVar(const ExprSymbol &var) const {
+    for (VariableIndex i : freeVars) {
+        if (var == getGinacSymbol(i)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 

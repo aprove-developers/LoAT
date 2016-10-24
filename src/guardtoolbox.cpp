@@ -54,6 +54,13 @@ bool GuardToolbox::isValidInequality(const Expression &term) {
 }
 
 
+bool GuardToolbox::isNormalizedInequality(const Expression &term) {
+    return isValidInequality(term)
+           && term.info(GiNaC::info_flags::relation_greater)
+           && term.rhs().is_zero();
+}
+
+
 Expression GuardToolbox::replaceLhsRhs(const Expression &term, Expression lhs, Expression rhs) {
     assert(isValidInequality(term));
     if (term.info(GiNaC::info_flags::relation_less)) return lhs < rhs;
@@ -94,6 +101,51 @@ Expression GuardToolbox::makeLessEqual(Expression term) {
     }
 
     assert(term.info(GiNaC::info_flags::relation_less_or_equal));
+    return term;
+}
+
+
+Expression GuardToolbox::makeGreater(Expression term) {
+    assert(isValidInequality(term));
+
+    //flip < or <=
+    if (term.info(GiNaC::info_flags::relation_less)) {
+        term = term.rhs() > term.lhs();
+    } else if (term.info(GiNaC::info_flags::relation_less_or_equal)) {
+        term = term.rhs() >= term.lhs();
+    }
+
+    //change >= to >, assuming integer arithmetic
+    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
+        term = (term.lhs() + 1) > term.rhs();
+    }
+
+    assert(term.info(GiNaC::info_flags::relation_greater));
+    return term;
+}
+
+
+Expression GuardToolbox::normalize(Expression term) {
+    assert(isValidInequality(term));
+
+    Expression greater = makeGreater(term);
+    Expression normalized = (greater.lhs() - greater.rhs()) > 0;
+
+    assert(isNormalizedInequality(normalized));
+    return normalized;
+}
+
+
+Expression GuardToolbox::turnToLess(Expression term) {
+    assert(term.info(GiNaC::info_flags::relation_equal)
+           || isValidInequality(term));
+
+    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
+        term = term.rhs() <= term.lhs();
+    } else if (term.info(GiNaC::info_flags::relation_greater)) {
+        term = term.rhs() < term.lhs();
+    }
+
     return term;
 }
 
@@ -304,9 +356,18 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
 }
 
 
+GiNaC::exmap GuardToolbox::composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g) {
+    GiNaC::exmap substitution;
 
+    for (auto const &pair : g) {
+        substitution.insert(std::make_pair(pair.first, pair.second.subs(f)));
+    }
 
+    for (auto const &pair : f) {
+        if (substitution.count(pair.first) == 0) {
+            substitution.insert(pair);
+        }
+    }
 
-
-
-
+    return substitution;
+}

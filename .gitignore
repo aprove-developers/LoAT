@@ -17,5 +17,7 @@ src/loat
 src/koatToComplexity
 src/koatToT2
 
-#logging directory
+#benchmarking directories
 benchlog
+benchscores
+koat-examples

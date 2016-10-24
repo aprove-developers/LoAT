@@ -28,6 +28,14 @@ struct Transition;
 namespace Preprocess
 {
     /**
+     * Tries to remove the constraint "cost >= 0" from the guard
+     * (which is assumed to be the last element of guard!)
+     * @note if no "cost >= 0" was added, then the last guard constraint might be (soundly) removed
+     * @return true iff "cost >= 0" is implied by the guard and was removed
+     */
+    bool tryToRemoveCost(const ITRSProblem &itrs, GuardList &guard);
+
+    /**
      * Expensive preprocessing of the given transition.
      * This includes finding equalities, removing free variables, removing trivial constraints.
      * @param trans the transition, modified.

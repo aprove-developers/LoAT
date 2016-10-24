@@ -103,6 +103,7 @@ public:
 
     inline T& getTransData(TransIndex idx) { return transitions[idx].data; }
     inline const T& getTransData(TransIndex idx) const { return transitions.at(idx).data; }
+    inline NodeIndex getTransSource(TransIndex idx) const { return transitions.at(idx).from; }
     inline NodeIndex getTransTarget(TransIndex idx) const { return transitions.at(idx).to; }
 
     std::vector<TransIndex> getAllTrans() const {
@@ -134,7 +135,7 @@ public:
     /**
      * Splits the given node into two nodes, one for all incoming transitions (node) and one for all outgoing transitions (newOutgoing)
      * @note newOutgoing *must* be a fresh node index
-     * @note afterwards, node has only incoming, newOutgoing only outgoing transitions and these two nodes are *not* connected to each other
+     * @note afterwards, node has only incoming, newOutgoing only outgoing transitions
      */
     void splitNode(NodeIndex node, NodeIndex newOutgoing) {
         assert(check() == Valid);

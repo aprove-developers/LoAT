@@ -147,6 +147,23 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
     unreachable();
 }
 
+bool Expression::findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const {
+    bool anyFound = false;
+
+    if (match(pattern)) {
+        found.insert(*this);
+        anyFound = true;
+    }
+
+    for (size_t i = 0; i < nops(); i++) {
+        if (Expression(op(i)).findAll(pattern, found)) {
+            anyFound = true;
+        }
+    }
+
+    return anyFound;
+}
+
 
 bool Expression::equalsVariable(const GiNaC::symbol &var) const {
     return this->compare(var) == 0;
@@ -187,6 +204,44 @@ bool Expression::isLinear(const GiNaC::lst &vars) const {
         }
     }
     return true;
+}
+
+
+bool Expression::isProperRational() const {
+    return this->info(GiNaC::info_flags::rational)
+           && !this->info(GiNaC::info_flags::integer);
+}
+
+
+bool Expression::isProperNaturalPower() const {
+    if (!GiNaC::is_a<GiNaC::power>(*this)) {
+        return false;
+    }
+
+    GiNaC::ex power = this->op(1);
+    if (!power.info(GiNaC::info_flags::integer)) {
+        return false;
+    }
+
+    return GiNaC::ex_to<GiNaC::numeric>(power) > GiNaC::numeric(1);
+}
+
+
+int Expression::getMaxDegree() const {
+    assert(info(GiNaC::info_flags::polynomial));
+
+    int res = 0;
+    for (auto var : getVariables()) {
+        if (is_polynomial(var)) {
+            int deg = degree(var);
+
+            if (deg > res) {
+                res = deg;
+            }
+        }
+    }
+
+    return res;
 }
 
 
@@ -244,6 +299,134 @@ ExprSymbolSet Expression::getVariables() const {
     ExprSymbolSet res;
     collectVariables(res);
     return res;
+}
+
+
+bool Expression::hasNoVariables() const {
+    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+        SymbolVisitor(bool &b)
+            : noVars(b) {
+        }
+        void visit(const GiNaC::symbol &var) {
+            noVars = false;
+        }
+    private:
+        bool &noVars;
+    };
+
+    bool noVars = true;
+
+    SymbolVisitor visitor(noVars);
+    traverse(visitor);
+
+    return noVars;
+}
+
+
+bool Expression::hasExactlyOneVariable() const {
+    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+        SymbolVisitor(bool &b)
+            : exactlyOneVar(b), foundVar(nullptr) {
+        }
+        void visit(const GiNaC::symbol &var) {
+            if (foundVar == nullptr) {
+                foundVar = &var;
+                exactlyOneVar = true;
+
+            } else {
+                if (var != *foundVar) {
+                    exactlyOneVar = false;
+                }
+            }
+        }
+    private:
+        bool &exactlyOneVar;
+        const GiNaC::symbol *foundVar;
+    };
+
+    bool exactlyOneVar = false;
+
+    SymbolVisitor visitor(exactlyOneVar);
+    traverse(visitor);
+
+    return exactlyOneVar;
+}
+
+
+ExprSymbol Expression::getAVariable() const {
+    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+        SymbolVisitor(GiNaC::symbol &variable)
+            : variable(variable) {
+        }
+        void visit(const GiNaC::symbol &var) {
+            variable = var;
+        }
+    private:
+        GiNaC::symbol &variable;
+    };
+
+    ExprSymbol variable;
+
+    SymbolVisitor visitor(variable);
+    traverse(visitor);
+
+    return variable;
+}
+
+
+bool Expression::hasAtMostOneVariable() const {
+    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+        SymbolVisitor(bool &b)
+            : atMostOneVar(b), foundVar(nullptr) {
+        }
+        void visit(const GiNaC::symbol &var) {
+            if (foundVar == nullptr) {
+                foundVar = &var;
+
+            } else {
+                if (var != *foundVar) {
+                    atMostOneVar = false;
+                }
+            }
+        }
+    private:
+        bool &atMostOneVar;
+        const GiNaC::symbol *foundVar;
+    };
+
+    bool atMostOneVar = true;
+
+    SymbolVisitor visitor(atMostOneVar);
+    traverse(visitor);
+
+    return atMostOneVar;
+}
+
+
+bool Expression::hasAtLeastTwoVariables() const {
+    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+        SymbolVisitor(bool &b)
+            : atLeastTwoVars(b), foundVar(nullptr) {
+        }
+        void visit(const GiNaC::symbol &var) {
+            if (foundVar == nullptr) {
+                foundVar = &var;
+
+            } else if (var != *foundVar) {
+                atLeastTwoVars = true;
+            }
+        }
+    private:
+        bool &atLeastTwoVars;
+        const GiNaC::symbol *foundVar;
+    };
+
+    bool atLeastTwoVars = false;
+
+    SymbolVisitor visitor(atLeastTwoVars);
+    traverse(visitor);
+
+    return atLeastTwoVars;
 }
 
 

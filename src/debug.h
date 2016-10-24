@@ -53,7 +53,7 @@ struct DebugStream {
 
 /* ### Define for the proof output (can be used to disable proof output) ### */
 
-#define proofout cout
+#define proofout std::cout
 //#define proofout DebugStream::dummy
 
 
@@ -78,6 +78,12 @@ struct DebugStream {
 
 //debugging for final infinity check
 #define DEBUG_INFINITY
+
+//debugging for limit problems
+//#define DEBUG_LIMIT_PROBLEMS
+
+//debugging for asymptotic bounds
+//#define DEBUG_ASYMPTOTIC_BOUNDS
 
 //debugging for the Expression class
 #define DEBUG_EXPRESSION
@@ -141,6 +147,18 @@ struct DebugStream {
 #define debugInfinity(output) do { std::cout << output << std::endl; } while(0)
 #else
 #define debugInfinity(output) (void(0))
+#endif
+
+#ifdef DEBUG_LIMIT_PROBLEMS
+#define debugLimitProblem(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugLimitProblem(output) (void(0))
+#endif
+
+#ifdef DEBUG_ASYMPTOTIC_BOUNDS
+#define debugAsymptoticBound(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugAsymptoticBound(output) (void(0))
 #endif
 
 #ifdef DEBUG_PROBLEMS

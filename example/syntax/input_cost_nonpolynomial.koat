@@ -4,5 +4,5 @@
 (VAR x y)
 (RULES
   start(x, y) -> f(x, y)
-  f(x, y) -{2^x}> f(x-1, y) [ x > 0 ]
+  f(x, y) -{2^x,2^x}> f(x-1, y) [ x > 0 ]
 )

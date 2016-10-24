@@ -60,12 +60,6 @@
 #define SELFLOOPS_ALWAYS_SIMPLIFY
 
 /*
- * if defined, for every loop elimination an empty transition is added, modelling the choice
- * to not execute any of the parallel selfloops at all
- */
-//#define SELFLOOP_ALLOW_ZEROEXEC
-
-/*
  * this defines the nesting iterations when eliminating selfloops, i.e.
  * how often the successfully nested loops are tried to be nested again
  * NOTE: nesting is always aborted if no new nested loops are created
@@ -114,10 +108,21 @@
 #define Z3_MAX_EXPONENT 5
 
 /*
+ * timeout for z3 in ms
+ */
+#define Z3_CHECK_TIMEOUT 100u
+
+/*
  * if defined, the final guard/cost is checked to ensure it has infintily many instances
  * NOTE: this check is strongly required for soundness (should never be disabled anymore)
  */
 #define FINAL_INFINITY_CHECK
+
+/*
+ * discard a limit problem of size >= LIMIT_PROBLEM_DISCARD_SIZE in a non-final check
+ * if z3 yields "unknown"
+ */
+#define LIMIT_PROBLEM_DISCARD_SIZE 10
 
 
 #endif //GLOBAL_H

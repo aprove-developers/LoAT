@@ -75,6 +75,11 @@ public:
     void printForProof() const;
 
     /**
+     * Print the graph in KoAT format (i.e. LoAT's input format)
+     */
+    void printKoAT() const;
+
+    /**
      * Print the graph as dot outpus
      * @param s the output stream to print to (the dotfile)
      * @param step the number of the subgraph (should increase for every call)
@@ -98,9 +103,10 @@ public:
     /**
      * Performs extensive preprocessing to simplify the graph (i.e. remove unreachable nodes, simplify guards)
      * @note this is a slow operation and should be used rarely (e.g. only once before the processing begins)
+     * @param eliminateCostConstraints if true, the terms "cost >= 0" are removed from the guard if they are implied by it
      * @return true iff the graph was modified
      */
-    bool simplifyTransitions();
+    bool preprocessTransitions(bool eliminateCostConstraints);
 
     /**
      * Checks initial transitions for satisfiability, removes unsat transitions.
@@ -109,10 +115,23 @@ public:
     bool reduceInitialTransitions();
 
     /**
+     * Removes identical transitions from the initial node (syntactical check!)
+     * @return true iff the graph was modified
+     */
+    bool removeDuplicateInitialTransitions();
+
+    /**
      * Apply simple chaining (i.e. only linear paths)
      * @return true iff the graph was modified
      */
     bool chainLinear();
+
+    /**
+     * Eliminates a single location without simple loops by chaining incoming and outgoing
+     * transitions.
+     * @return true iff the graph was modified
+     */
+    bool eliminateALocation();
 
     /**
      * Apply branched chaining (i.e. the eliminated node can have multiple outgoing edges)
@@ -122,19 +141,19 @@ public:
     bool chainBranches();
 
     /**
-     * Replaces all selfloops with linear transitions by searching for metering functions and iterated costs/updates.
-     * Also handles nesting and chaining of parallel selfoops (where possible).
-     * @return true iff the graph was modified (which is always the case if any selfloops were present)
+     * Apply chaining to simple loops
+     * @return true iff the graph was modified
      */
-    bool removeSelfloops();
+    bool chainSimpleLoops();
 
     /**
-     * Tries to identify and remove duplicate transitions
-     * @param trans list of transitions that are checked
-     * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
-     * @return true iff the graph was modified (i.e. a duplicate got deleted)
+     * Replaces all simple loops with accelerated simple loops
+     * by searching for metering functions and iterated costs/updates.
+     * Also handles nesting and chaining of parallel simple loops (where possible).
+     * @return true iff the graph was modified
+     *         (which is always the case if any simple loops were present)
      */
-    bool removeDuplicateTransitions(const std::vector<TransIndex> &trans);
+    bool accelerateSimpleLoops();
 
     /**
      * Reduces the number of parallel transitions by applying some greedy heuristic to find the "best" transitions
@@ -186,6 +205,12 @@ private:
     bool chainLinearPaths(NodeIndex node, std::set<NodeIndex> &visited);
 
     /**
+     * Internal function for eliminateALocation
+     * @return true iff the graph was modified
+     */
+    bool eliminateALocation(NodeIndex node, std::set<NodeIndex> &visited);
+
+    /**
      * Internal function for chainBranches
      * @return true iff the graph was modified
      */
@@ -198,17 +223,35 @@ private:
     bool canNest(const Transition &inner, const Transition &outer) const;
 
     /**
-     * Replaces all selfloops of the given location with linear transitions by searching for metering functions and iterated costs/updates.
-     * Also handles nesting and chaining of parallel selfoops (where possible).
-     * @return true iff the graph was modified (which is always the case if any selfloops were present)
+     * Apply chaining to the simple loops of node
+     * @return true iff the graph was modified
      */
-    bool removeSelfloopsFrom(NodeIndex node);
+    bool chainSimpleLoops(NodeIndex node);
 
     /**
-     * A simple syntactic comparision. If it returns true, a and b are guaranteed to be equal.
-     * @note as this is a syntactic check, false has no guaranteed meaning
+     * Replaces all simple loops of the given location with accelerated simple loops
+     * by searching for metering functions and iterated costs/updates.
+     * Also handles nesting and chaining of parallel simple loops (where possible).
+     * @return true iff the graph was modified
+     *         (which is always the case if any selfloops were present)
      */
-    bool compareTransitions(TransIndex a, TransIndex b) const;
+    bool accelerateSimpleLoops(NodeIndex node);
+
+    /**
+     * A simple syntactic comparision. Returns true iff a and b are equal up to constants
+     * in the cost term.
+     * @note as this is a syntactic check, false has no guaranteed meaning
+     * @param compareUpdate if false, the update is not compared (i.e. transitions with different update might be equal)
+     */
+    bool compareTransitions(TransIndex a, TransIndex b, bool compareUpdate = true) const;
+
+    /**
+     * Tries to identify and remove duplicate transitions
+     * @param trans list of transitions that are checked
+     * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
+     * @return true iff the graph was modified (i.e. a duplicate got deleted)
+     */
+    bool removeDuplicateTransitions(const std::vector<TransIndex> &trans, bool compareUpdate = true);
 
     /**
      * Removes all unreachable nodes and transitions to leaves with constant cost, as they have no impact on the runtime
@@ -223,12 +266,21 @@ private:
      */
     bool removeIrrelevantTransitions(NodeIndex curr, std::set<NodeIndex> &visited);
 
+    /**
+     * Helper for program output. Determines the set of bound variables of a transition.
+     */
+    std::set<VariableIndex> getBoundVariables(const Transition &trans) const;
+
 private:
     NodeIndex initial;
     std::set<NodeIndex> nodes;
     NodeIndex nextNode;
 
     ITRSProblem &itrs;
+
+    // accelerateSimpleLoops() uses the following set to communicate
+    // with chainSimpleLoops().
+    std::set<NodeIndex> addTransitionToSkipLoops;
 };
 
 #endif // FLOWGRAPH_H

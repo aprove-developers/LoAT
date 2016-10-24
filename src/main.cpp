@@ -112,10 +112,15 @@ void printConfig() {
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --timeout <sec>  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --dot <file>     Dump dot output to given file" << endl;
-    cout << "  --stats          Print some statistics about the performed steps" << endl;
-    cout << "  --timing         Print information about time usage" << endl;
+    cout << "  --timeout <sec>    Timeout (in seconds), minimum: 10" << endl;
+    cout << "  --dot <file>       Dump dot output to given file" << endl;
+    cout << "  --stats            Print some statistics about the performed steps" << endl;
+    cout << "  --timing           Print information about time usage" << endl;
+    cout << "  --print-simplified Print simplfied program in the input format" << endl;
+    cout << "  --allow-division   Allows division to occur in the input program" << endl;
+    cout << "                     Note: LoAT is not sound for division in general" << endl;
+    cout << "  --no-cost-check    Don't check if costs are nonnegative (potentially unsound)" << endl;
+    cout << "  --no-preprocessing Don't try to simplify the program first (involves SMT)" << endl;
 }
 
 
@@ -130,6 +135,10 @@ int main(int argc, char *argv[]) {
     string dotFile;
     bool printStats = false;
     bool printTiming = false;
+    bool printSimplified = false;
+    bool allowDivision = false;
+    bool checkCosts = true;
+    bool doPreprocessing = true;
     string filename;
     int timeout = 0;
 
@@ -155,6 +164,14 @@ int main(int argc, char *argv[]) {
             printStats = true;
         } else if (strcmp("--timing",argv[arg]) == 0) {
             printTiming = true;
+        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
+            printSimplified = true;
+        } else if (strcmp("--allow-division",argv[arg]) == 0) {
+            allowDivision = true;
+        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
+            doPreprocessing = false;
+        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
+            checkCosts = false;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -175,6 +192,16 @@ int main(int argc, char *argv[]) {
         Timeout::setTimeouts(timeout);
     }
 
+    if (allowDivision) {
+        cout << endl << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
+        cout << "Division is only sound if the result of a term is always an integer" << endl << endl;
+    }
+
+    if (!checkCosts) {
+        cout << endl << "WARNING: Not checking the costs can yield unsound results!" << endl;
+        cout << "This is only safe if costs in the input program are guaranteed to be nonnegative" << endl << endl;
+    }
+
     // ### Start analyzing ###
 
     int dotStep=0;
@@ -192,7 +219,7 @@ int main(int argc, char *argv[]) {
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-    ITRSProblem res = ITRSProblem::loadFromFile(filename);
+    ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision,checkCosts);
     FlowGraph g(res);
 
     proofout << endl << "Initial Control flow graph problem:" << endl;
@@ -208,52 +235,84 @@ int main(int argc, char *argv[]) {
     RuntimeResult runtime;
     if (!g.isEmpty()) {
         //do some preprocessing
-        bool changed = g.simplifyTransitions();
-        if (changed) {
-            proofout << endl <<  "Simplified the transitions:" << endl;
-            g.printForProof();
-            if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");
+        if (doPreprocessing) {
+            if (g.preprocessTransitions(checkCosts)) {
+                proofout << endl <<  "Simplified the transitions:" << endl;
+                g.printForProof();
+                if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");
+            }
         }
 
-        for (;;) {
+        while (!g.isFullyChained()) {
+
+            bool changed;
             do {
                 changed = false;
-                if (g.removeSelfloops()) {
+
+                if (g.accelerateSimpleLoops()) {
                     changed = true;
-                    proofout << endl <<  "Removed all Self-loops using metering functions (where possible):" << endl;
+                    proofout << endl <<  "Accelerated all simple loops using metering functions"
+                             << " (where possible):" << endl;
                     g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Loop");
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Accelerate simple loops");
                 }
                 if (Timeout::soft()) break;
+
+                if (g.chainSimpleLoops()) {
+                    changed = true;
+                    proofout << endl <<  "Chained simpled loops:" << endl;
+                    g.printForProof();
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Chain simple loops");
+                }
+                if (Timeout::soft()) break;
+
                 if (g.chainLinear()) {
                     changed = true;
-                    proofout << endl <<  "Applied simple chaining:" << endl;
+                    proofout << endl <<  "Eliminated locations (linear):" << endl;
                     g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Contract");
+                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (linear)");
                 }
                 if (Timeout::soft()) break;
+
             } while (changed);
-            if (Timeout::soft()) break;
 
-            if (g.isFullyChained()) break;
-            if (!g.chainBranches()) break; //break if nothing heamy results
-            if (dotOutput) g.printDot(dotStream,dotStep++,"Branches");
 
-            if (Timeout::soft()) break;
-            if (g.pruneTransitions()) {
-                if (dotOutput) g.printDot(dotStream,dotStep++,"Prune");
+            if (g.chainBranches()) {
+                proofout << endl <<  "Eliminated locations (branches):" << endl;
+                g.printForProof();
+                if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (branches)");
+
+            } else if (g.eliminateALocation()) {
+                proofout << endl <<  "Eliminated locations:" << endl;
+                g.printForProof();
+                if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations");
             }
+            if (Timeout::soft()) break;
 
-            proofout << endl <<  "Applied chaining over branches and pruning:" << endl;
-            g.printForProof();
+            if (g.pruneTransitions()) {
+                proofout << endl <<  "Pruned:" << endl;
+                g.printForProof();
+                if (dotOutput) { g.printDot(dotStream,dotStep++,"Prune"); }
+            }
             if (Timeout::soft()) break;
         }
 
         if (Timeout::soft()) proofout << "Aborted due to lack of remaining time" << endl << endl;
 
+        //simplify the simplified program
+        if (g.isFullyChained()) {
+            g.removeDuplicateInitialTransitions();
+        }
+
         proofout << endl << "Final control flow graph problem, now checking costs for infinitely many models:" << endl;
         g.printForProof();
         if (dotOutput) g.printDot(dotStream,dotStep++,"Final");
+
+        if (printSimplified) {
+            proofout << endl << "Simplified program in input format:" << endl;
+            g.printKoAT();
+            proofout << endl;
+        }
 
         if (!g.isFullyChained()) {
             //handling for timeouts
