@@ -28,6 +28,11 @@ public:
      */
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
+    /**
+     * Creates the initial LimitProblem without any cost term.
+     */
+    LimitProblem(const GuardList &normalizedGuard);
+
     // copy constructor and assignment operator
     LimitProblem(const LimitProblem &other);
     LimitProblem& operator=(const LimitProblem &other);

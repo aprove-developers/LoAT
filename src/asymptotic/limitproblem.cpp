@@ -30,6 +30,18 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 }
 
 
+LimitProblem::LimitProblem(const GuardList &normalizedGuard)
+    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
+    for (const Expression &ex : normalizedGuard) {
+        assert(GuardToolbox::isNormalizedInequality(ex));
+        addExpression(InftyExpression(ex.lhs(), POS));
+    }
+
+    (*log) << "Created initial limit problem without cost:" << std::endl
+        << *this << std::endl << std::endl;
+}
+
+
 LimitProblem::LimitProblem(const LimitProblem &other)
     : set(other.set),
       variableN(other.variableN),
@@ -337,9 +349,9 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
 
 
 void LimitProblem::removeAllConstraints() {
-    log << "removing all constraints (solved by SMT)" << std::endl;
+    (*log) << "removing all constraints (solved by SMT)" << std::endl;
     set.clear();
-    log << "resulting limit problem: " << *this << std::endl << std::endl;
+    (*log) << "resulting limit problem: " << *this << std::endl << std::endl;
 }
 
 
