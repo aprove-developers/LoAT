@@ -1043,59 +1043,49 @@ bool AsymptoticBound::trySmtEncoding() {
     for (const ExprSymbol &var : vars) {
         ExprSymbol c0 = its.getFreshSymbol(var.get_name()+"_0");
         ExprSymbol c = its.getFreshSymbol(var.get_name()+"_c");
-        debugAsymptoticBound("CREATED " << c << " AND " << c0 << " FOR VAR " << var);
         varCoeff.emplace(var,Expression::ginacToZ3(c,context,false,true)); //HACKy HACK
         varCoeff0.emplace(var,Expression::ginacToZ3(c0,context,false,false));
         templateSubs[var] = c0 + (n * c);
     }
 
+    /* guard encoding */
     for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-        debugAsymptoticBound("");
-        //coefficients for the entire expression (is linear by assumption)
-        stringstream ss; ss << "[" << *it << "]";
-
-        //NOTE: these are Reals, only the variables themselves have to be integers!
-        //motiational example: A + 1/2, then c0 will be A_0 + 1/2 which is not an integer
-        z3::expr c0 = context.getFreshVariable("c0" + ss.str(),Z3VariableContext::Real);
-        z3::expr c = context.getFreshVariable("c" + ss.str(),Z3VariableContext::Real);
+        //create coefficients to describe the behaviour of an entire term
+        //NOTE: these are reals, only the variables themselves have to be integers!
+        stringstream name;
+        name << "[" << *it << "]"; //make SMT encoding readable
+        z3::expr c0 = context.getFreshVariable("c0" + name.str(),Z3VariableContext::Real);
+        z3::expr c = context.getFreshVariable("c" + name.str(),Z3VariableContext::Real);
         Direction dir = it->getDirection();
 
         if (dir == POS_CONS || dir == NEG_CONS) {
             //special case for constants that must not grow with n (and do not need Farkas)
-            debugAsymptoticBound("ADD CONST: " << (c == 0) << " AND " << (c0 <= -1) << ".");
             smt.push_back(c == 0);
             smt.push_back(c0 < 0);
         } else {
             //very simple farkas transformation (for "n >= 1000 -> c0 + c*n <= -1")
-            debugAsymptoticBound("ADD CONSTRAINT: " << n0constraint << " ==> " << (c0 + n_z3*c <= -1) << ".");
-
-            //Note: Farkas only allows x <= 0 or x <= -1, we need < 0. So we use x+0.0001 <= 0
-            z3::expr c0_offset = c0 + context.real_val(1,10000); //HACK
+            //Note: Farkas only allows x <= 0 or x <= -1, we need < 0. So we use x+0.001 <= 0 (hacky)
+            z3::expr c0_offset = c0 + context.real_val(1,1000);
             smt.push_back(FarkasMeterGenerator::applyFarkas({n0constraint},{n},{c},c0_offset,0,context));
         }
 
         //handle infinity constraints correctly
         if (dir == POS_INF) {
-            debugAsymptoticBound("ADD INF+: " << (-c > 0) << ".");
             smt.push_back(-c > 0);
         } else if (dir == NEG_INF) {
-            debugAsymptoticBound("ADD INF-: " << (-c < 0) << ".");
             smt.push_back(-c < 0);
         }
 
-        //add relation between c,c0 and variable coefficients
+        //add relation between c,c0 and variable coefficients var_c, var_0
         Expression sign = Expression((dir == Direction::NEG_CONS || dir == Direction::NEG_INF) ? 1 : -1); //inverted
         Expression ex = (*it).subs(templateSubs).expand();
         Expression nCoeff = ex.coeff(n);
         Expression absCoeff = (ex - nCoeff*n).expand();
         smt.push_back(c == Expression::ginacToZ3(sign * nCoeff,context,false,false));
         smt.push_back(c0 == Expression::ginacToZ3(sign * absCoeff,context,false,false));
-        debugAsymptoticBound("ADD CONSTRAINT: " << (c == Expression::ginacToZ3(sign * nCoeff,context,false,false)));
-        debugAsymptoticBound("ADD CONSTRAINT: " << (c0 == Expression::ginacToZ3(sign * absCoeff,context,false,false)));
     }
 
     /* initialize z3 solver */
-
     Z3Solver solver(context);
     z3::params params(context);
     params.set(":timeout", Z3_LIMITSMT_TIMEOUT);
@@ -1103,7 +1093,6 @@ bool AsymptoticBound::trySmtEncoding() {
 
 
     /* helper lambdas for brevity */
-
     auto buildCoeffSum = [&](int deg, const ExprSymbolSet &vars) -> z3::expr {
         z3::expr coeffSum = context.real_val(0);
         for (const ExprSymbol &var : vars) {
@@ -1116,9 +1105,9 @@ bool AsymptoticBound::trySmtEncoding() {
     };
 
     auto checkSolver = [&]() -> bool {
-        debugAsymptoticBound("SMT QUERY: " << solver);
+        debugAsymptoticBound("SMT Query: " << solver);
         z3::check_result res = solver.check();
-        debugAsymptoticBound("SMT RESULT: " << res);
+        debugAsymptoticBound("SMT Result: " << res);
         if (res == z3::sat) {
             return true;
         } else if (res == z3::unknown) {
@@ -1127,17 +1116,13 @@ bool AsymptoticBound::trySmtEncoding() {
         return false;
     };
 
-
     /* hard constraints for the guard */
-
     for (const z3::expr &x : smt) {
         solver.add(x);
     }
     solver.push();
 
-
     /* INF complexity */
-
     //fixed constraints: all program variables must be zero
     ExprSymbolSet freeCostVars;
     for (const ExprSymbol &var : costVars) {
@@ -1147,7 +1132,6 @@ bool AsymptoticBound::trySmtEncoding() {
             solver.add(varCoeff.at(var) == 0);
         }
     }
-
     //check for every degree of free variables
     if (!freeCostVars.empty()) {
         for (int deg=maxDeg; deg >= 1; --deg) {
@@ -1161,10 +1145,7 @@ bool AsymptoticBound::trySmtEncoding() {
     }
     solver.pop(); //drop "program var == 0" constraints
 
-
     /* Polynomial complexity */
-
-    //soft constraints for every degree
     for (int deg=maxDeg; deg >= 1; --deg) {
         solver.push();
         solver.add(buildCoeffSum(deg,costVars) > 0);
@@ -1174,20 +1155,18 @@ bool AsymptoticBound::trySmtEncoding() {
         solver.pop();
     }
 
+    /* handle failure (always unsat/unknown) */
     if (!hasUnknown) {
         debugAsymptoticBound("LP is unsolvable (by SMT encoding)");
         currentLP.setUnsolvable();
         return true;
     } else {
-        debugAsymptoticBound("RESULT: " << solver.check() << endl);
         debugAsymptoticBound("Giving up this SMT step (unknown/timeout)");
-        assert(false);
         return false;
     }
 
 foundSolution:
-    debugAsymptoticBound("RESULT: " << solver.check() << endl);
-    debugAsymptoticBound("MODEL: " << solver.get_model() << endl);
+    debugAsymptoticBound("SMT Model: " << solver.get_model() << endl);
 
     exmap smtSubs;
     z3::model model = solver.get_model();
