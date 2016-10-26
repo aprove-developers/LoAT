@@ -10,7 +10,12 @@
 #include "timeout.h"
 #include "z3toolbox.h"
 
+#include "inftyexpression.h"
+#include "farkas.h"
+
 using namespace GiNaC;
+using namespace std;
+
 
 AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard,
                                  Expression cost, bool finalCheck)
@@ -84,6 +89,37 @@ void AsymptoticBound::normalizeGuard() {
     debugAsymptoticBound("");
 }
 
+z3::check_result AsymptoticBound::solveByInitialSmtEncoding() {
+    //check if cost is simple enough for the SMT encoding
+    if (!isSmtApplicable()) {
+        return z3::unknown;
+    }
+
+    //check if guard is linear
+    for (const Expression &ex : normalizedGuard) {
+        Expression lhs = ex.lhs();
+        if (!lhs.isLinear(its.getGinacVarList())) return z3::unknown;
+    }
+
+    //create a limit problem without the cost
+    debugLimitProblem("Creating SMT encoding for the initial limit problem (without cost).");
+    currentLP = LimitProblem(normalizedGuard);
+    debugLimitProblem(currentLP);
+    debugLimitProblem("while maximizing the cost: " << cost.expand());
+    debugLimitProblem("");
+
+    if (trySmtEncoding()) {
+        if (currentLP.isSolved()) {
+            solvedLimitProblems.push_back(currentLP);
+            isAdequateSolution(currentLP); //needed to compute the complexity
+            return z3::sat;
+        } else {
+            assert(currentLP.isUnsolvable());
+            return z3::unsat;
+        }
+    }
+    return z3::unknown;
+}
 
 void AsymptoticBound::createInitialLimitProblem() {
     debugLimitProblem("Creating initial limit problem.");
@@ -329,6 +365,8 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
     Expression solvedCost = cost.subs(solution);
 
+    debugAsymptoticBound("COST:  " << cost << "  ===>  " << solvedCost);
+
     int lowerBound;
     ExprSymbol n = limitProblem.getN();
     if (solvedCost.info(info_flags::polynomial)) {
@@ -404,6 +442,8 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
+    bool smtApplicable = isSmtApplicable();
+
     currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
 
@@ -417,6 +457,13 @@ bool AsymptoticBound::solveLimitProblem() {
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
             if (tryRemovingConstant(it)) {
+                goto start;
+            }
+        }
+
+        //if the problem is linear, try a (max)SMT encoding
+        if (smtApplicable && currentLP.isLinear(its.getGinacVarList())) {
+            if (trySmtEncoding()) {
                 goto start;
             }
         }
@@ -513,7 +560,10 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
 
     debugAsymptoticBound(res.inftyVars << " infty var(s)");
 
-    if (res.upperBound == 0) {
+    if (res.inftyVars == 0) {
+        debugAsymptoticBound("Complexity: None, no infty var!");
+        res.complexity = Expression::ComplexNone;
+    } else if (res.upperBound == 0) {
         debugAsymptoticBound("Complexity: INF");
         res.complexity = Expression::ComplexInfty;
     } else {
@@ -942,6 +992,235 @@ bool AsymptoticBound::trySubstitutingVariable() {
 }
 
 
+
+bool AsymptoticBound::isSmtApplicable() {
+    if (!cost.is_polynomial(its.getGinacVarList())) {
+        return false;
+    }
+    //check if cost does not contain "mixed" terms (e.g. x*y or x*y^2, but x^2+5*y is allowed)
+    Expression expandedCost = cost.expand();
+    for (const ExprSymbol &var : cost.getVariables()) {
+        int maxdeg = expandedCost.degree(var);
+        int mindeg = max(1,expandedCost.ldegree(var));
+        for (int d = mindeg; d <= maxdeg; ++d) {
+            if (!is_a<numeric>(expandedCost.coeff(var,d))) {
+                debugAsymptoticBound("SMT ABORT: mixed term found: " << cost.coeff(var,d) << " for var " << var << " of degree " << mindeg);
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+bool AsymptoticBound::trySmtEncoding() {
+    debugAsymptoticBound(endl << "SMT: " << currentLP << endl);
+
+    Z3VariableContext context;
+    vector<z3::expr> smt;
+    InftyExpressionSet::const_iterator it;
+
+    ExprSymbol n = currentLP.getN();
+    Expression constraint = ((-n) <= -1000);
+    z3::expr n_z3 = Expression::ginacToZ3(n,context,false,false);
+
+    //get all relevant variables
+    ExprSymbolSet vars = currentLP.getVariables();
+    for (const ExprSymbol &costVar : cost.getVariables()) {
+        vars.insert(costVar);
+    }
+
+    //create linear templates for all variables
+    exmap templateSubs;
+    map<ExprSymbol,z3::expr,GiNaC::ex_is_less> varCoeff, varCoeff0;
+    for (const ExprSymbol &var : vars) {
+        ExprSymbol c0 = its.getFreshSymbol(var.get_name()+"_0");
+        ExprSymbol c = its.getFreshSymbol(var.get_name()+"_c");
+        debugAsymptoticBound("CREATED " << c << " AND " << c0 << " FOR VAR " << var);
+        varCoeff.emplace(var,Expression::ginacToZ3(c,context,false,true)); //HACKy HACK
+        varCoeff0.emplace(var,Expression::ginacToZ3(c0,context,false,false));
+        templateSubs[var] = c0 + (n * c);
+    }
+
+    for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
+        debugAsymptoticBound("");
+        //coefficients for the entire expression (is linear by assumption)
+        stringstream ss; ss << "[" << *it << "]";
+
+        //NOTE: these are Reals, only the variables themselves have to be integers!
+        //motiational example: A + 1/2, then c0 will be A_0 + 1/2 which is not an integer
+        z3::expr c0 = context.getFreshVariable("c0" + ss.str(),Z3VariableContext::Real);
+        z3::expr c = context.getFreshVariable("c" + ss.str(),Z3VariableContext::Real);
+        Direction dir = it->getDirection();
+
+        if (dir == POS_CONS || dir == NEG_CONS) {
+            //special case for constants that must not grow with n (and do not need Farkas)
+            debugAsymptoticBound("ADD CONST: " << (c == 0) << " AND " << (c0 <= -1) << ".");
+            smt.push_back(c == 0);
+            smt.push_back(c0 < 0);
+        } else {
+            //very simple farkas transformation (for "n >= 1000 -> c0 + c*n <= -1")
+            debugAsymptoticBound("ADD CONSTRAINT: " << constraint << " ==> " << (c0 + n_z3*c <= -1) << ".");
+
+            //Note: Farkas only allows x <= 0 or x <= -1, we need < 0. So we use x+0.0001 <= 0
+            z3::expr c0_offset = c0 + context.real_val(1,10000); //HACK
+            smt.push_back(FarkasMeterGenerator::applyFarkas({constraint},{n},{c},c0_offset,0,context));
+        }
+
+        //handle infinity constraints correctly
+        if (dir == POS_INF) {
+            debugAsymptoticBound("ADD INF+: " << (-c > 0) << ".");
+            smt.push_back(-c > 0);
+        } else if (dir == NEG_INF) {
+            debugAsymptoticBound("ADD INF-: " << (-c < 0) << ".");
+            smt.push_back(-c < 0);
+        }
+
+        //add relation between c,c0 and variable coefficients
+        Expression sign = Expression((dir == Direction::NEG_CONS || dir == Direction::NEG_INF) ? 1 : -1); //inverted
+        Expression ex = (*it).subs(templateSubs).expand();
+        Expression nCoeff = ex.coeff(n);
+        Expression absCoeff = (ex - nCoeff*n).expand();
+        smt.push_back(c == Expression::ginacToZ3(sign * nCoeff,context,false,false));
+        smt.push_back(c0 == Expression::ginacToZ3(sign * absCoeff,context,false,false));
+        debugAsymptoticBound("ADD CONSTRAINT: " << (c == Expression::ginacToZ3(sign * nCoeff,context,false,false)));
+        debugAsymptoticBound("ADD CONSTRAINT: " << (c0 == Expression::ginacToZ3(sign * absCoeff,context,false,false)));
+    }
+
+    debugAsymptoticBound("SMT SOLVED:" << endl);
+    //create solver, set timeout and hard constraints
+    z3::optimize solver(context);    
+    z3::params params(context);
+    params.set(":timeout", Z3_LIMITSMT_TIMEOUT);
+    solver.set(params);
+    for (const z3::expr &x : smt) {
+        solver.add(x);
+    }
+
+    //compute soft constraints for cost term
+    Expression expandedCost = cost.expand(); //to read off coefficients
+    ExprSymbolSet costVars = cost.getVariables();
+    int maxDeg = expandedCost.getMaxDegree();
+
+    //soft constraints for every degree
+    for (int deg=maxDeg; deg >= 1; --deg) {
+        z3::expr coeffSum = context.real_val(0);
+        for (const ExprSymbol &var : costVars) {
+            Expression coeff = expandedCost.coeff(var,deg);
+            if (coeff.is_zero()) continue;
+            assert(is_a<numeric>(coeff));
+            coeffSum = coeffSum + (coeff.toZ3(context,false,true) * varCoeff.at(var));
+        }
+        solver.add(coeffSum > 0, (deg < 32) ? (2 << deg) : 100000+deg);
+    }
+
+    //soft constraints just for free variables to achieve INF complexity
+    int baseWeight = (maxDeg < 32) ? (2 << maxDeg) : 100000+maxDeg;
+    for (int deg=maxDeg; deg >= 1; --deg) {
+        vector<z3::expr> constraints;
+        z3::expr coeffSum = context.real_val(0);
+        for (const ExprSymbol &var : costVars) {
+            if (its.isFreeVar(var)) {
+                Expression coeff = expandedCost.coeff(var,deg);
+                if (coeff.is_zero()) continue;
+                assert(is_a<numeric>(coeff));
+                coeffSum = coeffSum + (coeff.toZ3(context,false,true) * varCoeff.at(var));
+            } else {
+                constraints.push_back(varCoeff.at(var) == 0);
+            }
+        }
+        constraints.push_back(coeffSum > 0);
+        solver.add(Z3Toolbox::concatExpressions(context,constraints,Z3Toolbox::ConcatAnd), baseWeight + ((deg < 32) ? (2 << deg) : 100000+deg));
+    }
+
+    //TODO: timeout
+
+
+    //soft constraints: try to make variables from cost go to infty
+/*    vector<z3::expr> nontrivial;
+    Expression expandedCost = cost.expand(); //to read off coefficients
+    for (const ExprSymbol &var : expandedCost.getVariables()) {
+        if (vars.find(var) == vars.end()) {
+            continue; //variable was already eliminated from the LP
+        }
+        int deg = expandedCost.degree(var);
+        if (deg > 0) {
+            int weight = (deg > 7) ? (1000*deg) : (2 << (2*deg));
+            Expression coeff = expandedCost.coeff(var,deg);
+            if (is_a<numeric>(coeff)) {
+                if (deg % 2 == 1) {
+                    if (ex_to<numeric>(coeff).is_positive()) {
+                        nontrivial.push_back(varCoeff.at(var) > 0);
+                    } else {
+                        nontrivial.push_back(varCoeff.at(var) < 0);
+                    }
+                } else {
+                    if (ex_to<numeric>(coeff).is_positive()) {
+                        nontrivial.push_back(varCoeff.at(var) != 0); //direction does not matter for even exponent
+                    } else {
+                        nontrivial.push_back(varCoeff.at(var) == 0); //-x^2 always negative, try to keep it small
+                    }
+                }
+            } else {
+                //mixed terms are difficult to handle, we can just guess...
+                nontrivial.push_back(varCoeff.at(var) != 0);
+            }
+            solver.add(nontrivial.back(),weight);
+        }
+    }
+
+    //avoid solutions with trivial cost
+    if (!nontrivial.empty()) {
+//        solver.add(Z3Toolbox::concatExpressions(context,nontrivial,Z3Toolbox::ConcatOr));
+    }
+*/
+
+    debugAsymptoticBound(solver << endl << endl);
+
+    if (solver.check() == z3::sat) {
+        debugAsymptoticBound("RESULT: " << solver.check() << endl);
+        debugAsymptoticBound("MODEL: " << solver.get_model() << endl);
+
+        exmap smtSubs;
+        z3::model model = solver.get_model();
+        for (const ExprSymbol &var : vars) {
+            Expression c0 = Z3Toolbox::getRealFromModel(model,varCoeff0.at(var));
+            Expression c = Z3Toolbox::getRealFromModel(model,varCoeff.at(var));
+            smtSubs[var] = c0 + c * n;
+        }
+
+        //check if this solution is adequate
+/*        Expression resCost = cost.subs(smtSubs).expand();
+        if (resCost.is_polynomial(n)) { //if not polynomial, its probably EXP which is fine
+            for (const ExprSymbol &var : vars) {
+                Expression coeff = Z3Toolbox::getRealFromModel(model,varCoeff.at(var));
+                if (!coeff.is_zero() && resCost.getMaxDegree() < cost.degree(var)) {
+                    debugAsymptoticBound("Var " << var << " has degree " << cost.degree(var) << " and coeff " << coeff << " but res is only: " << resCost);
+                    assert(false);
+                }
+            }
+        }
+        */
+
+        substitutions.push_back(std::move(smtSubs));
+        currentLP.removeAllConstraints();
+        currentLP.substitute(substitutions.back(), substitutions.size() - 1);
+        return true;
+    } else if (solver.check() == z3::unsat) {
+        debugAsymptoticBound("RESULT: " << solver.check() << endl);
+        debugAsymptoticBound("LP is unsolvable");
+        currentLP.setUnsolvable();
+        return true;
+    } else {
+        debugAsymptoticBound("RESULT: " << solver.check() << endl);
+        debugAsymptoticBound("Giving up this SMT step");
+        assert(false);
+        return false;
+    }
+}
+
+
+
 InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its,
                                                                const GuardList &guard,
                                                                const Expression &cost,
@@ -953,7 +1232,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         debugAsymptoticBound(ex);
     }
     debugAsymptoticBound("");
-    debugAsymptoticBound("cost:" << cost);
+    debugAsymptoticBound("cost:" << cost.expand());
     debugAsymptoticBound("");
 
     Expression expandedCost = cost.expand();
@@ -976,27 +1255,24 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
+
+    //try SMT encoding first
+    auto z3res = asymptoticBound.solveByInitialSmtEncoding();
+    if (z3res == z3::sat) {
+        goto foundSolution;
+    } else if (z3res == z3::unsat) {
+        goto noSolution;
+    }
+
+    //otherwise perform limit calculus
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
     asymptoticBound.removeUnsatProblems();
-
     if (asymptoticBound.solveLimitProblem()) {
-        debugAsymptoticBound("Solved the initial limit problem. ("
-                             << asymptoticBound.solvedLimitProblems.size()
-                             << " solved problem(s))");
+        goto foundSolution;
+    }
 
-        proofout << "Solution:" << std::endl;
-        for (const auto &pair : asymptoticBound.bestComplexity.solution) {
-            proofout << pair.first << " / " << pair.second << std::endl;
-        }
-
-        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
-        return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
-                                         asymptoticBound.bestComplexity.upperBound > 1,
-                                         solvedCost.expand(),
-                                         asymptoticBound.bestComplexity.inftyVars,
-                                         "Solved the initial limit problem");
-    } else {
+noSolution:
         debugAsymptoticBound("Could not solve the initial limit problem");
 
         return InfiniteInstances::Result(Expression::ComplexNone,
@@ -1004,5 +1280,21 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
                                          numeric(0),
                                          cost.getVariables().size(),
                                          "Could not solve the initial limit problem");
+
+foundSolution:
+    debugAsymptoticBound("Solved the initial limit problem. ("
+                         << asymptoticBound.solvedLimitProblems.size()
+                         << " solved problem(s))");
+
+    proofout << "Solution:" << std::endl;
+    for (const auto &pair : asymptoticBound.bestComplexity.solution) {
+        proofout << pair.first << " / " << pair.second << std::endl;
     }
+
+    Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+    return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
+                                     asymptoticBound.bestComplexity.upperBound > 1,
+                                     solvedCost.expand(),
+                                     asymptoticBound.bestComplexity.inftyVars,
+                                     "Solved the initial limit problem");
 }
