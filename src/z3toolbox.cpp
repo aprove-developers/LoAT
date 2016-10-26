@@ -150,6 +150,9 @@ z3::check_result Z3Toolbox::checkExpressionsSATapproximate(const std::vector<Exp
     z3::expr target = concatExpressions(context,exprvec,ConcatAnd);
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(target);
     z3::check_result z3res = solver.check();
     debugZ3(solver,z3res,"checkExprSATapprox");
@@ -168,6 +171,9 @@ bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const 
     for (const Expression &ex : lhs) lhsList.push_back(ex.toZ3(context));
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(!rhsExpr && concatExpressions(context,lhsList,ConcatAnd));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
 }
