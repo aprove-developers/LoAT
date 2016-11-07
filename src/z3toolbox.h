@@ -58,6 +58,12 @@ public:
      */
     bool hasVariable(std::string name, VariableType type = Integer) const;
 
+    /**
+     * Returns true iff a variable of this name (and an arbitary type) exists
+     * @param typeOut is set to the type of the variable, if present
+     */
+    bool hasVariableOfAnyType(std::string name, VariableType &typeOut) const;
+
 private:
     bool isTypeEqual(const z3::expr &expr, VariableType type) const;
 

@@ -69,6 +69,16 @@ bool Z3VariableContext::hasVariable(string name, VariableType type) const {
     return it != variables.end() && isTypeEqual(it->second,type);
 }
 
+bool Z3VariableContext::hasVariableOfAnyType(string name, VariableType &typeOut) const {
+    auto it = variables.find(name);
+    if (it == variables.end()) {
+        return false;
+    } else {
+        typeOut = (it->second.get_sort().is_int()) ? Integer : Real;
+        return true;
+    }
+}
+
 bool Z3VariableContext::isTypeEqual(const z3::expr &expr, VariableType type) const {
     const z3::sort sort = expr.get_sort();
     return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
@@ -140,6 +150,9 @@ z3::check_result Z3Toolbox::checkExpressionsSATapproximate(const std::vector<Exp
     z3::expr target = concatExpressions(context,exprvec,ConcatAnd);
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(target);
     z3::check_result z3res = solver.check();
     debugZ3(solver,z3res,"checkExprSATapprox");
@@ -158,6 +171,9 @@ bool Z3Toolbox::checkTautologicImplication(const vector<Expression> &lhs, const 
     for (const Expression &ex : lhs) lhsList.push_back(ex.toZ3(context));
 
     Z3Solver solver(context);
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
     solver.add(!rhsExpr && concatExpressions(context,lhsList,ConcatAnd));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
 }

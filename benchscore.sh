@@ -104,6 +104,7 @@ echohelp() {
 	echo -e " -d DIR  \t dump stdout, stderr and dot output to given directory"
 	echo -e " -q      \t dont create benchmark files, just interactive output"
 	echo -e "         \t (temporary files are still used; can be combined with -d)"
+	echo -e " -b FILE \t use the given binary file instead of $LOATBIN"
 	echo -e " -h      \t this help"
 	echo
 	echo "To benchmark the LoAT examples: $0 example"
@@ -114,14 +115,15 @@ OLDIFS=$IFS
 totscore=0
 
 #default filename includes date and commit id
-FILEBASE_NAME="$(date +'%Y-%m-%d')_$(getcommit)"
+FILEBASE_NAME="$(date +'%Y-%m-%d_%H-%M')_$(getcommit)"
 
 #command line arguments
-while getopts ":kd:qt:o:h" opt; do
+while getopts ":kd:qt:b:o:h" opt; do
 	case $opt in
 		t)  TIMEOUT=$OPTARG; echo "Changing timeout to $TIMEOUT" ;;
 		o)  BENCHDIR="$OPTARG"; echo "Changing output dir to $BENCHDRI" ;;
 		d)  DUMP=1; DUMPDIR="$OPTARG"; echo "Dumping program output to $DUMPDIR" ;;
+		b)  LOATBIN="$OPTARG"; echo "Using alternative binary $LOATBIN" ;;
 		q)  QUIET=1 ;;
 		k)  KOAT=1 ;;
 		h)  echohelp; exit 0 ;;

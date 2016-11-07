@@ -28,6 +28,11 @@ public:
      */
     LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
 
+    /**
+     * Creates the initial LimitProblem without any cost term.
+     */
+    LimitProblem(const GuardList &normalizedGuard);
+
     // copy constructor and assignment operator
     LimitProblem(const LimitProblem &other);
     LimitProblem& operator=(const LimitProblem &other);
@@ -110,6 +115,12 @@ public:
     void reduceGeneralExp(const InftyExpressionSet::const_iterator &it);
 
     /**
+     * Clears the set of InftyExpressions, useful if the problem was completely
+     * solved by a SMT query.
+     */
+    void removeAllConstraints();
+
+    /**
      * Returns true iff this problem is marked as unsolvable.
      */
     bool isUnsolvable() const;
@@ -144,20 +155,33 @@ public:
      * Returns a const_iterator of the underlying set to the given InftyExpression.
      * Ignores the direction of the given InftyExpression.
      */
-    InftyExpressionSet::const_iterator find(const InftyExpression &ex);
+    InftyExpressionSet::const_iterator find(const InftyExpression &ex) const;
+
+    /**
+     * Returns a set of all variables appearing in this limit problem
+     */
+    ExprSymbolSet getVariables() const;
 
     /**
      * Returns this LimitProblem as a set of relational Expressions:
      * t (+), t (+!), t(+/+!) -> t > 0
      * t (-), t (-!) -> t < 0
      */
-    std::vector<Expression> getQuery();
+    std::vector<Expression> getQuery() const;
 
     /**
      * Returns true if the result of getQuery() is unsatisfiable according to z3.
      * Returns false if it is satisfiable or if satisfiability is unknown.
      */
-    bool isUnsat();
+    bool isUnsat() const;
+
+
+    /**
+     * Returns true if all expressions of this limit problem are linear in
+     * the given set of variables.
+     */
+    bool isLinear(const GiNaC::lst &vars) const;
+
 
     /**
      * Returns true iff the conditions for calling removeConstant(it) are met.
@@ -183,12 +207,12 @@ public:
     /**
      * Returns the number of InftyExpressions in this LimitProblem.
      */
-    InftyExpressionSet::size_type getSize();
+    InftyExpressionSet::size_type getSize() const;
 
     /**
      * Returns the internal log.
      */
-    std::string getProof();
+    std::string getProof() const;
 
 private:
     InftyExpressionSet set;

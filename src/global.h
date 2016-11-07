@@ -108,9 +108,10 @@
 #define Z3_MAX_EXPONENT 5
 
 /*
- * timeout for z3 in ms
+ * timeouts for z3 in ms
  */
 #define Z3_CHECK_TIMEOUT 100u
+#define Z3_LIMITSMT_TIMEOUT 500u
 
 /*
  * if defined, the final guard/cost is checked to ensure it has infintily many instances
@@ -123,6 +124,12 @@
  * if z3 yields "unknown"
  */
 #define LIMIT_PROBLEM_DISCARD_SIZE 10
+
+
+//settings (can be specified on the command line)
+namespace GlobalFlags {
+extern bool limitSmt;
+}
 
 
 #endif //GLOBAL_H

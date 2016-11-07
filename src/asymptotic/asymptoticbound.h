@@ -56,6 +56,14 @@ private:
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
 
+    //smt encoding of limit problems
+    bool isSmtApplicable();
+    bool trySmtEncoding();
+
+    //if the guard is linear, transforms the LP into a SMT query and runs Z3
+    //if a solution is found, the complexity is set, otherwise z3::unknown or z3::unsat is returned.
+    z3::check_result solveByInitialSmtEncoding();
+
 private:
     const ITRSProblem its;
     const GuardList guard;
