@@ -28,7 +28,7 @@
 
 /* ### Global debugging output flag ### */
 
-//#define DEBUG_DISABLE_ALL
+#define DEBUG_DISABLE_ALL
 
 
 /* ### Make sure assertions are enabled ### */
