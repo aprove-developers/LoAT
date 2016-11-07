@@ -359,6 +359,7 @@ int main(int argc, char *argv[]) {
     proofout << "  Complexity value: ";
     {
         if (runtime.cpx == Expression::ComplexInfty) proofout << "INF" << endl;
+        else if (runtime.cpx == Expression::ComplexNonterm) proofout << "NONTERM" << endl;
         else if (runtime.cpx == Expression::ComplexExp) proofout << "EXP" << endl;
         else if (runtime.cpx == Expression::ComplexExpMore) proofout << "EXP" << endl;
         else if (runtime.cpx == Expression::ComplexNone) proofout << "none" << endl;
@@ -370,6 +371,7 @@ int main(int argc, char *argv[]) {
     cout << "DEBUG Complexity value: ";
     {
         if (runtime.cpx == Expression::ComplexInfty) cout << "INF" << endl;
+        else if (runtime.cpx == Expression::ComplexNonterm) cout << "NONTERM" << endl;
         else if (runtime.cpx == Expression::ComplexExp) cout << "EXP" << endl;
         else if (runtime.cpx == Expression::ComplexExpMore) cout << "EXP" << endl;
         else if (runtime.cpx == Expression::ComplexNone) proofout << "none" << endl;
@@ -393,14 +395,18 @@ int main(int argc, char *argv[]) {
         Timing::print(cout);
     }
 
-    proofout << endl << "WORST_CASE(";
-    if (runtime.cpx == Expression::ComplexInfty) proofout << "INF";
-    else if (runtime.cpx == Expression::ComplexExp) proofout << "EXP";
-    else if (runtime.cpx == Expression::ComplexExpMore) proofout << "EXP";
-    else if (runtime.cpx == Expression::ComplexNone) proofout << "Omega(0)";
-    else if (runtime.cpx == 0) proofout << "Omega(1)";
-    else proofout << "Omega(n^" << runtime.cpx << ")";
-    proofout << ",?)" << endl;
+    if (runtime.cpx == Expression::ComplexNonterm) {
+        proofout << endl << "NO" << endl;
+    } else {
+        proofout << endl << "WORST_CASE(";
+        if (runtime.cpx == Expression::ComplexInfty) proofout << "INF";
+        else if (runtime.cpx == Expression::ComplexExp) proofout << "EXP";
+        else if (runtime.cpx == Expression::ComplexExpMore) proofout << "EXP";
+        else if (runtime.cpx == Expression::ComplexNone) proofout << "Omega(0)";
+        else if (runtime.cpx == 0) proofout << "Omega(1)";
+        else proofout << "Omega(n^" << runtime.cpx << ")";
+        proofout << ",?)" << endl;
+    }
 
     return 0;
 }

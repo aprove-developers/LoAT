@@ -360,7 +360,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
             res.reducedCpx = checkRes.reducedCpx;
             res.guard = getTransData(trans).guard;
 #endif
-            if (cpx == Expression::ComplexInfty) break;
+            if (cpx == Expression::ComplexInfty || cpx == Expression::ComplexNonterm) break;
         }
 
         if (Timeout::hard()) return res;
@@ -1055,7 +1055,7 @@ RuntimeResult FlowGraph::getMaxPartialResult() {
                 res.bound = checkRes.cost;
                 res.reducedCpx = checkRes.reducedCpx;
                 res.guard = data.guard;
-                if (res.cpx == Expression::ComplexInfty) goto done;
+                if (res.cpx == Expression::ComplexInfty || res.cpx == Expression::ComplexNonterm) goto done;
             }
             if (Timeout::hard()) goto abort;
         }

@@ -82,7 +82,8 @@ class Expression : public GiNaC::ex {
 public:
     static const Complexity ComplexExp;
     static const Complexity ComplexExpMore; //2^x^x etc.
-    static const Complexity ComplexInfty;
+    static const Complexity ComplexInfty; //unbounded (i.e. infinite) runtime
+    static const Complexity ComplexNonterm; //nontermination (also infinite runtime), ONLY FOR OUTPUT!
     static const Complexity ComplexNone; //Unknown/Error
     static const ExprSymbol Infty;
 

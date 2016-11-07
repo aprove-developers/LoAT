@@ -565,7 +565,7 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
         debugAsymptoticBound("Complexity: None, no infty var!");
         res.complexity = Expression::ComplexNone;
     } else if (res.upperBound == 0) {
-        debugAsymptoticBound("Complexity: INF");
+        debugAsymptoticBound("Complexity: INF (unbounded runtime)");
         res.complexity = Expression::ComplexInfty;
     } else {
         res.lowerBound = findLowerBoundforSolvedCost(limitProblem, res.solution);
@@ -1208,8 +1208,8 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         query.push_back(inftyCoeff > 0);
 
         if (Z3Toolbox::checkExpressionsSAT(query) == z3::sat) {
-            return InfiniteInstances::Result(Expression::ComplexInfty, false,
-                                             Expression::Infty, 0, "INF coeff sat");
+            return InfiniteInstances::Result(Expression::ComplexNonterm, false,
+                                             Expression::Infty, 0, "NONTERM (INF coeff > 0 by SMT)");
         }
 
         return InfiniteInstances::Result(Expression::ComplexNone,

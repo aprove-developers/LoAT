@@ -35,6 +35,7 @@ using namespace std;
 const Complexity Expression::ComplexExp = 10000;
 const Complexity Expression::ComplexExpMore = 20000;
 const Complexity Expression::ComplexInfty = 99999;
+const Complexity Expression::ComplexNonterm = 999999;
 const Complexity Expression::ComplexNone = -42;
 const ExprSymbol Expression::Infty = GiNaC::symbol("INF");
 
@@ -515,6 +516,7 @@ string Expression::complexityString(Complexity complexity) {
     if (complexity == ComplexExp) return "EXP";
     if (complexity == ComplexExpMore) return "EXP NESTED";
     if (complexity == ComplexInfty) return "INF";
+    if (complexity == ComplexNonterm) return "NONTERM";
     stringstream ss;
     ss << "n^" << complexity;
     return ss.str();

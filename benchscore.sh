@@ -249,8 +249,9 @@ for d in $SAMPLEDIRS; do
 		val=`parse_result`
 		count=$((count+1))
 
-		re='^(-?[0-9]+|EXP|INF)$'
+		re='^(-?[0-9]+|EXP|INF|NONTERM)$'
 		if [[ $val =~ $re ]]; then
+			if [ "$val" == "NONTERM" ]; then val=10000; fi #treat as INF for now
 			if [ "$val" == "INF" ]; then val=10000; fi
 			if [ "$val" == "EXP" ]; then val=1000; fi
 			if [ $val -eq -1 ]; then val=1000000; fi #see when complexity fails
