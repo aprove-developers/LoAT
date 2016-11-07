@@ -126,4 +126,10 @@
 #define LIMIT_PROBLEM_DISCARD_SIZE 10
 
 
+//settings (can be specified on the command line)
+namespace GlobalFlags {
+extern bool limitSmt;
+}
+
+
 #endif //GLOBAL_H

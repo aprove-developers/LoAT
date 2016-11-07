@@ -12,6 +12,7 @@
 
 #include "inftyexpression.h"
 #include "farkas.h"
+#include "global.h"
 
 using namespace GiNaC;
 using namespace std;
@@ -442,7 +443,7 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    bool smtApplicable = isSmtApplicable();
+    bool smtApplicable = GlobalFlags::limitSmt && isSmtApplicable();
 
     currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
@@ -1220,11 +1221,13 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     asymptoticBound.normalizeGuard();
 
     //try SMT encoding first
-    auto z3res = asymptoticBound.solveByInitialSmtEncoding();
-    if (z3res == z3::sat) {
-        goto foundSolution;
-    } else if (z3res == z3::unsat) {
-        goto noSolution;
+    if (GlobalFlags::limitSmt) {
+        auto z3res = asymptoticBound.solveByInitialSmtEncoding();
+        if (z3res == z3::sat) {
+            goto foundSolution;
+        } else if (z3res == z3::unsat) {
+            goto noSolution;
+        }
     }
 
     //otherwise perform limit calculus

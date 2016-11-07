@@ -121,6 +121,7 @@ void printHelp(char *arg0) {
     cout << "                     Note: LoAT is not sound for division in general" << endl;
     cout << "  --no-cost-check    Don't check if costs are nonnegative (potentially unsound)" << endl;
     cout << "  --no-preprocessing Don't try to simplify the program first (involves SMT)" << endl;
+    cout << "  --limit-smt        Solve limit problems by SMT queries when applicable" << endl;
 }
 
 
@@ -139,6 +140,7 @@ int main(int argc, char *argv[]) {
     bool allowDivision = false;
     bool checkCosts = true;
     bool doPreprocessing = true;
+    bool limitSmtSolving = false;
     string filename;
     int timeout = 0;
 
@@ -172,6 +174,8 @@ int main(int argc, char *argv[]) {
             doPreprocessing = false;
         } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
             checkCosts = false;
+        } else if (strcmp("--limit-smt",argv[arg]) == 0) {
+            limitSmtSolving = true;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -201,6 +205,8 @@ int main(int argc, char *argv[]) {
         cout << endl << "WARNING: Not checking the costs can yield unsound results!" << endl;
         cout << "This is only safe if costs in the input program are guaranteed to be nonnegative" << endl << endl;
     }
+
+    GlobalFlags::limitSmt = limitSmtSolving;
 
     // ### Start analyzing ###
 
