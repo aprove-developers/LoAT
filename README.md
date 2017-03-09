@@ -14,3 +14,14 @@ The technique behind LoAT is described in [this](http://aprove.informatik.rwth-a
 ## Website
 
 More information, a detailed evaluation and a static binary can be found on our [website](http://aprove.informatik.rwth-aachen.de/eval/integerLower/).
+
+## Build (for the impatient)
+
+* install [LoAT-purrs](<https://github.com/aprove-developers/LoAT-purrs>)
+* download and unpack the latest [Z3 release](<https://github.com/Z3Prover/z3/releases>)
+* add `/path/to/z3/bin` to your `LD_LIBRARY_PATH`
+* adapt the `Makefile`
+ * add `-L/path/to/z3/bin` to `LINK_FLAGS`
+ * add `-I/path/to/z3/include` to `CXXFLAGS`
+* make
+* for more detailed instruction, have a look at [INSTALL.md](<https://github.com/aprove-developers/LoAT/blob/master/INSTALL.md>)
