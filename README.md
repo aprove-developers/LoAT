@@ -22,6 +22,6 @@ More information, a detailed evaluation and a static binary can be found on our 
 * add `/path/to/z3/bin` to your `LD_LIBRARY_PATH`
 * adapt the `Makefile`
  * add `-L/path/to/z3/bin` to `LINK_FLAGS`
- * add `-I/path/to/z3/include` to `CXXFLAGS`
+ * add `-I/path/to/z3/include` to `COMPILE_FLAGS`
 * make
 * for more detailed instruction, have a look at [INSTALL.md](<https://github.com/aprove-developers/LoAT/blob/master/INSTALL.md>)
