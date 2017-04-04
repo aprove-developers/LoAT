@@ -21,7 +21,7 @@ More information, a detailed evaluation and a static binary can be found on our 
 * download and unpack the latest [Z3 release](<https://github.com/Z3Prover/z3/releases>)
 * add `/path/to/z3/bin` to your `LD_LIBRARY_PATH`
 * adapt the `Makefile`
- * add `-L/path/to/z3/bin` to `LINK_FLAGS`
- * add `-I/path/to/z3/include` to `COMPILE_FLAGS`
+  * add `-L/path/to/z3/bin` to `LINK_FLAGS`
+  * add `-I/path/to/z3/include` to `COMPILE_FLAGS`
 * make
 * for more detailed instructions, have a look at [INSTALL.md](<https://github.com/aprove-developers/LoAT/blob/master/INSTALL.md>)
