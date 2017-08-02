@@ -1,0 +1,133 @@
+Trying to load file: insertsort.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : Q'=1, [ 1>=A && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      2: lbl43 -> lbl43 : G'=-1+G, [ G>=0 && Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      6: lbl13 -> stop : [ G+A>=2 && 1+G>=0 && A>=2+G && F==A && Q==A && 1+D==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && G+D>=1 && 1+G>=0 && A>=1+D && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      2: lbl43 -> lbl43 : G'=-1+G, [ G>=0 && Q>=2+G && A>=1+Q && F==A ], cost: 1
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && G+D>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+Eliminating 1 self-loops for location lbl43
+  Self-Loop 2 has the metering function: 1+G, resulting in the new transition 9.
+  Removing the self-loops: 2.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      9: lbl43 -> lbl43 : G'=-1, [ G>=0 && Q>=2+G && A>=1+Q && F==A ], cost: 1+G
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && G+D>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start0
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+     10: lbl31 -> lbl43 : G'=-1, [ Q>=1 && A>=1+Q && F==A && -2+Q>=0 && Q>=Q && A>=1+Q && F==A ], cost: Q
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && G+D>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: start0
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+     10: lbl31 -> lbl13 : D'=Q, G'=-1, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && -2+Q>=0 && Q>=Q && A>=1+Q && F==A && Q>=1 && 0>=0 && A>=1+Q && F==A ], cost: 1+Q
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && G+D>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Eliminated locations (branches):
+  Start location: start0
+     11: lbl31 -> lbl31 : B'=free_1, D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && A>=2+Q && -1+2*Q>=1 && Q>=0 && Q>=Q && F==A && 1+Q==1+Q ], cost: 2
+     12: lbl31 -> lbl31 : B'=free_1, D'=Q, G'=-1, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && -2+Q>=0 && Q>=Q && A>=1+Q && F==A && Q>=1 && 0>=0 && A>=1+Q && F==A && A>=2+Q && -1+Q>=1 && 0>=0 && Q>=0 && F==A && 1+Q==1+Q ], cost: 2+Q
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+Eliminating 2 self-loops for location lbl31
+  Self-Loop 11 has the metering function: -1+A-Q, resulting in the new transition 13.
+  Self-Loop 12 has the metering function: -1+A-Q, resulting in the new transition 14.
+  Removing the self-loops: 11 12.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+     13: lbl31 -> lbl31 : B'=free_1, D'=-2+A, G'=-3+A, Q'=-1+A, [ Q>=1 && F==A && A>=2+Q ], cost: -2+2*A-2*Q
+     14: lbl31 -> lbl31 : B'=free_1, D'=-2+A, G'=-1, Q'=-1+A, [ F==A && -2+Q>=0 && A>=2+Q ], cost: -3/2+(-1+A-Q)*Q+3/2*A+1/2*(-1+A-Q)^2-3/2*Q
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Chained simpled loops:
+  Start location: start0
+     15: start0 -> lbl31 : B'=free_1, D'=-2+A, F'=A, G'=-3+A, Q'=-1+A, [ A>=2 && C==C && E==E && A==A && H==H && J==J && 1>=1 && A==A && A>=3 ], cost: -2+2*A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start0
+     15: start0 -> lbl31 : B'=free_1, D'=-2+A, F'=A, G'=-3+A, Q'=-1+A, [ A>=2 && C==C && E==E && A==A && H==H && J==J && 1>=1 && A==A && A>=3 ], cost: -2+2*A
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+1 (+/+!), -1+A (+/+!), -2+A (+/+!), -2+2*A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+A (+/+!), -2+A (+/+!), -2+2*A (+) [not solved]
+
+applying transformation rule (D), replacing -1+A (+/+!) by A (+)
+resulting limit problem:
+A (+), -2+A (+/+!), -2+2*A (+) [not solved]
+
+applying transformation rule (D), replacing -2+A (+/+!) by A (+)
+resulting limit problem:
+A (+), -2+2*A (+) [not solved]
+
+applying transformation rule (D), replacing -2+2*A (+) by 2*A (+)
+resulting limit problem:
+A (+), 2*A (+) [not solved]
+
+applying transformation rule (A), replacing 2*A (+) by A (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), A (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+E / 0
+A / n
+C / 0
+H / 0
+J / 0
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=2 && C==C && E==E && A==A && H==H && J==J && 1>=1 && A==A && A>=3
+  Final Cost:  -2+2*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

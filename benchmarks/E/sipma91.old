@@ -1,0 +1,188 @@
+Trying to load file: sipma91.koat
+
+Initial Control flow graph problem:
+  Start location: evalsipma91start
+      0: evalsipma91start -> evalsipma91entryin : [], cost: 1
+      1: evalsipma91entryin -> evalsipma91returnin : [ A>=101 ], cost: 1
+      2: evalsipma91entryin -> evalsipma91bb3in : A'=1, B'=A, [ 100>=A ], cost: 1
+     16: evalsipma91returnin -> evalsipma91stop : [], cost: 1
+      3: evalsipma91bb3in -> evalsipma91bb2in : [ 100>=B ], cost: 1
+      4: evalsipma91bb3in -> evalsipma91bb11in : [ B>=101 ], cost: 1
+      5: evalsipma91bb2in -> evalsipma91bb3in : A'=1+A, B'=11+B, [], cost: 1
+      7: evalsipma91bb11in -> evalsipma91returnin : [ 1>=A ], cost: 1
+      6: evalsipma91bb11in -> evalsipma91bb5in : [ A>=2 ], cost: 1
+     11: evalsipma91bb5in -> evalsipma91bb11in : A'=-1+A, B'=-10+B, [ B>=111 && A==2 ], cost: 1
+      8: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 110>=B ], cost: 1
+      9: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 1>=A ], cost: 1
+     10: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ A>=3 ], cost: 1
+     12: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=1+C, [ C>=101 ], cost: 1
+     13: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=11+C, [ C>=101 && 100>=C ], cost: 1
+     14: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=1+C, [ 100>=C && C>=101 ], cost: 1
+     15: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=11+C, [ 100>=C ], cost: 1
+
+
+Simplified the transitions:
+  Start location: evalsipma91start
+      0: evalsipma91start -> evalsipma91entryin : [], cost: 1
+      2: evalsipma91entryin -> evalsipma91bb3in : A'=1, B'=A, [ 100>=A ], cost: 1
+      3: evalsipma91bb3in -> evalsipma91bb2in : [ 100>=B ], cost: 1
+      4: evalsipma91bb3in -> evalsipma91bb11in : [ B>=101 ], cost: 1
+      5: evalsipma91bb2in -> evalsipma91bb3in : A'=1+A, B'=11+B, [], cost: 1
+      6: evalsipma91bb11in -> evalsipma91bb5in : [ A>=2 ], cost: 1
+     11: evalsipma91bb5in -> evalsipma91bb11in : A'=-1+A, B'=-10+B, [ B>=111 && A==2 ], cost: 1
+      8: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 110>=B ], cost: 1
+      9: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 1>=A ], cost: 1
+     10: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ A>=3 ], cost: 1
+     12: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=1+C, [ C>=101 ], cost: 1
+     13: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=11+C, [ C>=101 && 100>=C ], cost: 1
+     14: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=1+C, [ 100>=C && C>=101 ], cost: 1
+     15: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=11+C, [ 100>=C ], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalsipma91start
+      0: evalsipma91start -> evalsipma91bb3in : A'=1, B'=A, [ 100>=A ], cost: 2
+      3: evalsipma91bb3in -> evalsipma91bb3in : A'=1+A, B'=11+B, [ 100>=B ], cost: 2
+      4: evalsipma91bb3in -> evalsipma91bb11in : [ B>=101 ], cost: 1
+      6: evalsipma91bb11in -> evalsipma91bb5in : [ A>=2 ], cost: 1
+     11: evalsipma91bb5in -> evalsipma91bb11in : A'=-1+A, B'=-10+B, [ B>=111 && A==2 ], cost: 1
+      8: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 110>=B ], cost: 1
+      9: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 1>=A ], cost: 1
+     10: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ A>=3 ], cost: 1
+     12: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=1+C, [ C>=101 ], cost: 1
+     13: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=11+C, [ C>=101 && 100>=C ], cost: 1
+     14: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=1+C, [ 100>=C && C>=101 ], cost: 1
+     15: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=11+C, [ 100>=C ], cost: 1
+
+Eliminating 1 self-loops for location evalsipma91bb3in
+  Self-Loop 3 has the metering function: meter, resulting in the new transition 17.
+  Removing the self-loops: 3.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalsipma91start
+      0: evalsipma91start -> evalsipma91bb3in : A'=1, B'=A, [ 100>=A ], cost: 2
+     17: evalsipma91bb3in -> evalsipma91bb3in : A'=A+meter, B'=B+11*meter, [ 100>=B && 11*meter==100-B ], cost: 2*meter
+      4: evalsipma91bb3in -> evalsipma91bb11in : [ B>=101 ], cost: 1
+      6: evalsipma91bb11in -> evalsipma91bb5in : [ A>=2 ], cost: 1
+     11: evalsipma91bb5in -> evalsipma91bb11in : A'=-1+A, B'=-10+B, [ B>=111 && A==2 ], cost: 1
+      8: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 110>=B ], cost: 1
+      9: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 1>=A ], cost: 1
+     10: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ A>=3 ], cost: 1
+     12: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=1+C, [ C>=101 ], cost: 1
+     13: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=11+C, [ C>=101 && 100>=C ], cost: 1
+     14: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=1+C, [ 100>=C && C>=101 ], cost: 1
+     15: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=11+C, [ 100>=C ], cost: 1
+
+
+Chained simpled loops:
+  Start location: evalsipma91start
+     18: evalsipma91start -> evalsipma91bb3in : A'=1+meter, B'=A+11*meter, [ 100>=A && 100>=A && 11*meter==100-A ], cost: 2+2*meter
+      4: evalsipma91bb3in -> evalsipma91bb11in : [ B>=101 ], cost: 1
+      6: evalsipma91bb11in -> evalsipma91bb5in : [ A>=2 ], cost: 1
+     11: evalsipma91bb5in -> evalsipma91bb11in : A'=-1+A, B'=-10+B, [ B>=111 && A==2 ], cost: 1
+      8: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 110>=B ], cost: 1
+      9: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ 1>=A ], cost: 1
+     10: evalsipma91bb5in -> evalsipma91bb8in : C'=-10+B, D'=-1+A, [ A>=3 ], cost: 1
+     12: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=1+C, [ C>=101 ], cost: 1
+     13: evalsipma91bb8in -> evalsipma91bb11in : A'=D, B'=11+C, [ C>=101 && 100>=C ], cost: 1
+     14: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=1+C, [ 100>=C && C>=101 ], cost: 1
+     15: evalsipma91bb8in -> evalsipma91bb11in : A'=1+D, B'=11+C, [ 100>=C ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalsipma91start
+     19: evalsipma91start -> [9] : A'=1+meter, B'=A+11*meter, [ 100>=A && 100>=A && 11*meter==100-A ], cost: 2+2*meter
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalsipma91start
+     19: evalsipma91start -> [9] : A'=1+meter, B'=A+11*meter, [ 100>=A && 100>=A && 11*meter==100-A ], cost: 2+2*meter
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+-99+A+11*meter (+/+!), 2+2*meter (+), 101-A-11*meter (+/+!), 101-A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==100-11*meter}
+resulting limit problem:
+2+2*meter (+), 1 (+/+!), 1+11*meter (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2+2*meter (+), 1+11*meter (+/+!) [not solved]
+
+applying transformation rule (D), replacing 2+2*meter (+) by 2*meter (+)
+resulting limit problem:
+1+11*meter (+/+!), 2*meter (+) [not solved]
+
+applying transformation rule (D), replacing 1+11*meter (+/+!) by 11*meter (+)
+resulting limit problem:
+11*meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 11*meter (+) by meter (+) and 11 (+!) using + limit vector (+,+!)
+resulting limit problem:
+11 (+!), meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (B), deleting 11 (+!)
+resulting limit problem:
+meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 2*meter (+) by meter (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), meter (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+meter (+) [solved]
+
+Created initial limit problem:
+-99+A+11*meter (+/+!), 2+2*meter (+), 101-A-11*meter (+/+!), 101-A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==100-11*meter}
+resulting limit problem:
+2+2*meter (+), 1 (+/+!), 1+11*meter (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2+2*meter (+), 1+11*meter (+/+!) [not solved]
+
+applying transformation rule (D), replacing 2+2*meter (+) by 2*meter (+)
+resulting limit problem:
+1+11*meter (+/+!), 2*meter (+) [not solved]
+
+applying transformation rule (D), replacing 1+11*meter (+/+!) by 11*meter (+)
+resulting limit problem:
+11*meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 11*meter (+) by meter (+) and 11 (+!) using + limit vector (+,+!)
+resulting limit problem:
+11 (+!), meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (B), deleting 11 (+!)
+resulting limit problem:
+meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 2*meter (+) by meter (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), meter (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+meter (+) [solved]
+
+Solution:
+A / 100-11*n
+meter / n
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 100>=A && 100>=A && 11*meter==100-A
+  Final Cost:  2+2*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

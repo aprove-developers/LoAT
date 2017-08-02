@@ -1,0 +1,19 @@
+Trying to load file: 10.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: eval -> eval : A'=0, [ 2*free>=0 && 0>=2*free && A==1 ], cost: 1
+      1: eval -> eval : A'=2*free_1, [ 2*free_1>=0 && 2+2*free_1>=0 && A==1+2*free_1 ], cost: 1
+      2: eval -> eval : A'=free_2, [ 1>=2*free_4 && 2*free_4>=0 && 2*free_5>=1 && 1>=2*free_5 && 1>=2*free_3 && 3*free_3>=2 && free_2>=free_3 && 1>=2*free_6 && 3*free_6>=2 && free_6>=free_2 && A==1 ], cost: 1
+      3: eval -> eval : A'=free_7, [ 2*free_10>=1 && 1+2*free_10>=0 && 2*free_10>=2*free_9 && 1+2*free_9>=2*free_10 && 2*free_10>=2*free_8 && 3*free_8>=1+2*free_10 && free_7>=free_8 && 2*free_10>=2*free_11 && 3*free_11>=1+2*free_10 && free_11>=free_7 && A==2*free_10 ], cost: 1
+      4: start -> eval : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start
+      0: eval -> eval : A'=0, [ -2*free==0 && A==1 ], cost: 1
+      1: eval -> eval : A'=2*free_1, [ 2*free_1>=0 && A==1+2*free_1 ], cost: 1
+      2: eval -> eval : A'=free_2, [ 1>=2*free_4 && 2*free_4>=0 && 1-2*free_5==0 && 1>=2*free_3 && 3*free_3>=2 && free_2>=free_3 && 1>=2*free_6 && 3*free_6>=2 && free_6>=free_2 && A==1 ], cost: 1
+      3: eval -> eval : A'=free_7, [ 2*free_10>=1 && 2*free_10>=2*free_9 && 1+2*free_9>=2*free_10 && 2*free_10>=2*free_8 && 3*free_8>=1+2*free_10 && free_7>=free_8 && 2*free_10>=2*free_11 && 3*free_11>=1+2*free_10 && free_11>=free_7 && A==2*free_10 ], cost: 1
+      4: start -> eval : [], cost: 1
+

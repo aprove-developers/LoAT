@@ -1,0 +1,53 @@
+Trying to load file: byron-3.koat
+
+Initial Control flow graph problem:
+  Start location: f1
+      1: f0 -> f0 : A'=A+C, C'=-1+C, [ A>=1 ], cost: 1
+      0: f0 -> f2 : B'=free, [ 0>=A ], cost: 1
+      2: f1 -> f0 : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: f1
+      1: f0 -> f0 : A'=A+C, C'=-1+C, [ A>=1 ], cost: 1
+      2: f1 -> f0 : [], cost: 1
+
+
+Try instantiation
+  Start location: f1
+      3: f0 -> f0 : A'=A+C, C'=-1+C, [ A>=1 ], cost: 1
+      2: f1 -> f0 : [], cost: 1
+
+Eliminating 1 self-loops for location f0
+  Removing the self-loops: 3.
+Adding an epsilon transition (to model nonexecution of the loops): 5.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f1
+      4: f0 -> [3] : A'=A+C, C'=-1+C, [ A>=1 ], cost: 1
+      5: f0 -> [3] : [], cost: 0
+      2: f1 -> f0 : [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f1
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f1
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

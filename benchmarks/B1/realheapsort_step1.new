@@ -1,0 +1,236 @@
+Trying to load file: realheapsort_step1.koat
+
+Initial Control flow graph problem:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1entryin : [], cost: 1
+      1: evalrealheapsortstep1entryin -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 1
+      2: evalrealheapsortstep1entryin -> evalrealheapsortstep1returnin : [ 2>=A ], cost: 1
+      4: evalrealheapsortstep1bb6in -> evalrealheapsortstep1returnin : [ B>=A ], cost: 1
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+     41: evalrealheapsortstep1returnin -> evalrealheapsortstep1stop : [], cost: 1
+      5: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb5in : [ 0>=C ], cost: 1
+      6: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb4in : [ C>=1 ], cost: 1
+     40: evalrealheapsortstep1bb5in -> evalrealheapsortstep1bb6in : B'=1+B, [], cost: 1
+     10: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ 1+C==0 ], cost: 1
+     11: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 1
+     12: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ 0>=2+C && 0>=free_3 && 2*free_3>=1+C && 2+C>=2*free_3 ], cost: 1
+      7: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ 1+C==0 ], cost: 1
+      8: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ C>=0 && free>=0 && 1+C>=2*free && 2*free>=C ], cost: 1
+      9: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ 0>=2+C && 0>=free_1 && 2*free_1>=1+C && 2+C>=2*free_1 ], cost: 1
+     13: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 1+C==0 ], cost: 1
+     14: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_4, [ 0>=1 && free_4>=0 && 0>=2*free_4 && 1+2*free_4>=0 && 1+C==0 ], cost: 1
+     15: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_5, [ 0>=1 && 0>=free_5 && 1+C==0 && 2*free_5>=1+C && 2+C>=2*free_5 ], cost: 1
+     16: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && free_6>=0 && 0>=2*free_6 && 1+2*free_6>=0 && 1+C==0 ], cost: 1
+     17: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_7, [ 0>=1 && free_8>=0 && 0>=2*free_8 && 1+2*free_8>=0 && free_7>=0 && 0>=2*free_7 && 1+2*free_7>=0 && 1+C==0 ], cost: 1
+     18: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_9, [ 0>=1 && free_10>=0 && 0>=2*free_10 && 1+2*free_10>=0 && 0>=free_9 && 1+C==0 && 2*free_9>=1+C && 2+C>=2*free_9 ], cost: 1
+     19: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && 0>=free_11 && 1+C==0 && 2*free_11>=1+C && 2+C>=2*free_11 ], cost: 1
+     20: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_12, [ 0>=1 && 0>=free_13 && free_12>=0 && 0>=2*free_12 && 1+2*free_12>=0 && 1+C==0 && 2*free_13>=1+C && 2+C>=2*free_13 ], cost: 1
+     21: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_14, [ 0>=1 && 0>=free_15 && 0>=free_14 && 1+C==0 && 2*free_15>=1+C && 2+C>=2*free_15 && 2*free_14>=1+C && 2+C>=2*free_14 ], cost: 1
+     22: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && free_16>=0 && 0>=2*free_16 && 1+2*free_16>=0 && 1+C==0 ], cost: 1
+     23: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_17, [ 0>=1 && free_18>=0 && 0>=2*free_18 && 1+2*free_18>=0 && free_17>=0 && 0>=2*free_17 && 1+2*free_17>=0 && 1+C==0 ], cost: 1
+     24: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_19, [ 0>=1 && free_20>=0 && 0>=2*free_20 && 1+2*free_20>=0 && 0>=free_19 && 1+C==0 && 2*free_19>=1+C && 2+C>=2*free_19 ], cost: 1
+     25: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && free_21>=0 && 0>=2*free_21 && 1+2*free_21>=0 && free_22>=0 && 0>=2*free_22 && 1+2*free_22>=0 && 1+C==0 ], cost: 1
+     26: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_23, [ C>=0 && free_25>=0 && 1+C>=2*free_25 && 2*free_25>=C && free_24>=0 && 1+C>=2*free_24 && 2*free_24>=C && free_23>=0 && 1+C>=2*free_23 && 2*free_23>=C ], cost: 1
+     27: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_26, [ C>=0 && free_28>=0 && 1+C>=2*free_28 && 2*free_28>=C && free_27>=0 && 1+C>=2*free_27 && 2*free_27>=C && 0>=2+C && 0>=free_26 && 2*free_26>=1+C && 2+C>=2*free_26 ], cost: 1
+     28: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && free_29>=0 && 0>=2*free_29 && 1+2*free_29>=0 && 0>=free_30 && 1+C==0 && 2*free_30>=1+C && 2+C>=2*free_30 ], cost: 1
+     29: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_31, [ C>=0 && free_33>=0 && 1+C>=2*free_33 && 2*free_33>=C && 0>=2+C && 0>=free_32 && free_31>=0 && 1+C>=2*free_31 && 2*free_31>=C && 2*free_32>=1+C && 2+C>=2*free_32 ], cost: 1
+     30: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_34, [ C>=0 && free_36>=0 && 1+C>=2*free_36 && 2*free_36>=C && 0>=2+C && 0>=free_35 && 0>=free_34 && 2*free_35>=1+C && 2+C>=2*free_35 && 2*free_34>=1+C && 2+C>=2*free_34 ], cost: 1
+     31: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && 0>=free_37 && 1+C==0 && 2*free_37>=1+C && 2+C>=2*free_37 ], cost: 1
+     32: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_38, [ 0>=1 && 0>=free_39 && free_38>=0 && 0>=2*free_38 && 1+2*free_38>=0 && 1+C==0 && 2*free_39>=1+C && 2+C>=2*free_39 ], cost: 1
+     33: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_40, [ 0>=1 && 0>=free_41 && 0>=free_40 && 1+C==0 && 2*free_41>=1+C && 2+C>=2*free_41 && 2*free_40>=1+C && 2+C>=2*free_40 ], cost: 1
+     34: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && 0>=free_42 && free_43>=0 && 0>=2*free_43 && 1+2*free_43>=0 && 1+C==0 && 2*free_42>=1+C && 2+C>=2*free_42 ], cost: 1
+     35: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_44, [ 0>=2+C && 0>=free_46 && C>=0 && free_45>=0 && 1+C>=2*free_45 && 2*free_45>=C && free_44>=0 && 1+C>=2*free_44 && 2*free_44>=C && 2*free_46>=1+C && 2+C>=2*free_46 ], cost: 1
+     36: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_47, [ 0>=2+C && 0>=free_49 && C>=0 && free_48>=0 && 1+C>=2*free_48 && 2*free_48>=C && 0>=free_47 && 2*free_49>=1+C && 2+C>=2*free_49 && 2*free_47>=1+C && 2+C>=2*free_47 ], cost: 1
+     37: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 && 0>=free_50 && 0>=free_51 && 1+C==0 && 2*free_50>=1+C && 2+C>=2*free_50 && 2*free_51>=1+C && 2+C>=2*free_51 ], cost: 1
+     38: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_52, [ 0>=2+C && 0>=free_54 && 0>=free_53 && C>=0 && free_52>=0 && 1+C>=2*free_52 && 2*free_52>=C && 2*free_54>=1+C && 2+C>=2*free_54 && 2*free_53>=1+C && 2+C>=2*free_53 ], cost: 1
+     39: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_55, [ 0>=2+C && 0>=free_57 && 0>=free_56 && 0>=free_55 && 2*free_57>=1+C && 2+C>=2*free_57 && 2*free_56>=1+C && 2+C>=2*free_56 && 2*free_55>=1+C && 2+C>=2*free_55 ], cost: 1
+
+Removing duplicate transition: 16.
+Removing duplicate transition: 19.
+Removing duplicate transition: 22.
+Removing duplicate transition: 25.
+Removing duplicate transition: 28.
+Removing duplicate transition: 31.
+Removing duplicate transition: 34.
+
+Simplified the transitions:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1entryin : [], cost: 1
+      1: evalrealheapsortstep1entryin -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 1
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+      5: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb5in : [ 0>=C ], cost: 1
+      6: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb4in : [ C>=1 ], cost: 1
+     40: evalrealheapsortstep1bb5in -> evalrealheapsortstep1bb6in : B'=1+B, [], cost: 1
+     10: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ 1+C==0 ], cost: 1
+     11: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 1
+     12: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ 0>=2+C && 0>=free_3 && 2*free_3>=1+C && 2+C>=2*free_3 ], cost: 1
+      7: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ 1+C==0 ], cost: 1
+      8: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ C>=0 && free>=0 && 1+C>=2*free && 2*free>=C ], cost: 1
+      9: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ 0>=2+C && 0>=free_1 && 2*free_1>=1+C && 2+C>=2*free_1 ], cost: 1
+     13: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 1+C==0 ], cost: 1
+     14: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_4, [ 0>=1 ], cost: 1
+     15: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_5, [ 0>=1 ], cost: 1
+     17: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_7, [ 0>=1 ], cost: 1
+     18: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_9, [ 0>=1 ], cost: 1
+     20: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_12, [ 0>=1 ], cost: 1
+     21: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_14, [ 0>=1 ], cost: 1
+     23: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_17, [ 0>=1 ], cost: 1
+     24: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_19, [ 0>=1 ], cost: 1
+     26: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_23, [ C>=0 && free_25>=0 && 1+C>=2*free_25 && 2*free_25>=C && free_24>=0 && 1+C>=2*free_24 && 2*free_24>=C && free_23>=0 && 1+C>=2*free_23 && 2*free_23>=C ], cost: 1
+     27: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_26, [ C>=0 && free_28>=0 && 1+C>=2*free_28 && 2*free_28>=C && free_27>=0 && 1+C>=2*free_27 && 2*free_27>=C && 0>=2+C && 0>=free_26 && 2*free_26>=1+C && 2+C>=2*free_26 ], cost: 1
+     29: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_31, [ C>=0 && free_33>=0 && 1+C>=2*free_33 && 2*free_33>=C && 0>=2+C && 0>=free_32 && free_31>=0 && 1+C>=2*free_31 && 2*free_31>=C && 2*free_32>=1+C && 2+C>=2*free_32 ], cost: 1
+     30: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_34, [ C>=0 && free_36>=0 && 1+C>=2*free_36 && 2*free_36>=C && 0>=2+C && 0>=free_35 && 0>=free_34 && 2*free_35>=1+C && 2+C>=2*free_35 && 2*free_34>=1+C && 2+C>=2*free_34 ], cost: 1
+     32: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_38, [ 0>=1 ], cost: 1
+     33: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_40, [ 0>=1 ], cost: 1
+     35: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_44, [ 0>=2+C && 0>=free_46 && C>=0 && free_45>=0 && 1+C>=2*free_45 && 2*free_45>=C && free_44>=0 && 1+C>=2*free_44 && 2*free_44>=C && 2*free_46>=1+C && 2+C>=2*free_46 ], cost: 1
+     36: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_47, [ 0>=2+C && 0>=free_49 && C>=0 && free_48>=0 && 1+C>=2*free_48 && 2*free_48>=C && 0>=free_47 && 2*free_49>=1+C && 2+C>=2*free_49 && 2*free_47>=1+C && 2+C>=2*free_47 ], cost: 1
+     37: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 ], cost: 1
+     38: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_52, [ 0>=2+C && 0>=free_54 && 0>=free_53 && C>=0 && free_52>=0 && 1+C>=2*free_52 && 2*free_52>=C && 2*free_54>=1+C && 2+C>=2*free_54 && 2*free_53>=1+C && 2+C>=2*free_53 ], cost: 1
+     39: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_55, [ 0>=2+C && 0>=free_57 && 0>=free_56 && 0>=free_55 && 2*free_57>=1+C && 2+C>=2*free_57 && 2*free_56>=1+C && 2+C>=2*free_56 && 2*free_55>=1+C && 2+C>=2*free_55 ], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+      5: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb5in : [ 0>=C ], cost: 1
+      6: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb4in : [ C>=1 ], cost: 1
+     40: evalrealheapsortstep1bb5in -> evalrealheapsortstep1bb6in : B'=1+B, [], cost: 1
+     10: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ 1+C==0 ], cost: 1
+     11: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 1
+     12: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb5in : [ 0>=2+C && 0>=free_3 && 2*free_3>=1+C && 2+C>=2*free_3 ], cost: 1
+      7: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ 1+C==0 ], cost: 1
+      8: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ C>=0 && free>=0 && 1+C>=2*free && 2*free>=C ], cost: 1
+      9: evalrealheapsortstep1bb4in -> evalrealheapsortstep1bb2in : [ 0>=2+C && 0>=free_1 && 2*free_1>=1+C && 2+C>=2*free_1 ], cost: 1
+     13: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 1+C==0 ], cost: 1
+     14: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_4, [ 0>=1 ], cost: 1
+     15: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_5, [ 0>=1 ], cost: 1
+     17: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_7, [ 0>=1 ], cost: 1
+     18: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_9, [ 0>=1 ], cost: 1
+     20: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_12, [ 0>=1 ], cost: 1
+     21: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_14, [ 0>=1 ], cost: 1
+     23: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_17, [ 0>=1 ], cost: 1
+     24: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_19, [ 0>=1 ], cost: 1
+     26: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_23, [ C>=0 && free_25>=0 && 1+C>=2*free_25 && 2*free_25>=C && free_24>=0 && 1+C>=2*free_24 && 2*free_24>=C && free_23>=0 && 1+C>=2*free_23 && 2*free_23>=C ], cost: 1
+     27: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_26, [ C>=0 && free_28>=0 && 1+C>=2*free_28 && 2*free_28>=C && free_27>=0 && 1+C>=2*free_27 && 2*free_27>=C && 0>=2+C && 0>=free_26 && 2*free_26>=1+C && 2+C>=2*free_26 ], cost: 1
+     29: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_31, [ C>=0 && free_33>=0 && 1+C>=2*free_33 && 2*free_33>=C && 0>=2+C && 0>=free_32 && free_31>=0 && 1+C>=2*free_31 && 2*free_31>=C && 2*free_32>=1+C && 2+C>=2*free_32 ], cost: 1
+     30: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_34, [ C>=0 && free_36>=0 && 1+C>=2*free_36 && 2*free_36>=C && 0>=2+C && 0>=free_35 && 0>=free_34 && 2*free_35>=1+C && 2+C>=2*free_35 && 2*free_34>=1+C && 2+C>=2*free_34 ], cost: 1
+     32: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_38, [ 0>=1 ], cost: 1
+     33: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_40, [ 0>=1 ], cost: 1
+     35: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_44, [ 0>=2+C && 0>=free_46 && C>=0 && free_45>=0 && 1+C>=2*free_45 && 2*free_45>=C && free_44>=0 && 1+C>=2*free_44 && 2*free_44>=C && 2*free_46>=1+C && 2+C>=2*free_46 ], cost: 1
+     36: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_47, [ 0>=2+C && 0>=free_49 && C>=0 && free_48>=0 && 1+C>=2*free_48 && 2*free_48>=C && 0>=free_47 && 2*free_49>=1+C && 2+C>=2*free_49 && 2*free_47>=1+C && 2+C>=2*free_47 ], cost: 1
+     37: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 0>=1 ], cost: 1
+     38: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_52, [ 0>=2+C && 0>=free_54 && 0>=free_53 && C>=0 && free_52>=0 && 1+C>=2*free_52 && 2*free_52>=C && 2*free_54>=1+C && 2+C>=2*free_54 && 2*free_53>=1+C && 2+C>=2*free_53 ], cost: 1
+     39: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_55, [ 0>=2+C && 0>=free_57 && 0>=free_56 && 0>=free_55 && 2*free_57>=1+C && 2+C>=2*free_57 && 2*free_56>=1+C && 2+C>=2*free_56 && 2*free_55>=1+C && 2+C>=2*free_55 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+      5: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb5in : [ 0>=C ], cost: 1
+     42: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb5in : [ C>=1 && C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 2
+     43: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb2in : [ C>=1 && C>=0 && free>=0 && 1+C>=2*free && 2*free>=C ], cost: 2
+     40: evalrealheapsortstep1bb5in -> evalrealheapsortstep1bb6in : B'=1+B, [], cost: 1
+     13: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1, [ 1+C==0 ], cost: 1
+     14: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_4, [ 0>=1 ], cost: 1
+     17: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_7, [ 0>=1 ], cost: 1
+     26: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_23, [ C>=0 && free_25>=0 && 1+C>=2*free_25 && 2*free_25>=C && free_24>=0 && 1+C>=2*free_24 && 2*free_24>=C && free_23>=0 && 1+C>=2*free_23 && 2*free_23>=C ], cost: 1
+     39: evalrealheapsortstep1bb2in -> evalrealheapsortstep1bb3in : C'=-1+free_55, [ 0>=2+C && 0>=free_57 && 0>=free_56 && 0>=free_55 && 2*free_57>=1+C && 2+C>=2*free_57 && 2*free_56>=1+C && 2+C>=2*free_56 && 2*free_55>=1+C && 2+C>=2*free_55 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+     44: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb6in : B'=1+B, [ 0>=C ], cost: 2
+     45: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb6in : B'=1+B, [ C>=1 && C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 3
+     46: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb3in : C'=-1+free_23, [ C>=1 && C>=0 && free>=0 && 1+C>=2*free && 2*free>=C && C>=0 && free_25>=0 && 1+C>=2*free_25 && 2*free_25>=C && free_24>=0 && 1+C>=2*free_24 && 2*free_24>=C && free_23>=0 && 1+C>=2*free_23 && 2*free_23>=C ], cost: 3
+
+
+Try instantiation
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+     44: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb6in : B'=1+B, [ 0>=C ], cost: 2
+     45: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb6in : B'=1+B, [ C>=1 && C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 3
+     47: evalrealheapsortstep1bb3in -> evalrealheapsortstep1bb3in : [ C>=1 && C>=0 && C>=-1 ], cost: INF
+
+Eliminating 1 self-loops for location evalrealheapsortstep1bb3in
+  Removing the self-loops: 47.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+      3: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb3in : C'=B, [ A>=1+B ], cost: 1
+     48: evalrealheapsortstep1bb3in -> [9] : [ C>=1 && C>=0 && C>=-1 ], cost: INF
+     44: [9] -> evalrealheapsortstep1bb6in : B'=1+B, [ 0>=C ], cost: 2
+     45: [9] -> evalrealheapsortstep1bb6in : B'=1+B, [ C>=1 && C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 3
+
+
+Applied simple chaining:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+      3: evalrealheapsortstep1bb6in -> [9] : C'=B, [ A>=1+B && B>=1 && B>=0 && B>=-1 ], cost: INF
+     44: [9] -> evalrealheapsortstep1bb6in : B'=1+B, [ 0>=C ], cost: 2
+     45: [9] -> evalrealheapsortstep1bb6in : B'=1+B, [ C>=1 && C>=0 && free_2>=0 && 1+C>=2*free_2 && 2*free_2>=C ], cost: 3
+
+
+Applied chaining over branches and pruning:
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+     50: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb6in : B'=1+B, C'=B, [ A>=1+B && B>=1 && B>=0 && B>=-1 && B>=1 && B>=0 && free_2>=0 && 1+B>=2*free_2 && 2*free_2>=B ], cost: INF
+     49: evalrealheapsortstep1bb6in -> [10] : C'=B, [ A>=1+B && B>=1 && B>=0 && B>=-1 ], cost: INF
+
+
+Try instantiation
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+     51: evalrealheapsortstep1bb6in -> evalrealheapsortstep1bb6in : B'=A, C'=-1+A, [ A>=0 && A>=1+B && B>=1 && B>=0 && B>=-1 && A>=2 && A>=1 ], cost: -INF*(B-A)
+     49: evalrealheapsortstep1bb6in -> [10] : C'=B, [ A>=1+B && B>=1 && B>=0 && B>=-1 ], cost: INF
+
+Eliminating 1 self-loops for location evalrealheapsortstep1bb6in
+  Removing the self-loops: 51.
+Adding an epsilon transition (to model nonexecution of the loops): 53.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalrealheapsortstep1start
+      0: evalrealheapsortstep1start -> evalrealheapsortstep1bb6in : B'=1, [ A>=3 ], cost: 2
+     52: evalrealheapsortstep1bb6in -> [11] : B'=A, C'=-1+A, [ A>=1+B && B>=1 && A>=2 ], cost: -INF*(B-A)
+     53: evalrealheapsortstep1bb6in -> [11] : [], cost: 0
+     49: [11] -> [10] : C'=B, [ A>=1+B && B>=1 && B>=0 && B>=-1 ], cost: INF
+
+
+Applied chaining over branches and pruning:
+  Start location: evalrealheapsortstep1start
+     54: evalrealheapsortstep1start -> [11] : B'=A, C'=-1+A, [ A>=3 && A>=2 && 1>=1 && A>=2 ], cost: 2+INF*(-1+A)
+     55: evalrealheapsortstep1start -> [11] : B'=1, [ A>=3 ], cost: 2
+     49: [11] -> [10] : C'=B, [ A>=1+B && B>=1 && B>=0 && B>=-1 ], cost: INF
+
+
+Applied chaining over branches and pruning:
+  Start location: evalrealheapsortstep1start
+     57: evalrealheapsortstep1start -> [10] : B'=1, C'=1, [ A>=3 && A>=2 && 1>=1 && 1>=0 && 1>=-1 ], cost: INF
+     56: evalrealheapsortstep1start -> [12] : B'=A, C'=-1+A, [ A>=3 && A>=2 && 1>=1 && A>=2 ], cost: 2+INF*(-1+A)
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalrealheapsortstep1start
+     57: evalrealheapsortstep1start -> [10] : B'=1, C'=1, [ A>=3 && A>=2 && 1>=1 && 1>=0 && 1>=-1 ], cost: INF
+     56: evalrealheapsortstep1start -> [12] : B'=A, C'=-1+A, [ A>=3 && A>=2 && 1>=1 && A>=2 ], cost: 2+INF*(-1+A)
+
+
+Computing complexity for remaining 2 transitions.
+
+Found new complexity INF, because: INF sat.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=3 && A>=2 && 1>=1 && 1>=0 && 1>=-1
+  Final Cost:  INF
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: INF
+  Complexity value: INF
+
+WORST_CASE(INF,?)

@@ -1,0 +1,88 @@
+Trying to load file: poly3.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: eval -> eval : A'=-1+A, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      1: eval -> eval : B'=C+B, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      2: start -> eval : [], cost: 1
+
+Eliminating 2 self-loops for location eval
+  Self-Loop 0 has the metering function: 1+A, resulting in the new transition 3.
+  Removing the self-loops: 0 1.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+      3: eval -> eval : A'=-1, C'=-1-A+C, [ A>=0 && B^3>=C ], cost: 1+A
+      4: eval -> eval : B'=C+B, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      2: start -> eval : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start
+      2: start -> eval : [], cost: 1
+      5: start -> eval : A'=-1, C'=-1-A+C, [ A>=0 && B^3>=C ], cost: 2+A
+      6: start -> eval : B'=C+B, C'=-1+C, [ A>=0 && B^3>=C ], cost: 2
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+      5: start -> eval : A'=-1, C'=-1-A+C, [ A>=0 && B^3>=C ], cost: 2+A
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+1-C+B^3 (+/+!), 2+A (+), 1+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing 2+A (+) by A (+)
+resulting limit problem:
+A (+), 1-C+B^3 (+/+!), 1+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+A (+/+!) by A (+)
+resulting limit problem:
+A (+), 1-C+B^3 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 1-C+B^3 (+/+!) by 1 (+!) and -C+B^3 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+A (+), 1 (+!), -C+B^3 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+A (+), -C+B^3 (+!) [not solved]
+
+applying transformation rule (A), replacing -C+B^3 (+!) by -C (+!) and B^3 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+A (+), -C (+!), B^3 (+!) [not solved]
+
+applying transformation rule (C) using substitution {C==-1}
+resulting limit problem:
+A (+), 1 (+!), B^3 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+A (+), B^3 (+!) [not solved]
+
+applying transformation rule (C) using substitution {B==2}
+resulting limit problem:
+8 (+!), A (+) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+A / n
+C / -1
+B / 2
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && B^3>=C
+  Final Cost:  2+n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

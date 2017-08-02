@@ -1,0 +1,83 @@
+Trying to load file: walk.koat
+
+Initial Control flow graph problem:
+  Start location: f22
+      0: f17 -> f17 : B'=free_1, D'=1+D, E'=free, [ A>=1+B && C>=0 && D>=0 ], cost: 1
+      1: f17 -> f17 : B'=free_3, D'=1+D, E'=free_2, [ B>=1+A && C>=0 && D>=0 ], cost: 1
+      4: f17 -> f20 : A'=B, G'=free_8, [ C>=0 && D>=0 && B==A ], cost: 1
+      2: f18 -> f17 : B'=free_5, D'=1, E'=free_4, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_7, D'=1, E'=free_6, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f22
+      0: f17 -> f17 : B'=free_1, D'=1+D, E'=free, [ A>=1+B && C>=0 && D>=0 ], cost: 1
+      1: f17 -> f17 : B'=free_3, D'=1+D, E'=free_2, [ B>=1+A && C>=0 && D>=0 ], cost: 1
+      2: f18 -> f17 : B'=free_5, D'=1, E'=free_4, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_7, D'=1, E'=free_6, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+
+Try instantiation
+  Start location: f22
+      7: f17 -> f17 : [ D>=0 && B>=1+A && C>=0 && D>=-1 ], cost: INF
+      8: f17 -> f17 : [ D>=0 && A>=1+B && C>=0 && D>=-1 ], cost: INF
+      2: f18 -> f17 : B'=free_5, D'=1, E'=free_4, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_7, D'=1, E'=free_6, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+Eliminating 2 self-loops for location f17
+  Removing the self-loops: 7 8.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f22
+      9: f17 -> [4] : [ D>=0 && B>=1+A && C>=0 && D>=-1 ], cost: INF
+     10: f17 -> [4] : [ D>=0 && A>=1+B && C>=0 && D>=-1 ], cost: INF
+      2: f18 -> f17 : B'=free_5, D'=1, E'=free_4, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_7, D'=1, E'=free_6, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f22
+      9: f17 -> [4] : [ D>=0 && B>=1+A && C>=0 && D>=-1 ], cost: INF
+     10: f17 -> [4] : [ D>=0 && A>=1+B && C>=0 && D>=-1 ], cost: INF
+     11: f22 -> f17 : B'=free_5, D'=1, E'=free_4, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 && F>=0 && A>=1+H ], cost: 2
+     12: f22 -> f17 : B'=free_7, D'=1, E'=free_6, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 && F>=0 && H>=1+A ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: f22
+     13: f22 -> [4] : B'=free_5, D'=1, E'=free_4, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 && F>=0 && A>=1+H && 1>=0 && free_5>=1+A && C>=0 && 1>=-1 ], cost: INF
+     14: f22 -> [4] : B'=free_5, D'=1, E'=free_4, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 && F>=0 && A>=1+H && 1>=0 && A>=1+free_5 && C>=0 && 1>=-1 ], cost: INF
+     15: f22 -> [4] : B'=free_7, D'=1, E'=free_6, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 && F>=0 && H>=1+A && 1>=0 && free_7>=1+A && C>=0 && 1>=-1 ], cost: INF
+     16: f22 -> [4] : B'=free_7, D'=1, E'=free_6, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 && F>=0 && H>=1+A && 1>=0 && A>=1+free_7 && C>=0 && 1>=-1 ], cost: INF
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f22
+     13: f22 -> [4] : B'=free_5, D'=1, E'=free_4, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 && F>=0 && A>=1+H && 1>=0 && free_5>=1+A && C>=0 && 1>=-1 ], cost: INF
+     14: f22 -> [4] : B'=free_5, D'=1, E'=free_4, G'=free_10, Q'=2, J'=free_9, K'=free_9, L'=free_9, M'=free_9, N'=3, O'=0, [ A>=1+H && F>=0 && F>=0 && A>=1+H && 1>=0 && A>=1+free_5 && C>=0 && 1>=-1 ], cost: INF
+     15: f22 -> [4] : B'=free_7, D'=1, E'=free_6, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 && F>=0 && H>=1+A && 1>=0 && free_7>=1+A && C>=0 && 1>=-1 ], cost: INF
+     16: f22 -> [4] : B'=free_7, D'=1, E'=free_6, G'=free_12, Q'=2, J'=free_11, K'=free_11, L'=free_11, M'=free_11, N'=3, O'=0, [ H>=1+A && F>=0 && F>=0 && H>=1+A && 1>=0 && A>=1+free_7 && C>=0 && 1>=-1 ], cost: INF
+
+
+Computing complexity for remaining 4 transitions.
+
+Found new complexity INF, because: INF sat.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=1+H && F>=0 && F>=0 && A>=1+H && 1>=0 && free_5>=1+A && C>=0 && 1>=-1
+  Final Cost:  INF
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: INF
+  Complexity value: INF
+
+WORST_CASE(INF,?)

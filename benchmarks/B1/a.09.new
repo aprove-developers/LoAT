@@ -1,0 +1,52 @@
+Trying to load file: a.09.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: eval -> eval : B'=B+C, [ A>=B && C>=1 ], cost: 1
+      1: start -> eval : [], cost: 1
+
+
+Try instantiation
+  Start location: start
+      2: eval -> eval : B'=1+A, [ A>=B && C<=1 && C>=1 ], cost: 1-B+A
+      1: start -> eval : [], cost: 1
+
+Eliminating 1 self-loops for location eval
+  Removing the self-loops: 2.
+Adding an epsilon transition (to model nonexecution of the loops): 4.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      3: eval -> [2] : B'=1+A, [ A>=B && -1+C==0 ], cost: 1-B+A
+      4: eval -> [2] : [], cost: 0
+      1: start -> eval : [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      5: start -> [2] : B'=1+A, [ A>=B && -1+C==0 ], cost: 2-B+A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+      5: start -> [2] : B'=1+A, [ A>=B && -1+C==0 ], cost: 2-B+A
+
+
+Computing complexity for remaining 1 transitions.
+
+  Found configuration with infinitely models for cost: 2-B+A
+  and guard: A>=B && -1+C==0:
+  B: Pos, A: Pos, C: Both, where: A > B
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=B && -1+C==0
+  Final Cost:  2-B+A
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

@@ -1,0 +1,141 @@
+Trying to load file: eric2.koat
+
+Initial Control flow graph problem:
+  Start location: f999
+      2: f1 -> f1 : A'=1+A, B'=1+B, C'=-1+C+H, H'=0, [ C+H>=1 ], cost: 1
+      7: f1 -> f1 : A'=1+A+S+R, B'=1+Q_1+P+B, C'=-1+C+O, O'=0, P'=0, Q_1'=0, R'=0, S'=0, [ C>=1 ], cost: 1
+      0: f1 -> f2 : A'=0, B'=0, C'=0, D'=C+D, E'=-1+E+B, F'=-1+A+F, G'=1+G, [ A>=1 && B>=1 ], cost: 1
+      3: f2 -> f1 : A'=1+A, B'=1+B, C'=-1+C+H+D, D'=0, H'=0, [ H+D>=1 ], cost: 1
+      5: f2 -> f1 : A'=1+L+A, B'=1+J+B, C'=-1+C+D+Q, D'=0, E'=0, F'=0, G'=0, Q'=0, J'=0, K'=K+E, L'=0, M'=M+F, N'=N+G, [ D>=1 ], cost: 1
+      6: f2 -> f1 : A'=1+A, B'=1+B, C'=-2+C+H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=1+J, K'=K+E, L'=1+L, M'=M+F, N'=N+G, [ H+D+Q>=2 && D>=1 ], cost: 1
+      4: f2 -> f2 : D'=-1+D+Q, E'=K+E, F'=M+F, G'=N+G, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ D>=1 ], cost: 1
+      8: f2 -> f2 : D'=1+D+T+U, E'=-1+W+V+E, F'=B1+X+Z+F, G'=Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ G>=1 && F>=C1 && C1>=1 && E>=C1 ], cost: 1
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+
+
+Try instantiation
+  Start location: f999
+      9: f1 -> f1 : A'=1+A+S+R, B'=1+Q_1+P+B, C'=-1+C+O, O'=0, P'=0, Q_1'=0, R'=0, S'=0, [ C>=1 ], cost: 1
+     10: f1 -> f1 : A'=1+A, B'=1+B, C'=-1+C+H, H'=0, [ C+H>=1 ], cost: 1
+      0: f1 -> f2 : A'=0, B'=0, C'=0, D'=C+D, E'=-1+E+B, F'=-1+A+F, G'=1+G, [ A>=1 && B>=1 ], cost: 1
+      3: f2 -> f1 : A'=1+A, B'=1+B, C'=-1+C+H+D, D'=0, H'=0, [ H+D>=1 ], cost: 1
+      5: f2 -> f1 : A'=1+L+A, B'=1+J+B, C'=-1+C+D+Q, D'=0, E'=0, F'=0, G'=0, Q'=0, J'=0, K'=K+E, L'=0, M'=M+F, N'=N+G, [ D>=1 ], cost: 1
+      6: f2 -> f1 : A'=1+A, B'=1+B, C'=-2+C+H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=1+J, K'=K+E, L'=1+L, M'=M+F, N'=N+G, [ H+D+Q>=2 && D>=1 ], cost: 1
+      4: f2 -> f2 : D'=-1+D+Q, E'=K+E, F'=M+F, G'=N+G, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ D>=1 ], cost: 1
+      8: f2 -> f2 : D'=1+D+T+U, E'=-1+W+V+E, F'=B1+X+Z+F, G'=Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ G>=1 && F>=C1 && C1>=1 && E>=C1 ], cost: 1
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+
+Eliminating 2 self-loops for location f1
+  Self-Loop 10 has the metering function: C+H, resulting in the new transition 12.
+  Removing the self-loops: 9 10.
+Adding an epsilon transition (to model nonexecution of the loops): 13.
+
+Try instantiation
+  Start location: f999
+     11: f1 -> [3] : A'=1+A+S+R, B'=1+Q_1+P+B, C'=-1+C+O, O'=0, P'=0, Q_1'=0, R'=0, S'=0, [ C>=1 ], cost: 1
+     12: f1 -> [3] : A'=A+C+H, B'=C+H+B, C'=-H, H'=0, [ C+H>=1 ], cost: C+H
+     13: f1 -> [3] : [], cost: 0
+      3: f2 -> f1 : A'=1+A, B'=1+B, C'=-1+C+H+D, D'=0, H'=0, [ H+D>=1 ], cost: 1
+      5: f2 -> f1 : A'=1+L+A, B'=1+J+B, C'=-1+C+D+Q, D'=0, E'=0, F'=0, G'=0, Q'=0, J'=0, K'=K+E, L'=0, M'=M+F, N'=N+G, [ D>=1 ], cost: 1
+      6: f2 -> f1 : A'=1+A, B'=1+B, C'=-2+C+H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=1+J, K'=K+E, L'=1+L, M'=M+F, N'=N+G, [ H+D+Q>=2 && D>=1 ], cost: 1
+     14: f2 -> f2 : D'=1+D+T+U, E'=-1+W+V+E, F'=B1+X+Z+F, G'=Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ G>=1 && F>=C1 && C1>=1 && E>=C1 ], cost: 1
+     15: f2 -> f2 : D'=-1+D+Q, E'=K+E, F'=M+F, G'=N+G, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ D>=1 ], cost: 1
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+      0: [3] -> f2 : A'=0, B'=0, C'=0, D'=C+D, E'=-1+E+B, F'=-1+A+F, G'=1+G, [ A>=1 && B>=1 ], cost: 1
+
+Eliminating 2 self-loops for location f2
+  Removing the self-loops: 14 15.
+Adding an epsilon transition (to model nonexecution of the loops): 18.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f999
+     11: f1 -> [3] : A'=1+A+S+R, B'=1+Q_1+P+B, C'=-1+C+O, O'=0, P'=0, Q_1'=0, R'=0, S'=0, [ C>=1 ], cost: 1
+     12: f1 -> [3] : A'=A+C+H, B'=C+H+B, C'=-H, H'=0, [ C+H>=1 ], cost: C+H
+     13: f1 -> [3] : [], cost: 0
+     16: f2 -> [4] : D'=1+D+T+U, E'=-1+W+V+E, F'=B1+X+Z+F, G'=Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ G>=1 && F>=C1 && C1>=1 && E>=C1 ], cost: 1
+     17: f2 -> [4] : D'=-1+D+Q, E'=K+E, F'=M+F, G'=N+G, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ D>=1 ], cost: 1
+     18: f2 -> [4] : [], cost: 0
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+      0: [3] -> f2 : A'=0, B'=0, C'=0, D'=C+D, E'=-1+E+B, F'=-1+A+F, G'=1+G, [ A>=1 && B>=1 ], cost: 1
+      3: [4] -> f1 : A'=1+A, B'=1+B, C'=-1+C+H+D, D'=0, H'=0, [ H+D>=1 ], cost: 1
+      5: [4] -> f1 : A'=1+L+A, B'=1+J+B, C'=-1+C+D+Q, D'=0, E'=0, F'=0, G'=0, Q'=0, J'=0, K'=K+E, L'=0, M'=M+F, N'=N+G, [ D>=1 ], cost: 1
+      6: [4] -> f1 : A'=1+A, B'=1+B, C'=-2+C+H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=1+J, K'=K+E, L'=1+L, M'=M+F, N'=N+G, [ H+D+Q>=2 && D>=1 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f999
+     19: f1 -> f2 : A'=0, B'=0, C'=0, D'=-1+C+O+D, E'=Q_1+P+E+B, F'=A+S+F+R, G'=1+G, O'=0, P'=0, Q_1'=0, R'=0, S'=0, [ C>=1 && 1+A+S+R>=1 && 1+Q_1+P+B>=1 ], cost: 2
+     20: f1 -> f2 : A'=0, B'=0, C'=0, D'=-H+D, E'=-1+C+H+E+B, F'=-1+A+C+H+F, G'=1+G, H'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 ], cost: 1+C+H
+     21: f1 -> f2 : A'=0, B'=0, C'=0, D'=C+D, E'=-1+E+B, F'=-1+A+F, G'=1+G, [ A>=1 && B>=1 ], cost: 1
+     22: f2 -> f1 : A'=1+A, B'=1+B, C'=C+H+D+T+U, D'=0, E'=-1+W+V+E, F'=B1+X+Z+F, G'=Y+A1+G, H'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ G>=1 && F>=C1 && C1>=1 && E>=C1 && 1+H+D+T+U>=1 ], cost: 2
+     23: f2 -> f1 : A'=1+L+A, B'=1+J+B, C'=C+D+T+Q+U, D'=0, E'=0, F'=0, G'=0, Q'=0, J'=0, K'=-1+W+V+K+E, L'=0, M'=B1+X+M+Z+F, N'=N+Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ G>=1 && F>=C1 && C1>=1 && E>=C1 && 1+D+T+U>=1 ], cost: 2
+     25: f2 -> f1 : A'=1+A, B'=1+B, C'=-2+C+H+D+Q, D'=0, E'=K+E, F'=M+F, G'=N+G, H'=0, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ D>=1 && -1+H+D+Q>=1 ], cost: 2
+     26: f2 -> f1 : A'=2+L+A, B'=2+J+B, C'=-2+C+D+Q, D'=0, E'=0, F'=0, G'=0, Q'=0, J'=0, K'=K+E, L'=0, M'=M+F, N'=N+G, [ D>=1 && -1+D+Q>=1 ], cost: 2
+     28: f2 -> f1 : A'=1+A, B'=1+B, C'=-1+C+H+D, D'=0, H'=0, [ H+D>=1 ], cost: 1
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f999
+     36: f1 -> f1 : A'=1, B'=1, C'=-H+D+T+U, D'=0, E'=-2+W+C+H+V+E+B, F'=-1+A+B1+C+H+X+Z+F, G'=1+Y+A1+G, H'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && 1+G>=1 && -1+A+C+H+F>=C1 && C1>=1 && -1+C+H+E+B>=C1 && 1-H+D+T+U>=1 ], cost: 3+C+H
+     37: f1 -> f1 : A'=1+L, B'=1+J, C'=-H+D+T+Q+U, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-2+W+C+H+V+K+E+B, L'=0, M'=-1+A+B1+C+H+X+M+Z+F, N'=1+N+Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && 1+G>=1 && -1+A+C+H+F>=C1 && C1>=1 && -1+C+H+E+B>=C1 && 1-H+D+T+U>=1 ], cost: 3+C+H
+     38: f1 -> f1 : A'=1, B'=1, C'=-2-H+D+Q, D'=0, E'=-1+C+H+K+E+B, F'=-1+A+C+H+M+F, G'=1+N+G, H'=0, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 && -1-H+D+Q>=1 ], cost: 3+C+H
+     39: f1 -> f1 : A'=2+L, B'=2+J, C'=-2-H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-1+C+H+K+E+B, L'=0, M'=-1+A+C+H+M+F, N'=1+N+G, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 && -1-H+D+Q>=1 ], cost: 3+C+H
+     40: f1 -> f1 : A'=1, B'=1, C'=-1-H+D, D'=0, E'=-1+C+H+E+B, F'=-1+A+C+H+F, G'=1+G, H'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 ], cost: 2+C+H
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+
+
+Try instantiation
+  Start location: f999
+     46: f1 -> f1 : A'=1, B'=1, C'=-1-H+D, D'=0, E'=-1+C+H+E+B, F'=-1+A+C+H+F, G'=1+G, H'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 ], cost: 2+C+H
+     47: f1 -> f1 : A'=2+L, B'=2+J, C'=-2-H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-1+C+H+K+E+B, L'=0, M'=-1+A+C+H+M+F, N'=1+N+G, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 && -1-H+D+Q>=1 ], cost: 3+C+H
+     48: f1 -> f1 : A'=1, B'=1, C'=-2-H+D+Q, D'=0, E'=-1+C+H+K+E+B, F'=-1+A+C+H+M+F, G'=1+N+G, H'=0, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 && -1-H+D+Q>=1 ], cost: 3+C+H
+     49: f1 -> f1 : A'=1+L, B'=1+J, C'=-H+D+T+Q+U, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-2+W+C+H+V+K+E+B, L'=0, M'=-1+A+B1+C+H+X+M+Z+F, N'=1+N+Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && 1+G>=1 && -1+A+C+H+F>=C1 && C1>=1 && -1+C+H+E+B>=C1 && 1-H+D+T+U>=1 ], cost: 3+C+H
+     50: f1 -> f1 : A'=1, B'=1, C'=-H+D+T+U, D'=0, E'=-2+W+C+H+V+E+B, F'=-1+A+B1+C+H+X+Z+F, G'=1+Y+A1+G, H'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && 1+G>=1 && -1+A+C+H+F>=C1 && C1>=1 && -1+C+H+E+B>=C1 && 1-H+D+T+U>=1 ], cost: 3+C+H
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+
+Eliminating 5 self-loops for location f1
+  Removing the self-loops: 46 47 48 49 50.
+Adding an epsilon transition (to model nonexecution of the loops): 56.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f999
+     51: f1 -> [5] : A'=1, B'=1, C'=-1-H+D, D'=0, E'=-1+C+H+E+B, F'=-1+A+C+H+F, G'=1+G, H'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 ], cost: 2+C+H
+     52: f1 -> [5] : A'=2+L, B'=2+J, C'=-2-H+D+Q, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-1+C+H+K+E+B, L'=0, M'=-1+A+C+H+M+F, N'=1+N+G, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 && -1-H+D+Q>=1 ], cost: 3+C+H
+     53: f1 -> [5] : A'=1, B'=1, C'=-2-H+D+Q, D'=0, E'=-1+C+H+K+E+B, F'=-1+A+C+H+M+F, G'=1+N+G, H'=0, Q'=0, J'=1+J, K'=0, L'=1+L, M'=0, N'=0, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && -H+D>=1 && -1-H+D+Q>=1 ], cost: 3+C+H
+     54: f1 -> [5] : A'=1+L, B'=1+J, C'=-H+D+T+Q+U, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-2+W+C+H+V+K+E+B, L'=0, M'=-1+A+B1+C+H+X+M+Z+F, N'=1+N+Y+A1+G, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && 1+G>=1 && -1+A+C+H+F>=C1 && C1>=1 && -1+C+H+E+B>=C1 && 1-H+D+T+U>=1 ], cost: 3+C+H
+     55: f1 -> [5] : A'=1, B'=1, C'=-H+D+T+U, D'=0, E'=-2+W+C+H+V+E+B, F'=-1+A+B1+C+H+X+Z+F, G'=1+Y+A1+G, H'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ C+H>=1 && A+C+H>=1 && C+H+B>=1 && 1+G>=1 && -1+A+C+H+F>=C1 && C1>=1 && -1+C+H+E+B>=C1 && 1-H+D+T+U>=1 ], cost: 3+C+H
+     56: f1 -> [5] : [], cost: 0
+      1: f999 -> f1 : A'=1, B'=1, C'=-1+H, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f999
+     57: f999 -> [5] : A'=1, B'=1, C'=0, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-2+H, L'=0, M'=-1+H, N'=1, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 && -1+H>=1 && H>=1 && H>=1 && 1>=1 && -1+H>=C1 && C1>=1 && -1+H>=C1 && 1>=1 ], cost: 3+H
+     58: f999 -> [5] : A'=1, B'=1, C'=0, D'=0, E'=-2+H, F'=-1+H, G'=1, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 && -1+H>=1 && H>=1 && H>=1 && 1>=1 && -1+H>=C1 && C1>=1 && -1+H>=C1 && 1>=1 ], cost: 3+H
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f999
+     57: f999 -> [5] : A'=1, B'=1, C'=0, D'=0, E'=0, F'=0, G'=0, H'=0, Q'=0, J'=0, K'=-2+H, L'=0, M'=-1+H, N'=1, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 && -1+H>=1 && H>=1 && H>=1 && 1>=1 && -1+H>=C1 && C1>=1 && -1+H>=C1 && 1>=1 ], cost: 3+H
+     58: f999 -> [5] : A'=1, B'=1, C'=0, D'=0, E'=-2+H, F'=-1+H, G'=1, H'=0, Q'=0, J'=0, K'=0, L'=0, M'=0, N'=0, O'=0, P'=0, Q_1'=0, R'=0, S'=0, T'=0, U'=0, V'=0, W'=0, X'=0, Y'=0, Z'=0, A1'=0, B1'=0, C1'=free, [ H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 && -1+H>=1 && H>=1 && H>=1 && 1>=1 && -1+H>=C1 && C1>=1 && -1+H>=C1 && 1>=1 ], cost: 3+H
+
+
+Computing complexity for remaining 2 transitions.
+
+  Found configuration with infinitely models for cost: 3+H
+  and guard: H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 && -1+H>=1 && H>=1 && H>=1 && 1>=1 && -1+H>=C1 && C1>=1 && -1+H>=C1 && 1>=1:
+  W: Both, L: Both, A: Both, B1: Both, Q_1: Both, N: Both, C: Both, S: Both, H: Pos, X: Both, M: Both, C1: Pos, J: Both, Z: Both, O: Both, D: Both, T: Both, Q: Both, Y: Both, F: Both, V: Both, K: Both, A1: Both, P: Both, E: Both, U: Both, B: Both, R: Both, G: Both, where: H > C1
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: H>=1 && C==0 && B==0 && A==0 && D==0 && E==0 && F==0 && G==0 && Q==0 && J==0 && K==0 && L==0 && M==0 && N==0 && O==0 && P==0 && Q_1==0 && R==0 && S==0 && T==0 && U==0 && V==0 && W==0 && X==0 && Y==0 && Z==0 && A1==0 && B1==0 && -1+H>=1 && H>=1 && H>=1 && 1>=1 && -1+H>=C1 && C1>=1 && -1+H>=C1 && 1>=1
+  Final Cost:  3+H
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

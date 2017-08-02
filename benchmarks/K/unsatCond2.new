@@ -1,0 +1,37 @@
+Trying to load file: unsatCond2.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: f -> f : [ 0>=1+A^2 ], cost: 1
+      1: start -> f : [], cost: 1
+
+
+Try instantiation
+  Start location: start
+      1: start -> f : [], cost: 1
+
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      1: start -> f : [], cost: 1
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+      1: start -> f : [], cost: 1
+
+
+Computing complexity for remaining 1 transitions.
+
+Found new complexity const, because: const cost.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

@@ -1,0 +1,163 @@
+Trying to load file: aaron2.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : [ 0>=1+A && B==C && D==E && F==A ], cost: 1
+      1: start -> stop : [ A>=0 && C>=1+E && B==C && D==E && F==A ], cost: 1
+      2: start -> lbl91 : D'=-1+D-F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+      3: start -> lbl101 : B'=1+B+F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+      4: lbl91 -> stop : [ B>=1+D && B>=C && A>=0 && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+      5: lbl91 -> stop : [ D>=B && 0>=1+A && B>=C && A>=0 && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+      6: lbl91 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+      7: lbl91 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+      8: lbl101 -> stop : [ B>=1+D && E>=D && A>=0 && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+      9: lbl101 -> stop : [ D>=B && 0>=1+A && E>=D && A>=0 && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     10: lbl101 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     11: lbl101 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     12: start0 -> start : B'=C, D'=E, F'=A, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      2: start -> lbl91 : D'=-1+D-F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+      3: start -> lbl101 : B'=1+B+F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+      6: lbl91 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+      7: lbl91 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+     10: lbl101 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     11: lbl101 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     12: start0 -> start : B'=C, D'=E, F'=A, [], cost: 1
+
+Eliminating 1 self-loops for location lbl91
+  Removing the self-loops: 6.
+Eliminating 1 self-loops for location lbl101
+  Removing the self-loops: 11.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+      2: start -> lbl91 : D'=-1+D-F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+      3: start -> lbl101 : B'=1+B+F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+     13: lbl91 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+      7: lbl91 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+     10: lbl101 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     14: lbl101 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     12: start0 -> start : B'=C, D'=E, F'=A, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start0
+      2: start -> lbl91 : D'=-1+D-F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+     15: start -> lbl91 : D'=-2+D-2*F, [ A>=0 && E>=C && B==C && D==E && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A ], cost: 2
+      3: start -> lbl101 : B'=1+B+F, [ A>=0 && E>=C && B==C && D==E && F==A ], cost: 1
+     17: start -> lbl101 : B'=2+B+2*F, [ A>=0 && E>=C && B==C && D==E && F==A && A>=0 && D>=1+B+F && E>=D && 1+B+F>=1+A+C && 1+A+D>=1+B+F && F==A ], cost: 2
+      7: lbl91 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+     18: lbl91 -> lbl101 : B'=2+B+2*F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A && A>=0 && D>=1+B+F && E>=D && 1+B+F>=1+A+C && 1+A+D>=1+B+F && F==A ], cost: 2
+     10: lbl101 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     16: lbl101 -> lbl91 : D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A ], cost: 2
+     12: start0 -> start : B'=C, D'=E, F'=A, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: start0
+      7: lbl91 -> lbl101 : B'=1+B+F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A ], cost: 1
+     18: lbl91 -> lbl101 : B'=2+B+2*F, [ A>=0 && D>=B && B>=C && 1+A+D>=B && E>=1+A+D && F==A && A>=0 && D>=1+B+F && E>=D && 1+B+F>=1+A+C && 1+A+D>=1+B+F && F==A ], cost: 2
+     10: lbl101 -> lbl91 : D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A ], cost: 1
+     16: lbl101 -> lbl91 : D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A ], cost: 2
+     19: start0 -> lbl91 : B'=C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A ], cost: 2
+     20: start0 -> lbl91 : B'=C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A ], cost: 3
+     21: start0 -> lbl101 : B'=1+A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A ], cost: 2
+     22: start0 -> lbl101 : B'=2+2*A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A ], cost: 3
+
+
+Eliminated locations:
+  Start location: start0
+     23: lbl101 -> lbl101 : B'=1+B+F, D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A ], cost: 2
+     24: lbl101 -> lbl101 : B'=1+B+F, D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A && A>=0 && -2+D-2*F>=B && B>=C && -1+A+D-2*F>=B && E>=-1+A+D-2*F && F==A ], cost: 3
+     27: lbl101 -> lbl101 : B'=2+B+2*F, D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A && A>=0 && -1+D-F>=1+B+F && E>=-1+D-F && 1+B+F>=1+A+C && A+D-F>=1+B+F && F==A ], cost: 3
+     28: lbl101 -> lbl101 : B'=2+B+2*F, D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A && A>=0 && -2+D-2*F>=B && B>=C && -1+A+D-2*F>=B && E>=-1+A+D-2*F && F==A && A>=0 && -2+D-2*F>=1+B+F && E>=-2+D-2*F && 1+B+F>=1+A+C && -1+A+D-2*F>=1+B+F && F==A ], cost: 4
+     21: start0 -> lbl101 : B'=1+A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A ], cost: 2
+     22: start0 -> lbl101 : B'=2+2*A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A ], cost: 3
+     25: start0 -> lbl101 : B'=1+A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A ], cost: 3
+     26: start0 -> lbl101 : B'=1+A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A ], cost: 4
+     29: start0 -> lbl101 : B'=2+2*A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -1+E-A>=1+A+C && E>=-1+E-A && 1+A+C>=1+A+C && E>=1+A+C && A==A ], cost: 4
+     30: start0 -> lbl101 : B'=2+2*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A ], cost: 5
+
+
+Pruned:
+  Start location: start0
+     23: lbl101 -> lbl101 : B'=1+B+F, D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A ], cost: 2
+     24: lbl101 -> lbl101 : B'=1+B+F, D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A && A>=0 && -2+D-2*F>=B && B>=C && -1+A+D-2*F>=B && E>=-1+A+D-2*F && F==A ], cost: 3
+     27: lbl101 -> lbl101 : B'=2+B+2*F, D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A && A>=0 && -1+D-F>=1+B+F && E>=-1+D-F && 1+B+F>=1+A+C && A+D-F>=1+B+F && F==A ], cost: 3
+     28: lbl101 -> lbl101 : B'=2+B+2*F, D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && A>=0 && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && F==A && A>=0 && -2+D-2*F>=B && B>=C && -1+A+D-2*F>=B && E>=-1+A+D-2*F && F==A && A>=0 && -2+D-2*F>=1+B+F && E>=-2+D-2*F && 1+B+F>=1+A+C && -1+A+D-2*F>=1+B+F && F==A ], cost: 4
+     21: start0 -> lbl101 : B'=1+A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A ], cost: 2
+     22: start0 -> lbl101 : B'=2+2*A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A ], cost: 3
+     25: start0 -> lbl101 : B'=1+A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A ], cost: 3
+     26: start0 -> lbl101 : B'=1+A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A ], cost: 4
+     30: start0 -> lbl101 : B'=2+2*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A ], cost: 5
+
+Eliminating 4 self-loops for location lbl101
+  Removing the self-loops: 23 24 27 28.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+     31: lbl101 -> lbl101 : B'=1+B+F, D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F ], cost: 2
+     32: lbl101 -> lbl101 : B'=1+B+F, D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && -2+D-2*F>=B && -1+A+D-2*F>=B && E>=-1+A+D-2*F ], cost: 3
+     33: lbl101 -> lbl101 : B'=2+B+2*F, D'=-1+D-F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && -1+D-F>=1+B+F && E>=-1+D-F && 1+B+F>=1+A+C && A+D-F>=1+B+F ], cost: 3
+     34: lbl101 -> lbl101 : B'=2+B+2*F, D'=-2+D-2*F, [ A>=0 && D>=B && E>=D && B>=1+A+C && 1+A+D>=B && F==A && -1+D-F>=B && B>=C && A+D-F>=B && E>=A+D-F && -2+D-2*F>=B && -1+A+D-2*F>=B && E>=-1+A+D-2*F && -2+D-2*F>=1+B+F && E>=-2+D-2*F && 1+B+F>=1+A+C && -1+A+D-2*F>=1+B+F ], cost: 4
+     21: start0 -> lbl101 : B'=1+A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A ], cost: 2
+     22: start0 -> lbl101 : B'=2+2*A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A ], cost: 3
+     25: start0 -> lbl101 : B'=1+A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A ], cost: 3
+     26: start0 -> lbl101 : B'=1+A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A ], cost: 4
+     30: start0 -> lbl101 : B'=2+2*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A ], cost: 5
+
+
+Chained simpled loops:
+  Start location: start0
+     21: start0 -> lbl101 : B'=1+A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A ], cost: 2
+     22: start0 -> lbl101 : B'=2+2*A+C, D'=E, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A ], cost: 3
+     25: start0 -> lbl101 : B'=1+A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A ], cost: 3
+     26: start0 -> lbl101 : B'=1+A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A ], cost: 4
+     30: start0 -> lbl101 : B'=2+2*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A ], cost: 5
+     35: start0 -> lbl101 : B'=2+2*A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && -1+E-A>=1+A+C && 1+A+C>=C && E>=1+A+C && E>=E ], cost: 4
+     36: start0 -> lbl101 : B'=3+3*A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && A>=0 && E>=2+2*A+C && E>=E && 2+2*A+C>=1+A+C && 1+E+A>=2+2*A+C && A==A && -1+E-A>=2+2*A+C && 2+2*A+C>=C && E>=2+2*A+C && E>=E ], cost: 5
+     37: start0 -> lbl101 : B'=2+2*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -1+E-A>=1+A+C && E>=-1+E-A && 1+A+C>=1+A+C && E>=1+A+C && A==A && -2+E-2*A>=1+A+C && 1+A+C>=C && -1+E-A>=1+A+C && E>=-1+E-A ], cost: 5
+     38: start0 -> lbl101 : B'=2+2*A+C, D'=-3+E-3*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && -3+E-3*A>=1+A+C && 1+A+C>=C && -2+E-2*A>=1+A+C && E>=-2+E-2*A ], cost: 6
+     39: start0 -> lbl101 : B'=3+3*A+C, D'=-3+E-3*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && A>=0 && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && 2+2*A+C>=1+A+C && -1+E-A>=2+2*A+C && A==A && -3+E-3*A>=2+2*A+C && 2+2*A+C>=C && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A ], cost: 7
+     40: start0 -> lbl101 : B'=2+2*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && -1+E-A>=1+A+C && 1+A+C>=C && E>=1+A+C && E>=E && -2+E-2*A>=1+A+C && -1+E-A>=1+A+C && E>=-1+E-A ], cost: 5
+     41: start0 -> lbl101 : B'=3+3*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && A>=0 && E>=2+2*A+C && E>=E && 2+2*A+C>=1+A+C && 1+E+A>=2+2*A+C && A==A && -1+E-A>=2+2*A+C && 2+2*A+C>=C && E>=2+2*A+C && E>=E && -2+E-2*A>=2+2*A+C && -1+E-A>=2+2*A+C && E>=-1+E-A ], cost: 6
+     42: start0 -> lbl101 : B'=2+2*A+C, D'=-3+E-3*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -1+E-A>=1+A+C && E>=-1+E-A && 1+A+C>=1+A+C && E>=1+A+C && A==A && -2+E-2*A>=1+A+C && 1+A+C>=C && -1+E-A>=1+A+C && E>=-1+E-A && -3+E-3*A>=1+A+C && -2+E-2*A>=1+A+C && E>=-2+E-2*A ], cost: 6
+     43: start0 -> lbl101 : B'=2+2*A+C, D'=-4+E-4*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && -3+E-3*A>=1+A+C && 1+A+C>=C && -2+E-2*A>=1+A+C && E>=-2+E-2*A && -4+E-4*A>=1+A+C && -3+E-3*A>=1+A+C && E>=-3+E-3*A ], cost: 7
+     44: start0 -> lbl101 : B'=3+3*A+C, D'=-4+E-4*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && A>=0 && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && 2+2*A+C>=1+A+C && -1+E-A>=2+2*A+C && A==A && -3+E-3*A>=2+2*A+C && 2+2*A+C>=C && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && -4+E-4*A>=2+2*A+C && -3+E-3*A>=2+2*A+C && E>=-3+E-3*A ], cost: 8
+     45: start0 -> lbl101 : B'=3+3*A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && -1+E-A>=1+A+C && 1+A+C>=C && E>=1+A+C && E>=E && -1+E-A>=2+2*A+C && E>=-1+E-A && 2+2*A+C>=1+A+C && E>=2+2*A+C ], cost: 5
+     46: start0 -> lbl101 : B'=4+4*A+C, D'=-1+E-A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && A>=0 && E>=2+2*A+C && E>=E && 2+2*A+C>=1+A+C && 1+E+A>=2+2*A+C && A==A && -1+E-A>=2+2*A+C && 2+2*A+C>=C && E>=2+2*A+C && E>=E && -1+E-A>=3+3*A+C && E>=-1+E-A && 3+3*A+C>=1+A+C && E>=3+3*A+C ], cost: 6
+     47: start0 -> lbl101 : B'=3+3*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -1+E-A>=1+A+C && E>=-1+E-A && 1+A+C>=1+A+C && E>=1+A+C && A==A && -2+E-2*A>=1+A+C && 1+A+C>=C && -1+E-A>=1+A+C && E>=-1+E-A && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && 2+2*A+C>=1+A+C && -1+E-A>=2+2*A+C ], cost: 6
+     48: start0 -> lbl101 : B'=3+3*A+C, D'=-3+E-3*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && -3+E-3*A>=1+A+C && 1+A+C>=C && -2+E-2*A>=1+A+C && E>=-2+E-2*A && -3+E-3*A>=2+2*A+C && E>=-3+E-3*A && 2+2*A+C>=1+A+C && -2+E-2*A>=2+2*A+C ], cost: 7
+     49: start0 -> lbl101 : B'=4+4*A+C, D'=-3+E-3*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && A>=0 && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && 2+2*A+C>=1+A+C && -1+E-A>=2+2*A+C && A==A && -3+E-3*A>=2+2*A+C && 2+2*A+C>=C && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && -3+E-3*A>=3+3*A+C && E>=-3+E-3*A && 3+3*A+C>=1+A+C && -2+E-2*A>=3+3*A+C ], cost: 8
+     50: start0 -> lbl101 : B'=3+3*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && -1+E-A>=1+A+C && 1+A+C>=C && E>=1+A+C && E>=E && -2+E-2*A>=1+A+C && -1+E-A>=1+A+C && E>=-1+E-A && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && 2+2*A+C>=1+A+C && -1+E-A>=2+2*A+C ], cost: 6
+     51: start0 -> lbl101 : B'=4+4*A+C, D'=-2+E-2*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && E>=1+A+C && E>=E && 1+A+C>=1+A+C && 1+E+A>=1+A+C && A==A && A>=0 && E>=2+2*A+C && E>=E && 2+2*A+C>=1+A+C && 1+E+A>=2+2*A+C && A==A && -1+E-A>=2+2*A+C && 2+2*A+C>=C && E>=2+2*A+C && E>=E && -2+E-2*A>=2+2*A+C && -1+E-A>=2+2*A+C && E>=-1+E-A && -2+E-2*A>=3+3*A+C && E>=-2+E-2*A && 3+3*A+C>=1+A+C && -1+E-A>=3+3*A+C ], cost: 7
+     52: start0 -> lbl101 : B'=3+3*A+C, D'=-3+E-3*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -1+E-A>=1+A+C && E>=-1+E-A && 1+A+C>=1+A+C && E>=1+A+C && A==A && -2+E-2*A>=1+A+C && 1+A+C>=C && -1+E-A>=1+A+C && E>=-1+E-A && -3+E-3*A>=1+A+C && -2+E-2*A>=1+A+C && E>=-2+E-2*A && -3+E-3*A>=2+2*A+C && E>=-3+E-3*A && 2+2*A+C>=1+A+C && -2+E-2*A>=2+2*A+C ], cost: 7
+     53: start0 -> lbl101 : B'=3+3*A+C, D'=-4+E-4*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && -3+E-3*A>=1+A+C && 1+A+C>=C && -2+E-2*A>=1+A+C && E>=-2+E-2*A && -4+E-4*A>=1+A+C && -3+E-3*A>=1+A+C && E>=-3+E-3*A && -4+E-4*A>=2+2*A+C && E>=-4+E-4*A && 2+2*A+C>=1+A+C && -3+E-3*A>=2+2*A+C ], cost: 8
+     54: start0 -> lbl101 : B'=4+4*A+C, D'=-4+E-4*A, F'=A, [ A>=0 && E>=C && C==C && E==E && A==A && A>=0 && -1+E-A>=C && C>=C && E>=C && E>=E && A==A && A>=0 && -2+E-2*A>=C && C>=C && -1+E-A>=C && E>=-1+E-A && A==A && A>=0 && -2+E-2*A>=1+A+C && E>=-2+E-2*A && 1+A+C>=1+A+C && -1+E-A>=1+A+C && A==A && A>=0 && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && 2+2*A+C>=1+A+C && -1+E-A>=2+2*A+C && A==A && -3+E-3*A>=2+2*A+C && 2+2*A+C>=C && -2+E-2*A>=2+2*A+C && E>=-2+E-2*A && -4+E-4*A>=2+2*A+C && -3+E-3*A>=2+2*A+C && E>=-3+E-3*A && -4+E-4*A>=3+3*A+C && E>=-4+E-4*A && 3+3*A+C>=1+A+C && -3+E-3*A>=3+3*A+C ], cost: 9
+
+
+Pruned:
+  Start location: start0
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start0
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

@@ -1,0 +1,65 @@
+Trying to load file: p-46.koat
+
+Initial Control flow graph problem:
+  Start location: f1
+      1: f0 -> f0 : A'=1+3*A, C'=free_1, D'=free_2, E'=free_3, [ A>=1 && A>=1+2*free_3 && 3*A>=3*free_1 && 3*free_1>=3*A && free_1>=1+2*free_3 && free_1>=1 ], cost: 1
+      2: f0 -> f0 : A'=1+3*A, C'=free_4, D'=free_5, E'=free_6, [ A>=1 && A>=1+2*free_6 && 3*A>=3*free_4 && 3*free_4>=3*A && 2*free_6>=1+free_4 && free_4>=1 ], cost: 1
+      3: f0 -> f0 : A'=1+3*A, C'=free_7, D'=free_8, E'=free_9, [ A>=1 && 2*free_9>=1+A && 3*A>=3*free_7 && 3*free_7>=3*A && free_7>=1+2*free_9 && free_7>=1 ], cost: 1
+      4: f0 -> f0 : A'=1+3*A, C'=free_10, D'=free_11, E'=free_12, [ A>=1 && 2*free_12>=1+A && 3*A>=3*free_10 && 3*free_10>=3*A && 2*free_12>=1+free_10 && free_10>=1 ], cost: 1
+      5: f0 -> f0 : A'=free_13, D'=free_14, E'=free_13, [ 2*free_13>=1 && free_15>=1 && A==2*free_13 ], cost: 1
+      0: f0 -> f2 : B'=free, [ 0>=A ], cost: 1
+      6: f1 -> f0 : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: f1
+      1: f0 -> f0 : A'=1+3*A, C'=free_1, D'=free_2, E'=free_3, [ A>=1 && A>=1+2*free_3 && -3*A+3*free_1==0 && free_1>=1+2*free_3 ], cost: 1
+      2: f0 -> f0 : A'=1+3*A, C'=free_4, D'=free_5, E'=free_6, [ A>=1 && A>=1+2*free_6 && -3*A+3*free_4==0 && 2*free_6>=1+free_4 ], cost: 1
+      3: f0 -> f0 : A'=1+3*A, C'=free_7, D'=free_8, E'=free_9, [ A>=1 && 2*free_9>=1+A && -3*A+3*free_7==0 && free_7>=1+2*free_9 ], cost: 1
+      4: f0 -> f0 : A'=1+3*A, C'=free_10, D'=free_11, E'=free_12, [ A>=1 && 2*free_12>=1+A && -3*A+3*free_10==0 && 2*free_12>=1+free_10 ], cost: 1
+      5: f0 -> f0 : A'=free_13, D'=free_14, E'=free_13, [ 2*free_13>=1 && A==2*free_13 ], cost: 1
+      6: f1 -> f0 : [], cost: 1
+
+Eliminating 5 self-loops for location f0
+  Removing the self-loops: 1 2 3 4 5.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f1
+      7: f0 -> f0 : A'=1+3*A, C'=free_1, D'=free_2, E'=free_3, [ A>=1 && A>=1+2*free_3 && -3*A+3*free_1==0 && free_1>=1+2*free_3 ], cost: 1
+      8: f0 -> f0 : A'=1+3*A, C'=free_4, D'=free_5, E'=free_6, [ A>=1 && A>=1+2*free_6 && -3*A+3*free_4==0 && 2*free_6>=1+free_4 ], cost: 1
+      9: f0 -> f0 : A'=1+3*A, C'=free_7, D'=free_8, E'=free_9, [ A>=1 && 2*free_9>=1+A && -3*A+3*free_7==0 && free_7>=1+2*free_9 ], cost: 1
+     10: f0 -> f0 : A'=1+3*A, C'=free_10, D'=free_11, E'=free_12, [ A>=1 && 2*free_12>=1+A && -3*A+3*free_10==0 && 2*free_12>=1+free_10 ], cost: 1
+     11: f0 -> f0 : A'=free_13, D'=free_14, E'=free_13, [ 2*free_13>=1 && A==2*free_13 ], cost: 1
+      6: f1 -> f0 : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: f1
+      6: f1 -> f0 : [], cost: 1
+     12: f1 -> f0 : A'=1+3*A, C'=free_1, D'=free_2, E'=free_3, [ A>=1 && A>=1+2*free_3 && -3*A+3*free_1==0 && free_1>=1+2*free_3 ], cost: 2
+     13: f1 -> f0 : A'=1+3*A, C'=free_10, D'=free_11, E'=free_12, [ A>=1 && 2*free_12>=1+A && -3*A+3*free_10==0 && 2*free_12>=1+free_10 ], cost: 2
+     14: f1 -> f0 : A'=free_13, D'=free_14, E'=free_13, [ 2*free_13>=1 && A==2*free_13 ], cost: 2
+
+
+Pruned:
+  Start location: f1
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f1
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

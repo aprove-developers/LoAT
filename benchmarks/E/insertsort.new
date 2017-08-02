@@ -1,0 +1,119 @@
+Trying to load file: insertsort.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : Q'=1, [ 1>=A && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      2: lbl43 -> lbl43 : G'=-1+G, [ G>=0 && Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      6: lbl13 -> stop : [ G+A>=2 && 1+G>=0 && A>=2+G && F==A && Q==A && 1+D==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && A>=1+D && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      2: lbl43 -> lbl43 : G'=-1+G, [ G>=0 && Q>=2+G && A>=1+Q && F==A ], cost: 1
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+
+Try instantiation
+  Start location: start0
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      9: lbl43 -> lbl43 : G'=-1, [ Q>=2 && F>=A && G>=0 && Q>=2+G && A>=1+Q && F<=A ], cost: 1+G
+      3: lbl43 -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+
+Eliminating 1 self-loops for location lbl43
+  Removing the self-loops: 9.
+Adding an epsilon transition (to model nonexecution of the loops): 11.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start0
+      1: start -> lbl31 : B'=free, Q'=1, [ A>=2 && B==C && D==E && F==A && G==H && Q==J ], cost: 1
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+     10: lbl43 -> [6] : G'=-1, [ Q>=2 && -F+A==0 && G>=0 && Q>=2+G && A>=1+Q ], cost: 1+G
+     11: lbl43 -> [6] : [], cost: 0
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> start : B'=C, D'=E, F'=A, G'=H, Q'=J, [], cost: 1
+      3: [6] -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+
+
+Applied simple chaining:
+  Start location: start0
+      4: lbl31 -> lbl43 : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+     10: lbl43 -> [6] : G'=-1, [ Q>=2 && -F+A==0 && G>=0 && Q>=2+G && A>=1+Q ], cost: 1+G
+     11: lbl43 -> [6] : [], cost: 0
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+      3: [6] -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start0
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+     12: lbl31 -> [6] : G'=-1, [ Q>=1 && A>=1+Q && F==A && Q>=2 && -F+A==0 && -2+Q>=0 && Q>=Q && A>=1+Q ], cost: Q
+     13: lbl31 -> [6] : G'=-2+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+      3: [6] -> lbl13 : D'=Q, Q'=1+Q, [ Q>=2+G && 1+G>=0 && A>=1+Q && F==A ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start0
+      5: lbl31 -> lbl13 : D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A ], cost: 1
+     14: lbl31 -> lbl13 : D'=Q, G'=-1, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && Q>=2 && -F+A==0 && -2+Q>=0 && Q>=Q && A>=1+Q && Q>=1 && 0>=0 && A>=1+Q && F==A ], cost: 1+Q
+     15: lbl31 -> lbl13 : D'=Q, G'=-2+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && Q>=Q && -1+Q>=0 && A>=1+Q && F==A ], cost: 2
+      7: lbl13 -> lbl31 : B'=free_1, [ A>=2+D && D+G>=1 && 1+G>=0 && D>=1+G && F==A && Q==1+D ], cost: 1
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: start0
+     16: lbl31 -> lbl31 : B'=free_1, D'=Q, G'=-1+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && A>=2+Q && -1+2*Q>=1 && Q>=0 && Q>=Q && F==A && 1+Q==1+Q ], cost: 2
+     17: lbl31 -> lbl31 : B'=free_1, D'=Q, G'=-1, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && Q>=2 && -F+A==0 && -2+Q>=0 && Q>=Q && A>=1+Q && Q>=1 && 0>=0 && A>=1+Q && F==A && A>=2+Q && -1+Q>=1 && 0>=0 && Q>=0 && F==A && 1+Q==1+Q ], cost: 2+Q
+     18: lbl31 -> lbl31 : B'=free_1, D'=Q, G'=-2+Q, Q'=1+Q, [ Q>=1 && A>=1+Q && F==A && Q>=Q && -1+Q>=0 && A>=1+Q && F==A && A>=2+Q && -2+2*Q>=1 && -1+Q>=0 && Q>=-1+Q && F==A && 1+Q==1+Q ], cost: 3
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Try instantiation
+  Start location: start0
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start0
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start0
+      8: start0 -> lbl31 : B'=free, D'=E, F'=A, G'=H, Q'=1, [ A>=2 && C==C && E==E && A==A && H==H && J==J ], cost: 2
+
+
+Computing complexity for remaining 1 transitions.
+
+Found new complexity const, because: const cost.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=2 && C==C && E==E && A==A && H==H && J==J
+  Final Cost:  2
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

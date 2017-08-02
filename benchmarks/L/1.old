@@ -1,0 +1,137 @@
+Trying to load file: 1.koat
+
+Initial Control flow graph problem:
+  Start location: f3000
+      0: f11 -> f11 : B'=free, C'=B, D'=free_1, [ A>=0 && B>=1 ], cost: 1
+      1: f11 -> f11 : B'=free_2, C'=B, D'=free_3, [ A>=0 && 0>=1+B ], cost: 1
+      3: f11 -> f13 : B'=0, K'=free_5, [ A>=0 && B==0 ], cost: 1
+      4: f16 -> f11 : B'=free_6, C'=free_7, D'=free_8, K'=free_9, L'=J, M'=J, [ 1+G>=F && free_7>=1 && E>=0 ], cost: 1
+      5: f16 -> f11 : B'=free_10, C'=free_11, D'=free_12, K'=free_13, L'=J, M'=J, [ 1+G>=F && 0>=1+free_11 && E>=0 ], cost: 1
+      2: f16 -> f16 : G'=1+G, H'=free_4, Q'=free_4, J'=free_4, [ E>=0 && F>=2+G ], cost: 1
+      6: f3000 -> f16 : G'=1, H'=free_14, Q'=free_14, J'=free_14, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 ], cost: 1
+      7: f3000 -> f13 : B'=0, G'=0, J'=0, K'=free_16, L'=0, M'=0, N'=N-100*free_17, [ N>=100*free_17 && 99+100*free_17>=N && 1>=F ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f3000
+      0: f11 -> f11 : B'=free, C'=B, D'=free_1, [ A>=0 && B>=1 ], cost: 1
+      1: f11 -> f11 : B'=free_2, C'=B, D'=free_3, [ A>=0 && 0>=1+B ], cost: 1
+      4: f16 -> f11 : B'=free_6, C'=free_7, D'=free_8, K'=free_9, L'=J, M'=J, [ 1+G>=F && free_7>=1 && E>=0 ], cost: 1
+      5: f16 -> f11 : B'=free_10, C'=free_11, D'=free_12, K'=free_13, L'=J, M'=J, [ 1+G>=F && 0>=1+free_11 && E>=0 ], cost: 1
+      2: f16 -> f16 : G'=1+G, H'=free_4, Q'=free_4, J'=free_4, [ E>=0 && F>=2+G ], cost: 1
+      6: f3000 -> f16 : G'=1, H'=free_14, Q'=free_14, J'=free_14, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 ], cost: 1
+
+Eliminating 2 self-loops for location f11
+  Removing the self-loops: 0 1.
+Eliminating 1 self-loops for location f16
+  Self-Loop 2 has the metering function: -1-G+F, resulting in the new transition 10.
+  Removing the self-loops: 2.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f3000
+      8: f11 -> f11 : B'=free, C'=B, D'=free_1, [ A>=0 && B>=1 ], cost: 1
+      9: f11 -> f11 : B'=free_2, C'=B, D'=free_3, [ A>=0 && 0>=1+B ], cost: 1
+      4: f16 -> f11 : B'=free_6, C'=free_7, D'=free_8, K'=free_9, L'=J, M'=J, [ 1+G>=F && free_7>=1 && E>=0 ], cost: 1
+      5: f16 -> f11 : B'=free_10, C'=free_11, D'=free_12, K'=free_13, L'=J, M'=J, [ 1+G>=F && 0>=1+free_11 && E>=0 ], cost: 1
+     10: f16 -> f16 : G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, [ E>=0 && F>=2+G ], cost: -1-G+F
+      6: f3000 -> f16 : G'=1, H'=free_14, Q'=free_14, J'=free_14, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 ], cost: 1
+
+
+Chained simpled loops:
+  Start location: f3000
+      4: f16 -> f11 : B'=free_6, C'=free_7, D'=free_8, K'=free_9, L'=J, M'=J, [ 1+G>=F && free_7>=1 && E>=0 ], cost: 1
+      5: f16 -> f11 : B'=free_10, C'=free_11, D'=free_12, K'=free_13, L'=J, M'=J, [ 1+G>=F && 0>=1+free_11 && E>=0 ], cost: 1
+     11: f16 -> f11 : B'=free, C'=free_6, D'=free_1, K'=free_9, L'=J, M'=J, [ 1+G>=F && free_7>=1 && E>=0 && A>=0 && free_6>=1 ], cost: 2
+     12: f16 -> f11 : B'=free, C'=free_10, D'=free_1, K'=free_13, L'=J, M'=J, [ 1+G>=F && 0>=1+free_11 && E>=0 && A>=0 && free_10>=1 ], cost: 2
+     13: f16 -> f11 : B'=free_2, C'=free_6, D'=free_3, K'=free_9, L'=J, M'=J, [ 1+G>=F && free_7>=1 && E>=0 && A>=0 && 0>=1+free_6 ], cost: 2
+     14: f16 -> f11 : B'=free_2, C'=free_10, D'=free_3, K'=free_13, L'=J, M'=J, [ 1+G>=F && 0>=1+free_11 && E>=0 && A>=0 && 0>=1+free_10 ], cost: 2
+     15: f3000 -> f16 : G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 ], cost: -1+F
+
+
+Eliminated locations (branches):
+  Start location: f3000
+     16: f3000 -> f11 : B'=free_6, C'=free_7, D'=free_8, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 ], cost: F
+     17: f3000 -> f11 : B'=free_10, C'=free_11, D'=free_12, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 ], cost: F
+     18: f3000 -> f11 : B'=free, C'=free_6, D'=free_1, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 && A>=0 && free_6>=1 ], cost: 1+F
+     19: f3000 -> f11 : B'=free, C'=free_10, D'=free_1, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 && A>=0 && free_10>=1 ], cost: 1+F
+     20: f3000 -> f11 : B'=free_2, C'=free_6, D'=free_3, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 && A>=0 && 0>=1+free_6 ], cost: 1+F
+     21: f3000 -> f11 : B'=free_2, C'=free_10, D'=free_3, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 && A>=0 && 0>=1+free_10 ], cost: 1+F
+
+
+Pruned:
+  Start location: f3000
+     16: f3000 -> f11 : B'=free_6, C'=free_7, D'=free_8, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 ], cost: F
+     17: f3000 -> f11 : B'=free_10, C'=free_11, D'=free_12, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 ], cost: F
+     18: f3000 -> f11 : B'=free, C'=free_6, D'=free_1, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 && A>=0 && free_6>=1 ], cost: 1+F
+     19: f3000 -> f11 : B'=free, C'=free_10, D'=free_1, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 && A>=0 && free_10>=1 ], cost: 1+F
+     21: f3000 -> f11 : B'=free_2, C'=free_10, D'=free_3, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 && A>=0 && 0>=1+free_10 ], cost: 1+F
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f3000
+     16: f3000 -> f11 : B'=free_6, C'=free_7, D'=free_8, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 ], cost: F
+     17: f3000 -> f11 : B'=free_10, C'=free_11, D'=free_12, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 ], cost: F
+     18: f3000 -> f11 : B'=free, C'=free_6, D'=free_1, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_9, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0 && A>=0 && free_6>=1 ], cost: 1+F
+     19: f3000 -> f11 : B'=free, C'=free_10, D'=free_1, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 && A>=0 && free_10>=1 ], cost: 1+F
+     21: f3000 -> f11 : B'=free_2, C'=free_10, D'=free_3, G'=-1+F, H'=free_4, Q'=free_4, J'=free_4, K'=free_13, L'=free_4, M'=free_4, N'=-100*free_15+N, [ N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && 0>=1+free_11 && E>=0 && A>=0 && 0>=1+free_10 ], cost: 1+F
+
+
+Computing complexity for remaining 5 transitions.
+
+Created initial limit problem:
+1 (+/+!), -2+F (+/+!), 1+E (+/+!), 1-100*free_15+N (+/+!), free_7 (+/+!), 100+100*free_15-N (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {N==100*free_15}
+resulting limit problem:
+100 (+/+!), 1 (+/+!), -2+F (+/+!), 1+E (+/+!), free_7 (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {N==99+100*free_15}
+resulting limit problem:
+100 (+/+!), 1 (+/+!), -2+F (+/+!), 1+E (+/+!), free_7 (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {E==0}
+resulting limit problem:
+100 (+/+!), 1 (+/+!), -2+F (+/+!), free_7 (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {free_7==1}
+resulting limit problem:
+100 (+/+!), 1 (+/+!), -2+F (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {E==0}
+resulting limit problem:
+100 (+/+!), 1 (+/+!), -2+F (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (B), deleting 100 (+/+!)
+resulting limit problem:
+1 (+/+!), -2+F (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-2+F (+/+!), F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+F (+/+!) by F (+)
+resulting limit problem:
+F (+), -1+F (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+F (+/+!) by F (+)
+resulting limit problem:
+F (+) [solved]
+
+Solution:
+E / 0
+free_15 / 0
+N / 0
+free_7 / 1
+F / n
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: N>=100*free_15 && 99+100*free_15>=N && F>=2 && E>=0 && F>=3 && F>=F && free_7>=1 && E>=0
+  Final Cost:  n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

@@ -1,0 +1,489 @@
+Trying to load file: elmhes.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: f0 -> f12 : C'=0, D'=B, [ A>=1+B ], cost: 1
+     21: f0 -> f58 : [ B>=A ], cost: 1
+      1: f12 -> f12 : E'=1+E, F'=free, G'=free_1, [ A>=E && free_1>=free ], cost: 1
+      2: f12 -> f12 : C'=free_2, D'=E, E'=1+E, F'=free_3, G'=free_4, [ A>=E && free_3>=1+free_4 ], cost: 1
+     19: f12 -> f22 : [ B>=1+D && E>=1+A ], cost: 1
+     20: f12 -> f22 : [ D>=1+B && E>=1+A ], cost: 1
+     18: f12 -> f35 : D'=B, [ E>=1+A && B==D ], cost: 1
+      3: f22 -> f22 : E'=1+E, H'=free_5, [ A>=E ], cost: 1
+     17: f22 -> f29 : [ E>=1+A ], cost: 1
+      4: f29 -> f29 : E'=1+E, H'=free_6, [ A>=E ], cost: 1
+     16: f29 -> f35 : [ E>=1+A ], cost: 1
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+      5: f35 -> f37 : [ 0>=1+C ], cost: 1
+      6: f35 -> f37 : [ C>=1 ], cost: 1
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     11: f37 -> f37 : D'=1+D, H'=0, [ A>=D ], cost: 1
+      7: f37 -> f43 : H'=free_7, [ A>=D && 0>=1+free_8 ], cost: 1
+      8: f37 -> f43 : H'=free_9, [ A>=D && free_10>=1 ], cost: 1
+      9: f43 -> f43 : E'=1+E, [ A>=E ], cost: 1
+     14: f43 -> f48 : [ E>=1+A ], cost: 1
+     13: f48 -> f37 : D'=1+D, [ E>=1+A ], cost: 1
+     10: f48 -> f48 : E'=1+E, [ A>=E ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start
+      0: f0 -> f12 : C'=0, D'=B, [ A>=1+B ], cost: 1
+      1: f12 -> f12 : E'=1+E, F'=free, G'=free_1, [ A>=E && free_1>=free ], cost: 1
+      2: f12 -> f12 : C'=free_2, D'=E, E'=1+E, F'=free_3, G'=free_4, [ A>=E && free_3>=1+free_4 ], cost: 1
+     19: f12 -> f22 : [ B>=1+D && E>=1+A ], cost: 1
+     20: f12 -> f22 : [ D>=1+B && E>=1+A ], cost: 1
+     18: f12 -> f35 : D'=B, [ E>=1+A && B==D ], cost: 1
+      3: f22 -> f22 : E'=1+E, H'=free_5, [ A>=E ], cost: 1
+     17: f22 -> f29 : [ E>=1+A ], cost: 1
+      4: f29 -> f29 : E'=1+E, H'=free_6, [ A>=E ], cost: 1
+     16: f29 -> f35 : [ E>=1+A ], cost: 1
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+      5: f35 -> f37 : [ 0>=1+C ], cost: 1
+      6: f35 -> f37 : [ C>=1 ], cost: 1
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     11: f37 -> f37 : D'=1+D, H'=0, [ A>=D ], cost: 1
+      7: f37 -> f43 : H'=free_7, [ A>=D ], cost: 1
+      8: f37 -> f43 : H'=free_9, [ A>=D ], cost: 1
+      9: f43 -> f43 : E'=1+E, [ A>=E ], cost: 1
+     14: f43 -> f48 : [ E>=1+A ], cost: 1
+     13: f48 -> f37 : D'=1+D, [ E>=1+A ], cost: 1
+     10: f48 -> f48 : E'=1+E, [ A>=E ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+Eliminating 2 self-loops for location f12
+  Self-Loop 1 has the metering function: 1-E+A, resulting in the new transition 23.
+  Self-Loop 2 has the metering function: 1-E+A, resulting in the new transition 24.
+  Removing the self-loops: 1 2.
+Eliminating 1 self-loops for location f22
+  Self-Loop 3 has the metering function: 1-E+A, resulting in the new transition 25.
+  Removing the self-loops: 3.
+Eliminating 1 self-loops for location f29
+  Self-Loop 4 has the metering function: 1-E+A, resulting in the new transition 26.
+  Removing the self-loops: 4.
+Eliminating 1 self-loops for location f37
+  Self-Loop 11 has the metering function: 1+A-D, resulting in the new transition 27.
+  Removing the self-loops: 11.
+Eliminating 1 self-loops for location f43
+  Self-Loop 9 has the metering function: 1-E+A, resulting in the new transition 28.
+  Removing the self-loops: 9.
+Eliminating 1 self-loops for location f48
+  Self-Loop 10 has the metering function: 1-E+A, resulting in the new transition 29.
+  Removing the self-loops: 10.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+      0: f0 -> f12 : C'=0, D'=B, [ A>=1+B ], cost: 1
+     23: f12 -> f12 : E'=1+A, F'=free, G'=free_1, [ A>=E && free_1>=free ], cost: 1-E+A
+     24: f12 -> f12 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=E && free_3>=1+free_4 ], cost: 1-E+A
+     19: f12 -> f22 : [ B>=1+D && E>=1+A ], cost: 1
+     20: f12 -> f22 : [ D>=1+B && E>=1+A ], cost: 1
+     18: f12 -> f35 : D'=B, [ E>=1+A && B==D ], cost: 1
+     25: f22 -> f22 : E'=1+A, H'=free_5, [ A>=E ], cost: 1-E+A
+     17: f22 -> f29 : [ E>=1+A ], cost: 1
+     26: f29 -> f29 : E'=1+A, H'=free_6, [ A>=E ], cost: 1-E+A
+     16: f29 -> f35 : [ E>=1+A ], cost: 1
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+      5: f35 -> f37 : [ 0>=1+C ], cost: 1
+      6: f35 -> f37 : [ C>=1 ], cost: 1
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     27: f37 -> f37 : D'=1+A, H'=0, [ A>=D ], cost: 1+A-D
+      7: f37 -> f43 : H'=free_7, [ A>=D ], cost: 1
+      8: f37 -> f43 : H'=free_9, [ A>=D ], cost: 1
+     28: f43 -> f43 : E'=1+A, [ A>=E ], cost: 1-E+A
+     14: f43 -> f48 : [ E>=1+A ], cost: 1
+     13: f48 -> f37 : D'=1+D, [ E>=1+A ], cost: 1
+     29: f48 -> f48 : E'=1+A, [ A>=E ], cost: 1-E+A
+     22: start -> f0 : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start
+     30: f0 -> f12 : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     31: f0 -> f12 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     19: f12 -> f22 : [ B>=1+D && E>=1+A ], cost: 1
+     20: f12 -> f22 : [ D>=1+B && E>=1+A ], cost: 1
+     18: f12 -> f35 : D'=B, [ E>=1+A && B==D ], cost: 1
+     17: f22 -> f29 : [ E>=1+A ], cost: 1
+     16: f29 -> f35 : [ E>=1+A ], cost: 1
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+     32: f35 -> f37 : D'=1+A, H'=0, [ 0>=1+C && A>=D ], cost: 2+A-D
+     33: f35 -> f37 : D'=1+A, H'=0, [ C>=1 && A>=D ], cost: 2+A-D
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     35: f37 -> f43 : E'=1+A, H'=free_7, [ A>=D && A>=E ], cost: 2-E+A
+     36: f37 -> f43 : E'=1+A, H'=free_9, [ A>=D && A>=E ], cost: 2-E+A
+     14: f43 -> f48 : [ E>=1+A ], cost: 1
+     34: f48 -> f37 : D'=1+A, H'=0, [ E>=1+A && A>=1+D ], cost: 1+A-D
+     22: start -> f0 : [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: start
+     30: f0 -> f12 : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     31: f0 -> f12 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     19: f12 -> f22 : [ B>=1+D && E>=1+A ], cost: 1
+     20: f12 -> f22 : [ D>=1+B && E>=1+A ], cost: 1
+     18: f12 -> f35 : D'=B, [ E>=1+A && B==D ], cost: 1
+     17: f22 -> f35 : [ E>=1+A && E>=1+A ], cost: 2
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+     32: f35 -> f37 : D'=1+A, H'=0, [ 0>=1+C && A>=D ], cost: 2+A-D
+     33: f35 -> f37 : D'=1+A, H'=0, [ C>=1 && A>=D ], cost: 2+A-D
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     35: f37 -> f43 : E'=1+A, H'=free_7, [ A>=D && A>=E ], cost: 2-E+A
+     36: f37 -> f43 : E'=1+A, H'=free_9, [ A>=D && A>=E ], cost: 2-E+A
+     14: f43 -> f37 : D'=1+A, H'=0, [ E>=1+A && E>=1+A && A>=1+D ], cost: 2+A-D
+     22: start -> f0 : [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: start
+     41: f0 -> f22 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A ], cost: 3-E+A
+     39: f0 -> f35 : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     17: f22 -> f35 : [ E>=1+A && E>=1+A ], cost: 2
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+     32: f35 -> f37 : D'=1+A, H'=0, [ 0>=1+C && A>=D ], cost: 2+A-D
+     33: f35 -> f37 : D'=1+A, H'=0, [ C>=1 && A>=D ], cost: 2+A-D
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     43: f37 -> f37 : D'=1+A, E'=1+A, H'=0, [ A>=D && A>=E && 1+A>=1+A && 1+A>=1+A && A>=1+D ], cost: 4-E+2*A-D
+     44: f37 -> f37 : D'=1+A, E'=1+A, H'=0, [ A>=D && A>=E && 1+A>=1+A && 1+A>=1+A && A>=1+D ], cost: 4-E+2*A-D
+     22: start -> f0 : [], cost: 1
+
+Eliminating 2 self-loops for location f37
+  Removing the self-loops: 43 44.
+Removing duplicate transition: 45.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+     41: f0 -> f22 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A ], cost: 3-E+A
+     39: f0 -> f35 : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     17: f22 -> f35 : [ E>=1+A && E>=1+A ], cost: 2
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+     32: f35 -> f37 : D'=1+A, H'=0, [ 0>=1+C && A>=D ], cost: 2+A-D
+     33: f35 -> f37 : D'=1+A, H'=0, [ C>=1 && A>=D ], cost: 2+A-D
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     46: f37 -> f37 : D'=1+A, E'=1+A, H'=0, [ A>=E && A>=1+D ], cost: 4-E+2*A-D
+     22: start -> f0 : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start
+     41: f0 -> f22 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A ], cost: 3-E+A
+     39: f0 -> f35 : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     17: f22 -> f35 : [ E>=1+A && E>=1+A ], cost: 2
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+     32: f35 -> f37 : D'=1+A, H'=0, [ 0>=1+C && A>=D ], cost: 2+A-D
+     33: f35 -> f37 : D'=1+A, H'=0, [ C>=1 && A>=D ], cost: 2+A-D
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: start
+     39: f0 -> f35 : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     41: f0 -> f35 : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A ], cost: 5-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     12: f35 -> f0 : B'=1+B, C'=0, [ C==0 ], cost: 1
+     32: f35 -> f37 : D'=1+A, H'=0, [ 0>=1+C && A>=D ], cost: 2+A-D
+     33: f35 -> f37 : D'=1+A, H'=0, [ C>=1 && A>=D ], cost: 2+A-D
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: start
+     47: f0 -> f0 : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B && 0==0 ], cost: 4-E+A
+     50: f0 -> f0 : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2==0 ], cost: 6-E+A
+     51: f0 -> f37 : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     52: f0 -> f37 : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     48: f0 -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     49: f0 -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+Eliminating 2 self-loops for location f0
+  Removing the self-loops: 47 50.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+     53: f0 -> f0 : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 4-E+A
+     54: f0 -> f0 : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 6-E+A
+     51: f0 -> f37 : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     52: f0 -> f37 : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     48: f0 -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     49: f0 -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start
+     51: f0 -> f37 : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     52: f0 -> f37 : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     48: f0 -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     49: f0 -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     15: f37 -> f0 : B'=1+B, [ D>=1+A ], cost: 1
+     55: f37 -> f0 : B'=2+B, C'=0, D'=1+B, E'=1+A, F'=free, G'=free_1, [ D>=1+A && A>=2+B && A>=E && free_1>=free ], cost: 5-E+A
+     57: f37 -> f0 : B'=2+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ D>=1+A && A>=2+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     22: start -> f0 : [], cost: 1
+     56: start -> f0 : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     58: start -> f0 : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+
+
+Eliminated locations (branches):
+  Start location: start
+     59: f0 -> f0 : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A && 1+A>=1+A ], cost: 8-E+A
+     62: f0 -> f0 : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A && 1+A>=1+A ], cost: 8-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     48: f0 -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     49: f0 -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     60: f0 -> [16] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     61: f0 -> [17] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     63: f0 -> [18] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     64: f0 -> [19] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     22: start -> f0 : [], cost: 1
+     56: start -> f0 : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     58: start -> f0 : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+
+Eliminating 2 self-loops for location f0
+  Removing the self-loops: 59 62.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+     65: f0 -> f0 : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 8-E+A
+     66: f0 -> f0 : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 8-E+A
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     48: f0 -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     49: f0 -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     60: f0 -> [16] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     61: f0 -> [17] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     63: f0 -> [18] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     64: f0 -> [19] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     22: start -> f0 : [], cost: 1
+     56: start -> f0 : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     58: start -> f0 : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+
+
+Chained simpled loops:
+  Start location: start
+     37: f0 -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     38: f0 -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 2-E+A
+     40: f0 -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     42: f0 -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 2-E+A
+     48: f0 -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     49: f0 -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 3-E+A
+     60: f0 -> [16] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     61: f0 -> [17] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 7-E+A
+     63: f0 -> [18] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     64: f0 -> [19] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 7-E+A
+     22: start -> f0 : [], cost: 1
+     56: start -> f0 : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     58: start -> f0 : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     67: start -> f0 : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+     68: start -> f0 : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+
+
+Eliminated locations (branches):
+  Start location: start
+     69: start -> [10] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 3-E+A
+     70: start -> [11] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 3-E+A
+     71: start -> [12] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 3-E+A
+     72: start -> [13] : C'=free_2, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 3-E+A
+     73: start -> [14] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 4-E+A
+     74: start -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 4-E+A
+     75: start -> [16] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 8-E+A
+     76: start -> [17] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 8-E+A
+     77: start -> [18] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 8-E+A
+     78: start -> [19] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 8-E+A
+     79: start -> [20] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     80: start -> [21] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     81: start -> [22] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     82: start -> [23] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     83: start -> [24] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     84: start -> [25] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     85: start -> [26] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     86: start -> [27] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     87: start -> [28] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     88: start -> [29] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     89: start -> [30] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     90: start -> [31] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     91: start -> [32] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     92: start -> [33] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     93: start -> [34] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     94: start -> [35] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     95: start -> [36] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     96: start -> [37] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     97: start -> [38] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     98: start -> [39] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+     99: start -> [40] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    100: start -> [41] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    101: start -> [42] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    102: start -> [43] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    103: start -> [44] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    104: start -> [45] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    105: start -> [46] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    106: start -> [47] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    107: start -> [48] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    108: start -> [49] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    109: start -> [50] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    110: start -> [51] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    111: start -> [52] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    112: start -> [53] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    113: start -> [54] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    114: start -> [55] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    115: start -> [56] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    116: start -> [57] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    117: start -> [58] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+    118: start -> [59] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+
+Removing duplicate transition: 69.
+Removing duplicate transition: 70.
+Removing duplicate transition: 71.
+Removing duplicate transition: 72.
+Removing duplicate transition: 73.
+Removing duplicate transition: 75.
+Removing duplicate transition: 77.
+Removing duplicate transition: 79.
+Removing duplicate transition: 80.
+Removing duplicate transition: 81.
+Removing duplicate transition: 82.
+Removing duplicate transition: 83.
+Removing duplicate transition: 84.
+Removing duplicate transition: 85.
+Removing duplicate transition: 86.
+Removing duplicate transition: 87.
+Removing duplicate transition: 89.
+Removing duplicate transition: 90.
+Removing duplicate transition: 91.
+Removing duplicate transition: 92.
+Removing duplicate transition: 93.
+Removing duplicate transition: 94.
+Removing duplicate transition: 95.
+Removing duplicate transition: 96.
+Removing duplicate transition: 97.
+Removing duplicate transition: 99.
+Removing duplicate transition: 100.
+Removing duplicate transition: 101.
+Removing duplicate transition: 102.
+Removing duplicate transition: 103.
+Removing duplicate transition: 104.
+Removing duplicate transition: 105.
+Removing duplicate transition: 106.
+Removing duplicate transition: 107.
+Removing duplicate transition: 109.
+Removing duplicate transition: 110.
+Removing duplicate transition: 111.
+Removing duplicate transition: 112.
+Removing duplicate transition: 113.
+Removing duplicate transition: 114.
+Removing duplicate transition: 115.
+Removing duplicate transition: 116.
+Removing duplicate transition: 117.
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+     74: start -> [15] : C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B ], cost: 4-E+A
+     76: start -> [17] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && 0>=1+free_2 && A>=A ], cost: 8-E+A
+     78: start -> [19] : C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && A>=1+B && 1+A>=1+A && 1+A>=1+A && 1+A>=1+A && free_2>=1 && A>=A ], cost: 8-E+A
+     88: start -> [29] : B'=1+B, C'=0, D'=B, E'=1+A, F'=free, G'=free_1, [ A>=1+B && A>=E && free_1>=free ], cost: 5-E+A
+     98: start -> [39] : B'=1+B, C'=0, D'=A, E'=1+A, F'=free_3, G'=free_4, [ A>=1+B && A>=E && free_3>=1+free_4 ], cost: 7-E+A
+    108: start -> [49] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && 0>=1+free_2 ], cost: 9-E+A
+    118: start -> [59] : B'=1+B, C'=free_2, D'=1+A, E'=1+A, F'=free_3, G'=free_4, H'=0, [ A>=1+B && A>=E && free_3>=1+free_4 && free_2>=1 ], cost: 9-E+A
+
+
+Computing complexity for remaining 7 transitions.
+
+Created initial limit problem:
+1 (+/+!), 1-free+free_1 (+/+!), 4-E+A (+), -B+A (+/+!), 1-E+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1+B}
+resulting limit problem:
+1 (+/+!), 5-E+B (+), 1-free+free_1 (+/+!), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==E}
+resulting limit problem:
+1 (+/+!), 5-E+B (+), 1-free+free_1 (+/+!), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {free_1==free}
+resulting limit problem:
+1 (+/+!), 5-E+B (+), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+5-E+B (+), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (A), replacing 5-E+B (+) by 5 (+!) and -E+B (+) using + limit vector (+!,+)
+resulting limit problem:
+-E+B (+), 5 (+!), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (B), deleting 5 (+!)
+resulting limit problem:
+-E+B (+), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (A), replacing -E+B (+) by -E (-!) and B (+) using + limit vector (-!,+)
+resulting limit problem:
+-E (-!), B (+), 2-E+B (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {E==1}
+resulting limit problem:
+1+B (+/+!), B (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+1+B (+/+!), B (+) [not solved]
+
+applying transformation rule (D), replacing 1+B (+/+!) by B (+)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+E / 1
+B / n
+free / 0
+A / 1+n
+free_1 / 0
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=1+B && A>=E && free_1>=free && 1+A>=1+A && B==B
+  Final Cost:  4+n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

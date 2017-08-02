@@ -1,0 +1,272 @@
+Trying to load file: traverse_seg.koat
+
+Initial Control flow graph problem:
+  Start location: f15
+      2: f7 -> f7 : A'=1+A, C'=N, M'=N, N'=free_22, W'=free_23, X'=A, Y'=T, [ B>=1+A && A>=0 ], cost: 1
+      0: f7 -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: f7 -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+     15: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F, L1'=-1+E, [ free_96>=1+free_97 && free_96>=1+free_92 && F>=0 && E>=0 && free_94>=1+free_96 && free_93>=2 ], cost: 1
+     16: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F, L1'=-1+E, [ free_102>=1+free_103 && free_102>=1+free_98 && F>=0 && E>=0 && free_102>=1+free_100 && free_99>=2 ], cost: 1
+     17: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F, L1'=-1+E, [ free_108>=1+free_109 && free_104>=1+free_108 && F>=0 && E>=0 && free_106>=1+free_108 && free_105>=2 ], cost: 1
+     18: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F, L1'=-1+E, [ free_114>=1+free_115 && free_110>=1+free_114 && F>=0 && E>=0 && free_114>=1+free_112 && free_111>=2 ], cost: 1
+     19: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F, L1'=-1+E, [ free_121>=1+free_120 && free_120>=1+free_116 && F>=0 && E>=0 && free_118>=1+free_120 && free_117>=2 ], cost: 1
+     20: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F, L1'=-1+E, [ free_127>=1+free_126 && free_126>=1+free_122 && F>=0 && E>=0 && free_126>=1+free_124 && free_123>=2 ], cost: 1
+     21: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F, L1'=-1+E, [ free_133>=1+free_132 && free_128>=1+free_132 && F>=0 && E>=0 && free_130>=1+free_132 && free_129>=2 ], cost: 1
+     22: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F, L1'=-1+E, [ free_139>=1+free_138 && free_134>=1+free_138 && F>=0 && E>=0 && free_138>=1+free_136 && free_135>=2 ], cost: 1
+     47: f14 -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_254>=2 && free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: f14 -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_260>=2 && free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: f14 -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_266>=2 && free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: f14 -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_272>=2 && free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+      3: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_26, O'=free_27, P'=free_27, Z'=free_28, A1'=1+E, B1'=T, C1'=free_25, D1'=free_24, E1'=E, [ free_29>=1+R && A>=0 && free_26>=2 && free_27>=1+free_29 && free_30>=free_26 && F==1 ], cost: 1
+      4: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_33, O'=free_34, P'=free_34, Z'=free_35, A1'=1+E, B1'=T, C1'=free_32, D1'=free_31, E1'=E, [ free_36>=1+R && A>=0 && free_33>=2 && free_36>=1+free_34 && free_37>=free_33 && F==1 ], cost: 1
+      5: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_40, O'=free_41, P'=free_41, Z'=free_42, A1'=1+E, B1'=T, C1'=free_39, D1'=free_38, E1'=E, [ R>=1+free_43 && A>=0 && free_40>=2 && free_41>=1+free_43 && free_44>=free_40 && F==1 ], cost: 1
+      6: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_47, O'=free_48, P'=free_48, Z'=free_49, A1'=1+E, B1'=T, C1'=free_46, D1'=free_45, E1'=E, [ R>=1+free_50 && A>=0 && free_47>=2 && free_50>=1+free_48 && free_51>=free_47 && F==1 ], cost: 1
+      7: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_53, O'=free_54, P'=free_54, F1'=free_55, G1'=free_52, [ free_56>=1+R && free_56>=1+free_52 && E1>=0 && free_54>=1+free_56 && free_53>=2 ], cost: 1
+      8: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_58, O'=free_59, P'=free_59, F1'=free_60, G1'=free_57, [ free_61>=1+R && free_61>=1+free_57 && E1>=0 && free_61>=1+free_59 && free_58>=2 ], cost: 1
+      9: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_63, O'=free_64, P'=free_64, F1'=free_65, G1'=free_62, [ free_66>=1+R && free_62>=1+free_66 && E1>=0 && free_64>=1+free_66 && free_63>=2 ], cost: 1
+     10: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_68, O'=free_69, P'=free_69, F1'=free_70, G1'=free_67, [ free_71>=1+R && free_67>=1+free_71 && E1>=0 && free_71>=1+free_69 && free_68>=2 ], cost: 1
+     11: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_73, O'=free_74, P'=free_74, F1'=free_75, G1'=free_72, [ R>=1+free_76 && free_76>=1+free_72 && E1>=0 && free_74>=1+free_76 && free_73>=2 ], cost: 1
+     12: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_78, O'=free_79, P'=free_79, F1'=free_80, G1'=free_77, [ R>=1+free_81 && free_81>=1+free_77 && E1>=0 && free_81>=1+free_79 && free_78>=2 ], cost: 1
+     13: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_83, O'=free_84, P'=free_84, F1'=free_85, G1'=free_82, [ R>=1+free_86 && free_82>=1+free_86 && E1>=0 && free_84>=1+free_86 && free_83>=2 ], cost: 1
+     14: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_88, O'=free_89, P'=free_89, F1'=free_90, G1'=free_87, [ R>=1+free_91 && free_87>=1+free_91 && E1>=0 && free_91>=1+free_89 && free_88>=2 ], cost: 1
+     43: f10 -> f5 : F'=1+R1, G'=D, H'=free_227, P'=free_228, Q_1'=free_229, R'=free_226, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_225, [ free_230>=2 && free_227>=2 && E1>=0 && O>=1+D && D>=1+O && Q_1==R && F==1 ], cost: 1
+     44: f10 -> f5 : F'=1+R1, G'=D, H'=free_233, P'=free_234, Q_1'=free_235, R'=free_232, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_231, [ free_236>=2 && free_233>=2 && E1>=0 && O>=1+D && Q_1==R && F==1 ], cost: 1
+     45: f10 -> f5 : F'=1+R1, G'=D, H'=free_239, P'=free_240, Q_1'=free_241, R'=free_238, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_237, [ free_242>=2 && free_239>=2 && E1>=0 && D>=1+O && Q_1==R && F==1 ], cost: 1
+     46: f10 -> f5 : F'=1+R1, G'=D, H'=free_245, P'=free_246, Q_1'=free_247, R'=free_244, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_243, [ free_248>=2 && free_245>=2 && E1>=0 && D>=1+O && O>=1+D && Q_1==R && F==1 ], cost: 1
+     23: f4 -> f5 : D'=O1, G'=O1, H'=free_140, O'=free_141, P1'=free_141, Q1_1'=M1, [ free_142>=1+M1 && N1>=0 && free_140>=2 && O1>=1+free_141 && free_141>=1+free_142 ], cost: 1
+     24: f4 -> f5 : D'=O1, G'=O1, H'=free_143, O'=free_144, P1'=free_144, Q1_1'=M1, [ free_145>=1+M1 && N1>=0 && free_143>=2 && O1>=1+free_144 && free_145>=1+free_144 ], cost: 1
+     25: f4 -> f5 : D'=O1, G'=O1, H'=free_146, O'=free_147, P1'=free_147, Q1_1'=M1, [ free_148>=1+M1 && N1>=0 && free_146>=2 && free_147>=1+O1 && free_147>=1+free_148 ], cost: 1
+     26: f4 -> f5 : D'=O1, G'=O1, H'=free_149, O'=free_150, P1'=free_150, Q1_1'=M1, [ free_151>=1+M1 && N1>=0 && free_149>=2 && free_150>=1+O1 && free_151>=1+free_150 ], cost: 1
+     27: f4 -> f5 : D'=O1, G'=O1, H'=free_152, O'=free_153, P1'=free_153, Q1_1'=M1, [ M1>=1+free_154 && N1>=0 && free_152>=2 && O1>=1+free_153 && free_153>=1+free_154 ], cost: 1
+     28: f4 -> f5 : D'=O1, G'=O1, H'=free_155, O'=free_156, P1'=free_156, Q1_1'=M1, [ M1>=1+free_157 && N1>=0 && free_155>=2 && O1>=1+free_156 && free_157>=1+free_156 ], cost: 1
+     29: f4 -> f5 : D'=O1, G'=O1, H'=free_158, O'=free_159, P1'=free_159, Q1_1'=M1, [ M1>=1+free_160 && N1>=0 && free_158>=2 && free_159>=1+O1 && free_159>=1+free_160 ], cost: 1
+     30: f4 -> f5 : D'=O1, G'=O1, H'=free_161, O'=free_162, P1'=free_162, Q1_1'=M1, [ M1>=1+free_163 && N1>=0 && free_161>=2 && free_162>=1+O1 && free_163>=1+free_162 ], cost: 1
+     31: f4 -> f16 : G'=free_168, H'=free_169, K'=free_171, O'=free_166, M1'=free_170, O1'=free_167, P1'=free_165, Q1_1'=free_164, [ N1>=0 && free_168>=1+free_166 && free_169>=2 && O1==M1 ], cost: 1
+     32: f4 -> f16 : G'=free_176, H'=free_177, K'=free_179, O'=free_174, M1'=free_178, O1'=free_175, P1'=free_173, Q1_1'=free_172, [ N1>=0 && free_174>=1+free_176 && free_177>=2 && O1==M1 ], cost: 1
+     33: f5 -> f5 : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_183>=1+M1 && R1>=0 && free_180>=2 && O1>=1+free_181 && free_181>=1+free_183 ], cost: 1
+     34: f5 -> f5 : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_187>=1+M1 && R1>=0 && free_184>=2 && O1>=1+free_185 && free_187>=1+free_185 ], cost: 1
+     35: f5 -> f5 : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_191>=1+M1 && R1>=0 && free_188>=2 && free_189>=1+O1 && free_189>=1+free_191 ], cost: 1
+     36: f5 -> f5 : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_195>=1+M1 && R1>=0 && free_192>=2 && free_193>=1+O1 && free_195>=1+free_193 ], cost: 1
+     37: f5 -> f5 : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_199 && R1>=0 && free_196>=2 && O1>=1+free_197 && free_197>=1+free_199 ], cost: 1
+     38: f5 -> f5 : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_203 && R1>=0 && free_200>=2 && O1>=1+free_201 && free_203>=1+free_201 ], cost: 1
+     39: f5 -> f5 : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_207 && R1>=0 && free_204>=2 && free_205>=1+O1 && free_205>=1+free_207 ], cost: 1
+     40: f5 -> f5 : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_211 && R1>=0 && free_208>=2 && free_209>=1+O1 && free_211>=1+free_209 ], cost: 1
+     41: f5 -> f16 : H'=free_215, K'=free_216, M1'=free_212, O1'=free_213, P1'=free_217, Q1_1'=free_214, [ free_215>=2 && R1>=0 && O1==M1 ], cost: 1
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+     51: f15 -> f16 : A'=free_286, B'=free_277, C'=free_279, D'=U1, G'=U1, H'=free_291, Q'=free_274, J'=free_273, K'=free_280, L'=free_278, M'=free_287, N'=free_281, O'=U1, P'=free_288, Q_1'=free_275, R'=free_290, M1'=free_289, O1'=free_283, P1'=free_276, Q1_1'=free_285, U1'=free_282, V1'=free_284, [ 0>=free_292 && 0>=free_294 && 0>=free_291 && 0>=free_293 ], cost: 1
+     52: f15 -> f16 : A'=free_309, B'=free_300, C'=free_302, D'=N, G'=free_305, H'=1, Q'=free_297, J'=free_295, K'=free_303, L'=free_301, M'=free_310, N'=free_304, O'=free_311, P'=free_298, Q_1'=free_313, R'=free_299, M1'=free_308, O1'=free_312, P1'=free_306, Q1_1'=free_296, U1'=free_307, V1'=free_314, [ 0>=1 && free_305>=1+free_311 ], cost: 1
+     53: f15 -> f16 : A'=free_329, B'=free_320, C'=free_322, D'=N, G'=free_325, H'=1, Q'=free_317, J'=free_315, K'=free_323, L'=free_321, M'=free_330, N'=free_324, O'=free_331, P'=free_318, Q_1'=free_333, R'=free_319, M1'=free_328, O1'=free_332, P1'=free_326, Q1_1'=free_316, U1'=free_327, V1'=free_334, [ 0>=1 && free_331>=1+free_325 ], cost: 1
+     54: f15 -> f16 : A'=free_349, B'=free_340, C'=free_342, D'=N, G'=free_345, H'=1, Q'=free_337, J'=free_335, K'=free_343, L'=free_341, M'=free_350, N'=free_344, O'=free_351, P'=free_338, Q_1'=free_353, R'=free_339, M1'=free_348, O1'=free_352, P1'=free_346, Q1_1'=free_336, U1'=free_347, V1'=free_354, [ 0>=1 && free_345>=1+free_351 ], cost: 1
+     55: f15 -> f16 : A'=free_369, B'=free_360, C'=free_362, D'=N, G'=free_365, H'=1, Q'=free_357, J'=free_355, K'=free_363, L'=free_361, M'=free_370, N'=free_364, O'=free_371, P'=free_358, Q_1'=free_373, R'=free_359, M1'=free_368, O1'=free_372, P1'=free_366, Q1_1'=free_356, U1'=free_367, V1'=free_374, [ 0>=1 && free_371>=1+free_365 ], cost: 1
+
+
+Removed unsatisfiable initial transitions:
+  Start location: f15
+      2: f7 -> f7 : A'=1+A, C'=N, M'=N, N'=free_22, W'=free_23, X'=A, Y'=T, [ B>=1+A && A>=0 ], cost: 1
+      0: f7 -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: f7 -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+     15: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F, L1'=-1+E, [ free_96>=1+free_97 && free_96>=1+free_92 && F>=0 && E>=0 && free_94>=1+free_96 && free_93>=2 ], cost: 1
+     16: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F, L1'=-1+E, [ free_102>=1+free_103 && free_102>=1+free_98 && F>=0 && E>=0 && free_102>=1+free_100 && free_99>=2 ], cost: 1
+     17: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F, L1'=-1+E, [ free_108>=1+free_109 && free_104>=1+free_108 && F>=0 && E>=0 && free_106>=1+free_108 && free_105>=2 ], cost: 1
+     18: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F, L1'=-1+E, [ free_114>=1+free_115 && free_110>=1+free_114 && F>=0 && E>=0 && free_114>=1+free_112 && free_111>=2 ], cost: 1
+     19: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F, L1'=-1+E, [ free_121>=1+free_120 && free_120>=1+free_116 && F>=0 && E>=0 && free_118>=1+free_120 && free_117>=2 ], cost: 1
+     20: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F, L1'=-1+E, [ free_127>=1+free_126 && free_126>=1+free_122 && F>=0 && E>=0 && free_126>=1+free_124 && free_123>=2 ], cost: 1
+     21: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F, L1'=-1+E, [ free_133>=1+free_132 && free_128>=1+free_132 && F>=0 && E>=0 && free_130>=1+free_132 && free_129>=2 ], cost: 1
+     22: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F, L1'=-1+E, [ free_139>=1+free_138 && free_134>=1+free_138 && F>=0 && E>=0 && free_138>=1+free_136 && free_135>=2 ], cost: 1
+     47: f14 -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_254>=2 && free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: f14 -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_260>=2 && free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: f14 -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_266>=2 && free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: f14 -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_272>=2 && free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+      3: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_26, O'=free_27, P'=free_27, Z'=free_28, A1'=1+E, B1'=T, C1'=free_25, D1'=free_24, E1'=E, [ free_29>=1+R && A>=0 && free_26>=2 && free_27>=1+free_29 && free_30>=free_26 && F==1 ], cost: 1
+      4: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_33, O'=free_34, P'=free_34, Z'=free_35, A1'=1+E, B1'=T, C1'=free_32, D1'=free_31, E1'=E, [ free_36>=1+R && A>=0 && free_33>=2 && free_36>=1+free_34 && free_37>=free_33 && F==1 ], cost: 1
+      5: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_40, O'=free_41, P'=free_41, Z'=free_42, A1'=1+E, B1'=T, C1'=free_39, D1'=free_38, E1'=E, [ R>=1+free_43 && A>=0 && free_40>=2 && free_41>=1+free_43 && free_44>=free_40 && F==1 ], cost: 1
+      6: f9 -> f14 : D'=Q_1, F'=1, G'=Q_1, H'=free_47, O'=free_48, P'=free_48, Z'=free_49, A1'=1+E, B1'=T, C1'=free_46, D1'=free_45, E1'=E, [ R>=1+free_50 && A>=0 && free_47>=2 && free_50>=1+free_48 && free_51>=free_47 && F==1 ], cost: 1
+      7: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_53, O'=free_54, P'=free_54, F1'=free_55, G1'=free_52, [ free_56>=1+R && free_56>=1+free_52 && E1>=0 && free_54>=1+free_56 && free_53>=2 ], cost: 1
+      8: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_58, O'=free_59, P'=free_59, F1'=free_60, G1'=free_57, [ free_61>=1+R && free_61>=1+free_57 && E1>=0 && free_61>=1+free_59 && free_58>=2 ], cost: 1
+      9: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_63, O'=free_64, P'=free_64, F1'=free_65, G1'=free_62, [ free_66>=1+R && free_62>=1+free_66 && E1>=0 && free_64>=1+free_66 && free_63>=2 ], cost: 1
+     10: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_68, O'=free_69, P'=free_69, F1'=free_70, G1'=free_67, [ free_71>=1+R && free_67>=1+free_71 && E1>=0 && free_71>=1+free_69 && free_68>=2 ], cost: 1
+     11: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_73, O'=free_74, P'=free_74, F1'=free_75, G1'=free_72, [ R>=1+free_76 && free_76>=1+free_72 && E1>=0 && free_74>=1+free_76 && free_73>=2 ], cost: 1
+     12: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_78, O'=free_79, P'=free_79, F1'=free_80, G1'=free_77, [ R>=1+free_81 && free_81>=1+free_77 && E1>=0 && free_81>=1+free_79 && free_78>=2 ], cost: 1
+     13: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_83, O'=free_84, P'=free_84, F1'=free_85, G1'=free_82, [ R>=1+free_86 && free_82>=1+free_86 && E1>=0 && free_84>=1+free_86 && free_83>=2 ], cost: 1
+     14: f10 -> f14 : D'=Q_1, G'=Q_1, H'=free_88, O'=free_89, P'=free_89, F1'=free_90, G1'=free_87, [ R>=1+free_91 && free_87>=1+free_91 && E1>=0 && free_91>=1+free_89 && free_88>=2 ], cost: 1
+     43: f10 -> f5 : F'=1+R1, G'=D, H'=free_227, P'=free_228, Q_1'=free_229, R'=free_226, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_225, [ free_230>=2 && free_227>=2 && E1>=0 && O>=1+D && D>=1+O && Q_1==R && F==1 ], cost: 1
+     44: f10 -> f5 : F'=1+R1, G'=D, H'=free_233, P'=free_234, Q_1'=free_235, R'=free_232, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_231, [ free_236>=2 && free_233>=2 && E1>=0 && O>=1+D && Q_1==R && F==1 ], cost: 1
+     45: f10 -> f5 : F'=1+R1, G'=D, H'=free_239, P'=free_240, Q_1'=free_241, R'=free_238, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_237, [ free_242>=2 && free_239>=2 && E1>=0 && D>=1+O && Q_1==R && F==1 ], cost: 1
+     46: f10 -> f5 : F'=1+R1, G'=D, H'=free_245, P'=free_246, Q_1'=free_247, R'=free_244, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, X1'=T, Y1'=T, Z1'=free_243, [ free_248>=2 && free_245>=2 && E1>=0 && D>=1+O && O>=1+D && Q_1==R && F==1 ], cost: 1
+     23: f4 -> f5 : D'=O1, G'=O1, H'=free_140, O'=free_141, P1'=free_141, Q1_1'=M1, [ free_142>=1+M1 && N1>=0 && free_140>=2 && O1>=1+free_141 && free_141>=1+free_142 ], cost: 1
+     24: f4 -> f5 : D'=O1, G'=O1, H'=free_143, O'=free_144, P1'=free_144, Q1_1'=M1, [ free_145>=1+M1 && N1>=0 && free_143>=2 && O1>=1+free_144 && free_145>=1+free_144 ], cost: 1
+     25: f4 -> f5 : D'=O1, G'=O1, H'=free_146, O'=free_147, P1'=free_147, Q1_1'=M1, [ free_148>=1+M1 && N1>=0 && free_146>=2 && free_147>=1+O1 && free_147>=1+free_148 ], cost: 1
+     26: f4 -> f5 : D'=O1, G'=O1, H'=free_149, O'=free_150, P1'=free_150, Q1_1'=M1, [ free_151>=1+M1 && N1>=0 && free_149>=2 && free_150>=1+O1 && free_151>=1+free_150 ], cost: 1
+     27: f4 -> f5 : D'=O1, G'=O1, H'=free_152, O'=free_153, P1'=free_153, Q1_1'=M1, [ M1>=1+free_154 && N1>=0 && free_152>=2 && O1>=1+free_153 && free_153>=1+free_154 ], cost: 1
+     28: f4 -> f5 : D'=O1, G'=O1, H'=free_155, O'=free_156, P1'=free_156, Q1_1'=M1, [ M1>=1+free_157 && N1>=0 && free_155>=2 && O1>=1+free_156 && free_157>=1+free_156 ], cost: 1
+     29: f4 -> f5 : D'=O1, G'=O1, H'=free_158, O'=free_159, P1'=free_159, Q1_1'=M1, [ M1>=1+free_160 && N1>=0 && free_158>=2 && free_159>=1+O1 && free_159>=1+free_160 ], cost: 1
+     30: f4 -> f5 : D'=O1, G'=O1, H'=free_161, O'=free_162, P1'=free_162, Q1_1'=M1, [ M1>=1+free_163 && N1>=0 && free_161>=2 && free_162>=1+O1 && free_163>=1+free_162 ], cost: 1
+     31: f4 -> f16 : G'=free_168, H'=free_169, K'=free_171, O'=free_166, M1'=free_170, O1'=free_167, P1'=free_165, Q1_1'=free_164, [ N1>=0 && free_168>=1+free_166 && free_169>=2 && O1==M1 ], cost: 1
+     32: f4 -> f16 : G'=free_176, H'=free_177, K'=free_179, O'=free_174, M1'=free_178, O1'=free_175, P1'=free_173, Q1_1'=free_172, [ N1>=0 && free_174>=1+free_176 && free_177>=2 && O1==M1 ], cost: 1
+     33: f5 -> f5 : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_183>=1+M1 && R1>=0 && free_180>=2 && O1>=1+free_181 && free_181>=1+free_183 ], cost: 1
+     34: f5 -> f5 : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_187>=1+M1 && R1>=0 && free_184>=2 && O1>=1+free_185 && free_187>=1+free_185 ], cost: 1
+     35: f5 -> f5 : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_191>=1+M1 && R1>=0 && free_188>=2 && free_189>=1+O1 && free_189>=1+free_191 ], cost: 1
+     36: f5 -> f5 : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ free_195>=1+M1 && R1>=0 && free_192>=2 && free_193>=1+O1 && free_195>=1+free_193 ], cost: 1
+     37: f5 -> f5 : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_199 && R1>=0 && free_196>=2 && O1>=1+free_197 && free_197>=1+free_199 ], cost: 1
+     38: f5 -> f5 : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_203 && R1>=0 && free_200>=2 && O1>=1+free_201 && free_203>=1+free_201 ], cost: 1
+     39: f5 -> f5 : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_207 && R1>=0 && free_204>=2 && free_205>=1+O1 && free_205>=1+free_207 ], cost: 1
+     40: f5 -> f5 : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ M1>=1+free_211 && R1>=0 && free_208>=2 && free_209>=1+O1 && free_211>=1+free_209 ], cost: 1
+     41: f5 -> f16 : H'=free_215, K'=free_216, M1'=free_212, O1'=free_213, P1'=free_217, Q1_1'=free_214, [ free_215>=2 && R1>=0 && O1==M1 ], cost: 1
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+     51: f15 -> f16 : A'=free_286, B'=free_277, C'=free_279, D'=U1, G'=U1, H'=free_291, Q'=free_274, J'=free_273, K'=free_280, L'=free_278, M'=free_287, N'=free_281, O'=U1, P'=free_288, Q_1'=free_275, R'=free_290, M1'=free_289, O1'=free_283, P1'=free_276, Q1_1'=free_285, U1'=free_282, V1'=free_284, [ 0>=free_292 && 0>=free_294 && 0>=free_291 && 0>=free_293 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f15
+      2: f7 -> f7 : A'=1+A, C'=N, M'=N, N'=free_22, W'=free_23, X'=A, Y'=T, [ B>=1+A && A>=0 ], cost: 1
+      0: f7 -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: f7 -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+     15: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_93>=2 && 1+free_92<=-1+free_94 ], cost: 1
+     16: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_99>=2 ], cost: 1
+     17: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_105>=2 ], cost: 1
+     18: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_111>=2 && 1+free_112<=-1+free_110 ], cost: 1
+     19: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_117>=2 && 1+free_116<=-1+free_118 ], cost: 1
+     20: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_123>=2 ], cost: 1
+     21: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_129>=2 ], cost: 1
+     22: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_135>=2 && 1+free_136<=-1+free_134 ], cost: 1
+     47: f14 -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: f14 -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: f14 -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: f14 -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+     33: f5 -> f5 : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_180>=2 && O1>=1+free_181 && 1+M1<=-1+free_181 ], cost: 1
+     34: f5 -> f5 : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_184>=2 && O1>=1+free_185 ], cost: 1
+     35: f5 -> f5 : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_188>=2 && free_189>=1+O1 && 1+M1<=-1+free_189 ], cost: 1
+     36: f5 -> f5 : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_192>=2 && free_193>=1+O1 ], cost: 1
+     37: f5 -> f5 : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_196>=2 && O1>=1+free_197 ], cost: 1
+     38: f5 -> f5 : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_200>=2 && O1>=1+free_201 && 1+free_201<=-1+M1 ], cost: 1
+     39: f5 -> f5 : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_204>=2 && free_205>=1+O1 ], cost: 1
+     40: f5 -> f5 : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_208>=2 && free_209>=1+O1 && 1+free_209<=-1+M1 ], cost: 1
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+
+
+Try instantiation
+  Start location: f15
+     56: f7 -> f7 : A'=B, C'=free_22, M'=free_22, N'=free_22, W'=free_23, X'=-1+B, Y'=T, [ B>=1 && A>=0 && B>=1+A ], cost: B-A
+      0: f7 -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: f7 -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+     15: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_93>=2 && 1+free_92<=-1+free_94 ], cost: 1
+     16: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_99>=2 ], cost: 1
+     17: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_105>=2 ], cost: 1
+     18: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_111>=2 && 1+free_112<=-1+free_110 ], cost: 1
+     19: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_117>=2 && 1+free_116<=-1+free_118 ], cost: 1
+     20: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_123>=2 ], cost: 1
+     21: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_129>=2 ], cost: 1
+     22: f14 -> f14 : D'=Q_1, E'=-1+E, F'=1+F, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F, L1'=-1+E, [ F>=0 && E>=0 && free_135>=2 && 1+free_136<=-1+free_134 ], cost: 1
+     47: f14 -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: f14 -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: f14 -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: f14 -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+     33: f5 -> f5 : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_180>=2 && O1>=1+free_181 && 1+M1<=-1+free_181 ], cost: 1
+     34: f5 -> f5 : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_184>=2 && O1>=1+free_185 ], cost: 1
+     35: f5 -> f5 : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_188>=2 && free_189>=1+O1 && 1+M1<=-1+free_189 ], cost: 1
+     36: f5 -> f5 : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_192>=2 && free_193>=1+O1 ], cost: 1
+     37: f5 -> f5 : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_196>=2 && O1>=1+free_197 ], cost: 1
+     38: f5 -> f5 : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_200>=2 && O1>=1+free_201 && 1+free_201<=-1+M1 ], cost: 1
+     39: f5 -> f5 : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_204>=2 && free_205>=1+O1 ], cost: 1
+     40: f5 -> f5 : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_208>=2 && free_209>=1+O1 && 1+free_209<=-1+M1 ], cost: 1
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+
+Eliminating 1 self-loops for location f7
+  Removing the self-loops: 56.
+Adding an epsilon transition (to model nonexecution of the loops): 58.
+
+Try instantiation
+  Start location: f15
+     57: f7 -> [8] : A'=B, C'=free_22, M'=free_22, N'=free_22, W'=free_23, X'=-1+B, Y'=T, [ B>=1 && A>=0 && B>=1+A ], cost: B-A
+     58: f7 -> [8] : [], cost: 0
+     59: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     60: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     61: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     62: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     63: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     64: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     65: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     66: f14 -> f14 : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     47: f14 -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: f14 -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: f14 -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: f14 -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+     33: f5 -> f5 : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_180>=2 && O1>=1+free_181 && 1+M1<=-1+free_181 ], cost: 1
+     34: f5 -> f5 : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_184>=2 && O1>=1+free_185 ], cost: 1
+     35: f5 -> f5 : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_188>=2 && free_189>=1+O1 && 1+M1<=-1+free_189 ], cost: 1
+     36: f5 -> f5 : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_192>=2 && free_193>=1+O1 ], cost: 1
+     37: f5 -> f5 : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_196>=2 && O1>=1+free_197 ], cost: 1
+     38: f5 -> f5 : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_200>=2 && O1>=1+free_201 && 1+free_201<=-1+M1 ], cost: 1
+     39: f5 -> f5 : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_204>=2 && free_205>=1+O1 ], cost: 1
+     40: f5 -> f5 : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1+R1, S1'=T, T1'=-1+R1, [ R1>=0 && free_208>=2 && free_209>=1+O1 && 1+free_209<=-1+M1 ], cost: 1
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+      0: [8] -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: [8] -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+
+Eliminating 8 self-loops for location f14
+  Removing the self-loops: 59 60 61 62 63 64 65 66.
+Adding an epsilon transition (to model nonexecution of the loops): 75.
+
+Try instantiation
+  Start location: f15
+     57: f7 -> [8] : A'=B, C'=free_22, M'=free_22, N'=free_22, W'=free_23, X'=-1+B, Y'=T, [ B>=1 && A>=0 && B>=1+A ], cost: B-A
+     58: f7 -> [8] : [], cost: 0
+     67: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     68: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     69: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     70: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     71: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     72: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     73: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     74: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     75: f14 -> [9] : [], cost: 0
+     76: f5 -> f5 : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ O1-M1<=-3 && R1>=0 ], cost: 1+R1
+     77: f5 -> f5 : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     78: f5 -> f5 : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     79: f5 -> f5 : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     80: f5 -> f5 : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     81: f5 -> f5 : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     82: f5 -> f5 : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     83: f5 -> f5 : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ -O1+M1<=-3 && R1>=0 ], cost: 1+R1
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+      0: [8] -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: [8] -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+     47: [9] -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: [9] -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: [9] -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: [9] -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+
+Eliminating 8 self-loops for location f5
+  Removing the self-loops: 76 77 78 79 80 81 82 83.
+Adding an epsilon transition (to model nonexecution of the loops): 92.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f15
+     57: f7 -> [8] : A'=B, C'=free_22, M'=free_22, N'=free_22, W'=free_23, X'=-1+B, Y'=T, [ B>=1 && A>=0 && B>=1+A ], cost: B-A
+     58: f7 -> [8] : [], cost: 0
+     67: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_135, O'=free_136, P'=free_136, Z'=free_137, H1'=R, Q1'=free_134, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     68: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_129, O'=free_130, P'=free_130, Z'=free_131, H1'=R, Q1'=free_128, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     69: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_123, O'=free_124, P'=free_124, Z'=free_125, H1'=R, Q1'=free_122, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     70: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_117, O'=free_118, P'=free_118, Z'=free_119, H1'=R, Q1'=free_116, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     71: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_111, O'=free_112, P'=free_112, Z'=free_113, H1'=R, Q1'=free_110, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     72: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_105, O'=free_106, P'=free_106, Z'=free_107, H1'=R, Q1'=free_104, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     73: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_99, O'=free_100, P'=free_100, Z'=free_101, H1'=R, Q1'=free_98, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     74: f14 -> [9] : D'=Q_1, E'=-1, F'=1+F+E, G'=Q_1, H'=free_93, O'=free_94, P'=free_94, Z'=free_95, H1'=R, Q1'=free_92, J1'=T, K1'=1+F+E, L1'=-1, [ F+E>=0 && F>=0 && E>=0 ], cost: 1+E
+     75: f14 -> [9] : [], cost: 0
+     84: f5 -> [10] : D'=O1, G'=O1, H'=free_208, O'=free_209, Z'=free_210, P1'=free_209, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ O1-M1<=-3 && R1>=0 ], cost: 1+R1
+     85: f5 -> [10] : D'=O1, G'=O1, H'=free_204, O'=free_205, Z'=free_206, P1'=free_205, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     86: f5 -> [10] : D'=O1, G'=O1, H'=free_200, O'=free_201, Z'=free_202, P1'=free_201, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     87: f5 -> [10] : D'=O1, G'=O1, H'=free_196, O'=free_197, Z'=free_198, P1'=free_197, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     88: f5 -> [10] : D'=O1, G'=O1, H'=free_192, O'=free_193, Z'=free_194, P1'=free_193, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     89: f5 -> [10] : D'=O1, G'=O1, H'=free_188, O'=free_189, Z'=free_190, P1'=free_189, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     90: f5 -> [10] : D'=O1, G'=O1, H'=free_184, O'=free_185, Z'=free_186, P1'=free_185, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ R1>=0 ], cost: 1+R1
+     91: f5 -> [10] : D'=O1, G'=O1, H'=free_180, O'=free_181, Z'=free_182, P1'=free_181, Q1_1'=M1, R1'=-1, S1'=T, T1'=-1, [ -O1+M1<=-3 && R1>=0 ], cost: 1+R1
+     92: f5 -> [10] : [], cost: 0
+     42: f15 -> f7 : A'=2, B'=free_219, C'=free_218, D'=free_221, G'=free_221, H'=free_219, Q'=free_221, L'=free_218, M'=free_218, N'=free_220, U1'=free_222, V1'=free_224, W1'=free_223, [ free_219>=2 ], cost: 1
+      0: [8] -> f14 : A'=E, B'=free_7, C'=free_2, F'=0, G'=D, H'=free_6, Q'=free_10, J'=free_1, K'=free_4, L'=free_8, M'=free, N'=free_5, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_3, V'=free_9, [ A>=B && A>=0 && C>=1+D && free_6>=2 && free_3>=free_6 && E>=free_6 && F==0 ], cost: 1
+      1: [8] -> f14 : A'=E, B'=free_18, C'=free_13, F'=0, G'=D, H'=free_17, Q'=free_21, J'=free_12, K'=free_15, L'=free_19, M'=free_11, N'=free_16, O'=C, P'=C, Q_1'=D, R'=C, S'=T, U'=free_14, V'=free_20, [ A>=B && A>=0 && D>=1+C && free_17>=2 && free_14>=free_17 && E>=free_17 && F==0 ], cost: 1
+     47: [9] -> f5 : F'=1+R1, G'=D, H'=free_251, P'=free_252, Q_1'=free_253, R'=free_250, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_249, [ free_251>=2 && E>=0 && F>=0 && O>=1+D && D>=1+O && Q_1==R ], cost: 1
+     48: [9] -> f5 : F'=1+R1, G'=D, H'=free_257, P'=free_258, Q_1'=free_259, R'=free_256, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_255, [ free_257>=2 && E>=0 && F>=0 && O>=1+D && Q_1==R ], cost: 1
+     49: [9] -> f5 : F'=1+R1, G'=D, H'=free_263, P'=free_264, Q_1'=free_265, R'=free_262, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_261, [ free_263>=2 && E>=0 && F>=0 && D>=1+O && Q_1==R ], cost: 1
+     50: [9] -> f5 : F'=1+R1, G'=D, H'=free_269, P'=free_270, Q_1'=free_271, R'=free_268, M1'=O, N1'=R1, O1'=D, P1'=O, Q1_1'=O, Y1'=T, Z1'=free_267, [ free_269>=2 && E>=0 && F>=0 && D>=1+O && O>=1+D && Q_1==R ], cost: 1
+

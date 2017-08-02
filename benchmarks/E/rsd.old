@@ -1,0 +1,103 @@
+Trying to load file: rsd.koat
+
+Initial Control flow graph problem:
+  Start location: evalrsdstart
+      0: evalrsdstart -> evalrsdentryin : [], cost: 1
+      1: evalrsdentryin -> evalrsdbbin : [ A>=0 ], cost: 1
+      2: evalrsdentryin -> evalrsdreturnin : [ 0>=1+A ], cost: 1
+      3: evalrsdbbin -> evalrsdbb4in : B'=2*A, C'=2*A, [], cost: 1
+     11: evalrsdreturnin -> evalrsdstop : [], cost: 1
+      5: evalrsdbb4in -> evalrsdreturnin : [ A>=1+C ], cost: 1
+      4: evalrsdbb4in -> evalrsdbb1in : [ C>=A ], cost: 1
+      6: evalrsdbb1in -> evalrsdbb2in : [ 0>=1+free ], cost: 1
+      7: evalrsdbb1in -> evalrsdbb2in : [ free_1>=1 ], cost: 1
+      8: evalrsdbb1in -> evalrsdbb3in : [], cost: 1
+      9: evalrsdbb2in -> evalrsdbb4in : C'=-1+C, [], cost: 1
+     10: evalrsdbb3in -> evalrsdbb4in : B'=-1+B, C'=-1+B, [], cost: 1
+
+Removing duplicate transition: 6.
+
+Simplified the transitions:
+  Start location: evalrsdstart
+      0: evalrsdstart -> evalrsdentryin : [], cost: 1
+      1: evalrsdentryin -> evalrsdbbin : [ A>=0 ], cost: 1
+      3: evalrsdbbin -> evalrsdbb4in : B'=2*A, C'=2*A, [], cost: 1
+      4: evalrsdbb4in -> evalrsdbb1in : [ C>=A ], cost: 1
+      7: evalrsdbb1in -> evalrsdbb2in : [], cost: 1
+      8: evalrsdbb1in -> evalrsdbb3in : [], cost: 1
+      9: evalrsdbb2in -> evalrsdbb4in : C'=-1+C, [], cost: 1
+     10: evalrsdbb3in -> evalrsdbb4in : B'=-1+B, C'=-1+B, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalrsdstart
+      0: evalrsdstart -> evalrsdbb4in : B'=2*A, C'=2*A, [ A>=0 ], cost: 3
+      4: evalrsdbb4in -> evalrsdbb1in : [ C>=A ], cost: 1
+      7: evalrsdbb1in -> evalrsdbb4in : C'=-1+C, [], cost: 2
+      8: evalrsdbb1in -> evalrsdbb4in : B'=-1+B, C'=-1+B, [], cost: 2
+
+
+Eliminated locations (branches):
+  Start location: evalrsdstart
+      0: evalrsdstart -> evalrsdbb4in : B'=2*A, C'=2*A, [ A>=0 ], cost: 3
+     12: evalrsdbb4in -> evalrsdbb4in : C'=-1+C, [ C>=A ], cost: 3
+     13: evalrsdbb4in -> evalrsdbb4in : B'=-1+B, C'=-1+B, [ C>=A ], cost: 3
+
+Eliminating 2 self-loops for location evalrsdbb4in
+  Self-Loop 12 has the metering function: 1-A+C, resulting in the new transition 14.
+  Removing the self-loops: 12 13.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalrsdstart
+      0: evalrsdstart -> evalrsdbb4in : B'=2*A, C'=2*A, [ A>=0 ], cost: 3
+     14: evalrsdbb4in -> evalrsdbb4in : C'=-1+A, [ C>=A ], cost: 3-3*A+3*C
+     15: evalrsdbb4in -> evalrsdbb4in : B'=-1+B, C'=-1+B, [ C>=A ], cost: 3
+
+
+Chained simpled loops:
+  Start location: evalrsdstart
+      0: evalrsdstart -> evalrsdbb4in : B'=2*A, C'=2*A, [ A>=0 ], cost: 3
+     16: evalrsdstart -> evalrsdbb4in : B'=2*A, C'=-1+A, [ A>=0 && 2*A>=A ], cost: 6+3*A
+     17: evalrsdstart -> evalrsdbb4in : B'=-1+2*A, C'=-1+2*A, [ A>=0 && 2*A>=A ], cost: 6
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalrsdstart
+     16: evalrsdstart -> evalrsdbb4in : B'=2*A, C'=-1+A, [ A>=0 && 2*A>=A ], cost: 6+3*A
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+6+3*A (+), 1+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing 6+3*A (+) by 3*A (+)
+resulting limit problem:
+3*A (+), 1+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+A (+/+!) by A (+)
+resulting limit problem:
+3*A (+), A (+) [not solved]
+
+applying transformation rule (A), replacing 3*A (+) by A (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), A (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+A / n
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && 2*A>=A
+  Final Cost:  6+3*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

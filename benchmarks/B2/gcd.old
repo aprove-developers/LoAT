@@ -1,0 +1,164 @@
+Trying to load file: gcd.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : [ 0>=A && B==C && D==A ], cost: 1
+      1: start -> lbl6 : [ A>=1 && 0>=C && B==C && D==A ], cost: 1
+      2: start -> cut : [ A>=1 && D==A && B==A && C==A ], cost: 1
+      3: start -> lbl101 : B'=-D+B, [ A>=1 && C>=1+A && B==C && D==A ], cost: 1
+      4: start -> lbl111 : D'=D-B, [ A>=1+C && C>=1 && B==C && D==A ], cost: 1
+      5: lbl6 -> stop : [ A>=1 && 0>=C && D==A && B==C ], cost: 1
+     12: cut -> stop : [ A>=B && B>=1 && C>=B && D==B ], cost: 1
+      6: lbl101 -> cut : [ A>=B && B>=1 && C>=2*B && D==B ], cost: 1
+      7: lbl101 -> lbl101 : B'=-D+B, [ B>=1+D && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+      8: lbl101 -> lbl111 : D'=D-B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+      9: lbl111 -> cut : [ C>=B && B>=1 && A>=2*B && D==B ], cost: 1
+     10: lbl111 -> lbl101 : B'=-D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     11: lbl111 -> lbl111 : D'=D-B, [ D>=1+B && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     13: start0 -> start : B'=C, D'=A, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      3: start -> lbl101 : B'=-D+B, [ A>=1 && C>=1+A && B==C && D==A ], cost: 1
+      4: start -> lbl111 : D'=D-B, [ A>=1+C && C>=1 && B==C && D==A ], cost: 1
+      7: lbl101 -> lbl101 : B'=-D+B, [ B>=1+D && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+      8: lbl101 -> lbl111 : D'=D-B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+     10: lbl111 -> lbl101 : B'=-D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     11: lbl111 -> lbl111 : D'=D-B, [ D>=1+B && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     13: start0 -> start : B'=C, D'=A, [], cost: 1
+
+Eliminating 1 self-loops for location lbl101
+  Removing the self-loops: 7.
+Eliminating 1 self-loops for location lbl111
+  Removing the self-loops: 11.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+      3: start -> lbl101 : B'=-D+B, [ A>=1 && C>=1+A && B==C && D==A ], cost: 1
+      4: start -> lbl111 : D'=D-B, [ A>=1+C && C>=1 && B==C && D==A ], cost: 1
+     14: lbl101 -> lbl101 : B'=-D+B, [ B>=1+D && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+      8: lbl101 -> lbl111 : D'=D-B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+     10: lbl111 -> lbl101 : B'=-D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     15: lbl111 -> lbl111 : D'=D-B, [ D>=1+B && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     13: start0 -> start : B'=C, D'=A, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start0
+      3: start -> lbl101 : B'=-D+B, [ A>=1 && C>=1+A && B==C && D==A ], cost: 1
+     16: start -> lbl101 : B'=-2*D+B, [ A>=1 && C>=1+A && B==C && D==A && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B ], cost: 2
+      4: start -> lbl111 : D'=D-B, [ A>=1+C && C>=1 && B==C && D==A ], cost: 1
+     18: start -> lbl111 : D'=D-2*B, [ A>=1+C && C>=1 && B==C && D==A && D-B>=1+B && C>=B && B>=1 && D-B>=1 && A>=D ], cost: 2
+      8: lbl101 -> lbl111 : D'=D-B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+     19: lbl101 -> lbl111 : D'=D-2*B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B && D-B>=1+B && C>=B && B>=1 && D-B>=1 && A>=D ], cost: 2
+     10: lbl111 -> lbl101 : B'=-D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     17: lbl111 -> lbl101 : B'=-2*D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B ], cost: 2
+     13: start0 -> start : B'=C, D'=A, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: start0
+      8: lbl101 -> lbl111 : D'=D-B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B ], cost: 1
+     19: lbl101 -> lbl111 : D'=D-2*B, [ D>=1+B && A>=D && B>=1 && D>=1 && C>=D+B && D-B>=1+B && C>=B && B>=1 && D-B>=1 && A>=D ], cost: 2
+     10: lbl111 -> lbl101 : B'=-D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B ], cost: 1
+     17: lbl111 -> lbl101 : B'=-2*D+B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B ], cost: 2
+     20: start0 -> lbl101 : B'=-A+C, D'=A, [ A>=1 && C>=1+A && C==C && A==A ], cost: 2
+     21: start0 -> lbl101 : B'=-2*A+C, D'=A, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C ], cost: 3
+     22: start0 -> lbl111 : B'=C, D'=A-C, [ A>=1+C && C>=1 && C==C && A==A ], cost: 2
+     23: start0 -> lbl111 : B'=C, D'=A-2*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A ], cost: 3
+
+
+Eliminated locations:
+  Start location: start0
+     24: lbl111 -> lbl111 : B'=-D+B, D'=2*D-B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && D>=1-D+B && A>=D && -D+B>=1 && D>=1 && C>=B ], cost: 2
+     25: lbl111 -> lbl111 : B'=-2*D+B, D'=3*D-B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B && D>=1-2*D+B && A>=D && -2*D+B>=1 && D>=1 && C>=-D+B ], cost: 3
+     28: lbl111 -> lbl111 : B'=-D+B, D'=3*D-2*B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && D>=1-D+B && A>=D && -D+B>=1 && D>=1 && C>=B && 2*D-B>=1-D+B && C>=-D+B && -D+B>=1 && 2*D-B>=1 && A>=D ], cost: 3
+     29: lbl111 -> lbl111 : B'=-2*D+B, D'=5*D-2*B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B && D>=1-2*D+B && A>=D && -2*D+B>=1 && D>=1 && C>=-D+B && 3*D-B>=1-2*D+B && C>=-2*D+B && -2*D+B>=1 && 3*D-B>=1 && A>=D ], cost: 4
+     22: start0 -> lbl111 : B'=C, D'=A-C, [ A>=1+C && C>=1 && C==C && A==A ], cost: 2
+     23: start0 -> lbl111 : B'=C, D'=A-2*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A ], cost: 3
+     26: start0 -> lbl111 : B'=-A+C, D'=2*A-C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C ], cost: 3
+     27: start0 -> lbl111 : B'=-2*A+C, D'=3*A-C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C ], cost: 4
+     30: start0 -> lbl111 : B'=-A+C, D'=3*A-2*C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C && 2*A-C>=1-A+C && C>=-A+C && -A+C>=1 && 2*A-C>=1 && A>=A ], cost: 4
+     31: start0 -> lbl111 : B'=-2*A+C, D'=5*A-2*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A ], cost: 5
+
+
+Pruned:
+  Start location: start0
+     24: lbl111 -> lbl111 : B'=-D+B, D'=2*D-B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && D>=1-D+B && A>=D && -D+B>=1 && D>=1 && C>=B ], cost: 2
+     25: lbl111 -> lbl111 : B'=-2*D+B, D'=3*D-B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B && D>=1-2*D+B && A>=D && -2*D+B>=1 && D>=1 && C>=-D+B ], cost: 3
+     28: lbl111 -> lbl111 : B'=-D+B, D'=3*D-2*B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && D>=1-D+B && A>=D && -D+B>=1 && D>=1 && C>=B && 2*D-B>=1-D+B && C>=-D+B && -D+B>=1 && 2*D-B>=1 && A>=D ], cost: 3
+     29: lbl111 -> lbl111 : B'=-2*D+B, D'=5*D-2*B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && -D+B>=1 && D>=1 && C>=B && D>=1-2*D+B && A>=D && -2*D+B>=1 && D>=1 && C>=-D+B && 3*D-B>=1-2*D+B && C>=-2*D+B && -2*D+B>=1 && 3*D-B>=1 && A>=D ], cost: 4
+     22: start0 -> lbl111 : B'=C, D'=A-C, [ A>=1+C && C>=1 && C==C && A==A ], cost: 2
+     23: start0 -> lbl111 : B'=C, D'=A-2*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A ], cost: 3
+     26: start0 -> lbl111 : B'=-A+C, D'=2*A-C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C ], cost: 3
+     27: start0 -> lbl111 : B'=-2*A+C, D'=3*A-C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C ], cost: 4
+     31: start0 -> lbl111 : B'=-2*A+C, D'=5*A-2*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A ], cost: 5
+
+Eliminating 4 self-loops for location lbl111
+  Removing the self-loops: 24 25 28 29.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+     32: lbl111 -> lbl111 : B'=-D+B, D'=2*D-B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && D>=1-D+B && A>=D ], cost: 2
+     33: lbl111 -> lbl111 : B'=-2*D+B, D'=3*D-B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && D>=1-2*D+B && C>=-D+B ], cost: 3
+     34: lbl111 -> lbl111 : B'=-D+B, D'=3*D-2*B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && D>=1-D+B && A>=D && 2*D-B>=1-D+B && C>=-D+B ], cost: 3
+     35: lbl111 -> lbl111 : B'=-2*D+B, D'=5*D-2*B, [ B>=1+D && C>=B && B>=1 && D>=1 && A>=D+B && -D+B>=1+D && A>=D && D>=1-2*D+B && C>=-D+B && 3*D-B>=1-2*D+B && C>=-2*D+B ], cost: 4
+     22: start0 -> lbl111 : B'=C, D'=A-C, [ A>=1+C && C>=1 && C==C && A==A ], cost: 2
+     23: start0 -> lbl111 : B'=C, D'=A-2*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A ], cost: 3
+     26: start0 -> lbl111 : B'=-A+C, D'=2*A-C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C ], cost: 3
+     27: start0 -> lbl111 : B'=-2*A+C, D'=3*A-C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C ], cost: 4
+     31: start0 -> lbl111 : B'=-2*A+C, D'=5*A-2*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A ], cost: 5
+
+
+Chained simpled loops:
+  Start location: start0
+     22: start0 -> lbl111 : B'=C, D'=A-C, [ A>=1+C && C>=1 && C==C && A==A ], cost: 2
+     23: start0 -> lbl111 : B'=C, D'=A-2*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A ], cost: 3
+     26: start0 -> lbl111 : B'=-A+C, D'=2*A-C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C ], cost: 3
+     27: start0 -> lbl111 : B'=-2*A+C, D'=3*A-C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C ], cost: 4
+     31: start0 -> lbl111 : B'=-2*A+C, D'=5*A-2*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A ], cost: 5
+     36: start0 -> lbl111 : B'=-A+2*C, D'=2*A-3*C, [ A>=1+C && C>=1 && C==C && A==A && C>=1+A-C && C>=C && C>=1 && A-C>=1 && A>=A && A-C>=1-A+2*C && A>=A-C ], cost: 4
+     37: start0 -> lbl111 : B'=-A+3*C, D'=2*A-5*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A && C>=1+A-2*C && C>=C && C>=1 && A-2*C>=1 && A>=A-C && A-2*C>=1-A+3*C && A>=A-2*C ], cost: 5
+     38: start0 -> lbl111 : B'=-3*A+2*C, D'=5*A-3*C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C && -A+C>=1+2*A-C && C>=-A+C && -A+C>=1 && 2*A-C>=1 && A>=A && 2*A-C>=1-3*A+2*C && A>=2*A-C ], cost: 5
+     39: start0 -> lbl111 : B'=-5*A+2*C, D'=8*A-3*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && -2*A+C>=1+3*A-C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && 3*A-C>=1-5*A+2*C && A>=3*A-C ], cost: 6
+     40: start0 -> lbl111 : B'=-7*A+3*C, D'=12*A-5*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && -2*A+C>=1+5*A-2*C && C>=-2*A+C && -2*A+C>=1 && 5*A-2*C>=1 && A>=3*A-C && 5*A-2*C>=1-7*A+3*C && A>=5*A-2*C ], cost: 7
+     41: start0 -> lbl111 : B'=-2*A+3*C, D'=3*A-4*C, [ A>=1+C && C>=1 && C==C && A==A && C>=1+A-C && C>=C && C>=1 && A-C>=1 && A>=A && -A+2*C>=1+A-C && A>=A-C && A-C>=1-2*A+3*C && C>=-A+2*C ], cost: 5
+     42: start0 -> lbl111 : B'=-2*A+5*C, D'=3*A-7*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A && C>=1+A-2*C && C>=C && C>=1 && A-2*C>=1 && A>=A-C && -A+3*C>=1+A-2*C && A>=A-2*C && A-2*C>=1-2*A+5*C && C>=-A+3*C ], cost: 6
+     43: start0 -> lbl111 : B'=-5*A+3*C, D'=7*A-4*C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C && -A+C>=1+2*A-C && C>=-A+C && -A+C>=1 && 2*A-C>=1 && A>=A && -3*A+2*C>=1+2*A-C && A>=2*A-C && 2*A-C>=1-5*A+3*C && C>=-3*A+2*C ], cost: 6
+     44: start0 -> lbl111 : B'=-8*A+3*C, D'=11*A-4*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && -2*A+C>=1+3*A-C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && -5*A+2*C>=1+3*A-C && A>=3*A-C && 3*A-C>=1-8*A+3*C && C>=-5*A+2*C ], cost: 7
+     45: start0 -> lbl111 : B'=-12*A+5*C, D'=17*A-7*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && -2*A+C>=1+5*A-2*C && C>=-2*A+C && -2*A+C>=1 && 5*A-2*C>=1 && A>=3*A-C && -7*A+3*C>=1+5*A-2*C && A>=5*A-2*C && 5*A-2*C>=1-12*A+5*C && C>=-7*A+3*C ], cost: 8
+     46: start0 -> lbl111 : B'=-A+2*C, D'=3*A-5*C, [ A>=1+C && C>=1 && C==C && A==A && C>=1+A-C && C>=C && C>=1 && A-C>=1 && A>=A && A-C>=1-A+2*C && A>=A-C && 2*A-3*C>=1-A+2*C && C>=-A+2*C ], cost: 5
+     47: start0 -> lbl111 : B'=-A+3*C, D'=3*A-8*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A && C>=1+A-2*C && C>=C && C>=1 && A-2*C>=1 && A>=A-C && A-2*C>=1-A+3*C && A>=A-2*C && 2*A-5*C>=1-A+3*C && C>=-A+3*C ], cost: 6
+     48: start0 -> lbl111 : B'=-3*A+2*C, D'=8*A-5*C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C && -A+C>=1+2*A-C && C>=-A+C && -A+C>=1 && 2*A-C>=1 && A>=A && 2*A-C>=1-3*A+2*C && A>=2*A-C && 5*A-3*C>=1-3*A+2*C && C>=-3*A+2*C ], cost: 6
+     49: start0 -> lbl111 : B'=-5*A+2*C, D'=13*A-5*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && -2*A+C>=1+3*A-C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && 3*A-C>=1-5*A+2*C && A>=3*A-C && 8*A-3*C>=1-5*A+2*C && C>=-5*A+2*C ], cost: 7
+     50: start0 -> lbl111 : B'=-7*A+3*C, D'=19*A-8*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && -2*A+C>=1+5*A-2*C && C>=-2*A+C && -2*A+C>=1 && 5*A-2*C>=1 && A>=3*A-C && 5*A-2*C>=1-7*A+3*C && A>=5*A-2*C && 12*A-5*C>=1-7*A+3*C && C>=-7*A+3*C ], cost: 8
+     51: start0 -> lbl111 : B'=-2*A+3*C, D'=5*A-7*C, [ A>=1+C && C>=1 && C==C && A==A && C>=1+A-C && C>=C && C>=1 && A-C>=1 && A>=A && -A+2*C>=1+A-C && A>=A-C && A-C>=1-2*A+3*C && C>=-A+2*C && 3*A-4*C>=1-2*A+3*C && C>=-2*A+3*C ], cost: 6
+     52: start0 -> lbl111 : B'=-2*A+5*C, D'=5*A-12*C, [ A>=1+C && C>=1 && C==C && A==A && A-C>=1+C && C>=C && C>=1 && A-C>=1 && A>=A && C>=1+A-2*C && C>=C && C>=1 && A-2*C>=1 && A>=A-C && -A+3*C>=1+A-2*C && A>=A-2*C && A-2*C>=1-2*A+5*C && C>=-A+3*C && 3*A-7*C>=1-2*A+5*C && C>=-2*A+5*C ], cost: 7
+     53: start0 -> lbl111 : B'=-5*A+3*C, D'=12*A-7*C, [ A>=1 && C>=1+A && C==C && A==A && A>=1-A+C && A>=A && -A+C>=1 && A>=1 && C>=C && -A+C>=1+2*A-C && C>=-A+C && -A+C>=1 && 2*A-C>=1 && A>=A && -3*A+2*C>=1+2*A-C && A>=2*A-C && 2*A-C>=1-5*A+3*C && C>=-3*A+2*C && 7*A-4*C>=1-5*A+3*C && C>=-5*A+3*C ], cost: 7
+     54: start0 -> lbl111 : B'=-8*A+3*C, D'=19*A-7*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && -2*A+C>=1+3*A-C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && -5*A+2*C>=1+3*A-C && A>=3*A-C && 3*A-C>=1-8*A+3*C && C>=-5*A+2*C && 11*A-4*C>=1-8*A+3*C && C>=-8*A+3*C ], cost: 8
+     55: start0 -> lbl111 : B'=-12*A+5*C, D'=29*A-12*C, [ A>=1 && C>=1+A && C==C && A==A && -A+C>=1+A && A>=A && -A+C>=1 && A>=1 && C>=C && A>=1-2*A+C && A>=A && -2*A+C>=1 && A>=1 && C>=-A+C && 3*A-C>=1-2*A+C && C>=-2*A+C && -2*A+C>=1 && 3*A-C>=1 && A>=A && -2*A+C>=1+5*A-2*C && C>=-2*A+C && -2*A+C>=1 && 5*A-2*C>=1 && A>=3*A-C && -7*A+3*C>=1+5*A-2*C && A>=5*A-2*C && 5*A-2*C>=1-12*A+5*C && C>=-7*A+3*C && 17*A-7*C>=1-12*A+5*C && C>=-12*A+5*C ], cost: 9
+
+
+Pruned:
+  Start location: start0
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start0
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

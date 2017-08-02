@@ -1,0 +1,101 @@
+Trying to load file: eric.koat
+
+Initial Control flow graph problem:
+  Start location: f1
+      0: f1 -> f2 : C'=1+B, [ A>=B && A>=1 && B>=1 ], cost: 1
+      1: f2 -> f3 : [ B>=1+C ], cost: 1
+      2: f2 -> f3 : [ C>=1+B ], cost: 1
+      3: f3 -> f2 : C'=0, [ 1+A>=0 && C>=1 && C>=1+A ], cost: 1
+      4: f3 -> f2 : C'=1+C, [ A>=C && 1+C>=0 ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: f1
+      0: f1 -> f2 : C'=1+B, [ A>=B && A>=1 && B>=1 ], cost: 1
+      5: f2 -> f2 : C'=0, [ B>=1+C && 1+A>=0 && C>=1 && C>=1+A ], cost: 2
+      6: f2 -> f2 : C'=1+C, [ B>=1+C && A>=C && 1+C>=0 ], cost: 2
+      7: f2 -> f2 : C'=0, [ C>=1+B && 1+A>=0 && C>=1 && C>=1+A ], cost: 2
+      8: f2 -> f2 : C'=1+C, [ C>=1+B && A>=C && 1+C>=0 ], cost: 2
+
+Eliminating 4 self-loops for location f2
+  Self-Loop 8 has the metering function: 1+A-C, resulting in the new transition 12.
+  Found unbounded runtime when nesting loops,
+  and nested parallel self-loops 11 (outer loop) and 12 (inner loop), obtaining the new transitions: 13, 14.
+  Found this metering function when nesting loops: 1+A-C,
+  Found unbounded runtime when nesting loops,
+  Found unbounded runtime when nesting loops,
+  Removing the self-loops: 5 6 7 8 11.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f1
+      0: f1 -> f2 : C'=1+B, [ A>=B && A>=1 && B>=1 ], cost: 1
+      9: f2 -> f2 : C'=0, [ B>=1+C && 1+A>=0 && C>=1 && C>=1+A ], cost: 2
+     10: f2 -> f2 : C'=1+C, [ B>=1+C && A>=C && 1+C>=0 ], cost: 2
+     12: f2 -> f2 : C'=1+A, [ C>=1+B && A>=C && 1+C>=0 ], cost: 2+2*A-2*C
+     13: f2 -> f2 : [ C>=1+B && 1+A>=0 && C>=1 && C>=1+A && 0>=1+B && A>=0 && 1>=0 ], cost: INF
+     14: f2 -> f2 : C'=1+A, [ C>=1+B && A>=C && 1+C>=0 && 1+A>=1+B && 1+A>=0 && 1+A>=1 && 1+A>=1+A && 0>=1+B && A>=0 && 1>=0 ], cost: INF
+
+
+Chained simpled loops:
+  Start location: f1
+      0: f1 -> f2 : C'=1+B, [ A>=B && A>=1 && B>=1 ], cost: 1
+     15: f1 -> f2 : C'=1+A, [ A>=B && A>=1 && B>=1 && 1+B>=1+B && A>=1+B && 2+B>=0 ], cost: 1+2*A-2*B
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f1
+     15: f1 -> f2 : C'=1+A, [ A>=B && A>=1 && B>=1 && 1+B>=1+B && A>=1+B && 2+B>=0 ], cost: 1+2*A-2*B
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+1 (+/+!), A (+/+!), 1+2*A-2*B (+), A-B (+/+!), 1+A-B (+/+!), 3+B (+/+!), B (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+A (+/+!), 1+2*A-2*B (+), A-B (+/+!), 1+A-B (+/+!), 3+B (+/+!), B (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==1}
+resulting limit problem:
+1 (+!), A (+), -1+A (+/+!), 4 (+!), -1+2*A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+A (+), -1+A (+/+!), 4 (+!), -1+2*A (+) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+A (+), -1+A (+/+!), -1+2*A (+) [not solved]
+
+applying transformation rule (D), replacing -1+A (+/+!) by A (+)
+resulting limit problem:
+A (+), -1+2*A (+) [not solved]
+
+applying transformation rule (D), replacing -1+2*A (+) by 2*A (+)
+resulting limit problem:
+2*A (+), A (+) [not solved]
+
+applying transformation rule (A), replacing 2*A (+) by A (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+A (+), 2 (+!) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+A / n
+B / 1
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=B && A>=1 && B>=1 && 1+B>=1+B && A>=1+B && 2+B>=0
+  Final Cost:  -1+2*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

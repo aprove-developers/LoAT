@@ -1,0 +1,430 @@
+Trying to load file: a.03.koat
+
+Initial Control flow graph problem:
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+      2: eval2 -> eval3 : C'=A, D'=2*A, [ B>=2 ], cost: 1
+      5: eval3 -> eval3 : C'=D, D'=2*D, [ B>=D && B>=1+D && D>=1 ], cost: 1
+      6: eval3 -> eval3 : C'=1+D, D'=2+2*D, [ B>=D && B>=1+D && D>=1 ], cost: 1
+      8: eval3 -> eval3 : C'=D, D'=2*D, [ D>=1 && B==D ], cost: 1
+      3: eval3 -> eval4 : [ B>=D && B>=1+D ], cost: 1
+      4: eval3 -> eval4 : D'=1+D, [ B>=D && B>=1+D ], cost: 1
+      7: eval3 -> eval4 : [ B==D ], cost: 1
+      9: eval4 -> eval2 : A'=-1+A, [ A>=2 && A>=1 && B>=2 ], cost: 1
+     10: eval4 -> eval2 : B'=-1+B, [ B>=2 && A==1 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+      2: eval2 -> eval3 : C'=A, D'=2*A, [ B>=2 ], cost: 1
+      5: eval3 -> eval3 : C'=D, D'=2*D, [ B>=1+D && D>=1 ], cost: 1
+      6: eval3 -> eval3 : C'=1+D, D'=2+2*D, [ B>=1+D && D>=1 ], cost: 1
+      8: eval3 -> eval3 : C'=D, D'=2*D, [ D>=1 && B==D ], cost: 1
+      3: eval3 -> eval4 : [ B>=1+D ], cost: 1
+      4: eval3 -> eval4 : D'=1+D, [ B>=1+D ], cost: 1
+      7: eval3 -> eval4 : [ B==D ], cost: 1
+      9: eval4 -> eval2 : A'=-1+A, [ A>=2 && B>=2 ], cost: 1
+     10: eval4 -> eval2 : B'=-1+B, [ B>=2 && A==1 ], cost: 1
+
+Eliminating 3 self-loops for location eval3
+  Removing the self-loops: 5 6 8.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+      2: eval2 -> eval3 : C'=A, D'=2*A, [ B>=2 ], cost: 1
+     11: eval3 -> eval3 : C'=D, D'=2*D, [ B>=1+D && D>=1 ], cost: 1
+     12: eval3 -> eval3 : C'=1+D, D'=2+2*D, [ B>=1+D && D>=1 ], cost: 1
+     13: eval3 -> eval3 : C'=D, D'=2*D, [ D>=1 && B==D ], cost: 1
+      3: eval3 -> eval4 : [ B>=1+D ], cost: 1
+      4: eval3 -> eval4 : D'=1+D, [ B>=1+D ], cost: 1
+      7: eval3 -> eval4 : [ B==D ], cost: 1
+      9: eval4 -> eval2 : A'=-1+A, [ A>=2 && B>=2 ], cost: 1
+     10: eval4 -> eval2 : B'=-1+B, [ B>=2 && A==1 ], cost: 1
+
+
+Chained simpled loops:
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+      2: eval2 -> eval3 : C'=A, D'=2*A, [ B>=2 ], cost: 1
+     14: eval2 -> eval3 : C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 ], cost: 2
+     15: eval2 -> eval3 : C'=1+2*A, D'=2+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 ], cost: 2
+     16: eval2 -> eval3 : C'=2*A, D'=4*A, [ B>=2 && 2*A>=1 && B==2*A ], cost: 2
+      3: eval3 -> eval4 : [ B>=1+D ], cost: 1
+      4: eval3 -> eval4 : D'=1+D, [ B>=1+D ], cost: 1
+      7: eval3 -> eval4 : [ B==D ], cost: 1
+      9: eval4 -> eval2 : A'=-1+A, [ A>=2 && B>=2 ], cost: 1
+     10: eval4 -> eval2 : B'=-1+B, [ B>=2 && A==1 ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+     17: eval2 -> eval4 : C'=A, D'=2*A, [ B>=2 && B>=1+2*A ], cost: 2
+     18: eval2 -> eval4 : C'=A, D'=1+2*A, [ B>=2 && B>=1+2*A ], cost: 2
+     19: eval2 -> eval4 : C'=A, D'=2*A, [ B>=2 && B==2*A ], cost: 2
+     20: eval2 -> eval4 : C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A ], cost: 3
+     21: eval2 -> eval4 : C'=2*A, D'=1+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A ], cost: 3
+     22: eval2 -> eval4 : C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B==4*A ], cost: 3
+     23: eval2 -> eval4 : C'=1+2*A, D'=2+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=3+4*A ], cost: 3
+     24: eval2 -> eval4 : C'=1+2*A, D'=3+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=3+4*A ], cost: 3
+     25: eval2 -> eval4 : C'=1+2*A, D'=2+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B==2+4*A ], cost: 3
+      9: eval4 -> eval2 : A'=-1+A, [ A>=2 && B>=2 ], cost: 1
+     10: eval4 -> eval2 : B'=-1+B, [ B>=2 && A==1 ], cost: 1
+
+
+Pruned:
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+     17: eval2 -> eval4 : C'=A, D'=2*A, [ B>=2 && B>=1+2*A ], cost: 2
+     18: eval2 -> eval4 : C'=A, D'=1+2*A, [ B>=2 && B>=1+2*A ], cost: 2
+     20: eval2 -> eval4 : C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A ], cost: 3
+     21: eval2 -> eval4 : C'=2*A, D'=1+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A ], cost: 3
+     23: eval2 -> eval4 : C'=1+2*A, D'=2+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=3+4*A ], cost: 3
+      9: eval4 -> eval2 : A'=-1+A, [ A>=2 && B>=2 ], cost: 1
+     10: eval4 -> eval2 : B'=-1+B, [ B>=2 && A==1 ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+     26: eval2 -> eval2 : A'=-1+A, C'=A, D'=2*A, [ B>=2 && B>=1+2*A && A>=2 && B>=2 ], cost: 3
+     27: eval2 -> eval2 : B'=-1+B, C'=A, D'=2*A, [ B>=2 && B>=1+2*A && B>=2 && A==1 ], cost: 3
+     28: eval2 -> eval2 : A'=-1+A, C'=A, D'=1+2*A, [ B>=2 && B>=1+2*A && A>=2 && B>=2 ], cost: 3
+     29: eval2 -> eval2 : B'=-1+B, C'=A, D'=1+2*A, [ B>=2 && B>=1+2*A && B>=2 && A==1 ], cost: 3
+     30: eval2 -> eval2 : A'=-1+A, C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A && A>=2 && B>=2 ], cost: 4
+     31: eval2 -> eval2 : B'=-1+B, C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A && B>=2 && A==1 ], cost: 4
+     32: eval2 -> eval2 : A'=-1+A, C'=2*A, D'=1+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A && A>=2 && B>=2 ], cost: 4
+     33: eval2 -> eval2 : B'=-1+B, C'=2*A, D'=1+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A && B>=2 && A==1 ], cost: 4
+     34: eval2 -> eval2 : A'=-1+A, C'=1+2*A, D'=2+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=3+4*A && A>=2 && B>=2 ], cost: 4
+     35: eval2 -> eval2 : B'=-1+B, C'=1+2*A, D'=2+4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=3+4*A && B>=2 && A==1 ], cost: 4
+
+
+Pruned:
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+     26: eval2 -> eval2 : A'=-1+A, C'=A, D'=2*A, [ B>=2 && B>=1+2*A && A>=2 && B>=2 ], cost: 3
+     27: eval2 -> eval2 : B'=-1+B, C'=A, D'=2*A, [ B>=2 && B>=1+2*A && B>=2 && A==1 ], cost: 3
+     29: eval2 -> eval2 : B'=-1+B, C'=A, D'=1+2*A, [ B>=2 && B>=1+2*A && B>=2 && A==1 ], cost: 3
+     30: eval2 -> eval2 : A'=-1+A, C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A && A>=2 && B>=2 ], cost: 4
+     31: eval2 -> eval2 : B'=-1+B, C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && 2*A>=1 && B>=1+4*A && B>=2 && A==1 ], cost: 4
+
+Eliminating 5 self-loops for location eval2
+  Self-Loop 26 has the metering function: -1+A, resulting in the new transition 36.
+  Self-Loop 27 has the metering function: B-2*A, resulting in the new transition 37.
+  Self-Loop 29 has the metering function: B-2*A, resulting in the new transition 38.
+  Self-Loop 30 has the metering function: -1+A, resulting in the new transition 39.
+  Self-Loop 31 has the metering function: B-4*A, resulting in the new transition 40.
+  Found this metering function when nesting loops: -1+A,
+  Removing the self-loops: 26 27 29 30 31.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: eval1
+      0: eval1 -> eval2 : A'=-1+A, [ A>=2 ], cost: 1
+      1: eval1 -> eval2 : B'=-1+B, [ 1>=A ], cost: 1
+     36: eval2 -> eval2 : A'=1, C'=2, D'=4, [ B>=2 && B>=1+2*A && A>=2 ], cost: -3+3*A
+     37: eval2 -> eval2 : B'=2*A, C'=A, D'=2*A, [ B>=2 && B>=1+2*A && A==1 ], cost: 3*B-6*A
+     38: eval2 -> eval2 : B'=2*A, C'=A, D'=1+2*A, [ B>=2 && B>=1+2*A && A==1 ], cost: 3*B-6*A
+     39: eval2 -> eval2 : A'=1, C'=4, D'=8, [ B>=2 && B>=1+2*A && B>=1+4*A && A>=2 ], cost: -4+4*A
+     40: eval2 -> eval2 : B'=4*A, C'=2*A, D'=4*A, [ B>=2 && B>=1+2*A && B>=1+4*A && A==1 ], cost: 4*B-16*A
+
+
+Chained simpled loops:
+  Start location: eval1
+     41: eval1 -> eval2 : A'=1, C'=2, D'=4, [ A>=2 && B>=2 && B>=-1+2*A && -1+A>=2 ], cost: -5+3*A
+     42: eval1 -> eval2 : A'=-1+A, B'=-2+2*A, C'=-1+A, D'=-2+2*A, [ A>=2 && B>=2 && B>=-1+2*A && -1+A==1 ], cost: 7+3*B-6*A
+     43: eval1 -> eval2 : B'=2*A, C'=A, D'=2*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && A==1 ], cost: -2+3*B-6*A
+     44: eval1 -> eval2 : A'=-1+A, B'=-2+2*A, C'=-1+A, D'=-1+2*A, [ A>=2 && B>=2 && B>=-1+2*A && -1+A==1 ], cost: 7+3*B-6*A
+     45: eval1 -> eval2 : B'=2*A, C'=A, D'=1+2*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && A==1 ], cost: -2+3*B-6*A
+     46: eval1 -> eval2 : A'=1, C'=4, D'=8, [ A>=2 && B>=2 && B>=-1+2*A && B>=-3+4*A && -1+A>=2 ], cost: -7+4*A
+     47: eval1 -> eval2 : A'=-1+A, B'=-4+4*A, C'=-2+2*A, D'=-4+4*A, [ A>=2 && B>=2 && B>=-1+2*A && B>=-3+4*A && -1+A==1 ], cost: 17+4*B-16*A
+     48: eval1 -> eval2 : B'=4*A, C'=2*A, D'=4*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && -1+B>=1+4*A && A==1 ], cost: -3+4*B-16*A
+
+Created initial limit problem:
+-2+B (+/+!), -3+4*B-16*A (+), -1+B-4*A (+/+!), A (+/+!), 2-A (+/+!), -1+B-2*A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1}
+resulting limit problem:
+1 (+/+!), -2+B (+/+!), -3+B (+/+!), -5+B (+/+!), -19+4*B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-2+B (+/+!), -3+B (+/+!), -5+B (+/+!), -19+4*B (+) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+-3+B (+/+!), -5+B (+/+!), -19+4*B (+), B (+) [not solved]
+
+applying transformation rule (D), replacing -3+B (+/+!) by B (+)
+resulting limit problem:
+-5+B (+/+!), -19+4*B (+), B (+) [not solved]
+
+applying transformation rule (D), replacing -5+B (+/+!) by B (+)
+resulting limit problem:
+-19+4*B (+), B (+) [not solved]
+
+applying transformation rule (D), replacing -19+4*B (+) by 4*B (+)
+resulting limit problem:
+B (+), 4*B (+) [not solved]
+
+applying transformation rule (A), replacing 4*B (+) by B (+) and 4 (+!) using + limit vector (+,+!)
+resulting limit problem:
+B (+), 4 (+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 1
+Created initial limit problem:
+2+B-2*A (+/+!), 7+3*B-6*A (+), -1+A (+/+!), -1+B (+/+!), 3-A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2}
+resulting limit problem:
+-5+3*B (+), 1 (+/+!), -2+B (+/+!), -1+B (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-5+3*B (+), -2+B (+/+!), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -5+3*B (+) by 3*B (+)
+resulting limit problem:
+-2+B (+/+!), 3*B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+3*B (+), B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+B (+/+!) by B (+)
+resulting limit problem:
+3*B (+), B (+) [not solved]
+
+applying transformation rule (A), replacing 3*B (+) by B (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), B (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 2
+Created initial limit problem:
+2+B-2*A (+/+!), -1+A (+/+!), 4+B-4*A (+/+!), 17+4*B-16*A (+), -1+B (+/+!), 3-A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2}
+resulting limit problem:
+1 (+/+!), -2+B (+/+!), -4+B (+/+!), -15+4*B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-2+B (+/+!), -4+B (+/+!), -15+4*B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+-4+B (+/+!), -15+4*B (+), B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -4+B (+/+!) by B (+)
+resulting limit problem:
+-15+4*B (+), B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -15+4*B (+) by 4*B (+)
+resulting limit problem:
+B (+), 4*B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+B (+/+!) by B (+)
+resulting limit problem:
+B (+), 4*B (+) [not solved]
+
+applying transformation rule (A), replacing 4*B (+) by B (+) and 4 (+!) using + limit vector (+,+!)
+resulting limit problem:
+B (+), 4 (+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 2
+Created initial limit problem:
+-2+B (+/+!), A (+/+!), 2-A (+/+!), -2+3*B-6*A (+), -1+B-2*A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1}
+resulting limit problem:
+1 (+/+!), -2+B (+/+!), -3+B (+/+!), -8+3*B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-2+B (+/+!), -3+B (+/+!), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+-3+B (+/+!), B (+), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -3+B (+/+!) by B (+)
+resulting limit problem:
+B (+), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -8+3*B (+) by 3*B (+)
+resulting limit problem:
+3*B (+), B (+) [not solved]
+
+applying transformation rule (A), replacing 3*B (+) by B (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), B (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 1
+Created initial limit problem:
+2+B-2*A (+/+!), 7+3*B-6*A (+), -1+A (+/+!), -1+B (+/+!), 3-A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2}
+resulting limit problem:
+-5+3*B (+), 1 (+/+!), -2+B (+/+!), -1+B (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-5+3*B (+), -2+B (+/+!), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -5+3*B (+) by 3*B (+)
+resulting limit problem:
+-2+B (+/+!), 3*B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+3*B (+), B (+), -1+B (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+B (+/+!) by B (+)
+resulting limit problem:
+3*B (+), B (+) [not solved]
+
+applying transformation rule (A), replacing 3*B (+) by B (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), B (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 2
+Created initial limit problem:
+-2+B (+/+!), A (+/+!), 2-A (+/+!), -2+3*B-6*A (+), -1+B-2*A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1}
+resulting limit problem:
+1 (+/+!), -2+B (+/+!), -3+B (+/+!), -8+3*B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-2+B (+/+!), -3+B (+/+!), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+-3+B (+/+!), B (+), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -3+B (+/+!) by B (+)
+resulting limit problem:
+B (+), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -8+3*B (+) by 3*B (+)
+resulting limit problem:
+3*B (+), B (+) [not solved]
+
+applying transformation rule (A), replacing 3*B (+) by B (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), B (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 1
+
+Pruned:
+  Start location: eval1
+     42: eval1 -> eval2 : A'=-1+A, B'=-2+2*A, C'=-1+A, D'=-2+2*A, [ A>=2 && B>=2 && B>=-1+2*A && -1+A==1 ], cost: 7+3*B-6*A
+     43: eval1 -> eval2 : B'=2*A, C'=A, D'=2*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && A==1 ], cost: -2+3*B-6*A
+     44: eval1 -> eval2 : A'=-1+A, B'=-2+2*A, C'=-1+A, D'=-1+2*A, [ A>=2 && B>=2 && B>=-1+2*A && -1+A==1 ], cost: 7+3*B-6*A
+     47: eval1 -> eval2 : A'=-1+A, B'=-4+4*A, C'=-2+2*A, D'=-4+4*A, [ A>=2 && B>=2 && B>=-1+2*A && B>=-3+4*A && -1+A==1 ], cost: 17+4*B-16*A
+     48: eval1 -> eval2 : B'=4*A, C'=2*A, D'=4*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && -1+B>=1+4*A && A==1 ], cost: -3+4*B-16*A
+
+Removing duplicate transition: 42.
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: eval1
+     43: eval1 -> eval2 : B'=2*A, C'=A, D'=2*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && A==1 ], cost: -2+3*B-6*A
+     44: eval1 -> eval2 : A'=-1+A, B'=-2+2*A, C'=-1+A, D'=-1+2*A, [ A>=2 && B>=2 && B>=-1+2*A && -1+A==1 ], cost: 7+3*B-6*A
+     47: eval1 -> eval2 : A'=-1+A, B'=-4+4*A, C'=-2+2*A, D'=-4+4*A, [ A>=2 && B>=2 && B>=-1+2*A && B>=-3+4*A && -1+A==1 ], cost: 17+4*B-16*A
+     48: eval1 -> eval2 : B'=4*A, C'=2*A, D'=4*A, [ 1>=A && -1+B>=2 && -1+B>=1+2*A && -1+B>=1+4*A && A==1 ], cost: -3+4*B-16*A
+
+
+Computing complexity for remaining 4 transitions.
+
+Created initial limit problem:
+-2+B (+/+!), A (+/+!), 2-A (+/+!), -2+3*B-6*A (+), -1+B-2*A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1}
+resulting limit problem:
+1 (+/+!), -2+B (+/+!), -3+B (+/+!), -8+3*B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-2+B (+/+!), -3+B (+/+!), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -2+B (+/+!) by B (+)
+resulting limit problem:
+-3+B (+/+!), B (+), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -3+B (+/+!) by B (+)
+resulting limit problem:
+B (+), -8+3*B (+) [not solved]
+
+applying transformation rule (D), replacing -8+3*B (+) by 3*B (+)
+resulting limit problem:
+3*B (+), B (+) [not solved]
+
+applying transformation rule (A), replacing 3*B (+) by B (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), B (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+B (+) [solved]
+
+Solution:
+B / n
+A / 1
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 1>=A && -1+B>=2 && -1+B>=1+2*A && A==1
+  Final Cost:  -8+3*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

@@ -1,0 +1,112 @@
+Trying to load file: realselect.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : L'=0, [ 1>=A && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      1: start -> lbl53 : D'=1, H'=0, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      2: start -> lbl53 : D'=1, H'=1, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      5: lbl53 -> lbl53 : D'=J, J'=1+J, [ A>=1+J && D>=H && D>=1 && A>=J && J>=1+D && 1+H>=D && 1+L==D && N==A ], cost: 1
+      6: lbl53 -> lbl53 : D'=J, H'=J, J'=1+J, [ A>=1+J && D>=H && D>=1 && A>=J && J>=1+D && 1+H>=D && 1+L==D && N==A ], cost: 1
+      4: lbl53 -> lbl91 : F'=free, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A ], cost: 1
+      3: lbl91 -> lbl13 : B'=L, L'=1+L, [ D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A ], cost: 1
+      7: lbl13 -> stop : [ 2+H>=A && A>=2 && A>=1+H && 1+L==A && 2+B==A && 1+D==A && N==A && J==A ], cost: 1
+      8: lbl13 -> lbl53 : D'=1+L, H'=L, J'=2+L, [ A>=3+B && A>=2+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+      9: lbl13 -> lbl53 : D'=1+L, H'=1+L, J'=2+L, [ A>=3+B && A>=2+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=Q, J'=K, L'=M, N'=A, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      1: start -> lbl53 : D'=1, H'=0, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      2: start -> lbl53 : D'=1, H'=1, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      5: lbl53 -> lbl53 : D'=J, J'=1+J, [ A>=1+J && D>=H && D>=1 && J>=1+D && 1+H>=D && 1+L==D && N==A ], cost: 1
+      6: lbl53 -> lbl53 : D'=J, H'=J, J'=1+J, [ A>=1+J && D>=H && D>=1 && J>=1+D && 1+H>=D && 1+L==D && N==A ], cost: 1
+      4: lbl53 -> lbl91 : F'=free, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A ], cost: 1
+      3: lbl91 -> lbl13 : B'=L, L'=1+L, [ D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A ], cost: 1
+      8: lbl13 -> lbl53 : D'=1+L, H'=L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+      9: lbl13 -> lbl53 : D'=1+L, H'=1+L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=Q, J'=K, L'=M, N'=A, [], cost: 1
+
+Eliminating 2 self-loops for location lbl53
+  Removing the self-loops: 5 6.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+      1: start -> lbl53 : D'=1, H'=0, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      2: start -> lbl53 : D'=1, H'=1, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+     11: lbl53 -> lbl53 : D'=J, J'=1+J, [ A>=1+J && D>=H && D>=1 && J>=1+D && 1+H>=D && 1+L==D && N==A ], cost: 1
+     12: lbl53 -> lbl53 : D'=J, H'=J, J'=1+J, [ A>=1+J && D>=H && D>=1 && J>=1+D && 1+H>=D && 1+L==D && N==A ], cost: 1
+      4: lbl53 -> lbl91 : F'=free, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A ], cost: 1
+      3: lbl91 -> lbl13 : B'=L, L'=1+L, [ D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A ], cost: 1
+      8: lbl13 -> lbl53 : D'=1+L, H'=L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+      9: lbl13 -> lbl53 : D'=1+L, H'=1+L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=Q, J'=K, L'=M, N'=A, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start0
+      1: start -> lbl53 : D'=1, H'=0, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      2: start -> lbl53 : D'=1, H'=1, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+     13: start -> lbl53 : D'=2, H'=0, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && N==A ], cost: 2
+     14: start -> lbl53 : D'=2, H'=1, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && N==A ], cost: 2
+     17: start -> lbl53 : D'=2, H'=2, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && N==A ], cost: 2
+     18: start -> lbl53 : D'=2, H'=2, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && N==A ], cost: 2
+      4: lbl53 -> lbl91 : F'=free, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A ], cost: 1
+      3: lbl91 -> lbl13 : B'=L, L'=1+L, [ D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A ], cost: 1
+      8: lbl13 -> lbl53 : D'=1+L, H'=L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+      9: lbl13 -> lbl53 : D'=1+L, H'=1+L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+     15: lbl13 -> lbl53 : D'=2+L, H'=L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=L && 1+L>=1 && 2+L>=2+L && 1+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     16: lbl13 -> lbl53 : D'=2+L, H'=1+L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=1+L && 1+L>=1 && 2+L>=2+L && 2+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     19: lbl13 -> lbl53 : D'=2+L, H'=2+L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=L && 1+L>=1 && 2+L>=2+L && 1+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     20: lbl13 -> lbl53 : D'=2+L, H'=2+L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=1+L && 1+L>=1 && 2+L>=2+L && 2+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=Q, J'=K, L'=M, N'=A, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: start0
+      1: start -> lbl53 : D'=1, H'=0, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+      2: start -> lbl53 : D'=1, H'=1, J'=2, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A ], cost: 1
+     13: start -> lbl53 : D'=2, H'=0, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && N==A ], cost: 2
+     14: start -> lbl53 : D'=2, H'=1, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && N==A ], cost: 2
+     17: start -> lbl53 : D'=2, H'=2, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && N==A ], cost: 2
+     18: start -> lbl53 : D'=2, H'=2, J'=3, L'=0, [ A>=2 && B==C && D==E && F==G && H==Q && J==K && L==M && N==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && N==A ], cost: 2
+      4: lbl53 -> lbl13 : B'=L, F'=free, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A ], cost: 2
+      8: lbl13 -> lbl53 : D'=1+L, H'=L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+      9: lbl13 -> lbl53 : D'=1+L, H'=1+L, J'=2+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A ], cost: 1
+     15: lbl13 -> lbl53 : D'=2+L, H'=L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=L && 1+L>=1 && 2+L>=2+L && 1+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     16: lbl13 -> lbl53 : D'=2+L, H'=1+L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=1+L && 1+L>=1 && 2+L>=2+L && 2+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     19: lbl13 -> lbl53 : D'=2+L, H'=2+L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=L && 1+L>=1 && 2+L>=2+L && 1+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     20: lbl13 -> lbl53 : D'=2+L, H'=2+L, J'=3+L, [ A>=3+B && H>=B && B>=0 && 1+B>=H && L==1+B && D==1+B && N==A && J==A && A>=3+L && 1+L>=1+L && 1+L>=1 && 2+L>=2+L && 2+L>=1+L && 1+L==1+L && N==A ], cost: 2
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=Q, J'=K, L'=M, N'=A, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: start0
+     27: lbl53 -> lbl53 : B'=L, D'=2+L, F'=free, H'=1+L, J'=3+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A ], cost: 3
+     28: lbl53 -> lbl53 : B'=L, D'=2+L, F'=free, H'=2+L, J'=3+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A ], cost: 3
+     29: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=1+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=1+L && 2+L>=1 && 3+L>=3+L && 2+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     30: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=2+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=2+L && 2+L>=1 && 3+L>=3+L && 3+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     31: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=3+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=1+L && 2+L>=1 && 3+L>=3+L && 2+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     32: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=3+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=2+L && 2+L>=1 && 3+L>=3+L && 3+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     21: start0 -> lbl53 : B'=C, D'=1, F'=G, H'=0, J'=2, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A ], cost: 2
+     22: start0 -> lbl53 : B'=C, D'=1, F'=G, H'=1, J'=2, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A ], cost: 2
+     23: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=0, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && A==A ], cost: 3
+     24: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=1, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && A==A ], cost: 3
+     25: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=2, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && A==A ], cost: 3
+     26: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=2, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && A==A ], cost: 3
+
+
+Pruned:
+  Start location: start0
+     27: lbl53 -> lbl53 : B'=L, D'=2+L, F'=free, H'=1+L, J'=3+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A ], cost: 3
+     28: lbl53 -> lbl53 : B'=L, D'=2+L, F'=free, H'=2+L, J'=3+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A ], cost: 3
+     29: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=1+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=1+L && 2+L>=1 && 3+L>=3+L && 2+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     30: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=2+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=2+L && 2+L>=1 && 3+L>=3+L && 3+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     32: lbl53 -> lbl53 : B'=L, D'=3+L, F'=free, H'=3+L, J'=4+L, L'=1+L, [ D>=H && D>=1 && A>=1+D && 1+H>=D && J==A && 1+L==D && N==A && D>=H && D>=1 && 1+H>=D && A>=1+D && N==A && 1+L==D && J==A && A>=3+L && H>=L && L>=0 && 1+L>=H && 1+L==1+L && D==1+L && N==A && J==A && A>=4+L && 2+L>=2+L && 2+L>=1 && 3+L>=3+L && 3+L>=2+L && 2+L==2+L && N==A ], cost: 4
+     21: start0 -> lbl53 : B'=C, D'=1, F'=G, H'=0, J'=2, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A ], cost: 2
+     22: start0 -> lbl53 : B'=C, D'=1, F'=G, H'=1, J'=2, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A ], cost: 2
+     23: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=0, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=0 && 1>=1 && 2>=2 && 1>=1 && 1==1 && A==A ], cost: 3
+     24: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=1, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && A==A ], cost: 3
+     26: start0 -> lbl53 : B'=C, D'=2, F'=G, H'=2, J'=3, L'=0, N'=A, [ A>=2 && C==C && E==E && G==G && Q==Q && K==K && M==M && A==A && A>=3 && 1>=1 && 1>=1 && 2>=2 && 2>=1 && 1==1 && A==A ], cost: 3
+
+Eliminating 5 self-loops for location lbl53

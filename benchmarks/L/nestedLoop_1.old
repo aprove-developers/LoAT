@@ -1,0 +1,176 @@
+Trying to load file: nestedLoop_1.koat
+
+Initial Control flow graph problem:
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopentryin : [], cost: 1
+      1: evalnestedLoopentryin -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 1
+      2: evalnestedLoopentryin -> evalnestedLoopreturnin : [ 0>=1+A ], cost: 1
+      3: evalnestedLoopentryin -> evalnestedLoopreturnin : [ 0>=1+B ], cost: 1
+      4: evalnestedLoopentryin -> evalnestedLoopreturnin : [ 0>=1+C ], cost: 1
+      6: evalnestedLoopbb9in -> evalnestedLoopreturnin : [ D>=A ], cost: 1
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+     14: evalnestedLoopreturnin -> evalnestedLoopstop : [], cost: 1
+      7: evalnestedLoopbb7in -> evalnestedLoopbb4in : [ B>=1+E ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb8in : [ E>=B ], cost: 1
+      9: evalnestedLoopbb4in -> evalnestedLoopbb6in : G'=1+E, H'=F, [], cost: 1
+     13: evalnestedLoopbb8in -> evalnestedLoopbb9in : D'=1+F, [], cost: 1
+     11: evalnestedLoopbb6in -> evalnestedLoopbb7in : E'=G, F'=H, [ H>=C ], cost: 1
+     10: evalnestedLoopbb6in -> evalnestedLoopbb5in : [ C>=1+H ], cost: 1
+     12: evalnestedLoopbb5in -> evalnestedLoopbb6in : H'=1+H, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopentryin : [], cost: 1
+      1: evalnestedLoopentryin -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 1
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+      7: evalnestedLoopbb7in -> evalnestedLoopbb4in : [ B>=1+E ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb8in : [ E>=B ], cost: 1
+      9: evalnestedLoopbb4in -> evalnestedLoopbb6in : G'=1+E, H'=F, [], cost: 1
+     13: evalnestedLoopbb8in -> evalnestedLoopbb9in : D'=1+F, [], cost: 1
+     11: evalnestedLoopbb6in -> evalnestedLoopbb7in : E'=G, F'=H, [ H>=C ], cost: 1
+     10: evalnestedLoopbb6in -> evalnestedLoopbb5in : [ C>=1+H ], cost: 1
+     12: evalnestedLoopbb5in -> evalnestedLoopbb6in : H'=1+H, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+      7: evalnestedLoopbb7in -> evalnestedLoopbb6in : G'=1+E, H'=F, [ B>=1+E ], cost: 2
+     11: evalnestedLoopbb6in -> evalnestedLoopbb7in : E'=G, F'=H, [ H>=C ], cost: 1
+     10: evalnestedLoopbb6in -> evalnestedLoopbb6in : H'=1+H, [ C>=1+H ], cost: 2
+
+Eliminating 1 self-loops for location evalnestedLoopbb6in
+  Self-Loop 10 has the metering function: C-H, resulting in the new transition 15.
+  Removing the self-loops: 10.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+      7: evalnestedLoopbb7in -> evalnestedLoopbb6in : G'=1+E, H'=F, [ B>=1+E ], cost: 2
+     11: evalnestedLoopbb6in -> evalnestedLoopbb7in : E'=G, F'=H, [ H>=C ], cost: 1
+     15: evalnestedLoopbb6in -> evalnestedLoopbb6in : H'=C, [ C>=1+H ], cost: 2*C-2*H
+
+
+Chained simpled loops:
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     16: evalnestedLoopbb7in -> evalnestedLoopbb6in : G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 2+2*C-2*F
+     11: evalnestedLoopbb6in -> evalnestedLoopbb7in : E'=G, F'=H, [ H>=C ], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     16: evalnestedLoopbb7in -> evalnestedLoopbb7in : E'=1+E, F'=C, G'=1+E, H'=C, [ B>=1+E && C>=1+F && C>=C ], cost: 3+2*C-2*F
+
+Eliminating 1 self-loops for location evalnestedLoopbb7in
+  Removing the self-loops: 16.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+      8: evalnestedLoopbb7in -> evalnestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     17: evalnestedLoopbb7in -> evalnestedLoopbb7in : E'=1+E, F'=C, G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 3+2*C-2*F
+
+
+Chained simpled loops:
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      5: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=0, F'=D, [ A>=1+D ], cost: 1
+     18: evalnestedLoopbb9in -> evalnestedLoopbb7in : E'=1, F'=C, G'=1, H'=C, [ A>=1+D && B>=1 && C>=1+D ], cost: 4+2*C-2*D
+      8: evalnestedLoopbb7in -> evalnestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+
+
+Eliminated locations (branches):
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     19: evalnestedLoopbb9in -> evalnestedLoopbb9in : D'=1+D, E'=0, F'=D, [ A>=1+D && 0>=B ], cost: 3
+     20: evalnestedLoopbb9in -> evalnestedLoopbb9in : D'=1+C, E'=1, F'=C, G'=1, H'=C, [ A>=1+D && B>=1 && C>=1+D && 1>=B ], cost: 6+2*C-2*D
+
+Eliminating 2 self-loops for location evalnestedLoopbb9in
+  Self-Loop 19 has the metering function: A-D, resulting in the new transition 21.
+  Removing the self-loops: 19 20.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     21: evalnestedLoopbb9in -> evalnestedLoopbb9in : D'=A, E'=0, F'=-1+A, [ A>=1+D && 0>=B ], cost: 3*A-3*D
+     22: evalnestedLoopbb9in -> evalnestedLoopbb9in : D'=1+C, E'=1, F'=C, G'=1, H'=C, [ A>=1+D && 1-B==0 && C>=1+D ], cost: 6+2*C-2*D
+
+
+Chained simpled loops:
+  Start location: evalnestedLoopstart
+      0: evalnestedLoopstart -> evalnestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     23: evalnestedLoopstart -> evalnestedLoopbb9in : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && 0>=B ], cost: 2+3*A
+     24: evalnestedLoopstart -> evalnestedLoopbb9in : D'=1+C, E'=1, F'=C, G'=1, H'=C, [ A>=0 && B>=0 && C>=0 && A>=1 && 1-B==0 && C>=1 ], cost: 8+2*C
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalnestedLoopstart
+     23: evalnestedLoopstart -> evalnestedLoopbb9in : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && 0>=B ], cost: 2+3*A
+     24: evalnestedLoopstart -> evalnestedLoopbb9in : D'=1+C, E'=1, F'=C, G'=1, H'=C, [ A>=0 && B>=0 && C>=0 && A>=1 && 1-B==0 && C>=1 ], cost: 8+2*C
+
+
+Computing complexity for remaining 2 transitions.
+
+Created initial limit problem:
+1+B (+/+!), A (+/+!), 1+C (+/+!), 2+3*A (+), 1+A (+/+!), 1-B (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+C (+/+!) by C (+)
+resulting limit problem:
+1+B (+!), A (+/+!), C (+), 2+3*A (+), 1+A (+/+!), 1-B (+/+!) [not solved]
+
+applying transformation rule (D), replacing 2+3*A (+) by 3*A (+)
+resulting limit problem:
+1+B (+!), 3*A (+), A (+/+!), C (+), 1+A (+/+!), 1-B (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+A (+/+!) by A (+)
+resulting limit problem:
+1+B (+!), 3*A (+), A (+), C (+), 1-B (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==C}
+resulting limit problem:
+1+B (+!), C (+), 1-B (+!), 3*C (+) [not solved]
+
+applying transformation rule (C) using substitution {B==0}
+resulting limit problem:
+1 (+!), C (+), 3*C (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+C (+), 3*C (+) [not solved]
+
+applying transformation rule (A), replacing 3*C (+) by C (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+3 (+!), C (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+C (+) [solved]
+
+Solution:
+A / n
+C / n
+B / 0
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && B>=0 && C>=0 && A>=1 && 0>=B
+  Final Cost:  2+3*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

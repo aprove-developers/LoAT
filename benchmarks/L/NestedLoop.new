@@ -1,0 +1,312 @@
+Trying to load file: NestedLoop.koat
+
+Initial Control flow graph problem:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopentryin : [], cost: 1
+      1: evalNestedLoopentryin -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 1
+      2: evalNestedLoopbb9in -> evalNestedLoopreturnin : [ D>=A ], cost: 1
+      3: evalNestedLoopbb9in -> evalNestedLoopbb10in : [ A>=1+D ], cost: 1
+     20: evalNestedLoopreturnin -> evalNestedLoopstop : [], cost: 1
+      6: evalNestedLoopbb10in -> evalNestedLoopreturnin : [], cost: 1
+      4: evalNestedLoopbb10in -> evalNestedLoopbb6in : E'=0, F'=D, [ 0>=1+free ], cost: 1
+      5: evalNestedLoopbb10in -> evalNestedLoopbb6in : E'=0, F'=D, [ free_1>=1 ], cost: 1
+      7: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ E>=B ], cost: 1
+      8: evalNestedLoopbb6in -> evalNestedLoopbb7in : [ B>=1+E ], cost: 1
+     19: evalNestedLoopbb8in -> evalNestedLoopbb9in : D'=1+F, [], cost: 1
+     11: evalNestedLoopbb7in -> evalNestedLoopbb8in : [], cost: 1
+      9: evalNestedLoopbb7in -> evalNestedLoopbb1in : [ 0>=1+free_2 ], cost: 1
+     10: evalNestedLoopbb7in -> evalNestedLoopbb1in : [ free_3>=1 ], cost: 1
+     12: evalNestedLoopbb1in -> evalNestedLoopbb3in : G'=1+E, H'=F, [], cost: 1
+     13: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     14: evalNestedLoopbb3in -> evalNestedLoopbb4in : [ C>=1+H ], cost: 1
+     17: evalNestedLoopbb4in -> evalNestedLoopbb6in : E'=G, F'=H, [], cost: 1
+     15: evalNestedLoopbb4in -> evalNestedLoopbb2in : [ 0>=1+free_4 ], cost: 1
+     16: evalNestedLoopbb4in -> evalNestedLoopbb2in : [ free_5>=1 ], cost: 1
+     18: evalNestedLoopbb2in -> evalNestedLoopbb3in : H'=1+H, [], cost: 1
+
+Removing duplicate transition: 4.
+Removing duplicate transition: 9.
+Removing duplicate transition: 15.
+
+Simplified the transitions:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopentryin : [], cost: 1
+      1: evalNestedLoopentryin -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 1
+      3: evalNestedLoopbb9in -> evalNestedLoopbb10in : [ A>=1+D ], cost: 1
+      5: evalNestedLoopbb10in -> evalNestedLoopbb6in : E'=0, F'=D, [], cost: 1
+      7: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ E>=B ], cost: 1
+      8: evalNestedLoopbb6in -> evalNestedLoopbb7in : [ B>=1+E ], cost: 1
+     19: evalNestedLoopbb8in -> evalNestedLoopbb9in : D'=1+F, [], cost: 1
+     11: evalNestedLoopbb7in -> evalNestedLoopbb8in : [], cost: 1
+     10: evalNestedLoopbb7in -> evalNestedLoopbb1in : [], cost: 1
+     12: evalNestedLoopbb1in -> evalNestedLoopbb3in : G'=1+E, H'=F, [], cost: 1
+     13: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     14: evalNestedLoopbb3in -> evalNestedLoopbb4in : [ C>=1+H ], cost: 1
+     17: evalNestedLoopbb4in -> evalNestedLoopbb6in : E'=G, F'=H, [], cost: 1
+     16: evalNestedLoopbb4in -> evalNestedLoopbb2in : [], cost: 1
+     18: evalNestedLoopbb2in -> evalNestedLoopbb3in : H'=1+H, [], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+      7: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ E>=B ], cost: 1
+      8: evalNestedLoopbb6in -> evalNestedLoopbb7in : [ B>=1+E ], cost: 1
+     19: evalNestedLoopbb8in -> evalNestedLoopbb9in : D'=1+F, [], cost: 1
+     11: evalNestedLoopbb7in -> evalNestedLoopbb8in : [], cost: 1
+     10: evalNestedLoopbb7in -> evalNestedLoopbb3in : G'=1+E, H'=F, [], cost: 2
+     13: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     14: evalNestedLoopbb3in -> evalNestedLoopbb4in : [ C>=1+H ], cost: 1
+     17: evalNestedLoopbb4in -> evalNestedLoopbb6in : E'=G, F'=H, [], cost: 1
+     16: evalNestedLoopbb4in -> evalNestedLoopbb3in : H'=1+H, [], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+      7: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ E>=B ], cost: 1
+     21: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ B>=1+E ], cost: 2
+     22: evalNestedLoopbb6in -> evalNestedLoopbb3in : G'=1+E, H'=F, [ B>=1+E ], cost: 3
+     19: evalNestedLoopbb8in -> evalNestedLoopbb9in : D'=1+F, [], cost: 1
+     13: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     23: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ C>=1+H ], cost: 2
+     24: evalNestedLoopbb3in -> evalNestedLoopbb3in : H'=1+H, [ C>=1+H ], cost: 3
+
+
+Try instantiation
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+      7: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ E>=B ], cost: 1
+     21: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ B>=1+E ], cost: 2
+     22: evalNestedLoopbb6in -> evalNestedLoopbb3in : G'=1+E, H'=F, [ B>=1+E ], cost: 3
+     19: evalNestedLoopbb8in -> evalNestedLoopbb9in : D'=1+F, [], cost: 1
+     13: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     23: evalNestedLoopbb3in -> evalNestedLoopbb6in : E'=G, F'=H, [ C>=1+H ], cost: 2
+     25: evalNestedLoopbb3in -> evalNestedLoopbb3in : H'=C, [ C>=1+H ], cost: 3*C-3*H
+
+Eliminating 1 self-loops for location evalNestedLoopbb3in
+  Removing the self-loops: 25.
+Adding an epsilon transition (to model nonexecution of the loops): 27.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+      7: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ E>=B ], cost: 1
+     21: evalNestedLoopbb6in -> evalNestedLoopbb8in : [ B>=1+E ], cost: 2
+     22: evalNestedLoopbb6in -> evalNestedLoopbb3in : G'=1+E, H'=F, [ B>=1+E ], cost: 3
+     19: evalNestedLoopbb8in -> evalNestedLoopbb9in : D'=1+F, [], cost: 1
+     26: evalNestedLoopbb3in -> [13] : H'=C, [ C>=1+H ], cost: 3*C-3*H
+     27: evalNestedLoopbb3in -> [13] : [], cost: 0
+     13: [13] -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     23: [13] -> evalNestedLoopbb6in : E'=G, F'=H, [ C>=1+H ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+     28: evalNestedLoopbb6in -> evalNestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     29: evalNestedLoopbb6in -> evalNestedLoopbb9in : D'=1+F, [ B>=1+E ], cost: 3
+     30: evalNestedLoopbb6in -> [13] : G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 3-3*F+3*C
+     31: evalNestedLoopbb6in -> [13] : G'=1+E, H'=F, [ B>=1+E ], cost: 3
+     13: [13] -> evalNestedLoopbb6in : E'=G, F'=H, [ H>=C ], cost: 1
+     23: [13] -> evalNestedLoopbb6in : E'=G, F'=H, [ C>=1+H ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+     28: evalNestedLoopbb6in -> evalNestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     29: evalNestedLoopbb6in -> evalNestedLoopbb9in : D'=1+F, [ B>=1+E ], cost: 3
+     32: evalNestedLoopbb6in -> evalNestedLoopbb6in : E'=1+E, F'=C, G'=1+E, H'=C, [ B>=1+E && C>=1+F && C>=C ], cost: 4-3*F+3*C
+     34: evalNestedLoopbb6in -> evalNestedLoopbb6in : E'=1+E, F'=F, G'=1+E, H'=F, [ B>=1+E && F>=C ], cost: 4
+     35: evalNestedLoopbb6in -> evalNestedLoopbb6in : E'=1+E, F'=F, G'=1+E, H'=F, [ B>=1+E && C>=1+F ], cost: 5
+     33: evalNestedLoopbb6in -> [14] : G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 3-3*F+3*C
+
+
+Try instantiation
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+     28: evalNestedLoopbb6in -> evalNestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     29: evalNestedLoopbb6in -> evalNestedLoopbb9in : D'=1+F, [ B>=1+E ], cost: 3
+     36: evalNestedLoopbb6in -> evalNestedLoopbb6in : E'=B, F'=F, G'=B, H'=F, [ B>=1+E && C>=1+F ], cost: -5*E+5*B
+     37: evalNestedLoopbb6in -> evalNestedLoopbb6in : E'=B, F'=F, G'=B, H'=F, [ B>=1+E && F>=C ], cost: -4*E+4*B
+     33: evalNestedLoopbb6in -> [14] : G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 3-3*F+3*C
+
+Eliminating 2 self-loops for location evalNestedLoopbb6in
+  Removing the self-loops: 36 37.
+Adding an epsilon transition (to model nonexecution of the loops): 40.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+      3: evalNestedLoopbb9in -> evalNestedLoopbb6in : E'=0, F'=D, [ A>=1+D ], cost: 2
+     38: evalNestedLoopbb6in -> [15] : E'=B, G'=B, H'=F, [ B>=1+E && C>=1+F ], cost: -5*E+5*B
+     39: evalNestedLoopbb6in -> [15] : E'=B, G'=B, H'=F, [ B>=1+E && F>=C ], cost: -4*E+4*B
+     40: evalNestedLoopbb6in -> [15] : [], cost: 0
+     28: [15] -> evalNestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     29: [15] -> evalNestedLoopbb9in : D'=1+F, [ B>=1+E ], cost: 3
+     33: [15] -> [14] : G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 3-3*F+3*C
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     41: evalNestedLoopbb9in -> [15] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     42: evalNestedLoopbb9in -> [15] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+     43: evalNestedLoopbb9in -> [15] : E'=0, F'=D, [ A>=1+D ], cost: 2
+     28: [15] -> evalNestedLoopbb9in : D'=1+F, [ E>=B ], cost: 2
+     29: [15] -> evalNestedLoopbb9in : D'=1+F, [ B>=1+E ], cost: 3
+     33: [15] -> [14] : G'=1+E, H'=C, [ B>=1+E && C>=1+F ], cost: 3-3*F+3*C
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     44: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=1+D, E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D && B>=B ], cost: 4+5*B
+     47: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=1+D, E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C && B>=B ], cost: 4+4*B
+     50: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=1+D, E'=0, F'=D, [ A>=1+D && 0>=B ], cost: 4
+     51: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=1+D, E'=0, F'=D, [ A>=1+D && B>=1 ], cost: 5
+     52: evalNestedLoopbb9in -> [14] : E'=0, F'=D, G'=1, H'=C, [ A>=1+D && B>=1 && C>=1+D ], cost: 5-3*D+3*C
+     45: evalNestedLoopbb9in -> [16] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     46: evalNestedLoopbb9in -> [17] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     48: evalNestedLoopbb9in -> [18] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+     49: evalNestedLoopbb9in -> [19] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+
+
+Try instantiation
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     53: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=A, E'=0, F'=-1+A, [ A>=1+D && B>=1 ], cost: -5*D+5*A
+     54: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=A, E'=0, F'=-1+A, [ A>=1+D && 0>=B ], cost: -4*D+4*A
+     55: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=1+C && D>=C && A>=1+D && B>=1 ], cost: -4*D-4*B*(D-A)+4*A
+     56: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=C && C>=1+D && A>=1+D && B>=1 ], cost: -5*(D-C)*B-4*D+4*C
+     57: evalNestedLoopbb9in -> evalNestedLoopbb9in : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ C>=A && C>=1+D && A>=1+D && B>=1 ], cost: -4*D-5*B*(D-A)+4*A
+     52: evalNestedLoopbb9in -> [14] : E'=0, F'=D, G'=1, H'=C, [ A>=1+D && B>=1 && C>=1+D ], cost: 5-3*D+3*C
+     45: evalNestedLoopbb9in -> [16] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     46: evalNestedLoopbb9in -> [17] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     48: evalNestedLoopbb9in -> [18] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+     49: evalNestedLoopbb9in -> [19] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+
+Eliminating 5 self-loops for location evalNestedLoopbb9in
+  Removing the self-loops: 53 54 55 56 57.
+Adding an epsilon transition (to model nonexecution of the loops): 63.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalNestedLoopstart
+      0: evalNestedLoopstart -> evalNestedLoopbb9in : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     58: evalNestedLoopbb9in -> [20] : D'=A, E'=0, F'=-1+A, [ A>=1+D && B>=1 ], cost: -5*D+5*A
+     59: evalNestedLoopbb9in -> [20] : D'=A, E'=0, F'=-1+A, [ A>=1+D && 0>=B ], cost: -4*D+4*A
+     60: evalNestedLoopbb9in -> [20] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=1+C && D>=C && A>=1+D && B>=1 ], cost: -4*D-4*B*(D-A)+4*A
+     61: evalNestedLoopbb9in -> [20] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=C && C>=1+D && A>=1+D && B>=1 ], cost: -5*(D-C)*B-4*D+4*C
+     62: evalNestedLoopbb9in -> [20] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ C>=A && C>=1+D && A>=1+D && B>=1 ], cost: -4*D-5*B*(D-A)+4*A
+     63: evalNestedLoopbb9in -> [20] : [], cost: 0
+     52: [20] -> [14] : E'=0, F'=D, G'=1, H'=C, [ A>=1+D && B>=1 && C>=1+D ], cost: 5-3*D+3*C
+     45: [20] -> [16] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     46: [20] -> [17] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     48: [20] -> [18] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+     49: [20] -> [19] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+     64: evalNestedLoopstart -> [20] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     66: evalNestedLoopstart -> [20] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     67: evalNestedLoopstart -> [20] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     68: evalNestedLoopstart -> [20] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     69: evalNestedLoopstart -> [20] : D'=0, [ A>=0 && B>=0 && C>=0 ], cost: 2
+     52: [20] -> [14] : E'=0, F'=D, G'=1, H'=C, [ A>=1+D && B>=1 && C>=1+D ], cost: 5-3*D+3*C
+     45: [20] -> [16] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     46: [20] -> [17] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && C>=1+D ], cost: 2+5*B
+     48: [20] -> [18] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+     49: [20] -> [19] : E'=B, F'=D, G'=B, H'=D, [ A>=1+D && B>=1 && D>=C ], cost: 2+4*B
+
+
+Applied chaining over branches and pruning:
+  Start location: evalNestedLoopstart
+     90: evalNestedLoopstart -> [14] : D'=0, E'=0, F'=0, G'=1, H'=C, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1 ], cost: 7+3*C
+     91: evalNestedLoopstart -> [16] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1 ], cost: 4+5*B
+     92: evalNestedLoopstart -> [17] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1 ], cost: 4+5*B
+     83: evalNestedLoopstart -> [18] : D'=C, E'=B, F'=C, G'=B, H'=C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 && A>=1+C && B>=1 && C>=C ], cost: 4+4*B+4*C+5*B*C
+     93: evalNestedLoopstart -> [18] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && 0>=C ], cost: 4+4*B
+     84: evalNestedLoopstart -> [19] : D'=C, E'=B, F'=C, G'=B, H'=C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 && A>=1+C && B>=1 && C>=C ], cost: 4+4*B+4*C+5*B*C
+     94: evalNestedLoopstart -> [19] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && 0>=C ], cost: 4+4*B
+     70: evalNestedLoopstart -> [21] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     71: evalNestedLoopstart -> [22] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     72: evalNestedLoopstart -> [23] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     73: evalNestedLoopstart -> [24] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     74: evalNestedLoopstart -> [25] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     75: evalNestedLoopstart -> [26] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     76: evalNestedLoopstart -> [27] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     77: evalNestedLoopstart -> [28] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     78: evalNestedLoopstart -> [29] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     79: evalNestedLoopstart -> [30] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     80: evalNestedLoopstart -> [31] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     81: evalNestedLoopstart -> [32] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     82: evalNestedLoopstart -> [33] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     85: evalNestedLoopstart -> [34] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     86: evalNestedLoopstart -> [35] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     87: evalNestedLoopstart -> [36] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     88: evalNestedLoopstart -> [37] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     89: evalNestedLoopstart -> [38] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalNestedLoopstart
+     90: evalNestedLoopstart -> [14] : D'=0, E'=0, F'=0, G'=1, H'=C, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1 ], cost: 7+3*C
+     91: evalNestedLoopstart -> [16] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1 ], cost: 4+5*B
+     92: evalNestedLoopstart -> [17] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1 ], cost: 4+5*B
+     83: evalNestedLoopstart -> [18] : D'=C, E'=B, F'=C, G'=B, H'=C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 && A>=1+C && B>=1 && C>=C ], cost: 4+4*B+4*C+5*B*C
+     93: evalNestedLoopstart -> [18] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && 0>=C ], cost: 4+4*B
+     84: evalNestedLoopstart -> [19] : D'=C, E'=B, F'=C, G'=B, H'=C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 && A>=1+C && B>=1 && C>=C ], cost: 4+4*B+4*C+5*B*C
+     94: evalNestedLoopstart -> [19] : D'=0, E'=B, F'=0, G'=B, H'=0, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && 0>=C ], cost: 4+4*B
+     70: evalNestedLoopstart -> [21] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     71: evalNestedLoopstart -> [22] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     72: evalNestedLoopstart -> [23] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     73: evalNestedLoopstart -> [24] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     74: evalNestedLoopstart -> [25] : D'=A, E'=0, F'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1 && B>=1 ], cost: 2+5*A
+     75: evalNestedLoopstart -> [26] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     76: evalNestedLoopstart -> [27] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     77: evalNestedLoopstart -> [28] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     78: evalNestedLoopstart -> [29] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     79: evalNestedLoopstart -> [30] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && A>=1+C && 0>=C && A>=1 && B>=1 ], cost: 2+4*B*A+4*A
+     80: evalNestedLoopstart -> [31] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     81: evalNestedLoopstart -> [32] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     82: evalNestedLoopstart -> [33] : D'=C, E'=B, F'=-1+C, G'=B, H'=-1+C, [ A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 ], cost: 2+4*C+5*B*C
+     85: evalNestedLoopstart -> [34] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     86: evalNestedLoopstart -> [35] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     87: evalNestedLoopstart -> [36] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     88: evalNestedLoopstart -> [37] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+     89: evalNestedLoopstart -> [38] : D'=A, E'=B, F'=-1+A, G'=B, H'=-1+A, [ A>=0 && B>=0 && C>=0 && C>=A && C>=1 && A>=1 && B>=1 ], cost: 2+5*B*A+4*A
+
+
+Computing complexity for remaining 25 transitions.
+
+  Found configuration with infinitely models for cost: 7+3*C
+  and guard: A>=0 && B>=0 && C>=0 && A>=1 && B>=1 && C>=1:
+  B: Pos, A: Pos, C: Pos
+
+Found new complexity n^1, because: Found infinity configuration.
+
+  Found configuration with infinitely models for cost: 4+4*B+4*C+5*B*C
+  and guard: A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 && A>=1+C && B>=1 && C>=C:
+  B: Pos, A: Pos, C: Pos, where: A > C
+
+Found new complexity n^2, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && B>=0 && C>=0 && A>=C && C>=1 && A>=1 && B>=1 && A>=1+C && B>=1 && C>=C
+  Final Cost:  4+4*B+4*C+5*B*C
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^2
+  Complexity value: 2
+
+WORST_CASE(Omega(n^2),?)

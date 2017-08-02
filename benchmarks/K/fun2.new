@@ -1,0 +1,154 @@
+Trying to load file: fun2.koat
+
+Initial Control flow graph problem:
+  Start location: f8
+      0: f8 -> f1 : [], cost: 1
+      1: f1 -> f7 : A'=1, B'=C, D'=E, F'=free, G'=free_1, H'=0, Q'=1, J'=free, K'=free_1, L'=7, [ 7>=free_1 && 7>=free && 3>=free_1 && free_1>=1 && free>=1 ], cost: 1
+      2: f1 -> f7 : A'=1, B'=C, D'=E, F'=free_2, G'=free_3, H'=0, Q'=1, J'=free_2, K'=free_3, L'=7, [ 7>=free_3 && 7>=free_2 && free_3>=5 && free_2>=1 ], cost: 1
+      3: f1 -> f7 : A'=1, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_4, G'=4, H'=1, Q'=1, J'=free_4, K'=4, L'=7, [ 7>=free_4 && free_4>=1 ], cost: 1
+      4: f1 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_5, H'=0, Q'=0, J'=3, K'=free_5, L'=2, [ 7>=free_5 && 3>=free_5 && free_5>=1 ], cost: 1
+      5: f1 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_6, H'=0, Q'=0, J'=3, K'=free_6, L'=2, [ 7>=free_6 && free_6>=5 ], cost: 1
+      6: f1 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=3, G'=4, H'=1, Q'=0, J'=3, K'=4, L'=2, [], cost: 1
+      7: f2 -> f7 : A'=1, B'=C, D'=E, F'=free_7, G'=free_8, Q'=1, J'=free_7, K'=free_8, L'=7, [ 7>=free_8 && 7>=free_7 && 3>=free_8 && free_8>=1 && free_7>=1 ], cost: 1
+      8: f2 -> f7 : A'=1, B'=C, D'=E, F'=free_9, G'=free_10, Q'=1, J'=free_9, K'=free_10, L'=7, [ 7>=free_10 && 7>=free_9 && free_10>=5 && free_9>=1 ], cost: 1
+      9: f2 -> f7 : A'=1, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_11, G'=4, H'=1, Q'=1, J'=free_11, K'=4, L'=7, [ 7>=free_11 && free_11>=1 ], cost: 1
+     10: f2 -> f3 : A'=0, B'=C, D'=E, F'=free_12, G'=free_13, Q'=0, J'=free_12, K'=free_13, L'=3, [ 7>=free_13 && 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 ], cost: 1
+     11: f2 -> f3 : A'=0, B'=C, D'=E, F'=free_14, G'=free_15, Q'=0, J'=free_14, K'=free_15, L'=3, [ 7>=free_15 && 7>=free_14 && free_15>=5 && free_14>=1 ], cost: 1
+     12: f2 -> f3 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_16, G'=4, H'=1, Q'=0, J'=free_16, K'=4, L'=3, [ 7>=free_16 && free_16>=1 ], cost: 1
+     13: f3 -> f6 : A'=1, B'=C, D'=E, F'=free_17, G'=free_18, Q'=1, J'=free_17, K'=free_18, L'=6, [ 7>=free_18 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 ], cost: 1
+     14: f3 -> f6 : A'=1, B'=C, D'=E, F'=free_19, G'=free_20, Q'=1, J'=free_19, K'=free_20, L'=6, [ 7>=free_20 && 7>=free_19 && free_20>=5 && free_19>=1 ], cost: 1
+     15: f3 -> f6 : A'=1, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_21, G'=4, H'=1, Q'=1, J'=free_21, K'=4, L'=6, [ 7>=free_21 && free_21>=1 ], cost: 1
+     16: f6 -> f4 : A'=free_22, B'=C, D'=E, F'=free_23, G'=2, H'=0, Q'=free_22, J'=free_23, K'=2, L'=4, [ 7>=free_23 && 1>=free_22 && free_22>=0 && free_23>=1 ], cost: 1
+     17: f6 -> f4 : A'=free_24, B'=C, D'=E, F'=free_25, G'=7, H'=1, Q'=free_24, J'=free_25, K'=7, L'=4, [ 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 ], cost: 1
+     21: f4 -> f7 : A'=0, B'=C, D'=E, F'=free_31, G'=free_32, Q'=0, J'=free_31, K'=free_32, L'=7, [ E>=M && C>=N && 7>=free_32 && 7>=free_31 && 3>=free_32 && free_32>=1 && free_31>=1 ], cost: 1
+     22: f4 -> f7 : A'=0, B'=C, D'=E, F'=free_33, G'=free_34, Q'=0, J'=free_33, K'=free_34, L'=7, [ E>=M && C>=N && 7>=free_34 && 7>=free_33 && free_34>=5 && free_33>=1 ], cost: 1
+     23: f4 -> f7 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_35, G'=4, H'=1, Q'=0, J'=free_35, K'=4, L'=7, [ 1+E>=M && 1+C>=N && 7>=free_35 && free_35>=1 ], cost: 1
+     24: f4 -> f7 : A'=1, B'=C, D'=E, F'=free_36, G'=free_37, Q'=1, J'=free_36, K'=free_37, L'=7, [ 7>=free_37 && 7>=free_36 && 3>=free_37 && free_37>=1 && free_36>=1 ], cost: 1
+     25: f4 -> f7 : A'=1, B'=C, D'=E, F'=free_38, G'=free_39, Q'=1, J'=free_38, K'=free_39, L'=7, [ 7>=free_39 && 7>=free_38 && free_39>=5 && free_38>=1 ], cost: 1
+     26: f4 -> f7 : A'=1, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_40, G'=4, H'=1, Q'=1, J'=free_40, K'=4, L'=7, [ 7>=free_40 && free_40>=1 ], cost: 1
+     18: f4 -> f2 : A'=0, B'=C, D'=E, F'=free_26, G'=free_27, H'=0, Q'=0, J'=free_26, K'=free_27, L'=2, [ M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_27 && 7>=free_26 && 3>=free_27 && free_27>=1 && free_26>=1 && H==1 ], cost: 1
+     19: f4 -> f2 : A'=0, B'=C, D'=E, F'=free_28, G'=free_29, H'=0, Q'=0, J'=free_28, K'=free_29, L'=2, [ M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_29 && 7>=free_28 && free_29>=5 && free_28>=1 && H==1 ], cost: 1
+     20: f4 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f8
+      0: f8 -> f1 : [], cost: 1
+      4: f1 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_5, H'=0, Q'=0, J'=3, K'=free_5, L'=2, [ 3>=free_5 && free_5>=1 ], cost: 1
+      5: f1 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_6, H'=0, Q'=0, J'=3, K'=free_6, L'=2, [ 7>=free_6 && free_6>=5 ], cost: 1
+      6: f1 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=3, G'=4, H'=1, Q'=0, J'=3, K'=4, L'=2, [], cost: 1
+     10: f2 -> f3 : A'=0, B'=C, D'=E, F'=free_12, G'=free_13, Q'=0, J'=free_12, K'=free_13, L'=3, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 ], cost: 1
+     11: f2 -> f3 : A'=0, B'=C, D'=E, F'=free_14, G'=free_15, Q'=0, J'=free_14, K'=free_15, L'=3, [ 7>=free_15 && 7>=free_14 && free_15>=5 && free_14>=1 ], cost: 1
+     12: f2 -> f3 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_16, G'=4, H'=1, Q'=0, J'=free_16, K'=4, L'=3, [ 7>=free_16 && free_16>=1 ], cost: 1
+     13: f3 -> f6 : A'=1, B'=C, D'=E, F'=free_17, G'=free_18, Q'=1, J'=free_17, K'=free_18, L'=6, [ 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 ], cost: 1
+     14: f3 -> f6 : A'=1, B'=C, D'=E, F'=free_19, G'=free_20, Q'=1, J'=free_19, K'=free_20, L'=6, [ 7>=free_20 && 7>=free_19 && free_20>=5 && free_19>=1 ], cost: 1
+     15: f3 -> f6 : A'=1, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_21, G'=4, H'=1, Q'=1, J'=free_21, K'=4, L'=6, [ 7>=free_21 && free_21>=1 ], cost: 1
+     16: f6 -> f4 : A'=free_22, B'=C, D'=E, F'=free_23, G'=2, H'=0, Q'=free_22, J'=free_23, K'=2, L'=4, [ 7>=free_23 && 1>=free_22 && free_22>=0 && free_23>=1 ], cost: 1
+     17: f6 -> f4 : A'=free_24, B'=C, D'=E, F'=free_25, G'=7, H'=1, Q'=free_24, J'=free_25, K'=7, L'=4, [ 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 ], cost: 1
+     18: f4 -> f2 : A'=0, B'=C, D'=E, F'=free_26, G'=free_27, H'=0, Q'=0, J'=free_26, K'=free_27, L'=2, [ M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_26 && 3>=free_27 && free_27>=1 && free_26>=1 && H==1 ], cost: 1
+     19: f4 -> f2 : A'=0, B'=C, D'=E, F'=free_28, G'=free_29, H'=0, Q'=0, J'=free_28, K'=free_29, L'=2, [ M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_29 && 7>=free_28 && free_29>=5 && free_28>=1 && H==1 ], cost: 1
+     20: f4 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f8
+     27: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_5, H'=0, Q'=0, J'=3, K'=free_5, L'=2, [ 3>=free_5 && free_5>=1 ], cost: 2
+     28: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_6, H'=0, Q'=0, J'=3, K'=free_6, L'=2, [ 7>=free_6 && free_6>=5 ], cost: 2
+     29: f8 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=3, G'=4, H'=1, Q'=0, J'=3, K'=4, L'=2, [], cost: 2
+     30: f2 -> f6 : A'=1, B'=C, D'=E, F'=free_17, G'=free_18, Q'=1, J'=free_17, K'=free_18, L'=6, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 ], cost: 2
+     31: f2 -> f6 : A'=1, B'=C, D'=E, F'=free_19, G'=free_20, Q'=1, J'=free_19, K'=free_20, L'=6, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 && 7>=free_20 && 7>=free_19 && free_20>=5 && free_19>=1 ], cost: 2
+     33: f2 -> f6 : A'=1, B'=C, D'=E, F'=free_17, G'=free_18, Q'=1, J'=free_17, K'=free_18, L'=6, [ 7>=free_15 && 7>=free_14 && free_15>=5 && free_14>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 ], cost: 2
+     34: f2 -> f6 : A'=1, B'=C, D'=E, F'=free_19, G'=free_20, Q'=1, J'=free_19, K'=free_20, L'=6, [ 7>=free_15 && 7>=free_14 && free_15>=5 && free_14>=1 && 7>=free_20 && 7>=free_19 && free_20>=5 && free_19>=1 ], cost: 2
+     36: f2 -> f6 : A'=1, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_17, G'=free_18, H'=1, Q'=1, J'=free_17, K'=free_18, L'=6, [ 7>=free_16 && free_16>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 ], cost: 2
+     39: f6 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_23 && 1>=free_22 && free_22>=0 && free_23>=1 && M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 2
+     40: f6 -> f2 : A'=0, B'=C, D'=E, F'=free_26, G'=free_27, H'=0, Q'=0, J'=free_26, K'=free_27, L'=2, [ 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_26 && 3>=free_27 && free_27>=1 && free_26>=1 && 1==1 ], cost: 2
+     41: f6 -> f2 : A'=0, B'=C, D'=E, F'=free_28, G'=free_29, H'=0, Q'=0, J'=free_28, K'=free_29, L'=2, [ 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_29 && 7>=free_28 && free_29>=5 && free_28>=1 && 1==1 ], cost: 2
+     42: f6 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: f8
+     27: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_5, H'=0, Q'=0, J'=3, K'=free_5, L'=2, [ 3>=free_5 && free_5>=1 ], cost: 2
+     28: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_6, H'=0, Q'=0, J'=3, K'=free_6, L'=2, [ 7>=free_6 && free_6>=5 ], cost: 2
+     29: f8 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=3, G'=4, H'=1, Q'=0, J'=3, K'=4, L'=2, [], cost: 2
+     43: f2 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 && 7>=free_23 && 1>=free_22 && free_22>=0 && free_23>=1 && M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 4
+     44: f2 -> f2 : A'=0, B'=C, D'=E, F'=free_26, G'=free_27, H'=0, Q'=0, J'=free_26, K'=free_27, L'=2, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 && 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_26 && 3>=free_27 && free_27>=1 && free_26>=1 && 1==1 ], cost: 4
+     46: f2 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 && 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 4
+     50: f2 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_12 && 3>=free_13 && free_13>=1 && free_12>=1 && 7>=free_20 && 7>=free_19 && free_20>=5 && free_19>=1 && 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=2+E && N>=2+C && M>=1 && N>=1 && 7>=free_30 && free_30>=1 ], cost: 4
+     53: f2 -> f2 : A'=0, B'=C, D'=E, F'=free_28, G'=free_29, H'=0, Q'=0, J'=free_28, K'=free_29, L'=2, [ 7>=free_15 && 7>=free_14 && free_15>=5 && free_14>=1 && 7>=free_17 && 3>=free_18 && free_18>=1 && free_17>=1 && 7>=free_25 && 1>=free_24 && free_24>=0 && free_25>=1 && H==1 && M>=1 && M>=1+E && N>=1 && N>=1+C && 7>=free_29 && 7>=free_28 && free_29>=5 && free_28>=1 && 1==1 ], cost: 4
+
+
+Try instantiation
+  Start location: f8
+     27: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_5, H'=0, Q'=0, J'=3, K'=free_5, L'=2, [ 3>=free_5 && free_5>=1 ], cost: 2
+     28: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_6, H'=0, Q'=0, J'=3, K'=free_6, L'=2, [ 7>=free_6 && free_6>=5 ], cost: 2
+     29: f8 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=3, G'=4, H'=1, Q'=0, J'=3, K'=4, L'=2, [], cost: 2
+     63: f2 -> f2 : A'=0, B'=-1-E+C+M, C'=-1-E+C+M, D'=-1+M, E'=-1+M, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -4-4*E+4*M
+     64: f2 -> f2 : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -4+4*N-4*C
+
+Eliminating 2 self-loops for location f2
+  Removing the self-loops: 63 64.
+Adding an epsilon transition (to model nonexecution of the loops): 67.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f8
+     27: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_5, H'=0, Q'=0, J'=3, K'=free_5, L'=2, [ 3>=free_5 && free_5>=1 ], cost: 2
+     28: f8 -> f2 : A'=0, B'=C, D'=E, F'=3, G'=free_6, H'=0, Q'=0, J'=3, K'=free_6, L'=2, [ 7>=free_6 && free_6>=5 ], cost: 2
+     29: f8 -> f2 : A'=0, B'=1+C, C'=1+C, D'=1+E, E'=1+E, F'=3, G'=4, H'=1, Q'=0, J'=3, K'=4, L'=2, [], cost: 2
+     65: f2 -> [7] : A'=0, B'=-1-E+C+M, C'=-1-E+C+M, D'=-1+M, E'=-1+M, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -4-4*E+4*M
+     66: f2 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -4+4*N-4*C
+     67: f2 -> [7] : [], cost: 0
+
+
+Applied chaining over branches and pruning:
+  Start location: f8
+     68: f8 -> [7] : A'=0, B'=-1-E+C+M, C'=-1-E+C+M, D'=-1+M, E'=-1+M, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 3>=free_5 && free_5>=1 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2-4*E+4*M
+     69: f8 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 3>=free_5 && free_5>=1 && M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2+4*N-4*C
+     71: f8 -> [7] : A'=0, B'=-1-E+C+M, C'=-1-E+C+M, D'=-1+M, E'=-1+M, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_6 && free_6>=5 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2-4*E+4*M
+     72: f8 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_6 && free_6>=5 && M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2+4*N-4*C
+     75: f8 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ M>=E+N-C && M>=3+E && N>=3+C && M>=1 && N>=1 ], cost: -6+4*N-4*C
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f8
+     68: f8 -> [7] : A'=0, B'=-1-E+C+M, C'=-1-E+C+M, D'=-1+M, E'=-1+M, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 3>=free_5 && free_5>=1 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2-4*E+4*M
+     69: f8 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 3>=free_5 && free_5>=1 && M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2+4*N-4*C
+     71: f8 -> [7] : A'=0, B'=-1-E+C+M, C'=-1-E+C+M, D'=-1+M, E'=-1+M, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_6 && free_6>=5 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2-4*E+4*M
+     72: f8 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ 7>=free_6 && free_6>=5 && M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1 ], cost: -2+4*N-4*C
+     75: f8 -> [7] : A'=0, B'=-1+N, C'=-1+N, D'=-1+E+N-C, E'=-1+E+N-C, F'=free_30, G'=4, H'=0, Q'=0, J'=free_30, K'=4, L'=2, [ M>=E+N-C && M>=3+E && N>=3+C && M>=1 && N>=1 ], cost: -6+4*N-4*C
+
+
+Computing complexity for remaining 5 transitions.
+
+  Found configuration with infinitely models for cost: -2-4*E+4*M
+  and guard: 3>=free_5 && free_5>=1 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1:
+  E: Const, N: Pos, C: Neg, M: Const, free_5: Const
+
+Found new complexity const, because: Found infinity configuration.
+
+  Found configuration with infinitely models for cost: -2+4*N-4*C
+  and guard: 3>=free_5 && free_5>=1 && M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1:
+  E: Neg, N: Const, C: Const, M: Pos, free_5: Const
+
+  Found configuration with infinitely models for cost: -2-4*E+4*M
+  and guard: 7>=free_6 && free_6>=5 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1:
+  E: Const, free_6: Const, N: Pos, C: Neg, M: Const
+
+  Found configuration with infinitely models for cost: -2+4*N-4*C
+  and guard: 7>=free_6 && free_6>=5 && M>=E+N-C && M>=2+E && N>=2+C && M>=1 && N>=1:
+  E: Neg, free_6: Const, N: Const, C: Const, M: Pos
+
+  Found configuration with infinitely models for cost: -6+4*N-4*C
+  and guard: M>=E+N-C && M>=3+E && N>=3+C && M>=1 && N>=1:
+  E: Neg, N: Const, C: Const, M: Pos
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 3>=free_5 && free_5>=1 && N>=-E+C+M && M>=2+E && N>=2+C && M>=1 && N>=1
+  Final Cost:  6
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)
