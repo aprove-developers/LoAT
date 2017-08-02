@@ -22,14 +22,24 @@
 #include "z3toolbox.h"
 #include "farkas.h"
 #include "infinity.h"
+#include "itrs.h"
+#include "expression.h"
 
 #include "debug.h"
 #include "stats.h"
 #include "timing.h"
 #include "timeout.h"
 
+#include <list>
+#include <map>
 #include <queue>
+#include <set>
+#include <sstream>
+#include <stack>
+#include <vector>
 #include <iomanip>
+#include <ginac/ginac.h>
+#include <z3++.h>
 
 
 using namespace std;
@@ -175,6 +185,7 @@ bool FlowGraph::removeSelfloops() {
     bool res = false;
     for (NodeIndex node : nodes) {
         if (!getTransFromTo(node,node).empty()) {
+            res = tryInstantiate(node) || res;
             res = removeSelfloopsFrom(node) || res; //note: inserting while iterating is ok for std::set
             if (Timeout::soft()) return res;
         }
@@ -474,11 +485,11 @@ bool FlowGraph::canNest(const Transition &inner, const Transition &outer) const 
 
 bool FlowGraph::removeSelfloopsFrom(NodeIndex node) {
     vector<TransIndex> loops = getTransFromTo(node,node);
+    if (loops.empty()) return true;
     proofout << "Eliminating " << loops.size() << " self-loops for location ";
     if (node < itrs.getTermCount()) proofout << itrs.getTerm(node).name; else proofout << "[" << node << "]";
     proofout << endl;
     debugGraph("Eliminating " << loops.size() << " selfloops for node: " << node);
-    assert(!loops.empty());
 
     //split node into incoming and outgoing node, where loop will be replaced by single transition between them
     NodeIndex outNode = addNode();
@@ -1078,3 +1089,644 @@ void FlowGraph::printT2(ostream &s) const {
     }
 }
 
+/**********************************************************/
+
+// New functions developed in 2017
+
+z3::expr FlowGraph::ginacToZ3(GiNaC::ex ex, z3::context &c) {
+    if (GiNaC::is_a<GiNaC::add>(ex)) {
+        z3::expr res = ginacToZ3(ex.op(0), c);
+        for (int i=1; i < (int)ex.nops(); ++i) {
+            res = res + ginacToZ3(ex.op(i), c);
+        }
+        return res;
+    }
+    else if (GiNaC::is_a<GiNaC::mul>(ex)) {
+        z3::expr res = ginacToZ3(ex.op(0), c);
+        for (int i=1; i < (int)ex.nops(); ++i) {
+            res = res * ginacToZ3(ex.op(i), c);
+        }
+        return res;
+    }
+    else if (GiNaC::is_a<GiNaC::power>(ex)) {
+        if (GiNaC::is_a<GiNaC::numeric>(ex.op(1))) {
+            // rewrite power as multiplication if possible, which z3 can handle much better
+            GiNaC::numeric num = GiNaC::ex_to<GiNaC::numeric>(ex.op(1));
+            if (num.is_integer() and num.is_positive() and num.to_int() <= 5) {
+                int exp = num.to_int();
+                z3::expr base = ginacToZ3(ex.op(0), c);
+                z3::expr res = base;
+                while (--exp > 0) res = res * base;
+                return res;
+            }
+        }
+        // use z3 power as fallback (only poorly supported)
+        return z3::pw(ginacToZ3(ex.op(0), c), ginacToZ3(ex.op(1), c));
+    }
+    else if (GiNaC::is_a<GiNaC::numeric>(ex)) {
+        GiNaC::numeric num = GiNaC::ex_to<GiNaC::numeric>(ex);
+        if (num.denom().to_int() == 1) {
+            return c.int_val(num.numer().to_int());
+        }
+        else {
+            z3::expr numer = c.int_val(num.numer().to_int());
+            z3::expr denom = c.int_val(num.denom().to_int());
+            return numer / denom;
+        }
+    }
+    else if (GiNaC::is_a<GiNaC::symbol>(ex)) {
+        GiNaC::symbol symbol = GiNaC::ex_to<GiNaC::symbol>(ex);
+        return c.int_const(symbol.get_name().c_str());
+    }
+    else if (GiNaC::is_a<GiNaC::relational>(ex)) {
+        z3::expr a = ginacToZ3(ex.op(0), c);
+        z3::expr b = ginacToZ3(ex.op(1), c);
+        if (ex.info(GiNaC::info_flags::relation_equal)) return a == b;
+        if (ex.info(GiNaC::info_flags::relation_not_equal)) return (a <= b) && (a >= b);
+        if (ex.info(GiNaC::info_flags::relation_less)) return a <= b - 1;
+        if (ex.info(GiNaC::info_flags::relation_less_or_equal)) return a <= b;
+        if (ex.info(GiNaC::info_flags::relation_greater)) return a >= b + 1;
+        if (ex.info(GiNaC::info_flags::relation_greater_or_equal)) return a >= b;
+    }
+    else std::cerr << "Cannot convert from GiNaC::ex to z3::expr" << std::endl;
+    return c.int_val(0);
+}
+
+z3::expr FlowGraph::ginacToZ3(GuardList guard, z3::context &c, std::set<VariableIndex> protectedFreeVariables = std::set<VariableIndex>()) {
+    z3::goal g1(c);
+    for (GiNaC::ex ex : guard) {
+        g1.add(ginacToZ3(ex, c));
+    }
+    z3::expr_vector freeVariables(c);
+    std::set<VariableIndex> s = itrs.getFreeVars();
+    for (VariableIndex idx : s) {
+        if (protectedFreeVariables.count(idx) == 0) {
+            freeVariables.push_back(c.int_const(itrs.getVarname(idx).c_str()));
+        }
+    }
+    z3::goal g2(c);
+    g2.add(z3::exists(freeVariables, g1.as_expr()));
+    z3::tactic t1(c, "ctx-solver-simplify");
+    z3::tactic t2(c, "qe");
+    z3::apply_result res = (t1 & t2)(g2);
+    g2 = res[0];
+    return g2.as_expr();
+}
+
+std::list<std::string> tokenize(std::string str) {
+    std::list<std::string> tokens;
+    const char * s = str.c_str();
+    while (*s) {
+        while (*s == ' ' || *s == (char)10)
+            ++s;
+        if (*s == '(' || *s == ')')
+            tokens.push_back(*s++ == '(' ? "(" : ")");
+        else {
+            const char * t = s;
+            while (*t && *t != ' ' && *t != '(' && *t != ')')
+                ++t;
+            tokens.push_back(std::string(s, t));
+            s = t;
+        }
+    }
+    return tokens;
+}
+
+GiNaC::ex FlowGraph::read_from(std::list<std::string> &tokens) {
+    std::string token(tokens.front());
+    tokens.pop_front();
+    if (token == "(") {
+        GiNaC::ex res;
+        std::string op = tokens.front();
+        tokens.pop_front();
+        if (op == "=") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = GiNaC::ex(a == b);
+        }
+        else if (op == ">") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = GiNaC::ex(a > b);
+        }
+        else if (op == "<") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = GiNaC::ex(a < b);
+        }
+        else if (op == ">=") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = GiNaC::ex(a >= b);
+        }
+        else if (op == "<=") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = GiNaC::ex(a <= b);
+        }
+        else if (op == "+") {
+            res = GiNaC::ex(0);
+            while (tokens.front() != ")") {
+                res += read_from(tokens);
+            }
+        }
+        else if (op == "*") {
+            res = GiNaC::ex(1);
+            while (tokens.front() != ")") {
+                res *= read_from(tokens);
+            }
+        }
+        else if (op == "-") {
+            res = read_from(tokens);
+            if (tokens.front() == ")") res = -res;
+            else res -= read_from(tokens);
+        }
+        else if (op == "/") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = a / b;
+        }
+        else if (op == "pow") {
+            GiNaC::ex a = read_from(tokens);
+            GiNaC::ex b = read_from(tokens);
+            res = GiNaC::pow(a, b);
+        }
+        else {
+            std::cerr << "Cannot convert from z3::expr to GiNaC::ex " << op << std::endl;
+            for (std::string s : tokens) std::cerr << s;
+            std::cerr << std::endl;
+        }
+        tokens.pop_front();
+        return res;
+    }
+    else {
+        if (token.size() == 0)
+            return GiNaC::ex(0);
+        else if (token == "true")
+            return GiNaC::ex(0);
+        else if (token == "false")
+            return GiNaC::ex(0);
+        else if (isdigit(token[0]) || (token[0] == '-' && isdigit(token[1])))
+            return GiNaC::ex(std::stoi(token));
+        else  return itrs.getGinacSymbol(itrs.getVarindex(token));
+    }
+}
+
+GiNaC::ex FlowGraph::z3ToGinac(z3::expr expr) {
+    std::stringstream ss;
+    ss << expr;
+    std::string str = ss.str();
+    std::list<std::string> tokens = tokenize(str);
+    return read_from(tokens);
+}
+
+GuardList FlowGraph::z3ToGuard(z3::expr expr) {
+    std::stringstream ss;
+    ss << expr;
+    std::string str = ss.str();
+    std::list<std::string> tokens = tokenize(str);
+    GuardList res;
+    if (tokens.front() == "(") {
+        tokens.pop_front();
+        if (tokens.front() == "and") {
+            tokens.pop_front();
+            while (tokens.front() != ")") {
+                res.push_back(Expression(read_from(tokens)));
+            }
+            return res;
+        }
+        else {
+            res.push_back(Expression(z3ToGinac(expr)));
+            return res;
+        }
+    }
+    else {
+        res.push_back(Expression(z3ToGinac(expr)));
+        return res;
+    }
+}
+
+/**********************************************************/
+
+bool FlowGraph::tryInstantiate(NodeIndex node) {
+
+    // Guess and Check
+
+    std::vector<TransIndex> vLoops = getTransFromTo(node, node);
+    std::stack<Transition> stackTransitions;
+    std::vector<Transition> v1Transitions;  // Transitions before acceleration
+    std::vector<Transition> v2Transitions;  // Transitions after acceleration
+    // Put all loops into a stack
+    for (TransIndex idx : vLoops) {
+        stackTransitions.push(getTransData(idx));
+    }
+
+    // Now we instantiate all updates like X=X+Y and X=X-Y with Y=1 and Y=-1
+    // The resulting transitions will be stored in v1Transitions
+    while (!stackTransitions.empty()) {
+        Transition trans = stackTransitions.top();
+        stackTransitions.pop();
+        UpdateMap update = trans.update;
+        for (auto iter : update) {
+            // For each update item, check if it is like X=X+?
+            ExprSymbol X = itrs.getGinacSymbol(iter.first);
+            Expression ex = iter.second;
+            ExprSymbolSet symbolSet = ex.getVariables();
+            if (symbolSet.count(X) > 0) {  // ex contains X
+                ex = ex - X;  // Try removing X
+                symbolSet = ex.getVariables();
+                if (symbolSet.count(X) > 0) {  // X is not removed
+                    v2Transitions.push_back(trans);
+                    goto Next1;
+                }
+                else {  // X is removed
+                    if (GiNaC::is_a<GiNaC::numeric>(ex));  // X=X+1 or X=X-1
+                    else if (GiNaC::is_a<GiNaC::symbol>(ex) or GiNaC::is_a<GiNaC::symbol>(-ex)) {
+                        // X=X+Y or X=X-Y
+                        GiNaC::symbol Y;
+                        if (GiNaC::is_a<GiNaC::symbol>(ex)) {
+                            Y = GiNaC::ex_to<GiNaC::symbol>(ex);
+                        }
+                        else {  // GiNaC::is_a<GiNaC::symbol>(-ex)
+                            Y = GiNaC::ex_to<GiNaC::symbol>(-ex);
+                        }
+
+                        // Check if Y is updated
+                        for (auto it : update) {
+                            if (itrs.getGinacSymbol(it.first) == Y) {
+                                // If Y is updated, give up
+                                v2Transitions.push_back(trans);
+                                goto Next1;
+                            }
+                        }
+
+                        // Instantiate Y with 1
+                        GiNaC::exmap exmap1;
+                        exmap1[Y] = GiNaC::ex(1);
+                        Transition newTrans1 = trans;
+                        for (auto &it : newTrans1.update) {  // Instantiate update
+                            it.second = it.second.subs(exmap1);
+                        }
+                        for (auto &it : newTrans1.guard) {  // Instantiate guard
+                            it = it.subs(exmap1);
+                        }
+                        newTrans1.guard.push_back(Y==1);
+                        newTrans1.cost = newTrans1.cost.subs(exmap1);
+                        stackTransitions.push(newTrans1);
+
+                        // Instantiate Y with -1
+                        GiNaC::exmap exmap2;
+                        exmap2[Y] = GiNaC::ex(-1);
+                        Transition newTrans2 = trans;
+                        for (auto &it : newTrans2.update) {  // Instantiate update
+                            it.second = it.second.subs(exmap2);
+                        }
+                        for (auto &it : newTrans2.guard) {  // Instantiate guard
+                            it = it.subs(exmap2);
+                        }
+                        newTrans2.guard.push_back(Y==-1);
+                        newTrans2.cost = newTrans2.cost.subs(exmap2);
+                        stackTransitions.push(newTrans2);
+
+                        goto Next1;
+                    }
+                    else {
+                        // Can not be handled
+                        v2Transitions.push_back(trans);
+                        goto Next1;
+                    }
+                }
+            }
+            else {  // ex does not contain X
+
+            }
+        }
+        v1Transitions.push_back(trans);
+        Next1: ;
+    }
+
+    // Remove original transitions
+    for (TransIndex idx : vLoops) {
+        removeTrans(idx);
+    }
+
+    // Now we have instantiated all updates like X=X+Y and X=X-Y with Y=1 and Y=-1
+    // The resulting transitions are stored in v1Transitions
+
+    // A structrue to describe the update
+    // Let k be the number of iterations
+    // X = start + k * step
+    // step = 0 means X is a constant
+    struct BasicUpdate {
+        Expression start;
+        Expression step;
+    };
+
+    // Next we accelerate each transition in v1Transitions and put the result into v2Transitions
+    for (Transition &trans : v1Transitions) {
+        std::map<VariableIndex, BasicUpdate> m;
+        // Transform updates into BasicUpdates
+        while (m.size() < trans.update.size()) {
+            bool changed = false;
+            for (auto iter : trans.update) {
+                GiNaC::symbol k("k");
+                VariableIndex idx = iter.first;
+                if (m.count(idx) > 0) {  // already visited
+                    continue;
+                }
+                Expression ex = iter.second;
+                ExprSymbolSet symbols = ex.getVariables();
+                GiNaC::exmap exmap;
+                for (ExprSymbol symbol : symbols) {
+                    VariableIndex index = itrs.getVarindex(symbol.get_name());
+                    if (index == idx) {  // X=X+1 or X=X-1
+                        BasicUpdate newBU;
+                        newBU.start = symbol;
+                        newBU.step = ex - symbol;
+                        m[idx] = newBU;
+                        changed = true;
+                        goto Next2;
+                    }
+                    else if (itrs.isFreeVar(index)) {  // ex contains free variables
+                        BasicUpdate newBU;
+                        newBU.start = ex;
+                        newBU.step = Expression(0);
+                        m[idx] = newBU;
+                        changed = true;
+                        goto Next2;
+                    }
+                    else if (trans.update.count(index) > 0 and m.count(index) == 0) {  // symbol is dependent on another variable
+                        goto Next2;  // try it later
+                    }
+                    // symbol is already visited
+                    BasicUpdate bU = m[index];
+                    exmap[symbol] = bU.start + bU.step * k;
+                }
+                // Now we have finished constructing exmap
+                // Transform exmap to newBU
+                {
+                    ex = ex.subs(exmap);
+                    BasicUpdate newBU;
+                    newBU.step = ex.coeff(k);
+                    if (!(GiNaC::is_a<GiNaC::numeric>(newBU.step))) {  // not a constant
+                        // Can not handle this transition
+                        v2Transitions.push_back(trans);
+                        goto Next3;
+                    }
+                    // newBU.step is constant
+                    newBU.start = ex - newBU.step * k;
+                    ExprSymbolSet s = newBU.start.getVariables();
+                    if (s.count(k) > 0) {
+                        // k is not linear in ex
+                        // Can not handle this transition
+                        v2Transitions.push_back(trans);
+                        goto Next3;
+                    }
+                    m[idx] = newBU;
+                    changed = true;
+                    //std::cerr << "newBU:  start = " << newBU.start << ",  step = " << newBU.step << std::endl;
+                }
+                Next2: ;
+            }
+            if (!changed) {
+                v2Transitions.push_back(trans);
+                goto Next3;
+            }
+        }
+
+        // Now we have finished constructing m
+
+        /*for (auto iter : m) {
+            //std::map<VariableIndex, BasicUpdate> m;
+            BasicUpdate BU = iter.second;
+            std::cerr << itrs.getVarname(iter.first) << "   ";
+            std::cerr << "start = " << BU.start << "   ";
+            std::cerr << "step = " << BU.step << std::endl;
+        }
+        std::cerr << std::endl;*/
+
+        // Next we analyze the guard
+        {
+            // Prepare protectedFreeVariables
+            std::set<VariableIndex> protectedFreeVariables;
+            for (auto iter : m) {
+                BasicUpdate BU = iter.second;
+                for (std::string variableName : BU.start.getVariableNames()) {
+                    protectedFreeVariables.insert(itrs.getVarindex(variableName));
+                }
+            }
+
+            // handle equation
+            int n = trans.guard.size();
+            for (int i = 0; i < n; ++i) {
+                Expression ex = trans.guard[i];
+                if (GiNaC::is_a<GiNaC::relational>(ex) and ex.info(GiNaC::info_flags::relation_equal)) {
+                    trans.guard[i] = ex.op(0) <= ex.op(1);
+                    trans.guard.push_back(ex.op(0) >= ex.op(1));
+                }
+            }
+
+            // Simplify guard
+            z3::context c;
+            z3::expr expr = ginacToZ3(trans.guard, c, protectedFreeVariables);
+            std::stringstream ss;
+            ss << expr;
+            if (ss.str() == "true") {
+                GuardList emptyGuard;
+                trans.guard = emptyGuard;
+            }
+            else if (ss.str() == "false") {
+                // guard can not be satisfied
+                goto Next3;
+            }
+            else {
+                trans.guard = z3ToGuard(expr);
+
+            }
+            auto isUpperBound = [&](VariableIndex idx, Expression &ex) {
+                if (GiNaC::is_a<GiNaC::relational>(ex) == false) {
+                    return false;
+                }
+                if (ex.info(GiNaC::info_flags::relation_less_or_equal) or ex.info(GiNaC::info_flags::relation_greater_or_equal)) {
+                    GiNaC::ex bound;
+                    GiNaC::symbol X = itrs.getGinacSymbol(idx);
+                    if (ex.info(GiNaC::info_flags::relation_less_or_equal)) {
+                        bound = ex.op(1) - ex.op(0) + X;
+                    }
+                    else {  // ex.info(GiNaC::info_flags::relation_greater_or_equal)
+                        bound = ex.op(0) - ex.op(1) + X;
+                    }
+                    if (bound.coeff(X) == GiNaC::ex(0)) {  // bound does not contain X
+                        ex = X <= bound;
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+            };
+
+            auto isLowerBound = [&](VariableIndex idx, Expression &ex) {
+                if (GiNaC::is_a<GiNaC::relational>(ex) == false) {
+                    return false;
+                }
+                if (ex.info(GiNaC::info_flags::relation_less_or_equal) or ex.info(GiNaC::info_flags::relation_greater_or_equal)) {
+                    GiNaC::ex bound;
+                    GiNaC::symbol X = itrs.getGinacSymbol(idx);
+                    if (ex.info(GiNaC::info_flags::relation_less_or_equal)) {
+                        bound = ex.op(0) - ex.op(1) + X;
+                    }
+                    else {  // ex.info(GiNaC::info_flags::relation_greater_or_equal)
+                        bound = ex.op(1) - ex.op(0) + X;
+                    }
+                    if (bound.coeff(X) == GiNaC::ex(0)) {  // bound does not contain X
+                        ex = X >= bound;
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+            };
+
+            auto getUpperBound = [&](VariableIndex idx, Expression &ex) {
+                // Must call isUpperBound first!
+                return ex.op(1);
+            };
+
+            auto getLowerBound = [&](VariableIndex idx, Expression &ex) {
+                // Must call isLowerBound first!
+                return ex.op(1);
+            };
+
+            // Analyze upper bound or lower bound
+            bool noBound = true;
+            for (Expression ex : trans.guard) {
+                //std::cerr << "ex = " << ex << std::endl;
+
+                for (auto iter : m) {
+                    BasicUpdate bU = iter.second;
+
+                    // Prepare newTrans
+                    Transition newTrans;
+
+                    int step = GiNaC::ex_to<GiNaC::numeric>(bU.step).to_int();
+                    Expression k;
+
+                    if (step > 0 && isUpperBound(iter.first, ex)) {
+                        // Increasing, find upper bound
+                        if (step == 1) {
+                            k = getUpperBound(iter.first, ex) - bU.start + 1;
+                        }
+                        else {
+                            k = itrs.getGinacSymbol(itrs.addFreshVariable("meter"));
+                            newTrans.guard.push_back(k * step == getUpperBound(iter.first, ex) - bU.start + step);
+                            //newTrans.guard.push_back(k * step > getUpperBound(iter.first, ex) - bU.start);
+                        }
+                    }
+                    else if (step < 0 && isLowerBound(iter.first, ex)) {
+                        // Decreasing, find lower bound
+                        if (step == -1) {
+                            k = bU.start - getLowerBound(iter.first, ex) + 1;
+                        }
+                        else {
+                            k = itrs.getGinacSymbol(itrs.addFreshVariable("meter"));
+                            newTrans.guard.push_back(k * (-step) == bU.start - getLowerBound(iter.first, ex) - step);
+                            //newTrans.guard.push_back(k * (-step) > bU.start - getLowerBound(iter.first, ex));
+                        }
+                    }
+                    else continue;  // step == 0
+
+                    Recurrence recurrence(itrs);
+
+                    // Calculate iterated update
+                    recurrence.calcIteratedUpdate(trans.update, k, newTrans.update);
+
+                    // Calculate iterated cost
+                    recurrence.calcIteratedCost(trans.cost, k, newTrans.cost);
+
+                    // Calculate iterated guard
+                    Recurrence recurrenceKMinusOne(itrs);
+                    UpdateMap kMinusOne;
+                    recurrenceKMinusOne.calcIteratedUpdate(trans.update, k - 1, kMinusOne);
+                    // Build substitution map for k-1
+                    GiNaC::exmap exmap;
+                    for (auto it : kMinusOne) {
+                        exmap[itrs.getGinacSymbol(it.first)] = it.second;
+                    }
+                    // Add guard at iteration 0
+                    for (Expression guardEx : trans.guard) {
+                        newTrans.guard.push_back(guardEx);
+                    }
+                    // Add guard at iteration k-1
+                    for (Expression guardEx : trans.guard) {
+                        newTrans.guard.push_back(guardEx.subs(exmap).expand());
+                    }
+                    // Simplify guard
+                    z3::context c;
+
+                    //std::cerr << std::endl << "GUARD 1" << std::endl;
+                    //for (Expression ex : newTrans.guard) std::cerr << ex << " && ";
+
+                    z3::expr expr = ginacToZ3(newTrans.guard, c, protectedFreeVariables);
+                    std::stringstream ss;
+                    ss << expr;
+                    if (ss.str() == "true");
+                    else if (ss.str() == "false") {
+                        // guard can not be satisfied
+                        goto Next3;
+                    }
+                    else newTrans.guard = z3ToGuard(expr);
+
+                    //std::cerr << std::endl << "GUARD 2" << std::endl;
+                    //for (Expression ex : newTrans.guard) std::cerr << ex << " && ";
+
+                    // Push newTrans into v2Transitions
+                    v2Transitions.push_back(newTrans);
+                    noBound = false;
+                }
+            }
+            if (noBound) {
+                Transition newTrans;
+
+                // Build substitution map for iteration 0 and 1
+                Recurrence recurrenceOne(itrs);
+                UpdateMap One;
+                recurrenceOne.calcIteratedUpdate(trans.update, Expression(1), One);
+                GiNaC::exmap exmap;
+                for (auto it : One) {
+                    exmap[itrs.getGinacSymbol(it.first)] = it.second;
+                }
+                // Add guard at iteration 0
+                newTrans.guard = trans.guard;
+                // Add guard at iteration 1
+                for (Expression guardEx : trans.guard) {
+                    newTrans.guard.push_back(guardEx.subs(exmap).expand());
+                }
+                // Simplify guard
+                z3::context c;
+                z3::expr expr = ginacToZ3(newTrans.guard, c, protectedFreeVariables);
+                std::stringstream  ss;
+                ss << expr;
+                if (ss.str() == "true");
+                else if (ss.str() == "false") {
+                    // guard can not be satisfied
+                    goto Next3;
+                }
+                else newTrans.guard = z3ToGuard(expr);
+                newTrans.cost = Expression::Infty;
+                v2Transitions.push_back(newTrans);
+            }
+        }
+        Next3: ;
+    }
+
+    // Now the accelerated transitions are stored in v2Transitions
+    // Add them back to the graph
+    for (Transition &trans : v2Transitions) {
+        addTrans(node, node, trans);
+    }
+
+    // Some output
+    proofout << std::endl << "Try instantiation" << std::endl;
+    printForProof();
+    return true;
+}
