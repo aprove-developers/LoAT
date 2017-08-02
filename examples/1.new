@@ -1,0 +1,56 @@
+Trying to load file: 1.koat
+
+Initial Control flow graph problem:
+  Start location: a
+      0: a -> b : [], cost: 1
+      1: b -> b : A'=-1+A, B'=-2+B, [ A>=0 && B>=0 && C>=2*free ], cost: 1
+
+
+Try instantiation
+  Start location: a
+      0: a -> b : [], cost: 1
+      2: b -> b : A'=-1, B'=-2+B-2*A, [ B-2*A>=0 && A>=0 && B>=0 ], cost: 1+A
+      3: b -> b : A'=-meter+A, B'=-2*meter+B, [ -2*meter+B>=-2 && 2*meter==2+B && A>=0 && B>=0 && -meter+A>=-1 ], cost: meter
+
+Eliminating 2 self-loops for location b
+  Removing the self-loops: 2 3.
+Adding an epsilon transition (to model nonexecution of the loops): 6.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: a
+      0: a -> b : [], cost: 1
+      4: b -> [2] : A'=-1, B'=-2+B-2*A, [ B-2*A>=0 && A>=0 && B>=0 ], cost: 1+A
+      5: b -> [2] : A'=-meter+A, B'=-2*meter+B, [ 2*meter==2+B && A>=0 && B>=0 && -meter+A>=-1 ], cost: meter
+      6: b -> [2] : [], cost: 0
+
+
+Applied chaining over branches and pruning:
+  Start location: a
+      7: a -> [2] : A'=-1, B'=-2+B-2*A, [ B-2*A>=0 && A>=0 && B>=0 ], cost: 2+A
+      8: a -> [2] : A'=-meter+A, B'=-2*meter+B, [ 2*meter==2+B && A>=0 && B>=0 && -meter+A>=-1 ], cost: 1+meter
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: a
+      7: a -> [2] : A'=-1, B'=-2+B-2*A, [ B-2*A>=0 && A>=0 && B>=0 ], cost: 2+A
+      8: a -> [2] : A'=-meter+A, B'=-2*meter+B, [ 2*meter==2+B && A>=0 && B>=0 && -meter+A>=-1 ], cost: 1+meter
+
+
+Computing complexity for remaining 2 transitions.
+
+  Found configuration with infinitely models for cost: 2+A
+  and guard: B-2*A>=0 && A>=0 && B>=0:
+  B: Pos, A: Pos, where: B > A
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: B-2*A>=0 && A>=0 && B>=0
+  Final Cost:  2+A
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS a))
+(VAR A B C D)
+(RULES
+    a(A,B,C) -> b(A,B,C)
+    b(A,B,C) -> b(A-1,B-2,C) [A>=0 && B>=0 && C>=2*D]
+)
