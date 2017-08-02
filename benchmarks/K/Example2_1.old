@@ -1,0 +1,319 @@
+Trying to load file: Example2_1.koat
+
+Initial Control flow graph problem:
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2entryin : [], cost: 1
+      1: evalbinsearchStepSize2entryin -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 1
+      2: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2returnin : [ C==1 ], cost: 1
+      3: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb1in : E'=free, [ 0>=C ], cost: 1
+      4: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb1in : E'=free_1, [ C>=2 ], cost: 1
+     35: evalbinsearchStepSize2returnin -> evalbinsearchStepSize2stop : [], cost: 1
+      5: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb2in : [ 0>=1+B ], cost: 1
+      6: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb2in : [ B>=1 ], cost: 1
+      7: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb3in : F'=C, [ B==0 ], cost: 1
+      8: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=0, [ C==0 ], cost: 1
+      9: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_2, [ C>=1 && free_2>=0 && C>=2*free_2 && 1+2*free_2>=C ], cost: 1
+     10: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_3, [ 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 1
+     11: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb4in : [ E>=1+G ], cost: 1
+     12: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb9in : [ G>=E ], cost: 1
+     13: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb6in : [ A==1 && B==0 ], cost: 1
+     14: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ 0>=A ], cost: 1
+     15: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ A>=2 ], cost: 1
+     16: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ 0>=1+B ], cost: 1
+     17: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ B>=1 ], cost: 1
+     24: evalbinsearchStepSize2bb9in -> evalbinsearchStepSize2returnin : [ E>=G ], cost: 1
+     23: evalbinsearchStepSize2bb9in -> evalbinsearchStepSize2bb10in : [ G>=1+E ], cost: 1
+     18: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=0, [ F==0 ], cost: 1
+     19: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_4, [ F>=1 && free_4>=0 && F>=2*free_4 && 1+2*free_4>=F ], cost: 1
+     20: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_5, [ 0>=1+F && 0>=free_5 && 2*free_5>=F && 1+F>=2*free_5 ], cost: 1
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     21: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2returnin : [ D+Q>=256 ], cost: 1
+     25: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb12in : [ A==2 && B==0 ], cost: 1
+     26: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ 1>=A ], cost: 1
+     27: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ A>=3 ], cost: 1
+     28: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ 0>=1+B ], cost: 1
+     29: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ B>=1 ], cost: 1
+     30: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=0, [ F==0 ], cost: 1
+     31: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_6, [ F>=1 && free_6>=0 && F>=2*free_6 && 1+2*free_6>=F ], cost: 1
+     32: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_7, [ 0>=1+F && 0>=free_7 && 2*free_7>=F && 1+F>=2*free_7 ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+     33: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2returnin : [ Q>=1+D ], cost: 1
+
+
+Simplified the transitions:
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2entryin : [], cost: 1
+      1: evalbinsearchStepSize2entryin -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 1
+      3: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb1in : E'=free, [ 0>=C ], cost: 1
+      4: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb1in : E'=free_1, [ C>=2 ], cost: 1
+      5: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb2in : [ 0>=1+B ], cost: 1
+      6: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb2in : [ B>=1 ], cost: 1
+      7: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb3in : F'=C, [ B==0 ], cost: 1
+      8: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=0, [ C==0 ], cost: 1
+      9: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_2, [ C>=1 && free_2>=0 && C>=2*free_2 && 1+2*free_2>=C ], cost: 1
+     10: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_3, [ 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 1
+     11: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb4in : [ E>=1+G ], cost: 1
+     12: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb9in : [ G>=E ], cost: 1
+     13: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb6in : [ A==1 && B==0 ], cost: 1
+     14: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ 0>=A ], cost: 1
+     15: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ A>=2 ], cost: 1
+     16: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ 0>=1+B ], cost: 1
+     17: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ B>=1 ], cost: 1
+     23: evalbinsearchStepSize2bb9in -> evalbinsearchStepSize2bb10in : [ G>=1+E ], cost: 1
+     18: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=0, [ F==0 ], cost: 1
+     19: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_4, [ F>=1 && free_4>=0 && F>=2*free_4 && 1+2*free_4>=F ], cost: 1
+     20: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_5, [ 0>=1+F && 0>=free_5 && 2*free_5>=F && 1+F>=2*free_5 ], cost: 1
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     25: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb12in : [ A==2 && B==0 ], cost: 1
+     26: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ 1>=A ], cost: 1
+     27: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ A>=3 ], cost: 1
+     28: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ 0>=1+B ], cost: 1
+     29: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ B>=1 ], cost: 1
+     30: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=0, [ F==0 ], cost: 1
+     31: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_6, [ F>=1 && free_6>=0 && F>=2*free_6 && 1+2*free_6>=F ], cost: 1
+     32: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_7, [ 0>=1+F && 0>=free_7 && 2*free_7>=F && 1+F>=2*free_7 ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+      3: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb1in : E'=free, [ 0>=C ], cost: 1
+      4: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb1in : E'=free_1, [ C>=2 ], cost: 1
+      5: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb2in : [ 0>=1+B ], cost: 1
+      6: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb2in : [ B>=1 ], cost: 1
+      7: evalbinsearchStepSize2bb1in -> evalbinsearchStepSize2bb3in : F'=C, [ B==0 ], cost: 1
+      8: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=0, [ C==0 ], cost: 1
+      9: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_2, [ C>=1 && free_2>=0 && C>=2*free_2 && 1+2*free_2>=C ], cost: 1
+     10: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_3, [ 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 1
+     11: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb4in : [ E>=1+G ], cost: 1
+     12: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb10in : [ G>=E && G>=1+E ], cost: 2
+     13: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb6in : [ A==1 && B==0 ], cost: 1
+     14: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ 0>=A ], cost: 1
+     15: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ A>=2 ], cost: 1
+     16: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ 0>=1+B ], cost: 1
+     17: evalbinsearchStepSize2bb4in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ B>=1 ], cost: 1
+     18: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=0, [ F==0 ], cost: 1
+     19: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_4, [ F>=1 && free_4>=0 && F>=2*free_4 && 1+2*free_4>=F ], cost: 1
+     20: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_5, [ 0>=1+F && 0>=free_5 && 2*free_5>=F && 1+F>=2*free_5 ], cost: 1
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     25: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb12in : [ A==2 && B==0 ], cost: 1
+     26: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ 1>=A ], cost: 1
+     27: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ A>=3 ], cost: 1
+     28: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ 0>=1+B ], cost: 1
+     29: evalbinsearchStepSize2bb10in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ B>=1 ], cost: 1
+     30: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=0, [ F==0 ], cost: 1
+     31: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_6, [ F>=1 && free_6>=0 && F>=2*free_6 && 1+2*free_6>=F ], cost: 1
+     32: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_7, [ 0>=1+F && 0>=free_7 && 2*free_7>=F && 1+F>=2*free_7 ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     36: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb2in : E'=free, [ 0>=C && 0>=1+B ], cost: 2
+     37: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb2in : E'=free, [ 0>=C && B>=1 ], cost: 2
+     39: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb2in : E'=free_1, [ C>=2 && 0>=1+B ], cost: 2
+     40: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb2in : E'=free_1, [ C>=2 && B>=1 ], cost: 2
+     38: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=C, [ 0>=C && B==0 ], cost: 2
+     41: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free_1, F'=C, [ C>=2 && B==0 ], cost: 2
+      8: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=0, [ C==0 ], cost: 1
+      9: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_2, [ C>=1 && free_2>=0 && C>=2*free_2 && 1+2*free_2>=C ], cost: 1
+     10: evalbinsearchStepSize2bb2in -> evalbinsearchStepSize2bb3in : F'=free_3, [ 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 1
+     42: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb6in : [ E>=1+G && A==1 && B==0 ], cost: 2
+     43: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && 0>=A ], cost: 2
+     44: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && A>=2 ], cost: 2
+     45: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && 0>=1+B ], cost: 2
+     46: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && B>=1 ], cost: 2
+     47: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb12in : [ G>=E && G>=1+E && A==2 && B==0 ], cost: 3
+     48: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && 1>=A ], cost: 3
+     49: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && A>=3 ], cost: 3
+     50: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && 0>=1+B ], cost: 3
+     51: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && B>=1 ], cost: 3
+     18: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=0, [ F==0 ], cost: 1
+     19: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_4, [ F>=1 && free_4>=0 && F>=2*free_4 && 1+2*free_4>=F ], cost: 1
+     20: evalbinsearchStepSize2bb6in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_5, [ 0>=1+F && 0>=free_5 && 2*free_5>=F && 1+F>=2*free_5 ], cost: 1
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     30: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=0, [ F==0 ], cost: 1
+     31: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_6, [ F>=1 && free_6>=0 && F>=2*free_6 && 1+2*free_6>=F ], cost: 1
+     32: evalbinsearchStepSize2bb12in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_7, [ 0>=1+F && 0>=free_7 && 2*free_7>=F && 1+F>=2*free_7 ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     38: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=C, [ 0>=C && B==0 ], cost: 2
+     41: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free_1, F'=C, [ C>=2 && B==0 ], cost: 2
+     52: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=0, [ 0>=C && 0>=1+B && C==0 ], cost: 3
+     53: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 3
+     54: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=0, [ 0>=C && B>=1 && C==0 ], cost: 3
+     55: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 3
+     56: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free_1, F'=free_2, [ C>=2 && 0>=1+B && C>=1 && free_2>=0 && C>=2*free_2 && 1+2*free_2>=C ], cost: 3
+     57: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free_1, F'=free_2, [ C>=2 && B>=1 && C>=1 && free_2>=0 && C>=2*free_2 && 1+2*free_2>=C ], cost: 3
+     43: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && 0>=A ], cost: 2
+     44: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && A>=2 ], cost: 2
+     45: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && 0>=1+B ], cost: 2
+     46: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && B>=1 ], cost: 2
+     58: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=1, Q'=0, [ E>=1+G && A==1 && B==0 && F==0 ], cost: 3
+     59: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_4, [ E>=1+G && A==1 && B==0 && F>=1 && free_4>=0 && F>=2*free_4 && 1+2*free_4>=F ], cost: 3
+     60: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=1, Q'=free_5, [ E>=1+G && A==1 && B==0 && 0>=1+F && 0>=free_5 && 2*free_5>=F && 1+F>=2*free_5 ], cost: 3
+     48: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && 1>=A ], cost: 3
+     49: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && A>=3 ], cost: 3
+     50: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && 0>=1+B ], cost: 3
+     51: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && B>=1 ], cost: 3
+     61: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=1, Q'=0, [ G>=E && G>=1+E && A==2 && B==0 && F==0 ], cost: 4
+     62: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_6, [ G>=E && G>=1+E && A==2 && B==0 && F>=1 && free_6>=0 && F>=2*free_6 && 1+2*free_6>=F ], cost: 4
+     63: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=1, Q'=free_7, [ G>=E && G>=1+E && A==2 && B==0 && 0>=1+F && 0>=free_7 && 2*free_7>=F && 1+F>=2*free_7 ], cost: 4
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Pruned:
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     38: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=C, [ 0>=C && B==0 ], cost: 2
+     41: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free_1, F'=C, [ C>=2 && B==0 ], cost: 2
+     53: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 3
+     54: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=0, [ 0>=C && B>=1 && C==0 ], cost: 3
+     55: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb3in : E'=free, F'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 ], cost: 3
+     43: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && 0>=A ], cost: 2
+     44: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && A>=2 ], cost: 2
+     45: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && 0>=1+B ], cost: 2
+     46: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=B, Q'=F, [ E>=1+G && B>=1 ], cost: 2
+     58: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb7in : H'=1, Q'=0, [ E>=1+G && A==1 && B==0 && F==0 ], cost: 3
+     48: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && 1>=A ], cost: 3
+     49: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && A>=3 ], cost: 3
+     50: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && 0>=1+B ], cost: 3
+     51: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=B, Q'=F, [ G>=E && G>=1+E && B>=1 ], cost: 3
+     61: evalbinsearchStepSize2bb3in -> evalbinsearchStepSize2bb13in : H'=1, Q'=0, [ G>=E && G>=1+E && A==2 && B==0 && F==0 ], cost: 4
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     64: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && 0>=A ], cost: 4
+     65: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && A>=2 ], cost: 4
+     66: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=C, H'=1, Q'=0, [ 0>=C && B==0 && free>=1+G && A==1 && B==0 && C==0 ], cost: 5
+     70: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && free_1>=1+G && 0>=A ], cost: 4
+     71: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && free_1>=1+G && A>=2 ], cost: 4
+     74: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 0>=A ], cost: 5
+     75: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && A>=2 ], cost: 5
+     76: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 0>=1+B ], cost: 5
+     80: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=0, H'=B, Q'=0, [ 0>=C && B>=1 && C==0 && free>=1+G && 0>=A ], cost: 5
+     81: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=0, H'=B, Q'=0, [ 0>=C && B>=1 && C==0 && free>=1+G && A>=2 ], cost: 5
+     82: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=0, H'=B, Q'=0, [ 0>=C && B>=1 && C==0 && free>=1+G && B>=1 ], cost: 5
+     86: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 0>=A ], cost: 5
+     87: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && A>=2 ], cost: 5
+     88: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && B>=1 ], cost: 5
+     67: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && 1>=A ], cost: 5
+     68: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && A>=3 ], cost: 5
+     69: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=C, H'=1, Q'=0, [ 0>=C && B==0 && G>=free && G>=1+free && A==2 && B==0 && C==0 ], cost: 6
+     72: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && G>=free_1 && G>=1+free_1 && 1>=A ], cost: 5
+     73: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && G>=free_1 && G>=1+free_1 && A>=3 ], cost: 5
+     77: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && 1>=A ], cost: 6
+     78: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && A>=3 ], cost: 6
+     79: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && 0>=1+B ], cost: 6
+     83: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=0, H'=B, Q'=0, [ 0>=C && B>=1 && C==0 && G>=free && G>=1+free && 1>=A ], cost: 6
+     84: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=0, H'=B, Q'=0, [ 0>=C && B>=1 && C==0 && G>=free && G>=1+free && A>=3 ], cost: 6
+     85: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=0, H'=B, Q'=0, [ 0>=C && B>=1 && C==0 && G>=free && G>=1+free && B>=1 ], cost: 6
+     89: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && 1>=A ], cost: 6
+     90: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && A>=3 ], cost: 6
+     91: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && B>=1 && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && B>=1 ], cost: 6
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Pruned:
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     64: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && 0>=A ], cost: 4
+     65: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && A>=2 ], cost: 4
+     70: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && free_1>=1+G && 0>=A ], cost: 4
+     75: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && A>=2 ], cost: 5
+     76: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb7in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 0>=1+B ], cost: 5
+     67: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && 1>=A ], cost: 5
+     68: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && A>=3 ], cost: 5
+     72: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && G>=free_1 && G>=1+free_1 && 1>=A ], cost: 5
+     78: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && A>=3 ], cost: 6
+     79: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bb13in : E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && 0>=1+B ], cost: 6
+     22: evalbinsearchStepSize2bb7in -> evalbinsearchStepSize2bbin : A'=2, B'=H, C'=Q, D'=D+Q, [ 255>=D+Q ], cost: 1
+     34: evalbinsearchStepSize2bb13in -> evalbinsearchStepSize2bbin : A'=1, B'=H, C'=Q, D'=D-Q, [ D>=Q ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     92: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=C, D'=C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && 0>=A && 255>=C+D ], cost: 5
+     93: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=C, D'=C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && A>=2 && 255>=C+D ], cost: 5
+     94: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=C, D'=C+D, E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && free_1>=1+G && 0>=A && 255>=C+D ], cost: 5
+     95: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=free_3, D'=free_3+D, E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && A>=2 && 255>=free_3+D ], cost: 6
+     96: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=free_3, D'=free_3+D, E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 0>=1+B && 255>=free_3+D ], cost: 6
+     97: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=1, B'=B, C'=C, D'=-C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && 1>=A && D>=C ], cost: 6
+     98: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=1, B'=B, C'=C, D'=-C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && A>=3 && D>=C ], cost: 6
+     99: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=1, B'=B, C'=C, D'=-C+D, E'=free_1, F'=C, H'=B, Q'=C, [ C>=2 && B==0 && G>=free_1 && G>=1+free_1 && 1>=A && D>=C ], cost: 6
+    100: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=1, B'=B, C'=free_3, D'=-free_3+D, E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && A>=3 && D>=free_3 ], cost: 7
+    101: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=1, B'=B, C'=free_3, D'=-free_3+D, E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && G>=free && G>=1+free && 0>=1+B && D>=free_3 ], cost: 7
+
+
+Pruned:
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+     92: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=C, D'=C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && 0>=A && 255>=C+D ], cost: 5
+     93: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=C, D'=C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && A>=2 && 255>=C+D ], cost: 5
+     95: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=free_3, D'=free_3+D, E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && A>=2 && 255>=free_3+D ], cost: 6
+     96: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, B'=B, C'=free_3, D'=free_3+D, E'=free, F'=free_3, H'=B, Q'=free_3, [ 0>=C && 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 0>=1+B && 255>=free_3+D ], cost: 6
+     97: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=1, B'=B, C'=C, D'=-C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && G>=free && G>=1+free && 1>=A && D>=C ], cost: 6
+
+Eliminating 5 self-loops for location evalbinsearchStepSize2bbin
+  Self-Loop 93 has unbounded runtime, resulting in the new transition 103.
+  Self-Loop 95 has the metering function: -C, resulting in the new transition 104.
+  Self-Loop 96 has the metering function: -C, resulting in the new transition 105.
+  Self-Loop 97 has unbounded runtime, resulting in the new transition 106.
+  Found this metering function when nesting loops: meter,
+  and nested parallel self-loops 96 (outer loop) and 104 (inner loop), obtaining the new transitions: 107.
+  Found this metering function when nesting loops: meter_1,
+  and nested parallel self-loops 95 (outer loop) and 105 (inner loop), obtaining the new transitions: 108.
+  Removing the self-loops: 92 93 95 96 97.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+    102: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, D'=C+D, E'=free, F'=C, H'=B, Q'=C, [ 0>=C && B==0 && free>=1+G && 0>=A && 255>=C+D ], cost: 5
+    103: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : [ 0>=C && B==0 && free>=1+G && A>=2 && 255>=C+D ], cost: INF
+    104: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, C'=0, D'=D, E'=free, F'=0, H'=B, Q'=0, [ 0>=1+B && 0>=1+C && 0>=0 && 0>=C && 1+C>=0 && free>=1+G && A>=2 && 255>=D ], cost: -6*C
+    105: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, C'=0, D'=D, E'=free, F'=0, H'=B, Q'=0, [ 0>=1+B && 0>=1+C && 0>=0 && 0>=C && 1+C>=0 && free>=1+G && 255>=D ], cost: -6*C
+    106: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : [ 0>=C && B==0 && G>=1+free && 1>=A && D>=C ], cost: INF
+    107: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, C'=0, D'=free_3*meter+D, E'=free, F'=0, H'=B, Q'=0, [ 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && 255>=free_3+D && 0>=1+B && 0>=1+free_3 && 0>=0 && 0>=free_3 && 1+free_3>=0 && free>=1+G && 2>=2 && 255>=free_3+D && 3*meter==-1-C ], cost: -6*free_3*meter+6*meter
+    108: evalbinsearchStepSize2bbin -> evalbinsearchStepSize2bbin : A'=2, C'=0, D'=free_3*meter_1+D, E'=free, F'=0, H'=B, Q'=0, [ 0>=1+B && 0>=1+C && 0>=free_3 && 2*free_3>=C && 1+C>=2*free_3 && free>=1+G && A>=2 && 255>=free_3+D && 0>=1+B && 0>=1+free_3 && 0>=0 && 0>=free_3 && 1+free_3>=0 && free>=1+G && 255>=free_3+D && 3*meter_1==-1-C ], cost: -6*free_3*meter_1+6*meter_1
+
+
+Chained simpled loops:
+  Start location: evalbinsearchStepSize2start
+      0: evalbinsearchStepSize2start -> evalbinsearchStepSize2bbin : A'=0, B'=0, C'=4, D'=A, [], cost: 2
+
+
+Pruned:
+  Start location: evalbinsearchStepSize2start
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalbinsearchStepSize2start
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

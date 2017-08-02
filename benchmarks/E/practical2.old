@@ -1,0 +1,164 @@
+Trying to load file: practical2.koat
+
+Initial Control flow graph problem:
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      1: eval1 -> end : [ A>=101 ], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+      3: eval3 -> eval3 : A'=11+A, C'=1+C, [ 100>=A ], cost: 1
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+      3: eval3 -> eval3 : A'=11+A, C'=1+C, [ 100>=A ], cost: 1
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+Eliminating 1 self-loops for location eval3
+  Self-Loop 3 has the metering function: meter, resulting in the new transition 13.
+  Removing the self-loops: 3.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+     13: eval3 -> eval3 : A'=A+11*meter, C'=C+meter, [ 100>=A && 11*meter==100-A ], cost: meter
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+     14: eval1 -> eval3 : A'=A+11*meter, C'=C+meter, [ 100>=A && 100>=A && 11*meter==100-A ], cost: 1+meter
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: eval0
+      0: eval0 -> eval3 : A'=B+11*meter, C'=1+meter, [ 100>=B && 100>=B && 11*meter==100-B ], cost: 2+meter
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: eval0
+     15: eval0 -> [8] : A'=B+11*meter, C'=1+meter, [ 100>=B && 100>=B && 11*meter==100-B ], cost: 2+meter
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: eval0
+     15: eval0 -> [8] : A'=B+11*meter, C'=1+meter, [ 100>=B && 100>=B && 11*meter==100-B ], cost: 2+meter
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+101-B-11*meter (+/+!), -99+B+11*meter (+/+!), 101-B (+/+!), 2+meter (+) [not solved]
+
+applying transformation rule (C) using substitution {B==100-11*meter}
+resulting limit problem:
+1 (+/+!), 1+11*meter (+/+!), 2+meter (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+11*meter (+/+!), 2+meter (+) [not solved]
+
+applying transformation rule (D), replacing 1+11*meter (+/+!) by 11*meter (+)
+resulting limit problem:
+2+meter (+), 11*meter (+) [not solved]
+
+applying transformation rule (D), replacing 2+meter (+) by meter (+)
+resulting limit problem:
+meter (+), 11*meter (+) [not solved]
+
+applying transformation rule (A), replacing 11*meter (+) by meter (+) and 11 (+!) using + limit vector (+,+!)
+resulting limit problem:
+11 (+!), meter (+) [not solved]
+
+applying transformation rule (B), deleting 11 (+!)
+resulting limit problem:
+meter (+) [solved]
+
+Created initial limit problem:
+101-B-11*meter (+/+!), -99+B+11*meter (+/+!), 101-B (+/+!), 2+meter (+) [not solved]
+
+applying transformation rule (C) using substitution {B==100-11*meter}
+resulting limit problem:
+1 (+/+!), 1+11*meter (+/+!), 2+meter (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+11*meter (+/+!), 2+meter (+) [not solved]
+
+applying transformation rule (D), replacing 1+11*meter (+/+!) by 11*meter (+)
+resulting limit problem:
+2+meter (+), 11*meter (+) [not solved]
+
+applying transformation rule (D), replacing 2+meter (+) by meter (+)
+resulting limit problem:
+meter (+), 11*meter (+) [not solved]
+
+applying transformation rule (A), replacing 11*meter (+) by meter (+) and 11 (+!) using + limit vector (+,+!)
+resulting limit problem:
+11 (+!), meter (+) [not solved]
+
+applying transformation rule (B), deleting 11 (+!)
+resulting limit problem:
+meter (+) [solved]
+
+Solution:
+B / 100-11*n
+meter / n
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 100>=B && 100>=B && 11*meter==100-B
+  Final Cost:  2+n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

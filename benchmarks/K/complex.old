@@ -1,0 +1,143 @@
+Trying to load file: complex.koat
+
+Initial Control flow graph problem:
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexentryin : [], cost: 1
+      1: evalcomplexentryin -> evalcomplexbb10in : A'=B, B'=A, [], cost: 1
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+      3: evalcomplexbb10in -> evalcomplexreturnin : [ B>=30 ], cost: 1
+      4: evalcomplexbb8in -> evalcomplexbb1in : [ D>=1+C ], cost: 1
+      5: evalcomplexbb8in -> evalcomplexbb9in : [ C>=D ], cost: 1
+     15: evalcomplexreturnin -> evalcomplexstop : [], cost: 1
+      6: evalcomplexbb1in -> evalcomplexbb7in : E'=7+C, [ C>=6 && 2>=C ], cost: 1
+      7: evalcomplexbb1in -> evalcomplexbb7in : E'=7+C, [ C>=6 ], cost: 1
+      9: evalcomplexbb1in -> evalcomplexbb7in : E'=2+C, [ 5>=C && 7>=C ], cost: 1
+     10: evalcomplexbb1in -> evalcomplexbb7in : E'=2+C, [ 5>=C && C>=11 ], cost: 1
+      8: evalcomplexbb1in -> evalcomplexbb6in : E'=7+C, [ C>=6 && C>=3 && 5>=C ], cost: 1
+     11: evalcomplexbb1in -> evalcomplexbb6in : E'=2+C, [ 5>=C && C>=8 && 10>=C ], cost: 1
+     14: evalcomplexbb9in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [], cost: 1
+     12: evalcomplexbb7in -> evalcomplexbb8in : C'=E, D'=1+D, [], cost: 1
+     13: evalcomplexbb6in -> evalcomplexbb8in : C'=E, D'=10+D, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexentryin : [], cost: 1
+      1: evalcomplexentryin -> evalcomplexbb10in : A'=B, B'=A, [], cost: 1
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+      4: evalcomplexbb8in -> evalcomplexbb1in : [ D>=1+C ], cost: 1
+      5: evalcomplexbb8in -> evalcomplexbb9in : [ C>=D ], cost: 1
+      6: evalcomplexbb1in -> evalcomplexbb7in : E'=7+C, [ C>=6 && 2>=C ], cost: 1
+      7: evalcomplexbb1in -> evalcomplexbb7in : E'=7+C, [ C>=6 ], cost: 1
+      9: evalcomplexbb1in -> evalcomplexbb7in : E'=2+C, [ 5>=C ], cost: 1
+     10: evalcomplexbb1in -> evalcomplexbb7in : E'=2+C, [ 5>=C && C>=11 ], cost: 1
+      8: evalcomplexbb1in -> evalcomplexbb6in : E'=7+C, [ C>=6 && 5>=C ], cost: 1
+     11: evalcomplexbb1in -> evalcomplexbb6in : E'=2+C, [ 5>=C && C>=8 ], cost: 1
+     14: evalcomplexbb9in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [], cost: 1
+     12: evalcomplexbb7in -> evalcomplexbb8in : C'=E, D'=1+D, [], cost: 1
+     13: evalcomplexbb6in -> evalcomplexbb8in : C'=E, D'=10+D, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+      5: evalcomplexbb8in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [ C>=D ], cost: 2
+      4: evalcomplexbb8in -> evalcomplexbb1in : [ D>=1+C ], cost: 1
+      6: evalcomplexbb1in -> evalcomplexbb7in : E'=7+C, [ C>=6 && 2>=C ], cost: 1
+      7: evalcomplexbb1in -> evalcomplexbb7in : E'=7+C, [ C>=6 ], cost: 1
+      9: evalcomplexbb1in -> evalcomplexbb7in : E'=2+C, [ 5>=C ], cost: 1
+     10: evalcomplexbb1in -> evalcomplexbb7in : E'=2+C, [ 5>=C && C>=11 ], cost: 1
+      8: evalcomplexbb1in -> evalcomplexbb6in : E'=7+C, [ C>=6 && 5>=C ], cost: 1
+     11: evalcomplexbb1in -> evalcomplexbb6in : E'=2+C, [ 5>=C && C>=8 ], cost: 1
+     12: evalcomplexbb7in -> evalcomplexbb8in : C'=E, D'=1+D, [], cost: 1
+     13: evalcomplexbb6in -> evalcomplexbb8in : C'=E, D'=10+D, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+      5: evalcomplexbb8in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [ C>=D ], cost: 2
+     16: evalcomplexbb8in -> evalcomplexbb7in : E'=7+C, [ D>=1+C && C>=6 ], cost: 2
+     17: evalcomplexbb8in -> evalcomplexbb7in : E'=2+C, [ D>=1+C && 5>=C ], cost: 2
+     12: evalcomplexbb7in -> evalcomplexbb8in : C'=E, D'=1+D, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+      5: evalcomplexbb8in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [ C>=D ], cost: 2
+     18: evalcomplexbb8in -> evalcomplexbb8in : C'=7+C, D'=1+D, E'=7+C, [ D>=1+C && C>=6 ], cost: 3
+     19: evalcomplexbb8in -> evalcomplexbb8in : C'=2+C, D'=1+D, E'=2+C, [ D>=1+C && 5>=C ], cost: 3
+
+Eliminating 2 self-loops for location evalcomplexbb8in
+  Self-Loop 18 has the metering function: meter, resulting in the new transition 20.
+  Self-Loop 21 has unbounded runtime, resulting in the new transition 24.
+  Removing the self-loops: 18 19 21 22.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+      5: evalcomplexbb8in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [ C>=D ], cost: 2
+     20: evalcomplexbb8in -> evalcomplexbb8in : C'=7*meter+C, D'=meter+D, E'=7*meter+C, [ D>=1+C && C>=6 && 6*meter==-C+D ], cost: 3*meter
+     23: evalcomplexbb8in -> evalcomplexbb8in : C'=2+C, D'=1+D, E'=2+C, [ D>=1+C && 5>=C ], cost: 3
+     24: evalcomplexbb8in -> evalcomplexbb8in : [ D>=1+C && 5>=C && C>D ], cost: INF
+
+
+Chained simpled loops:
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+      2: evalcomplexbb10in -> evalcomplexbb8in : C'=A, D'=B, [ 29>=B ], cost: 1
+     25: evalcomplexbb10in -> evalcomplexbb8in : C'=7*meter+A, D'=B+meter, E'=7*meter+A, [ 29>=B && B>=1+A && A>=6 && 6*meter==B-A ], cost: 1+3*meter
+     26: evalcomplexbb10in -> evalcomplexbb8in : C'=2+A, D'=1+B, E'=2+A, [ 29>=B && B>=1+A && 5>=A ], cost: 4
+      5: evalcomplexbb8in -> evalcomplexbb10in : A'=-10+C, B'=2+D, [ C>=D ], cost: 2
+
+
+Eliminated locations (branches):
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+     27: evalcomplexbb10in -> evalcomplexbb10in : A'=-10+A, B'=2+B, C'=A, D'=B, [ 29>=B && A>=B ], cost: 3
+     28: evalcomplexbb10in -> evalcomplexbb10in : A'=-10+7*meter+A, B'=2+B+meter, C'=7*meter+A, D'=B+meter, E'=7*meter+A, [ 29>=B && B>=1+A && A>=6 && 6*meter==B-A && 7*meter+A>=B+meter ], cost: 3+3*meter
+     29: evalcomplexbb10in -> evalcomplexbb10in : A'=-8+A, B'=3+B, C'=2+A, D'=1+B, E'=2+A, [ 29>=B && B>=1+A && 5>=A && 2+A>=1+B ], cost: 6
+
+Eliminating 3 self-loops for location evalcomplexbb10in
+  Self-Loop 29 has the metering function: meter_1, resulting in the new transition 34.
+  Self-Loop 31 has unbounded runtime, resulting in the new transition 35.
+  Removing the self-loops: 27 28 29 30 31.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+     32: evalcomplexbb10in -> evalcomplexbb10in : A'=-10+A, B'=2+B, C'=A, D'=B, [ 29>=B && A>=B ], cost: 3
+     33: evalcomplexbb10in -> evalcomplexbb10in : A'=-10+7*meter+A, B'=2+B+meter, C'=7*meter+A, D'=B+meter, E'=7*meter+A, [ 29>=B && B>=1+A && A>=6 && 6*meter==B-A ], cost: 3+3*meter
+     34: evalcomplexbb10in -> evalcomplexbb10in : A'=A-8*meter_1, B'=B+3*meter_1, C'=10+A-8*meter_1, D'=-2+B+3*meter_1, E'=10+A-8*meter_1, [ 29>=B && 1-B+A==0 && 5>=A && 11*meter_1==2-B+A ], cost: 6*meter_1
+     35: evalcomplexbb10in -> evalcomplexbb10in : [ 29>=B && A>=B && B>A ], cost: INF
+
+
+Chained simpled loops:
+  Start location: evalcomplexstart
+      0: evalcomplexstart -> evalcomplexbb10in : A'=B, B'=A, [], cost: 2
+     36: evalcomplexstart -> evalcomplexbb10in : A'=-10+B, B'=2+A, C'=B, D'=A, [ 29>=A && B>=A ], cost: 5
+     37: evalcomplexstart -> evalcomplexbb10in : A'=-10+B+7*meter, B'=2+meter+A, C'=B+7*meter, D'=meter+A, E'=B+7*meter, [ 29>=A && A>=1+B && B>=6 && 6*meter==-B+A ], cost: 5+3*meter
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalcomplexstart
+     37: evalcomplexstart -> evalcomplexbb10in : A'=-10+B+7*meter, B'=2+meter+A, C'=B+7*meter, D'=meter+A, E'=B+7*meter, [ 29>=A && A>=1+B && B>=6 && 6*meter==-B+A ], cost: 5+3*meter
+
+
+Computing complexity for remaining 1 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

@@ -1,0 +1,63 @@
+Trying to load file: exmini.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : [ A>=101 && B==C && D==E && F==G && H==A ], cost: 1
+      1: start -> stop : [ G>=1+E && B==C && D==E && F==G && H==A ], cost: 1
+      2: start -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ E>=G && 100>=A && B==C && D==E && F==G && H==A ], cost: 1
+      3: lbl71 -> stop : [ E+G+A>=102+D+B && E>=1+D && 100>=A && E>=G && 2+2*D+B>=E+G+A && 100>=B && F==1+B && 1+D+B+H==E+G+A ], cost: 1
+      4: lbl71 -> stop : [ B>=D && E>=1+D && 100>=A && E>=G && 2+2*D+B>=E+G+A && 100>=B && F==1+B && 1+D+B+H==E+G+A ], cost: 1
+      5: lbl71 -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ D>=1+B && 101+D+B>=E+G+A && E>=1+D && 100>=A && E>=G && 2+2*D+B>=E+G+A && 100>=B && F==1+B && 1+D+B+H==E+G+A ], cost: 1
+      6: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      2: start -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ E>=G && 100>=A && B==C && D==E && F==G && H==A ], cost: 1
+      5: lbl71 -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ D>=1+B && 101+D+B>=E+G+A && E>=1+D && 100>=A && E>=G && 2+2*D+B>=E+G+A && 100>=B && F==1+B && 1+D+B+H==E+G+A ], cost: 1
+      6: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+Eliminating 1 self-loops for location lbl71
+  Removing the self-loops: 5.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start0
+      2: start -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ E>=G && 100>=A && B==C && D==E && F==G && H==A ], cost: 1
+      7: lbl71 -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ D>=1+B && 101+D+B>=E+G+A && E>=1+D && 100>=A && E>=G && 2+2*D+B>=E+G+A && 100>=B && F==1+B && 1+D+B+H==E+G+A ], cost: 1
+      6: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start0
+      2: start -> lbl71 : B'=H, D'=-1+D, F'=1+H, H'=F, [ E>=G && 100>=A && B==C && D==E && F==G && H==A ], cost: 1
+      8: start -> lbl71 : B'=F, D'=-2+D, F'=1+F, H'=1+H, [ E>=G && 100>=A && B==C && D==E && F==G && H==A && -1+D>=1+H && 100+D+H>=E+G+A && E>=D && 100>=A && E>=G && 2*D+H>=E+G+A && 100>=H && 1+H==1+H && D+F+H==E+G+A ], cost: 2
+      6: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: start0
+    <empty>
+
+
+Pruned:
+  Start location: start0
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start0
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

@@ -1,0 +1,85 @@
+Trying to load file: randomwalk_withassume.koat
+
+Initial Control flow graph problem:
+  Start location: f0
+      0: f0 -> f10 : A'=1, B'=1, C'=free, D'=0, E'=2, F'=1, [ free>=0 ], cost: 1
+      1: f10 -> f21 : B'=-1+B, G'=0, [ F>=1 && E>=F && B>=1 && 0>=C ], cost: 1
+      2: f10 -> f21 : A'=1+A, B'=1+A, C'=free_1, G'=free_2, [ free_2>=0 && 1>=free_2 && free_1>=0 && F>=1 && E>=F && 0>=B && 0>=C ], cost: 1
+      3: f10 -> f21 : C'=-1+C, G'=free_3, [ free_3>=0 && 1>=free_3 && F>=1 && C>=1 && E>=F ], cost: 1
+      6: f10 -> f32 : [ 0>=F && E>=F ], cost: 1
+      7: f10 -> f32 : [ F>=1+E ], cost: 1
+      4: f21 -> f10 : F'=-1+F, [ 1+E>=A && 0>=G ], cost: 1
+      5: f21 -> f10 : F'=1+F, [ 1+E>=A && G>=1 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f0
+      0: f0 -> f10 : A'=1, B'=1, C'=free, D'=0, E'=2, F'=1, [ free>=0 ], cost: 1
+      1: f10 -> f21 : B'=-1+B, G'=0, [ F>=1 && E>=F && B>=1 && 0>=C ], cost: 1
+      2: f10 -> f21 : A'=1+A, B'=1+A, C'=free_1, G'=free_2, [ free_2>=0 && 1>=free_2 && free_1>=0 && F>=1 && E>=F && 0>=B && 0>=C ], cost: 1
+      3: f10 -> f21 : C'=-1+C, G'=free_3, [ free_3>=0 && 1>=free_3 && F>=1 && C>=1 && E>=F ], cost: 1
+      4: f21 -> f10 : F'=-1+F, [ 1+E>=A && 0>=G ], cost: 1
+      5: f21 -> f10 : F'=1+F, [ 1+E>=A && G>=1 ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: f0
+      0: f0 -> f10 : A'=1, B'=1, C'=free, D'=0, E'=2, F'=1, [ free>=0 ], cost: 1
+      8: f10 -> f10 : B'=-1+B, F'=-1+F, G'=0, [ F>=1 && E>=F && B>=1 && 0>=C && 1+E>=A && 0>=0 ], cost: 2
+      9: f10 -> f10 : A'=1+A, B'=1+A, C'=free_1, F'=-1+F, G'=free_2, [ free_2>=0 && 1>=free_2 && free_1>=0 && F>=1 && E>=F && 0>=B && 0>=C && 1+E>=1+A && 0>=free_2 ], cost: 2
+     10: f10 -> f10 : A'=1+A, B'=1+A, C'=free_1, F'=1+F, G'=free_2, [ free_2>=0 && 1>=free_2 && free_1>=0 && F>=1 && E>=F && 0>=B && 0>=C && 1+E>=1+A && free_2>=1 ], cost: 2
+     11: f10 -> f10 : C'=-1+C, F'=-1+F, G'=free_3, [ free_3>=0 && 1>=free_3 && F>=1 && C>=1 && E>=F && 1+E>=A && 0>=free_3 ], cost: 2
+     12: f10 -> f10 : C'=-1+C, F'=1+F, G'=free_3, [ free_3>=0 && 1>=free_3 && F>=1 && C>=1 && E>=F && 1+E>=A && free_3>=1 ], cost: 2
+
+Eliminating 5 self-loops for location f10
+  Self-Loop 13 has the metering function: F, resulting in the new transition 28.
+  Self-Loop 14 has the metering function: B, resulting in the new transition 29.
+  Self-Loop 22 has the metering function: F, resulting in the new transition 30.
+  Self-Loop 23 has the metering function: C, resulting in the new transition 31.
+  Removing the self-loops: 8 9 10 11 12 13 14 16 17 19 20 22 23 25 26.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f0
+      0: f0 -> f10 : A'=1, B'=1, C'=free, D'=0, E'=2, F'=1, [ free>=0 ], cost: 1
+     15: f10 -> f10 : B'=-1+B, F'=-1+F, G'=0, [ F>=1 && E>=F && B>=1 && 0>=C && 1+E>=A ], cost: 2
+     18: f10 -> f10 : A'=1+A, B'=1+A, C'=free_1, F'=-1+F, G'=0, [ free_1>=0 && F>=1 && E>=F && 0>=B && 0>=C && 1+E>=1+A ], cost: 2
+     21: f10 -> f10 : A'=1+A, B'=1+A, C'=free_1, F'=1+F, G'=1, [ free_1>=0 && F>=1 && E>=F && 0>=B && 0>=C && 1+E>=1+A ], cost: 2
+     24: f10 -> f10 : C'=-1+C, F'=-1+F, G'=0, [ F>=1 && C>=1 && E>=F && 1+E>=A ], cost: 2
+     27: f10 -> f10 : C'=-1+C, F'=1+F, G'=1, [ F>=1 && C>=1 && E>=F && 1+E>=A ], cost: 2
+     28: f10 -> f10 : B'=-F+B, F'=0, G'=0, [ F>=1 && E>=F && B>=1 && 0>=C && 1+E>=A && B>F ], cost: 2*F
+     29: f10 -> f10 : B'=0, F'=F-B, G'=0, [ F>=1 && E>=F && B>=1 && 0>=C && 1+E>=A && F>B ], cost: 2*B
+     30: f10 -> f10 : C'=-F+C, F'=0, G'=0, [ F>=1 && C>=1 && E>=F && 1+E>=A && C>F ], cost: 2*F
+     31: f10 -> f10 : C'=0, F'=F-C, G'=0, [ F>=1 && C>=1 && E>=F && 1+E>=A && F>C ], cost: 2*C
+
+
+Chained simpled loops:
+  Start location: f0
+      0: f0 -> f10 : A'=1, B'=1, C'=free, D'=0, E'=2, F'=1, [ free>=0 ], cost: 1
+     32: f0 -> f10 : A'=1, B'=0, C'=free, D'=0, E'=2, F'=0, G'=0, [ free>=0 && 1>=1 && 2>=1 && 1>=1 && 0>=free && 3>=1 ], cost: 3
+     33: f0 -> f10 : A'=1, B'=1, C'=-1+free, D'=0, E'=2, F'=0, G'=0, [ free>=0 && 1>=1 && free>=1 && 2>=1 && 3>=1 ], cost: 3
+     34: f0 -> f10 : A'=1, B'=1, C'=-1+free, D'=0, E'=2, F'=2, G'=1, [ free>=0 && 1>=1 && free>=1 && 2>=1 && 3>=1 ], cost: 3
+     35: f0 -> f10 : A'=1, B'=1, C'=-1+free, D'=0, E'=2, F'=0, G'=0, [ free>=0 && 1>=1 && free>=1 && 2>=1 && 3>=1 && free>1 ], cost: 3
+
+
+Pruned:
+  Start location: f0
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f0
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

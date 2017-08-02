@@ -1,0 +1,47 @@
+Trying to load file: poly1.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: eval -> eval : A'=1+A, B'=B+A, [ A>=B ], cost: 1
+      1: eval -> eval : A'=A-C, B'=B+C^2, C'=-1+C, [ A>=B ], cost: 1
+      2: start -> eval : [], cost: 1
+
+Eliminating 2 self-loops for location eval
+  Removing the self-loops: 0 1.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+      3: eval -> eval : A'=1+A, B'=B+A, [ A>=B ], cost: 1
+      4: eval -> eval : A'=A-C, B'=B+C^2, C'=-1+C, [ A>=B ], cost: 1
+      2: start -> eval : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start
+      2: start -> eval : [], cost: 1
+      5: start -> eval : A'=1+A, B'=B+A, [ A>=B ], cost: 2
+      6: start -> eval : A'=A-C, B'=B+C^2, C'=-1+C, [ A>=B ], cost: 2
+
+
+Pruned:
+  Start location: start
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

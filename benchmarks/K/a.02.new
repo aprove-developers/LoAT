@@ -1,0 +1,8 @@
+Trying to load file: a.02.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: eval -> eval : A'=free, [ A>=0 && B>=0 && B>=1+A && B+A>=2*free_1 && 3*free_1>=1+B+A && free>=1+free_1 && B+A>=2*free_2 && 3*free_2>=1+B+A && 1+free_2>=free ], cost: 1
+      1: eval -> eval : B'=free_3, [ A>=0 && B>=0 && B>=1+A && B+A>=2*free_4 && 3*free_4>=1+B+A && free_3>=free_4 && B+A>=2*free_5 && 3*free_5>=1+B+A && free_5>=free_3 ], cost: 1
+      2: start -> eval : [], cost: 1
+

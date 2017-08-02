@@ -1,0 +1,57 @@
+Trying to load file: ack.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: ack -> ack : A'=-1+A, B'=free, [ A>=1 && B>=1 ], cost: 1
+      1: ack -> ack : B'=-1+B, [ A>=1 && B>=1 ], cost: 1
+      2: start -> ack : [], cost: 1
+
+
+Try instantiation
+  Start location: start
+      3: ack -> ack : B'=0, [ A>=1 && B>=1 ], cost: B
+      4: ack -> ack : A'=0, B'=free, [ B>=1 && A>=1 ], cost: A
+      2: start -> ack : [], cost: 1
+
+Eliminating 2 self-loops for location ack
+  Removing the self-loops: 3 4.
+Adding an epsilon transition (to model nonexecution of the loops): 7.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      5: ack -> [2] : B'=0, [ A>=1 && B>=1 ], cost: B
+      6: ack -> [2] : A'=0, B'=free, [ B>=1 && A>=1 ], cost: A
+      7: ack -> [2] : [], cost: 0
+      2: start -> ack : [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      8: start -> [2] : B'=0, [ A>=1 && B>=1 ], cost: 1+B
+      9: start -> [2] : A'=0, B'=free, [ B>=1 && A>=1 ], cost: 1+A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+      8: start -> [2] : B'=0, [ A>=1 && B>=1 ], cost: 1+B
+      9: start -> [2] : A'=0, B'=free, [ B>=1 && A>=1 ], cost: 1+A
+
+
+Computing complexity for remaining 2 transitions.
+
+  Found configuration with infinitely models for cost: 1+B
+  and guard: A>=1 && B>=1:
+  A: Pos, B: Pos
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=1 && B>=1
+  Final Cost:  1+B
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

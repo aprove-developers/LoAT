@@ -1,0 +1,693 @@
+Trying to load file: fourn.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: f0 -> f0 : B'=1+B, C'=free, [ A>=B ], cost: 1
+     21: f0 -> f17 : A1'=1, [ B>=1+A ], cost: 1
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+     20: f17 -> f93 : [ 0>=B ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     17: f30 -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+      4: f30 -> f30 : L'=G+L, M'=-J+Q+L, N'=free_6, [ H>=L ], cost: 1
+     15: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+      6: f44 -> f44 : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     11: f68 -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+     10: f68 -> f68 : J'=Q_1+J, N'=free_15, X'=J, Y'=J+P, Z'=free_14, [ H>=J ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start
+      0: f0 -> f0 : B'=1+B, C'=free, [ A>=B ], cost: 1
+     21: f0 -> f17 : A1'=1, [ B>=1+A ], cost: 1
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     17: f30 -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+      4: f30 -> f30 : L'=G+L, M'=-J+Q+L, N'=free_6, [ H>=L ], cost: 1
+     15: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+      6: f44 -> f44 : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     11: f68 -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+     10: f68 -> f68 : J'=Q_1+J, N'=free_15, X'=J, Y'=J+P, Z'=free_14, [ H>=J ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+
+Try instantiation
+  Start location: start
+     23: f0 -> f0 : B'=1+A, C'=free, [ A>=B ], cost: 1-B+A
+     21: f0 -> f17 : A1'=1, [ B>=1+A ], cost: 1
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     17: f30 -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+      4: f30 -> f30 : L'=G+L, M'=-J+Q+L, N'=free_6, [ H>=L ], cost: 1
+     15: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+      6: f44 -> f44 : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     11: f68 -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+     10: f68 -> f68 : J'=Q_1+J, N'=free_15, X'=J, Y'=J+P, Z'=free_14, [ H>=J ], cost: 1
+     22: start -> f0 : [], cost: 1
+
+Eliminating 1 self-loops for location f0
+  Removing the self-loops: 23.
+Adding an epsilon transition (to model nonexecution of the loops): 25.
+
+Try instantiation
+  Start location: start
+     24: f0 -> [12] : B'=1+A, C'=free, [ A>=B ], cost: 1-B+A
+     25: f0 -> [12] : [], cost: 0
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     17: f30 -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+     26: f30 -> f30 : [ H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     27: f30 -> f30 : L'=1+H, M'=H-J+Q, N'=free_6, [ G<=1 && G>=1 && H>=L ], cost: 1+H-L
+     15: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+      6: f44 -> f44 : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     11: f68 -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+     10: f68 -> f68 : J'=Q_1+J, N'=free_15, X'=J, Y'=J+P, Z'=free_14, [ H>=J ], cost: 1
+     22: start -> f0 : [], cost: 1
+     21: [12] -> f17 : A1'=1, [ B>=1+A ], cost: 1
+
+Eliminating 2 self-loops for location f30
+  Removing the self-loops: 26 27.
+Adding an epsilon transition (to model nonexecution of the loops): 30.
+
+Try instantiation
+  Start location: start
+     24: f0 -> [12] : B'=1+A, C'=free, [ A>=B ], cost: 1-B+A
+     25: f0 -> [12] : [], cost: 0
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     28: f30 -> [13] : [ H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     29: f30 -> [13] : L'=1+H, M'=H-J+Q, N'=free_6, [ -1+G==0 && H>=L ], cost: 1+H-L
+     30: f30 -> [13] : [], cost: 0
+     15: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     31: f44 -> f44 : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     11: f68 -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+     10: f68 -> f68 : J'=Q_1+J, N'=free_15, X'=J, Y'=J+P, Z'=free_14, [ H>=J ], cost: 1
+     22: start -> f0 : [], cost: 1
+     21: [12] -> f17 : A1'=1, [ B>=1+A ], cost: 1
+     17: [13] -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+
+Eliminating 1 self-loops for location f44
+  Removing the self-loops: 31.
+Adding an epsilon transition (to model nonexecution of the loops): 33.
+
+Try instantiation
+  Start location: start
+     24: f0 -> [12] : B'=1+A, C'=free, [ A>=B ], cost: 1-B+A
+     25: f0 -> [12] : [], cost: 0
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     28: f30 -> [13] : [ H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     29: f30 -> [13] : L'=1+H, M'=H-J+Q, N'=free_6, [ -1+G==0 && H>=L ], cost: 1+H-L
+     30: f30 -> [13] : [], cost: 0
+     32: f44 -> [14] : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     33: f44 -> [14] : [], cost: 0
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     11: f68 -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+     34: f68 -> f68 : [ H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     35: f68 -> f68 : J'=1+H, N'=free_15, X'=H, Y'=H+P, Z'=free_14, [ Q_1<=1 && Q_1>=1 && H>=J ], cost: 1+H-J
+     22: start -> f0 : [], cost: 1
+     21: [12] -> f17 : A1'=1, [ B>=1+A ], cost: 1
+     17: [13] -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+     15: [14] -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: [14] -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+
+Eliminating 2 self-loops for location f68
+  Removing the self-loops: 34 35.
+Adding an epsilon transition (to model nonexecution of the loops): 38.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+     24: f0 -> [12] : B'=1+A, C'=free, [ A>=B ], cost: 1-B+A
+     25: f0 -> [12] : [], cost: 0
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+      3: f28 -> f30 : [ J+F>=2+K ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     28: f30 -> [13] : [ H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     29: f30 -> [13] : L'=1+H, M'=H-J+Q, N'=free_6, [ -1+G==0 && H>=L ], cost: 1+H-L
+     30: f30 -> [13] : [], cost: 0
+     32: f44 -> [14] : Q'=-O+Q, O'=free_8, [ O>=F && Q>=1+O ], cost: 1
+     33: f44 -> [14] : [], cost: 0
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+      9: f66 -> f68 : [ F+L>=2+K ], cost: 1
+     36: f68 -> [15] : [ H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     37: f68 -> [15] : J'=1+H, N'=free_15, X'=H, Y'=H+P, Z'=free_14, [ -1+Q_1==0 && H>=J ], cost: 1+H-J
+     38: f68 -> [15] : [], cost: 0
+     22: start -> f0 : [], cost: 1
+     21: [12] -> f17 : A1'=1, [ B>=1+A ], cost: 1
+     17: [13] -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+     15: [14] -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     16: [14] -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     11: [15] -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     41: f28 -> [13] : [ J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     42: f28 -> [13] : L'=1+H, M'=H-J+Q, N'=free_6, [ J+F>=2+K && -1+G==0 && H>=L ], cost: 2+H-L
+     43: f28 -> [13] : [ J+F>=2+K ], cost: 1
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+     48: f66 -> [15] : [ F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     49: f66 -> [15] : J'=1+H, N'=free_15, X'=H, Y'=H+P, Z'=free_14, [ F+L>=2+K && -1+Q_1==0 && H>=J ], cost: 2+H-J
+     50: f66 -> [15] : [ F+L>=2+K ], cost: 1
+     39: start -> [12] : B'=1+A, C'=free, [ A>=B ], cost: 2-B+A
+     40: start -> [12] : [], cost: 1
+     21: [12] -> f17 : A1'=1, [ B>=1+A ], cost: 1
+     17: [13] -> f28 : K'=2+K, [ L>=1+H ], cost: 1
+     11: [15] -> f66 : K'=2+K, [ J>=1+H ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     54: f28 -> f28 : K'=2+K, L'=1+H, M'=H-J+Q, N'=free_6, [ J+F>=2+K && -1+G==0 && H>=L && 1+H>=1+H ], cost: 3+H-L
+     55: f28 -> f28 : K'=2+K, [ J+F>=2+K && L>=1+H ], cost: 2
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     53: f28 -> [16] : [ J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+     57: f66 -> f66 : J'=1+H, K'=2+K, N'=free_15, X'=H, Y'=H+P, Z'=free_14, [ F+L>=2+K && -1+Q_1==0 && H>=J && 1+H>=1+H ], cost: 3+H-J
+     58: f66 -> f66 : K'=2+K, [ F+L>=2+K && J>=1+H ], cost: 2
+     56: f66 -> [17] : [ F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+
+
+Try instantiation
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     59: f28 -> f28 : K'=2*meter+K, [ J+F>=2*meter+K && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 2*meter
+     18: f28 -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     53: f28 -> [16] : [ J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+     57: f66 -> f66 : J'=1+H, K'=2+K, N'=free_15, X'=H, Y'=H+P, Z'=free_14, [ F+L>=2+K && -1+Q_1==0 && H>=J && 1+H>=1+H ], cost: 3+H-J
+     58: f66 -> f66 : K'=2+K, [ F+L>=2+K && J>=1+H ], cost: 2
+     56: f66 -> [17] : [ F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+
+Eliminating 1 self-loops for location f28
+  Removing the self-loops: 59.
+Adding an epsilon transition (to model nonexecution of the loops): 61.
+
+Try instantiation
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     60: f28 -> [18] : K'=2*meter+K, [ 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 2*meter
+     61: f28 -> [18] : [], cost: 0
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     12: f66 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+     62: f66 -> f66 : K'=2*meter_2+K, [ F+L>=2*meter_2+K && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2*meter_2
+     56: f66 -> [17] : [ F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     18: [18] -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     53: [18] -> [16] : [ J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+
+Eliminating 1 self-loops for location f66
+  Removing the self-loops: 62.
+Adding an epsilon transition (to model nonexecution of the loops): 64.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      2: f25 -> f28 : [ G>=J && Q>=1+J ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     60: f28 -> [18] : K'=2*meter+K, [ 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 2*meter
+     61: f28 -> [18] : [], cost: 0
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+      8: f64 -> f66 : [ P>=L ], cost: 1
+     63: f66 -> [19] : K'=2*meter_2+K, [ 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2*meter_2
+     64: f66 -> [19] : [], cost: 0
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     18: [18] -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     53: [18] -> [16] : [ J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     12: [19] -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+     56: [19] -> [17] : [ F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     65: f25 -> [18] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     66: f25 -> [18] : [ G>=J && Q>=1+J ], cost: 1
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     67: f64 -> [19] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+     68: f64 -> [19] : [ P>=L ], cost: 1
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     18: [18] -> f44 : O'=free_19, [ 1+K>=J+F ], cost: 1
+     53: [18] -> [16] : [ J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     12: [19] -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ 1+K>=F+L ], cost: 1
+     56: [19] -> [17] : [ F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     69: f25 -> f44 : K'=2*meter+K, O'=free_19, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F ], cost: 2+2*meter
+     71: f25 -> f44 : O'=free_19, [ G>=J && Q>=1+J && 1+K>=J+F ], cost: 2
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: f25 -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: f25 -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     73: f64 -> f64 : K'=2*meter_2+K, L'=F+L, S'=V, V'=free_17, W'=free_16, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && 1+2*meter_2+K>=F+L ], cost: 2+2*meter_2
+     75: f64 -> f64 : L'=F+L, S'=V, V'=free_17, W'=free_16, [ P>=L && 1+K>=F+L ], cost: 2
+     76: f64 -> [17] : [ P>=L && F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     74: f64 -> [21] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+
+
+Try instantiation
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     69: f25 -> f44 : K'=2*meter+K, O'=free_19, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F ], cost: 2+2*meter
+     71: f25 -> f44 : O'=free_19, [ G>=J && Q>=1+J && 1+K>=J+F ], cost: 2
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: f25 -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: f25 -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     13: f64 -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     77: f64 -> f64 : K'=2*meter_2+K, L'=F+L, S'=V, V'=free_17, W'=free_16, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && 1+2*meter_2+K>=F+L ], cost: 2+2*meter_2
+     78: f64 -> f64 : [ K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+     79: f64 -> f64 : L'=1+P, S'=free_17, V'=free_17, W'=free_16, [ K>=P && F>=1 && P>=L && K>=L && F<=1 ], cost: 2+2*P-2*L
+     80: f64 -> f64 : L'=1+K, S'=free_17, V'=free_17, W'=free_16, [ P>=K && F>=1 && P>=L && K>=L && F<=1 ], cost: 2+2*K-2*L
+     76: f64 -> [17] : [ P>=L && F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     74: f64 -> [21] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+
+Eliminating 4 self-loops for location f64
+  Removing the self-loops: 77 78 79 80.
+Adding an epsilon transition (to model nonexecution of the loops): 85.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+      5: f25 -> f44 : O'=free_7, [ G>=J && J>=Q ], cost: 1
+     69: f25 -> f44 : K'=2*meter+K, O'=free_19, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F ], cost: 2+2*meter
+     71: f25 -> f44 : O'=free_19, [ G>=J && Q>=1+J && 1+K>=J+F ], cost: 2
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: f25 -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: f25 -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     44: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && free_8>=F && free_8>=-O+Q ], cost: 2
+     45: f44 -> f25 : Q'=-O+Q+free_8, J'=J+F, O'=free_8, [ O>=F && Q>=1+O && F>=1+free_8 ], cost: 2
+     46: f44 -> f25 : Q'=O+Q, J'=J+F, [ O>=F && O>=Q ], cost: 1
+     47: f44 -> f25 : Q'=O+Q, J'=J+F, [ F>=1+O ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+      7: f55 -> f64 : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     81: f64 -> [22] : K'=2*meter_2+K, L'=F+L, S'=V, V'=free_17, W'=free_16, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2+2*meter_2
+     82: f64 -> [22] : [ K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+     83: f64 -> [22] : L'=1+P, S'=free_17, V'=free_17, W'=free_16, [ K>=P && 1-F==0 && P>=L && K>=L ], cost: 2+2*P-2*L
+     84: f64 -> [22] : L'=1+K, S'=free_17, V'=free_17, W'=free_16, [ P>=K && 1-F==0 && P>=L && K>=L ], cost: 2+2*K-2*L
+     85: f64 -> [22] : [], cost: 0
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     13: [22] -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     76: [22] -> [17] : [ P>=L && F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     74: [22] -> [21] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+     89: f25 -> f25 : Q'=free_7+Q, J'=J+F, O'=free_7, [ G>=J && J>=Q && F>=1+free_7 ], cost: 2
+     90: f25 -> f25 : Q'=Q-free_19+free_8, J'=J+F, K'=2*meter+K, O'=free_8, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F && free_19>=F && Q>=1+free_19 && free_8>=F && free_8>=Q-free_19 ], cost: 4+2*meter
+     91: f25 -> f25 : Q'=Q-free_19+free_8, J'=J+F, K'=2*meter+K, O'=free_8, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F && free_19>=F && Q>=1+free_19 && F>=1+free_8 ], cost: 4+2*meter
+     92: f25 -> f25 : Q'=Q+free_19, J'=J+F, K'=2*meter+K, O'=free_19, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F && free_19>=F && free_19>=Q ], cost: 3+2*meter
+     93: f25 -> f25 : Q'=Q+free_19, J'=J+F, K'=2*meter+K, O'=free_19, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F && F>=1+free_19 ], cost: 3+2*meter
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: f25 -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: f25 -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+     98: f55 -> [22] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+     99: f55 -> [22] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    100: f55 -> [22] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    101: f55 -> [22] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L ], cost: 3+2*K-2*L
+    102: f55 -> [22] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     13: [22] -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     76: [22] -> [17] : [ P>=L && F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     74: [22] -> [21] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+
+
+Try instantiation
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+    103: f25 -> f25 : Q'=-1+Q, J'=-1+J, K'=2*meter+K, O'=-1, [ G>=J && Q>=1+J && 2*meter==-1+J-K && L>=1+H && -1+J>=2+K && 1+2*meter+K>=-1+J && -1>=0 && free_19==-1 && F==-1 ], cost: 3+2*meter
+    104: f25 -> f25 : Q'=-1+Q, J'=1+J, K'=2*meter+K, O'=-1, [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && 1+2*meter+K>=1+J && 1>=0 && free_19==-1 && F==1 ], cost: 3+2*meter
+    105: f25 -> f25 : Q'=1+Q, J'=-1+J, K'=2*meter+K, O'=1, [ G>=J && Q>=1+J && 2*meter==-1+J-K && L>=1+H && -1+J>=2+K && 1+2*meter+K>=-1+J && -1>=2 && free_19==1 && F==-1 ], cost: 3+2*meter
+    106: f25 -> f25 : Q'=1+Q, J'=1+J, K'=2*meter+K, O'=1, [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && 1+2*meter+K>=1+J && 1>=2 && free_19==1 && F==1 ], cost: 3+2*meter
+    107: f25 -> f25 : Q'=-1+Q, J'=-1+J, K'=2*meter+K, O'=-1, [ G>=J && Q>=1+J && 2*meter==-1+J-K && L>=1+H && -1+J>=2+K && 1+2*meter+K>=-1+J && -1>=-1 && -1>=Q && free_19==-1 && F==-1 ], cost: 3+2*meter
+    108: f25 -> f25 : Q'=-1+Q, J'=1+J, K'=2*meter+K, O'=-1, [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && 1+2*meter+K>=1+J && -1>=1 && -1>=Q && free_19==-1 && F==1 ], cost: 3+2*meter
+    109: f25 -> f25 : Q'=1+Q, J'=-1+J, K'=2*meter+K, O'=1, [ G>=J && Q>=1+J && 2*meter==-1+J-K && L>=1+H && -1+J>=2+K && 1+2*meter+K>=-1+J && 1>=-1 && 1>=Q && free_19==1 && F==-1 ], cost: 3+2*meter
+    110: f25 -> f25 : Q'=1+Q, J'=1+J, K'=2*meter+K, O'=1, [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && 1+2*meter+K>=1+J && 1>=1 && 1>=Q && free_19==1 && F==1 ], cost: 3+2*meter
+    111: f25 -> f25 : Q'=Q-free_19+free_8, J'=J+F, K'=2*meter+K, O'=free_8, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F && free_19>=F && Q>=1+free_19 && F>=1+free_8 ], cost: 4+2*meter
+    112: f25 -> f25 : Q'=Q-free_19+free_8, J'=J+F, K'=2*meter+K, O'=free_8, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && 1+2*meter+K>=J+F && free_19>=F && Q>=1+free_19 && free_8>=F && free_8>=Q-free_19 ], cost: 4+2*meter
+    113: f25 -> f25 : Q'=-1+J+Q-G, J'=1+G, O'=-1, [ 2*G>=J+Q && G>=J && J>=Q && F<=1 && F>=1 ], cost: 2-2*J+2*G
+     19: f25 -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: f25 -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: f25 -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+     98: f55 -> [22] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+     99: f55 -> [22] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    100: f55 -> [22] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    101: f55 -> [22] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L ], cost: 3+2*K-2*L
+    102: f55 -> [22] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     13: [22] -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     76: [22] -> [17] : [ P>=L && F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     74: [22] -> [21] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+
+Eliminating 11 self-loops for location f25
+  Self-Loop 103 has unbounded runtime, resulting in the new transition 114.
+  Self-Loop 105 has unbounded runtime, resulting in the new transition 118.
+  Self-Loop 106 has unbounded runtime, resulting in the new transition 119.
+  Self-Loop 108 has unbounded runtime, resulting in the new transition 121.
+  Self-Loop 116 has unbounded runtime, resulting in the new transition 127.
+  Removing the self-loops: 103 104 105 106 107 108 109 110 111 112 113 115 116.
+Adding an epsilon transition (to model nonexecution of the loops): 128.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      1: f17 -> f25 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+    114: f25 -> [23] : [ -1>=0 ], cost: INF
+    117: f25 -> [23] : Q'=-1+Q, J'=1+J, K'=2*meter+K, O'=-1, [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && F==1 ], cost: 3+2*meter
+    118: f25 -> [23] : [ -1>=2 ], cost: INF
+    119: f25 -> [23] : [ 1>=2 ], cost: INF
+    120: f25 -> [23] : Q'=-1+Q, J'=-1+J, K'=2*meter+K, O'=-1, [ G>=J && Q>=1+J && 2*meter==-1+J-K && L>=1+H && -1+J>=2+K && -1>=Q && F==-1 ], cost: 3+2*meter
+    121: f25 -> [23] : [ -1>=1 ], cost: INF
+    122: f25 -> [23] : Q'=1+Q, J'=-1+J, K'=2*meter+K, O'=1, [ G>=J && Q>=1+J && 2*meter==-1+J-K && L>=1+H && -1+J>=2+K && 1>=Q && F==-1 ], cost: 3+2*meter
+    123: f25 -> [23] : Q'=1+Q, J'=1+J, K'=2*meter+K, O'=1, [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && 1>=Q && F==1 ], cost: 3+2*meter
+    124: f25 -> [23] : Q'=Q-free_19+free_8, J'=J+F, K'=2*meter+K, O'=free_8, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && free_19>=F && Q>=1+free_19 && F>=1+free_8 ], cost: 4+2*meter
+    125: f25 -> [23] : Q'=Q-free_19+free_8, J'=J+F, K'=2*meter+K, O'=free_8, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K && free_19>=F && Q>=1+free_19 && free_8>=F && free_8>=Q-free_19 ], cost: 4+2*meter
+    126: f25 -> [23] : Q'=-1+J+Q-G, J'=1+G, O'=-1, [ 2*G>=J+Q && G>=J && J>=Q && -1+F==0 ], cost: 2-2*J+2*G
+    127: f25 -> [23] : [ G>=J && Q>=1+J && 2*meter==1+J-K && L>=1+H && 1+J>=2+K && F==1 && J>Q ], cost: INF
+    128: f25 -> [23] : [], cost: 0
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+     98: f55 -> [22] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+     99: f55 -> [22] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    100: f55 -> [22] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    101: f55 -> [22] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L ], cost: 3+2*K-2*L
+    102: f55 -> [22] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P ], cost: 1
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     13: [22] -> f55 : P'=Q_1, [ L>=1+P ], cost: 1
+     76: [22] -> [17] : [ P>=L && F+L>=2+K && H>=-1+J && Q_1>=-1 && H>=J && Q_1<=-1 ], cost: INF
+     74: [22] -> [21] : K'=2*meter_2+K, [ P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 1+2*meter_2
+     19: [23] -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: [23] -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: [23] -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+    129: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=0, J'=1+J, K'=2*meter+K, O'=-1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && free_1==1 ], cost: 4+2*meter
+    130: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=-1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==-1+J-K && L>=1+free_4 && -1+J>=2+K && 1>=1 && free_1==-1 ], cost: 4+2*meter
+    131: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && 1>=1 && free_1==1 ], cost: 4+2*meter
+    134: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=J-free_3, J'=1+free_3, O'=-1, [ B>=1 && 2*free_3>=1+J && free_3>=J && J>=1 && -1+free_1==0 ], cost: 3-2*J+2*free_3
+    135: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+    136: f55 -> f55 : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    142: f55 -> f55 : L'=1+P, P'=free_13, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L && 1+P>=1+P ], cost: 4+2*P-2*L
+    145: f55 -> f55 : L'=1+K, P'=free_13, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && 1+K>=1+P ], cost: 4+2*K-2*L
+    148: f55 -> f55 : P'=free_13, Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && L>=1+P ], cost: 2
+    146: f55 -> [17] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 1+F+K>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    149: f55 -> [17] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && F+L>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    138: f55 -> [21] : K'=4*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && P>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K ], cost: 4+4*meter_2
+    147: f55 -> [21] : K'=2*meter_2+K, L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 2*meter_2==1+F && J>=1+H && 1+F+K>=2+K ], cost: 4+2*meter_2+2*K-2*L
+    150: f55 -> [21] : K'=2*meter_2+K, Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2+2*meter_2
+    137: f55 -> [24] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+    139: f55 -> [25] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    140: f55 -> [26] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    141: f55 -> [27] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    143: f55 -> [28] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    144: f55 -> [29] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     19: [23] -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: [23] -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: [23] -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+
+
+Try instantiation
+  Start location: start
+    129: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=0, J'=1+J, K'=2*meter+K, O'=-1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && free_1==1 ], cost: 4+2*meter
+    130: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=-1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==-1+J-K && L>=1+free_4 && -1+J>=2+K && 1>=1 && free_1==-1 ], cost: 4+2*meter
+    131: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && 1>=1 && free_1==1 ], cost: 4+2*meter
+    134: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=J-free_3, J'=1+free_3, O'=-1, [ B>=1 && 2*free_3>=1+J && free_3>=J && J>=1 && -1+free_1==0 ], cost: 3-2*J+2*free_3
+    135: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+     14: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+    151: f55 -> f55 : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    152: f55 -> f55 : [ L>=1+P && G>=1+P ], cost: INF
+    146: f55 -> [17] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 1+F+K>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    149: f55 -> [17] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && F+L>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    138: f55 -> [21] : K'=4*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && P>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K ], cost: 4+4*meter_2
+    147: f55 -> [21] : K'=2*meter_2+K, L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 2*meter_2==1+F && J>=1+H && 1+F+K>=2+K ], cost: 4+2*meter_2+2*K-2*L
+    150: f55 -> [21] : K'=2*meter_2+K, Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2+2*meter_2
+    137: f55 -> [24] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+    139: f55 -> [25] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    140: f55 -> [26] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    141: f55 -> [27] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    143: f55 -> [28] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    144: f55 -> [29] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     19: [23] -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: [23] -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: [23] -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+
+Eliminating 2 self-loops for location f55
+  Removing the self-loops: 151 152.
+Adding an epsilon transition (to model nonexecution of the loops): 155.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+    129: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=0, J'=1+J, K'=2*meter+K, O'=-1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && free_1==1 ], cost: 4+2*meter
+    130: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=-1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==-1+J-K && L>=1+free_4 && -1+J>=2+K && 1>=1 && free_1==-1 ], cost: 4+2*meter
+    131: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && 1>=1 && free_1==1 ], cost: 4+2*meter
+    134: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=J-free_3, J'=1+free_3, O'=-1, [ B>=1 && 2*free_3>=1+J && free_3>=J && J>=1 && -1+free_1==0 ], cost: 3-2*J+2*free_3
+    135: f17 -> [23] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 ], cost: 1
+    153: f55 -> [30] : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    154: f55 -> [30] : [ L>=1+P && G>=1+P ], cost: INF
+    155: f55 -> [30] : [], cost: 0
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+     19: [23] -> f55 : P'=F, [ J>=1+G ], cost: 1
+     72: [23] -> [16] : [ G>=J && Q>=1+J && J+F>=2+K && H>=-1+L && G>=-1 && H>=L && G<=-1 ], cost: INF
+     70: [23] -> [20] : K'=2*meter+K, [ G>=J && Q>=1+J && 2*meter==J+F-K && L>=1+H && J+F>=2+K ], cost: 1+2*meter
+     14: [30] -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+    146: [30] -> [17] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 1+F+K>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    149: [30] -> [17] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && F+L>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    138: [30] -> [21] : K'=4*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && P>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K ], cost: 4+4*meter_2
+    147: [30] -> [21] : K'=2*meter_2+K, L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 2*meter_2==1+F && J>=1+H && 1+F+K>=2+K ], cost: 4+2*meter_2+2*K-2*L
+    150: [30] -> [21] : K'=2*meter_2+K, Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2+2*meter_2
+    137: [30] -> [24] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+    139: [30] -> [25] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    140: [30] -> [26] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    141: [30] -> [27] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    143: [30] -> [28] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    144: [30] -> [29] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+    156: f17 -> f55 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=0, J'=1+J, K'=2*meter+K, O'=-1, P'=free_1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && free_1==1 && 1+J>=1+free_3 ], cost: 5+2*meter
+    162: f17 -> f55 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=1+J, K'=2*meter+K, O'=1, P'=free_1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && 1>=1 && free_1==1 && 1+J>=1+free_3 ], cost: 5+2*meter
+    165: f17 -> f55 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=J-free_3, J'=1+free_3, O'=-1, P'=free_1, [ B>=1 && 2*free_3>=1+J && free_3>=J && J>=1 && -1+free_1==0 && 1+free_3>=1+free_3 ], cost: 4-2*J+2*free_3
+    168: f17 -> f55 : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, P'=free_1, [ B>=1 && J>=1+free_3 ], cost: 2
+    169: f17 -> [16] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, [ B>=1 && free_3>=J && 1>=1+J && J+free_1>=2+K && free_4>=-1+L && free_3>=-1 && free_4>=L && free_3<=-1 ], cost: INF
+    170: f17 -> [20] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=1, K'=2*meter+K, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==J-K+free_1 && L>=1+free_4 && J+free_1>=2+K ], cost: 2+2*meter
+    157: f17 -> [31] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=0, J'=1+J, K'=2*meter+K, O'=-1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && free_1==1 ], cost: 4+2*meter
+    158: f17 -> [32] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=0, J'=1+J, K'=2*meter+K, O'=-1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && free_1==1 ], cost: 4+2*meter
+    159: f17 -> [33] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=-1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==-1+J-K && L>=1+free_4 && -1+J>=2+K && 1>=1 && free_1==-1 ], cost: 4+2*meter
+    160: f17 -> [34] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=-1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==-1+J-K && L>=1+free_4 && -1+J>=2+K && 1>=1 && free_1==-1 ], cost: 4+2*meter
+    161: f17 -> [35] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=-1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==-1+J-K && L>=1+free_4 && -1+J>=2+K && 1>=1 && free_1==-1 ], cost: 4+2*meter
+    163: f17 -> [36] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && 1>=1 && free_1==1 ], cost: 4+2*meter
+    164: f17 -> [37] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=2, J'=1+J, K'=2*meter+K, O'=1, [ B>=1 && free_3>=J && 1>=1+J && 2*meter==1+J-K && L>=1+free_4 && 1+J>=2+K && 1>=1 && free_1==1 ], cost: 4+2*meter
+    166: f17 -> [38] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=J-free_3, J'=1+free_3, O'=-1, [ B>=1 && 2*free_3>=1+J && free_3>=J && J>=1 && -1+free_1==0 ], cost: 3-2*J+2*free_3
+    167: f17 -> [39] : D'=free_5, E'=free_2, F'=free_1, G'=free_3, H'=free_4, Q'=J-free_3, J'=1+free_3, O'=-1, [ B>=1 && 2*free_3>=1+J && free_3>=J && J>=1 && -1+free_1==0 ], cost: 3-2*J+2*free_3
+    171: f55 -> f17 : B'=-1+B, K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, A1'=free_18, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P && free_13>=G ], cost: 5+2*meter_2
+    195: f55 -> f17 : B'=-1+B, A1'=free_18, [ P>=G ], cost: 1
+    196: f55 -> [17] : L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 1+F+K>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    197: f55 -> [17] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && F+L>=2+K && H>=-1+J && free_13>=-1 && H>=J && free_13<=-1 ], cost: INF
+    174: f55 -> [21] : K'=6*meter_2+K, L'=2*F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P && G>=1+free_13 && free_13>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K && free_13>=2*F+L && 2*meter_2==-4*meter_2+3*F-K+L && J>=1+H && 3*F+L>=2+4*meter_2+K ], cost: 8+6*meter_2
+    176: f55 -> [21] : K'=4*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P && G>=1+free_13 && free_13>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K ], cost: 6+4*meter_2
+    198: f55 -> [21] : K'=4*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && P>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K ], cost: 4+4*meter_2
+    199: f55 -> [21] : K'=2*meter_2+K, L'=1+K, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=K && 1-F==0 && P>=L && K>=L && P>=1+K && 2*meter_2==1+F && J>=1+H && 1+F+K>=2+K ], cost: 4+2*meter_2+2*K-2*L
+    200: f55 -> [21] : K'=2*meter_2+K, Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 2+2*meter_2
+    177: f55 -> [24] : K'=4*meter_2+K, L'=2*F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P && G>=1+free_13 && free_13>=F+L && 2*meter_2==-2*meter_2+2*F-K+L && J>=1+H && 2*F+L>=2+2*meter_2+K ], cost: 7+4*meter_2
+    201: f55 -> [24] : K'=2*meter_2+K, L'=F+L, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K ], cost: 3+2*meter_2
+    202: f55 -> [25] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    203: f55 -> [26] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    204: f55 -> [27] : Q_1'=free_13, R'=free_10, S'=free_9, T'=free_11, U'=free_12, V'=1, W'=0, [ G>=1+P && K>=-3+L && F>=-1 && P>=L && K>=-2+L && F<=-1 && P>=-1+L ], cost: INF
+    181: f55 -> [28] : K'=2*meter_2+K, L'=1+free_13, P'=free_13, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P && G>=1+free_13 && 2*meter_2+K>=free_13 && 1-F==0 && free_13>=F+L && 2*meter_2+K>=F+L ], cost: 7+2*free_13+2*meter_2-2*F-2*L
+    205: f55 -> [28] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    182: f55 -> [29] : K'=2*meter_2+K, L'=1+free_13, P'=free_13, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P && G>=1+free_13 && 2*meter_2+K>=free_13 && 1-F==0 && free_13>=F+L && 2*meter_2+K>=F+L ], cost: 7+2*free_13+2*meter_2-2*F-2*L
+    206: f55 -> [29] : L'=1+P, Q_1'=free_13, R'=free_10, S'=free_17, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && K>=P && 1-F==0 && P>=L && K>=L ], cost: 3+2*P-2*L
+    172: f55 -> [40] : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    173: f55 -> [41] : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    178: f55 -> [42] : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    179: f55 -> [43] : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    180: f55 -> [44] : K'=2*meter_2+K, L'=F+L, P'=free_13, Q_1'=free_13, R'=free_10, S'=1, T'=free_11, U'=free_12, V'=free_17, W'=free_16, [ G>=1+P && P>=L && 2*meter_2==F-K+L && J>=1+H && F+L>=2+K && F+L>=1+P ], cost: 4+2*meter_2
+    183: f55 -> [45] : [ L>=1+P && G>=1+P ], cost: INF
+    184: f55 -> [46] : [ L>=1+P && G>=1+P ], cost: INF
+    185: f55 -> [47] : [ L>=1+P && G>=1+P ], cost: INF
+    186: f55 -> [48] : [ L>=1+P && G>=1+P ], cost: INF
+    187: f55 -> [49] : [ L>=1+P && G>=1+P ], cost: INF
+    188: f55 -> [50] : [ L>=1+P && G>=1+P ], cost: INF
+    189: f55 -> [51] : [ L>=1+P && G>=1+P ], cost: INF
+    190: f55 -> [52] : [ L>=1+P && G>=1+P ], cost: INF
+    191: f55 -> [53] : [ L>=1+P && G>=1+P ], cost: INF
+    192: f55 -> [54] : [ L>=1+P && G>=1+P ], cost: INF
+    193: f55 -> [55] : [ L>=1+P && G>=1+P ], cost: INF
+    194: f55 -> [56] : [ L>=1+P && G>=1+P ], cost: INF
+     51: start -> f17 : B'=1+A, C'=free, A1'=1, [ A>=B && 1+A>=1+A ], cost: 3-B+A
+     52: start -> f17 : A1'=1, [ B>=1+A ], cost: 2
+

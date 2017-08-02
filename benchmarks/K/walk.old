@@ -1,0 +1,74 @@
+Trying to load file: walk.koat
+
+Initial Control flow graph problem:
+  Start location: f22
+      0: f17 -> f17 : B'=free, D'=1+D, E'=free_1, [ A>=1+B && C>=0 && D>=0 ], cost: 1
+      1: f17 -> f17 : B'=free_2, D'=1+D, E'=free_3, [ B>=1+A && C>=0 && D>=0 ], cost: 1
+      4: f17 -> f20 : A'=B, G'=free_8, [ C>=0 && D>=0 && B==A ], cost: 1
+      2: f18 -> f17 : B'=free_4, D'=1, E'=free_5, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_6, D'=1, E'=free_7, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_9, Q'=2, J'=free_10, K'=free_10, L'=free_10, M'=free_10, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_11, Q'=2, J'=free_12, K'=free_12, L'=free_12, M'=free_12, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f22
+      0: f17 -> f17 : B'=free, D'=1+D, E'=free_1, [ A>=1+B && C>=0 && D>=0 ], cost: 1
+      1: f17 -> f17 : B'=free_2, D'=1+D, E'=free_3, [ B>=1+A && C>=0 && D>=0 ], cost: 1
+      2: f18 -> f17 : B'=free_4, D'=1, E'=free_5, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_6, D'=1, E'=free_7, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_9, Q'=2, J'=free_10, K'=free_10, L'=free_10, M'=free_10, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_11, Q'=2, J'=free_12, K'=free_12, L'=free_12, M'=free_12, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+Eliminating 2 self-loops for location f17
+  Removing the self-loops: 0 1.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f22
+      7: f17 -> f17 : B'=free, D'=1+D, E'=free_1, [ A>=1+B && C>=0 && D>=0 ], cost: 1
+      8: f17 -> f17 : B'=free_2, D'=1+D, E'=free_3, [ B>=1+A && C>=0 && D>=0 ], cost: 1
+      2: f18 -> f17 : B'=free_4, D'=1, E'=free_5, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_6, D'=1, E'=free_7, [ F>=0 && B>=1+A ], cost: 1
+      5: f22 -> f18 : B'=H, G'=free_9, Q'=2, J'=free_10, K'=free_10, L'=free_10, M'=free_10, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_11, Q'=2, J'=free_12, K'=free_12, L'=free_12, M'=free_12, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+
+Chained simpled loops:
+  Start location: f22
+      2: f18 -> f17 : B'=free_4, D'=1, E'=free_5, [ F>=0 && A>=1+B ], cost: 1
+      3: f18 -> f17 : B'=free_6, D'=1, E'=free_7, [ F>=0 && B>=1+A ], cost: 1
+      9: f18 -> f17 : B'=free, D'=2, E'=free_1, [ F>=0 && A>=1+B && A>=1+free_4 && C>=0 && 1>=0 ], cost: 2
+     10: f18 -> f17 : B'=free, D'=2, E'=free_1, [ F>=0 && B>=1+A && A>=1+free_6 && C>=0 && 1>=0 ], cost: 2
+     11: f18 -> f17 : B'=free_2, D'=2, E'=free_3, [ F>=0 && A>=1+B && free_4>=1+A && C>=0 && 1>=0 ], cost: 2
+     12: f18 -> f17 : B'=free_2, D'=2, E'=free_3, [ F>=0 && B>=1+A && free_6>=1+A && C>=0 && 1>=0 ], cost: 2
+      5: f22 -> f18 : B'=H, G'=free_9, Q'=2, J'=free_10, K'=free_10, L'=free_10, M'=free_10, N'=3, O'=0, [ A>=1+H && F>=0 ], cost: 1
+      6: f22 -> f18 : B'=H, G'=free_11, Q'=2, J'=free_12, K'=free_12, L'=free_12, M'=free_12, N'=3, O'=0, [ H>=1+A && F>=0 ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: f22
+    <empty>
+
+
+Pruned:
+  Start location: f22
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f22
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

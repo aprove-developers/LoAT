@@ -1,0 +1,47 @@
+Trying to load file: jacobi.c.i.jacobi.pl.t2.fixed.koat
+
+Initial Control flow graph problem:
+  Start location: f2
+      0: f2 -> f5 : [], cost: 1
+      1: f5 -> f8 : [ A>=B ], cost: 1
+     41: f5 -> f17 : [ B>=1+A ], cost: 1
+     40: f8 -> f5 : B'=1+B, [ C>=1+A ], cost: 1
+      2: f8 -> f8 : C'=1+C, [ A>=C ], cost: 1
+      3: f17 -> f17 : B'=1+B, D'=free, [ A>=B ], cost: 1
+     39: f17 -> f27 : [ B>=1+A ], cost: 1
+      4: f27 -> f31 : F'=0, [ 50>=E ], cost: 1
+     38: f27 -> f1 : [ E>=51 ], cost: 1
+      5: f31 -> f34 : [ A>=1+B ], cost: 1
+     35: f31 -> f46 : [ B>=A && 0>=1+F ], cost: 1
+     36: f31 -> f46 : [ B>=A && F>=1 ], cost: 1
+     37: f31 -> f1 : F'=0, [ B>=A && F==0 ], cost: 1
+     34: f34 -> f31 : B'=1+B, [ C>=1+A ], cost: 1
+      6: f34 -> f34 : C'=1+C, F'=F+free_1, G'=free_1, [ A>=C ], cost: 1
+      7: f46 -> f50 : H'=free_2, [ 3>=E ], cost: 1
+      8: f46 -> f50 : H'=0, [ E>=4 ], cost: 1
+      9: f50 -> f53 : [ A>=1+B ], cost: 1
+     33: f50 -> f132 : [ B>=A ], cost: 1
+     32: f53 -> f50 : B'=1+B, [ C>=1+A ], cost: 1
+     11: f53 -> f53 : C'=1+C, J'=free_3, K'=100*free_3, L'=free_4, M'=free_4+100*free_3, N'=free_5, O'=100*free_3+free_5, [ A>=C && E>=5 ], cost: 1
+     12: f53 -> f69 : Q'=free_6, J'=free_7, K'=100*free_7, [ A>=C && 4>=E ], cost: 1
+     13: f53 -> f69 : Q'=free_8, J'=free_9, K'=100*free_9, L'=free_10, M'=100*free_9+free_10, N'=free_11, O'=free_12, [ E>=5 && A>=C && free_12>=1+free_11+100*free_9 ], cost: 1
+     14: f53 -> f69 : Q'=free_13, J'=free_14, K'=100*free_14, L'=free_15, M'=free_15+100*free_14, N'=free_16, O'=free_17, [ E>=5 && A>=C && free_16+100*free_14>=1+free_17 ], cost: 1
+     15: f53 -> f69 : Q'=free_18, J'=free_19, K'=100*free_19, L'=free_20, M'=free_21, [ E>=5 && A>=C && free_21>=1+free_20+100*free_19 ], cost: 1
+     16: f53 -> f69 : Q'=free_22, J'=free_23, K'=100*free_23, L'=free_24, M'=free_25, [ E>=5 && A>=C && 100*free_23+free_24>=1+free_25 ], cost: 1
+     10: f69 -> f53 : C'=1+C, [ H>=Q ], cost: 1
+     17: f69 -> f80 : P'=-free_27+free_26, Q_1'=free_28, R'=free_29, S'=free_30, T'=free_31, U'=free_32, V'=free_33, [ free_29>=1+K+free_28 && 1>=free_33*free_34+free_32*free_34 && free_33*free_34+free_34+free_32*free_34>=2 && free_30>=free_34 && 1>=free_32*free_35+free_33*free_35 && free_32*free_35+free_33*free_35+free_35>=2 && free_35>=free_30 && Q>=1+H ], cost: 1
+     18: f69 -> f80 : P'=free_36-free_37, Q_1'=free_38, R'=free_39, S'=free_40, T'=free_41, U'=free_42, V'=free_43, [ K+free_38>=1+free_39 && 1>=free_42*free_44+free_43*free_44 && free_42*free_44+free_44+free_43*free_44>=2 && free_40>=free_44 && 1>=free_42*free_45+free_43*free_45 && free_42*free_45+free_43*free_45+free_45>=2 && free_45>=free_40 && Q>=1+H ], cost: 1
+     20: f69 -> f92 : P'=free_61, Q_1'=free_62, R'=K+free_62, S'=free_63, W'=free_64, X'=free_65, Y'=free_66, Z'=free_67, [ free_68>=free_64*free_69*free_68 && free_69+free_64*free_69*free_68>=1+free_68 && free_71>=free_64*free_71*free_70 && free_64*free_71*free_70+free_70>=1+free_71 && free_73>=free_64*free_73*free_72 && free_64*free_73*free_72+free_72>=1+free_73 && free_69+free_72*free_74>=free_74*free_70 && free_74+free_74*free_70>=1+free_69+free_72*free_74 && free_74>=free_66 && free_68>=free_75*free_64*free_68 && free_75+free_75*free_64*free_68>=1+free_68 && free_71>=free_64*free_71*free_76 && free_76+free_64*free_71*free_76>=1+free_71 && free_73>=free_64*free_77*free_73 && free_77+free_64*free_77*free_73>=1+free_73 && free_75+free_77*free_78>=free_76*free_78 && free_76*free_78+free_78>=1+free_75+free_77*free_78 && free_66>=free_78 && free_68>=free_64*free_79*free_68 && free_64*free_79*free_68+free_79>=1+free_68 && free_71>=free_64*free_80*free_71 && free_80+free_64*free_80*free_71>=1+free_71 && free_73>=free_64*free_73*free_81 && free_64*free_73*free_81+free_81>=1+free_73 && free_79+free_82*free_81>=free_80*free_82 && free_82+free_80*free_82>=1+free_79+free_82*free_81 && 1>=free_64*free_83 && free_83+free_64*free_83>=2 && free_82>=free_83*free_84+free_84 && free_83*free_84+2*free_84>=1+free_82 && free_84>=free_67 && free_68>=free_64*free_85*free_68 && free_64*free_85*free_68+free_85>=1+free_68 && free_71>=free_64*free_71*free_86 && free_64*free_71*free_86+free_86>=1+free_71 && free_73>=free_64*free_87*free_73 && free_64*free_87*free_73+free_87>=1+free_73 && free_85+free_87*free_88>=free_88*free_86 && free_88*free_86+free_88>=1+free_85+free_87*free_88 && 1>=free_64*free_89 && free_64*free_89+free_89>=2 && free_88>=free_89*free_90+free_90 && free_89*free_90+2*free_90>=1+free_88 && free_67>=free_90 && free_91*free_73+free_68>=free_91*free_71 && free_91+free_91*free_71>=1+free_91*free_73+free_68 && free_91>=free_63 && free_92*free_73+free_68>=free_71*free_92 && free_71*free_92+free_92>=1+free_92*free_73+free_68 && free_63>=free_92 && free_93*free_68+free_93*free_73*free_94>=free_93*free_71*free_94 && free_93*free_71*free_94+free_94>=1+free_93*free_68+free_93*free_73*free_94 && free_94>=free_61 && free_93*free_73*free_95+free_93*free_68>=free_93*free_71*free_95 && free_95+free_93*free_71*free_95>=1+free_93*free_73*free_95+free_93*free_68 && free_61>=free_95 && 1>=free_64*free_96 && free_96+free_64*free_96>=2 && free_65>=free_96 && 1>=free_64*free_97 && free_64*free_97+free_97>=2 && free_97>=free_65 && Q>=1+H ], cost: 1
+     19: f80 -> f92 : P'=S*free_46, W'=free_47, X'=free_48, Y'=free_49, Z'=free_50, [ T>=0 && S>=free_47*S*free_51 && free_47*S*free_51+free_51>=1+S && free_51>=free_49 && S>=free_47*free_52*S && free_52+free_47*free_52*S>=1+S && free_49>=free_52 && 1>=free_53*free_47 && free_53+free_53*free_47>=2 && free_48>=free_53 && 1>=free_47*free_54 && free_47*free_54+free_54>=2 && free_54>=free_48 && S>=free_47*free_55*S && free_55+free_47*free_55*S>=1+S && 1>=free_47*free_56 && free_47*free_56+free_56>=2 && free_55>=free_57*free_56+free_57 && free_57*free_56+2*free_57>=1+free_55 && free_57>=free_50 && S>=free_58*free_47*S && free_58*free_47*S+free_58>=1+S && 1>=free_47*free_59 && free_47*free_59+free_59>=2 && free_58>=free_59*free_60+free_60 && free_59*free_60+2*free_60>=1+free_58 && free_50>=free_60 ], cost: 1
+     21: f80 -> f92 : P'=-free_98*S, S'=-S, W'=free_99, X'=free_100, Y'=-S*free_101, Z'=free_102, [ 1>=free_99*free_101 && free_101+free_99*free_101>=2 && 0>=1+T && 1>=free_103*free_99 && free_103+free_103*free_99>=2 && free_100>=free_103 && 1>=free_99*free_104 && free_104+free_99*free_104>=2 && free_104>=free_100 && 1>=free_105*free_99 && free_105+free_105*free_99>=2 && 1>=free_99*free_106 && free_99*free_106+free_106>=2 && 0>=free_107+free_105*S+free_107*free_106 && 2*free_107+free_105*S+free_107*free_106>=1 && free_102>=free_107 && 1>=free_108*free_99 && free_108*free_99+free_108>=2 && 1>=free_109*free_99 && free_109+free_109*free_99>=2 && 0>=free_108*S+free_110+free_109*free_110 && free_108*S+2*free_110+free_109*free_110>=1 && free_110>=free_102 ], cost: 1
+     22: f92 -> f92 : K'=free_111, P'=free_112, A1'=1+A1, [ B>=1+A1 ], cost: 1
+     31: f92 -> f101 : [ A1>=B ], cost: 1
+     23: f101 -> f101 : K'=free_113, P'=free_114, A1'=1+A1, [ C>=1+A1 ], cost: 1
+     30: f101 -> f110 : [ A1>=C ], cost: 1
+     24: f110 -> f110 : K'=free_115, P'=free_116, A1'=1+A1, [ A>=A1 ], cost: 1
+     29: f110 -> f119 : [ A1>=1+A ], cost: 1
+     28: f119 -> f53 : C'=1+C, [ A1>=1+A ], cost: 1
+     25: f119 -> f119 : K'=free_117, P'=free_118, A1'=1+A1, [ A>=A1 ], cost: 1
+     27: f132 -> f27 : E'=1+E, [ B>=1+A ], cost: 1
+     26: f132 -> f132 : B'=1+B, [ A>=B ], cost: 1
+

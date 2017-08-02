@@ -1,0 +1,192 @@
+Trying to load file: ex3.koat
+
+Initial Control flow graph problem:
+  Start location: evalfstart
+      0: evalfstart -> evalfentryin : [], cost: 1
+      1: evalfentryin -> evalfbb9in : A'=B, [], cost: 1
+      2: evalfbb9in -> evalfbbin : [ B>=2 ], cost: 1
+      3: evalfbb9in -> evalfreturnin : [ 1>=B ], cost: 1
+      4: evalfbbin -> evalfbb6in : C'=-1+B, D'=-1+B+A, [], cost: 1
+     19: evalfreturnin -> evalfstop : [], cost: 1
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+      6: evalfbb6in -> evalfbb7in : [ D>=1+C ], cost: 1
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+      9: evalfbb7in -> evalfbb8in : [], cost: 1
+      7: evalfbb7in -> evalfbb1in : [ 0>=1+free ], cost: 1
+      8: evalfbb7in -> evalfbb1in : [ free_1>=1 ], cost: 1
+     10: evalfbb1in -> evalfbb3in : E'=C, F'=-1+D, [], cost: 1
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     12: evalfbb3in -> evalfbb4in : [ 0>=3 ], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+     15: evalfbb4in -> evalfbb5in : [], cost: 1
+     13: evalfbb4in -> evalfbb2in : [ 0>=1+free_2 ], cost: 1
+     14: evalfbb4in -> evalfbb2in : [ free_3>=1 ], cost: 1
+     16: evalfbb2in -> evalfbb3in : E'=1+E, F'=-2+F, [], cost: 1
+
+Removing duplicate transition: 7.
+Removing duplicate transition: 13.
+
+Simplified the transitions:
+  Start location: evalfstart
+      0: evalfstart -> evalfentryin : [], cost: 1
+      1: evalfentryin -> evalfbb9in : A'=B, [], cost: 1
+      2: evalfbb9in -> evalfbbin : [ B>=2 ], cost: 1
+      4: evalfbbin -> evalfbb6in : C'=-1+B, D'=-1+B+A, [], cost: 1
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+      6: evalfbb6in -> evalfbb7in : [ D>=1+C ], cost: 1
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+      9: evalfbb7in -> evalfbb8in : [], cost: 1
+      8: evalfbb7in -> evalfbb1in : [], cost: 1
+     10: evalfbb1in -> evalfbb3in : E'=C, F'=-1+D, [], cost: 1
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     12: evalfbb3in -> evalfbb4in : [ 0>=3 ], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+     15: evalfbb4in -> evalfbb5in : [], cost: 1
+     14: evalfbb4in -> evalfbb2in : [], cost: 1
+     16: evalfbb2in -> evalfbb3in : E'=1+E, F'=-2+F, [], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+      6: evalfbb6in -> evalfbb7in : [ D>=1+C ], cost: 1
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+      9: evalfbb7in -> evalfbb8in : [], cost: 1
+      8: evalfbb7in -> evalfbb3in : E'=C, F'=-1+D, [], cost: 2
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     12: evalfbb3in -> evalfbb4in : [ 0>=3 ], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+     14: evalfbb4in -> evalfbb3in : E'=1+E, F'=-2+F, [], cost: 2
+     15: evalfbb4in -> evalfbb5in : [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     21: evalfbb6in -> evalfbb3in : E'=C, F'=-1+D, [ D>=1+C ], cost: 3
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+     21: evalfbb6in -> evalfbb6in : C'=C, D'=-2+D, E'=C, F'=-1+D, [ D>=1+C ], cost: 5
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+
+
+Try instantiation
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+     22: evalfbb6in -> evalfbb6in : C'=C, D'=D-2*meter, E'=C, F'=1+D-2*meter, [ D-2*meter>=-1+C && 2*meter==1+D-C && D>=1+C ], cost: 5*meter
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+
+Eliminating 1 self-loops for location evalfbb6in
+  Removing the self-loops: 22.
+Adding an epsilon transition (to model nonexecution of the loops): 24.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+     23: evalfbb6in -> [14] : D'=D-2*meter, E'=C, F'=1+D-2*meter, [ 2*meter==1+D-C && D>=1+C ], cost: 5*meter
+     24: evalfbb6in -> [14] : [], cost: 0
+     18: evalfbb8in -> evalfbb9in : A'=1+D-C, B'=-1+C, [], cost: 1
+      5: [14] -> evalfbb8in : [ C>=D ], cost: 1
+     20: [14] -> evalfbb8in : [ D>=1+C ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     25: evalfbb9in -> [14] : C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B ], cost: 2+5*meter
+     26: evalfbb9in -> [14] : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+     27: [14] -> evalfbb9in : A'=1+D-C, B'=-1+C, [ C>=D ], cost: 2
+     28: [14] -> evalfbb9in : A'=1+D-C, B'=-1+C, [ D>=1+C ], cost: 3
+
+
+Applied chaining over branches and pruning:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     29: evalfbb9in -> evalfbb9in : A'=1-2*meter+A, B'=-2+B, C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B && -1+B>=-1-2*meter+B+A ], cost: 4+5*meter
+     31: evalfbb9in -> evalfbb9in : A'=1+A, B'=-2+B, C'=-1+B, D'=-1+B+A, [ B>=2 && -1+B>=-1+B+A ], cost: 4
+     32: evalfbb9in -> evalfbb9in : A'=1+A, B'=-2+B, C'=-1+B, D'=-1+B+A, [ B>=2 && -1+B+A>=B ], cost: 5
+     30: evalfbb9in -> [15] : C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B ], cost: 2+5*meter
+
+
+Try instantiation
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     33: evalfbb9in -> evalfbb9in : A'=1-2*meter+A, B'=-2+B, C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B && -1+B>=-1-2*meter+B+A ], cost: 4+5*meter
+     34: evalfbb9in -> evalfbb9in : A'=meter_1+A, B'=B-2*meter_1, C'=1+B-2*meter_1, D'=B-meter_1+A, [ B-2*meter_1>=0 && 2*meter_1==B && A>=1 && B>=2 && meter_1+A>=2 ], cost: 5*meter_1
+     35: evalfbb9in -> evalfbb9in : A'=1, B'=-2+B+2*A, C'=-1+B+2*A, D'=-1+B+2*A, [ B+2*A>=2 && 0>=A && B>=2 ], cost: 4-4*A
+     36: evalfbb9in -> evalfbb9in : A'=A+meter_2, B'=B-2*meter_2, C'=1+B-2*meter_2, D'=B+A-meter_2, [ B-2*meter_2>=0 && 2*meter_2==B && 0>=A && B>=2 && 1>=A+meter_2 ], cost: 4*meter_2
+     30: evalfbb9in -> [15] : C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B ], cost: 2+5*meter
+
+Eliminating 4 self-loops for location evalfbb9in
+  Removing the self-loops: 33 34 35 36.
+Adding an epsilon transition (to model nonexecution of the loops): 41.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     37: evalfbb9in -> [16] : A'=1-2*meter+A, B'=-2+B, C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B ], cost: 4+5*meter
+     38: evalfbb9in -> [16] : A'=meter_1+A, B'=B-2*meter_1, C'=1+B-2*meter_1, D'=B-meter_1+A, [ 2*meter_1==B && A>=1 && B>=2 && meter_1+A>=2 ], cost: 5*meter_1
+     39: evalfbb9in -> [16] : A'=1, B'=-2+B+2*A, C'=-1+B+2*A, D'=-1+B+2*A, [ B+2*A>=2 && 0>=A && B>=2 ], cost: 4-4*A
+     40: evalfbb9in -> [16] : A'=A+meter_2, B'=B-2*meter_2, C'=1+B-2*meter_2, D'=B+A-meter_2, [ 2*meter_2==B && 0>=A && B>=2 && 1>=A+meter_2 ], cost: 4*meter_2
+     41: evalfbb9in -> [16] : [], cost: 0
+     30: [16] -> [15] : C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B ], cost: 2+5*meter
+
+
+Applied chaining over branches and pruning:
+  Start location: evalfstart
+     42: evalfstart -> [16] : A'=1-2*meter+B, B'=-2+B, C'=-1+B, D'=-1-2*meter+2*B, E'=-1+B, F'=-2*meter+2*B, [ B>=2 && 2*meter==1+B && -1+2*B>=B ], cost: 6+5*meter
+     43: evalfstart -> [16] : A'=B+meter_1, B'=B-2*meter_1, C'=1+B-2*meter_1, D'=2*B-meter_1, [ 2*meter_1==B && B>=1 && B>=2 && B+meter_1>=2 ], cost: 2+5*meter_1
+     44: evalfstart -> [16] : A'=B, [], cost: 2
+     30: [16] -> [15] : C'=-1+B, D'=-1-2*meter+B+A, E'=-1+B, F'=-2*meter+B+A, [ B>=2 && 2*meter==1+A && -1+B+A>=B ], cost: 2+5*meter
+
+
+Applied chaining over branches and pruning:
+  Start location: evalfstart
+     47: evalfstart -> [15] : A'=B, C'=-1+B, D'=-1-2*meter+2*B, E'=-1+B, F'=-2*meter+2*B, [ B>=2 && 2*meter==1+B && -1+2*B>=B ], cost: 4+5*meter
+     45: evalfstart -> [17] : A'=1-2*meter+B, B'=-2+B, C'=-1+B, D'=-1-2*meter+2*B, E'=-1+B, F'=-2*meter+2*B, [ B>=2 && 2*meter==1+B && -1+2*B>=B ], cost: 6+5*meter
+     46: evalfstart -> [18] : A'=B+meter_1, B'=B-2*meter_1, C'=1+B-2*meter_1, D'=2*B-meter_1, [ 2*meter_1==B && B>=1 && B>=2 && B+meter_1>=2 ], cost: 2+5*meter_1
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalfstart
+     47: evalfstart -> [15] : A'=B, C'=-1+B, D'=-1-2*meter+2*B, E'=-1+B, F'=-2*meter+2*B, [ B>=2 && 2*meter==1+B && -1+2*B>=B ], cost: 4+5*meter
+     45: evalfstart -> [17] : A'=1-2*meter+B, B'=-2+B, C'=-1+B, D'=-1-2*meter+2*B, E'=-1+B, F'=-2*meter+2*B, [ B>=2 && 2*meter==1+B && -1+2*B>=B ], cost: 6+5*meter
+     46: evalfstart -> [18] : A'=B+meter_1, B'=B-2*meter_1, C'=1+B-2*meter_1, D'=2*B-meter_1, [ 2*meter_1==B && B>=1 && B>=2 && B+meter_1>=2 ], cost: 2+5*meter_1
+
+
+Computing complexity for remaining 3 transitions.
+
+  Found configuration with infinitely models for cost: 4+5*meter
+  and guard: B>=2 && 2*meter==1+B && -1+2*B>=B:
+  meter: Pos, B: Both
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: B>=2 && 2*meter==1+B && -1+2*B>=B
+  Final Cost:  4+5*meter
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

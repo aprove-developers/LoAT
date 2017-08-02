@@ -1,0 +1,100 @@
+Trying to load file: speedFails4.koat
+
+Initial Control flow graph problem:
+  Start location: evalspeedFails4start
+      0: evalspeedFails4start -> evalspeedFails4entryin : [], cost: 1
+      1: evalspeedFails4entryin -> evalspeedFails4bb6in : A'=1, B'=C, C'=A, D'=B, [ A>=1 ], cost: 1
+      2: evalspeedFails4entryin -> evalspeedFails4bb6in : A'=-1, B'=C, C'=A, D'=B, [ 0>=A ], cost: 1
+      3: evalspeedFails4bb6in -> evalspeedFails4bb3in : [ B>=D ], cost: 1
+      4: evalspeedFails4bb6in -> evalspeedFails4returnin : [ D>=1+B ], cost: 1
+      5: evalspeedFails4bb3in -> evalspeedFails4bb4in : [ C>=1 ], cost: 1
+      6: evalspeedFails4bb3in -> evalspeedFails4bb5in : [ 0>=C ], cost: 1
+      9: evalspeedFails4returnin -> evalspeedFails4stop : [], cost: 1
+      7: evalspeedFails4bb4in -> evalspeedFails4bb6in : D'=D+A, [], cost: 1
+      8: evalspeedFails4bb5in -> evalspeedFails4bb6in : D'=D-A, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: evalspeedFails4start
+      0: evalspeedFails4start -> evalspeedFails4entryin : [], cost: 1
+      1: evalspeedFails4entryin -> evalspeedFails4bb6in : A'=1, B'=C, C'=A, D'=B, [ A>=1 ], cost: 1
+      2: evalspeedFails4entryin -> evalspeedFails4bb6in : A'=-1, B'=C, C'=A, D'=B, [ 0>=A ], cost: 1
+      3: evalspeedFails4bb6in -> evalspeedFails4bb3in : [ B>=D ], cost: 1
+      5: evalspeedFails4bb3in -> evalspeedFails4bb4in : [ C>=1 ], cost: 1
+      6: evalspeedFails4bb3in -> evalspeedFails4bb5in : [ 0>=C ], cost: 1
+      7: evalspeedFails4bb4in -> evalspeedFails4bb6in : D'=D+A, [], cost: 1
+      8: evalspeedFails4bb5in -> evalspeedFails4bb6in : D'=D-A, [], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalspeedFails4start
+      0: evalspeedFails4start -> evalspeedFails4entryin : [], cost: 1
+      1: evalspeedFails4entryin -> evalspeedFails4bb6in : A'=1, B'=C, C'=A, D'=B, [ A>=1 ], cost: 1
+      2: evalspeedFails4entryin -> evalspeedFails4bb6in : A'=-1, B'=C, C'=A, D'=B, [ 0>=A ], cost: 1
+      3: evalspeedFails4bb6in -> evalspeedFails4bb3in : [ B>=D ], cost: 1
+      5: evalspeedFails4bb3in -> evalspeedFails4bb6in : D'=D+A, [ C>=1 ], cost: 2
+      6: evalspeedFails4bb3in -> evalspeedFails4bb6in : D'=D-A, [ 0>=C ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: evalspeedFails4start
+     10: evalspeedFails4start -> evalspeedFails4bb6in : A'=1, B'=C, C'=A, D'=B, [ A>=1 ], cost: 2
+     11: evalspeedFails4start -> evalspeedFails4bb6in : A'=-1, B'=C, C'=A, D'=B, [ 0>=A ], cost: 2
+     12: evalspeedFails4bb6in -> evalspeedFails4bb6in : D'=D+A, [ B>=D && C>=1 ], cost: 3
+     13: evalspeedFails4bb6in -> evalspeedFails4bb6in : D'=D-A, [ B>=D && 0>=C ], cost: 3
+
+
+Try instantiation
+  Start location: evalspeedFails4start
+     10: evalspeedFails4start -> evalspeedFails4bb6in : A'=1, B'=C, C'=A, D'=B, [ A>=1 ], cost: 2
+     11: evalspeedFails4start -> evalspeedFails4bb6in : A'=-1, B'=C, C'=A, D'=B, [ 0>=A ], cost: 2
+     14: evalspeedFails4bb6in -> evalspeedFails4bb6in : D'=1+B, [ B>=D && 0>=C && A<=-1 && A>=-1 ], cost: 3-3*D+3*B
+     15: evalspeedFails4bb6in -> evalspeedFails4bb6in : [ B>=D && 0>=C && A<=1 && A>=1 ], cost: INF
+     16: evalspeedFails4bb6in -> evalspeedFails4bb6in : [ B>=D && C>=1 && A<=-1 && A>=-1 ], cost: INF
+     17: evalspeedFails4bb6in -> evalspeedFails4bb6in : D'=1+B, [ B>=D && C>=1 && A<=1 && A>=1 ], cost: 3-3*D+3*B
+
+Eliminating 4 self-loops for location evalspeedFails4bb6in
+  Removing the self-loops: 14 15 16 17.
+Adding an epsilon transition (to model nonexecution of the loops): 22.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalspeedFails4start
+     10: evalspeedFails4start -> evalspeedFails4bb6in : A'=1, B'=C, C'=A, D'=B, [ A>=1 ], cost: 2
+     11: evalspeedFails4start -> evalspeedFails4bb6in : A'=-1, B'=C, C'=A, D'=B, [ 0>=A ], cost: 2
+     18: evalspeedFails4bb6in -> [8] : D'=1+B, [ B>=D && 0>=C && 1+A==0 ], cost: 3-3*D+3*B
+     19: evalspeedFails4bb6in -> [8] : [ B>=D && 0>=C && A<=1 && A>=1 ], cost: INF
+     20: evalspeedFails4bb6in -> [8] : [ B>=D && C>=1 && A<=-1 && A>=-1 ], cost: INF
+     21: evalspeedFails4bb6in -> [8] : D'=1+B, [ B>=D && C>=1 && -1+A==0 ], cost: 3-3*D+3*B
+     22: evalspeedFails4bb6in -> [8] : [], cost: 0
+
+
+Applied chaining over branches and pruning:
+  Start location: evalspeedFails4start
+     23: evalspeedFails4start -> [8] : A'=1, B'=C, C'=A, D'=1+C, [ A>=1 && C>=B && A>=1 && 0==0 ], cost: 5-3*B+3*C
+     25: evalspeedFails4start -> [8] : A'=-1, B'=C, C'=A, D'=1+C, [ 0>=A && C>=B && 0>=A && 0==0 ], cost: 5-3*B+3*C
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalspeedFails4start
+     23: evalspeedFails4start -> [8] : A'=1, B'=C, C'=A, D'=1+C, [ A>=1 && C>=B && A>=1 && 0==0 ], cost: 5-3*B+3*C
+     25: evalspeedFails4start -> [8] : A'=-1, B'=C, C'=A, D'=1+C, [ 0>=A && C>=B && 0>=A && 0==0 ], cost: 5-3*B+3*C
+
+
+Computing complexity for remaining 2 transitions.
+
+  Found configuration with infinitely models for cost: 5-3*B+3*C
+  and guard: A>=1 && C>=B && A>=1 && 0==0:
+  B: Pos, A: Pos, C: Pos, where: C > B
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=1 && C>=B && A>=1 && 0==0
+  Final Cost:  5-3*B+3*C
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

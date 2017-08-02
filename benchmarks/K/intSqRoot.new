@@ -1,0 +1,16 @@
+Trying to load file: intSqRoot.koat
+
+Initial Control flow graph problem:
+  Start location: f0
+      0: f0 -> f6 : A'=1, B'=C, [], cost: 1
+      1: f6 -> f6 : B'=free, D'=free, [ B>=2+A && free^2>=1+C ], cost: 1
+      2: f6 -> f6 : A'=free_1, D'=free_1, [ B>=2+A && C>=free_1^2 ], cost: 1
+      3: f6 -> f16 : [ 1+A>=B ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f0
+      0: f0 -> f6 : A'=1, B'=C, [], cost: 1
+      1: f6 -> f6 : B'=free, D'=free, [ B>=2+A && free^2>=1+C ], cost: 1
+      2: f6 -> f6 : A'=free_1, D'=free_1, [ B>=2+A && C>=free_1^2 ], cost: 1
+

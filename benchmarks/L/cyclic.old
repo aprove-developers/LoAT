@@ -1,0 +1,138 @@
+Trying to load file: cyclic.koat
+
+Initial Control flow graph problem:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicentryin : [], cost: 1
+      1: evalcyclicentryin -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 1
+      2: evalcyclicbb3in -> evalcyclicreturnin : [ C==A ], cost: 1
+      3: evalcyclicbb3in -> evalcyclicbb4in : [ A>=1+C ], cost: 1
+      4: evalcyclicbb3in -> evalcyclicbb4in : [ C>=1+A ], cost: 1
+     10: evalcyclicreturnin -> evalcyclicstop : [], cost: 1
+      7: evalcyclicbb4in -> evalcyclicreturnin : [], cost: 1
+      5: evalcyclicbb4in -> evalcyclicbbin : [ 0>=1+free ], cost: 1
+      6: evalcyclicbb4in -> evalcyclicbbin : [ free_1>=1 ], cost: 1
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+Removing duplicate transition: 5.
+
+Simplified the transitions:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicentryin : [], cost: 1
+      1: evalcyclicentryin -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 1
+      3: evalcyclicbb3in -> evalcyclicbb4in : [ A>=1+C ], cost: 1
+      4: evalcyclicbb3in -> evalcyclicbb4in : [ C>=1+A ], cost: 1
+      6: evalcyclicbb4in -> evalcyclicbbin : [], cost: 1
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+      3: evalcyclicbb3in -> evalcyclicbb4in : [ A>=1+C ], cost: 1
+      4: evalcyclicbb3in -> evalcyclicbb4in : [ C>=1+A ], cost: 1
+      6: evalcyclicbb4in -> evalcyclicbbin : [], cost: 1
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     11: evalcyclicbb3in -> evalcyclicbbin : [ A>=1+C ], cost: 2
+     12: evalcyclicbb3in -> evalcyclicbbin : [ C>=1+A ], cost: 2
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     13: evalcyclicbb3in -> evalcyclicbb3in : C'=1+C, [ A>=1+C && B>=C ], cost: 3
+     14: evalcyclicbb3in -> evalcyclicbb3in : C'=0, [ A>=1+C && C>=1+B ], cost: 3
+     15: evalcyclicbb3in -> evalcyclicbb3in : C'=1+C, [ C>=1+A && B>=C ], cost: 3
+     16: evalcyclicbb3in -> evalcyclicbb3in : C'=0, [ C>=1+A && C>=1+B ], cost: 3
+
+Eliminating 4 self-loops for location evalcyclicbb3in
+  Self-Loop 15 has the metering function: 1+B-C, resulting in the new transition 19.
+  Found unbounded runtime when nesting loops,
+  and nested parallel self-loops 20 (outer loop) and 19 (inner loop), obtaining the new transitions: 21, 22.
+  Found this metering function when nesting loops: 1+B-C,
+  Found unbounded runtime when nesting loops,
+  Found unbounded runtime when nesting loops,
+  Removing the self-loops: 13 14 15 16 20.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     17: evalcyclicbb3in -> evalcyclicbb3in : C'=1+C, [ A>=1+C && B>=C ], cost: 3
+     18: evalcyclicbb3in -> evalcyclicbb3in : C'=0, [ A>=1+C && C>=1+B ], cost: 3
+     19: evalcyclicbb3in -> evalcyclicbb3in : C'=1+B, [ C>=1+A && B>=C ], cost: 3+3*B-3*C
+     21: evalcyclicbb3in -> evalcyclicbb3in : [ C>=1+A && C>=1+B && 0>=1+A && B>=0 ], cost: INF
+     22: evalcyclicbb3in -> evalcyclicbb3in : C'=1+B, [ C>=1+A && B>=C && 1+B>=1+A && 1+B>=1+B && 0>=1+A && B>=0 ], cost: INF
+
+
+Chained simpled loops:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     23: evalcyclicstart -> evalcyclicbb3in : C'=1+B, [ A>=0 && B>=1+A && 1+A>=1+A && B>=1+A ], cost: 2+3*B-3*A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalcyclicstart
+     23: evalcyclicstart -> evalcyclicbb3in : C'=1+B, [ A>=0 && B>=1+A && 1+A>=1+A && B>=1+A ], cost: 2+3*B-3*A
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+1+A (+/+!), 1 (+/+!), B-A (+/+!), 2+3*B-3*A (+) [not solved]
+
+applying transformation rule (C) using substitution {A==0}
+resulting limit problem:
+B (+/+!), 1 (+/+!), 2+3*B (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1+A}
+resulting limit problem:
+1+A (+/+!), 1 (+/+!), 5+3*A (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1+A}
+resulting limit problem:
+1+A (+/+!), 1 (+/+!), 5+3*A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+A (+/+!), 5+3*A (+) [not solved]
+
+applying transformation rule (D), replacing 1+A (+/+!) by A (+)
+resulting limit problem:
+A (+), 5+3*A (+) [not solved]
+
+applying transformation rule (D), replacing 5+3*A (+) by 3*A (+)
+resulting limit problem:
+A (+), 3*A (+) [not solved]
+
+applying transformation rule (A), replacing 3*A (+) by A (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+A (+), 3 (+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+B / 1+n
+A / 0
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && B>=1+A && 1+A>=1+A && B>=1+A
+  Final Cost:  5+3*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

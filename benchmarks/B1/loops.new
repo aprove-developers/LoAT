@@ -1,0 +1,132 @@
+Trying to load file: loops.koat
+
+Initial Control flow graph problem:
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsentryin : [], cost: 1
+      1: evalloopsentryin -> evalloopsbb6in : [ A>=0 ], cost: 1
+      2: evalloopsentryin -> evalloopsreturnin : [ 0>=1+A ], cost: 1
+      4: evalloopsbb6in -> evalloopsreturnin : [ 0>=1+A ], cost: 1
+      3: evalloopsbb6in -> evalloopsbb1in : [ A>=0 ], cost: 1
+     11: evalloopsreturnin -> evalloopsstop : [], cost: 1
+      5: evalloopsbb1in -> evalloopsbb4in : B'=1, [ A>=2 ], cost: 1
+      6: evalloopsbb1in -> evalloopsbb5in : B'=free, [ 1>=A ], cost: 1
+      8: evalloopsbb4in -> evalloopsbb5in : [ B>=A ], cost: 1
+      7: evalloopsbb4in -> evalloopsbb3in : [ A>=1+B ], cost: 1
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+      9: evalloopsbb3in -> evalloopsbb4in : B'=2*B, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsentryin : [], cost: 1
+      1: evalloopsentryin -> evalloopsbb6in : [ A>=0 ], cost: 1
+      3: evalloopsbb6in -> evalloopsbb1in : [ A>=0 ], cost: 1
+      5: evalloopsbb1in -> evalloopsbb4in : B'=1, [ A>=2 ], cost: 1
+      6: evalloopsbb1in -> evalloopsbb5in : B'=free, [ 1>=A ], cost: 1
+      8: evalloopsbb4in -> evalloopsbb5in : [ B>=A ], cost: 1
+      7: evalloopsbb4in -> evalloopsbb3in : [ A>=1+B ], cost: 1
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+      9: evalloopsbb3in -> evalloopsbb4in : B'=2*B, [], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+      3: evalloopsbb6in -> evalloopsbb1in : [ A>=0 ], cost: 1
+      5: evalloopsbb1in -> evalloopsbb4in : B'=1, [ A>=2 ], cost: 1
+      6: evalloopsbb1in -> evalloopsbb5in : B'=free, [ 1>=A ], cost: 1
+      7: evalloopsbb4in -> evalloopsbb4in : B'=2*B, [ A>=1+B ], cost: 2
+      8: evalloopsbb4in -> evalloopsbb5in : [ B>=A ], cost: 1
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+
+
+Try instantiation
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+      3: evalloopsbb6in -> evalloopsbb1in : [ A>=0 ], cost: 1
+      5: evalloopsbb1in -> evalloopsbb4in : B'=1, [ A>=2 ], cost: 1
+      6: evalloopsbb1in -> evalloopsbb5in : B'=free, [ 1>=A ], cost: 1
+     12: evalloopsbb4in -> evalloopsbb4in : B'=2*B, [ A>=1+B ], cost: 2
+      8: evalloopsbb4in -> evalloopsbb5in : [ B>=A ], cost: 1
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+
+Eliminating 1 self-loops for location evalloopsbb4in
+  Removing the self-loops: 12.
+Adding an epsilon transition (to model nonexecution of the loops): 14.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+      3: evalloopsbb6in -> evalloopsbb1in : [ A>=0 ], cost: 1
+      5: evalloopsbb1in -> evalloopsbb4in : B'=1, [ A>=2 ], cost: 1
+      6: evalloopsbb1in -> evalloopsbb5in : B'=free, [ 1>=A ], cost: 1
+     13: evalloopsbb4in -> [9] : B'=2*B, [ A>=1+B ], cost: 2
+     14: evalloopsbb4in -> [9] : [], cost: 0
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+      8: [9] -> evalloopsbb5in : [ B>=A ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+     15: evalloopsbb6in -> evalloopsbb4in : B'=1, [ A>=0 && A>=2 ], cost: 2
+     16: evalloopsbb6in -> evalloopsbb5in : B'=free, [ A>=0 && 1>=A ], cost: 2
+     17: evalloopsbb4in -> evalloopsbb5in : B'=2*B, [ A>=1+B && 2*B>=A ], cost: 3
+     18: evalloopsbb4in -> evalloopsbb5in : [ B>=A ], cost: 1
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+     16: evalloopsbb6in -> evalloopsbb5in : B'=free, [ A>=0 && 1>=A ], cost: 2
+     19: evalloopsbb6in -> evalloopsbb5in : B'=2, [ A>=0 && A>=2 && A>=2 && 2>=A ], cost: 5
+     10: evalloopsbb5in -> evalloopsbb6in : A'=-1+A, [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+     20: evalloopsbb6in -> evalloopsbb6in : A'=-1+A, B'=free, [ A>=0 && 1>=A ], cost: 3
+     21: evalloopsbb6in -> evalloopsbb6in : A'=-1+A, B'=2, [ A>=0 && A>=2 && A>=2 && 2>=A ], cost: 6
+
+
+Try instantiation
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+     22: evalloopsbb6in -> evalloopsbb6in : A'=-1, B'=free, [ A>=0 && 1>=A ], cost: 3+3*A
+
+Eliminating 1 self-loops for location evalloopsbb6in
+  Self-Loop 22 has the metering function: meter, resulting in the new transition 23.
+  Removing the self-loops: 22.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalloopsstart
+      0: evalloopsstart -> evalloopsbb6in : [ A>=0 ], cost: 2
+     23: evalloopsbb6in -> [10] : A'=-1, B'=free, [ A>=0 && 1>=A && 2*meter==A ], cost: 0
+
+
+Applied simple chaining:
+  Start location: evalloopsstart
+      0: evalloopsstart -> [10] : A'=-1, B'=free, [ A>=0 && A>=0 && 1>=A && 2*meter==A ], cost: 2
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalloopsstart
+      0: evalloopsstart -> [10] : A'=-1, B'=free, [ A>=0 && A>=0 && 1>=A && 2*meter==A ], cost: 2
+
+
+Computing complexity for remaining 1 transitions.
+
+Found new complexity const, because: const cost.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && A>=0 && 1>=A && 2*meter==A
+  Final Cost:  2
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

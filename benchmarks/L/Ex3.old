@@ -1,0 +1,137 @@
+Trying to load file: Ex3.koat
+
+Initial Control flow graph problem:
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3entryin : [], cost: 1
+      1: evalEx3entryin -> evalEx3bb4in : [], cost: 1
+      2: evalEx3bb4in -> evalEx3bbin : [ A>=1 ], cost: 1
+      3: evalEx3bb4in -> evalEx3returnin : [ 0>=A ], cost: 1
+      4: evalEx3bbin -> evalEx3bb2in : B'=free, C'=A, [], cost: 1
+     11: evalEx3returnin -> evalEx3stop : [], cost: 1
+      5: evalEx3bb2in -> evalEx3bb4in : A'=C, [ 0>=C ], cost: 1
+      6: evalEx3bb2in -> evalEx3bb3in : [ C>=1 ], cost: 1
+      8: evalEx3bb3in -> evalEx3bb4in : A'=C, [ B>=1+free_1 ], cost: 1
+      9: evalEx3bb3in -> evalEx3bb4in : A'=C, [ free_2>=1+B ], cost: 1
+      7: evalEx3bb3in -> evalEx3bb1in : [], cost: 1
+     10: evalEx3bb1in -> evalEx3bb2in : C'=-1+C, [], cost: 1
+
+Removing duplicate transition: 8.
+
+Simplified the transitions:
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3entryin : [], cost: 1
+      1: evalEx3entryin -> evalEx3bb4in : [], cost: 1
+      2: evalEx3bb4in -> evalEx3bbin : [ A>=1 ], cost: 1
+      4: evalEx3bbin -> evalEx3bb2in : B'=free, C'=A, [], cost: 1
+      5: evalEx3bb2in -> evalEx3bb4in : A'=C, [ 0>=C ], cost: 1
+      6: evalEx3bb2in -> evalEx3bb3in : [ C>=1 ], cost: 1
+      9: evalEx3bb3in -> evalEx3bb4in : A'=C, [], cost: 1
+      7: evalEx3bb3in -> evalEx3bb1in : [], cost: 1
+     10: evalEx3bb1in -> evalEx3bb2in : C'=-1+C, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+      2: evalEx3bb4in -> evalEx3bb2in : B'=free, C'=A, [ A>=1 ], cost: 2
+      5: evalEx3bb2in -> evalEx3bb4in : A'=C, [ 0>=C ], cost: 1
+      6: evalEx3bb2in -> evalEx3bb3in : [ C>=1 ], cost: 1
+      9: evalEx3bb3in -> evalEx3bb4in : A'=C, [], cost: 1
+      7: evalEx3bb3in -> evalEx3bb2in : C'=-1+C, [], cost: 2
+
+
+Eliminated locations (branches):
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+      2: evalEx3bb4in -> evalEx3bb2in : B'=free, C'=A, [ A>=1 ], cost: 2
+      5: evalEx3bb2in -> evalEx3bb4in : A'=C, [ 0>=C ], cost: 1
+     12: evalEx3bb2in -> evalEx3bb4in : A'=C, [ C>=1 ], cost: 2
+     13: evalEx3bb2in -> evalEx3bb2in : C'=-1+C, [ C>=1 ], cost: 3
+
+Eliminating 1 self-loops for location evalEx3bb2in
+  Self-Loop 13 has the metering function: C, resulting in the new transition 14.
+  Removing the self-loops: 13.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+      2: evalEx3bb4in -> evalEx3bb2in : B'=free, C'=A, [ A>=1 ], cost: 2
+      5: evalEx3bb2in -> evalEx3bb4in : A'=C, [ 0>=C ], cost: 1
+     12: evalEx3bb2in -> evalEx3bb4in : A'=C, [ C>=1 ], cost: 2
+     14: evalEx3bb2in -> evalEx3bb2in : C'=0, [ C>=1 ], cost: 3*C
+
+
+Chained simpled loops:
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+     15: evalEx3bb4in -> evalEx3bb2in : B'=free, C'=0, [ A>=1 && A>=1 ], cost: 2+3*A
+      5: evalEx3bb2in -> evalEx3bb4in : A'=C, [ 0>=C ], cost: 1
+     12: evalEx3bb2in -> evalEx3bb4in : A'=C, [ C>=1 ], cost: 2
+
+
+Eliminated locations (branches):
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+     16: evalEx3bb4in -> evalEx3bb4in : A'=0, B'=free, C'=0, [ A>=1 && A>=1 && 0>=0 ], cost: 3+3*A
+     17: evalEx3bb4in -> [9] : B'=free, C'=0, [ A>=1 && A>=1 ], cost: 2+3*A
+
+Eliminating 1 self-loops for location evalEx3bb4in
+  Removing the self-loops: 16.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+     18: evalEx3bb4in -> evalEx3bb4in : A'=0, B'=free, C'=0, [ A>=1 ], cost: 3+3*A
+     17: evalEx3bb4in -> [9] : B'=free, C'=0, [ A>=1 && A>=1 ], cost: 2+3*A
+
+
+Chained simpled loops:
+  Start location: evalEx3start
+      0: evalEx3start -> evalEx3bb4in : [], cost: 2
+     19: evalEx3start -> evalEx3bb4in : A'=0, B'=free, C'=0, [ A>=1 ], cost: 5+3*A
+     17: evalEx3bb4in -> [9] : B'=free, C'=0, [ A>=1 && A>=1 ], cost: 2+3*A
+
+
+Eliminated locations (branches):
+  Start location: evalEx3start
+     20: evalEx3start -> [9] : B'=free, C'=0, [ A>=1 && A>=1 ], cost: 4+3*A
+     21: evalEx3start -> [10] : A'=0, B'=free, C'=0, [ A>=1 ], cost: 5+3*A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalEx3start
+     20: evalEx3start -> [9] : B'=free, C'=0, [ A>=1 && A>=1 ], cost: 4+3*A
+     21: evalEx3start -> [10] : A'=0, B'=free, C'=0, [ A>=1 ], cost: 5+3*A
+
+
+Computing complexity for remaining 2 transitions.
+
+Created initial limit problem:
+A (+/+!), 4+3*A (+) [not solved]
+
+applying transformation rule (D), replacing 4+3*A (+) by 3*A (+)
+resulting limit problem:
+A (+/+!), 3*A (+) [not solved]
+
+applying transformation rule (A), replacing 3*A (+) by A (+) and 3 (+!) using + limit vector (+,+!)
+resulting limit problem:
+A (+), 3 (+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+A / n
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=1 && A>=1
+  Final Cost:  4+3*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

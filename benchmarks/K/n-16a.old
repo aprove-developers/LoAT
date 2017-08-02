@@ -1,0 +1,51 @@
+Trying to load file: n-16a.koat
+
+Initial Control flow graph problem:
+  Start location: f300
+      1: f2 -> f2 : A'=B+A, [ B+A>=0 ], cost: 1
+      0: f2 -> f1 : A'=B+A, C'=free, [ 0>=1+B+A ], cost: 1
+      2: f300 -> f2 : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: f300
+      1: f2 -> f2 : A'=B+A, [ B+A>=0 ], cost: 1
+      2: f300 -> f2 : [], cost: 1
+
+Eliminating 1 self-loops for location f2
+  Removing the self-loops: 1.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f300
+      3: f2 -> f2 : A'=B+A, [ B+A>=0 ], cost: 1
+      2: f300 -> f2 : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: f300
+      2: f300 -> f2 : [], cost: 1
+      4: f300 -> f2 : A'=B+A, [ B+A>=0 ], cost: 2
+
+
+Pruned:
+  Start location: f300
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f300
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

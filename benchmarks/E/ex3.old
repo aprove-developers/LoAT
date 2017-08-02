@@ -1,0 +1,238 @@
+Trying to load file: ex3.koat
+
+Initial Control flow graph problem:
+  Start location: evalfstart
+      0: evalfstart -> evalfentryin : [], cost: 1
+      1: evalfentryin -> evalfbb9in : A'=B, [], cost: 1
+      2: evalfbb9in -> evalfbbin : [ B>=2 ], cost: 1
+      3: evalfbb9in -> evalfreturnin : [ 1>=B ], cost: 1
+      4: evalfbbin -> evalfbb6in : C'=-1+B, D'=-1+B+A, [], cost: 1
+     19: evalfreturnin -> evalfstop : [], cost: 1
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+      6: evalfbb6in -> evalfbb7in : [ D>=1+C ], cost: 1
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+      9: evalfbb7in -> evalfbb8in : [], cost: 1
+      7: evalfbb7in -> evalfbb1in : [ 0>=1+free ], cost: 1
+      8: evalfbb7in -> evalfbb1in : [ free_1>=1 ], cost: 1
+     10: evalfbb1in -> evalfbb3in : E'=C, F'=-1+D, [], cost: 1
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     12: evalfbb3in -> evalfbb4in : [ 0>=3 ], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+     15: evalfbb4in -> evalfbb5in : [], cost: 1
+     13: evalfbb4in -> evalfbb2in : [ 0>=1+free_2 ], cost: 1
+     14: evalfbb4in -> evalfbb2in : [ free_3>=1 ], cost: 1
+     16: evalfbb2in -> evalfbb3in : E'=1+E, F'=-2+F, [], cost: 1
+
+Removing duplicate transition: 7.
+Removing duplicate transition: 13.
+
+Simplified the transitions:
+  Start location: evalfstart
+      0: evalfstart -> evalfentryin : [], cost: 1
+      1: evalfentryin -> evalfbb9in : A'=B, [], cost: 1
+      2: evalfbb9in -> evalfbbin : [ B>=2 ], cost: 1
+      4: evalfbbin -> evalfbb6in : C'=-1+B, D'=-1+B+A, [], cost: 1
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+      6: evalfbb6in -> evalfbb7in : [ D>=1+C ], cost: 1
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+      9: evalfbb7in -> evalfbb8in : [], cost: 1
+      8: evalfbb7in -> evalfbb1in : [], cost: 1
+     10: evalfbb1in -> evalfbb3in : E'=C, F'=-1+D, [], cost: 1
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     12: evalfbb3in -> evalfbb4in : [ 0>=3 ], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+     15: evalfbb4in -> evalfbb5in : [], cost: 1
+     14: evalfbb4in -> evalfbb2in : [], cost: 1
+     16: evalfbb2in -> evalfbb3in : E'=1+E, F'=-2+F, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+      6: evalfbb6in -> evalfbb7in : [ D>=1+C ], cost: 1
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+      9: evalfbb7in -> evalfbb8in : [], cost: 1
+      8: evalfbb7in -> evalfbb3in : E'=C, F'=-1+D, [], cost: 2
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     12: evalfbb3in -> evalfbb4in : [ 0>=3 ], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+     14: evalfbb4in -> evalfbb3in : E'=1+E, F'=-2+F, [], cost: 2
+     15: evalfbb4in -> evalfbb5in : [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     21: evalfbb6in -> evalfbb3in : E'=C, F'=-1+D, [ D>=1+C ], cost: 3
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+     11: evalfbb3in -> evalfbb5in : [], cost: 1
+     17: evalfbb5in -> evalfbb6in : C'=E, D'=-1+F, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+     21: evalfbb6in -> evalfbb6in : C'=C, D'=-2+D, E'=C, F'=-1+D, [ D>=1+C ], cost: 5
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+
+Eliminating 1 self-loops for location evalfbb6in
+  Self-Loop 21 has the metering function: meter, resulting in the new transition 22.
+  Removing the self-loops: 21.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+      2: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A, [ B>=2 ], cost: 2
+     22: evalfbb6in -> evalfbb6in : D'=-2*meter+D, E'=C, F'=1-2*meter+D, [ D>=1+C && 2*meter==-C+D ], cost: 5*meter
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+
+
+Chained simpled loops:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     23: evalfbb9in -> evalfbb6in : C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A ], cost: 2+5*meter
+      5: evalfbb6in -> evalfbb8in : [ C>=D ], cost: 1
+     20: evalfbb6in -> evalfbb8in : [ D>=1+C ], cost: 2
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     24: evalfbb9in -> evalfbb8in : C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A && -1+B>=-1+B+A-2*meter ], cost: 3+5*meter
+     25: evalfbb9in -> [14] : C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A ], cost: 2+5*meter
+     18: evalfbb8in -> evalfbb9in : A'=1-C+D, B'=-1+C, [], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     24: evalfbb9in -> evalfbb9in : A'=1+A-2*meter, B'=-2+B, C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A && -1+B>=-1+B+A-2*meter ], cost: 4+5*meter
+     25: evalfbb9in -> [14] : C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A ], cost: 2+5*meter
+
+Eliminating 1 self-loops for location evalfbb9in
+  Removing the self-loops: 24.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     26: evalfbb9in -> evalfbb9in : A'=1+A-2*meter, B'=-2+B, C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A ], cost: 4+5*meter
+     25: evalfbb9in -> [14] : C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A ], cost: 2+5*meter
+
+
+Chained simpled loops:
+  Start location: evalfstart
+      0: evalfstart -> evalfbb9in : A'=B, [], cost: 2
+     27: evalfstart -> evalfbb9in : A'=1+B-2*meter, B'=-2+B, C'=-1+B, D'=-1+2*B-2*meter, E'=-1+B, F'=2*B-2*meter, [ B>=2 && -1+2*B>=B && 2*meter==B ], cost: 6+5*meter
+     25: evalfbb9in -> [14] : C'=-1+B, D'=-1+B+A-2*meter, E'=-1+B, F'=B+A-2*meter, [ B>=2 && -1+B+A>=B && 2*meter==A ], cost: 2+5*meter
+
+
+Eliminated locations (branches):
+  Start location: evalfstart
+     28: evalfstart -> [14] : A'=B, C'=-1+B, D'=-1+2*B-2*meter, E'=-1+B, F'=2*B-2*meter, [ B>=2 && -1+2*B>=B && 2*meter==B ], cost: 4+5*meter
+     29: evalfstart -> [15] : A'=1+B-2*meter, B'=-2+B, C'=-1+B, D'=-1+2*B-2*meter, E'=-1+B, F'=2*B-2*meter, [ B>=2 && -1+2*B>=B && 2*meter==B ], cost: 6+5*meter
+
+Removing duplicate transition: 28.
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalfstart
+     29: evalfstart -> [15] : A'=1+B-2*meter, B'=-2+B, C'=-1+B, D'=-1+2*B-2*meter, E'=-1+B, F'=2*B-2*meter, [ B>=2 && -1+2*B>=B && 2*meter==B ], cost: 6+5*meter
+
+
+Computing complexity for remaining 1 transitions.
+
+Created initial limit problem:
+1+B-2*meter (+/+!), B (+/+!), -1+B (+/+!), 6+5*meter (+), 1-B+2*meter (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==2*meter}
+resulting limit problem:
+1 (+/+!), -1+2*meter (+/+!), 6+5*meter (+), 2*meter (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+2*meter (+/+!), 6+5*meter (+), 2*meter (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+2*meter (+/+!) by 2*meter (+)
+resulting limit problem:
+6+5*meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (D), replacing 6+5*meter (+) by 5*meter (+)
+resulting limit problem:
+5*meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 5*meter (+) by meter (+) and 5 (+!) using + limit vector (+,+!)
+resulting limit problem:
+5 (+!), meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (B), deleting 5 (+!)
+resulting limit problem:
+meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 2*meter (+) by meter (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), meter (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+meter (+) [solved]
+
+Created initial limit problem:
+1+B-2*meter (+/+!), B (+/+!), -1+B (+/+!), 6+5*meter (+), 1-B+2*meter (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==2*meter}
+resulting limit problem:
+1 (+/+!), -1+2*meter (+/+!), 6+5*meter (+), 2*meter (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+2*meter (+/+!), 6+5*meter (+), 2*meter (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+2*meter (+/+!) by 2*meter (+)
+resulting limit problem:
+6+5*meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (D), replacing 6+5*meter (+) by 5*meter (+)
+resulting limit problem:
+5*meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 5*meter (+) by meter (+) and 5 (+!) using + limit vector (+,+!)
+resulting limit problem:
+5 (+!), meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (B), deleting 5 (+!)
+resulting limit problem:
+meter (+), 2*meter (+) [not solved]
+
+applying transformation rule (A), replacing 2*meter (+) by meter (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), meter (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+meter (+) [solved]
+
+Solution:
+B / 2*n
+meter / n
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: B>=2 && -1+2*B>=B && 2*meter==B
+  Final Cost:  6+5*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

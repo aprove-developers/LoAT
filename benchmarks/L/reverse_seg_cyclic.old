@@ -1,0 +1,2216 @@
+Trying to load file: reverse_seg_cyclic.koat
+
+Initial Control flow graph problem:
+  Start location: f3
+      0: f1 -> f1 : B'=1+B, C'=D, D'=free, E'=D, F'=free_1, G'=B, H'=Q, [ A>=1+B && B>=0 ], cost: 1
+     53: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=0, N'=free_413, P'=O, Q_1'=free_414, R'=J, S'=free_414, C1'=J, F1'=free_415, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_421>=2 && W1>=free_421 && free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K ], cost: 1
+     54: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=0, N'=free_427, P'=O, Q_1'=free_428, R'=J, S'=free_428, C1'=J, F1'=free_429, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_435>=2 && W1>=free_435 && free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K ], cost: 1
+     55: f1 -> f4 : A'=free_436, B'=free_437, C'=free_438, D'=free_439, E'=free_440, J'=free_441, N'=free_442, P'=free_443, Q_1'=free_444, R'=free_445, C1'=free_446, F1'=free_447, S1'=free_448, T1'=free_449, U1'=free_450, [ free_451>=2 && W1>=free_451 && free_442>=2 && W1>=free_442 && B>=A && W1>=0 && B>=0 && O==J ], cost: 1
+      1: f5 -> f7 : L'=1+E1, M'=1, N'=free_2, O'=P, Q_1'=free_3, R'=J, S'=free_3, T'=free_4, U'=V, W'=Q, X'=K, Y'=free_5, Z'=free_6, A1'=free_7, B1'=free_8, C1'=J, D1'=E1, [ free_10>=1+free_9 && free_10>=1+J && free_10>=1+K && free_10>=1+free_8 && L>=0 && free_2>=2 && M==1 ], cost: 1
+      2: f5 -> f7 : L'=1+E1, M'=1, N'=free_11, O'=P, Q_1'=free_12, R'=J, S'=free_12, T'=free_13, U'=V, W'=Q, X'=K, Y'=free_14, Z'=free_15, A1'=free_16, B1'=free_17, C1'=J, D1'=E1, [ free_19>=1+free_18 && free_19>=1+J && free_19>=1+K && free_17>=1+free_19 && L>=0 && free_11>=2 && M==1 ], cost: 1
+      3: f5 -> f7 : L'=1+E1, M'=1, N'=free_20, O'=P, Q_1'=free_21, R'=J, S'=free_21, T'=free_22, U'=V, W'=Q, X'=K, Y'=free_23, Z'=free_24, A1'=free_25, B1'=free_26, C1'=J, D1'=E1, [ free_28>=1+free_27 && free_28>=1+J && K>=1+free_28 && free_28>=1+free_26 && L>=0 && free_20>=2 && M==1 ], cost: 1
+      4: f5 -> f7 : L'=1+E1, M'=1, N'=free_29, O'=P, Q_1'=free_30, R'=J, S'=free_30, T'=free_31, U'=V, W'=Q, X'=K, Y'=free_32, Z'=free_33, A1'=free_34, B1'=free_35, C1'=J, D1'=E1, [ free_37>=1+free_36 && free_37>=1+J && K>=1+free_37 && free_35>=1+free_37 && L>=0 && free_29>=2 && M==1 ], cost: 1
+      5: f5 -> f7 : L'=1+E1, M'=1, N'=free_38, O'=P, Q_1'=free_39, R'=J, S'=free_39, T'=free_40, U'=V, W'=Q, X'=K, Y'=free_41, Z'=free_42, A1'=free_43, B1'=free_44, C1'=J, D1'=E1, [ free_46>=1+free_45 && J>=1+free_46 && free_46>=1+K && free_46>=1+free_44 && L>=0 && free_38>=2 && M==1 ], cost: 1
+      6: f5 -> f7 : L'=1+E1, M'=1, N'=free_47, O'=P, Q_1'=free_48, R'=J, S'=free_48, T'=free_49, U'=V, W'=Q, X'=K, Y'=free_50, Z'=free_51, A1'=free_52, B1'=free_53, C1'=J, D1'=E1, [ free_55>=1+free_54 && J>=1+free_55 && free_55>=1+K && free_53>=1+free_55 && L>=0 && free_47>=2 && M==1 ], cost: 1
+      7: f5 -> f7 : L'=1+E1, M'=1, N'=free_56, O'=P, Q_1'=free_57, R'=J, S'=free_57, T'=free_58, U'=V, W'=Q, X'=K, Y'=free_59, Z'=free_60, A1'=free_61, B1'=free_62, C1'=J, D1'=E1, [ free_64>=1+free_63 && J>=1+free_64 && K>=1+free_64 && free_64>=1+free_62 && L>=0 && free_56>=2 && M==1 ], cost: 1
+      8: f5 -> f7 : L'=1+E1, M'=1, N'=free_65, O'=P, Q_1'=free_66, R'=J, S'=free_66, T'=free_67, U'=V, W'=Q, X'=K, Y'=free_68, Z'=free_69, A1'=free_70, B1'=free_71, C1'=J, D1'=E1, [ free_73>=1+free_72 && J>=1+free_73 && K>=1+free_73 && free_71>=1+free_73 && L>=0 && free_65>=2 && M==1 ], cost: 1
+      9: f5 -> f7 : L'=1+E1, M'=1, N'=free_74, O'=P, Q_1'=free_75, R'=J, S'=free_75, T'=free_76, U'=V, W'=Q, X'=K, Y'=free_77, Z'=free_78, A1'=free_79, B1'=free_80, C1'=J, D1'=E1, [ free_81>=1+free_82 && free_82>=1+J && free_82>=1+K && free_82>=1+free_80 && L>=0 && free_74>=2 && M==1 ], cost: 1
+     10: f5 -> f7 : L'=1+E1, M'=1, N'=free_83, O'=P, Q_1'=free_84, R'=J, S'=free_84, T'=free_85, U'=V, W'=Q, X'=K, Y'=free_86, Z'=free_87, A1'=free_88, B1'=free_89, C1'=J, D1'=E1, [ free_90>=1+free_91 && free_91>=1+J && free_91>=1+K && free_89>=1+free_91 && L>=0 && free_83>=2 && M==1 ], cost: 1
+     11: f5 -> f7 : L'=1+E1, M'=1, N'=free_92, O'=P, Q_1'=free_93, R'=J, S'=free_93, T'=free_94, U'=V, W'=Q, X'=K, Y'=free_95, Z'=free_96, A1'=free_97, B1'=free_98, C1'=J, D1'=E1, [ free_99>=1+free_100 && free_100>=1+J && K>=1+free_100 && free_100>=1+free_98 && L>=0 && free_92>=2 && M==1 ], cost: 1
+     12: f5 -> f7 : L'=1+E1, M'=1, N'=free_101, O'=P, Q_1'=free_102, R'=J, S'=free_102, T'=free_103, U'=V, W'=Q, X'=K, Y'=free_104, Z'=free_105, A1'=free_106, B1'=free_107, C1'=J, D1'=E1, [ free_108>=1+free_109 && free_109>=1+J && K>=1+free_109 && free_107>=1+free_109 && L>=0 && free_101>=2 && M==1 ], cost: 1
+     13: f5 -> f7 : L'=1+E1, M'=1, N'=free_110, O'=P, Q_1'=free_111, R'=J, S'=free_111, T'=free_112, U'=V, W'=Q, X'=K, Y'=free_113, Z'=free_114, A1'=free_115, B1'=free_116, C1'=J, D1'=E1, [ free_117>=1+free_118 && J>=1+free_118 && free_118>=1+K && free_118>=1+free_116 && L>=0 && free_110>=2 && M==1 ], cost: 1
+     14: f5 -> f7 : L'=1+E1, M'=1, N'=free_119, O'=P, Q_1'=free_120, R'=J, S'=free_120, T'=free_121, U'=V, W'=Q, X'=K, Y'=free_122, Z'=free_123, A1'=free_124, B1'=free_125, C1'=J, D1'=E1, [ free_126>=1+free_127 && J>=1+free_127 && free_127>=1+K && free_125>=1+free_127 && L>=0 && free_119>=2 && M==1 ], cost: 1
+     15: f5 -> f7 : L'=1+E1, M'=1, N'=free_128, O'=P, Q_1'=free_129, R'=J, S'=free_129, T'=free_130, U'=V, W'=Q, X'=K, Y'=free_131, Z'=free_132, A1'=free_133, B1'=free_134, C1'=J, D1'=E1, [ free_135>=1+free_136 && J>=1+free_136 && K>=1+free_136 && free_136>=1+free_134 && L>=0 && free_128>=2 && M==1 ], cost: 1
+     16: f5 -> f7 : L'=1+E1, M'=1, N'=free_137, O'=P, Q_1'=free_138, R'=J, S'=free_138, T'=free_139, U'=V, W'=Q, X'=K, Y'=free_140, Z'=free_141, A1'=free_142, B1'=free_143, C1'=J, D1'=E1, [ free_144>=1+free_145 && J>=1+free_145 && K>=1+free_145 && free_143>=1+free_145 && L>=0 && free_137>=2 && M==1 ], cost: 1
+     17: f5 -> f4 : J'=free_146, N'=free_147, O'=free_148, P'=free_149, Q_1'=free_150, R'=free_151, C1'=free_152, F1'=free_153, G1'=free_154, [ L>=0 && free_148>=1+free_154 && free_147>=2 && J==P ], cost: 1
+     18: f5 -> f4 : J'=free_155, N'=free_156, O'=free_157, P'=free_158, Q_1'=free_159, R'=free_160, C1'=free_161, F1'=free_162, G1'=free_163, [ L>=0 && free_163>=1+free_157 && free_156>=2 && J==P ], cost: 1
+     31: f7 -> f7 : M'=1+M, N'=free_240, O'=P, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1+E1, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_244>=1+free_245 && free_244>=1+J && free_244>=1+free_243 && free_244>=1+K && free_246>=0 && free_240>=2 && E1>=0 ], cost: 1
+     32: f7 -> f7 : M'=1+M, N'=free_247, O'=P, Q_1'=free_248, R'=J, S'=free_248, C1'=J, E1'=-1+E1, K1'=free_249, L1'=free_250, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_251>=1+free_252 && free_251>=1+J && free_251>=1+free_250 && K>=1+free_251 && free_253>=0 && free_247>=2 && E1>=0 ], cost: 1
+     33: f7 -> f7 : M'=1+M, N'=free_254, O'=P, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1+E1, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_258>=1+free_259 && free_258>=1+J && free_257>=1+free_258 && free_258>=1+K && free_260>=0 && free_254>=2 && E1>=0 ], cost: 1
+     34: f7 -> f7 : M'=1+M, N'=free_261, O'=P, Q_1'=free_262, R'=J, S'=free_262, C1'=J, E1'=-1+E1, K1'=free_263, L1'=free_264, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_265>=1+free_266 && free_265>=1+J && free_264>=1+free_265 && K>=1+free_265 && free_267>=0 && free_261>=2 && E1>=0 ], cost: 1
+     35: f7 -> f7 : M'=1+M, N'=free_268, O'=P, Q_1'=free_269, R'=J, S'=free_269, C1'=J, E1'=-1+E1, K1'=free_270, L1'=free_271, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_272>=1+free_273 && J>=1+free_272 && free_272>=1+free_271 && free_272>=1+K && free_274>=0 && free_268>=2 && E1>=0 ], cost: 1
+     36: f7 -> f7 : M'=1+M, N'=free_275, O'=P, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1+E1, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_279>=1+free_280 && J>=1+free_279 && free_279>=1+free_278 && K>=1+free_279 && free_281>=0 && free_275>=2 && E1>=0 ], cost: 1
+     37: f7 -> f7 : M'=1+M, N'=free_282, O'=P, Q_1'=free_283, R'=J, S'=free_283, C1'=J, E1'=-1+E1, K1'=free_284, L1'=free_285, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_286>=1+free_287 && J>=1+free_286 && free_285>=1+free_286 && free_286>=1+K && free_288>=0 && free_282>=2 && E1>=0 ], cost: 1
+     38: f7 -> f7 : M'=1+M, N'=free_289, O'=P, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1+E1, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_293>=1+free_294 && J>=1+free_293 && free_292>=1+free_293 && K>=1+free_293 && free_295>=0 && free_289>=2 && E1>=0 ], cost: 1
+     39: f7 -> f7 : M'=1+M, N'=free_296, O'=P, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1+E1, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_301>=1+free_300 && free_300>=1+J && free_300>=1+free_299 && free_300>=1+K && free_302>=0 && free_296>=2 && E1>=0 ], cost: 1
+     40: f7 -> f7 : M'=1+M, N'=free_303, O'=P, Q_1'=free_304, R'=J, S'=free_304, C1'=J, E1'=-1+E1, K1'=free_305, L1'=free_306, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_308>=1+free_307 && free_307>=1+J && free_307>=1+free_306 && K>=1+free_307 && free_309>=0 && free_303>=2 && E1>=0 ], cost: 1
+     41: f7 -> f7 : M'=1+M, N'=free_310, O'=P, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1+E1, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_315>=1+free_314 && free_314>=1+J && free_313>=1+free_314 && free_314>=1+K && free_316>=0 && free_310>=2 && E1>=0 ], cost: 1
+     42: f7 -> f7 : M'=1+M, N'=free_317, O'=P, Q_1'=free_318, R'=J, S'=free_318, C1'=J, E1'=-1+E1, K1'=free_319, L1'=free_320, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_322>=1+free_321 && free_321>=1+J && free_320>=1+free_321 && K>=1+free_321 && free_323>=0 && free_317>=2 && E1>=0 ], cost: 1
+     43: f7 -> f7 : M'=1+M, N'=free_324, O'=P, Q_1'=free_325, R'=J, S'=free_325, C1'=J, E1'=-1+E1, K1'=free_326, L1'=free_327, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_329>=1+free_328 && J>=1+free_328 && free_328>=1+free_327 && free_328>=1+K && free_330>=0 && free_324>=2 && E1>=0 ], cost: 1
+     44: f7 -> f7 : M'=1+M, N'=free_331, O'=P, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1+E1, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_336>=1+free_335 && J>=1+free_335 && free_335>=1+free_334 && K>=1+free_335 && free_337>=0 && free_331>=2 && E1>=0 ], cost: 1
+     45: f7 -> f7 : M'=1+M, N'=free_338, O'=P, Q_1'=free_339, R'=J, S'=free_339, C1'=J, E1'=-1+E1, K1'=free_340, L1'=free_341, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_343>=1+free_342 && J>=1+free_342 && free_341>=1+free_342 && free_342>=1+K && free_344>=0 && free_338>=2 && E1>=0 ], cost: 1
+     46: f7 -> f7 : M'=1+M, N'=free_345, O'=P, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1+E1, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_350>=1+free_349 && J>=1+free_349 && free_348>=1+free_349 && K>=1+free_349 && free_351>=0 && free_345>=2 && E1>=0 ], cost: 1
+     47: f7 -> f4 : J'=free_352, N'=free_353, O'=free_354, P'=free_355, Q_1'=free_356, R'=free_357, C1'=free_358, F1'=free_359, R1'=free_360, [ M>=0 && E1>=0 && free_353>=2 && free_354>=1+free_360 && free_354>=1+K && J==P ], cost: 1
+     48: f7 -> f4 : J'=free_361, N'=free_362, O'=free_363, P'=free_364, Q_1'=free_365, R'=free_366, C1'=free_367, F1'=free_368, R1'=free_369, [ M>=0 && E1>=0 && free_362>=2 && free_363>=1+free_369 && K>=1+free_363 && J==P ], cost: 1
+     49: f7 -> f4 : J'=free_370, N'=free_371, O'=free_372, P'=free_373, Q_1'=free_374, R'=free_375, C1'=free_376, F1'=free_377, R1'=free_378, [ M>=0 && E1>=0 && free_371>=2 && free_378>=1+free_372 && free_372>=1+K && J==P ], cost: 1
+     50: f7 -> f4 : J'=free_379, N'=free_380, O'=free_381, P'=free_382, Q_1'=free_383, R'=free_384, C1'=free_385, F1'=free_386, R1'=free_387, [ M>=0 && E1>=0 && free_380>=2 && free_387>=1+free_381 && K>=1+free_381 && J==P ], cost: 1
+     19: f6 -> f7 : N'=free_164, O'=P, Q_1'=free_165, R'=J, S'=free_165, C1'=J, H1'=free_166, Q1'=free_167, [ free_168>=1+K && free_168>=1+J && free_168>=1+free_167 && free_164>=2 && D1>=0 ], cost: 1
+     20: f6 -> f7 : N'=free_169, O'=P, Q_1'=free_170, R'=J, S'=free_170, C1'=J, H1'=free_171, Q1'=free_172, [ free_173>=1+K && free_173>=1+J && free_172>=1+free_173 && free_169>=2 && D1>=0 ], cost: 1
+     21: f6 -> f7 : N'=free_174, O'=P, Q_1'=free_175, R'=J, S'=free_175, C1'=J, H1'=free_176, Q1'=free_177, [ free_178>=1+K && J>=1+free_178 && free_178>=1+free_177 && free_174>=2 && D1>=0 ], cost: 1
+     22: f6 -> f7 : N'=free_179, O'=P, Q_1'=free_180, R'=J, S'=free_180, C1'=J, H1'=free_181, Q1'=free_182, [ free_183>=1+K && J>=1+free_183 && free_182>=1+free_183 && free_179>=2 && D1>=0 ], cost: 1
+     23: f6 -> f7 : N'=free_184, O'=P, Q_1'=free_185, R'=J, S'=free_185, C1'=J, H1'=free_186, Q1'=free_187, [ K>=1+free_188 && free_188>=1+J && free_188>=1+free_187 && free_184>=2 && D1>=0 ], cost: 1
+     24: f6 -> f7 : N'=free_189, O'=P, Q_1'=free_190, R'=J, S'=free_190, C1'=J, H1'=free_191, Q1'=free_192, [ K>=1+free_193 && free_193>=1+J && free_192>=1+free_193 && free_189>=2 && D1>=0 ], cost: 1
+     25: f6 -> f7 : N'=free_194, O'=P, Q_1'=free_195, R'=J, S'=free_195, C1'=J, H1'=free_196, Q1'=free_197, [ K>=1+free_198 && J>=1+free_198 && free_198>=1+free_197 && free_194>=2 && D1>=0 ], cost: 1
+     26: f6 -> f7 : N'=free_199, O'=P, Q_1'=free_200, R'=J, S'=free_200, C1'=J, H1'=free_201, Q1'=free_202, [ K>=1+free_203 && J>=1+free_203 && free_202>=1+free_203 && free_199>=2 && D1>=0 ], cost: 1
+     27: f6 -> f4 : J'=free_204, N'=free_205, O'=free_206, P'=free_207, Q_1'=free_208, R'=free_209, C1'=free_210, F1'=free_211, J1'=free_212, [ D1>=0 && free_205>=2 && free_206>=1+free_212 && free_206>=1+K && J==P ], cost: 1
+     28: f6 -> f4 : J'=free_213, N'=free_214, O'=free_215, P'=free_216, Q_1'=free_217, R'=free_218, C1'=free_219, F1'=free_220, J1'=free_221, [ D1>=0 && free_214>=2 && free_215>=1+free_221 && K>=1+free_215 && J==P ], cost: 1
+     29: f6 -> f4 : J'=free_222, N'=free_223, O'=free_224, P'=free_225, Q_1'=free_226, R'=free_227, C1'=free_228, F1'=free_229, J1'=free_230, [ D1>=0 && free_223>=2 && free_230>=1+free_224 && free_224>=1+K && J==P ], cost: 1
+     30: f6 -> f4 : J'=free_231, N'=free_232, O'=free_233, P'=free_234, Q_1'=free_235, R'=free_236, C1'=free_237, F1'=free_238, J1'=free_239, [ D1>=0 && free_232>=2 && free_239>=1+free_233 && K>=1+free_233 && J==P ], cost: 1
+     52: f3 -> f1 : A'=N, B'=2, C'=free_404, D'=free_405, E'=free_404, O'=free_406, S1'=free_406, U1'=free_404, V1'=free_407, [ N>=2 ], cost: 1
+     51: f3 -> f4 : A'=free_388, B'=free_389, C'=free_390, D'=free_391, E'=free_392, J'=free_393, N'=free_394, P'=free_395, Q_1'=free_396, R'=free_397, C1'=free_398, F1'=free_399, S1'=free_400, T1'=free_401, U1'=free_402, [ 0>=free_403 && 0>=N && 0>=free_394 ], cost: 1
+     56: f3 -> f4 : A'=free_452, B'=free_453, C'=free_454, D'=free_455, E'=free_456, J'=free_457, N'=1, O'=J, P'=free_458, Q_1'=free_459, R'=free_460, C1'=free_461, F1'=free_462, S1'=free_463, T1'=free_464, U1'=free_465, [ N==1 ], cost: 1
+     57: f3 -> f4 : A'=free_466, B'=free_467, C'=free_468, D'=free_469, E'=free_470, J'=free_471, N'=1, O'=free_472, P'=free_473, Q_1'=free_474, R'=free_475, S'=free_476, C1'=free_477, F1'=free_478, S1'=free_479, T1'=free_480, U1'=free_481, B2'=free_482, [ 0>=1 && free_472>=1+free_482 && N==1 ], cost: 1
+     58: f3 -> f4 : A'=free_483, B'=free_484, C'=free_485, D'=free_486, E'=free_487, J'=free_488, N'=1, O'=free_489, P'=free_490, Q_1'=free_491, R'=free_492, S'=free_493, C1'=free_494, F1'=free_495, S1'=free_496, T1'=free_497, U1'=free_498, B2'=free_499, [ 0>=1 && free_499>=1+free_489 && N==1 ], cost: 1
+     59: f3 -> f4 : A'=free_500, B'=free_501, C'=free_502, D'=free_503, E'=free_504, J'=free_505, N'=1, O'=free_506, P'=free_507, Q_1'=free_508, R'=free_509, S'=free_510, C1'=free_511, F1'=free_512, S1'=free_513, T1'=free_514, U1'=free_515, B2'=free_516, [ 0>=1 && free_506>=1+free_516 && N==1 ], cost: 1
+     60: f3 -> f4 : A'=free_517, B'=free_518, C'=free_519, D'=free_520, E'=free_521, J'=free_522, N'=1, O'=free_523, P'=free_524, Q_1'=free_525, R'=free_526, S'=free_527, C1'=free_528, F1'=free_529, S1'=free_530, T1'=free_531, U1'=free_532, B2'=free_533, [ 0>=1 && free_533>=1+free_523 && N==1 ], cost: 1
+
+
+Removed unsatisfiable initial transitions:
+  Start location: f3
+      0: f1 -> f1 : B'=1+B, C'=D, D'=free, E'=D, F'=free_1, G'=B, H'=Q, [ A>=1+B && B>=0 ], cost: 1
+     53: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=0, N'=free_413, P'=O, Q_1'=free_414, R'=J, S'=free_414, C1'=J, F1'=free_415, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_421>=2 && W1>=free_421 && free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K ], cost: 1
+     54: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=0, N'=free_427, P'=O, Q_1'=free_428, R'=J, S'=free_428, C1'=J, F1'=free_429, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_435>=2 && W1>=free_435 && free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K ], cost: 1
+     55: f1 -> f4 : A'=free_436, B'=free_437, C'=free_438, D'=free_439, E'=free_440, J'=free_441, N'=free_442, P'=free_443, Q_1'=free_444, R'=free_445, C1'=free_446, F1'=free_447, S1'=free_448, T1'=free_449, U1'=free_450, [ free_451>=2 && W1>=free_451 && free_442>=2 && W1>=free_442 && B>=A && W1>=0 && B>=0 && O==J ], cost: 1
+      1: f5 -> f7 : L'=1+E1, M'=1, N'=free_2, O'=P, Q_1'=free_3, R'=J, S'=free_3, T'=free_4, U'=V, W'=Q, X'=K, Y'=free_5, Z'=free_6, A1'=free_7, B1'=free_8, C1'=J, D1'=E1, [ free_10>=1+free_9 && free_10>=1+J && free_10>=1+K && free_10>=1+free_8 && L>=0 && free_2>=2 && M==1 ], cost: 1
+      2: f5 -> f7 : L'=1+E1, M'=1, N'=free_11, O'=P, Q_1'=free_12, R'=J, S'=free_12, T'=free_13, U'=V, W'=Q, X'=K, Y'=free_14, Z'=free_15, A1'=free_16, B1'=free_17, C1'=J, D1'=E1, [ free_19>=1+free_18 && free_19>=1+J && free_19>=1+K && free_17>=1+free_19 && L>=0 && free_11>=2 && M==1 ], cost: 1
+      3: f5 -> f7 : L'=1+E1, M'=1, N'=free_20, O'=P, Q_1'=free_21, R'=J, S'=free_21, T'=free_22, U'=V, W'=Q, X'=K, Y'=free_23, Z'=free_24, A1'=free_25, B1'=free_26, C1'=J, D1'=E1, [ free_28>=1+free_27 && free_28>=1+J && K>=1+free_28 && free_28>=1+free_26 && L>=0 && free_20>=2 && M==1 ], cost: 1
+      4: f5 -> f7 : L'=1+E1, M'=1, N'=free_29, O'=P, Q_1'=free_30, R'=J, S'=free_30, T'=free_31, U'=V, W'=Q, X'=K, Y'=free_32, Z'=free_33, A1'=free_34, B1'=free_35, C1'=J, D1'=E1, [ free_37>=1+free_36 && free_37>=1+J && K>=1+free_37 && free_35>=1+free_37 && L>=0 && free_29>=2 && M==1 ], cost: 1
+      5: f5 -> f7 : L'=1+E1, M'=1, N'=free_38, O'=P, Q_1'=free_39, R'=J, S'=free_39, T'=free_40, U'=V, W'=Q, X'=K, Y'=free_41, Z'=free_42, A1'=free_43, B1'=free_44, C1'=J, D1'=E1, [ free_46>=1+free_45 && J>=1+free_46 && free_46>=1+K && free_46>=1+free_44 && L>=0 && free_38>=2 && M==1 ], cost: 1
+      6: f5 -> f7 : L'=1+E1, M'=1, N'=free_47, O'=P, Q_1'=free_48, R'=J, S'=free_48, T'=free_49, U'=V, W'=Q, X'=K, Y'=free_50, Z'=free_51, A1'=free_52, B1'=free_53, C1'=J, D1'=E1, [ free_55>=1+free_54 && J>=1+free_55 && free_55>=1+K && free_53>=1+free_55 && L>=0 && free_47>=2 && M==1 ], cost: 1
+      7: f5 -> f7 : L'=1+E1, M'=1, N'=free_56, O'=P, Q_1'=free_57, R'=J, S'=free_57, T'=free_58, U'=V, W'=Q, X'=K, Y'=free_59, Z'=free_60, A1'=free_61, B1'=free_62, C1'=J, D1'=E1, [ free_64>=1+free_63 && J>=1+free_64 && K>=1+free_64 && free_64>=1+free_62 && L>=0 && free_56>=2 && M==1 ], cost: 1
+      8: f5 -> f7 : L'=1+E1, M'=1, N'=free_65, O'=P, Q_1'=free_66, R'=J, S'=free_66, T'=free_67, U'=V, W'=Q, X'=K, Y'=free_68, Z'=free_69, A1'=free_70, B1'=free_71, C1'=J, D1'=E1, [ free_73>=1+free_72 && J>=1+free_73 && K>=1+free_73 && free_71>=1+free_73 && L>=0 && free_65>=2 && M==1 ], cost: 1
+      9: f5 -> f7 : L'=1+E1, M'=1, N'=free_74, O'=P, Q_1'=free_75, R'=J, S'=free_75, T'=free_76, U'=V, W'=Q, X'=K, Y'=free_77, Z'=free_78, A1'=free_79, B1'=free_80, C1'=J, D1'=E1, [ free_81>=1+free_82 && free_82>=1+J && free_82>=1+K && free_82>=1+free_80 && L>=0 && free_74>=2 && M==1 ], cost: 1
+     10: f5 -> f7 : L'=1+E1, M'=1, N'=free_83, O'=P, Q_1'=free_84, R'=J, S'=free_84, T'=free_85, U'=V, W'=Q, X'=K, Y'=free_86, Z'=free_87, A1'=free_88, B1'=free_89, C1'=J, D1'=E1, [ free_90>=1+free_91 && free_91>=1+J && free_91>=1+K && free_89>=1+free_91 && L>=0 && free_83>=2 && M==1 ], cost: 1
+     11: f5 -> f7 : L'=1+E1, M'=1, N'=free_92, O'=P, Q_1'=free_93, R'=J, S'=free_93, T'=free_94, U'=V, W'=Q, X'=K, Y'=free_95, Z'=free_96, A1'=free_97, B1'=free_98, C1'=J, D1'=E1, [ free_99>=1+free_100 && free_100>=1+J && K>=1+free_100 && free_100>=1+free_98 && L>=0 && free_92>=2 && M==1 ], cost: 1
+     12: f5 -> f7 : L'=1+E1, M'=1, N'=free_101, O'=P, Q_1'=free_102, R'=J, S'=free_102, T'=free_103, U'=V, W'=Q, X'=K, Y'=free_104, Z'=free_105, A1'=free_106, B1'=free_107, C1'=J, D1'=E1, [ free_108>=1+free_109 && free_109>=1+J && K>=1+free_109 && free_107>=1+free_109 && L>=0 && free_101>=2 && M==1 ], cost: 1
+     13: f5 -> f7 : L'=1+E1, M'=1, N'=free_110, O'=P, Q_1'=free_111, R'=J, S'=free_111, T'=free_112, U'=V, W'=Q, X'=K, Y'=free_113, Z'=free_114, A1'=free_115, B1'=free_116, C1'=J, D1'=E1, [ free_117>=1+free_118 && J>=1+free_118 && free_118>=1+K && free_118>=1+free_116 && L>=0 && free_110>=2 && M==1 ], cost: 1
+     14: f5 -> f7 : L'=1+E1, M'=1, N'=free_119, O'=P, Q_1'=free_120, R'=J, S'=free_120, T'=free_121, U'=V, W'=Q, X'=K, Y'=free_122, Z'=free_123, A1'=free_124, B1'=free_125, C1'=J, D1'=E1, [ free_126>=1+free_127 && J>=1+free_127 && free_127>=1+K && free_125>=1+free_127 && L>=0 && free_119>=2 && M==1 ], cost: 1
+     15: f5 -> f7 : L'=1+E1, M'=1, N'=free_128, O'=P, Q_1'=free_129, R'=J, S'=free_129, T'=free_130, U'=V, W'=Q, X'=K, Y'=free_131, Z'=free_132, A1'=free_133, B1'=free_134, C1'=J, D1'=E1, [ free_135>=1+free_136 && J>=1+free_136 && K>=1+free_136 && free_136>=1+free_134 && L>=0 && free_128>=2 && M==1 ], cost: 1
+     16: f5 -> f7 : L'=1+E1, M'=1, N'=free_137, O'=P, Q_1'=free_138, R'=J, S'=free_138, T'=free_139, U'=V, W'=Q, X'=K, Y'=free_140, Z'=free_141, A1'=free_142, B1'=free_143, C1'=J, D1'=E1, [ free_144>=1+free_145 && J>=1+free_145 && K>=1+free_145 && free_143>=1+free_145 && L>=0 && free_137>=2 && M==1 ], cost: 1
+     17: f5 -> f4 : J'=free_146, N'=free_147, O'=free_148, P'=free_149, Q_1'=free_150, R'=free_151, C1'=free_152, F1'=free_153, G1'=free_154, [ L>=0 && free_148>=1+free_154 && free_147>=2 && J==P ], cost: 1
+     18: f5 -> f4 : J'=free_155, N'=free_156, O'=free_157, P'=free_158, Q_1'=free_159, R'=free_160, C1'=free_161, F1'=free_162, G1'=free_163, [ L>=0 && free_163>=1+free_157 && free_156>=2 && J==P ], cost: 1
+     31: f7 -> f7 : M'=1+M, N'=free_240, O'=P, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1+E1, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_244>=1+free_245 && free_244>=1+J && free_244>=1+free_243 && free_244>=1+K && free_246>=0 && free_240>=2 && E1>=0 ], cost: 1
+     32: f7 -> f7 : M'=1+M, N'=free_247, O'=P, Q_1'=free_248, R'=J, S'=free_248, C1'=J, E1'=-1+E1, K1'=free_249, L1'=free_250, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_251>=1+free_252 && free_251>=1+J && free_251>=1+free_250 && K>=1+free_251 && free_253>=0 && free_247>=2 && E1>=0 ], cost: 1
+     33: f7 -> f7 : M'=1+M, N'=free_254, O'=P, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1+E1, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_258>=1+free_259 && free_258>=1+J && free_257>=1+free_258 && free_258>=1+K && free_260>=0 && free_254>=2 && E1>=0 ], cost: 1
+     34: f7 -> f7 : M'=1+M, N'=free_261, O'=P, Q_1'=free_262, R'=J, S'=free_262, C1'=J, E1'=-1+E1, K1'=free_263, L1'=free_264, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_265>=1+free_266 && free_265>=1+J && free_264>=1+free_265 && K>=1+free_265 && free_267>=0 && free_261>=2 && E1>=0 ], cost: 1
+     35: f7 -> f7 : M'=1+M, N'=free_268, O'=P, Q_1'=free_269, R'=J, S'=free_269, C1'=J, E1'=-1+E1, K1'=free_270, L1'=free_271, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_272>=1+free_273 && J>=1+free_272 && free_272>=1+free_271 && free_272>=1+K && free_274>=0 && free_268>=2 && E1>=0 ], cost: 1
+     36: f7 -> f7 : M'=1+M, N'=free_275, O'=P, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1+E1, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_279>=1+free_280 && J>=1+free_279 && free_279>=1+free_278 && K>=1+free_279 && free_281>=0 && free_275>=2 && E1>=0 ], cost: 1
+     37: f7 -> f7 : M'=1+M, N'=free_282, O'=P, Q_1'=free_283, R'=J, S'=free_283, C1'=J, E1'=-1+E1, K1'=free_284, L1'=free_285, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_286>=1+free_287 && J>=1+free_286 && free_285>=1+free_286 && free_286>=1+K && free_288>=0 && free_282>=2 && E1>=0 ], cost: 1
+     38: f7 -> f7 : M'=1+M, N'=free_289, O'=P, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1+E1, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_293>=1+free_294 && J>=1+free_293 && free_292>=1+free_293 && K>=1+free_293 && free_295>=0 && free_289>=2 && E1>=0 ], cost: 1
+     39: f7 -> f7 : M'=1+M, N'=free_296, O'=P, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1+E1, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_301>=1+free_300 && free_300>=1+J && free_300>=1+free_299 && free_300>=1+K && free_302>=0 && free_296>=2 && E1>=0 ], cost: 1
+     40: f7 -> f7 : M'=1+M, N'=free_303, O'=P, Q_1'=free_304, R'=J, S'=free_304, C1'=J, E1'=-1+E1, K1'=free_305, L1'=free_306, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_308>=1+free_307 && free_307>=1+J && free_307>=1+free_306 && K>=1+free_307 && free_309>=0 && free_303>=2 && E1>=0 ], cost: 1
+     41: f7 -> f7 : M'=1+M, N'=free_310, O'=P, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1+E1, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_315>=1+free_314 && free_314>=1+J && free_313>=1+free_314 && free_314>=1+K && free_316>=0 && free_310>=2 && E1>=0 ], cost: 1
+     42: f7 -> f7 : M'=1+M, N'=free_317, O'=P, Q_1'=free_318, R'=J, S'=free_318, C1'=J, E1'=-1+E1, K1'=free_319, L1'=free_320, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_322>=1+free_321 && free_321>=1+J && free_320>=1+free_321 && K>=1+free_321 && free_323>=0 && free_317>=2 && E1>=0 ], cost: 1
+     43: f7 -> f7 : M'=1+M, N'=free_324, O'=P, Q_1'=free_325, R'=J, S'=free_325, C1'=J, E1'=-1+E1, K1'=free_326, L1'=free_327, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_329>=1+free_328 && J>=1+free_328 && free_328>=1+free_327 && free_328>=1+K && free_330>=0 && free_324>=2 && E1>=0 ], cost: 1
+     44: f7 -> f7 : M'=1+M, N'=free_331, O'=P, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1+E1, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_336>=1+free_335 && J>=1+free_335 && free_335>=1+free_334 && K>=1+free_335 && free_337>=0 && free_331>=2 && E1>=0 ], cost: 1
+     45: f7 -> f7 : M'=1+M, N'=free_338, O'=P, Q_1'=free_339, R'=J, S'=free_339, C1'=J, E1'=-1+E1, K1'=free_340, L1'=free_341, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_343>=1+free_342 && J>=1+free_342 && free_341>=1+free_342 && free_342>=1+K && free_344>=0 && free_338>=2 && E1>=0 ], cost: 1
+     46: f7 -> f7 : M'=1+M, N'=free_345, O'=P, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1+E1, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_350>=1+free_349 && J>=1+free_349 && free_348>=1+free_349 && K>=1+free_349 && free_351>=0 && free_345>=2 && E1>=0 ], cost: 1
+     47: f7 -> f4 : J'=free_352, N'=free_353, O'=free_354, P'=free_355, Q_1'=free_356, R'=free_357, C1'=free_358, F1'=free_359, R1'=free_360, [ M>=0 && E1>=0 && free_353>=2 && free_354>=1+free_360 && free_354>=1+K && J==P ], cost: 1
+     48: f7 -> f4 : J'=free_361, N'=free_362, O'=free_363, P'=free_364, Q_1'=free_365, R'=free_366, C1'=free_367, F1'=free_368, R1'=free_369, [ M>=0 && E1>=0 && free_362>=2 && free_363>=1+free_369 && K>=1+free_363 && J==P ], cost: 1
+     49: f7 -> f4 : J'=free_370, N'=free_371, O'=free_372, P'=free_373, Q_1'=free_374, R'=free_375, C1'=free_376, F1'=free_377, R1'=free_378, [ M>=0 && E1>=0 && free_371>=2 && free_378>=1+free_372 && free_372>=1+K && J==P ], cost: 1
+     50: f7 -> f4 : J'=free_379, N'=free_380, O'=free_381, P'=free_382, Q_1'=free_383, R'=free_384, C1'=free_385, F1'=free_386, R1'=free_387, [ M>=0 && E1>=0 && free_380>=2 && free_387>=1+free_381 && K>=1+free_381 && J==P ], cost: 1
+     19: f6 -> f7 : N'=free_164, O'=P, Q_1'=free_165, R'=J, S'=free_165, C1'=J, H1'=free_166, Q1'=free_167, [ free_168>=1+K && free_168>=1+J && free_168>=1+free_167 && free_164>=2 && D1>=0 ], cost: 1
+     20: f6 -> f7 : N'=free_169, O'=P, Q_1'=free_170, R'=J, S'=free_170, C1'=J, H1'=free_171, Q1'=free_172, [ free_173>=1+K && free_173>=1+J && free_172>=1+free_173 && free_169>=2 && D1>=0 ], cost: 1
+     21: f6 -> f7 : N'=free_174, O'=P, Q_1'=free_175, R'=J, S'=free_175, C1'=J, H1'=free_176, Q1'=free_177, [ free_178>=1+K && J>=1+free_178 && free_178>=1+free_177 && free_174>=2 && D1>=0 ], cost: 1
+     22: f6 -> f7 : N'=free_179, O'=P, Q_1'=free_180, R'=J, S'=free_180, C1'=J, H1'=free_181, Q1'=free_182, [ free_183>=1+K && J>=1+free_183 && free_182>=1+free_183 && free_179>=2 && D1>=0 ], cost: 1
+     23: f6 -> f7 : N'=free_184, O'=P, Q_1'=free_185, R'=J, S'=free_185, C1'=J, H1'=free_186, Q1'=free_187, [ K>=1+free_188 && free_188>=1+J && free_188>=1+free_187 && free_184>=2 && D1>=0 ], cost: 1
+     24: f6 -> f7 : N'=free_189, O'=P, Q_1'=free_190, R'=J, S'=free_190, C1'=J, H1'=free_191, Q1'=free_192, [ K>=1+free_193 && free_193>=1+J && free_192>=1+free_193 && free_189>=2 && D1>=0 ], cost: 1
+     25: f6 -> f7 : N'=free_194, O'=P, Q_1'=free_195, R'=J, S'=free_195, C1'=J, H1'=free_196, Q1'=free_197, [ K>=1+free_198 && J>=1+free_198 && free_198>=1+free_197 && free_194>=2 && D1>=0 ], cost: 1
+     26: f6 -> f7 : N'=free_199, O'=P, Q_1'=free_200, R'=J, S'=free_200, C1'=J, H1'=free_201, Q1'=free_202, [ K>=1+free_203 && J>=1+free_203 && free_202>=1+free_203 && free_199>=2 && D1>=0 ], cost: 1
+     27: f6 -> f4 : J'=free_204, N'=free_205, O'=free_206, P'=free_207, Q_1'=free_208, R'=free_209, C1'=free_210, F1'=free_211, J1'=free_212, [ D1>=0 && free_205>=2 && free_206>=1+free_212 && free_206>=1+K && J==P ], cost: 1
+     28: f6 -> f4 : J'=free_213, N'=free_214, O'=free_215, P'=free_216, Q_1'=free_217, R'=free_218, C1'=free_219, F1'=free_220, J1'=free_221, [ D1>=0 && free_214>=2 && free_215>=1+free_221 && K>=1+free_215 && J==P ], cost: 1
+     29: f6 -> f4 : J'=free_222, N'=free_223, O'=free_224, P'=free_225, Q_1'=free_226, R'=free_227, C1'=free_228, F1'=free_229, J1'=free_230, [ D1>=0 && free_223>=2 && free_230>=1+free_224 && free_224>=1+K && J==P ], cost: 1
+     30: f6 -> f4 : J'=free_231, N'=free_232, O'=free_233, P'=free_234, Q_1'=free_235, R'=free_236, C1'=free_237, F1'=free_238, J1'=free_239, [ D1>=0 && free_232>=2 && free_239>=1+free_233 && K>=1+free_233 && J==P ], cost: 1
+     52: f3 -> f1 : A'=N, B'=2, C'=free_404, D'=free_405, E'=free_404, O'=free_406, S1'=free_406, U1'=free_404, V1'=free_407, [ N>=2 ], cost: 1
+     51: f3 -> f4 : A'=free_388, B'=free_389, C'=free_390, D'=free_391, E'=free_392, J'=free_393, N'=free_394, P'=free_395, Q_1'=free_396, R'=free_397, C1'=free_398, F1'=free_399, S1'=free_400, T1'=free_401, U1'=free_402, [ 0>=free_403 && 0>=N && 0>=free_394 ], cost: 1
+     56: f3 -> f4 : A'=free_452, B'=free_453, C'=free_454, D'=free_455, E'=free_456, J'=free_457, N'=1, O'=J, P'=free_458, Q_1'=free_459, R'=free_460, C1'=free_461, F1'=free_462, S1'=free_463, T1'=free_464, U1'=free_465, [ N==1 ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f3
+      0: f1 -> f1 : B'=1+B, C'=D, D'=free, E'=D, F'=free_1, G'=B, H'=Q, [ A>=1+B && B>=0 ], cost: 1
+     53: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=0, N'=free_413, P'=O, Q_1'=free_414, R'=J, S'=free_414, C1'=J, F1'=free_415, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 ], cost: 1
+     54: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=0, N'=free_427, P'=O, Q_1'=free_428, R'=J, S'=free_428, C1'=J, F1'=free_429, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 ], cost: 1
+     31: f7 -> f7 : M'=1+M, N'=free_240, O'=P, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1+E1, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_240>=2 && E1>=0 ], cost: 1
+     32: f7 -> f7 : M'=1+M, N'=free_247, O'=P, Q_1'=free_248, R'=J, S'=free_248, C1'=J, E1'=-1+E1, K1'=free_249, L1'=free_250, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_247>=2 && E1>=0 && 1+J<=-1+K && 1+free_250<=-1+K ], cost: 1
+     33: f7 -> f7 : M'=1+M, N'=free_254, O'=P, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1+E1, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+K<=-1+free_257 ], cost: 1
+     34: f7 -> f7 : M'=1+M, N'=free_261, O'=P, Q_1'=free_262, R'=J, S'=free_262, C1'=J, E1'=-1+E1, K1'=free_263, L1'=free_264, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_261>=2 && E1>=0 && 1+J<=-1+free_264 && 1+J<=-1+K ], cost: 1
+     35: f7 -> f7 : M'=1+M, N'=free_268, O'=P, Q_1'=free_269, R'=J, S'=free_269, C1'=J, E1'=-1+E1, K1'=free_270, L1'=free_271, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_268>=2 && E1>=0 && 1+free_271<=-1+J && 1+K<=-1+J ], cost: 1
+     36: f7 -> f7 : M'=1+M, N'=free_275, O'=P, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1+E1, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+K ], cost: 1
+     37: f7 -> f7 : M'=1+M, N'=free_282, O'=P, Q_1'=free_283, R'=J, S'=free_283, C1'=J, E1'=-1+E1, K1'=free_284, L1'=free_285, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_282>=2 && E1>=0 && 1+K<=-1+J && 1+K<=-1+free_285 ], cost: 1
+     38: f7 -> f7 : M'=1+M, N'=free_289, O'=P, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1+E1, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_289>=2 && E1>=0 ], cost: 1
+     39: f7 -> f7 : M'=1+M, N'=free_296, O'=P, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1+E1, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_296>=2 && E1>=0 ], cost: 1
+     40: f7 -> f7 : M'=1+M, N'=free_303, O'=P, Q_1'=free_304, R'=J, S'=free_304, C1'=J, E1'=-1+E1, K1'=free_305, L1'=free_306, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_303>=2 && E1>=0 && 1+J<=-1+K && 1+free_306<=-1+K ], cost: 1
+     41: f7 -> f7 : M'=1+M, N'=free_310, O'=P, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1+E1, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+K<=-1+free_313 ], cost: 1
+     42: f7 -> f7 : M'=1+M, N'=free_317, O'=P, Q_1'=free_318, R'=J, S'=free_318, C1'=J, E1'=-1+E1, K1'=free_319, L1'=free_320, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_317>=2 && E1>=0 && 1+J<=-1+free_320 && 1+J<=-1+K ], cost: 1
+     43: f7 -> f7 : M'=1+M, N'=free_324, O'=P, Q_1'=free_325, R'=J, S'=free_325, C1'=J, E1'=-1+E1, K1'=free_326, L1'=free_327, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_324>=2 && E1>=0 && 1+free_327<=-1+J && 1+K<=-1+J ], cost: 1
+     44: f7 -> f7 : M'=1+M, N'=free_331, O'=P, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1+E1, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+K ], cost: 1
+     45: f7 -> f7 : M'=1+M, N'=free_338, O'=P, Q_1'=free_339, R'=J, S'=free_339, C1'=J, E1'=-1+E1, K1'=free_340, L1'=free_341, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_338>=2 && E1>=0 && 1+K<=-1+J && 1+K<=-1+free_341 ], cost: 1
+     46: f7 -> f7 : M'=1+M, N'=free_345, O'=P, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1+E1, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=K, P1'=1+M, Q1_1'=-1+E1, [ free_345>=2 && E1>=0 ], cost: 1
+     52: f3 -> f1 : A'=N, B'=2, C'=free_404, D'=free_405, E'=free_404, O'=free_406, S1'=free_406, U1'=free_404, V1'=free_407, [ N>=2 ], cost: 1
+
+Eliminating 1 self-loops for location f1
+  Self-Loop 0 has the metering function: -B+A, resulting in the new transition 61.
+  Removing the self-loops: 0.
+Eliminating 16 self-loops for location f7
+  Self-Loop 31 has the metering function: 1+E1, resulting in the new transition 62.
+  Self-Loop 32 has the metering function: 1+E1, resulting in the new transition 63.
+  Self-Loop 33 has the metering function: 1+E1, resulting in the new transition 64.
+  Self-Loop 34 has the metering function: 1+E1, resulting in the new transition 65.
+  Self-Loop 35 has the metering function: 1+E1, resulting in the new transition 66.
+  Self-Loop 36 has the metering function: 1+E1, resulting in the new transition 67.
+  Self-Loop 37 has the metering function: 1+E1, resulting in the new transition 68.
+  Self-Loop 38 has the metering function: 1+E1, resulting in the new transition 69.
+  Self-Loop 39 has the metering function: 1+E1, resulting in the new transition 70.
+  Self-Loop 40 has the metering function: 1+E1, resulting in the new transition 71.
+  Self-Loop 41 has the metering function: 1+E1, resulting in the new transition 72.
+  Self-Loop 42 has the metering function: 1+E1, resulting in the new transition 73.
+  Self-Loop 43 has the metering function: 1+E1, resulting in the new transition 74.
+  Self-Loop 44 has the metering function: 1+E1, resulting in the new transition 75.
+  Self-Loop 45 has the metering function: 1+E1, resulting in the new transition 76.
+  Self-Loop 46 has the metering function: 1+E1, resulting in the new transition 77.
+  Removing the self-loops: 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f3
+     61: f1 -> f1 : B'=A, C'=free, D'=free, E'=free, F'=free_1, G'=-1+A, H'=Q, [ A>=1+B && B>=0 ], cost: -B+A
+     53: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=0, N'=free_413, P'=O, Q_1'=free_414, R'=J, S'=free_414, C1'=J, F1'=free_415, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 ], cost: 1
+     54: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=0, N'=free_427, P'=O, Q_1'=free_428, R'=J, S'=free_428, C1'=J, F1'=free_429, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 ], cost: 1
+     62: f7 -> f7 : M'=1+M+E1, N'=free_240, O'=P, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_240>=2 && E1>=0 ], cost: 1+E1
+     63: f7 -> f7 : M'=1+M+E1, N'=free_247, O'=P, Q_1'=free_248, R'=J, S'=free_248, C1'=J, E1'=-1, K1'=free_249, L1'=free_250, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_247>=2 && E1>=0 && 1+J<=-1+K && 1+free_250<=-1+K ], cost: 1+E1
+     64: f7 -> f7 : M'=1+M+E1, N'=free_254, O'=P, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+K<=-1+free_257 ], cost: 1+E1
+     65: f7 -> f7 : M'=1+M+E1, N'=free_261, O'=P, Q_1'=free_262, R'=J, S'=free_262, C1'=J, E1'=-1, K1'=free_263, L1'=free_264, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_261>=2 && E1>=0 && 1+J<=-1+free_264 && 1+J<=-1+K ], cost: 1+E1
+     66: f7 -> f7 : M'=1+M+E1, N'=free_268, O'=P, Q_1'=free_269, R'=J, S'=free_269, C1'=J, E1'=-1, K1'=free_270, L1'=free_271, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_268>=2 && E1>=0 && 1+free_271<=-1+J && 1+K<=-1+J ], cost: 1+E1
+     67: f7 -> f7 : M'=1+M+E1, N'=free_275, O'=P, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+K ], cost: 1+E1
+     68: f7 -> f7 : M'=1+M+E1, N'=free_282, O'=P, Q_1'=free_283, R'=J, S'=free_283, C1'=J, E1'=-1, K1'=free_284, L1'=free_285, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_282>=2 && E1>=0 && 1+K<=-1+J && 1+K<=-1+free_285 ], cost: 1+E1
+     69: f7 -> f7 : M'=1+M+E1, N'=free_289, O'=P, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_289>=2 && E1>=0 ], cost: 1+E1
+     70: f7 -> f7 : M'=1+M+E1, N'=free_296, O'=P, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_296>=2 && E1>=0 ], cost: 1+E1
+     71: f7 -> f7 : M'=1+M+E1, N'=free_303, O'=P, Q_1'=free_304, R'=J, S'=free_304, C1'=J, E1'=-1, K1'=free_305, L1'=free_306, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_303>=2 && E1>=0 && 1+J<=-1+K && 1+free_306<=-1+K ], cost: 1+E1
+     72: f7 -> f7 : M'=1+M+E1, N'=free_310, O'=P, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+K<=-1+free_313 ], cost: 1+E1
+     73: f7 -> f7 : M'=1+M+E1, N'=free_317, O'=P, Q_1'=free_318, R'=J, S'=free_318, C1'=J, E1'=-1, K1'=free_319, L1'=free_320, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_317>=2 && E1>=0 && 1+J<=-1+free_320 && 1+J<=-1+K ], cost: 1+E1
+     74: f7 -> f7 : M'=1+M+E1, N'=free_324, O'=P, Q_1'=free_325, R'=J, S'=free_325, C1'=J, E1'=-1, K1'=free_326, L1'=free_327, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_324>=2 && E1>=0 && 1+free_327<=-1+J && 1+K<=-1+J ], cost: 1+E1
+     75: f7 -> f7 : M'=1+M+E1, N'=free_331, O'=P, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+K ], cost: 1+E1
+     76: f7 -> f7 : M'=1+M+E1, N'=free_338, O'=P, Q_1'=free_339, R'=J, S'=free_339, C1'=J, E1'=-1, K1'=free_340, L1'=free_341, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_338>=2 && E1>=0 && 1+K<=-1+J && 1+K<=-1+free_341 ], cost: 1+E1
+     77: f7 -> f7 : M'=1+M+E1, N'=free_345, O'=P, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=K, P1'=1+M+E1, Q1_1'=-1, [ free_345>=2 && E1>=0 ], cost: 1+E1
+     52: f3 -> f1 : A'=N, B'=2, C'=free_404, D'=free_405, E'=free_404, O'=free_406, S1'=free_406, U1'=free_404, V1'=free_407, [ N>=2 ], cost: 1
+
+
+Chained simpled loops:
+  Start location: f3
+     79: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_240, O'=O, P'=O, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1, F1'=free_415, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_240>=2 && E1>=0 ], cost: 2+E1
+     80: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_240, O'=O, P'=O, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1, F1'=free_429, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_240>=2 && E1>=0 ], cost: 2+E1
+     81: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=O, P'=O, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_415, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 2+E1
+     82: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=O, P'=O, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_429, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 2+E1
+     83: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_275, O'=O, P'=O, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, F1'=free_415, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+J ], cost: 2+E1
+     84: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_275, O'=O, P'=O, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, F1'=free_429, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+J ], cost: 2+E1
+     85: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_289, O'=O, P'=O, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1, F1'=free_415, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_289>=2 && E1>=0 ], cost: 2+E1
+     86: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_289, O'=O, P'=O, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1, F1'=free_429, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_289>=2 && E1>=0 ], cost: 2+E1
+     87: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_296, O'=O, P'=O, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1, F1'=free_415, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_296>=2 && E1>=0 ], cost: 2+E1
+     88: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_296, O'=O, P'=O, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1, F1'=free_429, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_296>=2 && E1>=0 ], cost: 2+E1
+     89: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_310, O'=O, P'=O, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, F1'=free_415, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+J<=-1+free_313 ], cost: 2+E1
+     90: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_310, O'=O, P'=O, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, F1'=free_429, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+J<=-1+free_313 ], cost: 2+E1
+     91: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_331, O'=O, P'=O, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, F1'=free_415, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+J ], cost: 2+E1
+     92: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_331, O'=O, P'=O, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, F1'=free_429, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+J ], cost: 2+E1
+     93: f1 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, K'=J, L'=E1, M'=1+E1, N'=free_345, O'=O, P'=O, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1, F1'=free_415, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ free_413>=2 && W1>=free_413 && O>=1+K && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_345>=2 && E1>=0 ], cost: 2+E1
+     94: f1 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, K'=J, L'=E1, M'=1+E1, N'=free_345, O'=O, P'=O, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1, F1'=free_429, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ free_427>=2 && W1>=free_427 && K>=1+O && B>=A && B>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_345>=2 && E1>=0 ], cost: 2+E1
+     78: f3 -> f1 : A'=N, B'=N, C'=free, D'=free, E'=free, F'=free_1, G'=-1+N, H'=Q, O'=free_406, S1'=free_406, U1'=free_404, V1'=free_407, [ N>=2 && N>=3 && 2>=0 ], cost: -1+N
+
+
+Eliminated locations (branches):
+  Start location: f3
+     95: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_240, O'=free_406, P'=free_406, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1, F1'=free_415, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_240>=2 && E1>=0 ], cost: 1+N+E1
+     96: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_240, O'=free_406, P'=free_406, Q_1'=free_241, R'=J, S'=free_241, C1'=J, E1'=-1, F1'=free_429, K1'=free_242, L1'=free_243, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_240>=2 && E1>=0 ], cost: 1+N+E1
+     97: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=free_406, P'=free_406, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_415, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 1+N+E1
+     98: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=free_406, P'=free_406, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_429, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 1+N+E1
+     99: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_275, O'=free_406, P'=free_406, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, F1'=free_415, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+J ], cost: 1+N+E1
+    100: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_275, O'=free_406, P'=free_406, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, F1'=free_429, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+J ], cost: 1+N+E1
+    101: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_289, O'=free_406, P'=free_406, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1, F1'=free_415, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_289>=2 && E1>=0 ], cost: 1+N+E1
+    102: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_289, O'=free_406, P'=free_406, Q_1'=free_290, R'=J, S'=free_290, C1'=J, E1'=-1, F1'=free_429, K1'=free_291, L1'=free_292, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_289>=2 && E1>=0 ], cost: 1+N+E1
+    103: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_296, O'=free_406, P'=free_406, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1, F1'=free_415, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_296>=2 && E1>=0 ], cost: 1+N+E1
+    104: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_296, O'=free_406, P'=free_406, Q_1'=free_297, R'=J, S'=free_297, C1'=J, E1'=-1, F1'=free_429, K1'=free_298, L1'=free_299, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_296>=2 && E1>=0 ], cost: 1+N+E1
+    105: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_310, O'=free_406, P'=free_406, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, F1'=free_415, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+J<=-1+free_313 ], cost: 1+N+E1
+    106: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_310, O'=free_406, P'=free_406, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, F1'=free_429, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+J<=-1+free_313 ], cost: 1+N+E1
+    107: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_331, O'=free_406, P'=free_406, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, F1'=free_415, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+J ], cost: 1+N+E1
+    108: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_331, O'=free_406, P'=free_406, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, F1'=free_429, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+J ], cost: 1+N+E1
+    109: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_345, O'=free_406, P'=free_406, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1, F1'=free_415, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_345>=2 && E1>=0 ], cost: 1+N+E1
+    110: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_345, O'=free_406, P'=free_406, Q_1'=free_346, R'=J, S'=free_346, C1'=J, E1'=-1, F1'=free_429, K1'=free_347, L1'=free_348, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_345>=2 && E1>=0 ], cost: 1+N+E1
+
+Created initial limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1+free_240 (+/+!), N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_240 (+/+!) by free_240 (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), free_240 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), free_240 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), free_240 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_240 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_240 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_240 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_240 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_240 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), free_240 (+), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+), free_240 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_240}
+resulting limit problem:
+2*free_240 (+), free_406-K (+/+!), free_240 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_240 (+) by free_240 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), free_240 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), free_240 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), free_240 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), free_240 (+), free_406 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+free_240 (+), free_406 (+!) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+E1 / n
+free_240 / n
+free_406 / 1
+K / -1
+Created initial limit problem:
+1 (+/+!), -1+free_345 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_345 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_345 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_345 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_345 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_345 (+/+!) by free_345 (+)
+resulting limit problem:
+free_345 (+), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_345 (+), 1+N (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+free_345 (+), N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_345==N}
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+2*E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_427}
+resulting limit problem:
+1 (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406+K (+/+!) by -free_406 (+!) and K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-free_406 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_406==-1}
+resulting limit problem:
+1 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+K (+!), free_427 (+) [solved]
+
+Solution:
+free_345 / n
+N / n
+W1 / n
+M / 0
+J / 1
+E1 / n
+free_406 / -1
+K / 1
+free_427 / n
+Created initial limit problem:
+1 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1+free_240 (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1+free_240 (+/+!), N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_240 (+/+!) by free_240 (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), free_240 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), free_240 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), free_240 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), free_240 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), free_240 (+), -free_406+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), free_240 (+), -free_406+K (+/+!), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), free_240 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), E1 (+), free_240 (+), -free_406+K (+/+!), 1+2*E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), E1 (+), free_240 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_240}
+resulting limit problem:
+2*free_240 (+), 1+free_240-free_427 (+/+!), free_240 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_240==free_427}
+resulting limit problem:
+1 (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406+K (+/+!) by -free_406 (+!) and K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-free_406 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_406==-1}
+resulting limit problem:
+1 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+K (+!), free_427 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+J / 1
+E1 / n
+free_240 / n
+free_406 / -1
+K / 1
+free_427 / n
+Created initial limit problem:
+1 (+/+!), -1+free_345 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_345 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_345 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_345 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_345 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_345 (+/+!) by free_345 (+)
+resulting limit problem:
+free_345 (+), -1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+free_345 (+), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_345 (+), 1+N (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+free_345 (+), N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_345 (+), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_345==N}
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+) [not solved]
+
+applying transformation rule (A), replacing 2*E1 (+) by E1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), E1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), E1 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), E1 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), E1 (+), free_406 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+E1 (+), free_406 (+!) [solved]
+
+Solution:
+free_345 / n
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+E1 / n
+free_406 / 1
+K / -1
+Created initial limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-J+free_257 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-J+free_257 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1+free_254 (+/+!), N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_254 (+/+!) by free_254 (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {free_413==free_254}
+resulting limit problem:
+1+free_254+E1 (+), free_406-K (+/+!), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {free_254==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (A), replacing 2*E1 (+) by E1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), E1 (+), -1+free_257-K (+/+!), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), free_257 (+/+!), E1 (+), free_406 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+free_257 (+/+!), E1 (+), free_406 (+!) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+free_257 / n
+free_254 / n
+E1 / n
+free_406 / 1
+K / -1
+Created initial limit problem:
+1 (+/+!), -1+free_331 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-free_334+J (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_331 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-free_334+J (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_331 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_331 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_331 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_331 (+/+!) by free_331 (+)
+resulting limit problem:
+free_331 (+), 1+W1 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_331 (+), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_331==N}
+resulting limit problem:
+N (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), -1-free_334+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), -1-free_334+K (+/+!), E1 (+), -free_406+K (+/+!), 1+2*E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), -1-free_334+K (+/+!), E1 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_427}
+resulting limit problem:
+1 (+/+!), -1-free_334+K (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1-free_334+K (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+-1-free_334+K (+/+!), 2 (+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-1-free_334+K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -1-free_334+K (+/+!) by -1 (-!) and -free_334+K (+) using + limit vector (-!,+)
+resulting limit problem:
+-free_334+K (+), -free_406+K (+/+!), -1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-free_334+K (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_334+K (+) by -free_334 (-!) and K (+) using + limit vector (-!,+)
+resulting limit problem:
+-free_406+K (+/+!), -free_334 (-!), K (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {K==free_427}
+resulting limit problem:
+-free_334 (-!), -free_406+free_427 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_334==1}
+resulting limit problem:
+-1 (-!), -free_406+free_427 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-free_406+free_427 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406+free_427 (+/+!) by -free_406 (-!) and free_427 (+) using + limit vector (-!,+)
+resulting limit problem:
+-free_406 (-!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_406==1}
+resulting limit problem:
+-1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_427 (+) [solved]
+
+Solution:
+free_331 / n
+N / n
+W1 / n
+M / 0
+free_334 / 1
+J / n
+E1 / n
+free_406 / 1
+K / n
+free_427 / n
+Created initial limit problem:
+1 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-J+free_257 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-J+free_257 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1+free_254 (+/+!), N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_254 (+/+!) by free_254 (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), free_254 (+), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), free_254 (+), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), free_254 (+), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), 1+W1-free_427 (+/+!), free_254 (+), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_254}
+resulting limit problem:
+1+free_254-free_427 (+/+!), 1+free_254+E1 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_254==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), 1+2*E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), E1 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_427}
+resulting limit problem:
+1 (+/+!), 2*free_427 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2*free_427 (+), -1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), -1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-1+free_257-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -1+free_257-K (+/+!) by -1 (-!) and free_257-K (+) using + limit vector (-!,+)
+resulting limit problem:
+free_257-K (+), -free_406+K (+/+!), -1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_257-K (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing free_257-K (+) by free_257 (+) and -K (-!) using + limit vector (+,-!)
+resulting limit problem:
+-K (-!), free_257 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_257==free_427}
+resulting limit problem:
+-K (-!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {K==1}
+resulting limit problem:
+1-free_406 (+/+!), -1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+1-free_406 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1-free_406 (+/+!) by -free_406 (+)
+resulting limit problem:
+-free_406 (+), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406 (+) by free_406 (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+-1 (-!), free_406 (-), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_406 (-), free_427 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+J / 1
+free_257 / n
+free_254 / n
+E1 / n
+free_406 / -n
+K / 1
+free_427 / n
+Created initial limit problem:
+1 (+/+!), -1+free_331 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-free_334+J (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_331 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-free_334+J (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_331 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_331 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_331 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_331 (+/+!) by free_331 (+)
+resulting limit problem:
+free_331 (+), -1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+free_331 (+), 1+W1 (+/+!), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_331 (+), 1+N (+/+!), -1-free_334+K (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+free_331 (+), N (+), -1-free_334+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_331==N}
+resulting limit problem:
+N (+), -1-free_334+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), -1-free_334+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), -1-free_334+K (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1-free_334+K (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+-1-free_334+K (+/+!), free_406-K (+/+!), E1 (+), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), -1-free_334+K (+/+!), free_406-K (+/+!), E1 (+) [not solved]
+
+applying transformation rule (A), replacing 2*E1 (+) by E1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+-1-free_334+K (+/+!), 2 (+!), free_406-K (+/+!), E1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-1-free_334+K (+/+!), free_406-K (+/+!), E1 (+) [not solved]
+
+applying transformation rule (A), replacing -1-free_334+K (+/+!) by -1 (-!) and -free_334+K (+) using + limit vector (-!,+)
+resulting limit problem:
+free_406-K (+/+!), -free_334+K (+), E1 (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_406-K (+/+!), -free_334+K (+), E1 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), -free_334+K (+), E1 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), E1 (+), free_406 (+!), -1-free_334 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+E1 (+), free_406 (+!), -1-free_334 (+) [not solved]
+
+applying transformation rule (D), replacing -1-free_334 (+) by -free_334 (+)
+resulting limit problem:
+E1 (+), -free_334 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {free_406==1}
+resulting limit problem:
+1 (+!), E1 (+), -free_334 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+E1 (+), -free_334 (+) [not solved]
+
+applying transformation rule (A), replacing -free_334 (+) by free_334 (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+free_334 (-), E1 (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_334 (-), E1 (+) [solved]
+
+Solution:
+free_331 / n
+N / n
+W1 / n
+M / 0
+free_413 / n
+free_334 / -n
+J / -1
+E1 / n
+free_406 / 1
+K / -1
+Created initial limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -1-free_278+J (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -1-free_278+J (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), -1+free_275 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+free_275 (+/+!), E1 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_275 (+/+!) by free_275 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_275 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_275 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), -1-free_278+K (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_275 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), -1-free_278+K (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_275 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1-free_278+K (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_275 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+-1-free_278+K (+/+!), free_406-K (+/+!), E1 (+), free_275 (+), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), -1-free_278+K (+/+!), free_406-K (+/+!), E1 (+), free_275 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_275}
+resulting limit problem:
+-1-free_278+K (+/+!), free_406-K (+/+!), 2*free_275 (+), free_275 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_275 (+) by free_275 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+-1-free_278+K (+/+!), 2 (+!), free_406-K (+/+!), free_275 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-1-free_278+K (+/+!), free_406-K (+/+!), free_275 (+) [not solved]
+
+applying transformation rule (A), replacing -1-free_278+K (+/+!) by -1 (-!) and -free_278+K (+) using + limit vector (-!,+)
+resulting limit problem:
+free_406-K (+/+!), -free_278+K (+), -1 (-!), free_275 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_406-K (+/+!), -free_278+K (+), free_275 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), -free_278+K (+), free_275 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), -1-free_278 (+), free_275 (+), free_406 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-1-free_278 (+), free_275 (+), free_406 (+!) [not solved]
+
+applying transformation rule (D), replacing -1-free_278 (+) by -free_278 (+)
+resulting limit problem:
+-free_278 (+), free_275 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {free_406==1}
+resulting limit problem:
+1 (+!), -free_278 (+), free_275 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-free_278 (+), free_275 (+) [not solved]
+
+applying transformation rule (A), replacing -free_278 (+) by free_278 (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+free_278 (-), -1 (-!), free_275 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_278 (-), free_275 (+) [solved]
+
+Solution:
+free_278 / -n
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+E1 / n
+free_275 / n
+free_406 / 1
+K / -1
+Created initial limit problem:
+1 (+/+!), -1-J+free_313 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1-J+free_313 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+free_310 (+/+!) by free_310 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), 1+N+E1 (+), free_310 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), 1+N+E1 (+), free_310 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), free_310 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), 1+2*E1 (+), free_310 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), E1 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), free_310 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_310}
+resulting limit problem:
+1+free_310-free_427 (+/+!), 2*free_310 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), free_310 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_310==free_427}
+resulting limit problem:
+1 (+/+!), 2*free_427 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2*free_427 (+), -1+free_313-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), -1+free_313-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-1+free_313-K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -1+free_313-K (+/+!) by -1 (-!) and free_313-K (+) using + limit vector (-!,+)
+resulting limit problem:
+free_313-K (+), -free_406+K (+/+!), -1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_313-K (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing free_313-K (+) by free_313 (+) and -K (-!) using + limit vector (+,-!)
+resulting limit problem:
+-K (-!), -free_406+K (+/+!), free_313 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_313==free_427}
+resulting limit problem:
+-K (-!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {K==1}
+resulting limit problem:
+1-free_406 (+/+!), -1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+1-free_406 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1-free_406 (+/+!) by -free_406 (+)
+resulting limit problem:
+-free_406 (+), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406 (+) by free_406 (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+-1 (-!), free_406 (-), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_406 (-), free_427 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+J / 1
+E1 / n
+free_406 / -n
+free_313 / n
+K / 1
+free_310 / n
+free_427 / n
+Created initial limit problem:
+1 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -1-free_278+J (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -1-free_278+J (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1-free_278+K (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), -1+free_275 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), 1+W1-free_427 (+/+!), -1+free_275 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_275 (+/+!) by free_275 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_427 (+/+!), free_275 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_275 (+), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+-1-free_278+K (+/+!), N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_275 (+), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), -1-free_278+K (+/+!), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_275 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), -1-free_278+K (+/+!), E1 (+), -free_406+K (+/+!), free_275 (+), 1+2*E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), -1-free_278+K (+/+!), E1 (+), -free_406+K (+/+!), free_275 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_275}
+resulting limit problem:
+-1-free_278+K (+/+!), 1+free_275-free_427 (+/+!), -free_406+K (+/+!), 2*free_275 (+), free_275 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_275==free_427}
+resulting limit problem:
+1 (+/+!), -1-free_278+K (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1-free_278+K (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+-1-free_278+K (+/+!), 2 (+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-1-free_278+K (+/+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -1-free_278+K (+/+!) by -1 (-!) and -free_278+K (+) using + limit vector (-!,+)
+resulting limit problem:
+-free_278+K (+), -free_406+K (+/+!), -1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-free_278+K (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_278+K (+) by -free_278 (-!) and K (+) using + limit vector (-!,+)
+resulting limit problem:
+-free_278 (-!), -free_406+K (+/+!), K (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {K==free_427}
+resulting limit problem:
+-free_278 (-!), -free_406+free_427 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_278==1}
+resulting limit problem:
+-1 (-!), -free_406+free_427 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-free_406+free_427 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406+free_427 (+/+!) by -free_406 (-!) and free_427 (+) using + limit vector (-!,+)
+resulting limit problem:
+-free_406 (-!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_406==1}
+resulting limit problem:
+-1 (-!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+free_427 (+) [solved]
+
+Solution:
+free_278 / 1
+N / n
+W1 / n
+M / 0
+J / n
+E1 / n
+free_275 / n
+free_406 / 1
+K / n
+free_427 / n
+Created initial limit problem:
+1 (+/+!), -1-J+free_313 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1-J+free_313 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), -1+free_313-K (+/+!), -1+free_310 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_310 (+/+!) by free_310 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), -1+free_313-K (+/+!), 1+N+E1 (+), free_310 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), -1+free_313-K (+/+!), 1+N+E1 (+), free_310 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), -1+free_313-K (+/+!), 1+2*E1 (+), free_310 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_310}
+resulting limit problem:
+free_406-K (+/+!), 2*free_310 (+), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_310 (+) by free_310 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), -1+free_313-K (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), -1+free_313-K (+/+!), free_406 (+!), free_310 (+) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), free_406 (+!), free_313 (+/+!), free_310 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+free_406 (+!), free_313 (+/+!), free_310 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+E1 / n
+free_406 / 1
+free_313 / n
+K / -1
+free_310 / n
+Created initial limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), -1+free_289 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+free_289 (+/+!), E1 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_289 (+/+!) by free_289 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_289 (+), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_289 (+), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_289 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_289 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_289 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), free_289 (+), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+), free_289 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_289}
+resulting limit problem:
+free_406-K (+/+!), free_289 (+), 2*free_289 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_289 (+) by free_289 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), free_289 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), free_289 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), free_289 (+), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), free_289 (+), free_406 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+free_289 (+), free_406 (+!) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+E1 / n
+free_289 / n
+free_406 / 1
+K / -1
+Created initial limit problem:
+1 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_427 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+free_296 (+/+!) by free_296 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), free_296 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+N+E1 (+), free_296 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_296 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), 1+2*E1 (+), free_296 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_296 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_296}
+resulting limit problem:
+1+free_296-free_427 (+/+!), 2*free_296 (+), -free_406+K (+/+!), free_296 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_296==free_427}
+resulting limit problem:
+1 (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406+K (+/+!) by -free_406 (+!) and K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-free_406 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_406==-1}
+resulting limit problem:
+1 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+K (+!), free_427 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+J / 1
+E1 / n
+free_406 / -1
+K / 1
+free_296 / n
+free_427 / n
+Created initial limit problem:
+1 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), 1-J+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), 1+E1 (+/+!), -1+free_289 (+/+!), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), -1+free_289 (+/+!), E1 (+), -free_406+K (+/+!), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_289 (+/+!) by free_289 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_289 (+), -1+free_427 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_427 (+/+!) by free_427 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_289 (+), 1+N+E1 (+), -1+W1 (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_289 (+), 1+N+E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), 1+W1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_289 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==E1}
+resulting limit problem:
+1+E1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_289 (+), 1+2*E1 (+), free_427 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), 1+E1-free_427 (+/+!), E1 (+), -free_406+K (+/+!), free_289 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_289}
+resulting limit problem:
+-free_406+K (+/+!), free_289 (+), 1+free_289-free_427 (+/+!), 2*free_289 (+), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_289==free_427}
+resulting limit problem:
+1 (+/+!), 2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2*free_427 (+), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_427 (+) by free_427 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), -free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+-free_406+K (+/+!), free_427 (+) [not solved]
+
+applying transformation rule (A), replacing -free_406+K (+/+!) by -free_406 (+!) and K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-free_406 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_406==-1}
+resulting limit problem:
+1 (+!), K (+!), free_427 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+K (+!), free_427 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+J / 1
+E1 / n
+free_289 / n
+free_406 / -1
+K / 1
+free_427 / n
+Created initial limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), 1-J+K (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), -1+free_296 (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_296 (+/+!) by free_296 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+), free_296 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), 1+N+E1 (+), free_296 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), E1 (+), free_296 (+) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_296 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), E1 (+), free_296 (+) [not solved]
+
+applying transformation rule (C) using substitution {free_413==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), 1+2*E1 (+), free_296 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+), free_296 (+) [not solved]
+
+applying transformation rule (C) using substitution {E1==free_296}
+resulting limit problem:
+free_406-K (+/+!), 2*free_296 (+), free_296 (+) [not solved]
+
+applying transformation rule (A), replacing 2*free_296 (+) by free_296 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), free_296 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), free_296 (+) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), free_406 (+!), free_296 (+) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), free_406 (+!), free_296 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+free_406 (+!), free_296 (+) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+E1 / n
+free_406 / 1
+K / -1
+free_296 / n
+
+Pruned:
+  Start location: f3
+     97: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=free_406, P'=free_406, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_415, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 1+N+E1
+     98: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=free_406, P'=free_406, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_429, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 1+N+E1
+    100: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_275, O'=free_406, P'=free_406, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, F1'=free_429, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+J ], cost: 1+N+E1
+    106: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_310, O'=free_406, P'=free_406, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, F1'=free_429, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+J<=-1+free_313 ], cost: 1+N+E1
+    108: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_331, O'=free_406, P'=free_406, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, F1'=free_429, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+J ], cost: 1+N+E1
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f3
+     97: f3 -> f7 : A'=free_408, B'=free_409, C'=free_410, D'=free_411, E'=free_412, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=free_406, P'=free_406, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_415, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_416, T1'=free_417, U1'=free_418, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_419, A2'=free_420, [ N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 1+N+E1
+     98: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_254, O'=free_406, P'=free_406, Q_1'=free_255, R'=J, S'=free_255, C1'=J, E1'=-1, F1'=free_429, K1'=free_256, L1'=free_257, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257 ], cost: 1+N+E1
+    100: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_275, O'=free_406, P'=free_406, Q_1'=free_276, R'=J, S'=free_276, C1'=J, E1'=-1, F1'=free_429, K1'=free_277, L1'=free_278, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_275>=2 && E1>=0 && 1+free_278<=-1+J && 1+free_278<=-1+J ], cost: 1+N+E1
+    106: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_310, O'=free_406, P'=free_406, Q_1'=free_311, R'=J, S'=free_311, C1'=J, E1'=-1, F1'=free_429, K1'=free_312, L1'=free_313, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_310>=2 && E1>=0 && 1+J<=-1+free_313 && 1+J<=-1+free_313 ], cost: 1+N+E1
+    108: f3 -> f7 : A'=free_422, B'=free_423, C'=free_424, D'=free_425, E'=free_426, F'=free_1, G'=-1+N, H'=Q, K'=J, L'=E1, M'=1+E1, N'=free_331, O'=free_406, P'=free_406, Q_1'=free_332, R'=J, S'=free_332, C1'=J, E1'=-1, F1'=free_429, K1'=free_333, L1'=free_334, M1'=V, N1'=Q, O1'=J, P1'=1+E1, Q1_1'=-1, S1'=free_430, T1'=free_431, U1'=free_432, V1'=free_407, W1'=1+E1, X1'=V, Y1'=Q, Z1'=free_433, A2'=free_434, [ N>=2 && N>=3 && 2>=0 && free_427>=2 && W1>=free_427 && K>=1+free_406 && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_331>=2 && E1>=0 && 1+free_334<=-1+J && 1+free_334<=-1+J ], cost: 1+N+E1
+
+
+Computing complexity for remaining 5 transitions.
+
+Created initial limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1-M (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-J+free_257 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), 1+M (+/+!), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {M==0}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), 1+J-K (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1-J+free_257 (+/+!), 1-J+K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {J==K}
+resulting limit problem:
+1 (+/+!), -1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 3 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+-1+free_413 (+/+!), 1+W1 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_413 (+/+!) by free_413 (+)
+resulting limit problem:
+1+W1 (+/+!), 1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+1+N (+/+!), -1+free_254 (+/+!), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+N (+/+!) by N (+)
+resulting limit problem:
+-1+free_254 (+/+!), N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+free_254 (+/+!) by free_254 (+)
+resulting limit problem:
+N (+), -2+N (+/+!), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), -1+N (+/+!), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+N (+/+!) by N (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), 1+E1 (+/+!), free_254 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 1+E1 (+/+!) by E1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!), 1+N+E1 (+), -1+W1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+W1 (+/+!) by W1 (+)
+resulting limit problem:
+N (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!), 1+N+E1 (+) [not solved]
+
+applying transformation rule (C) using substitution {N==W1}
+resulting limit problem:
+1+W1+E1 (+), W1 (+), free_406-K (+/+!), 1+W1-free_413 (+/+!), free_413 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {W1==free_413}
+resulting limit problem:
+1 (+/+!), free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+free_406-K (+/+!), free_413 (+), 1+free_413+E1 (+), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {free_413==free_254}
+resulting limit problem:
+1+free_254+E1 (+), free_406-K (+/+!), free_254 (+), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {free_254==E1}
+resulting limit problem:
+free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!), 1+2*E1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+2*E1 (+) by 2*E1 (+)
+resulting limit problem:
+2*E1 (+), free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (A), replacing 2*E1 (+) by E1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+free_406-K (+/+!), E1 (+), -1+free_257-K (+/+!) [not solved]
+
+applying transformation rule (A), replacing free_406-K (+/+!) by free_406 (+!) and -K (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-K (+!), E1 (+), -1+free_257-K (+/+!), free_406 (+!) [not solved]
+
+applying transformation rule (C) using substitution {K==-1}
+resulting limit problem:
+1 (+!), free_257 (+/+!), E1 (+), free_406 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+free_257 (+/+!), E1 (+), free_406 (+!) [solved]
+
+Solution:
+N / n
+W1 / n
+M / 0
+free_413 / n
+J / -1
+free_257 / n
+free_254 / n
+E1 / n
+free_406 / 1
+K / -1
+Found new complexity n^1, because: Solved the initial limit problem.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: N>=2 && N>=3 && 2>=0 && free_413>=2 && W1>=free_413 && free_406>=1+K && N>=N && N>=0 && W1>=0 && M==0 && J==K && 2<=W1 && free_254>=2 && E1>=0 && 1+J<=-1+free_257 && 1+J<=-1+free_257
+  Final Cost:  1+2*n
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

@@ -1,0 +1,120 @@
+Trying to load file: sas2.koat
+
+Initial Control flow graph problem:
+  Start location: f0
+      0: f5 -> f7 : [ 0>=A ], cost: 1
+      1: f5 -> f7 : [ A>=2 ], cost: 1
+     18: f5 -> f30 : A'=1, [ A==1 ], cost: 1
+      2: f7 -> f9 : B'=0, [ B==0 ], cost: 1
+      6: f7 -> f9 : A'=-1+A, [ 0>=1+B ], cost: 1
+      7: f7 -> f9 : A'=-1+A, [ B>=1 ], cost: 1
+      8: f9 -> f16 : C'=A+C, E'=2, [ 0>=E && D>=1+F ], cost: 1
+      9: f9 -> f16 : C'=A+C, E'=2, [ E>=2 && D>=1+F ], cost: 1
+     10: f9 -> f16 : C'=A+C, E'=2, [ 0>=1+B && D>=1+F && E==1 ], cost: 1
+     11: f9 -> f16 : C'=A+C, E'=2, [ B>=1 && D>=1+F && E==1 ], cost: 1
+     12: f9 -> f16 : A'=-1+A, B'=1, C'=-1+A+C, E'=2, [ D>=1+F && B==0 && E==1 ], cost: 1
+     13: f9 -> f25 : C'=-A+C, E'=1, [ 1>=E && F>=1+D ], cost: 1
+     14: f9 -> f25 : C'=-A+C, E'=1, [ E>=3 && F>=1+D ], cost: 1
+     15: f9 -> f25 : C'=-A+C, E'=1, [ 0>=1+B && F>=1+D && E==2 ], cost: 1
+     16: f9 -> f25 : C'=-A+C, E'=1, [ B>=1 && F>=1+D && E==2 ], cost: 1
+     17: f9 -> f25 : A'=-1+A, B'=1, C'=1-A+C, E'=1, [ F>=1+D && B==0 && E==2 ], cost: 1
+     21: f9 -> f30 : F'=D, [ D==F ], cost: 1
+      3: f16 -> f5 : D'=free, [ 255>=C ], cost: 1
+     19: f16 -> f30 : [ C>=256 ], cost: 1
+      4: f25 -> f5 : D'=free_1, [ C>=0 ], cost: 1
+     20: f25 -> f30 : [ 0>=1+C ], cost: 1
+      5: f0 -> f5 : A'=4, B'=0, D'=free_2, E'=0, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: f0
+      0: f5 -> f7 : [ 0>=A ], cost: 1
+      1: f5 -> f7 : [ A>=2 ], cost: 1
+      2: f7 -> f9 : B'=0, [ B==0 ], cost: 1
+      6: f7 -> f9 : A'=-1+A, [ 0>=1+B ], cost: 1
+      7: f7 -> f9 : A'=-1+A, [ B>=1 ], cost: 1
+      8: f9 -> f16 : C'=A+C, E'=2, [ 0>=E && D>=1+F ], cost: 1
+      9: f9 -> f16 : C'=A+C, E'=2, [ E>=2 && D>=1+F ], cost: 1
+     10: f9 -> f16 : C'=A+C, E'=2, [ 0>=1+B && D>=1+F && E==1 ], cost: 1
+     11: f9 -> f16 : C'=A+C, E'=2, [ B>=1 && D>=1+F && E==1 ], cost: 1
+     12: f9 -> f16 : A'=-1+A, B'=1, C'=-1+A+C, E'=2, [ D>=1+F && B==0 && E==1 ], cost: 1
+     13: f9 -> f25 : C'=-A+C, E'=1, [ 1>=E && F>=1+D ], cost: 1
+     14: f9 -> f25 : C'=-A+C, E'=1, [ E>=3 && F>=1+D ], cost: 1
+     15: f9 -> f25 : C'=-A+C, E'=1, [ 0>=1+B && F>=1+D && E==2 ], cost: 1
+     16: f9 -> f25 : C'=-A+C, E'=1, [ B>=1 && F>=1+D && E==2 ], cost: 1
+     17: f9 -> f25 : A'=-1+A, B'=1, C'=1-A+C, E'=1, [ F>=1+D && B==0 && E==2 ], cost: 1
+      3: f16 -> f5 : D'=free, [ 255>=C ], cost: 1
+      4: f25 -> f5 : D'=free_1, [ C>=0 ], cost: 1
+      5: f0 -> f5 : A'=4, B'=0, D'=free_2, E'=0, [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f0
+     22: f5 -> f9 : B'=0, [ 0>=A && B==0 ], cost: 2
+     23: f5 -> f9 : A'=-1+A, [ 0>=A && 0>=1+B ], cost: 2
+     24: f5 -> f9 : A'=-1+A, [ 0>=A && B>=1 ], cost: 2
+     25: f5 -> f9 : B'=0, [ A>=2 && B==0 ], cost: 2
+     27: f5 -> f9 : A'=-1+A, [ A>=2 && B>=1 ], cost: 2
+     28: f9 -> f5 : C'=A+C, D'=free, E'=2, [ 0>=E && D>=1+F && 255>=A+C ], cost: 2
+     29: f9 -> f5 : C'=A+C, D'=free, E'=2, [ E>=2 && D>=1+F && 255>=A+C ], cost: 2
+     31: f9 -> f5 : C'=A+C, D'=free, E'=2, [ B>=1 && D>=1+F && E==1 && 255>=A+C ], cost: 2
+     32: f9 -> f5 : A'=-1+A, B'=1, C'=-1+A+C, D'=free, E'=2, [ D>=1+F && B==0 && E==1 && 255>=-1+A+C ], cost: 2
+     33: f9 -> f5 : C'=-A+C, D'=free_1, E'=1, [ 1>=E && F>=1+D && -A+C>=0 ], cost: 2
+      5: f0 -> f5 : A'=4, B'=0, D'=free_2, E'=0, [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f0
+     38: f5 -> f5 : B'=0, C'=A+C, D'=free, E'=2, [ 0>=A && B==0 && 0>=E && D>=1+F && 255>=A+C ], cost: 4
+     39: f5 -> f5 : B'=0, C'=A+C, D'=free, E'=2, [ 0>=A && B==0 && E>=2 && D>=1+F && 255>=A+C ], cost: 4
+     41: f5 -> f5 : B'=0, C'=-A+C, D'=free_1, E'=1, [ 0>=A && B==0 && 1>=E && F>=1+D && -A+C>=0 ], cost: 4
+     45: f5 -> f5 : A'=-1+A, C'=-1+A+C, D'=free, E'=2, [ 0>=A && B>=1 && 0>=E && D>=1+F && 255>=-1+A+C ], cost: 4
+     47: f5 -> f5 : A'=-1+A, C'=-1+A+C, D'=free, E'=2, [ 0>=A && B>=1 && B>=1 && D>=1+F && E==1 && 255>=-1+A+C ], cost: 4
+      5: f0 -> f5 : A'=4, B'=0, D'=free_2, E'=0, [], cost: 1
+
+
+Try instantiation
+  Start location: f0
+     57: f5 -> f5 : A'=-1+A, C'=-1+A+C, D'=free, E'=2, [ 0>=A && B>=1 && B>=1 && D>=1+F && E==1 && 255>=-1+A+C ], cost: 4
+     58: f5 -> f5 : A'=-1+A, C'=-1+A+C, D'=free, E'=2, [ 0>=A && B>=1 && 0>=E && D>=1+F && 255>=-1+A+C ], cost: 4
+     59: f5 -> f5 : [ A>=-1 && B<=0 && 1>=E && F>=1+D && C>=-1 && A<=-1 && B>=0 && C>=-2 ], cost: INF
+     60: f5 -> f5 : [ A>=-1 && B<=0 && E>=2 && D>=1+F && 256>=C && A<=-1 && B>=0 && 257>=C ], cost: INF
+      5: f0 -> f5 : A'=4, B'=0, D'=free_2, E'=0, [], cost: 1
+
+Eliminating 4 self-loops for location f5
+  Self-Loop 57 has the metering function: 1-E, resulting in the new transition 61.
+  Removing the self-loops: 57 58 59 60.
+Adding an epsilon transition (to model nonexecution of the loops): 65.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f0
+     61: f5 -> [7] : A'=-1+E+A, C'=-1/2+3/2*E-(-1+E)*A-1/2*(-1+E)^2+C, D'=free, E'=2, [ 0>=A && B>=1 && D>=1+F && E==1 && 255>=-1+A+C ], cost: 4-4*E
+     62: f5 -> [7] : A'=-1+A, C'=-1+A+C, D'=free, E'=2, [ 0>=A && B>=1 && 0>=E && D>=1+F && 255>=-1+A+C ], cost: 4
+     63: f5 -> [7] : [ A>=-1 && B<=0 && 1>=E && F>=1+D && C>=-1 && A<=-1 && B>=0 && C>=-2 ], cost: INF
+     64: f5 -> [7] : [ A>=-1 && B<=0 && E>=2 && D>=1+F && 256>=C && A<=-1 && B>=0 && 257>=C ], cost: INF
+     65: f5 -> [7] : [], cost: 0
+      5: f0 -> f5 : A'=4, B'=0, D'=free_2, E'=0, [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f0
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f0
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

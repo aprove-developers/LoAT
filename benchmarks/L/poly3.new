@@ -1,0 +1,55 @@
+Trying to load file: poly3.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: eval -> eval : A'=-1+A, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      1: eval -> eval : B'=C+B, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      2: start -> eval : [], cost: 1
+
+
+Try instantiation
+  Start location: start
+      3: eval -> eval : B'=C+B, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      4: eval -> eval : A'=-1, C'=-1+C-A, [ A>=0 && B^3>=C ], cost: 1+A
+      2: start -> eval : [], cost: 1
+
+Eliminating 2 self-loops for location eval
+  Removing the self-loops: 3 4.
+Adding an epsilon transition (to model nonexecution of the loops): 7.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start
+      5: eval -> [2] : B'=C+B, C'=-1+C, [ A>=0 && B^3>=C ], cost: 1
+      6: eval -> [2] : A'=-1, C'=-1+C-A, [ A>=0 && B^3>=C ], cost: 1+A
+      7: eval -> [2] : [], cost: 0
+      2: start -> eval : [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: start
+      9: start -> [2] : A'=-1, C'=-1+C-A, [ A>=0 && B^3>=C ], cost: 2+A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+      9: start -> [2] : A'=-1, C'=-1+C-A, [ A>=0 && B^3>=C ], cost: 2+A
+
+
+Computing complexity for remaining 1 transitions.
+
+  Found configuration with infinitely models for cost: 2+A
+  and guard: A>=0 && B^3>=C:
+  C: Both, B: Pos, A: Pos
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && B^3>=C
+  Final Cost:  2+A
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

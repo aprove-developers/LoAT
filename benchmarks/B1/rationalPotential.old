@@ -1,0 +1,51 @@
+Trying to load file: rationalPotential.koat
+
+Initial Control flow graph problem:
+  Start location: start
+      0: zip3 -> zip3 : A'=-1+A, B'=-1+B, C'=-1+C, [ A>=1 && B>=1 && C>=1 ], cost: 1
+      1: group3 -> group3 : A'=-3+A, [ A>=4 ], cost: 1
+      2: start -> zip3 : [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start
+      0: zip3 -> zip3 : A'=-1+A, B'=-1+B, C'=-1+C, [ A>=1 && B>=1 && C>=1 ], cost: 1
+      2: start -> zip3 : [], cost: 1
+
+Eliminating 1 self-loops for location zip3
+  Removing the self-loops: 0.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: start
+      3: zip3 -> zip3 : A'=-1+A, B'=-1+B, C'=-1+C, [ A>=1 && B>=1 && C>=1 ], cost: 1
+      2: start -> zip3 : [], cost: 1
+
+
+Chained simpled loops:
+  Start location: start
+      2: start -> zip3 : [], cost: 1
+      4: start -> zip3 : A'=-1+A, B'=-1+B, C'=-1+C, [ A>=1 && B>=1 && C>=1 ], cost: 2
+
+
+Pruned:
+  Start location: start
+    <empty>
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start
+    <empty>
+
+
+Computing complexity for remaining 0 transitions.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 
+  Final Cost:  1
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: const
+  Complexity value: 0
+
+WORST_CASE(Omega(1),?)

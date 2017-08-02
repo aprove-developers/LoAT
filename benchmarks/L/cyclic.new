@@ -1,0 +1,109 @@
+Trying to load file: cyclic.koat
+
+Initial Control flow graph problem:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicentryin : [], cost: 1
+      1: evalcyclicentryin -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 1
+      2: evalcyclicbb3in -> evalcyclicreturnin : [ C==A ], cost: 1
+      3: evalcyclicbb3in -> evalcyclicbb4in : [ A>=1+C ], cost: 1
+      4: evalcyclicbb3in -> evalcyclicbb4in : [ C>=1+A ], cost: 1
+     10: evalcyclicreturnin -> evalcyclicstop : [], cost: 1
+      7: evalcyclicbb4in -> evalcyclicreturnin : [], cost: 1
+      5: evalcyclicbb4in -> evalcyclicbbin : [ 0>=1+free ], cost: 1
+      6: evalcyclicbb4in -> evalcyclicbbin : [ free_1>=1 ], cost: 1
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+Removing duplicate transition: 5.
+
+Simplified the transitions:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicentryin : [], cost: 1
+      1: evalcyclicentryin -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 1
+      3: evalcyclicbb3in -> evalcyclicbb4in : [ A>=1+C ], cost: 1
+      4: evalcyclicbb3in -> evalcyclicbb4in : [ C>=1+A ], cost: 1
+      6: evalcyclicbb4in -> evalcyclicbbin : [], cost: 1
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+
+Applied simple chaining:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+      3: evalcyclicbb3in -> evalcyclicbb4in : [ A>=1+C ], cost: 1
+      4: evalcyclicbb3in -> evalcyclicbb4in : [ C>=1+A ], cost: 1
+      6: evalcyclicbb4in -> evalcyclicbbin : [], cost: 1
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     11: evalcyclicbb3in -> evalcyclicbbin : [ A>=1+C ], cost: 2
+     12: evalcyclicbb3in -> evalcyclicbbin : [ C>=1+A ], cost: 2
+      8: evalcyclicbbin -> evalcyclicbb3in : C'=1+C, [ B>=C ], cost: 1
+      9: evalcyclicbbin -> evalcyclicbb3in : C'=0, [ C>=1+B ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     13: evalcyclicbb3in -> evalcyclicbb3in : C'=1+C, [ A>=1+C && B>=C ], cost: 3
+     14: evalcyclicbb3in -> evalcyclicbb3in : C'=0, [ A>=1+C && C>=1+B ], cost: 3
+     15: evalcyclicbb3in -> evalcyclicbb3in : C'=1+C, [ C>=1+A && B>=C ], cost: 3
+     16: evalcyclicbb3in -> evalcyclicbb3in : C'=0, [ C>=1+A && C>=1+B ], cost: 3
+
+
+Try instantiation
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     17: evalcyclicbb3in -> evalcyclicbb3in : [ -1>=A && C>=1+B && C>=1+A && -1>=B ], cost: INF
+     18: evalcyclicbb3in -> evalcyclicbb3in : C'=1+B, [ B>=1+A && B>=C && C>=1+A ], cost: 3+3*B-3*C
+     19: evalcyclicbb3in -> evalcyclicbb3in : [ A>=1 && C>=1+B && A>=1+C && -1>=B ], cost: INF
+     20: evalcyclicbb3in -> evalcyclicbb3in : C'=1+B, [ A>=1+B && B>=C && A>=1+C ], cost: 3+3*B-3*C
+     21: evalcyclicbb3in -> evalcyclicbb3in : C'=A, [ B>=-1+A && B>=C && A>=1+C ], cost: 3*A-3*C
+
+Eliminating 5 self-loops for location evalcyclicbb3in
+  Removing the self-loops: 17 18 19 20 21.
+Adding an epsilon transition (to model nonexecution of the loops): 27.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: evalcyclicstart
+      0: evalcyclicstart -> evalcyclicbb3in : C'=1+A, [ A>=0 && B>=1+A ], cost: 2
+     22: evalcyclicbb3in -> [7] : [ -1>=A && C>=1+B && C>=1+A && -1>=B ], cost: INF
+     23: evalcyclicbb3in -> [7] : C'=1+B, [ B>=1+A && B>=C && C>=1+A ], cost: 3+3*B-3*C
+     24: evalcyclicbb3in -> [7] : [ A>=1 && C>=1+B && A>=1+C && -1>=B ], cost: INF
+     25: evalcyclicbb3in -> [7] : C'=1+B, [ A>=1+B && B>=C && A>=1+C ], cost: 3+3*B-3*C
+     26: evalcyclicbb3in -> [7] : C'=A, [ B>=-1+A && B>=C && A>=1+C ], cost: 3*A-3*C
+     27: evalcyclicbb3in -> [7] : [], cost: 0
+
+
+Applied chaining over branches and pruning:
+  Start location: evalcyclicstart
+     28: evalcyclicstart -> [7] : C'=1+B, [ A>=0 && B>=1+A && B>=1+A && B>=1+A && 1+A>=1+A ], cost: 2+3*B-3*A
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: evalcyclicstart
+     28: evalcyclicstart -> [7] : C'=1+B, [ A>=0 && B>=1+A && B>=1+A && B>=1+A && 1+A>=1+A ], cost: 2+3*B-3*A
+
+
+Computing complexity for remaining 1 transitions.
+
+  Found configuration with infinitely models for cost: 2+3*B-3*A
+  and guard: A>=0 && B>=1+A && B>=1+A && B>=1+A && 1+A>=1+A:
+  B: Pos, A: Pos, where: B > A
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=0 && B>=1+A && B>=1+A && B>=1+A && 1+A>=1+A
+  Final Cost:  2+3*B-3*A
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

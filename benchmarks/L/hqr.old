@@ -1,0 +1,2719 @@
+Trying to load file: hqr.koat
+
+Initial Control flow graph problem:
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     31: f80 -> f84 : C'=10, Q_1'=D+Q_1, [ C==10 ], cost: 1
+     30: f82 -> f84 : C'=20, Q_1'=D+Q_1, [ C==20 ], cost: 1
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+     52: f157 -> f167 : D'=free_87, O'=free_88, R'=E+R, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 ], cost: 1
+     53: f157 -> f167 : D'=free_92, O'=free_93, R'=E+R, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 ], cost: 1
+     54: f157 -> f167 : D'=free_97, O'=free_98, R'=E+R, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 ], cost: 1
+     55: f157 -> f167 : D'=free_102, O'=free_103, R'=E+R, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 ], cost: 1
+     56: f157 -> f167 : D'=free_107, O'=free_108, R'=E+R, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 ], cost: 1
+      9: f0 -> f13 : F'=0, [], cost: 1
+     10: f13 -> f15 : [ G>=H ], cost: 1
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     77: f15 -> f13 : H'=1+H, [ Q>=1+G ], cost: 1
+     11: f15 -> f15 : F'=F+free, Q'=1+Q, J'=free, [ G>=Q ], cost: 1
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     76: f25 -> f198 : [ 0>=A ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     32: f84 -> f84 : H'=1+H, [ A>=H ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     39: f126 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 1
+     40: f126 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 1
+     41: f126 -> f126 : H'=1+H, [ H>=3+D1 && A>=H ], cost: 1
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+     57: f167 -> f167 : Q'=1+Q, R'=free_112, R1'=-1+A, [ A>=Q && 1+R1==A ], cost: 1
+     58: f167 -> f167 : Q'=1+Q, R'=free_113, [ A>=2+R1 && A>=Q ], cost: 1
+     59: f167 -> f167 : Q'=1+Q, R'=free_114, [ R1>=A && A>=Q ], cost: 1
+     68: f167 -> f180 : Z1'=A, [ Q>=1+A && 2+R1>=A ], cost: 1
+     69: f167 -> f180 : Z1'=3+R1, [ Q>=1+A && A>=3+R1 ], cost: 1
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+     60: f180 -> f180 : H'=1+H, R'=free_115, R1'=-1+A, [ Z1>=H && 1+R1==A ], cost: 1
+     61: f180 -> f180 : H'=1+H, R'=free_116, [ A>=2+R1 && Z1>=H ], cost: 1
+     62: f180 -> f180 : H'=1+H, R'=free_117, [ R1>=A && Z1>=H ], cost: 1
+
+
+Simplified the transitions:
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     31: f80 -> f84 : C'=10, Q_1'=D+Q_1, [ C==10 ], cost: 1
+     30: f82 -> f84 : C'=20, Q_1'=D+Q_1, [ C==20 ], cost: 1
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+     52: f157 -> f167 : D'=free_87, O'=free_88, R'=E+R, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 ], cost: 1
+     53: f157 -> f167 : D'=free_92, O'=free_93, R'=E+R, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 ], cost: 1
+     54: f157 -> f167 : D'=free_97, O'=free_98, R'=E+R, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 ], cost: 1
+     55: f157 -> f167 : D'=free_102, O'=free_103, R'=E+R, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 ], cost: 1
+     56: f157 -> f167 : D'=free_107, O'=free_108, R'=E+R, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 ], cost: 1
+      9: f0 -> f13 : F'=0, [], cost: 1
+     10: f13 -> f15 : [ G>=H ], cost: 1
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     77: f15 -> f13 : H'=1+H, [ Q>=1+G ], cost: 1
+     11: f15 -> f15 : F'=F+free, Q'=1+Q, J'=free, [ G>=Q ], cost: 1
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     32: f84 -> f84 : H'=1+H, [ A>=H ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     39: f126 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 1
+     40: f126 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 1
+     41: f126 -> f126 : H'=1+H, [ H>=3+D1 && A>=H ], cost: 1
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+     57: f167 -> f167 : Q'=1+Q, R'=free_112, R1'=-1+A, [ A>=Q && 1+R1==A ], cost: 1
+     58: f167 -> f167 : Q'=1+Q, R'=free_113, [ A>=2+R1 && A>=Q ], cost: 1
+     59: f167 -> f167 : Q'=1+Q, R'=free_114, [ R1>=A && A>=Q ], cost: 1
+     68: f167 -> f180 : Z1'=A, [ Q>=1+A && 2+R1>=A ], cost: 1
+     69: f167 -> f180 : Z1'=3+R1, [ Q>=1+A && A>=3+R1 ], cost: 1
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+     60: f180 -> f180 : H'=1+H, R'=free_115, R1'=-1+A, [ Z1>=H && 1+R1==A ], cost: 1
+     61: f180 -> f180 : H'=1+H, R'=free_116, [ A>=2+R1 && Z1>=H ], cost: 1
+     62: f180 -> f180 : H'=1+H, R'=free_117, [ R1>=A && Z1>=H ], cost: 1
+
+Eliminating 1 self-loops for location f15
+  Self-Loop 11 has the metering function: 1-Q+G, resulting in the new transition 79.
+  Removing the self-loops: 11.
+Eliminating 1 self-loops for location f84
+  Self-Loop 32 has the metering function: 1-H+A, resulting in the new transition 80.
+  Removing the self-loops: 32.
+Eliminating 3 self-loops for location f126
+  Self-Loop 39 has the metering function: 3-H+D1, resulting in the new transition 81.
+  Self-Loop 41 has the metering function: 1-H+A, resulting in the new transition 83.
+  Found this metering function when nesting loops: meter,
+  Removing the self-loops: 39 40 41.
+Eliminating 3 self-loops for location f167
+  Self-Loop 57 has the metering function: 1-Q+A, resulting in the new transition 84.
+  Self-Loop 58 has the metering function: 1-Q+A, resulting in the new transition 85.
+  Self-Loop 59 has the metering function: 1-Q+A, resulting in the new transition 86.
+  Removing the self-loops: 57 58 59.
+Eliminating 3 self-loops for location f180
+  Self-Loop 60 has the metering function: 1-H+Z1, resulting in the new transition 87.
+  Self-Loop 61 has the metering function: 1-H+Z1, resulting in the new transition 88.
+  Self-Loop 62 has the metering function: 1-H+Z1, resulting in the new transition 89.
+  Removing the self-loops: 60 61 62.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     31: f80 -> f84 : C'=10, Q_1'=D+Q_1, [ C==10 ], cost: 1
+     30: f82 -> f84 : C'=20, Q_1'=D+Q_1, [ C==20 ], cost: 1
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+     52: f157 -> f167 : D'=free_87, O'=free_88, R'=E+R, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 ], cost: 1
+     53: f157 -> f167 : D'=free_92, O'=free_93, R'=E+R, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 ], cost: 1
+     54: f157 -> f167 : D'=free_97, O'=free_98, R'=E+R, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 ], cost: 1
+     55: f157 -> f167 : D'=free_102, O'=free_103, R'=E+R, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 ], cost: 1
+     56: f157 -> f167 : D'=free_107, O'=free_108, R'=E+R, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 ], cost: 1
+      9: f0 -> f13 : F'=0, [], cost: 1
+     10: f13 -> f15 : [ G>=H ], cost: 1
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     77: f15 -> f13 : H'=1+H, [ Q>=1+G ], cost: 1
+     79: f15 -> f15 : F'=-free*(-1+Q-G)+F, Q'=1+G, J'=free, [ G>=Q ], cost: 1-Q+G
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     80: f84 -> f84 : H'=1+A, [ A>=H ], cost: 1-H+A
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     81: f126 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 3-H+D1
+     82: f126 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 1
+     83: f126 -> f126 : H'=1+A, [ H>=3+D1 && A>=H ], cost: 1-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+     84: f167 -> f167 : Q'=1+A, R'=free_112, R1'=-1+A, [ A>=Q && 1+R1==A ], cost: 1-Q+A
+     85: f167 -> f167 : Q'=1+A, R'=free_113, [ A>=2+R1 && A>=Q ], cost: 1-Q+A
+     86: f167 -> f167 : Q'=1+A, R'=free_114, [ R1>=A && A>=Q ], cost: 1-Q+A
+     68: f167 -> f180 : Z1'=A, [ Q>=1+A && 2+R1>=A ], cost: 1
+     69: f167 -> f180 : Z1'=3+R1, [ Q>=1+A && A>=3+R1 ], cost: 1
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+     87: f180 -> f180 : H'=1+Z1, R'=free_115, R1'=-1+A, [ Z1>=H && 1+R1==A ], cost: 1-H+Z1
+     88: f180 -> f180 : H'=1+Z1, R'=free_116, [ A>=2+R1 && Z1>=H ], cost: 1-H+Z1
+     89: f180 -> f180 : H'=1+Z1, R'=free_117, [ R1>=A && Z1>=H ], cost: 1-H+Z1
+
+
+Chained simpled loops:
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     91: f80 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ C==10 && A>=H ], cost: 2-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+    102: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    103: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    104: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    105: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    106: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    107: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    108: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    109: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    110: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    111: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    112: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    113: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    114: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    115: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    116: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+      9: f0 -> f13 : F'=0, [], cost: 1
+     90: f13 -> f15 : F'=-free*(-1+Q-G)+F, Q'=1+G, J'=free, [ G>=H && G>=Q ], cost: 2-Q+G
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     77: f15 -> f13 : H'=1+H, [ Q>=1+G ], cost: 1
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     93: f96 -> f126 : H'=3+D1, [ B>=1+D1 && A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     96: f96 -> f126 : H'=1+H, [ B>=1+D1 && 1+D1>=H && A>=H ], cost: 2
+     97: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+H, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && 1+B>=H && A>=H ], cost: 2
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     95: f122 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     98: f122 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 2
+    101: f122 -> f126 : H'=1+A, [ H>=3+D1 && A>=H ], cost: 2-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+    117: f167 -> f180 : H'=1+A, R'=free_115, R1'=-1+A, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=H && 1+R1==A ], cost: 2-H+A
+    118: f167 -> f180 : H'=1+A, R'=free_116, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=2+R1 && A>=H ], cost: 2-H+A
+    119: f167 -> f180 : H'=4+R1, R'=free_116, Z1'=3+R1, [ Q>=1+A && A>=3+R1 && A>=2+R1 && 3+R1>=H ], cost: 5-H+R1
+    120: f167 -> f180 : H'=1+A, R'=free_117, Z1'=A, [ Q>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 2-H+A
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+
+Eliminated locations (linear):
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     91: f80 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ C==10 && A>=H ], cost: 2-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+    102: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    103: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    104: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    105: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    106: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    107: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    108: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    109: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    110: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    111: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    112: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    113: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    114: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    115: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    116: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+      9: f0 -> f13 : F'=0, [], cost: 1
+     90: f13 -> f13 : F'=-free*(-1+Q-G)+F, H'=1+H, Q'=1+G, J'=free, [ G>=H && G>=Q && 1+G>=1+G ], cost: 3-Q+G
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     93: f96 -> f126 : H'=3+D1, [ B>=1+D1 && A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     96: f96 -> f126 : H'=1+H, [ B>=1+D1 && 1+D1>=H && A>=H ], cost: 2
+     97: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+H, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && 1+B>=H && A>=H ], cost: 2
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     95: f122 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     98: f122 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 2
+    101: f122 -> f126 : H'=1+A, [ H>=3+D1 && A>=H ], cost: 2-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+    117: f167 -> f180 : H'=1+A, R'=free_115, R1'=-1+A, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=H && 1+R1==A ], cost: 2-H+A
+    118: f167 -> f180 : H'=1+A, R'=free_116, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=2+R1 && A>=H ], cost: 2-H+A
+    119: f167 -> f180 : H'=4+R1, R'=free_116, Z1'=3+R1, [ Q>=1+A && A>=3+R1 && A>=2+R1 && 3+R1>=H ], cost: 5-H+R1
+    120: f167 -> f180 : H'=1+A, R'=free_117, Z1'=A, [ Q>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 2-H+A
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+Eliminating 1 self-loops for location f13
+  Removing the self-loops: 90.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     91: f80 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ C==10 && A>=H ], cost: 2-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+    102: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    103: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    104: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    105: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    106: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    107: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    108: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    109: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    110: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    111: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    112: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    113: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    114: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    115: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    116: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+      9: f0 -> f13 : F'=0, [], cost: 1
+    121: f13 -> f13 : F'=-free*(-1+Q-G)+F, H'=1+H, Q'=1+G, J'=free, [ G>=H && G>=Q ], cost: 3-Q+G
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     93: f96 -> f126 : H'=3+D1, [ B>=1+D1 && A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     96: f96 -> f126 : H'=1+H, [ B>=1+D1 && 1+D1>=H && A>=H ], cost: 2
+     97: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+H, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && 1+B>=H && A>=H ], cost: 2
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     95: f122 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     98: f122 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 2
+    101: f122 -> f126 : H'=1+A, [ H>=3+D1 && A>=H ], cost: 2-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+    117: f167 -> f180 : H'=1+A, R'=free_115, R1'=-1+A, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=H && 1+R1==A ], cost: 2-H+A
+    118: f167 -> f180 : H'=1+A, R'=free_116, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=2+R1 && A>=H ], cost: 2-H+A
+    119: f167 -> f180 : H'=4+R1, R'=free_116, Z1'=3+R1, [ Q>=1+A && A>=3+R1 && A>=2+R1 && 3+R1>=H ], cost: 5-H+R1
+    120: f167 -> f180 : H'=1+A, R'=free_117, Z1'=A, [ Q>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 2-H+A
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+
+Chained simpled loops:
+  Start location: f0
+      0: f49 -> f78 : [ A>=2+B ], cost: 1
+      1: f49 -> f78 : [ B>=A ], cost: 1
+     28: f49 -> f46 : A'=-2+A, B'=-1+A, D'=D+Q_1, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=D+free_26+Q_1, C1'=free_29, [ 0>=1+free_27 && 1+B==A ], cost: 1
+     23: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=D+free_20+free_16+Q_1, [ free_16>=0 && free_17>=0 && 1+B==A ], cost: 1
+     24: f49 -> f66 : B'=-1+A, D'=D+Q_1, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=D-free_25+free_21+Q_1, Z'=free_25, [ 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 1
+      2: f78 -> f80 : [ 29>=C ], cost: 1
+      3: f78 -> f80 : [ C>=31 ], cost: 1
+     29: f78 -> f80 : C'=30, [ C==30 ], cost: 1
+      4: f80 -> f82 : [ 9>=C ], cost: 1
+      5: f80 -> f82 : [ C>=11 ], cost: 1
+     91: f80 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ C==10 && A>=H ], cost: 2-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+     50: f149 -> f153 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 ], cost: 1
+     51: f149 -> f153 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R ], cost: 1
+      7: f153 -> f157 : [ 0>=1+E ], cost: 1
+      8: f153 -> f157 : [ E>=1 ], cost: 1
+     63: f153 -> f133 : E'=0, R1'=1+R1, [ E==0 ], cost: 1
+    102: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    103: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    104: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    105: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    106: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    107: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    108: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    109: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    110: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    111: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    112: f157 -> f167 : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    113: f157 -> f167 : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    114: f157 -> f167 : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    115: f157 -> f167 : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    116: f157 -> f167 : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+      9: f0 -> f13 : F'=0, [], cost: 1
+    122: f0 -> f13 : F'=-free*(-1+Q-G), H'=1+H, Q'=1+G, J'=free, [ G>=H && G>=Q ], cost: 4-Q+G
+     78: f13 -> f25 : A'=G, Q_1'=0, [ H>=1+G ], cost: 1
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+     14: f28 -> f36 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 1
+     15: f28 -> f36 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 1
+     16: f28 -> f36 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 1
+     21: f40 -> f49 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B ], cost: 1
+     22: f40 -> f49 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A ], cost: 1
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+     18: f36 -> f28 : B'=-1+B, [ 0>=1+M ], cost: 1
+     19: f36 -> f28 : B'=-1+B, [ M>=1 ], cost: 1
+     17: f36 -> f40 : [], cost: 1
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+     35: f96 -> f122 : E'=free_31+free_30+free_32, R'=free_33, S'=free_34, V'=free_35, E1'=free_36, F1'=free_32, G1'=free_30, H1'=free_31, Q1'=free_37, J1'=free_38, K1'=free_39, L1'=free_40, M1'=free_41, N1'=free_42, O1'=free_43, P1'=free_44, Q1_1'=free_45, [ D1>=B && B>=1+D1 ], cost: 1
+     36: f96 -> f122 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 1
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     93: f96 -> f126 : H'=3+D1, [ B>=1+D1 && A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     96: f96 -> f126 : H'=1+H, [ B>=1+D1 && 1+D1>=H && A>=H ], cost: 2
+     97: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+H, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && 1+B>=H && A>=H ], cost: 2
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+     37: f122 -> f96 : D1'=-1+D1, [ 0>=1+L1 ], cost: 1
+     38: f122 -> f96 : D1'=-1+D1, [ L1>=1 ], cost: 1
+     74: f122 -> f126 : [], cost: 1
+     95: f122 -> f126 : H'=3+D1, [ A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     98: f122 -> f126 : H'=1+H, [ 1+D1>=H && A>=H ], cost: 2
+    101: f122 -> f126 : H'=1+A, [ H>=3+D1 && A>=H ], cost: 2-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     43: f133 -> f139 : R'=free_62, S'=free_63, E1'=0, [ D1>=1+R1 && A>=1+R1 ], cost: 1
+     44: f133 -> f139 : R'=free_64, S'=free_65, E1'=0, [ R1>=1+D1 && A>=1+R1 ], cost: 1
+     45: f139 -> f145 : D'=free_68+free_67+free_66, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ 1+R1==A ], cost: 1
+     46: f139 -> f145 : D'=free_69+free_71+free_70, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ A>=2+R1 ], cost: 1
+     47: f139 -> f145 : D'=free_73+free_75+free_74, E1'=free_76, S1'=free_75, T1'=free_73, U1'=free_74, [ R1>=A ], cost: 1
+    117: f167 -> f180 : H'=1+A, R'=free_115, R1'=-1+A, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=H && 1+R1==A ], cost: 2-H+A
+    118: f167 -> f180 : H'=1+A, R'=free_116, Z1'=A, [ Q>=1+A && 2+R1>=A && A>=2+R1 && A>=H ], cost: 2-H+A
+    119: f167 -> f180 : H'=4+R1, R'=free_116, Z1'=3+R1, [ Q>=1+A && A>=3+R1 && A>=2+R1 && 3+R1>=H ], cost: 5-H+R1
+    120: f167 -> f180 : H'=1+A, R'=free_117, Z1'=A, [ Q>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 2-H+A
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+
+Eliminated locations (branches):
+  Start location: f0
+    139: f78 -> f82 : [ 29>=C && 9>=C ], cost: 2
+    140: f78 -> f82 : [ 29>=C && C>=11 ], cost: 2
+    142: f78 -> f82 : [ C>=31 && C>=11 ], cost: 2
+    143: f78 -> f82 : C'=30, [ C==30 && 30>=11 ], cost: 2
+    141: f78 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ 29>=C && C==10 && A>=H ], cost: 3-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+    154: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && 0>=1+free_83 ], cost: 2
+    155: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && free_83>=1 ], cost: 2
+    157: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && 0>=1-free_85 ], cost: 2
+    158: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85>=1 ], cost: 2
+    156: f149 -> f133 : E'=0, R1'=1+R1, V1'=free_84, W1'=free_83, [ R>=0 && free_83==0 ], cost: 2
+    159: f149 -> f133 : E'=0, R1'=1+R1, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85==0 ], cost: 2
+    160: f157 -> f180 : D'=free_87, H'=1+A, Q'=1+A, O'=free_88, R'=free_115, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, Z1'=A, [ B==R1 && D1==R1 && A>=Q && 1+B==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    164: f157 -> f180 : D'=free_92, H'=1+A, Q'=1+A, O'=free_93, R'=free_115, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, Z1'=A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    168: f157 -> f180 : D'=free_97, H'=1+A, Q'=1+A, O'=free_98, R'=free_115, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, Z1'=A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    172: f157 -> f180 : D'=free_102, H'=1+A, Q'=1+A, O'=free_103, R'=free_115, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, Z1'=A, [ D1>=1+R1 && A>=Q && 1+R1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    176: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_115, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, Z1'=A, [ R1>=1+D1 && A>=Q && 1+R1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    181: f157 -> f180 : D'=free_87, H'=1+A, Q'=1+A, O'=free_88, R'=free_116, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, Z1'=A, [ B==R1 && D1==R1 && A>=2+B && A>=Q && 1+A>=1+A && 2+B>=A && A>=2+B && A>=H ], cost: 4-H-Q+2*A
+    182: f157 -> f180 : D'=free_87, H'=4+B, Q'=1+A, O'=free_88, R'=free_116, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, Z1'=3+B, [ B==R1 && D1==R1 && A>=2+B && A>=Q && 1+A>=1+A && A>=3+B && A>=2+B && 3+B>=H ], cost: 7-H-Q+B+A
+    185: f157 -> f180 : D'=free_92, H'=1+A, Q'=1+A, O'=free_93, R'=free_116, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, Z1'=A, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && 2+D1>=A && A>=2+D1 && A>=H ], cost: 4-H-Q+2*A
+    186: f157 -> f180 : D'=free_92, H'=4+D1, Q'=1+A, O'=free_93, R'=free_116, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, Z1'=3+D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && A>=3+D1 && A>=2+D1 && 3+D1>=H ], cost: 7-H-Q+A+D1
+    189: f157 -> f180 : D'=free_97, H'=1+A, Q'=1+A, O'=free_98, R'=free_116, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, Z1'=A, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && 2+D1>=A && A>=2+D1 && A>=H ], cost: 4-H-Q+2*A
+    190: f157 -> f180 : D'=free_97, H'=4+D1, Q'=1+A, O'=free_98, R'=free_116, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, Z1'=3+D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && A>=3+D1 && A>=2+D1 && 3+D1>=H ], cost: 7-H-Q+A+D1
+    193: f157 -> f180 : D'=free_102, H'=1+A, Q'=1+A, O'=free_103, R'=free_116, S'=free_104, V'=free_105, E1'=free_106, Z1'=A, [ D1>=1+R1 && A>=2+R1 && A>=Q && 1+A>=1+A && 2+R1>=A && A>=2+R1 && A>=H ], cost: 4-H-Q+2*A
+    194: f157 -> f180 : D'=free_102, H'=4+R1, Q'=1+A, O'=free_103, R'=free_116, S'=free_104, V'=free_105, E1'=free_106, Z1'=3+R1, [ D1>=1+R1 && A>=2+R1 && A>=Q && 1+A>=1+A && A>=3+R1 && A>=2+R1 && 3+R1>=H ], cost: 7-H-Q+A+R1
+    197: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_116, S'=free_109, V'=free_110, E1'=free_111, Z1'=A, [ R1>=1+D1 && A>=2+R1 && A>=Q && 1+A>=1+A && 2+R1>=A && A>=2+R1 && A>=H ], cost: 4-H-Q+2*A
+    198: f157 -> f180 : D'=free_107, H'=4+R1, Q'=1+A, O'=free_108, R'=free_116, S'=free_109, V'=free_110, E1'=free_111, Z1'=3+R1, [ R1>=1+D1 && A>=2+R1 && A>=Q && 1+A>=1+A && A>=3+R1 && A>=2+R1 && 3+R1>=H ], cost: 7-H-Q+A+R1
+    203: f157 -> f180 : D'=free_87, H'=1+A, Q'=1+A, O'=free_88, R'=free_117, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, Z1'=A, [ B==R1 && D1==R1 && B>=A && A>=Q && 1+A>=1+A && 2+B>=A && B>=A && A>=H ], cost: 4-H-Q+2*A
+    207: f157 -> f180 : D'=free_92, H'=1+A, Q'=1+A, O'=free_93, R'=free_117, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, Z1'=A, [ R1>=1+B && D1==R1 && D1>=A && A>=Q && 1+A>=1+A && 2+D1>=A && D1>=A && A>=H ], cost: 4-H-Q+2*A
+    211: f157 -> f180 : D'=free_97, H'=1+A, Q'=1+A, O'=free_98, R'=free_117, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, Z1'=A, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q && 1+A>=1+A && 2+D1>=A && D1>=A && A>=H ], cost: 4-H-Q+2*A
+    215: f157 -> f180 : D'=free_102, H'=1+A, Q'=1+A, O'=free_103, R'=free_117, S'=free_104, V'=free_105, E1'=free_106, Z1'=A, [ D1>=1+R1 && R1>=A && A>=Q && 1+A>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 4-H-Q+2*A
+    219: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_117, S'=free_109, V'=free_110, E1'=free_111, Z1'=A, [ R1>=1+D1 && R1>=A && A>=Q && 1+A>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 4-H-Q+2*A
+    161: f157 -> [26] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    162: f157 -> [27] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    163: f157 -> [28] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    165: f157 -> [29] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    166: f157 -> [30] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    167: f157 -> [31] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    169: f157 -> [32] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    170: f157 -> [33] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    171: f157 -> [34] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    173: f157 -> [35] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    174: f157 -> [36] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    175: f157 -> [37] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    177: f157 -> [38] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    178: f157 -> [39] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    179: f157 -> [40] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    180: f157 -> [41] : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    183: f157 -> [42] : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    184: f157 -> [43] : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    187: f157 -> [44] : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    188: f157 -> [45] : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    191: f157 -> [46] : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    192: f157 -> [47] : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    195: f157 -> [48] : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    196: f157 -> [49] : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    199: f157 -> [50] : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    200: f157 -> [51] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    201: f157 -> [52] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    202: f157 -> [53] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    204: f157 -> [54] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    205: f157 -> [55] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    206: f157 -> [56] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    208: f157 -> [57] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    209: f157 -> [58] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    210: f157 -> [59] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    212: f157 -> [60] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    213: f157 -> [61] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    214: f157 -> [62] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    216: f157 -> [63] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    217: f157 -> [64] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    218: f157 -> [65] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    123: f0 -> f25 : A'=G, F'=0, Q_1'=0, [ H>=1+G ], cost: 2
+    124: f0 -> f25 : A'=G, F'=-free*(-1+Q-G), H'=1+H, Q'=1+G, J'=free, Q_1'=0, [ G>=H && G>=Q && 1+H>=1+G ], cost: 5-Q+G
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+    125: f28 -> f28 : B'=-1+B, E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 && 0>=1+free_3 ], cost: 2
+    126: f28 -> f28 : B'=-1+B, E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 && free_3>=1 ], cost: 2
+    128: f28 -> f28 : B'=-1+B, E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 && 0>=1+free_6 ], cost: 2
+    129: f28 -> f28 : B'=-1+B, E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 && free_6>=1 ], cost: 2
+    131: f28 -> f28 : B'=-1+B, E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 && 0>=1+free_8 ], cost: 2
+    132: f28 -> f28 : B'=-1+B, E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 && free_8>=1 ], cost: 2
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+    127: f28 -> f40 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 2
+    130: f28 -> f40 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 2
+    133: f28 -> f40 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 2
+    134: f40 -> f78 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B && A>=2+B ], cost: 2
+    138: f40 -> f78 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A && B>=A ], cost: 2
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+    135: f40 -> f46 : A'=-2+A, B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=free_10+free_26+Q_1, C1'=free_29, [ A>=1+B && 0>=1+free_27 && 1+B==A ], cost: 2
+    136: f40 -> f66 : B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=free_20+free_16+free_10+Q_1, [ A>=1+B && free_16>=0 && free_17>=0 && 1+B==A ], cost: 2
+    137: f40 -> f66 : B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=-free_25+free_21+free_10+Q_1, Z'=free_25, [ A>=1+B && 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 2
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+    144: f96 -> f96 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=-1+D1, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && 0>=1+free_56 ], cost: 2
+    145: f96 -> f96 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=-1+D1, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && free_56>=1 ], cost: 2
+     72: f96 -> f126 : [ B>=1+D1 ], cost: 1
+     73: f96 -> f126 : E'=free_119+free_120+free_118, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 ], cost: 1
+     93: f96 -> f126 : H'=3+D1, [ B>=1+D1 && A>=2+D1 && H==2+D1 ], cost: 4-H+D1
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     96: f96 -> f126 : H'=1+H, [ B>=1+D1 && 1+D1>=H && A>=H ], cost: 2
+     97: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+H, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && 1+B>=H && A>=H ], cost: 2
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+    146: f96 -> f126 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B ], cost: 2
+    147: f96 -> f126 : E'=free_47+free_46+free_48, H'=3+D1, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && A>=2+D1 && H==2+D1 ], cost: 5-H+D1
+    148: f96 -> f126 : E'=free_47+free_46+free_48, H'=1+H, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && 1+D1>=H && A>=H ], cost: 3
+    149: f96 -> f126 : E'=free_47+free_46+free_48, H'=1+A, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && H>=3+D1 && A>=H ], cost: 3-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+    150: f133 -> f145 : D'=free_68+free_67+free_66, R'=free_62, S'=free_63, E1'=0, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ D1>=1+R1 && A>=1+R1 && 1+R1==A ], cost: 2
+    151: f133 -> f145 : D'=free_69+free_71+free_70, R'=free_62, S'=free_63, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ D1>=1+R1 && A>=1+R1 && A>=2+R1 ], cost: 2
+    152: f133 -> f145 : D'=free_68+free_67+free_66, R'=free_64, S'=free_65, E1'=0, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ R1>=1+D1 && A>=1+R1 && 1+R1==A ], cost: 2
+    153: f133 -> f145 : D'=free_69+free_71+free_70, R'=free_64, S'=free_65, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ R1>=1+D1 && A>=1+R1 && A>=2+R1 ], cost: 2
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+Created initial limit problem:
+-B+D1 (+/+!), -2+H-D1 (+/+!), 1-H+A (+/+!), 3-H+A (+) [not solved]
+
+applying transformation rule (C) using substitution {D1==1+B}
+resulting limit problem:
+1 (+/+!), -3+H-B (+/+!), 1-H+A (+/+!), 3-H+A (+) [not solved]
+
+applying transformation rule (C) using substitution {H==3+D1}
+resulting limit problem:
+1 (+/+!), -B+D1 (+/+!), A-D1 (+), -2+A-D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+1 (+/+!), -B+D1 (+/+!), -2+H-D1 (+/+!), H-D1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-B+D1 (+/+!), -2+H-D1 (+/+!), H-D1 (+) [not solved]
+
+applying transformation rule (A), replacing -B+D1 (+/+!) by -B (+!) and D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-2+H-D1 (+/+!), H-D1 (+), -B (+!), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {B==-1}
+resulting limit problem:
+1 (+!), -2+H-D1 (+/+!), H-D1 (+), D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-2+H-D1 (+/+!), H-D1 (+), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==1}
+resulting limit problem:
+1 (+!), -3+H (+/+!), -1+H (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-3+H (+/+!), -1+H (+) [not solved]
+
+applying transformation rule (D), replacing -3+H (+/+!) by H (+)
+resulting limit problem:
+H (+), -1+H (+) [not solved]
+
+applying transformation rule (D), replacing -1+H (+) by H (+)
+resulting limit problem:
+H (+) [solved]
+
+Solution:
+H / 4
+B / -1
+A / n
+D1 / 0
+Created initial limit problem:
+1+B-D1 (+/+!), -2+H-B (+/+!), 1-B+D1 (+/+!), 1-H+A (+/+!), 2-H+A (+) [not solved]
+
+applying transformation rule (C) using substitution {B==D1}
+resulting limit problem:
+1 (+/+!), -2+H-D1 (+/+!), 1-H+A (+/+!), 2-H+A (+) [not solved]
+
+applying transformation rule (C) using substitution {H==3+B}
+resulting limit problem:
+1 (+/+!), 1+B-D1 (+/+!), -2-B+A (+/+!), -1-B+A (+) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+1 (+/+!), 1+B-D1 (+/+!), -2+H-B (+/+!), -1+H-B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+B-D1 (+/+!), -2+H-B (+/+!), -1+H-B (+) [not solved]
+
+applying transformation rule (A), replacing 1+B-D1 (+/+!) by 1 (+!) and B-D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+1 (+!), B-D1 (+!), -2+H-B (+/+!), -1+H-B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+B-D1 (+!), -2+H-B (+/+!), -1+H-B (+) [not solved]
+
+applying transformation rule (A), replacing B-D1 (+!) by B (+!) and -D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-2+H-B (+/+!), -D1 (+!), B (+!), -1+H-B (+) [not solved]
+
+applying transformation rule (C) using substitution {D1==-1}
+resulting limit problem:
+1 (+!), -2+H-B (+/+!), B (+!), -1+H-B (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-2+H-B (+/+!), B (+!), -1+H-B (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1}
+resulting limit problem:
+1 (+!), -3+H (+/+!), -2+H (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-3+H (+/+!), -2+H (+) [not solved]
+
+applying transformation rule (D), replacing -3+H (+/+!) by H (+)
+resulting limit problem:
+H (+), -2+H (+) [not solved]
+
+applying transformation rule (D), replacing -2+H (+) by H (+)
+resulting limit problem:
+H (+) [solved]
+
+Solution:
+H / 4
+B / -1
+A / n
+D1 / -1
+Created initial limit problem:
+B-D1 (+/+!), -2+H-D1 (+/+!), 1-H+A (+/+!), 2-H+A (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1+D1}
+resulting limit problem:
+1 (+/+!), -2+H-D1 (+/+!), 1-H+A (+/+!), 2-H+A (+) [not solved]
+
+applying transformation rule (C) using substitution {H==3+D1}
+resulting limit problem:
+1 (+/+!), -1+A-D1 (+), -2+A-D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+1 (+/+!), -1+H-D1 (+), -2+H-D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+H-D1 (+), -2+H-D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -1+H-D1 (+) by -1 (-!) and H-D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-2+H-D1 (+/+!), H-D1 (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-2+H-D1 (+/+!), H-D1 (+) [not solved]
+
+applying transformation rule (A), replacing -2+H-D1 (+/+!) by -2 (-!) and H-D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-2 (-!), H-D1 (+) [not solved]
+
+applying transformation rule (B), deleting -2 (-!)
+resulting limit problem:
+H-D1 (+) [not solved]
+
+applying transformation rule (A), replacing H-D1 (+) by H (-!) and -D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+H (-!), -D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {H==-1}
+resulting limit problem:
+-D1 (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-D1 (+) [not solved]
+
+applying transformation rule (A), replacing -D1 (+) by D1 (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+-1 (-!), D1 (-) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+D1 (-) [solved]
+
+Solution:
+H / 3-n
+B / 1-n
+A / -1
+D1 / -n
+Created initial limit problem:
+1 (+/+!), R1-D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 3-A+R1 (+/+!), 1-Q+A (+/+!), 1-A+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==1+D1}
+resulting limit problem:
+1 (+/+!), 4-A+D1 (+/+!), 1-H+A (+/+!), 2-A+D1 (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==A}
+resulting limit problem:
+1 (+/+!), 4-A+D1 (+/+!), 1-H+A (+/+!), 2-A+D1 (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+4-Q+D1 (+/+!), 4-H+Q (+), 1 (+/+!), 1-H+Q (+/+!), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+R1}
+resulting limit problem:
+4-Q+D1 (+/+!), 4-H+Q (+), 1 (+/+!), 1-H+Q (+/+!), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==A}
+resulting limit problem:
+4-Q+D1 (+/+!), 4-H+Q (+), 1 (+/+!), 1-H+Q (+/+!), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+4-Q+D1 (+/+!), 4-H+Q (+), 1 (+/+!), 1-H+Q (+/+!), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-Q+D1 (+/+!), 4-H+Q (+), 1-H+Q (+/+!), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-Q+D1 (+/+!) by 4 (+!) and -Q+D1 (+) using + limit vector (+!,+)
+resulting limit problem:
+4-H+Q (+), 1-H+Q (+/+!), -Q+D1 (+), 4 (+!), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+4-H+Q (+), 1-H+Q (+/+!), -Q+D1 (+), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+Q (+) by 4 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1-H+Q (+/+!), -Q+D1 (+), 4 (+!), -H+Q (+), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+1-H+Q (+/+!), -Q+D1 (+), -H+Q (+), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 1-H+Q (+/+!) by 1 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), -Q+D1 (+), -H+Q (+), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-Q+D1 (+), -H+Q (+), 2-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -Q+D1 (+) by -Q (-!) and D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), -H+Q (+), 2-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+1-H (+), 1+D1 (+/+!), -1 (-!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+1-H (+), 1+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (D), replacing 1-H (+) by -H (+)
+resulting limit problem:
+1+D1 (+/+!), -H (+), D1 (+) [not solved]
+
+applying transformation rule (D), replacing 1+D1 (+/+!) by D1 (+)
+resulting limit problem:
+-H (+), D1 (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), -1 (-!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), D1 (+) [solved]
+
+Solution:
+H / -n
+Q / 1
+A / 1
+R1 / 1+n
+D1 / n
+Created initial limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), -B+R1 (+/+!), 2 (+/+!), 1-R1+D1 (+/+!), A-D1 (+/+!), 1-H+A (+/+!), 2-A+D1 (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), 2 (+/+!), -B+D1 (+/+!), A-D1 (+/+!), 1-H+A (+/+!), 2-A+D1 (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1+D1}
+resulting limit problem:
+1 (+/+!), 2 (+/+!), -B+D1 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2 (+/+!), -B+D1 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+/+!)
+resulting limit problem:
+-B+D1 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (A), replacing -B+D1 (+/+!) by -B (+!) and D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+2-H+D1 (+/+!), 2-Q+D1 (+/+!), -B (+!), D1 (+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {B==-1}
+resulting limit problem:
+1 (+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), D1 (+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+2-H+D1 (+/+!), 2-Q+D1 (+/+!), D1 (+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {D1==1}
+resulting limit problem:
+1 (+!), 3-Q (+/+!), 8-H-Q (+), 3-H (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+3-Q (+/+!), 8-H-Q (+), 3-H (+/+!) [not solved]
+
+applying transformation rule (D), replacing 3-Q (+/+!) by -Q (+)
+resulting limit problem:
+-Q (+), 8-H-Q (+), 3-H (+/+!) [not solved]
+
+applying transformation rule (D), replacing 3-H (+/+!) by -H (+)
+resulting limit problem:
+-Q (+), 8-H-Q (+), -H (+) [not solved]
+
+applying transformation rule (A), replacing -Q (+) by Q (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+Q (-), 8-H-Q (+), -H (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+Q (-), 8-H-Q (+), -H (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), Q (-), 8-H-Q (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), Q (-), 8-H-Q (+) [not solved]
+
+applying transformation rule (C) using substitution {H==Q}
+resulting limit problem:
+Q (-), 8-2*Q (+) [not solved]
+
+applying transformation rule (D), replacing 8-2*Q (+) by -2*Q (+)
+resulting limit problem:
+Q (-), -2*Q (+) [not solved]
+
+applying transformation rule (A), replacing -2*Q (+) by Q (-) and -2 (-!) using + limit vector (-,-!)
+resulting limit problem:
+-2 (-!), Q (-) [not solved]
+
+applying transformation rule (B), deleting -2 (-!)
+resulting limit problem:
+Q (-) [solved]
+
+Solution:
+H / -n
+Q / -n
+B / -1
+A / 2
+R1 / 1
+D1 / 1
+Created initial limit problem:
+1 (+/+!), -R1+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 3-A+R1 (+/+!), 1-Q+A (+/+!), 1-A+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==1+R1}
+resulting limit problem:
+1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 3-A+R1 (+/+!), 1-Q+A (+/+!), 1-A+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==A}
+resulting limit problem:
+1 (+/+!), 3 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+R1}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==A}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-H+Q (+), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+4-H+Q (+), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+Q (+) by 4 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1-H+Q (+/+!), 4 (+!), -H+Q (+) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+1-H+Q (+/+!), -H+Q (+) [not solved]
+
+applying transformation rule (A), replacing 1-H+Q (+/+!) by 1 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), -H+Q (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-H+Q (+) [not solved]
+
+applying transformation rule (A), replacing -H+Q (+) by -H (-!) and Q (+) using + limit vector (-!,+)
+resulting limit problem:
+Q (+), -H (-!) [not solved]
+
+applying transformation rule (C) using substitution {H==1}
+resulting limit problem:
+Q (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+Q (+) [solved]
+
+Solution:
+H / 1
+Q / n
+A / n
+R1 / n
+D1 / 1+n
+Created initial limit problem:
+B-R1 (+/+!), 1 (+/+!), 1+R1-D1 (+/+!), 2 (+/+!), 1-R1+D1 (+/+!), A-D1 (+/+!), 1-H+A (+/+!), 2-A+D1 (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), B-D1 (+/+!), 2 (+/+!), A-D1 (+/+!), 1-H+A (+/+!), 2-A+D1 (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1+D1}
+resulting limit problem:
+1 (+/+!), B-D1 (+/+!), 2 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1+R1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 2 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+R1-D1 (+/+!), 2 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+/+!)
+resulting limit problem:
+1+R1-D1 (+/+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (A), replacing 1+R1-D1 (+/+!) by 1 (+!) and R1-D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+1 (+!), R1-D1 (+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+R1-D1 (+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (A), replacing R1-D1 (+!) by R1 (+!) and -D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-D1 (+!), 2-H+D1 (+/+!), 2-Q+D1 (+/+!), R1 (+!), 6-H-Q+2*D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {D1==-1}
+resulting limit problem:
+1 (+!), 1-Q (+/+!), 1-H (+/+!), 4-H-Q (+), R1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+1-Q (+/+!), 1-H (+/+!), 4-H-Q (+), R1 (+!) [not solved]
+
+applying transformation rule (D), replacing 1-Q (+/+!) by -Q (+)
+resulting limit problem:
+-Q (+), 1-H (+/+!), 4-H-Q (+), R1 (+!) [not solved]
+
+applying transformation rule (D), replacing 1-H (+/+!) by -H (+)
+resulting limit problem:
+-Q (+), -H (+), 4-H-Q (+), R1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==1}
+resulting limit problem:
+1 (+!), -Q (+), -H (+), 4-H-Q (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-Q (+), -H (+), 4-H-Q (+) [not solved]
+
+applying transformation rule (A), replacing -Q (+) by Q (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+Q (-), -H (+), 4-H-Q (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+Q (-), -H (+), 4-H-Q (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), Q (-), 4-H-Q (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), Q (-), 4-H-Q (+) [not solved]
+
+applying transformation rule (C) using substitution {H==Q}
+resulting limit problem:
+Q (-), 4-2*Q (+) [not solved]
+
+applying transformation rule (D), replacing 4-2*Q (+) by -2*Q (+)
+resulting limit problem:
+Q (-), -2*Q (+) [not solved]
+
+applying transformation rule (A), replacing -2*Q (+) by Q (-) and -2 (-!) using + limit vector (-,-!)
+resulting limit problem:
+-2 (-!), Q (-) [not solved]
+
+applying transformation rule (B), deleting -2 (-!)
+resulting limit problem:
+Q (-) [solved]
+
+Solution:
+H / -n
+Q / -n
+B / 2
+A / 0
+R1 / -1
+D1 / -1
+Created initial limit problem:
+B-R1 (+/+!), 1 (+/+!), 1+R1-D1 (+/+!), 1-R1+D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), B-D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==1+R1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==A}
+resulting limit problem:
+1 (+/+!), 3 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-Q+R1 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-Q+R1 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==A}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-Q+R1 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 3 (+/+!), 1-Q+R1 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-H+Q (+), 3 (+/+!), 1-Q+R1 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+4-H+Q (+), 1-Q+R1 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+Q (+) by 4 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1-Q+R1 (+/+!), 1-H+Q (+/+!), 4 (+!), -H+Q (+) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+1-Q+R1 (+/+!), 1-H+Q (+/+!), -H+Q (+) [not solved]
+
+applying transformation rule (A), replacing 1-Q+R1 (+/+!) by 1 (+!) and -Q+R1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+1 (+!), -Q+R1 (+!), 1-H+Q (+/+!), -H+Q (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-Q+R1 (+!), 1-H+Q (+/+!), -H+Q (+) [not solved]
+
+applying transformation rule (A), replacing -Q+R1 (+!) by -Q (+!) and R1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-Q (+!), 1-H+Q (+/+!), -H+Q (+), R1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {Q==-1}
+resulting limit problem:
+1 (+!), -1-H (+), -H (+/+!), R1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-1-H (+), -H (+/+!), R1 (+!) [not solved]
+
+applying transformation rule (D), replacing -1-H (+) by -H (+)
+resulting limit problem:
+-H (+), R1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==1}
+resulting limit problem:
+1 (+!), -H (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-H (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-) [solved]
+
+Solution:
+H / -n
+Q / -1
+B / 2
+A / -1
+R1 / -1
+D1 / -1
+Created initial limit problem:
+1 (+/+!), 2 (+/+!), -R1+D1 (+/+!), 1-H+A (+/+!), 2-A+R1 (+/+!), 4-H-Q+2*A (+), A-R1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1+R1}
+resulting limit problem:
+1 (+/+!), 2 (+/+!), -R1+D1 (+/+!), 2-H+R1 (+/+!), 6-H-Q+2*R1 (+), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==1+R1}
+resulting limit problem:
+1 (+/+!), 2 (+/+!), 2-H+R1 (+/+!), 6-H-Q+2*R1 (+), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2 (+/+!), 2-H+R1 (+/+!), 6-H-Q+2*R1 (+), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 2 (+/+!)
+resulting limit problem:
+2-H+R1 (+/+!), 6-H-Q+2*R1 (+), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 2-H+R1 (+/+!) by 2 (+!) and -H+R1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+2 (+!), 6-H-Q+2*R1 (+), -H+R1 (+!), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+6-H-Q+2*R1 (+), -H+R1 (+!), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 6-H-Q+2*R1 (+) by 6 (+!) and -H-Q+2*R1 (+) using + limit vector (+!,+)
+resulting limit problem:
+-H-Q+2*R1 (+), 6 (+!), -H+R1 (+!), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 6 (+!)
+resulting limit problem:
+-H-Q+2*R1 (+), -H+R1 (+!), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -H-Q+2*R1 (+) by -H (-!) and -Q+2*R1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-H (-!), -H+R1 (+!), 2-Q+R1 (+/+!), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (C) using substitution {H==1}
+resulting limit problem:
+-1+R1 (+!), -1 (-!), 2-Q+R1 (+/+!), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-1+R1 (+!), 2-Q+R1 (+/+!), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (C) using substitution {R1==2}
+resulting limit problem:
+1 (+!), 4-Q (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+4-Q (+) [not solved]
+
+applying transformation rule (D), replacing 4-Q (+) by -Q (+)
+resulting limit problem:
+-Q (+) [not solved]
+
+applying transformation rule (A), replacing -Q (+) by Q (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+Q (-), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+Q (-) [solved]
+
+Solution:
+H / 1
+Q / -n
+A / 3
+R1 / 2
+D1 / 3
+Created initial limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), -B+R1 (+/+!), 1-R1+D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), -B+D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==A}
+resulting limit problem:
+1 (+/+!), -B+A (+/+!), 3 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), Q-B (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), Q-B (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==A}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), Q-B (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), Q-B (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-H+Q (+), Q-B (+/+!), 3 (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (B), deleting 3 (+/+!)
+resulting limit problem:
+4-H+Q (+), Q-B (+/+!), 1-H+Q (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+Q (+) by 4 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+Q-B (+/+!), 1-H+Q (+/+!), 4 (+!), -H+Q (+) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+Q-B (+/+!), 1-H+Q (+/+!), -H+Q (+) [not solved]
+
+applying transformation rule (A), replacing Q-B (+/+!) by Q (+!) and -B (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+Q (+!), 1-H+Q (+/+!), -H+Q (+), -B (+!) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+1 (+!), 1-H (+), 2-H (+/+!), -B (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+1-H (+), 2-H (+/+!), -B (+!) [not solved]
+
+applying transformation rule (D), replacing 1-H (+) by -H (+)
+resulting limit problem:
+-H (+), 2-H (+/+!), -B (+!) [not solved]
+
+applying transformation rule (D), replacing 2-H (+/+!) by -H (+)
+resulting limit problem:
+-H (+), -B (+!) [not solved]
+
+applying transformation rule (C) using substitution {B==-1}
+resulting limit problem:
+1 (+!), -H (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-H (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-) [solved]
+
+Solution:
+H / -n
+Q / 1
+B / -1
+A / 1
+R1 / 1
+D1 / 1
+Created initial limit problem:
+1 (+/+!), R1-D1 (+/+!), 2 (+/+!), 1-H+A (+/+!), 2-A+R1 (+/+!), 4-H-Q+2*A (+), A-R1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==1+R1}
+resulting limit problem:
+1 (+/+!), R1-D1 (+/+!), 2 (+/+!), 2-H+R1 (+/+!), 6-H-Q+2*R1 (+), 2-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==1+D1}
+resulting limit problem:
+1 (+/+!), 2 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+2 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 2 (+/+!)
+resulting limit problem:
+8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 8-H-Q+2*D1 (+) by 8 (+!) and -H-Q+2*D1 (+) using + limit vector (+!,+)
+resulting limit problem:
+8 (+!), -H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -H-Q+2*D1 (+) by -H (-!) and -Q+2*D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+3-H+D1 (+/+!), -H (-!), -Q+2*D1 (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {H==1}
+resulting limit problem:
+-Q+2*D1 (+), -1 (-!), 2+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-Q+2*D1 (+), 2+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 2+D1 (+/+!) by D1 (+)
+resulting limit problem:
+-Q+2*D1 (+), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (A), replacing -Q+2*D1 (+) by -Q (-!) and 2*D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), 2*D1 (+), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+-1 (-!), 2+D1 (+/+!), 2*D1 (+), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+2+D1 (+/+!), 2*D1 (+), D1 (+) [not solved]
+
+applying transformation rule (D), replacing 2+D1 (+/+!) by D1 (+)
+resulting limit problem:
+2*D1 (+), D1 (+) [not solved]
+
+applying transformation rule (A), replacing 2*D1 (+) by D1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+D1 (+) [solved]
+
+Solution:
+H / 1
+Q / 1
+A / 2+n
+R1 / 1+n
+D1 / n
+Created initial limit problem:
+3+B-A (+/+!), 1 (+/+!), 1+B-R1 (+/+!), 1+R1-D1 (+/+!), 1+B-A (+/+!), 1-B+R1 (+/+!), 1-R1+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==R1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 1-R1+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 3-A+R1 (+/+!), 1-Q+A (+/+!), 1-A+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!), 1-A+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 1-Q+D1 (+/+!), 1-H+Q (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+B}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 1-Q+D1 (+/+!), 1-H+Q (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+4-H+Q (+), 1 (+/+!), 1-Q+D1 (+/+!), 1-H+Q (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-H+Q (+), 1-Q+D1 (+/+!), 1-H+Q (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+Q (+) by 4 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1-Q+D1 (+/+!), 1-H+Q (+/+!), 4 (+!), -H+Q (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+1-Q+D1 (+/+!), 1-H+Q (+/+!), -H+Q (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 1-Q+D1 (+/+!) by 1 (+!) and -Q+D1 (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), 1-H+Q (+/+!), -Q+D1 (+), -H+Q (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+1-H+Q (+/+!), -Q+D1 (+), -H+Q (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 1-H+Q (+/+!) by 1 (+!) and -H+Q (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), -Q+D1 (+), -H+Q (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-Q+D1 (+), -H+Q (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -Q+D1 (+) by -Q (-!) and D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), -H+Q (+), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+1-H (+), -1 (-!), 2+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+1-H (+), 2+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (D), replacing 1-H (+) by -H (+)
+resulting limit problem:
+-H (+), 2+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (D), replacing 2+D1 (+/+!) by D1 (+)
+resulting limit problem:
+-H (+), D1 (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), -1 (-!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), D1 (+) [solved]
+
+Solution:
+H / -n
+Q / 1
+B / n
+A / 1
+R1 / n
+D1 / n
+Created initial limit problem:
+1 (+/+!), R1-D1 (+/+!), -1+A-R1 (+/+!), 4-H+R1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+R1-D1 (+/+!), -1+A-R1 (+/+!), 4-H+R1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (A), replacing R1-D1 (+/+!) by R1 (+!) and -D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-D1 (+!), -1+A-R1 (+/+!), 4-H+R1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), R1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==-1}
+resulting limit problem:
+1 (+!), -1+A-R1 (+/+!), 4-H+R1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), R1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-1+A-R1 (+/+!), 4-H+R1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), R1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==1}
+resulting limit problem:
+1 (+!), 5-H (+/+!), 8-H-Q+A (+), 1-Q+A (+/+!), -3+A (+/+!), -2+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+5-H (+/+!), 8-H-Q+A (+), 1-Q+A (+/+!), -3+A (+/+!), -2+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing 5-H (+/+!) by -H (+)
+resulting limit problem:
+8-H-Q+A (+), -H (+), 1-Q+A (+/+!), -3+A (+/+!), -2+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing -3+A (+/+!) by A (+)
+resulting limit problem:
+8-H-Q+A (+), -H (+), 1-Q+A (+/+!), A (+), -2+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing -2+A (+/+!) by A (+)
+resulting limit problem:
+8-H-Q+A (+), -H (+), 1-Q+A (+/+!), A (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), 8-H-Q+A (+), 1-Q+A (+/+!), A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), 8-H-Q+A (+), 1-Q+A (+/+!), A (+) [not solved]
+
+applying transformation rule (A), replacing 8-H-Q+A (+) by 8 (+!) and -H-Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+8 (+!), H (-), -H-Q+A (+), 1-Q+A (+/+!), A (+) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+H (-), -H-Q+A (+), 1-Q+A (+/+!), A (+) [not solved]
+
+applying transformation rule (A), replacing -H-Q+A (+) by -H (+) and -Q+A (+) using + limit vector (+,+)
+resulting limit problem:
+H (-), -H (+), 1-Q+A (+/+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), 1-Q+A (+/+!), A (+), -1 (-!), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), 1-Q+A (+/+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 1-Q+A (+/+!) by 1 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+H (-), 1 (+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+H (-), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -Q+A (+) by -Q (-!) and A (+) using + limit vector (-!,+)
+resulting limit problem:
+H (-), -Q (-!), A (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+H (-), A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), A (+) [solved]
+
+Solution:
+H / -n
+Q / 1
+A / n
+R1 / 1
+D1 / -1
+Created initial limit problem:
+1 (+/+!), 1+B-R1 (+/+!), 1+R1-D1 (+/+!), -2-B+A (+/+!), 7-H-Q+B+A (+), 1-B+R1 (+/+!), 1-R1+D1 (+/+!), 1-Q+A (+/+!), -1-B+A (+/+!), 4-H+B (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==R1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), -1+A-R1 (+/+!), 4-H+R1 (+/+!), 1-R1+D1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-H+D1 (+/+!), -1+A-D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+D1 (+/+!) by 4 (+!) and -H+D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-1+A-D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 4 (+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+-1+A-D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (A), replacing -1+A-D1 (+/+!) by -1 (-!) and A-D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -1 (-!), -H+D1 (+!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (A), replacing 7-H-Q+A+D1 (+) by 7 (+!) and -H-Q+A+D1 (+) using + limit vector (+!,+)
+resulting limit problem:
+-H-Q+A+D1 (+), 7 (+!), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 7 (+!)
+resulting limit problem:
+-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (A), replacing -H-Q+A+D1 (+) by -H (-!) and -Q+A+D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), -H (-!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {H==1}
+resulting limit problem:
+-Q+A+D1 (+), -1+D1 (+!), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-Q+A+D1 (+), -1+D1 (+!), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==2}
+resulting limit problem:
+1 (+!), -4+A (+/+!), 2-Q+A (+), 1-Q+A (+/+!), -2+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-4+A (+/+!), 2-Q+A (+), 1-Q+A (+/+!), -2+A (+) [not solved]
+
+applying transformation rule (D), replacing -4+A (+/+!) by A (+)
+resulting limit problem:
+2-Q+A (+), 1-Q+A (+/+!), A (+), -2+A (+) [not solved]
+
+applying transformation rule (D), replacing -2+A (+) by A (+)
+resulting limit problem:
+2-Q+A (+), 1-Q+A (+/+!), A (+) [not solved]
+
+applying transformation rule (A), replacing 2-Q+A (+) by 2 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+2 (+!), 1-Q+A (+/+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+1-Q+A (+/+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 1-Q+A (+/+!) by 1 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -Q+A (+) by -Q (-!) and A (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), A (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+H / 1
+Q / 1
+B / 2
+A / n
+R1 / 2
+D1 / 2
+Created initial limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), -B+R1 (+/+!), -1+A-D1 (+/+!), 1-R1+D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), -1+A-D1 (+/+!), -B+D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+8-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 8-H-Q+2*D1 (+) by 8 (+!) and -H-Q+2*D1 (+) using + limit vector (+!,+)
+resulting limit problem:
+8 (+!), -H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+-H-Q+2*D1 (+), -B+D1 (+/+!), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -H-Q+2*D1 (+) by -H (-!) and -Q+2*D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-B+D1 (+/+!), 3-H+D1 (+/+!), -H (-!), -Q+2*D1 (+), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {H==1}
+resulting limit problem:
+-B+D1 (+/+!), -Q+2*D1 (+), -1 (-!), 2+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-B+D1 (+/+!), -Q+2*D1 (+), 2+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (D), replacing 2+D1 (+/+!) by D1 (+)
+resulting limit problem:
+-B+D1 (+/+!), -Q+2*D1 (+), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (A), replacing -B+D1 (+/+!) by -B (-!) and D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q+2*D1 (+), -B (-!), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1}
+resulting limit problem:
+-Q+2*D1 (+), -1 (-!), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-Q+2*D1 (+), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (A), replacing -Q+2*D1 (+) by -Q (-!) and 2*D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), 2*D1 (+), 3-Q+D1 (+/+!), D1 (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+-1 (-!), 2+D1 (+/+!), 2*D1 (+), D1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+2+D1 (+/+!), 2*D1 (+), D1 (+) [not solved]
+
+applying transformation rule (D), replacing 2+D1 (+/+!) by D1 (+)
+resulting limit problem:
+2*D1 (+), D1 (+) [not solved]
+
+applying transformation rule (A), replacing 2*D1 (+) by D1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), D1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+D1 (+) [solved]
+
+Solution:
+H / 1
+Q / 1
+B / 1
+A / 2+n
+R1 / n
+D1 / n
+Created initial limit problem:
+1 (+/+!), -1+A-R1 (+/+!), 4-H+R1 (+/+!), -R1+D1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+-1+A-R1 (+/+!), 4-H+R1 (+/+!), -R1+D1 (+/+!), -2+A-R1 (+/+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (A), replacing -1+A-R1 (+/+!) by -1 (-!) and A-R1 (+) using + limit vector (-!,+)
+resulting limit problem:
+4-H+R1 (+/+!), -R1+D1 (+/+!), -2+A-R1 (+/+!), A-R1 (+), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+4-H+R1 (+/+!), -R1+D1 (+/+!), -2+A-R1 (+/+!), A-R1 (+), 7-H-Q+A+R1 (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+R1 (+/+!) by 4 (+!) and -H+R1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-R1+D1 (+/+!), -2+A-R1 (+/+!), A-R1 (+), 4 (+!), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), -H+R1 (+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+-R1+D1 (+/+!), -2+A-R1 (+/+!), A-R1 (+), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), -H+R1 (+!) [not solved]
+
+applying transformation rule (A), replacing -R1+D1 (+/+!) by -R1 (+!) and D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-R1 (+!), -2+A-R1 (+/+!), A-R1 (+), 7-H-Q+A+R1 (+), 1-Q+A (+/+!), -H+R1 (+!), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==-1}
+resulting limit problem:
+-1+A (+/+!), 1 (+!), -1-H (+!), 1+A (+), 1-Q+A (+/+!), 6-H-Q+A (+), D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-1+A (+/+!), -1-H (+!), 1+A (+), 1-Q+A (+/+!), 6-H-Q+A (+), D1 (+!) [not solved]
+
+applying transformation rule (D), replacing -1+A (+/+!) by A (+)
+resulting limit problem:
+-1-H (+!), 1+A (+), 1-Q+A (+/+!), A (+), 6-H-Q+A (+), D1 (+!) [not solved]
+
+applying transformation rule (D), replacing 1+A (+) by A (+)
+resulting limit problem:
+-1-H (+!), 1-Q+A (+/+!), A (+), 6-H-Q+A (+), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {H==-2}
+resulting limit problem:
+1 (+!), 1-Q+A (+/+!), A (+), 8-Q+A (+), D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+1-Q+A (+/+!), A (+), 8-Q+A (+), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==1}
+resulting limit problem:
+1 (+!), 1-Q+A (+/+!), A (+), 8-Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+1-Q+A (+/+!), A (+), 8-Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 1-Q+A (+/+!) by 1 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), A (+), 8-Q+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+A (+), 8-Q+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 8-Q+A (+) by 8 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+8 (+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -Q+A (+) by -Q (-!) and A (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), A (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+H / -2
+Q / 1
+A / n
+R1 / -1
+D1 / 1
+Created initial limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), -B+R1 (+/+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), 1-R1+D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), -B+D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+4-H+D1 (+/+!), -1+A-D1 (+/+!), -B+D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (A), replacing 4-H+D1 (+/+!) by 4 (+!) and -H+D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-1+A-D1 (+/+!), -B+D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 4 (+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 4 (+!)
+resulting limit problem:
+-1+A-D1 (+/+!), -B+D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (A), replacing -1+A-D1 (+/+!) by -1 (-!) and A-D1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-B+D1 (+/+!), 7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -1 (-!), -H+D1 (+!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-B+D1 (+/+!), 7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!) [not solved]
+
+applying transformation rule (A), replacing -B+D1 (+/+!) by -B (+!) and D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!), -B (+!), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {B==-1}
+resulting limit problem:
+1 (+!), 7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!), D1 (+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+7-H-Q+A+D1 (+), A-D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!), -H+D1 (+!), D1 (+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==1}
+resulting limit problem:
+-1+A (+), 1 (+!), 8-H-Q+A (+), 1-H (+!), 1-Q+A (+/+!), -3+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-1+A (+), 8-H-Q+A (+), 1-H (+!), 1-Q+A (+/+!), -3+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing -1+A (+) by A (+)
+resulting limit problem:
+8-H-Q+A (+), 1-H (+!), 1-Q+A (+/+!), A (+), -3+A (+/+!) [not solved]
+
+applying transformation rule (D), replacing -3+A (+/+!) by A (+)
+resulting limit problem:
+8-H-Q+A (+), 1-H (+!), 1-Q+A (+/+!), A (+) [not solved]
+
+applying transformation rule (C) using substitution {H==0}
+resulting limit problem:
+1 (+!), 1-Q+A (+/+!), A (+), 8-Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+1-Q+A (+/+!), A (+), 8-Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 1-Q+A (+/+!) by 1 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+1 (+!), A (+), 8-Q+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+A (+), 8-Q+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 8-Q+A (+) by 8 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+8 (+!), A (+), -Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+A (+), -Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -Q+A (+) by -Q (-!) and A (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), A (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+A (+) [solved]
+
+Solution:
+H / 0
+Q / 1
+B / -1
+A / n
+R1 / 1
+D1 / 1
+Created initial limit problem:
+1 (+/+!), -1+A-R1 (+/+!), -R1+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 3-A+R1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==1+R1}
+resulting limit problem:
+1 (+/+!), -1+A-R1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 3-A+R1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+R1}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+R1}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+R1}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+1 (+/+!), 8-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+8-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 8-H-Q+2*R1 (+) by 8 (+!) and -H-Q+2*R1 (+) using + limit vector (+!,+)
+resulting limit problem:
+8 (+!), -H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 8 (+!)
+resulting limit problem:
+-H-Q+2*R1 (+), 3-H+R1 (+/+!), 3-Q+R1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing -H-Q+2*R1 (+) by -H (-!) and -Q+2*R1 (+) using + limit vector (-!,+)
+resulting limit problem:
+3-H+R1 (+/+!), -H (-!), 3-Q+R1 (+/+!), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (C) using substitution {H==1}
+resulting limit problem:
+3-Q+R1 (+/+!), -1 (-!), 2+R1 (+/+!), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+3-Q+R1 (+/+!), 2+R1 (+/+!), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (D), replacing 2+R1 (+/+!) by R1 (+)
+resulting limit problem:
+3-Q+R1 (+/+!), R1 (+), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (A), replacing 3-Q+R1 (+/+!) by 3 (+!) and -Q+R1 (+) using + limit vector (+!,+)
+resulting limit problem:
+3 (+!), -Q+R1 (+), R1 (+), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (B), deleting 3 (+!)
+resulting limit problem:
+-Q+R1 (+), R1 (+), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (A), replacing -Q+R1 (+) by -Q (-!) and R1 (+) using + limit vector (-!,+)
+resulting limit problem:
+-Q (-!), R1 (+), -Q+2*R1 (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+-1+2*R1 (+), -1 (-!), R1 (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+-1+2*R1 (+), R1 (+) [not solved]
+
+applying transformation rule (D), replacing -1+2*R1 (+) by 2*R1 (+)
+resulting limit problem:
+2*R1 (+), R1 (+) [not solved]
+
+applying transformation rule (A), replacing 2*R1 (+) by R1 (+) and 2 (+!) using + limit vector (+,+!)
+resulting limit problem:
+2 (+!), R1 (+) [not solved]
+
+applying transformation rule (B), deleting 2 (+!)
+resulting limit problem:
+R1 (+) [solved]
+
+Solution:
+H / 1
+Q / 1
+A / 2+n
+R1 / n
+D1 / 1+n
+Created initial limit problem:
+B-R1 (+/+!), 1 (+/+!), 1+R1-D1 (+/+!), -1+A-D1 (+/+!), 1-R1+D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), B-D1 (+/+!), -1+A-D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {B==1+R1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), -1+A-D1 (+/+!), 3-A+D1 (+/+!), 1-H+A (+/+!), 4-H-Q+2*A (+), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==Q}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==2+D1}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {A==H}
+resulting limit problem:
+1 (+/+!), 1+R1-D1 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+1+R1-D1 (+/+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing 1+R1-D1 (+/+!) by 1 (+!) and R1-D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+1 (+!), R1-D1 (+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+R1-D1 (+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (A), replacing R1-D1 (+!) by R1 (+!) and -D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-D1 (+!), 8-H-Q+2*D1 (+), 3-H+D1 (+/+!), R1 (+!), 3-Q+D1 (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==-1}
+resulting limit problem:
+1 (+!), 2-Q (+/+!), 2-H (+/+!), R1 (+!), 6-H-Q (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+2-Q (+/+!), 2-H (+/+!), R1 (+!), 6-H-Q (+) [not solved]
+
+applying transformation rule (D), replacing 2-Q (+/+!) by -Q (+)
+resulting limit problem:
+-Q (+), 2-H (+/+!), R1 (+!), 6-H-Q (+) [not solved]
+
+applying transformation rule (D), replacing 2-H (+/+!) by -H (+)
+resulting limit problem:
+-Q (+), -H (+), R1 (+!), 6-H-Q (+) [not solved]
+
+applying transformation rule (C) using substitution {R1==1}
+resulting limit problem:
+1 (+!), -Q (+), -H (+), 6-H-Q (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-Q (+), -H (+), 6-H-Q (+) [not solved]
+
+applying transformation rule (A), replacing -Q (+) by Q (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+Q (-), -H (+), -1 (-!), 6-H-Q (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+Q (-), -H (+), 6-H-Q (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), Q (-), -1 (-!), 6-H-Q (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), Q (-), 6-H-Q (+) [not solved]
+
+applying transformation rule (C) using substitution {H==Q}
+resulting limit problem:
+6-2*Q (+), Q (-) [not solved]
+
+applying transformation rule (D), replacing 6-2*Q (+) by -2*Q (+)
+resulting limit problem:
+Q (-), -2*Q (+) [not solved]
+
+applying transformation rule (A), replacing -2*Q (+) by Q (-) and -2 (-!) using + limit vector (-,-!)
+resulting limit problem:
+-2 (-!), Q (-) [not solved]
+
+applying transformation rule (B), deleting -2 (-!)
+resulting limit problem:
+Q (-) [solved]
+
+Solution:
+H / -n
+Q / -n
+B / 2
+A / 1
+R1 / -1
+D1 / -1
+Created initial limit problem:
+B-R1 (+/+!), 1 (+/+!), 1+R1-D1 (+/+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), 1-R1+D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {R1==D1}
+resulting limit problem:
+1 (+/+!), B-D1 (+/+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (B), deleting 1 (+/+!)
+resulting limit problem:
+B-D1 (+/+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), 7-H-Q+A+D1 (+), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (A), replacing B-D1 (+/+!) by B (+!) and -D1 (+!) using +! limit vector (+!,+!)
+resulting limit problem:
+-D1 (+!), 4-H+D1 (+/+!), -1+A-D1 (+/+!), 7-H-Q+A+D1 (+), B (+!), -2+A-D1 (+/+!), 1-Q+A (+/+!) [not solved]
+
+applying transformation rule (C) using substitution {D1==-1}
+resulting limit problem:
+-1+A (+/+!), 1 (+!), B (+!), 1-Q+A (+/+!), A (+/+!), 3-H (+/+!), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-1+A (+/+!), B (+!), 1-Q+A (+/+!), A (+/+!), 3-H (+/+!), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (D), replacing -1+A (+/+!) by A (+)
+resulting limit problem:
+B (+!), 1-Q+A (+/+!), A (+), 3-H (+/+!), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (D), replacing 3-H (+/+!) by -H (+)
+resulting limit problem:
+B (+!), -H (+), 1-Q+A (+/+!), A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (C) using substitution {B==1}
+resulting limit problem:
+1 (+!), -H (+), 1-Q+A (+/+!), A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+-H (+), 1-Q+A (+/+!), A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), 1-Q+A (+/+!), A (+), -1 (-!), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), 1-Q+A (+/+!), A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (A), replacing 1-Q+A (+/+!) by 1 (+!) and -Q+A (+) using + limit vector (+!,+)
+resulting limit problem:
+H (-), 1 (+!), A (+), -Q+A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (B), deleting 1 (+!)
+resulting limit problem:
+H (-), A (+), -Q+A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (A), replacing -Q+A (+) by -Q (-!) and A (+) using + limit vector (-!,+)
+resulting limit problem:
+H (-), -Q (-!), A (+), 6-H-Q+A (+) [not solved]
+
+applying transformation rule (C) using substitution {Q==1}
+resulting limit problem:
+H (-), 5-H+A (+), A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), 5-H+A (+), A (+) [not solved]
+
+applying transformation rule (A), replacing 5-H+A (+) by 5 (+!) and -H+A (+) using + limit vector (+!,+)
+resulting limit problem:
+H (-), -H+A (+), 5 (+!), A (+) [not solved]
+
+applying transformation rule (B), deleting 5 (+!)
+resulting limit problem:
+H (-), -H+A (+), A (+) [not solved]
+
+applying transformation rule (A), replacing -H+A (+) by -H (+) and A (+) using + limit vector (+,+)
+resulting limit problem:
+H (-), -H (+), A (+) [not solved]
+
+applying transformation rule (A), replacing -H (+) by H (-) and -1 (-!) using + limit vector (-,-!)
+resulting limit problem:
+H (-), A (+), -1 (-!) [not solved]
+
+applying transformation rule (B), deleting -1 (-!)
+resulting limit problem:
+H (-), A (+) [solved]
+
+Solution:
+H / -n
+Q / 1
+B / 1
+A / n
+R1 / -1
+D1 / -1
+
+Pruned:
+  Start location: f0
+    139: f78 -> f82 : [ 29>=C && 9>=C ], cost: 2
+    140: f78 -> f82 : [ 29>=C && C>=11 ], cost: 2
+    142: f78 -> f82 : [ C>=31 && C>=11 ], cost: 2
+    143: f78 -> f82 : C'=30, [ C==30 && 30>=11 ], cost: 2
+    141: f78 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ 29>=C && C==10 && A>=H ], cost: 3-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+    154: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && 0>=1+free_83 ], cost: 2
+    155: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && free_83>=1 ], cost: 2
+    157: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && 0>=1-free_85 ], cost: 2
+    158: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85>=1 ], cost: 2
+    156: f149 -> f133 : E'=0, R1'=1+R1, V1'=free_84, W1'=free_83, [ R>=0 && free_83==0 ], cost: 2
+    159: f149 -> f133 : E'=0, R1'=1+R1, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85==0 ], cost: 2
+    176: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_115, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, Z1'=A, [ R1>=1+D1 && A>=Q && 1+R1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    185: f157 -> f180 : D'=free_92, H'=1+A, Q'=1+A, O'=free_93, R'=free_116, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, Z1'=A, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && 2+D1>=A && A>=2+D1 && A>=H ], cost: 4-H-Q+2*A
+    203: f157 -> f180 : D'=free_87, H'=1+A, Q'=1+A, O'=free_88, R'=free_117, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, Z1'=A, [ B==R1 && D1==R1 && B>=A && A>=Q && 1+A>=1+A && 2+B>=A && B>=A && A>=H ], cost: 4-H-Q+2*A
+    215: f157 -> f180 : D'=free_102, H'=1+A, Q'=1+A, O'=free_103, R'=free_117, S'=free_104, V'=free_105, E1'=free_106, Z1'=A, [ D1>=1+R1 && R1>=A && A>=Q && 1+A>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 4-H-Q+2*A
+    219: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_117, S'=free_109, V'=free_110, E1'=free_111, Z1'=A, [ R1>=1+D1 && R1>=A && A>=Q && 1+A>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 4-H-Q+2*A
+    161: f157 -> [26] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    162: f157 -> [27] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    163: f157 -> [28] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    165: f157 -> [29] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    166: f157 -> [30] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    167: f157 -> [31] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    169: f157 -> [32] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    170: f157 -> [33] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    171: f157 -> [34] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    173: f157 -> [35] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    174: f157 -> [36] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    175: f157 -> [37] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    177: f157 -> [38] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    178: f157 -> [39] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    179: f157 -> [40] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    180: f157 -> [41] : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    183: f157 -> [42] : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    184: f157 -> [43] : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    187: f157 -> [44] : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    188: f157 -> [45] : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    191: f157 -> [46] : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    192: f157 -> [47] : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    195: f157 -> [48] : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    196: f157 -> [49] : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    199: f157 -> [50] : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    200: f157 -> [51] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    201: f157 -> [52] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    202: f157 -> [53] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    204: f157 -> [54] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    205: f157 -> [55] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    206: f157 -> [56] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    208: f157 -> [57] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    209: f157 -> [58] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    210: f157 -> [59] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    212: f157 -> [60] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    213: f157 -> [61] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    214: f157 -> [62] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    216: f157 -> [63] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    217: f157 -> [64] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    218: f157 -> [65] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    123: f0 -> f25 : A'=G, F'=0, Q_1'=0, [ H>=1+G ], cost: 2
+    124: f0 -> f25 : A'=G, F'=-free*(-1+Q-G), H'=1+H, Q'=1+G, J'=free, Q_1'=0, [ G>=H && G>=Q && 1+H>=1+G ], cost: 5-Q+G
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+    125: f28 -> f28 : B'=-1+B, E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 && 0>=1+free_3 ], cost: 2
+    126: f28 -> f28 : B'=-1+B, E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 && free_3>=1 ], cost: 2
+    128: f28 -> f28 : B'=-1+B, E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 && 0>=1+free_6 ], cost: 2
+    129: f28 -> f28 : B'=-1+B, E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 && free_6>=1 ], cost: 2
+    132: f28 -> f28 : B'=-1+B, E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 && free_8>=1 ], cost: 2
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+    127: f28 -> f40 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 2
+    130: f28 -> f40 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 2
+    133: f28 -> f40 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 2
+    134: f40 -> f78 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B && A>=2+B ], cost: 2
+    138: f40 -> f78 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A && B>=A ], cost: 2
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+    135: f40 -> f46 : A'=-2+A, B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=free_10+free_26+Q_1, C1'=free_29, [ A>=1+B && 0>=1+free_27 && 1+B==A ], cost: 2
+    136: f40 -> f66 : B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=free_20+free_16+free_10+Q_1, [ A>=1+B && free_16>=0 && free_17>=0 && 1+B==A ], cost: 2
+    137: f40 -> f66 : B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=-free_25+free_21+free_10+Q_1, Z'=free_25, [ A>=1+B && 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 2
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+    144: f96 -> f96 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=-1+D1, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && 0>=1+free_56 ], cost: 2
+    145: f96 -> f96 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=-1+D1, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && free_56>=1 ], cost: 2
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+    147: f96 -> f126 : E'=free_47+free_46+free_48, H'=3+D1, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && A>=2+D1 && H==2+D1 ], cost: 5-H+D1
+    149: f96 -> f126 : E'=free_47+free_46+free_48, H'=1+A, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && H>=3+D1 && A>=H ], cost: 3-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+    150: f133 -> f145 : D'=free_68+free_67+free_66, R'=free_62, S'=free_63, E1'=0, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ D1>=1+R1 && A>=1+R1 && 1+R1==A ], cost: 2
+    151: f133 -> f145 : D'=free_69+free_71+free_70, R'=free_62, S'=free_63, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ D1>=1+R1 && A>=1+R1 && A>=2+R1 ], cost: 2
+    152: f133 -> f145 : D'=free_68+free_67+free_66, R'=free_64, S'=free_65, E1'=0, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ R1>=1+D1 && A>=1+R1 && 1+R1==A ], cost: 2
+    153: f133 -> f145 : D'=free_69+free_71+free_70, R'=free_64, S'=free_65, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ R1>=1+D1 && A>=1+R1 && A>=2+R1 ], cost: 2
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+Eliminating 5 self-loops for location f28
+  Self-Loop 125 has the metering function: -1+B, resulting in the new transition 220.
+  Self-Loop 126 has the metering function: -1+B, resulting in the new transition 221.
+  Self-Loop 128 has the metering function: -1+B, resulting in the new transition 222.
+  Self-Loop 129 has the metering function: -1+B, resulting in the new transition 223.
+  Self-Loop 132 has the metering function: -1+B, resulting in the new transition 224.
+  Removing the self-loops: 125 126 128 129 132.
+Eliminating 2 self-loops for location f96
+  Self-Loop 144 has the metering function: -B+D1, resulting in the new transition 225.
+  Self-Loop 145 has the metering function: -B+D1, resulting in the new transition 226.
+  Removing the self-loops: 144 145.
+
+Accelerated all simple loops using metering functions (where possible):
+  Start location: f0
+    139: f78 -> f82 : [ 29>=C && 9>=C ], cost: 2
+    140: f78 -> f82 : [ 29>=C && C>=11 ], cost: 2
+    142: f78 -> f82 : [ C>=31 && C>=11 ], cost: 2
+    143: f78 -> f82 : C'=30, [ C==30 && 30>=11 ], cost: 2
+    141: f78 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ 29>=C && C==10 && A>=H ], cost: 3-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+     33: f82 -> f96 : C'=1+C, [ 19>=C ], cost: 1
+     34: f82 -> f96 : C'=1+C, [ C>=21 ], cost: 1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+    154: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && 0>=1+free_83 ], cost: 2
+    155: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && free_83>=1 ], cost: 2
+    157: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && 0>=1-free_85 ], cost: 2
+    158: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85>=1 ], cost: 2
+    156: f149 -> f133 : E'=0, R1'=1+R1, V1'=free_84, W1'=free_83, [ R>=0 && free_83==0 ], cost: 2
+    159: f149 -> f133 : E'=0, R1'=1+R1, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85==0 ], cost: 2
+    176: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_115, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, Z1'=A, [ R1>=1+D1 && A>=Q && 1+R1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    185: f157 -> f180 : D'=free_92, H'=1+A, Q'=1+A, O'=free_93, R'=free_116, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, Z1'=A, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && 2+D1>=A && A>=2+D1 && A>=H ], cost: 4-H-Q+2*A
+    203: f157 -> f180 : D'=free_87, H'=1+A, Q'=1+A, O'=free_88, R'=free_117, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, Z1'=A, [ B==R1 && D1==R1 && B>=A && A>=Q && 1+A>=1+A && 2+B>=A && B>=A && A>=H ], cost: 4-H-Q+2*A
+    215: f157 -> f180 : D'=free_102, H'=1+A, Q'=1+A, O'=free_103, R'=free_117, S'=free_104, V'=free_105, E1'=free_106, Z1'=A, [ D1>=1+R1 && R1>=A && A>=Q && 1+A>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 4-H-Q+2*A
+    219: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_117, S'=free_109, V'=free_110, E1'=free_111, Z1'=A, [ R1>=1+D1 && R1>=A && A>=Q && 1+A>=1+A && 2+R1>=A && R1>=A && A>=H ], cost: 4-H-Q+2*A
+    161: f157 -> [26] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    162: f157 -> [27] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    163: f157 -> [28] : D'=free_87, Q'=1+A, O'=free_88, R'=free_112, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=-1+A, [ B==R1 && D1==R1 && A>=Q && 1+B==A ], cost: 2-Q+A
+    165: f157 -> [29] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    166: f157 -> [30] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    167: f157 -> [31] : D'=free_92, Q'=1+A, O'=free_93, R'=free_112, S'=free_94, V'=free_95, E1'=free_96, R1'=-1+A, [ R1>=1+B && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    169: f157 -> [32] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    170: f157 -> [33] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    171: f157 -> [34] : D'=free_97, Q'=1+A, O'=free_98, R'=free_112, S'=free_99, V'=free_100, E1'=free_101, R1'=-1+A, [ B>=1+R1 && D1==R1 && A>=Q && 1+D1==A ], cost: 2-Q+A
+    173: f157 -> [35] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    174: f157 -> [36] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    175: f157 -> [37] : D'=free_102, Q'=1+A, O'=free_103, R'=free_112, S'=free_104, V'=free_105, E1'=free_106, R1'=-1+A, [ D1>=1+R1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    177: f157 -> [38] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    178: f157 -> [39] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    179: f157 -> [40] : D'=free_107, Q'=1+A, O'=free_108, R'=free_112, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, [ R1>=1+D1 && A>=Q && 1+R1==A ], cost: 2-Q+A
+    180: f157 -> [41] : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    183: f157 -> [42] : D'=free_87, Q'=1+A, O'=free_88, R'=free_113, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && A>=2+B && A>=Q ], cost: 2-Q+A
+    184: f157 -> [43] : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    187: f157 -> [44] : D'=free_92, Q'=1+A, O'=free_93, R'=free_113, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    188: f157 -> [45] : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    191: f157 -> [46] : D'=free_97, Q'=1+A, O'=free_98, R'=free_113, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && A>=2+D1 && A>=Q ], cost: 2-Q+A
+    192: f157 -> [47] : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    195: f157 -> [48] : D'=free_102, Q'=1+A, O'=free_103, R'=free_113, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    196: f157 -> [49] : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    199: f157 -> [50] : D'=free_107, Q'=1+A, O'=free_108, R'=free_113, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && A>=2+R1 && A>=Q ], cost: 2-Q+A
+    200: f157 -> [51] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    201: f157 -> [52] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    202: f157 -> [53] : D'=free_87, Q'=1+A, O'=free_88, R'=free_114, S'=free_89, V'=free_90, D1'=B, E1'=free_91, R1'=B, [ B==R1 && D1==R1 && B>=A && A>=Q ], cost: 2-Q+A
+    204: f157 -> [54] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    205: f157 -> [55] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    206: f157 -> [56] : D'=free_92, Q'=1+A, O'=free_93, R'=free_114, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, [ R1>=1+B && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    208: f157 -> [57] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    209: f157 -> [58] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    210: f157 -> [59] : D'=free_97, Q'=1+A, O'=free_98, R'=free_114, S'=free_99, V'=free_100, E1'=free_101, R1'=D1, [ B>=1+R1 && D1==R1 && D1>=A && A>=Q ], cost: 2-Q+A
+    212: f157 -> [60] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    213: f157 -> [61] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    214: f157 -> [62] : D'=free_102, Q'=1+A, O'=free_103, R'=free_114, S'=free_104, V'=free_105, E1'=free_106, [ D1>=1+R1 && R1>=A && A>=Q ], cost: 2-Q+A
+    216: f157 -> [63] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    217: f157 -> [64] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    218: f157 -> [65] : D'=free_107, Q'=1+A, O'=free_108, R'=free_114, S'=free_109, V'=free_110, E1'=free_111, [ R1>=1+D1 && R1>=A && A>=Q ], cost: 2-Q+A
+    123: f0 -> f25 : A'=G, F'=0, Q_1'=0, [ H>=1+G ], cost: 2
+    124: f0 -> f25 : A'=G, F'=-free*(-1+Q-G), H'=1+H, Q'=1+G, J'=free, Q_1'=0, [ G>=H && G>=Q && 1+H>=1+G ], cost: 5-Q+G
+     12: f25 -> f28 : C'=0, [ A>=1 ], cost: 1
+    220: f28 -> f28 : B'=1, E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 && 0>=1+free_3 ], cost: -2+2*B
+    221: f28 -> f28 : B'=1, E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 && free_3>=1 ], cost: -2+2*B
+    222: f28 -> f28 : B'=1, E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 && 0>=1+free_6 ], cost: -2+2*B
+    223: f28 -> f28 : B'=1, E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 && free_6>=1 ], cost: -2+2*B
+    224: f28 -> f28 : B'=1, E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 && free_8>=1 ], cost: -2+2*B
+     13: f28 -> f40 : [ 1>=B ], cost: 1
+    127: f28 -> f40 : E'=free_2+free_1, K'=free_2, L'=free_1, M'=free_3, [ 0>=1+free_2+free_1 && B>=2 ], cost: 2
+    130: f28 -> f40 : E'=free_4+free_5, K'=free_5, L'=free_4, M'=free_6, [ free_4+free_5>=1 && B>=2 ], cost: 2
+    133: f28 -> f40 : E'=F, K'=-free_7, L'=free_7, M'=free_8, [ B>=2 ], cost: 2
+    134: f40 -> f78 : D'=free_10, O'=free_11, P'=free_12, [ A>=1+B && A>=2+B ], cost: 2
+    138: f40 -> f78 : D'=free_13, O'=free_14, P'=free_15, [ B>=1+A && B>=A ], cost: 2
+     20: f40 -> f46 : A'=-1+A, B'=A, D'=free_9, N'=A, [ A==B ], cost: 1
+    135: f40 -> f46 : A'=-2+A, B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_26, S'=free_27, T'=free_28, U'=free_29, V'=free_29, B1'=free_10+free_26+Q_1, C1'=free_29, [ A>=1+B && 0>=1+free_27 && 1+B==A ], cost: 2
+    136: f40 -> f66 : B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_16, S'=free_17, T'=free_18, U'=free_19, V'=free_20+free_16, W'=free_20, X'=free_20, Y'=free_20+free_16+free_10+Q_1, [ A>=1+B && free_16>=0 && free_17>=0 && 1+B==A ], cost: 2
+    137: f40 -> f66 : B'=-1+A, D'=free_10+Q_1, O'=free_11, P'=free_12, R'=free_21, S'=free_22, T'=free_23, U'=free_24, V'=-free_25+free_21, X'=-free_25, Y'=-free_25+free_21+free_10+Q_1, Z'=free_25, [ A>=1+B && 0>=1+free_21 && free_22>=0 && 1+B==A ], cost: 2
+     65: f46 -> f25 : [ C>=31 && A>=2+B ], cost: 1
+     66: f46 -> f25 : [ 1+B>=A ], cost: 1
+     64: f46 -> f28 : [ 30>=C && A>=2+B ], cost: 1
+     25: f66 -> f46 : A'=-2+A, V'=0, A1'=0, [ V==0 ], cost: 1
+     26: f66 -> f46 : A'=-2+A, A1'=0, [ 0>=1+V ], cost: 1
+     27: f66 -> f46 : A'=-2+A, A1'=0, [ V>=1 ], cost: 1
+     75: f84 -> f96 : C'=1+C, D'=free_125, E'=free_127+free_126, O'=free_125, P'=free_128, A2'=free_127, B2'=free_126, [ H>=1+A ], cost: 1
+    225: f96 -> f96 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=B, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && 0>=1+free_56 ], cost: -2*B+2*D1
+    226: f96 -> f96 : E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=B, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && free_56>=1 ], cost: -2*B+2*D1
+     94: f96 -> f126 : E'=free_119+free_120+free_118, H'=3+B, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && A>=2+B && H==2+B ], cost: 4-H+B
+     99: f96 -> f126 : H'=1+A, [ B>=1+D1 && H>=3+D1 && A>=H ], cost: 2-H+A
+    100: f96 -> f126 : E'=free_119+free_120+free_118, H'=1+A, R'=free_121, S'=free_122, V'=free_123, D1'=B, E1'=free_124, F1'=free_120, G1'=free_118, H1'=free_119, [ B==D1 && H>=3+B && A>=H ], cost: 2-H+A
+    147: f96 -> f126 : E'=free_47+free_46+free_48, H'=3+D1, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && A>=2+D1 && H==2+D1 ], cost: 5-H+D1
+    149: f96 -> f126 : E'=free_47+free_46+free_48, H'=1+A, R'=free_49, S'=free_50, V'=free_51, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ D1>=1+B && H>=3+D1 && A>=H ], cost: 3-H+A
+     71: f126 -> f133 : [ H>=1+A ], cost: 1
+    150: f133 -> f145 : D'=free_68+free_67+free_66, R'=free_62, S'=free_63, E1'=0, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ D1>=1+R1 && A>=1+R1 && 1+R1==A ], cost: 2
+    151: f133 -> f145 : D'=free_69+free_71+free_70, R'=free_62, S'=free_63, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ D1>=1+R1 && A>=1+R1 && A>=2+R1 ], cost: 2
+    152: f133 -> f145 : D'=free_68+free_67+free_66, R'=free_64, S'=free_65, E1'=0, R1'=-1+A, S1'=free_68, T1'=free_66, U1'=free_67, [ R1>=1+D1 && A>=1+R1 && 1+R1==A ], cost: 2
+    153: f133 -> f145 : D'=free_69+free_71+free_70, R'=free_64, S'=free_65, E1'=free_72, S1'=free_71, T1'=free_69, U1'=free_70, [ R1>=1+D1 && A>=1+R1 && A>=2+R1 ], cost: 2
+     42: f133 -> f149 : R1'=D1, [ A>=1+R1 && D1==R1 ], cost: 1
+     70: f133 -> f46 : [ R1>=A ], cost: 1
+     67: f180 -> f133 : R1'=1+R1, [ H>=1+Z1 ], cost: 1
+
+
+Chained simpled loops:
+  Start location: f0
+    139: f78 -> f82 : [ 29>=C && 9>=C ], cost: 2
+    140: f78 -> f82 : [ 29>=C && C>=11 ], cost: 2
+    142: f78 -> f82 : [ C>=31 && C>=11 ], cost: 2
+    143: f78 -> f82 : C'=30, [ C==30 && 30>=11 ], cost: 2
+    141: f78 -> f84 : C'=10, H'=1+A, Q_1'=D+Q_1, [ 29>=C && C==10 && A>=H ], cost: 3-H+A
+     92: f82 -> f84 : C'=20, H'=1+A, Q_1'=D+Q_1, [ C==20 && A>=H ], cost: 2-H+A
+    237: f82 -> f96 : C'=1+C, E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=B, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ 19>=C && D1>=1+B && 0>=1+free_56 ], cost: 1-2*B+2*D1
+    238: f82 -> f96 : C'=1+C, E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=B, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ C>=21 && D1>=1+B && 0>=1+free_56 ], cost: 1-2*B+2*D1
+    240: f82 -> f96 : C'=1+C, E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=B, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ 19>=C && D1>=1+B && free_56>=1 ], cost: 1-2*B+2*D1
+    241: f82 -> f96 : C'=1+C, E'=free_47+free_46+free_48, R'=free_49, S'=free_50, V'=free_51, D1'=B, E1'=free_52, F1'=free_48, G1'=free_46, H1'=free_47, Q1'=free_53, J1'=free_54, K1'=free_55, L1'=free_56, M1'=free_57, N1'=free_58, O1'=free_59, P1'=free_60, Q1_1'=free_61, [ C>=21 && D1>=1+B && free_56>=1 ], cost: 1-2*B+2*D1
+      6: f145 -> f149 : D'=0, [ D==0 ], cost: 1
+     48: f145 -> f149 : R'=free_77, S'=free_78, E1'=free_79, [ 0>=1+D ], cost: 1
+     49: f145 -> f149 : R'=free_80, S'=free_81, E1'=free_82, [ D>=1 ], cost: 1
+    154: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && 0>=1+free_83 ], cost: 2
+    155: f149 -> f157 : E'=free_83, V1'=free_84, W1'=free_83, [ R>=0 && free_83>=1 ], cost: 2
+    157: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && 0>=1-free_85 ], cost: 2
+    158: f149 -> f157 : E'=-free_85, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85>=1 ], cost: 2
+    156: f149 -> f133 : E'=0, R1'=1+R1, V1'=free_84, W1'=free_83, [ R>=0 && free_83==0 ], cost: 2
+    159: f149 -> f133 : E'=0, R1'=1+R1, X1'=free_86, Y1'=free_85, [ 0>=1+R && -free_85==0 ], cost: 2
+    176: f157 -> f180 : D'=free_107, H'=1+A, Q'=1+A, O'=free_108, R'=free_115, S'=free_109, V'=free_110, E1'=free_111, R1'=-1+A, Z1'=A, [ R1>=1+D1 && A>=Q && 1+R1==A && 1+A>=1+A && 1+A>=A && A>=H && A==A ], cost: 4-H-Q+2*A
+    185: f157 -> f180 : D'=free_92, H'=1+A, Q'=1+A, O'=free_93, R'=free_116, S'=free_94, V'=free_95, E1'=free_96, R1'=D1, Z1'=A, [ R1>=1+B && D1==R1 && A>=2+D1 && A>=Q && 1+A>=1+A && 2+D1>=A && A>=2+D1 && A>=H ], cost: 4-H-Q+2*A

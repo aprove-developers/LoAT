@@ -1,0 +1,94 @@
+Trying to load file: bs.koat
+
+Initial Control flow graph problem:
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+      3: f6 -> f6 : C'=-1+B, D'=free_3, E'=free_4, [ C>=B ], cost: 1
+      1: f6 -> f12 : E'=free, [ C>=B && A>=1+free_1 ], cost: 1
+      2: f6 -> f12 : E'=free_2, [ C>=B ], cost: 1
+      6: f6 -> f20 : F'=D, G'=D, [ B>=1+C ], cost: 1
+      4: f12 -> f6 : C'=-1+E, [], cost: 1
+      5: f12 -> f6 : B'=1+E, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+      3: f6 -> f6 : C'=-1+B, D'=free_3, E'=free_4, [ C>=B ], cost: 1
+      1: f6 -> f12 : E'=free, [ C>=B ], cost: 1
+      2: f6 -> f12 : E'=free_2, [ C>=B ], cost: 1
+      4: f12 -> f6 : C'=-1+E, [], cost: 1
+      5: f12 -> f6 : B'=1+E, [], cost: 1
+
+
+Try instantiation
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+      1: f6 -> f12 : E'=free, [ C>=B ], cost: 1
+      2: f6 -> f12 : E'=free_2, [ C>=B ], cost: 1
+      4: f12 -> f6 : C'=-1+E, [], cost: 1
+      5: f12 -> f6 : B'=1+E, [], cost: 1
+
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+      1: f6 -> f12 : E'=free, [ C>=B ], cost: 1
+      2: f6 -> f12 : E'=free_2, [ C>=B ], cost: 1
+      4: f12 -> f6 : C'=-1+E, [], cost: 1
+      5: f12 -> f6 : B'=1+E, [], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+      7: f6 -> f6 : C'=-1+free, E'=free, [ C>=B ], cost: 2
+      8: f6 -> f6 : B'=1+free, E'=free, [ C>=B ], cost: 2
+      9: f6 -> f6 : C'=-1+free_2, E'=free_2, [ C>=B ], cost: 2
+     10: f6 -> f6 : B'=1+free_2, E'=free_2, [ C>=B ], cost: 2
+
+
+Try instantiation
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+     11: f6 -> f6 : [ C>=B ], cost: INF
+     12: f6 -> f6 : [ C>=B ], cost: INF
+     13: f6 -> f6 : [ C>=B ], cost: INF
+     14: f6 -> f6 : [ C>=B ], cost: INF
+
+Eliminating 4 self-loops for location f6
+  Removing the self-loops: 11 12 13 14.
+Removing duplicate transition: 15.
+Removing duplicate transition: 16.
+Removing duplicate transition: 17.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: f0
+      0: f0 -> f6 : A'=8, B'=0, C'=14, D'=-1, [], cost: 1
+     18: f6 -> [4] : [ C>=B ], cost: INF
+
+
+Applied simple chaining:
+  Start location: f0
+      0: f0 -> [4] : A'=8, B'=0, C'=14, D'=-1, [ 14>=0 ], cost: INF
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: f0
+      0: f0 -> [4] : A'=8, B'=0, C'=14, D'=-1, [ 14>=0 ], cost: INF
+
+
+Computing complexity for remaining 1 transitions.
+
+Found new complexity INF, because: INF sat.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 14>=0
+  Final Cost:  INF
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: INF
+  Complexity value: INF
+
+WORST_CASE(INF,?)

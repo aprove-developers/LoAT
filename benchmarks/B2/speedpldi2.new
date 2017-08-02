@@ -1,0 +1,155 @@
+Trying to load file: speedpldi2.koat
+
+Initial Control flow graph problem:
+  Start location: start0
+      0: start -> stop : [ 0>=A && B==C && D==E && F==G && H==A ], cost: 1
+      1: start -> stop : [ 0>=1+G && B==C && D==E && F==G && H==A ], cost: 1
+      2: start -> stop : B'=0, D'=F, [ A>=1 && F==0 && B==C && D==E && G==0 && H==A ], cost: 1
+      3: start -> lM1 : B'=1, D'=-1+F, [ A>=1 && G>=1 && B==C && D==E && F==G && H==A ], cost: 1
+      4: lM1 -> stop : [ A>=B && G>=B && B>=1 && D==0 && H==A && F==G ], cost: 1
+      6: lM1 -> lM1 : B'=1+B, D'=-1+D, [ A>=1+B && D>=1 && A>=B && G>=D+B && B>=1 && D>=0 && H==A && F==G ], cost: 1
+      5: lM1 -> lZZ1 : B'=0, [ D>=1 && G>=A+D && A>=1 && D>=0 && B==A && H==A && F==G ], cost: 1
+      7: lZZ1 -> stop : [ 0>=D && G>=A+D && A>=2 && D>=1 && B==0 && H==A && F==G ], cost: 1
+      9: lZZ1 -> lM1 : B'=1+B, D'=-1+D, [ A>=1 && D>=1 && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+      8: lZZ1 -> lZZ1 : B'=0, [ D>=1 && 0>=A && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: start0
+      3: start -> lM1 : B'=1, D'=-1+F, [ A>=1 && G>=1 && B==C && D==E && F==G && H==A ], cost: 1
+      6: lM1 -> lM1 : B'=1+B, D'=-1+D, [ A>=1+B && D>=1 && G>=D+B && B>=1 && H==A && F==G ], cost: 1
+      5: lM1 -> lZZ1 : B'=0, [ D>=1 && G>=A+D && A>=1 && B==A && H==A && F==G ], cost: 1
+      9: lZZ1 -> lM1 : B'=1+B, D'=-1+D, [ D>=1 && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+      8: lZZ1 -> lZZ1 : B'=0, [ D>=1 && 0>=A && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+
+Try instantiation
+  Start location: start0
+      3: start -> lM1 : B'=1, D'=-1+F, [ A>=1 && G>=1 && B==C && D==E && F==G && H==A ], cost: 1
+     11: lM1 -> lM1 : B'=A, D'=-A+D+B, [ A>=1+B && B>=1 && -A+D+B>=0 && G>=D+B && H<=A && F<=G && H>=A && F>=G ], cost: A-B
+     12: lM1 -> lM1 : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && H<=A && F<=G && H>=A && F>=G ], cost: D
+     13: lM1 -> lM1 : B'=1-D+G, D'=-1+2*D+B-G, [ B>=1 && A>=1-D+G && 2*D+B-G>=1 && G>=D+B && H<=A && F<=G && H>=A && F>=G ], cost: 1-D-B+G
+      5: lM1 -> lZZ1 : B'=0, [ D>=1 && G>=A+D && A>=1 && B==A && H==A && F==G ], cost: 1
+      9: lZZ1 -> lM1 : B'=1+B, D'=-1+D, [ D>=1 && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+      8: lZZ1 -> lZZ1 : B'=0, [ D>=1 && 0>=A && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+
+Eliminating 3 self-loops for location lM1
+  Removing the self-loops: 11 12 13.
+Adding an epsilon transition (to model nonexecution of the loops): 17.
+
+Try instantiation
+  Start location: start0
+      3: start -> lM1 : B'=1, D'=-1+F, [ A>=1 && G>=1 && B==C && D==E && F==G && H==A ], cost: 1
+     14: lM1 -> [5] : B'=A, D'=-A+D+B, [ A>=1+B && B>=1 && -A+D+B>=0 && G>=D+B && -A+H==0 && F-G==0 ], cost: A-B
+     15: lM1 -> [5] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+     16: lM1 -> [5] : B'=1-D+G, D'=-1+2*D+B-G, [ B>=1 && A>=1-D+G && 2*D+B-G>=1 && G>=D+B && -A+H==0 && F-G==0 ], cost: 1-D-B+G
+     17: lM1 -> [5] : [], cost: 0
+      9: lZZ1 -> lM1 : B'=1+B, D'=-1+D, [ D>=1 && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+      5: [5] -> lZZ1 : B'=0, [ D>=1 && G>=A+D && A>=1 && B==A && H==A && F==G ], cost: 1
+
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start0
+      3: start -> lM1 : B'=1, D'=-1+F, [ A>=1 && G>=1 && B==C && D==E && F==G && H==A ], cost: 1
+     14: lM1 -> [5] : B'=A, D'=-A+D+B, [ A>=1+B && B>=1 && -A+D+B>=0 && G>=D+B && -A+H==0 && F-G==0 ], cost: A-B
+     15: lM1 -> [5] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+     16: lM1 -> [5] : B'=1-D+G, D'=-1+2*D+B-G, [ B>=1 && A>=1-D+G && 2*D+B-G>=1 && G>=D+B && -A+H==0 && F-G==0 ], cost: 1-D-B+G
+     17: lM1 -> [5] : [], cost: 0
+      9: lZZ1 -> lM1 : B'=1+B, D'=-1+D, [ D>=1 && G>=A+D && A>=2 && B==0 && H==A && F==G ], cost: 1
+     10: start0 -> start : B'=C, D'=E, F'=G, H'=A, [], cost: 1
+      5: [5] -> lZZ1 : B'=0, [ D>=1 && G>=A+D && A>=1 && B==A && H==A && F==G ], cost: 1
+
+
+Applied simple chaining:
+  Start location: start0
+     14: lM1 -> [5] : B'=A, D'=-A+D+B, [ A>=1+B && B>=1 && -A+D+B>=0 && G>=D+B && -A+H==0 && F-G==0 ], cost: A-B
+     15: lM1 -> [5] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+     16: lM1 -> [5] : B'=1-D+G, D'=-1+2*D+B-G, [ B>=1 && A>=1-D+G && 2*D+B-G>=1 && G>=D+B && -A+H==0 && F-G==0 ], cost: 1-D-B+G
+     17: lM1 -> [5] : [], cost: 0
+     10: start0 -> lM1 : B'=1, D'=-1+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A ], cost: 2
+      5: [5] -> lM1 : B'=1, D'=-1+D, [ D>=1 && G>=A+D && A>=1 && B==A && H==A && F==G && D>=1 && G>=A+D && A>=2 && 0==0 && H==A && F==G ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: start0
+     18: lM1 -> lM1 : B'=1, D'=-1-A+D+B, [ A>=1+B && B>=1 && -A+D+B>=0 && G>=D+B && -A+H==0 && F-G==0 && -A+D+B>=1 && G>=D+B && A>=1 && A==A && H==A && F==G && -A+D+B>=1 && G>=D+B && A>=2 && 0==0 && H==A && F==G ], cost: 2+A-B
+     20: lM1 -> lM1 : B'=1, D'=-2+2*D+B-G, [ B>=1 && A>=1-D+G && 2*D+B-G>=1 && G>=D+B && -A+H==0 && F-G==0 && -1+2*D+B-G>=1 && G>=-1+A+2*D+B-G && A>=1 && 1-D+G==A && H==A && F==G && -1+2*D+B-G>=1 && G>=-1+A+2*D+B-G && A>=2 && 0==0 && H==A && F==G ], cost: 3-D-B+G
+     21: lM1 -> lM1 : B'=1, D'=-1+D, [ D>=1 && G>=A+D && A>=1 && B==A && H==A && F==G && D>=1 && G>=A+D && A>=2 && 0==0 && H==A && F==G ], cost: 2
+     19: lM1 -> [6] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+     10: start0 -> lM1 : B'=1, D'=-1+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A ], cost: 2
+
+
+Try instantiation
+  Start location: start0
+     22: lM1 -> lM1 : B'=1, D'=-2+2*D+B-G, [ B>=1 && A>=1-D+G && 2*D+B-G>=1 && G>=D+B && -A+H==0 && F-G==0 && -1+2*D+B-G>=1 && G>=-1+A+2*D+B-G && A>=1 && 1-D+G==A && H==A && F==G && -1+2*D+B-G>=1 && G>=-1+A+2*D+B-G && A>=2 && 0==0 && H==A && F==G ], cost: 3-D-B+G
+     23: lM1 -> lM1 : B'=1, D'=-1-A+D+B, [ A>=1+B && B>=1 && -A+D+B>=0 && G>=D+B && -A+H==0 && F-G==0 && -A+D+B>=1 && G>=D+B && A>=1 && A==A && H==A && F==G && -A+D+B>=1 && G>=D+B && A>=2 && 0==0 && H==A && F==G ], cost: 2+A-B
+     19: lM1 -> [6] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+     10: start0 -> lM1 : B'=1, D'=-1+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A ], cost: 2
+
+Eliminating 2 self-loops for location lM1
+  Removing the self-loops: 22 23.
+Adding an epsilon transition (to model nonexecution of the loops): 26.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: start0
+     24: lM1 -> [7] : B'=1, D'=-2+2*D+B-G, [ B>=1 && G>=D+B && -A+H==0 && F-G==0 && -1+2*D+B-G>=1 && G>=-1+A+2*D+B-G && 1-D+G==A && A>=2 ], cost: 3-D-B+G
+     25: lM1 -> [7] : B'=1, D'=-1-A+D+B, [ A>=1+B && B>=1 && G>=D+B && -A+H==0 && F-G==0 && -A+D+B>=1 && A>=2 ], cost: 2+A-B
+     26: lM1 -> [7] : [], cost: 0
+     10: start0 -> lM1 : B'=1, D'=-1+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A ], cost: 2
+     19: [7] -> [6] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+
+
+Applied chaining over branches and pruning:
+  Start location: start0
+     27: start0 -> [7] : B'=1, D'=-3+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && 1>=1 && G>=G && 0==0 && 0==0 && -2+G>=1 && G>=-2+A+G && 2==A && A>=2 ], cost: 5
+     28: start0 -> [7] : B'=1, D'=-1-A+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && A>=2 && 1>=1 && G>=G && 0==0 && 0==0 && -A+G>=1 && A>=2 ], cost: 3+A
+     29: start0 -> [7] : B'=1, D'=-1+G, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A ], cost: 2
+     19: [7] -> [6] : B'=D+B, D'=0, [ D>=1 && B>=1 && A>=D+B && G>=D+B && -A+H==0 && F-G==0 ], cost: D
+
+
+Applied chaining over branches and pruning:
+  Start location: start0
+     30: start0 -> [6] : B'=-2+G, D'=0, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && 1>=1 && G>=G && 0==0 && 0==0 && -2+G>=1 && G>=-2+A+G && 2==A && A>=2 && -3+G>=1 && 1>=1 && A>=-2+G && G>=-2+G && 0==0 && 0==0 ], cost: 2+G
+     31: start0 -> [6] : B'=-A+G, D'=0, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && A>=2 && 1>=1 && G>=G && 0==0 && 0==0 && -A+G>=1 && A>=2 && -1-A+G>=1 && 1>=1 && A>=-A+G && G>=-A+G && 0==0 && 0==0 ], cost: 2+G
+     32: start0 -> [6] : B'=G, D'=0, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && -1+G>=1 && 1>=1 && A>=G && G>=G && 0==0 && 0==0 ], cost: 1+G
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: start0
+     30: start0 -> [6] : B'=-2+G, D'=0, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && 1>=1 && G>=G && 0==0 && 0==0 && -2+G>=1 && G>=-2+A+G && 2==A && A>=2 && -3+G>=1 && 1>=1 && A>=-2+G && G>=-2+G && 0==0 && 0==0 ], cost: 2+G
+     31: start0 -> [6] : B'=-A+G, D'=0, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && A>=2 && 1>=1 && G>=G && 0==0 && 0==0 && -A+G>=1 && A>=2 && -1-A+G>=1 && 1>=1 && A>=-A+G && G>=-A+G && 0==0 && 0==0 ], cost: 2+G
+     32: start0 -> [6] : B'=G, D'=0, F'=G, H'=A, [ A>=1 && G>=1 && C==C && E==E && G==G && A==A && -1+G>=1 && 1>=1 && A>=G && G>=G && 0==0 && 0==0 ], cost: 1+G
+
+
+Computing complexity for remaining 3 transitions.
+
+  Found configuration with infinitely models for cost: 2+G
+  and guard: A>=1 && G>=1 && C==C && E==E && G==G && A==A && 1>=1 && G>=G && 0==0 && 0==0 && -2+G>=1 && G>=-2+A+G && 2==A && A>=2 && -3+G>=1 && 1>=1 && A>=-2+G && G>=-2+G && 0==0 && 0==0:
+  A: Both, C: Both, E: Both, G: Const
+
+Found new complexity const, because: Found infinity configuration.
+
+  Found configuration with infinitely models for cost: 2+G
+  and guard: A>=1 && G>=1 && C==C && E==E && G==G && A==A && A>=2 && 1>=1 && G>=G && 0==0 && 0==0 && -A+G>=1 && A>=2 && -1-A+G>=1 && 1>=1 && A>=-A+G && G>=-A+G && 0==0 && 0==0:
+  A: Const, C: Both, E: Both, G: Const
+
+  Found configuration with infinitely models for cost: 1+G
+  and guard: A>=1 && G>=1 && C==C && E==E && G==G && A==A && -1+G>=1 && 1>=1 && A>=G && G>=G && 0==0 && 0==0:
+  A: Pos, C: Both, E: Both, G: Pos, where: A > G
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: A>=1 && G>=1 && C==C && E==E && G==G && A==A && -1+G>=1 && 1>=1 && A>=G && G>=G && 0==0 && 0==0
+  Final Cost:  1+G
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)

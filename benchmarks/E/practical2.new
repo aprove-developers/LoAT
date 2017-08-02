@@ -1,0 +1,172 @@
+Trying to load file: practical2.koat
+
+Initial Control flow graph problem:
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      1: eval1 -> end : [ A>=101 ], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+      3: eval3 -> eval3 : A'=11+A, C'=1+C, [ 100>=A ], cost: 1
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+
+Simplified the transitions:
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+      3: eval3 -> eval3 : A'=11+A, C'=1+C, [ 100>=A ], cost: 1
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+
+Try instantiation
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+     13: eval3 -> eval3 : A'=11*meter+A, C'=meter+C, [ 11*meter==111-A && 100>=A ], cost: meter
+      4: eval3 -> eval5 : [ A>=101 ], cost: 1
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+
+Eliminating 1 self-loops for location eval3
+  Removing the self-loops: 13.
+Adding an epsilon transition (to model nonexecution of the loops): 15.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: eval0
+      0: eval0 -> eval1 : A'=B, C'=1, [], cost: 1
+      2: eval1 -> eval3 : [ 100>=A ], cost: 1
+     14: eval3 -> [8] : A'=11*meter+A, C'=meter+C, [ 11*meter==111-A && 100>=A ], cost: meter
+     15: eval3 -> [8] : [], cost: 0
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+      4: [8] -> eval5 : [ A>=101 ], cost: 1
+
+
+Applied simple chaining:
+  Start location: eval0
+      0: eval0 -> eval3 : A'=B, C'=1, [ 100>=B ], cost: 2
+     14: eval3 -> [8] : A'=11*meter+A, C'=meter+C, [ 11*meter==111-A && 100>=A ], cost: meter
+     15: eval3 -> [8] : [], cost: 0
+      5: eval5 -> eval7 : A'=-10+A, C'=-1+C, [ C>=2 ], cost: 1
+      6: eval7 -> eval5 : D'=-10+A, [ A>=101 && C==1 ], cost: 1
+      7: eval7 -> eval9 : [ 100>=A ], cost: 1
+      8: eval7 -> eval9 : [ 2>=C ], cost: 1
+      9: eval7 -> eval9 : [ C>=0 ], cost: 1
+     10: eval9 -> eval11 : A'=-10+A, C'=-1+C, [ A>=101 ], cost: 1
+     11: eval9 -> eval11 : [ 100>=A ], cost: 1
+     12: eval11 -> eval5 : A'=11+A, C'=1+C, [], cost: 1
+      4: [8] -> eval5 : [ A>=101 ], cost: 1
+
+
+Applied chaining over branches and pruning:
+  Start location: eval0
+     16: eval0 -> [8] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B ], cost: 2+meter
+     17: eval0 -> [8] : A'=B, C'=1, [ 100>=B ], cost: 2
+     18: eval5 -> eval5 : A'=-10+A, C'=-1+C, D'=-20+A, [ C>=2 && -10+A>=101 && -1+C==1 ], cost: 2
+     19: eval5 -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && 100>=-10+A ], cost: 2
+     20: eval5 -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && 2>=-1+C ], cost: 2
+     21: eval5 -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && -1+C>=0 ], cost: 2
+     22: eval9 -> eval5 : A'=1+A, C'=C, [ A>=101 ], cost: 2
+     23: eval9 -> eval5 : A'=11+A, C'=1+C, [ 100>=A ], cost: 2
+      4: [8] -> eval5 : [ A>=101 ], cost: 1
+
+
+Try instantiation
+  Start location: eval0
+     16: eval0 -> [8] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B ], cost: 2+meter
+     17: eval0 -> [8] : A'=B, C'=1, [ 100>=B ], cost: 2
+     24: eval5 -> eval5 : A'=-10*meter_1+A, C'=-meter_1+C, D'=-10-10*meter_1+A, [ 10*meter_1==-101+A && C<=2 && C>=2 && -meter_1+C<=1 && -meter_1+C>=1 ], cost: 2*meter_1
+     25: eval5 -> eval5 : A'=10+A-10*C, C'=1, D'=A-10*C, [ C<=2 && C>=2 && A-10*C>=91 ], cost: -2+2*C
+     19: eval5 -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && 100>=-10+A ], cost: 2
+     20: eval5 -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && 2>=-1+C ], cost: 2
+     21: eval5 -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && -1+C>=0 ], cost: 2
+     22: eval9 -> eval5 : A'=1+A, C'=C, [ A>=101 ], cost: 2
+     23: eval9 -> eval5 : A'=11+A, C'=1+C, [ 100>=A ], cost: 2
+      4: [8] -> eval5 : [ A>=101 ], cost: 1
+
+Eliminating 2 self-loops for location eval5
+  Self-Loop 24 has the metering function: meter_2, resulting in the new transition 26.
+  Self-Loop 25 has the metering function: -1+C, resulting in the new transition 27.
+  Removing the self-loops: 24 25.
+
+Removed all Self-loops using metering functions (where possible):
+  Start location: eval0
+     16: eval0 -> [8] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B ], cost: 2+meter
+     17: eval0 -> [8] : A'=B, C'=1, [ 100>=B ], cost: 2
+     26: eval5 -> [9] : A'=-10*meter_1*meter_2+A, C'=-meter_1*meter_2+C, D'=-10-10*meter_1*meter_2+A, [ 10*meter_1==-101+A && -2+C==0 && -1-meter_1+C==0 && 12*meter_2==-103-11*meter_1+A+2*C ], cost: 2*meter_1*meter_2
+     27: eval5 -> [9] : A'=A, C'=1, D'=-10+A, [ -2+C==0 && A-10*C>=91 ], cost: 0
+     22: eval9 -> eval5 : A'=1+A, C'=C, [ A>=101 ], cost: 2
+     23: eval9 -> eval5 : A'=11+A, C'=1+C, [ 100>=A ], cost: 2
+      4: [8] -> eval5 : [ A>=101 ], cost: 1
+     19: [9] -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && 100>=-10+A ], cost: 2
+     20: [9] -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && 2>=-1+C ], cost: 2
+     21: [9] -> eval9 : A'=-10+A, C'=-1+C, [ C>=2 && -1+C>=0 ], cost: 2
+
+
+Applied chaining over branches and pruning:
+  Start location: eval0
+     28: eval0 -> eval5 : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+     29: eval5 -> [10] : A'=-10*meter_1*meter_2+A, C'=-meter_1*meter_2+C, D'=-10-10*meter_1*meter_2+A, [ 10*meter_1==-101+A && -2+C==0 && -1-meter_1+C==0 && 12*meter_2==-103-11*meter_1+A+2*C ], cost: 2*meter_1*meter_2
+     30: eval5 -> [11] : A'=-10*meter_1*meter_2+A, C'=-meter_1*meter_2+C, D'=-10-10*meter_1*meter_2+A, [ 10*meter_1==-101+A && -2+C==0 && -1-meter_1+C==0 && 12*meter_2==-103-11*meter_1+A+2*C ], cost: 2*meter_1*meter_2
+     31: eval5 -> [12] : A'=-10*meter_1*meter_2+A, C'=-meter_1*meter_2+C, D'=-10-10*meter_1*meter_2+A, [ 10*meter_1==-101+A && -2+C==0 && -1-meter_1+C==0 && 12*meter_2==-103-11*meter_1+A+2*C ], cost: 2*meter_1*meter_2
+
+
+Applied chaining over branches and pruning:
+  Start location: eval0
+     32: eval0 -> [13] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+     33: eval0 -> [14] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+     34: eval0 -> [15] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+
+
+Final control flow graph problem, now checking costs for infinitely many models:
+  Start location: eval0
+     32: eval0 -> [13] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+     33: eval0 -> [14] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+     34: eval0 -> [15] : A'=B+11*meter, C'=1+meter, [ 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101 ], cost: 3+meter
+
+
+Computing complexity for remaining 3 transitions.
+
+  Found configuration with infinitely models for cost: 3+meter
+  and guard: 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101:
+  B: Both, meter: Pos
+
+Found new complexity n^1, because: Found infinity configuration.
+
+
+The final runtime is determined by this resulting transition:
+  Final Guard: 100>=B && 11*meter==111-B && 100>=B && B+11*meter>=101
+  Final Cost:  3+meter
+
+Obtained the following complexity w.r.t. the length of the input n:
+  Complexity class: n^1
+  Complexity value: 1
+
+WORST_CASE(Omega(n^1),?)
