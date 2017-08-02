@@ -23,6 +23,9 @@
 #include "graph.h"
 #include "itrs.h"
 #include "expression.h"
+#include <list>
+#include <string>
+#include <z3++.h>
 
 
 /**
@@ -270,6 +273,20 @@ private:
      * Helper for program output. Determines the set of bound variables of a transition.
      */
     std::set<VariableIndex> getBoundVariables(const Transition &trans) const;
+
+/**********************************************************/
+
+    // New functions developed in 2017
+
+    // Z3 <-> GiNaC
+    z3::expr ginacToZ3(GiNaC:: ex ex, z3::context &c);
+    z3::expr ginacToZ3(GuardList guard, z3::context &c, std::set<VariableIndex> protectedFreeVariables);
+    GiNaC::ex read_from(std::list<std::string> &tokens);
+    GiNaC::ex z3ToGinac(z3::expr expr);
+    GuardList z3ToGuard(z3::expr expr);
+
+    // Guess and Check
+    bool tryInstantiate(NodeIndex node);
 
 private:
     NodeIndex initial;

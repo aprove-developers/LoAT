@@ -41,7 +41,6 @@ public:
      */
     static bool calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &meterfunc);
 
-private:
     Recurrence(const ITRSProblem &itrs);
 
     /**
