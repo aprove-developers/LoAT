@@ -182,6 +182,12 @@ public:
      */
     bool isLinear(const GiNaC::lst &vars) const;
 
+    /**
+     * Returns true if all expressions of this limit problem are polynomial in
+     * the given set of variables.
+     */
+    bool isPolynomial(const GiNaC::lst &vars) const;
+
 
     /**
      * Returns true iff the conditions for calling removeConstant(it) are met.

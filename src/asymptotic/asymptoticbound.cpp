@@ -96,10 +96,10 @@ z3::check_result AsymptoticBound::solveByInitialSmtEncoding() {
         return z3::unknown;
     }
 
-    //check if guard is linear
+    //check if guard is polynomial
     for (const Expression &ex : normalizedGuard) {
         Expression lhs = ex.lhs();
-        if (!lhs.isLinear(its.getGinacVarList())) return z3::unknown;
+        if (!lhs.is_polynomial(its.getGinacVarList())) return z3::unknown;
     }
 
     //create a limit problem without the cost
@@ -462,8 +462,8 @@ bool AsymptoticBound::solveLimitProblem() {
             }
         }
 
-        //if the problem is linear, try a (max)SMT encoding
-        if (smtApplicable && currentLP.isLinear(its.getGinacVarList())) {
+        //if the problem is polynomial, try a (max)SMT encoding
+        if (smtApplicable && currentLP.isPolynomial(its.getGinacVarList())) {
             if (trySmtEncoding()) {
                 goto start;
             }
@@ -995,136 +995,206 @@ bool AsymptoticBound::trySubstitutingVariable() {
 
 
 bool AsymptoticBound::isSmtApplicable() {
-    if (!cost.is_polynomial(its.getGinacVarList())) {
-        return false;
-    }
-    //check if cost does not contain "mixed" terms (e.g. x*y or x*y^2, but x^2+5*y is allowed)
-    Expression expandedCost = cost.expand();
-    for (const ExprSymbol &var : cost.getVariables()) {
-        int maxdeg = expandedCost.degree(var);
-        int mindeg = max(1,expandedCost.ldegree(var));
-        for (int d = mindeg; d <= maxdeg; ++d) {
-            if (!is_a<numeric>(expandedCost.coeff(var,d))) {
-                debugAsymptoticBound("SMT ABORT: mixed term found: " << cost.coeff(var,d) << " for var " << var << " of degree " << mindeg);
-                return false;
-            }
-        }
-    }
-    return true;
+    return cost.is_polynomial(its.getGinacVarList());
 }
 
+/**
+ * Given the (abstract) coefficients of a univariate polynomial p in n (where the key is the
+ * degree of the respective monomial), builds an expression which implies that
+ * lim_{n->\infty} p is a positive constant
+ */
+z3::expr posConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+    z3::expr conjunction = context.bool_val(true);
+    for (pair<int, Expression> p : coefficients) {
+        int degree = p.first;
+        Expression c = p.second;
+        if (degree > 0) {
+            conjunction = conjunction && c.toZ3(context) == 0;
+        } else {
+            conjunction = conjunction && c.toZ3(context) > 0;
+        }
+    }
+    return conjunction;
+}
+
+/**
+ * Given the (abstract) coefficients of a univariate polynomial p in n (where the key is the
+ * degree of the respective monomial), builds an expression which implies that
+ * lim_{n->\infty} p is a negative constant
+ */
+z3::expr negConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+    z3::expr conjunction = context.bool_val(true);
+    for (pair<int, Expression> p : coefficients) {
+        int degree = p.first;
+        Expression c = p.second;
+        if (degree > 0) {
+            conjunction = conjunction && c.toZ3(context) == 0;
+        } else {
+            conjunction = conjunction && c.toZ3(context) < 0;
+        }
+    }
+    return conjunction;
+}
+
+/**
+ * Given the (abstract) coefficients of a univariate polynomial p in n (where the key is the
+ * degree of the respective monomial), builds an expression which implies
+ * lim_{n->\infty} p = -\infty
+ */
+z3::expr negInfConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+    int maxDegree = 0;
+    for (pair<int, Expression> p: coefficients) {
+        maxDegree = p.first > maxDegree ? p.first : maxDegree;
+    }
+    z3::expr disjunction = context.bool_val(false);
+    for (int i = 1; i <= maxDegree; i++) {
+        z3::expr conjunction = context.bool_val(true);
+        for (pair<int, Expression> p: coefficients) {
+            int degree = p.first;
+            Expression c = p.second;
+            if (degree > i) {
+                conjunction = conjunction && c.toZ3(context) == 0;
+            } else if (degree == i) {
+                conjunction = conjunction && c.toZ3(context) < 0;
+            }
+        }
+        disjunction = disjunction || conjunction;
+    }
+    return disjunction;
+}
+
+/**
+ * Given the (abstract) coefficients of a univariate polynomial p in n (where the key is the
+ * degree of the respective monomial), builds an expression which implies
+ * lim_{n->\infty} p = \infty
+ */
+z3::expr posInfConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+    int maxDegree = 0;
+    for (pair<int, Expression> p: coefficients) {
+        maxDegree = p.first > maxDegree ? p.first : maxDegree;
+    }
+    z3::expr disjunction = context.bool_val(false);
+    for (int i = 1; i <= maxDegree; i++) {
+        z3::expr conjunction = context.bool_val(true);
+        for (pair<int, Expression> p: coefficients) {
+            int degree = p.first;
+            Expression c = p.second;
+            if (degree > i) {
+                conjunction = conjunction && c.toZ3(context) == 0;
+            } else if (degree == i) {
+                conjunction = conjunction && c.toZ3(context) > 0;
+            }
+        }
+        disjunction = disjunction || conjunction;
+    }
+    return disjunction;
+}
+
+/**
+ * @return the (abstract) coefficients of 'n' in 'ex', where the key is the degree of the respective monomial
+ */
+map<int, Expression> getCoefficients(Expression ex, ExprSymbol n) {
+    GiNaC::lst nList;
+    nList.append(n);
+    int maxDegree = ex.getMaxDegree(nList);
+    map<int, Expression> coefficients;
+    for (int i = 0; i <= maxDegree; i++) {
+        coefficients.emplace(i, ex.coeff(n, i));
+    }
+    return coefficients;
+}
 
 bool AsymptoticBound::trySmtEncoding() {
     debugAsymptoticBound(endl << "SMT: " << currentLP << endl);
 
-    bool hasUnknown = false;
     Z3VariableContext context;
-    vector<z3::expr> smt;
     InftyExpressionSet::const_iterator it;
 
-    //setup for the infinite family
-    ExprSymbol n = currentLP.getN();
-    Expression n0constraint = ((-n) <= -1000);
-    z3::expr n_z3 = Expression::ginacToZ3(n,context,false,false);
-
-    //information about cost term
-    Expression expandedCost = cost.expand(); //to read off coefficients
-    ExprSymbolSet costVars = cost.getVariables();
-    int maxDeg = expandedCost.getMaxDegree();
-
-    //get all relevant variables
-    ExprSymbolSet vars = currentLP.getVariables();
-    for (const ExprSymbol &costVar : cost.getVariables()) {
-        vars.insert(costVar);
-    }
-
-    //create linear templates for all variables
-    exmap templateSubs;
-    map<ExprSymbol,z3::expr,GiNaC::ex_is_less> varCoeff, varCoeff0;
-    for (const ExprSymbol &var : vars) {
-        ExprSymbol c0 = its.getFreshSymbol(var.get_name()+"_0");
-        ExprSymbol c = its.getFreshSymbol(var.get_name()+"_c");
-        varCoeff.emplace(var,Expression::ginacToZ3(c,context,false,true)); //HACKy HACK
-        varCoeff0.emplace(var,Expression::ginacToZ3(c0,context,false,false));
-        templateSubs[var] = c0 + (n * c);
-    }
-
-    /* guard encoding */
-    for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-        //create coefficients to describe the behaviour of an entire term
-        //NOTE: these are reals, only the variables themselves have to be integers!
-        stringstream name;
-        name << "[" << *it << "]"; //make SMT encoding readable
-        z3::expr c0 = context.getFreshVariable("c0" + name.str(),Z3VariableContext::Real);
-        z3::expr c = context.getFreshVariable("c" + name.str(),Z3VariableContext::Real);
-        Direction dir = it->getDirection();
-
-        if (dir == POS_CONS || dir == NEG_CONS) {
-            //special case for constants that must not grow with n (and do not need Farkas)
-            smt.push_back(c == 0);
-            smt.push_back(c0 < 0);
-        } else {
-            //very simple farkas transformation (for "n >= 1000 -> c0 + c*n <= -1")
-            //Note: Farkas only allows x <= 0 or x <= -1, we need < 0. So we use x+0.001 <= 0 (hacky)
-            z3::expr c0_offset = c0 + context.real_val(1,1000);
-            smt.push_back(FarkasMeterGenerator::applyFarkas({n0constraint},{n},{c},c0_offset,0,context));
-        }
-
-        //handle infinity constraints correctly
-        if (dir == POS_INF) {
-            smt.push_back(-c > 0);
-        } else if (dir == NEG_INF) {
-            smt.push_back(-c < 0);
-        }
-
-        //add relation between c,c0 and variable coefficients var_c, var_0
-        Expression sign = Expression((dir == Direction::NEG_CONS || dir == Direction::NEG_INF) ? 1 : -1); //inverted
-        Expression ex = (*it).subs(templateSubs).expand();
-        Expression nCoeff = ex.coeff(n);
-        Expression absCoeff = (ex - nCoeff*n).expand();
-        smt.push_back(c == Expression::ginacToZ3(sign * nCoeff,context,false,false));
-        smt.push_back(c0 == Expression::ginacToZ3(sign * absCoeff,context,false,false));
-    }
-
-    /* initialize z3 solver */
+    // initialize z3
     Z3Solver solver(context);
     z3::params params(context);
     params.set(":timeout", Z3_LIMITSMT_TIMEOUT);
     solver.set(params);
 
+    // the parameter of the desired family of solutions
+    ExprSymbol n = currentLP.getN();
 
-    /* helper lambdas for brevity */
-    auto buildCoeffSum = [&](int deg, const ExprSymbolSet &vars) -> z3::expr {
-        z3::expr coeffSum = context.real_val(0);
-        for (const ExprSymbol &var : vars) {
-            Expression coeff = expandedCost.coeff(var,deg);
-            if (coeff.is_zero()) continue;
-            assert(is_a<numeric>(coeff));
-            coeffSum = coeffSum + (coeff.toZ3(context,false,true) * varCoeff.at(var));
+    // get all relevant variables
+    ExprSymbolSet costVars = cost.getVariables();
+    ExprSymbolSet vars = currentLP.getVariables();
+    for (const ExprSymbol &costVar : cost.getVariables()) {
+        vars.insert(costVar);
+    }
+
+    // create linear templates for all variables
+    exmap templateSubs;
+    map<ExprSymbol,z3::expr,GiNaC::ex_is_less> varCoeff, varCoeff0;
+    for (const ExprSymbol &var : vars) {
+        ExprSymbol c0 = its.getFreshSymbol(var.get_name()+"_0");
+        ExprSymbol c = its.getFreshSymbol(var.get_name()+"_c");
+        varCoeff.emplace(var,Expression::ginacToZ3(c,context)); //HACKy HACK
+        varCoeff0.emplace(var,Expression::ginacToZ3(c0,context));
+        templateSubs[var] = c0 + (n * c);
+    }
+
+    // replace variables in the cost function with their linear templates
+    Expression templateCost = cost.subs(templateSubs).expand();
+
+    // if the cost function is a constant, then we are bound to fail
+    GiNaC::lst nList;
+    nList.append(n);
+    int maxDeg = templateCost.getMaxDegree(nList);
+    if (maxDeg == 0) {
+        return false;
+    }
+
+    // encode every entry of the limit problem
+    for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
+        // replace variables with their linear templates
+        Expression ex = (*it).subs(templateSubs).expand();
+        map<int, Expression> coefficients = getCoefficients(ex, n);
+        Direction direction = it->getDirection();
+        // add the required constraints (depending on the direction-label from the limit problem)
+        if (direction == POS) {
+            z3::expr disjunction = posConstraint(coefficients, context) || posInfConstraint(coefficients, context);
+            solver.add(disjunction);
+        } else if (direction == POS_CONS) {
+            solver.add(posConstraint(coefficients, context));
+        } else if (direction == POS_INF) {
+            solver.add(posInfConstraint(coefficients, context));
+        } else if (direction == NEG_CONS) {
+            solver.add(negConstraint(coefficients, context));
+        } else if (direction == NEG_INF) {
+            solver.add(negInfConstraint(coefficients, context));
         }
-        return coeffSum;
-    };
+    }
 
+    map<int, Expression> coefficients = getCoefficients(templateCost, n);
+    // add the constraint that the cost-function has to be increasing
+    solver.add(posInfConstraint(coefficients, context));
+
+    // auxiliary function that checks satisfiability wrt. the current state of the solver
     auto checkSolver = [&]() -> bool {
         debugAsymptoticBound("SMT Query: " << solver);
         z3::check_result res = solver.check();
         debugAsymptoticBound("SMT Result: " << res);
         if (res == z3::sat) {
             return true;
-        } else if (res == z3::unknown) {
-            hasUnknown = true;
+        } else {
+            return false;
         }
-        return false;
     };
 
-    /* hard constraints for the guard */
-    for (const z3::expr &x : smt) {
-        solver.add(x);
+    // all constraints that we have so far are mandatory, so fail if we can't even solve these
+    if (!checkSolver()) {
+        return false;
     }
+
+    // remember the current state for backtracking before trying several variations
     solver.push();
 
-    /* INF complexity */
-    //fixed constraints: all program variables must be zero
+    // first fix that all program variables have to be constants
+    // a model witnesses unbounded complexity
     ExprSymbolSet freeCostVars;
     for (const ExprSymbol &var : costVars) {
         if (its.isFreeVar(var)) {
@@ -1133,42 +1203,31 @@ bool AsymptoticBound::trySmtEncoding() {
             solver.add(varCoeff.at(var) == 0);
         }
     }
-    //check for every degree of free variables
-    if (!freeCostVars.empty()) {
-        for (int deg=maxDeg; deg >= 1; --deg) {
-            solver.push();
-            solver.add(buildCoeffSum(deg,freeCostVars) > 0);
-            if (checkSolver()) {
-                goto foundSolution;
-            }
-            solver.pop();
-        }
-    }
-    solver.pop(); //drop "program var == 0" constraints
 
-    /* Polynomial complexity */
-    for (int deg=maxDeg; deg >= 1; --deg) {
-        solver.push();
-        solver.add(buildCoeffSum(deg,costVars) > 0);
-        if (checkSolver()) {
-            goto foundSolution;
-        }
+    if (!checkSolver()) {
+        // we failed to find a model -- drop all non-mandatory constraints
         solver.pop();
+        // try to find a witness for polynomial complexity with degree maxDeg,...,1
+        for (int i = maxDeg; i > 0; i--) {
+            Expression c = coefficients.find(i)->second;
+            // remember the current state for backtracking
+            solver.push();
+            solver.add(c.toZ3(context) > 0);
+            if (checkSolver()) {
+                break;
+            } else if (i == 1) {
+                // we even failed to prove a linear bound -- give up
+                return false;
+            } else {
+                // remove all non-mandatory constraints and retry with degree i-1
+                solver.pop();
+            }
+        }
     }
 
-    /* handle failure (always unsat/unknown) */
-    if (!hasUnknown) {
-        debugAsymptoticBound("LP is unsolvable (by SMT encoding)");
-        currentLP.setUnsolvable();
-        return true;
-    } else {
-        debugAsymptoticBound("Giving up this SMT step (unknown/timeout)");
-        return false;
-    }
-
-foundSolution:
     debugAsymptoticBound("SMT Model: " << solver.get_model() << endl);
 
+    // we found a model -- create the corresponding solution of the limit problem
     exmap smtSubs;
     z3::model model = solver.get_model();
     for (const ExprSymbol &var : vars) {

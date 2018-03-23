@@ -463,6 +463,14 @@ bool LimitProblem::isLinear(const GiNaC::lst &vars) const {
     return true;
 }
 
+bool LimitProblem::isPolynomial(const GiNaC::lst &vars) const {
+    for (const InftyExpression &ex : set) {
+        if (!ex.is_polynomial(vars)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 bool LimitProblem::removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it) {
     if (!it->info(info_flags::integer)) {
