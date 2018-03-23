@@ -1122,7 +1122,7 @@ bool AsymptoticBound::trySmtEncoding() {
     // get all relevant variables
     ExprSymbolSet costVars = cost.getVariables();
     ExprSymbolSet vars = currentLP.getVariables();
-    for (const ExprSymbol &costVar : cost.getVariables()) {
+    for (const ExprSymbol &costVar : costVars) {
         vars.insert(costVar);
     }
 
