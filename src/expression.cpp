@@ -129,7 +129,9 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
         return Expression(GiNaC::ex(s,variables));
     }
 
-    for (string op : {"<",">","==","!=","="}) {
+    string ops[] = {"<",">","==","!=","="};
+
+    for (string op : ops) {
         string::size_type pos;
         if ((pos = s.find(op)) != string::npos) {
             string lhs = s.substr(0,pos);
