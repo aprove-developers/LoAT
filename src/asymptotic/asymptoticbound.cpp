@@ -621,6 +621,10 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
             return false;
         }
 
+        if (cost.getMaxDegree() == solvedCost.degree(n)) {
+            return true;
+        }
+
     }
 
     for (const ExprSymbol &var : cost.getVariables()) {
