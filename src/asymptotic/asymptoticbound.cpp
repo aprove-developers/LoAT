@@ -90,38 +90,6 @@ void AsymptoticBound::normalizeGuard() {
     debugAsymptoticBound("");
 }
 
-z3::check_result AsymptoticBound::solveByInitialSmtEncoding() {
-    //check if cost is simple enough for the SMT encoding
-    if (!isSmtApplicable()) {
-        return z3::unknown;
-    }
-
-    //check if guard is polynomial
-    for (const Expression &ex : normalizedGuard) {
-        Expression lhs = ex.lhs();
-        if (!lhs.is_polynomial(its.getGinacVarList())) return z3::unknown;
-    }
-
-    //create a limit problem without the cost
-    debugLimitProblem("Creating SMT encoding for the initial limit problem (without cost).");
-    currentLP = LimitProblem(normalizedGuard);
-    debugLimitProblem(currentLP);
-    debugLimitProblem("while maximizing the cost: " << cost.expand());
-    debugLimitProblem("");
-
-    if (trySmtEncoding()) {
-        if (currentLP.isSolved()) {
-            solvedLimitProblems.push_back(currentLP);
-            isAdequateSolution(currentLP); //needed to compute the complexity
-            return z3::sat;
-        } else {
-            assert(currentLP.isUnsolvable());
-            return z3::unsat;
-        }
-    }
-    return z3::unknown;
-}
-
 void AsymptoticBound::createInitialLimitProblem() {
     debugLimitProblem("Creating initial limit problem.");
     currentLP = LimitProblem(normalizedGuard, cost);
@@ -1124,11 +1092,7 @@ bool AsymptoticBound::trySmtEncoding() {
     ExprSymbol n = currentLP.getN();
 
     // get all relevant variables
-    ExprSymbolSet costVars = cost.getVariables();
     ExprSymbolSet vars = currentLP.getVariables();
-    for (const ExprSymbol &costVar : costVars) {
-        vars.insert(costVar);
-    }
 
     // create linear templates for all variables
     exmap templateSubs;
@@ -1173,10 +1137,6 @@ bool AsymptoticBound::trySmtEncoding() {
         }
     }
 
-    map<int, Expression> coefficients = getCoefficients(templateCost, n);
-    // add the constraint that the cost-function has to be increasing
-    solver.add(posInfConstraint(coefficients, context));
-
     // auxiliary function that checks satisfiability wrt. the current state of the solver
     auto checkSolver = [&]() -> bool {
         debugAsymptoticBound("SMT Query: " << solver);
@@ -1199,11 +1159,8 @@ bool AsymptoticBound::trySmtEncoding() {
 
     // first fix that all program variables have to be constants
     // a model witnesses unbounded complexity
-    ExprSymbolSet freeCostVars;
-    for (const ExprSymbol &var : costVars) {
-        if (its.isFreeVar(var)) {
-            freeCostVars.insert(var);
-        } else {
+    for (const ExprSymbol &var : vars) {
+        if (!its.isFreeVar(var)) {
             solver.add(varCoeff.at(var) == 0);
         }
     }
@@ -1212,6 +1169,7 @@ bool AsymptoticBound::trySmtEncoding() {
         // we failed to find a model -- drop all non-mandatory constraints
         solver.pop();
         // try to find a witness for polynomial complexity with degree maxDeg,...,1
+        map<int, Expression> coefficients = getCoefficients(templateCost, n);
         for (int i = maxDeg; i > 0; i--) {
             Expression c = coefficients.find(i)->second;
             // remember the current state for backtracking
@@ -1283,47 +1241,33 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
-    //try SMT encoding first
-    if (GlobalFlags::limitSmt) {
-        auto z3res = asymptoticBound.solveByInitialSmtEncoding();
-        if (z3res == z3::sat) {
-            goto foundSolution;
-        } else if (z3res == z3::unsat) {
-            goto noSolution;
-        }
-    }
-
     //otherwise perform limit calculus
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
     asymptoticBound.removeUnsatProblems();
     if (asymptoticBound.solveLimitProblem()) {
-        goto foundSolution;
-    }
+        debugAsymptoticBound("Solved the initial limit problem. ("
+                << asymptoticBound.solvedLimitProblems.size()
+                << " solved problem(s))");
 
-noSolution:
+        proofout << "Solution:" << std::endl;
+        for (const auto &pair : asymptoticBound.bestComplexity.solution) {
+            proofout << pair.first << " / " << pair.second << std::endl;
+        }
+
+        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+        return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
+                asymptoticBound.bestComplexity.upperBound > 1,
+                solvedCost.expand(),
+                asymptoticBound.bestComplexity.inftyVars,
+                "Solved the initial limit problem");
+    } else {
         debugAsymptoticBound("Could not solve the initial limit problem");
 
         return InfiniteInstances::Result(Expression::ComplexNone,
-                                         false,
-                                         numeric(0),
-                                         cost.getVariables().size(),
-                                         "Could not solve the initial limit problem");
-
-foundSolution:
-    debugAsymptoticBound("Solved the initial limit problem. ("
-                         << asymptoticBound.solvedLimitProblems.size()
-                         << " solved problem(s))");
-
-    proofout << "Solution:" << std::endl;
-    for (const auto &pair : asymptoticBound.bestComplexity.solution) {
-        proofout << pair.first << " / " << pair.second << std::endl;
+                false,
+                numeric(0),
+                cost.getVariables().size(),
+                "Could not solve the initial limit problem");
     }
-
-    Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
-    return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
-                                     asymptoticBound.bestComplexity.upperBound > 1,
-                                     solvedCost.expand(),
-                                     asymptoticBound.bestComplexity.inftyVars,
-                                     "Solved the initial limit problem");
 }
