@@ -338,7 +338,14 @@ ITRSProblem ITRSProblem::loadFromFile(const string &filename, bool allowDivision
                 if (has_vars) throw FileError("Multiple VAR declarations");
                 stringstream ss(line.substr(4,line.length()-1-4));
                 string varname;
+                vector<string> varnames;
                 while (ss >> varname) {
+                    varnames.push_back(varname);
+                }
+                // sort the variable names to make sure that the result of the analysis does not depend
+                // on the order in which the variables were declared (which happened in the past)
+                std::sort(varnames.begin(), varnames.end());
+                for (string varname: varnames) {
                     if (!isValidVarname(varname)) throw FileError("Invalid variable name: "+varname);
                     string escapedname = varname;
                     escapeVarname(escapedname);
