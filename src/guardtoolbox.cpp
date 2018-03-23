@@ -243,6 +243,7 @@ bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard
                 i--;
 
                 varSubs[var] = target;
+                varSubs = composeSubs(varSubs, varSubs);
                 goto next;
             }
         }
