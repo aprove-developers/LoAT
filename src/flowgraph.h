@@ -20,7 +20,7 @@
 
 #include "global.h"
 
-#include "graph.h"
+#include "graph/graph.h"
 #include "itrs.h"
 #include "expression.h"
 
