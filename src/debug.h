@@ -169,8 +169,10 @@ struct DebugStream {
 
 #ifdef DEBUG_PARSER
 #define debugParser(output) do { std::cout << output << std::endl; } while(0)
+#define debugTermParser(output) do { std::cout << output << std::endl; } while(0)
 #else
 #define debugParser(output) (void(0))
+#define debugTermParser(output) (void(0))
 #endif
 
 #ifdef DEBUG_OTHER
