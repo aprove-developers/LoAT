@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef TERM_H
-#define TERM_H
+#ifndef EXPRESSION_H
+#define EXPRESSION_H
 
 #include "global.h"
 
@@ -264,4 +264,4 @@ private:
 #endif
 };
 
-#endif // TERM_H
+#endif // EXPRESSION_H

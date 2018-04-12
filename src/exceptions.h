@@ -33,7 +33,7 @@ protected:
 public:
     CustomException() : CustomException("") {}
     CustomException(std::string message) : errorMessage(message) {}
-    const char *what() const throw() { return errorMessage.c_str(); }
+    const char *what() const noexcept { return errorMessage.c_str(); }
 };
 
 

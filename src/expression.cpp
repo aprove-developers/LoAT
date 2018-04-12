@@ -316,7 +316,7 @@ bool Expression::hasNoVariables() const {
         SymbolVisitor(bool &b)
             : noVars(b) {
         }
-        void visit(const GiNaC::symbol &var) {
+        void visit(const GiNaC::symbol &) {
             noVars = false;
         }
     private:
