@@ -46,8 +46,8 @@ LimitProblem::LimitProblem(const LimitProblem &other)
     : set(other.set),
       variableN(other.variableN),
       substitutions(other.substitutions),
-      log(new std::ostringstream()),
-      unsolvable(other.unsolvable) {
+      unsolvable(other.unsolvable),
+      log(new std::ostringstream()) {
     (*log) << other.log->str();
 }
 
@@ -69,8 +69,8 @@ LimitProblem::LimitProblem(LimitProblem &&other)
     : set(std::move(other.set)),
       variableN(other.variableN),
       substitutions(std::move(other.substitutions)),
-      log(std::move(other.log)),
-      unsolvable(other.unsolvable) {
+      unsolvable(other.unsolvable),
+      log(std::move(other.log)) {
 }
 
 
