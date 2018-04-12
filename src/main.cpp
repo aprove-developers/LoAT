@@ -37,6 +37,9 @@ using namespace std;
 #include "timeout.h"
 
 
+#include "parser/itsparser.h"
+
+
 /**
  * Print the compile flags chosen in global.h
  */
@@ -224,6 +227,25 @@ int main(int argc, char *argv[]) {
 
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
+
+    ITSProblem its;
+
+    {
+        using namespace parser;
+
+        try {
+            its = ITSParser::loadFromFile(filename, ITSParser::Settings());
+        } catch (ITSParser::FileError err) {
+            cerr << "Error: " << err.what() << endl;
+            return 1;
+        }
+    }
+
+    cout << "SUCCESS"<< endl << endl;
+    its.print(cout);
+
+    return 42;
+
 
     ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision,checkCosts);
     FlowGraph g(res);
