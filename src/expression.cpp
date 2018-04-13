@@ -26,7 +26,7 @@
 #include <z3++.h>
 
 #include "itrs.h"
-#include "z3toolbox.h"
+#include "z3/z3context.h"
 
 
 using namespace std;
@@ -44,7 +44,7 @@ ostream& operator<<(ostream &s, const Complexity &cpx) {
     return s;
 }
 
-z3::expr Expression::ginacToZ3(const GiNaC::ex &term, Z3VariableContext &context, bool fresh, bool reals) {
+z3::expr Expression::ginacToZ3(const GiNaC::ex &term, Z3Context &context, bool fresh, bool reals) {
     if (GiNaC::is_a<GiNaC::add>(term)) {
         assert(term.nops() > 0);
         z3::expr res = ginacToZ3(term.op(0),context,fresh,reals);
@@ -91,12 +91,12 @@ z3::expr Expression::ginacToZ3(const GiNaC::ex &term, Z3VariableContext &context
     else if (GiNaC::is_a<GiNaC::symbol>(term)) {
         const GiNaC::symbol &sym = GiNaC::ex_to<GiNaC::symbol>(term);
         //check if the symbol is already known (and keep the type in this case)
-        Z3VariableContext::VariableType type;
+        Z3Context::VariableType type;
         if (!fresh && context.hasVariableOfAnyType(sym.get_name(), type)) {
             return context.getVariable(sym.get_name(),type);
         }
         //otherwise create a new one
-        type = (reals) ? Z3VariableContext::Real : Z3VariableContext::Integer;
+        type = (reals) ? Z3Context::Real : Z3Context::Integer;
         return context.getFreshVariable(sym.get_name(),type);
     }
     else if (GiNaC::is_a<GiNaC::relational>(term)) {

@@ -18,7 +18,8 @@
 #include "infinity.h"
 
 #include "timing.h"
-#include "z3toolbox.h"
+#include "z3/z3context.h"
+#include "z3/z3toolbox.h"
 #include "guardtoolbox.h"
 #include "flowgraph.h"
 #include "debug.h"
@@ -733,9 +734,9 @@ nonconst:
 
         debugInfinity("z3 check sat: "; for (auto ex : checkGuard) cout << ex << " "; cout);
 
-        Z3VariableContext context;
+        Z3Context context;
         z3::model model(context,Z3_model());
-        auto z3res = Z3Toolbox::checkExpressionsSAT(checkGuard,context,&model);
+        auto z3res = Z3Toolbox::checkAll(checkGuard, context, &model);
 
         //try to cheat on z3
         if (z3res == z3::unknown && checkCost) {
@@ -743,7 +744,7 @@ nonconst:
             checkGuard.pop_back();
             debugInfinity("z3 check again: "; for (auto ex : checkGuard) cout << ex << " "; cout);
 
-            z3res = Z3Toolbox::checkExpressionsSAT(checkGuard,context,&model);
+            z3res = Z3Toolbox::checkAll(checkGuard, context, &model);
 
             //we still have to check if cost is ok with these constants
             if (z3res == z3::sat) {
@@ -769,7 +770,7 @@ nonconst:
             //first try expanding all terms to ease computation
             for (Expression &ex : checkGuard) ex = ex.expand();
             debugInfinity("z3 check again2: "; for (auto ex : checkGuard) cout << ex << " "; cout);
-            z3res = Z3Toolbox::checkExpressionsSAT(checkGuard,context,&model);
+            z3res = Z3Toolbox::checkAll(checkGuard, context, &model);
         }
         if (z3res == z3::unknown) {
             //z3 failed again, let's try setting all consts to 1
@@ -778,7 +779,7 @@ nonconst:
                 if (cfg[idx] == InftyConst) checkGuard.insert(checkGuard.begin(),sym == 1);
             }
             debugInfinity("z3 check again3: "; for (auto ex : checkGuard) cout << ex << " "; cout);
-            z3res = Z3Toolbox::checkExpressionsSAT(checkGuard,context,&model);
+            z3res = Z3Toolbox::checkAll(checkGuard, context, &model);
         }
 
         if (z3res != z3::sat) {
@@ -893,7 +894,7 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
     assert(GuardToolbox::isValidGuard(guard));
 
     //abort if there is no model at all
-    auto z3res = Z3Toolbox::checkExpressionsSAT(guard);
+    auto z3res = Z3Toolbox::checkAll(guard);
     if (z3res == z3::unsat) return Result(Expression::ComplexNone,"unsat");
 
     //if cost is INF, a single model for the guard is sufficient
@@ -907,7 +908,7 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
     if (cost.has(Expression::Infty)) {
         Expression inftyCoeff = cost.coeff(Expression::Infty);
         guard.push_back(inftyCoeff > 0);
-        if (Z3Toolbox::checkExpressionsSAT(guard) == z3::sat) return Result(Expression::ComplexInfty,false,Expression::Infty,0,"INF coeff sat");
+        if (Z3Toolbox::checkAll(guard) == z3::sat) return Result(Expression::ComplexInfty,false,Expression::Infty,0,"INF coeff sat");
         guard.pop_back();
         cost = cost.subs(Expression::Infty == 0); //remove INF symbol if INF cost cannot be proved
     }
@@ -921,7 +922,7 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
     int costExpLevel = InfIns.replaceEXPcost();
     if (InfIns.replaceEXPguard() || costExpLevel > 0) {
         //abort if there is no model at all [try again, guard has changed]
-        auto z3res = Z3Toolbox::checkExpressionsSAT(InfIns.guard);
+        auto z3res = Z3Toolbox::checkAll(InfIns.guard);
         if (z3res == z3::unsat) return Result(Expression::ComplexNone,"unsat");
     }
     InfIns.dumpGuard("noEXP guard");

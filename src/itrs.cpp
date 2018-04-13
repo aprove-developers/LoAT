@@ -24,7 +24,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "z3toolbox.h"
+#include "z3/z3toolbox.h"
 
 
 using namespace std;

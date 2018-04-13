@@ -19,7 +19,7 @@
 
 #include "timing.h"
 #include "guardtoolbox.h"
-#include "z3toolbox.h"
+#include "z3/z3toolbox.h"
 #include "expression.h"
 #include "flowgraph.h"
 #include "timeout.h"
@@ -35,7 +35,7 @@ using namespace std;
 
 FarkasMeterGenerator::FarkasMeterGenerator(ITRSProblem &itrs, const Transition &t)
     : itrs(itrs), update(t.update), guard(t.guard),
-      coeff0(context.getFreshVariable("c",Z3VariableContext::Real))
+      coeff0(context.getFreshVariable("c",Z3Context::Real))
 {}
 
 
@@ -113,7 +113,7 @@ void FarkasMeterGenerator::reduceGuard() {
     irrelevantGuard.clear();
 
     //create Z3 solver here to use push/pop for efficiency
-    Z3VariableContext c;
+    Z3Context c;
     Z3Solver sol(c);
     for (const Expression &ex : guard) sol.add(ex.toZ3(c));
 
@@ -241,7 +241,7 @@ void FarkasMeterGenerator::restrictToRelevantVariables() {
 }
 
 
-void FarkasMeterGenerator::createCoefficients(Z3VariableContext::VariableType type) {
+void FarkasMeterGenerator::createCoefficients(Z3Context::VariableType type) {
     coeffs.clear();
     for (int i=0; i < varlist.size(); ++i) {
         coeffs.push_back(context.getFreshVariable("c",type));
@@ -409,7 +409,7 @@ void FarkasMeterGenerator::buildConstraints() {
 /* ### Apply Farkas Lemma to formulate the constraints for the metering function ### */
 
 
-z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints, const vector<ExprSymbol> &vars, const vector<z3::expr> &coeff, z3::expr c0, int delta, Z3VariableContext &context) {
+z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints, const vector<ExprSymbol> &vars, const vector<z3::expr> &coeff, z3::expr c0, int delta, Z3Context &context) {
     assert(vars.size() == coeff.size());
 
 #ifdef DEBUG_FARKAS
@@ -425,7 +425,7 @@ z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints
     //create lambda variables, add lambda >= 0
     for (int i=0; i < constraints.size(); ++i) {
         assert(constraints[i].info(GiNaC::info_flags::relation_less_or_equal));
-        lambda.push_back(context.getFreshVariable("l",Z3VariableContext::Real));
+        lambda.push_back(context.getFreshVariable("l",Z3Context::Real));
         res.push_back(lambda[i] >= 0);
     }
 
@@ -469,7 +469,7 @@ z3::expr FarkasMeterGenerator::applyFarkas(const vector<Expression> &constraints
     debugFarkas("---");
 #endif
 
-    return Z3Toolbox::concatExpressions(context,res,Z3Toolbox::ConcatAnd);
+    return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
 
@@ -481,7 +481,7 @@ z3::expr FarkasMeterGenerator::genNotGuardImplication() const {
         res.push_back(applyFarkas(lhs,symbols,coeffs,coeff0,0,context));
         lhs.pop_back();
     }
-    return Z3Toolbox::concatExpressions(context,res,Z3Toolbox::ConcatAnd);
+    return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
 
@@ -518,7 +518,7 @@ z3::expr FarkasMeterGenerator::genNonTrivial() const {
     for (z3::expr c : coeffs) {
         res.push_back(c != 0);
     }
-    return Z3Toolbox::concatExpressions(context,res,Z3Toolbox::ConcatOr);
+    return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatOr);
 }
 
 
@@ -677,9 +677,9 @@ FarkasMeterGenerator::Result FarkasMeterGenerator::generate(ITRSProblem &itrs, T
     //transform constraints
     //if there are integer coefficients, we will still get them due to the f(x) >= 1 constraint, so don't waste time searching twice
 #ifdef FARKAS_ALLOW_REAL_COEFFS
-    Z3VariableContext::VariableType coeffType = Z3VariableContext::Real;
+    Z3Context::VariableType coeffType = Z3Context::Real;
 #else
-    Z3VariableContext::VariableType coeffType = Z3VariableContext::Integer;
+    Z3Context::VariableType coeffType = Z3Context::Integer;
 #endif
     f.buildConstraints();
     f.createCoefficients(coeffType);

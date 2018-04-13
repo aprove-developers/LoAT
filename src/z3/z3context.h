@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef Z3TOOLBOX_H
-#define Z3TOOLBOX_H
+#ifndef Z3CONTEXT_H
+#define Z3CONTEXT_H
 
 #include "global.h"
 #include "timing.h"
@@ -25,19 +25,19 @@
 #include <vector>
 #include <map>
 
-class ITRSProblem;
-struct Transition;
 class Expression;
 
 
 /**
  * Wrapper around z3 context to allow convenient variable handling
  */
-class Z3VariableContext : public z3::context {
+class Z3Context : public z3::context {
 public:
     enum VariableType { Integer, Real };
 
 public:
+    // TODO: refactor this class to provide less confusing semantics
+
     /**
      * Returns a variable of the given type with the given name if possible.
      * If a variable with given name and type does exist, it is returned.
@@ -78,7 +78,8 @@ private:
  */
 class Z3Solver : public z3::solver {
 public:
-    Z3Solver(Z3VariableContext &context) : z3::solver(context) {}
+    Z3Solver(Z3Context &context) : z3::solver(context) {}
+
     inline z3::check_result check() {
         Timing::start(Timing::Z3);
         z3::check_result res = z3::solver::check();
@@ -88,47 +89,4 @@ public:
 };
 
 
-/**
- * Namespace for several helpers to access z3
- */
-namespace Z3Toolbox {
-    enum ConcatOperator { ConcatAnd, ConcatOr };
-
-    /**
-     * Tiny helper to create a list of and- or or-concated expressions
-     * @param list expressions to concat
-     * @param op the operator to use
-     * @return the resulting expression
-     */
-    z3::expr concatExpressions(Z3VariableContext &context, const std::vector<z3::expr> &list, ConcatOperator op);
-
-    /**
-     * Given a z3 model, reads out the (real) value assigned to the given symbol and returns it as an Expression
-     */
-    Expression getRealFromModel(const z3::model &model, const z3::expr &symbol);
-
-    /**
-     * Returns the z3 result (sat/unsat/unknown) for the check if all expressions are satisfiable
-     */
-    z3::check_result checkExpressionsSAT(const std::vector<Expression> &list);
-
-    /**
-     * Extended version of checkExpressionsSAT that works on a given context and can be used to obtain the model
-     * @note the model must have been created with the given context
-     */
-    z3::check_result checkExpressionsSAT(const std::vector<Expression> &list, Z3VariableContext &context, z3::model *model = nullptr);
-
-    /**
-     * Returns an approximation of the z3 result (sat/unsat/unknown) for the check if all expressions are satisfiable
-     * @note currently, integer are treated as reals to reduce unknowns
-     * @note using this function is *NOT* sound (obviously)
-     */
-    z3::check_result checkExpressionsSATapproximate(const std::vector<Expression> &list);
-
-    /**
-     * Returns true iff the implication "AND(lhs) -> rhs" is a (z3-provable) tautology in all occurring symbols
-     */
-    bool checkTautologicImplication(const std::vector<Expression> &lhs, const Expression &rhs);
-}
-
-#endif // Z3TOOLBOX_H
+#endif // Z3CONTEXT_H

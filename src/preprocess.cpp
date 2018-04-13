@@ -20,7 +20,7 @@
 #include "itrs.h"
 #include "flowgraph.h"
 #include "guardtoolbox.h"
-#include "z3toolbox.h"
+#include "z3/z3toolbox.h"
 #include "timeout.h"
 
 using namespace std;
@@ -29,7 +29,7 @@ using namespace std;
 bool Preprocess::tryToRemoveCost(const ITRSProblem &itrs, GuardList &guard) {
     if (guard.empty()) return false;
     GuardList realGuard(guard.begin(),guard.end()-1);
-    if (Z3Toolbox::checkTautologicImplication(realGuard, guard.back())) {
+    if (Z3Toolbox::isValidImplication(realGuard, guard.back())) {
         guard.pop_back();
         return true;
     }
@@ -79,7 +79,7 @@ bool Preprocess::removeWeakerGuards(GuardList &guard) {
         if (remove.count(i) > 0) continue;
         for (int j=0; j < guard.size(); ++j) {
             if (i == j || remove.count(j) > 0) continue;
-            if (Z3Toolbox::checkTautologicImplication({guard[i]},guard[j])) {
+            if (Z3Toolbox::isValidImplication({guard[i]}, guard[j])) {
                 remove.insert(j);
             }
         }

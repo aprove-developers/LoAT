@@ -29,7 +29,7 @@
 #include "exceptions.h"
 
 
-class Z3VariableContext;
+class Z3Context;
 class Expression;
 
 //Useful typedefs for readability
@@ -99,7 +99,7 @@ public:
     /**
      * static helper to convert a ginac expression to a z3 expression
      */
-    static z3::expr ginacToZ3(const GiNaC::ex &expr, Z3VariableContext &context, bool freshVariables = false, bool useReals = false);
+    static z3::expr ginacToZ3(const GiNaC::ex &expr, Z3Context &context, bool freshVariables = false, bool useReals = false);
 
     /**
      * static helper to cast a ginac expression (which must be a symbol) to a ginac symbol
@@ -218,7 +218,7 @@ public:
      * @note if a variable name is already known and of type integer, this type is kept (unless fresh is true)
      * @return newly created z3 expression
      */
-    z3::expr toZ3(Z3VariableContext &context, bool fresh=false, bool reals=false) const { return ginacToZ3(*this,context,fresh,reals); }
+    z3::expr toZ3(Z3Context &context, bool fresh=false, bool reals=false) const { return ginacToZ3(*this,context,fresh,reals); }
     EXCEPTION(GinacZ3ConversionError,CustomException);
 
     /**

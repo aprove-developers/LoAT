@@ -19,7 +19,7 @@
 
 #include "preprocess.h"
 #include "recurrence.h"
-#include "z3toolbox.h"
+#include "z3/z3toolbox.h"
 #include "farkas.h"
 #include "infinity.h"
 #include "asymptotic/asymptoticbound.h"
@@ -139,7 +139,7 @@ bool FlowGraph::preprocessTransitions(bool eliminateCostConstraints) {
 bool FlowGraph::reduceInitialTransitions() {
     bool changed = false;
     for (TransIndex trans : getTransFrom(initial)) {
-        if (Z3Toolbox::checkExpressionsSAT(getTransData(trans).guard) == z3::unsat) {
+        if (Z3Toolbox::checkAll(getTransData(trans).guard) == z3::unsat) {
             removeTrans(trans);
             changed = true;
         }
@@ -391,13 +391,13 @@ bool FlowGraph::chainTransitionData(Transition &trans, const Transition &followT
     Expression newCost = trans.cost + followTrans.cost.subs(updateSubs);
 
 #ifdef CONTRACT_CHECK_SAT
-    auto z3res = Z3Toolbox::checkExpressionsSAT(newGuard);
+    auto z3res = Z3Toolbox::checkAll(newGuard);
 
 #ifdef CONTRACT_CHECK_SAT_APPROXIMATE
     //try to solve an approximate problem instead, as we do not need 100% soundness here
     if (z3res == z3::unknown) {
         debugProblem("Contract unknown, try approximation for: " << trans << " + " << followTrans);
-        z3res = Z3Toolbox::checkExpressionsSATapproximate(newGuard);
+        z3res = Z3Toolbox::checkAllApproximate(newGuard);
     }
 #endif
 

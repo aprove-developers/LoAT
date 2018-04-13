@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "debug.h"
-#include "z3toolbox.h"
+#include "z3/z3toolbox.h"
 
 using namespace GiNaC;
 
@@ -450,7 +450,7 @@ std::vector<Expression> LimitProblem::getQuery() const {
 
 
 bool LimitProblem::isUnsat() const {
-    return Z3Toolbox::checkExpressionsSAT(getQuery()) == z3::unsat;
+    return Z3Toolbox::checkAll(getQuery()) == z3::unsat;
 }
 
 

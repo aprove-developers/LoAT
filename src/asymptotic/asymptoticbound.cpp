@@ -8,7 +8,9 @@
 #include "expression.h"
 #include "guardtoolbox.h"
 #include "timeout.h"
-#include "z3toolbox.h"
+
+#include "z3/z3context.h"
+#include "z3/z3toolbox.h"
 
 #include "inftyexpression.h"
 #include "farkas.h"
@@ -386,7 +388,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
-        auto result = Z3Toolbox::checkExpressionsSAT(limitProblems[i].getQuery());
+        auto result = Z3Toolbox::checkAll(limitProblems[i].getQuery());
 
         if (result == z3::unsat) {
             debugAsymptoticBound("unsat:");
@@ -881,10 +883,10 @@ bool AsymptoticBound::tryInstantiatingVariable() {
         Direction dir = it->getDirection();
 
         if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-            Z3VariableContext context;
+            Z3Context context;
             z3::model model(context, Z3_model());
             z3::check_result result;
-            result = Z3Toolbox::checkExpressionsSAT(currentLP.getQuery(), context, &model);
+            result = Z3Toolbox::checkAll(currentLP.getQuery(), context, &model);
 
             if (result == z3::unsat) {
                 debugAsymptoticBound("Z3: limit problem is unsat");
@@ -971,7 +973,7 @@ bool AsymptoticBound::isSmtApplicable() {
  * degree of the respective monomial), builds an expression which implies that
  * lim_{n->\infty} p is a positive constant
  */
-z3::expr posConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+z3::expr posConstraint(const map<int, Expression>& coefficients, Z3Context& context) {
     z3::expr conjunction = context.bool_val(true);
     for (pair<int, Expression> p : coefficients) {
         int degree = p.first;
@@ -990,7 +992,7 @@ z3::expr posConstraint(const map<int, Expression>& coefficients, Z3VariableConte
  * degree of the respective monomial), builds an expression which implies that
  * lim_{n->\infty} p is a negative constant
  */
-z3::expr negConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+z3::expr negConstraint(const map<int, Expression>& coefficients, Z3Context& context) {
     z3::expr conjunction = context.bool_val(true);
     for (pair<int, Expression> p : coefficients) {
         int degree = p.first;
@@ -1009,7 +1011,7 @@ z3::expr negConstraint(const map<int, Expression>& coefficients, Z3VariableConte
  * degree of the respective monomial), builds an expression which implies
  * lim_{n->\infty} p = -\infty
  */
-z3::expr negInfConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+z3::expr negInfConstraint(const map<int, Expression>& coefficients, Z3Context& context) {
     int maxDegree = 0;
     for (pair<int, Expression> p: coefficients) {
         maxDegree = p.first > maxDegree ? p.first : maxDegree;
@@ -1036,7 +1038,7 @@ z3::expr negInfConstraint(const map<int, Expression>& coefficients, Z3VariableCo
  * degree of the respective monomial), builds an expression which implies
  * lim_{n->\infty} p = \infty
  */
-z3::expr posInfConstraint(const map<int, Expression>& coefficients, Z3VariableContext& context) {
+z3::expr posInfConstraint(const map<int, Expression>& coefficients, Z3Context& context) {
     int maxDegree = 0;
     for (pair<int, Expression> p: coefficients) {
         maxDegree = p.first > maxDegree ? p.first : maxDegree;
@@ -1075,7 +1077,7 @@ map<int, Expression> getCoefficients(Expression ex, ExprSymbol n) {
 bool AsymptoticBound::trySmtEncoding() {
     debugAsymptoticBound(endl << "SMT: " << currentLP << endl);
 
-    Z3VariableContext context;
+    Z3Context context;
     InftyExpressionSet::const_iterator it;
 
     // initialize z3
@@ -1224,7 +1226,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         GuardList query = guard;
         query.push_back(inftyCoeff > 0);
 
-        if (Z3Toolbox::checkExpressionsSAT(query) == z3::sat) {
+        if (Z3Toolbox::checkAll(query) == z3::sat) {
             return InfiniteInstances::Result(Expression::ComplexNonterm, false,
                                              Expression::Infty, 0, "NONTERM (INF coeff > 0 by SMT)");
         }

@@ -21,7 +21,7 @@
 #include "global.h"
 
 #include "expression.h"
-#include "z3toolbox.h"
+#include "z3/z3context.h"
 #include "itrs.h"
 
 #include <vector>
@@ -85,7 +85,7 @@ public:
      */
     static z3::expr applyFarkas(const std::vector<Expression> &constraints, const std::vector<ExprSymbol> &vars,
                                 const std::vector<z3::expr> &coeff, z3::expr c0, int delta,
-                                Z3VariableContext &context);
+                                Z3Context &context);
 
 private:
     FarkasMeterGenerator(ITRSProblem &itrs, const Transition &t);
@@ -163,7 +163,7 @@ private:
     /**
      * Creates z3 symbols for the coefficients for all relevant variables
      */
-    void createCoefficients(Z3VariableContext::VariableType type);
+    void createCoefficients(Z3Context::VariableType type);
 
     /**
      * Helper to build the implication: "(G and U) --> f(x)-f(x') <= 1" using applyFarkas
@@ -229,7 +229,7 @@ private:
     /**
      * The Z3 context to handle z3 symbols/expressions
      */
-    mutable Z3VariableContext context;
+    mutable Z3Context context;
 
     /**
      * List of all variables that are relevant and thus occur in the metering function
