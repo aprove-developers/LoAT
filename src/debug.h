@@ -40,8 +40,8 @@
 
 /* ### Some special assertions ### */
 
-#define unreachable() assert(false)
-#define unimplemented() assert(false)
+#define unreachable() assert(false && "unreachable")
+#define unimplemented() assert(false && "not implemented")
 
 
 /* ### Define a dummy ostream object ### */
@@ -64,8 +64,11 @@ struct DebugStream {
 //print an overview of the problem after every relevant simplification step (similar to proof output)
 //#define DEBUG_PRINTSTEPS
 
-//print problems that (might) have a strong impact on the result
+//print problematic results that (might) have a strong impact on the result
 #define DEBUG_PROBLEMS
+
+//print warnings which might indicate bugs
+#define DEBUG_WARN
 
 //dump z3 solvers and results
 //#define DEBUG_Z3
@@ -88,8 +91,11 @@ struct DebugStream {
 //debugging for the Expression class
 #define DEBUG_EXPRESSION
 
-//debugging for the ITRS problem parser
-//#define DEBUG_PARSER
+//debugging for the ITS problem parser
+#define DEBUG_PARSER
+
+//debugging for the term parser (part of the ITS problem parser)
+#define DEBUG_TERM_PARSER
 
 //debugging for PURRS
 #define DEBUG_PURRS
@@ -103,82 +109,93 @@ struct DebugStream {
 /* ### Debugging macros ### */
 
 //useful for short fixes/debugging tests:
-#define debugTest(output) do { std::cerr << output << std::endl; } while(0)
+#define debugTest(output) do { std::cerr << "[test] " << output << std::endl; } while(0)
 
 #define dumpList(desc,guard) do {\
-    cout << desc << ":"; for (const auto& x : (guard)) cout << " " << x; cout << endl; \
+    cout << "[dump-list] " << desc << ":"; for (const auto& x : (guard)) cout << " " << x; cout << endl; \
 } while(0)
 
 #define dumpMap(desc,update) do {\
-    cout << desc << ":"; for (auto const &it : (update)) cout << " " << it.first << "=" << it.second; cout << endl; \
+    cout << "[dump-map] " << desc << ":"; for (auto const &it : (update)) cout << " " << it.first << "=" << it.second; cout << endl; \
 } while(0)
 
 #define dumpGuardUpdate(desc,guard,update) do {\
-    cout << desc << ":" << endl; \
-    dumpList(" guard",guard); \
+    cout << "[dump-guard-update] " << desc << ":" << endl; \
+    dumpList("guard:",guard); \
     dumpMap("update:",update); \
 } while(0)
 
 #ifdef DEBUG_Z3
-#define debugZ3(solver,res,location) do { std::cout << (location) << " Z3 Solver: " << (solver) << "Z3 Result: " << (res) << std::endl; } while(0)
+#define debugZ3(solver,res,location) do { std::cout << "[z3] " << (location) << " Z3 Solver: " << (solver) << "Z3 Result: " << (res) << std::endl; } while(0)
 #else
 #define debugZ3(solver,res,location) (void(0))
 #endif
 
 #ifdef DEBUG_PURRS
-#define debugPurrs(output) do { std::cout << output << std::endl; } while(0)
+#define debugPurrs(output) do { std::cout << "[purrs] " << output << std::endl; } while(0)
 #else
 #define debugPurrs(output) (void(0))
 #endif
 
 #ifdef DEBUG_GRAPH
-#define debugGraph(output) do { std::cout << output << std::endl; } while(0)
+#define debugGraph(output) do { std::cout << "[graph] " << output << std::endl; } while(0)
 #else
 #define debugGraph(output) (void(0))
 #endif
 
 #ifdef DEBUG_FARKAS
-#define debugFarkas(output) do { std::cout << output << std::endl; } while(0)
+#define debugFarkas(output) do { std::cout << "[farkas] " << output << std::endl; } while(0)
 #else
 #define debugFarkas(output) (void(0))
 #endif
 
 #ifdef DEBUG_INFINITY
-#define debugInfinity(output) do { std::cout << output << std::endl; } while(0)
+#define debugInfinity(output) do { std::cout << "[infinity] " << output << std::endl; } while(0)
 #else
 #define debugInfinity(output) (void(0))
 #endif
 
 #ifdef DEBUG_LIMIT_PROBLEMS
-#define debugLimitProblem(output) do { std::cout << output << std::endl; } while(0)
+#define debugLimitProblem(output) do { std::cout << "[limitproblem] " << output << std::endl; } while(0)
 #else
 #define debugLimitProblem(output) (void(0))
 #endif
 
 #ifdef DEBUG_ASYMPTOTIC_BOUNDS
-#define debugAsymptoticBound(output) do { std::cout << output << std::endl; } while(0)
+#define debugAsymptoticBound(output) do { std::cout << "[asymptotic] " << output << std::endl; } while(0)
 #else
 #define debugAsymptoticBound(output) (void(0))
 #endif
 
 #ifdef DEBUG_PROBLEMS
-#define debugProblem(output) do { std::cerr << output << std::endl; } while(0)
+#define debugProblem(output) do { std::cerr << "[PROBLEM] " << output << std::endl; } while(0)
 #else
 #define debugProblem(output) (void(0))
 #endif
 
 #ifdef DEBUG_PARSER
-#define debugParser(output) do { std::cout << output << std::endl; } while(0)
-#define debugTermParser(output) do { std::cout << output << std::endl; } while(0)
+#define debugParser(output) do { std::cout << "[parser] " << output << std::endl; } while(0)
 #else
 #define debugParser(output) (void(0))
+#endif
+
+#ifdef DEBUG_TERM_PARSER
+#define debugTermParser(output) do { std::cout << "[termparser] " << output << std::endl; } while(0)
+#else
 #define debugTermParser(output) (void(0))
 #endif
 
 #ifdef DEBUG_OTHER
-#define debugOther(output) do { std::cout << output << std::endl; } while(0)
+#define debugOther(output) do { std::cout << "[other] " << output << std::endl; } while(0)
 #else
 #define debugOther(output) (void(0))
 #endif
+
+#ifdef DEBUG_WARN
+#define debugWarn(output) do { std::cout << "[WARNING] " << output << std::endl; } while(0)
+#else
+#define debugWarn(output) (void(0))
+#endif
+
 
 #endif
