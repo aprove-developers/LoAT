@@ -18,14 +18,11 @@
 #ifndef Z3CONTEXT_H
 #define Z3CONTEXT_H
 
-#include "global.h"
 #include "timing.h"
 
 #include <z3++.h>
-#include <vector>
 #include <map>
-
-class Expression;
+#include <boost/optional.hpp>
 
 
 /**
@@ -36,49 +33,43 @@ public:
     enum VariableType { Integer, Real };
 
 public:
-    // TODO: refactor this class to provide less confusing semantics
+    /**
+     * Returns the variable of the given name (and any type), if present
+     */
+    boost::optional<z3::expr> getVariable(const std::string &name) const;
 
     /**
-     * Returns a variable of the given type with the given name if possible.
-     * If a variable with given name and type does exist, it is returned.
-     * If no variable with this name exists, a new one with given type is created.
-     * If a variable with this name exists but is of a different type, a fresh variable
-     * of the desired type with a modified name is created (same effect as getFreshVariable)
+     * Like getVariable, but only returns the variable if it has the given type
      */
-    z3::expr getVariable(std::string name, VariableType type = Integer);
+    boost::optional<z3::expr> getVariable(const std::string &name, VariableType type) const;
 
     /**
-     * Like getVariable, but enforces that a new variable is created.
-     * If newname is given, it is assigned the name of the fresh variable.
+     * Adds a fresh variable to this context and returns it.
+     * If possible, the given name is used.
+     * If the name is already taken, it is modified by appending a number.
      */
-    z3::expr getFreshVariable(std::string basename, VariableType type = Integer, std::string *newname = nullptr);
-
-    /**
-     * Returns true iff a variable of given name and type does already exist
-     */
-    bool hasVariable(std::string name, VariableType type = Integer) const;
-
-    /**
-     * Returns true iff a variable of this name (and an arbitary type) exists
-     * @param typeOut is set to the type of the variable, if present
-     */
-    bool hasVariableOfAnyType(std::string name, VariableType &typeOut) const;
+    z3::expr addFreshVariable(std::string basename, VariableType type = Integer);
 
 private:
-    bool isTypeEqual(const z3::expr &expr, VariableType type) const;
+    static bool isTypeEqual(const z3::expr &expr, VariableType type);
+    std::string generateFreshName(std::string basename);
 
 private:
+    // Mapping between numbers and generated variables
     std::map<std::string,z3::expr> variables;
+
+    // Only for efficiency: count how often a name was already given to addFreshVariable.
+    // This speeds up generating a fresh name if the same name is requested several times.
     std::map<std::string,int> basenameCount;
 };
 
 
 /**
- * Wrapper around z3 solver to gain timing information
+ * Wrapper around z3 solver to track timing information
  */
 class Z3Solver : public z3::solver {
 public:
-    Z3Solver(Z3Context &context) : z3::solver(context) {}
+    explicit Z3Solver(Z3Context &context) : z3::solver(context) {}
 
     inline z3::check_result check() {
         Timing::start(Timing::Z3);

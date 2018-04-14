@@ -17,70 +17,50 @@
 
 #include "z3context.h"
 
-#include "timing.h"
-#include "expression.h"
-
-#include "debug.h"
+#include "expr/expression.h"
 
 using namespace std;
+using boost::optional;
 
 
-/* ############################## *
- * ### Context implementation ### *
- * ############################## */
-
-z3::expr Z3Context::getVariable(string name, VariableType type) {
+optional<z3::expr> Z3Context::getVariable(const std::string &name) const {
     auto it = variables.find(name);
-    //create new variable
-    if (it == variables.end()) {
-        z3::expr res = (type == Integer) ? int_const(name.c_str()) : real_const(name.c_str());
-        variables.emplace(name,res);
-        basenameCount[name] = 1;
-        return res;
-    }
-    //return existing variable if type matches
-    if (isTypeEqual(it->second,type))
+    if (it != variables.end()) {
         return it->second;
-
-    //name already in use for different type
-    return getFreshVariable(name,type);
+    }
+    return {};
 }
 
-z3::expr Z3Context::getFreshVariable(string name, VariableType type, string *newnameptr) {
-    //if name is still free, keep it
-    if (variables.find(name) == variables.end())
-        return getVariable(name,type);
+optional<z3::expr> Z3Context::getVariable(const std::string &name, Z3Context::VariableType type) const {
+    auto it = variables.find(name);
+    if (it != variables.end()) {
+        if (isTypeEqual(it->second,type)) {
+            return it->second;
+        }
+    }
+    return {};
+}
 
+z3::expr Z3Context::addFreshVariable(std::string basename, Z3Context::VariableType type) {
+    string name = generateFreshName(basename);
+    z3::expr res = (type == Integer) ? int_const(name.c_str()) : real_const(name.c_str());
+    variables.emplace(name,res);
+    return res;
+}
+
+std::string Z3Context::generateFreshName(std::string basename) {
     string newname;
+
     do {
-        int cnt = basenameCount[name]++;
-        string suffix = to_string(cnt);
-        newname = name + "_" + suffix;
+        int cnt = basenameCount[basename]++;
+        newname = basename + "_" + to_string(cnt);
     } while (variables.find(newname) != variables.end());
 
-    if (newnameptr) *newnameptr = newname;
-
-    return getVariable(newname,type);
+    return newname;
 }
 
-bool Z3Context::hasVariable(string name, VariableType type) const {
-    auto it = variables.find(name);
-    return it != variables.end() && isTypeEqual(it->second,type);
-}
-
-bool Z3Context::hasVariableOfAnyType(string name, VariableType &typeOut) const {
-    auto it = variables.find(name);
-    if (it == variables.end()) {
-        return false;
-    } else {
-        typeOut = (it->second.get_sort().is_int()) ? Integer : Real;
-        return true;
-    }
-}
-
-bool Z3Context::isTypeEqual(const z3::expr &expr, VariableType type) const {
+bool Z3Context::isTypeEqual(const z3::expr &expr, VariableType type) {
     const z3::sort sort = expr.get_sort();
     return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
 }
-
 

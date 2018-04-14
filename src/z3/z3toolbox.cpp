@@ -18,7 +18,7 @@
 #include "z3toolbox.h"
 
 #include "z3context.h"
-#include "expression.h"
+#include "expr/expression.h"
 #include "debug.h"
 
 using namespace std;
@@ -82,7 +82,9 @@ z3::check_result Z3Toolbox::checkAllApproximate(const std::vector<Expression> &l
     Z3Context context;
     vector<z3::expr> exprvec;
     for (const Expression &expr : list) {
-        exprvec.push_back(expr.toZ3(context,false,true));
+        GinacToZ3::Settings cfg;
+        cfg.useReals = true;
+        exprvec.push_back(expr.toZ3(context, cfg));
     }
     z3::expr target = concat(context, exprvec, ConcatAnd);
 
