@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "expression.h"
+#include "expr/expression.h"
 #include "guardtoolbox.h"
 #include "infinity.h"
 #include "itrs.h"
@@ -18,8 +18,7 @@ private:
     // internal struct for the return value of getComplexity()
     struct ComplexityResult {
         ComplexityResult()
-            : complexity(Expression::ComplexNone),
-              upperBound(0), lowerBound(0), inftyVars(0) {
+            : complexity(), upperBound(0), lowerBound(0), inftyVars(0) {
         }
 
         GiNaC::exmap solution;

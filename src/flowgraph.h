@@ -22,7 +22,7 @@
 
 #include "graph/graph.h"
 #include "itrs.h"
-#include "expression.h"
+#include "expr/expression.h"
 
 
 /**
@@ -48,7 +48,7 @@ struct RuntimeResult {
     GuardList guard;
     Complexity cpx;
     bool reducedCpx;
-    RuntimeResult() : bound(0), cpx(Expression::ComplexNone), reducedCpx(false) {}
+    RuntimeResult() : bound(0), cpx(), reducedCpx(false) {}
 };
 
 

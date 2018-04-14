@@ -632,12 +632,16 @@ bool InfiniteInstances::containsUnboundedFreeInfty(const MonomData &monom, const
 }
 
 pair<Complexity,Complexity> InfiniteInstances::calcComplexityPair(const PolynomData &polynom, const InftyCfg &cfg) const {
-    Complexity cpxPos=0, cpxNeg=-1;
+    Complexity cpxPos = Complexity::Const;
+    Complexity cpxNeg = Complexity::Unknown;
+
     for (const MonomData &monom : polynom) {
-        Complexity cpx = getExpSum(monom,cfg);
+        Complexity cpx = Complexity::Poly(getExpSum(monom, cfg));
+
         if (containsUnboundedFreeInfty(monom,cfg)) {
-            cpx = Expression::ComplexInfty;
+            cpx = Complexity::Infty;
         }
+
         if (monom.isAlwaysPositive(cfg)) {
             if (cpx > cpxPos) cpxPos = cpx;
         } else {
@@ -651,7 +655,7 @@ pair<Complexity,Complexity> InfiniteInstances::calcComplexityPair(const PolynomD
 bool InfiniteInstances::isPositiveComplexity(const PolynomData &polynom, const InftyCfg &cfg) const {
     Complexity cpxPos,cpxNeg;
     tie(cpxPos,cpxNeg) = calcComplexityPair(polynom,cfg);
-    return (cpxPos > cpxNeg && cpxPos > 0);
+    return (cpxPos > cpxNeg && cpxPos > Complexity::Const);
 }
 
 int InfiniteInstances::getMaxNonlinearSubsDegree(const InftyCfg &cfg) const {
@@ -675,23 +679,24 @@ pair<Complexity,bool> InfiniteInstances::getEffectiveComplexity(const PolynomDat
     tie(cpxPos,cpxNeg) = calcComplexityPair(polynom,cfg);
 
     //this can happen if free variables occur unbounded and thus make the polynom negative unbounded
-    if (cpxNeg == Expression::ComplexInfty) {
-        return make_pair(Expression::ComplexNone,false);
+    if (cpxNeg == Complexity::Infty) {
+        return make_pair(Complexity::Unknown, false);
     }
 
     //if cpxPos,cpxNeg are both zero, the guard is either trivial or constants occur,
     //which are checked in another place. Nonzero higher negative cpx should not occur!
 
     //this condition is now violated, as we allow A-B (where we ensure A > B by InftyCfg.rel)
-//    assert(cpxPos > cpxNeg || cpxNeg <= 0);
+//    assert(cpxPos > cpxNeg || cpxNeg <= Complexity::Const);
 
     //this should still hold, however:
-    assert(cpxPos >= cpxNeg || cpxNeg <= 0);
+    assert(cpxPos >= cpxNeg || cpxNeg <= Complexity::Const);
 
-    //if we applied nonlinear substitutions, reduce the final complexit
+    //if we applied nonlinear substitutions, reduce the final complexity
     int maxSubstDeg = getMaxNonlinearSubsDegree(cfg);
     assert(maxSubstDeg >= 1);
-    return make_pair(cpxPos.divInt(maxSubstDeg),maxSubstDeg != 1);
+    cpxPos = cpxPos ^ SimpleFraction(1, maxSubstDeg); // divide degree by maxSubstDeg
+    return make_pair(cpxPos,maxSubstDeg != 1);
 }
 
 
@@ -751,7 +756,7 @@ nonconst:
                 GiNaC::exmap costSubs;
                 for (const ExprSymbol &sym : checkVars) {
                     if (cfg[symbolIndexMap.at(sym)] == InftyConst) {
-                        costSubs[sym] = Z3Toolbox::getRealFromModel(model,Expression::ginacToZ3(sym,context));
+                        costSubs[sym] = Z3Toolbox::getRealFromModel(model,GinacToZ3::convert(sym,context));
                     }
                 }
                 Expression newCost = cost.subs(costSubs);
@@ -792,7 +797,7 @@ nonconst:
             for (int i=0; i < cfg.size(); ++i) {
                 if (cfg[i] != InftyConst) continue;
                 if (checkVars.count(symbols[i]) == 0) continue;
-                (*constSubs)[symbols[i]] = Z3Toolbox::getRealFromModel(model,Expression::ginacToZ3(symbols[i],context));
+                (*constSubs)[symbols[i]] = Z3Toolbox::getRealFromModel(model,GinacToZ3::convert(symbols[i],context));
             }
         }
     }
@@ -844,7 +849,7 @@ bool InfiniteInstances::checkBestComplexity(InftyCfg &cfg, GiNaC::exmap *constSu
 InfiniteInstances::CheckResult InfiniteInstances::calcTotalComplexity(const set<InftyCfg> &configs, uint costExpLvl, bool makeConstSubs) const {
     CheckResult best;
     best.reducedCpx = false;
-    best.cpx = Expression::ComplexNone;
+    best.cpx = Complexity::Unknown;
     best.inftyVars = 0;
     for (InftyCfg cfg : configs) {
         GiNaC::exmap subs;
@@ -856,8 +861,8 @@ InfiniteInstances::CheckResult InfiniteInstances::calcTotalComplexity(const set<
 
         if (costExpLvl > 0) {
             effCpx = getEffectiveComplexity(expPolynom,cfg);
-            if (effCpx.first > 0) {
-                cpx = (costExpLvl == 1) ? Expression::ComplexExp : Expression::ComplexExpMore;
+            if (effCpx.first > Complexity::Const) {
+                cpx = (costExpLvl == 1) ? Complexity::Exp : Complexity::NestedExp;
             }
         }
 
@@ -870,7 +875,7 @@ InfiniteInstances::CheckResult InfiniteInstances::calcTotalComplexity(const set<
         }
     }
 #ifdef DEBUG_INFINITY
-    if (best.cpx >= 0) {
+    if (best.cpx >= Complexity::Const) {
         cout << "Success: Complexity " << best.cpx << " with configuration:" << endl;
         printCfg(best.cfg); cout << endl;
     }
@@ -895,22 +900,22 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
 
     //abort if there is no model at all
     auto z3res = Z3Toolbox::checkAll(guard);
-    if (z3res == z3::unsat) return Result(Expression::ComplexNone,"unsat");
+    if (z3res == z3::unsat) return Result(Complexity::Unknown,"unsat");
 
     //if cost is INF, a single model for the guard is sufficient
-    if (cost.isInfty() && z3res == z3::sat) return Result(Expression::ComplexInfty,false,Expression::Infty,0,"INF sat");
+    if (cost.isInfty() && z3res == z3::sat) return Result(Complexity::Infty,false,Expression::InfSymbol,0,"INF sat");
 
     //abort if cost is trivial
     debugInfinity("COST: " << cost);
-    if (cost.getVariables().empty()) return Result(0,false,cost,0,"const cost");
+    if (cost.getVariables().empty()) return Result(Complexity::Const,false,cost,0,"const cost");
 
     //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
-    if (cost.has(Expression::Infty)) {
-        Expression inftyCoeff = cost.coeff(Expression::Infty);
+    if (cost.has(Expression::InfSymbol)) {
+        Expression inftyCoeff = cost.coeff(Expression::InfSymbol);
         guard.push_back(inftyCoeff > 0);
-        if (Z3Toolbox::checkAll(guard) == z3::sat) return Result(Expression::ComplexInfty,false,Expression::Infty,0,"INF coeff sat");
+        if (Z3Toolbox::checkAll(guard) == z3::sat) return Result(Complexity::Infty,false,Expression::InfSymbol,0,"INF coeff sat");
         guard.pop_back();
-        cost = cost.subs(Expression::Infty == 0); //remove INF symbol if INF cost cannot be proved
+        cost = cost.subs(Expression::InfSymbol == 0); //remove INF symbol if INF cost cannot be proved
     }
 
     InfiniteInstances InfIns(itrs,guard,cost);
@@ -923,22 +928,22 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
     if (InfIns.replaceEXPguard() || costExpLevel > 0) {
         //abort if there is no model at all [try again, guard has changed]
         auto z3res = Z3Toolbox::checkAll(InfIns.guard);
-        if (z3res == z3::unsat) return Result(Expression::ComplexNone,"unsat");
+        if (z3res == z3::unsat) return Result(Complexity::Unknown,"unsat");
     }
     InfIns.dumpGuard("noEXP guard");
 
     //guard and cost must be polynomial for this check
-    if (!GuardToolbox::isPolynomialGuard(InfIns.guard,itrs.getGinacVarList())) return Result(Expression::ComplexNone,"non-polynomial guard");
-    if (!InfIns.cost.is_polynomial(itrs.getGinacVarList())) return Result(Expression::ComplexNone,"non-polynomial cost");
+    if (!GuardToolbox::isPolynomialGuard(InfIns.guard,itrs.getGinacVarList())) return Result(Complexity::Unknown,"non-polynomial guard");
+    if (!InfIns.cost.is_polynomial(itrs.getGinacVarList())) return Result(Complexity::Unknown,"non-polynomial cost");
 
     //eliminate all equalities
     InfIns.removeEqualitiesFromGuard();
     InfIns.dumpGuard("inequality guard");
 
-    if (InfIns.cost.getVariables().empty()) return Result(0,false,InfIns.cost,0,"const cost");
+    if (InfIns.cost.getVariables().empty()) return Result(Complexity::Const,false,InfIns.cost,0,"const cost");
 
     InfIns.makePolynomialGuard();
-    if (!InfIns.removeTrivialFromGuard()) return Result(0,"trivial unsat");
+    if (!InfIns.removeTrivialFromGuard()) return Result(Complexity::Const,"trivial unsat");
 
     InfIns.dumpGuard("final polynomial guard");
 
@@ -952,7 +957,7 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
 
     CheckResult res = InfIns.calcTotalComplexity(configs,costExpLevel,isFinalCheck);
     Expression finalCost(0);
-    if (res.cpx >= 0) {
+    if (res.cpx >= Complexity::Const) {
         if (isFinalCheck) {
             finalCost = InfIns.buildProofBound(res.constSubs);
             if (!InfIns.nonlinearSubs.empty()) proofout << "  Applied nonlinear substitutions: " << InfIns.nonlinearSubs << endl;
@@ -968,5 +973,5 @@ InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, Guar
         }
         return Result(res.cpx,res.reducedCpx,finalCost,res.inftyVars,"Found infinity configuration");
     }
-    return Result(Expression::ComplexNone,"All const/invalid");
+    return Result(Complexity::Unknown,"All const/invalid");
 }

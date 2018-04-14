@@ -26,7 +26,7 @@
 
 #include <ginac/ginac.h>
 
-#include "expression.h"
+#include "expr/expression.h"
 #include "exceptions.h"
 
 

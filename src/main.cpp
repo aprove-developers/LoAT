@@ -353,8 +353,8 @@ int main(int argc, char *argv[]) {
         }
 
         //if we failed to prove a bound, we can still output O(1) with bound 1, as the graph was non-empty
-        if (runtime.cpx == Expression::ComplexNone) {
-            runtime.cpx = 0;
+        if (runtime.cpx == Complexity::Unknown) {
+            runtime.cpx = Complexity::Const;
             runtime.bound = Expression(1);
             runtime.guard.clear();
         }
@@ -377,32 +377,30 @@ int main(int argc, char *argv[]) {
     }
 
     proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
-    proofout << "  Complexity class: " << Expression::complexityString(runtime.cpx) << endl;
+    proofout << "  Complexity class: " << runtime.cpx << endl;
     proofout << "  Complexity value: ";
     {
-        if (runtime.cpx == Expression::ComplexInfty) proofout << "INF" << endl;
-        else if (runtime.cpx == Expression::ComplexNonterm) proofout << "NONTERM" << endl;
-        else if (runtime.cpx == Expression::ComplexExp) proofout << "EXP" << endl;
-        else if (runtime.cpx == Expression::ComplexExpMore) proofout << "EXP" << endl;
-        else if (runtime.cpx == Expression::ComplexNone) proofout << "none" << endl;
-        else proofout << runtime.cpx.val() << endl;
+        if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
+            proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
+        } else {
+            proofout << runtime.cpx;
+        }
     }
 
 #ifndef DEBUG_DISABLE_ALL
     cout << "DEBUG Bound: " << runtime.bound << endl;
     cout << "DEBUG Complexity value: ";
     {
-        if (runtime.cpx == Expression::ComplexInfty) cout << "INF" << endl;
-        else if (runtime.cpx == Expression::ComplexNonterm) cout << "NONTERM" << endl;
-        else if (runtime.cpx == Expression::ComplexExp) cout << "EXP" << endl;
-        else if (runtime.cpx == Expression::ComplexExpMore) cout << "EXP" << endl;
-        else if (runtime.cpx == Expression::ComplexNone) proofout << "none" << endl;
-        else cout << runtime.cpx.val() << endl;
+        if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
+            cout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
+        } else {
+            cout << runtime.cpx;
+        }
     }
 #endif
 
     if (dotOutput) {
-        g.printDotText(dotStream,dotStep++,Expression::complexityString(runtime.cpx));
+        g.printDotText(dotStream,dotStep++,runtime.cpx.toString());
         dotStream << "}" << endl;
         dotStream.close();
     }
@@ -417,16 +415,15 @@ int main(int argc, char *argv[]) {
         Timing::print(cout);
     }
 
-    if (runtime.cpx == Expression::ComplexNonterm) {
+    if (runtime.cpx == Complexity::Nonterm) {
         proofout << endl << "NO" << endl;
     } else {
         proofout << endl << "WORST_CASE(";
-        if (runtime.cpx == Expression::ComplexInfty) proofout << "INF";
-        else if (runtime.cpx == Expression::ComplexExp) proofout << "EXP";
-        else if (runtime.cpx == Expression::ComplexExpMore) proofout << "EXP";
-        else if (runtime.cpx == Expression::ComplexNone) proofout << "Omega(0)";
-        else if (runtime.cpx == 0) proofout << "Omega(1)";
-        else proofout << "Omega(n^" << runtime.cpx << ")";
+        if (runtime.cpx == Complexity::Exp || runtime.cpx == Complexity::NestedExp) proofout << "EXP";
+        else if (runtime.cpx == Complexity::Infty) proofout << "INF";
+        else if (runtime.cpx == Complexity::Unknown) proofout << "Omega(0)";
+        else if (runtime.cpx == Complexity::Const) proofout << "Omega(1)";
+        else proofout << "Omega(n^" << runtime.cpx.getPolynomialDegree().toString() << ")";
         proofout << ",?)" << endl;
     }
 

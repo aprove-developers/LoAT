@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "expression.h"
+#include "expr/expression.h"
 #include "its/itsproblem.h"
 
 

@@ -20,7 +20,7 @@
 
 #include "global.h"
 
-#include "expression.h"
+#include "expr/expression.h"
 #include "z3/z3context.h"
 #include "itrs.h"
 

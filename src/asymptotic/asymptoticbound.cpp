@@ -5,7 +5,7 @@
 #include <ginac/ginac.h>
 #include <z3++.h>
 
-#include "expression.h"
+#include "expr/expression.h"
 #include "guardtoolbox.h"
 #include "timeout.h"
 
@@ -533,10 +533,10 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
 
     if (res.inftyVars == 0) {
         debugAsymptoticBound("Complexity: None, no infty var!");
-        res.complexity = Expression::ComplexNone;
+        res.complexity = Complexity::Unknown;
     } else if (res.upperBound == 0) {
         debugAsymptoticBound("Complexity: INF (unbounded runtime)");
-        res.complexity = Expression::ComplexInfty;
+        res.complexity = Complexity::Infty;
     } else {
         res.lowerBound = findLowerBoundforSolvedCost(limitProblem, res.solution);
 
@@ -546,12 +546,12 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
             debugAsymptoticBound("Complexity: Omega(" << res.lowerBound << "^" << "(" << n << "^"
                                  << "(1/" << res.upperBound << ")" << ")" << ")" << std::endl);
 
-            res.complexity = Expression::ComplexExp;
+            res.complexity = Complexity::Exp;
         } else {
             debugAsymptoticBound("Complexity: Omega(" << n << "^" << "(" << res.lowerBound
                                  << "/" << res.upperBound << ")" << ")" << std::endl);
 
-            res.complexity = Complexity(res.lowerBound, res.upperBound);
+            res.complexity = Complexity::Poly(res.lowerBound, res.upperBound);
         }
     }
 
@@ -569,7 +569,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
 
     ComplexityResult result = getComplexity(limitProblem);
 
-    if (result.complexity == Expression::ComplexInfty) {
+    if (result.complexity == Complexity::Infty) {
         return true;
     }
 
@@ -897,7 +897,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 
                 debugAsymptoticBound("Z3: limit problem is sat");
                 Expression rational =
-                    Z3Toolbox::getRealFromModel(model, Expression::ginacToZ3(var, context));
+                    Z3Toolbox::getRealFromModel(model, GinacToZ3::convert(var, context));
 
                 exmap sub;
                 sub.insert(std::make_pair(var, rational));
@@ -1098,8 +1098,8 @@ bool AsymptoticBound::trySmtEncoding() {
     for (const ExprSymbol &var : vars) {
         ExprSymbol c0 = its.getFreshSymbol(var.get_name()+"_0");
         ExprSymbol c = its.getFreshSymbol(var.get_name()+"_c");
-        varCoeff.emplace(var,Expression::ginacToZ3(c,context)); //HACKy HACK
-        varCoeff0.emplace(var,Expression::ginacToZ3(c0,context));
+        varCoeff.emplace(var,GinacToZ3::convert(c,context)); //HACKy HACK
+        varCoeff0.emplace(var,GinacToZ3::convert(c0,context));
         templateSubs[var] = c0 + (n * c);
     }
 
@@ -1220,19 +1220,18 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
 
     Expression expandedCost = cost.expand();
     //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
-    if (expandedCost.has(Expression::Infty)) {
-        Expression inftyCoeff = expandedCost.coeff(Expression::Infty);
+    if (expandedCost.has(Expression::InfSymbol)) {
+        Expression inftyCoeff = expandedCost.coeff(Expression::InfSymbol);
 
         GuardList query = guard;
         query.push_back(inftyCoeff > 0);
 
         if (Z3Toolbox::checkAll(query) == z3::sat) {
-            return InfiniteInstances::Result(Expression::ComplexNonterm, false,
-                                             Expression::Infty, 0, "NONTERM (INF coeff > 0 by SMT)");
+            return InfiniteInstances::Result(Complexity::Nonterm, false,
+                                             Expression::InfSymbol, 0, "NONTERM (INF coeff > 0 by SMT)");
         }
 
-        return InfiniteInstances::Result(Expression::ComplexNone,
-                                         "The cost contains infinity");
+        return InfiniteInstances::Result(Complexity::Unknown, "The cost contains infinity");
     }
 
     AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
@@ -1262,7 +1261,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem");
 
-        return InfiniteInstances::Result(Expression::ComplexNone,
+        return InfiniteInstances::Result(Complexity::Unknown,
                 false,
                 numeric(0),
                 cost.getVariables().size(),

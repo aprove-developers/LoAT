@@ -318,7 +318,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
     proofout << "Computing complexity for remaining " << vec.size() << " transitions." << endl << endl;
 
 #ifdef DEBUG_PROBLEMS
-    Complexity oldMaxCpx = Expression::ComplexNone;
+    Complexity oldMaxCpx;
     Expression oldMaxExpr(0);
 #endif
 
@@ -343,7 +343,7 @@ RuntimeResult FlowGraph::getMaxRuntime() {
         debugGraph(endl << "INFINITY CHECK");
         auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, true);
         debugGraph("RES: " << checkRes.cpx << " because: " << checkRes.reason);
-        if (checkRes.cpx == Expression::ComplexNone) {
+        if (checkRes.cpx == Complexity::Unknown) {
             debugGraph("INFINITY: FAIL");
             continue;
         }
@@ -355,12 +355,12 @@ RuntimeResult FlowGraph::getMaxRuntime() {
         if (cpx > res.cpx) {
             res.cpx = cpx;
 #ifdef FINAL_INFINITY_CHECK
-            proofout << "Found new complexity " << Expression::complexityString(cpx) << ", because: " << checkRes.reason << "." << endl << endl;
+            proofout << "Found new complexity " << cpx << ", because: " << checkRes.reason << "." << endl << endl;
             res.bound = checkRes.cost;
             res.reducedCpx = checkRes.reducedCpx;
             res.guard = getTransData(trans).guard;
 #endif
-            if (cpx == Expression::ComplexInfty || cpx == Expression::ComplexNonterm) break;
+            if (cpx >= Complexity::Infty) break;
         }
 
         if (Timeout::hard()) return res;
@@ -402,7 +402,7 @@ bool FlowGraph::chainTransitionData(Transition &trans, const Transition &followT
 #endif
 
 #ifdef CONTRACT_CHECK_EXP_OVER_UNKNOWN
-    if (z3res == z3::unknown && newCost.getComplexity() == Expression::ComplexExp) {
+    if (z3res == z3::unknown && newCost.getComplexity() == Complexity::Exp) {
         debugGraph("Contract: keeping unknown because of EXP cost");
         z3res = z3::sat;
     }
@@ -429,7 +429,7 @@ bool FlowGraph::chainTransitionData(Transition &trans, const Transition &followT
 
     //add up cost, but keep INF if present
     if (trans.cost.isInfty() || followTrans.cost.isInfty()) {
-        trans.cost = Expression::Infty;
+        trans.cost = Expression::InfSymbol;
     } else {
         trans.cost = std::move(newCost);
     }
@@ -576,7 +576,7 @@ bool FlowGraph::chainBranchedPaths(NodeIndex node, set<NodeIndex> &visited) {
                     Stats::add(Stats::ContractBranch);
                 } else {
                     //if UNSAT, add a new dummy node to keep the first part of the transition (which is removed below)
-                    if (data.cost.getComplexity() > 0) {
+                    if (data.cost.getComplexity() > Complexity::Const) {
                         NodeIndex dummy = addNode();
                         addTrans(node,dummy,data); //keep at least first transition
                     }
@@ -679,7 +679,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
         Expression rankfunc;
         FarkasMeterGenerator::Result res = FarkasMeterGenerator::generate(itrs,data,rankfunc);
         if (res == FarkasMeterGenerator::Unbounded) {
-            data.cost = Expression::Infty;
+            data.cost = Expression::InfSymbol;
             data.update.clear(); //clear update, but keep guard!
             proofout << "  Found unbounded runtime when nesting loops," << endl;
             return true;
@@ -756,7 +756,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
             if (result == FarkasMeterGenerator::Unbounded) {
                 Stats::add(Stats::SelfloopInfinite);
                 debugGraph("Farkas unbounded!");
-                data.cost = Expression::Infty;
+                data.cost = Expression::InfSymbol;
                 data.update.clear(); //clear update, but keep guard!
                 TransIndex newIdx = addTrans(node,node,data);
                 proofout << "  Self-Loop " << tidx << " has unbounded runtime, resulting in the new transition " << newIdx << "." << endl;
@@ -821,7 +821,7 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
                 if (map_to_original[inner] == outer) continue;
 
                 //dont nest if the inner loop has constant runtime
-                if (getTransData(inner).cost.getComplexity() == 0) continue;
+                if (getTransData(inner).cost.getComplexity() == Complexity::Const) continue;
 
                 //check if we can nest at all
                 if (!canNest(getTransData(inner),getTransData(outer))) continue;
@@ -987,7 +987,7 @@ bool FlowGraph::removeConstLeafsAndUnreachable() {
             //if next is (now) a leaf, remove const transitions to next
             if (!getTransFrom(next).empty()) continue;
             for (TransIndex trans : getTransFromTo(curr,next)) {
-                if (getTransData(trans).cost.getComplexity() <= 0) {
+                if (getTransData(trans).cost.getComplexity() <= Complexity::Const) {
                     removeTrans(trans);
                     changed = true;
                 }
@@ -1022,7 +1022,7 @@ bool FlowGraph::removeIrrelevantTransitions(NodeIndex curr, set<NodeIndex> &visi
             //only const costs below next, so keep only non-const transitions to next
             auto checktrans = getTransFromTo(curr,next);
             for (TransIndex trans : checktrans) {
-                if (getTransData(trans).cost.getComplexity() <= 0) removeTrans(trans);
+                if (getTransData(trans).cost.getComplexity() <= Complexity::Const) removeTrans(trans);
             }
         }
     }
@@ -1046,16 +1046,16 @@ RuntimeResult FlowGraph::getMaxPartialResult() {
         //get current max cost (with infinity check)
         for (TransIndex trans : getTransFrom(initial)) {
             const Transition &data = getTransData(trans);
-            if (data.cost.getComplexity() <= max(res.cpx,Complexity(0))) continue;
+            if (data.cost.getComplexity() <= max(res.cpx,Complexity::Const)) continue;
 
             auto checkRes = AsymptoticBound::determineComplexity(itrs, getTransData(trans).guard, getTransData(trans).cost, true);
             if (checkRes.cpx > res.cpx) {
-                proofout << "Found new complexity " << Expression::complexityString(checkRes.cpx) << ", because: " << checkRes.reason << "." << endl << endl;
+                proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl << endl;
                 res.cpx = checkRes.cpx;
                 res.bound = checkRes.cost;
                 res.reducedCpx = checkRes.reducedCpx;
                 res.guard = data.guard;
-                if (res.cpx == Expression::ComplexInfty || res.cpx == Expression::ComplexNonterm) goto done;
+                if (res.cpx >= Complexity::Infty) goto done;
             }
             if (Timeout::hard()) goto abort;
         }

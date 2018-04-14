@@ -19,7 +19,7 @@
 #define GUARDTOOLBOX_H
 
 #include "global.h"
-#include "expression.h"
+#include "expr/expression.h"
 
 #include <vector>
 #include <map>
