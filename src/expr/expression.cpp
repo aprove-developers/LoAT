@@ -16,134 +16,40 @@
  */
 
 #include "expression.h"
-#include "debug.h"
 
-#include <string>
-#include <map>
-#include <limits>
-#include <functional>
-
-#include <z3++.h>
-
-#include "itrs.h"
 #include "z3/z3context.h"
-
+#include "complexity.h"
 
 using namespace std;
 
-//constants to make Complexity easily comparable (now even more ugly thanks to floats)
-const Complexity Expression::ComplexExp = 10000;
-const Complexity Expression::ComplexExpMore = 20000;
-const Complexity Expression::ComplexInfty = 99999;
-const Complexity Expression::ComplexNonterm = 999999;
-const Complexity Expression::ComplexNone = -42;
-const ExprSymbol Expression::Infty = GiNaC::symbol("INF");
 
-ostream& operator<<(ostream &s, const Complexity &cpx) {
-    s << cpx.toString();
-    return s;
-}
-
-z3::expr Expression::ginacToZ3(const GiNaC::ex &term, Z3Context &context, bool fresh, bool reals) {
-    if (GiNaC::is_a<GiNaC::add>(term)) {
-        assert(term.nops() > 0);
-        z3::expr res = ginacToZ3(term.op(0),context,fresh,reals);
-        for (int i=1; i < term.nops(); ++i) {
-            res = res + ginacToZ3(term.op(i),context,fresh,reals);
-        }
-        return res;
-    }
-    else if (GiNaC::is_a<GiNaC::mul>(term)) {
-        assert(term.nops() > 0);
-        z3::expr res = ginacToZ3(term.op(0),context,fresh,reals);
-        for (int i=1; i < term.nops(); ++i) {
-            res = res * ginacToZ3(term.op(i),context,fresh,reals);
-        }
-        return res;
-    }
-    else if (GiNaC::is_a<GiNaC::power>(term)) {
-        assert(term.nops() == 2);
-        if (GiNaC::is_a<GiNaC::numeric>(term.op(1))) {
-            //rewrite power as multiplication if possible, which z3 can handle much better
-            GiNaC::numeric num = GiNaC::ex_to<GiNaC::numeric>(term.op(1));
-            if (num.is_integer() && num.is_positive() && num.to_int() <= Z3_MAX_EXPONENT) {
-                int exp = num.to_int();
-                z3::expr base = ginacToZ3(term.op(0),context,fresh,reals);
-                z3::expr res = base;
-                while (--exp > 0) res = res * base;
-                return res;
-            }
-        }
-        //use z3 power as fallback (only poorly supported)
-        return z3::pw(ginacToZ3(term.op(0),context,fresh,reals),ginacToZ3(term.op(1),context,fresh,reals));
-    }
-    else if (GiNaC::is_a<GiNaC::numeric>(term)) {
-        const GiNaC::numeric &num = GiNaC::ex_to<GiNaC::numeric>(term);
-        assert(num.is_integer() || num.is_real());
-        try {
-            if (num.is_integer()) {
-                return (reals) ? context.real_val(num.to_int(),1) : context.int_val(num.to_int());
-            } else {
-                return context.real_val(num.numer().to_int(),num.denom().to_int());
-            }
-        } catch (...) { throw GinacZ3ConversionError("Invalid numeric constant (value too large)"); }
-    }
-    else if (GiNaC::is_a<GiNaC::symbol>(term)) {
-        const GiNaC::symbol &sym = GiNaC::ex_to<GiNaC::symbol>(term);
-        //check if the symbol is already known (and keep the type in this case)
-        Z3Context::VariableType type;
-        if (!fresh && context.hasVariableOfAnyType(sym.get_name(), type)) {
-            return context.getVariable(sym.get_name(),type);
-        }
-        //otherwise create a new one
-        type = (reals) ? Z3Context::Real : Z3Context::Integer;
-        return context.getFreshVariable(sym.get_name(),type);
-    }
-    else if (GiNaC::is_a<GiNaC::relational>(term)) {
-        assert(term.nops() == 2);
-        z3::expr a = ginacToZ3(term.op(0),context,fresh,reals);
-        z3::expr b = ginacToZ3(term.op(1),context,fresh,reals);
-        if (term.info(GiNaC::info_flags::relation_equal)) return a == b;
-        if (term.info(GiNaC::info_flags::relation_not_equal)) return a != b;
-        if (term.info(GiNaC::info_flags::relation_less)) return a < b;
-        if (term.info(GiNaC::info_flags::relation_less_or_equal)) return a <= b;
-        if (term.info(GiNaC::info_flags::relation_greater)) return a > b;
-        if (term.info(GiNaC::info_flags::relation_greater_or_equal)) return a >= b;
-        assert(false);
-    }
-
-    string errormsg;
-    stringstream ss(errormsg);
-    ss << "ERROR: GiNaC type not implemented for term: " << term << endl;
-    throw GinacZ3ConversionError(ss.str());
-}
-
+const ExprSymbol Expression::InfSymbol = GiNaC::symbol("INF");
 
 
 Expression Expression::fromString(const string &s, const GiNaC::lst &variables) {
-    auto containsNoRelations = [](const string &s) -> bool {
-        return s.find(">") == string::npos && s.find("<") == string::npos && s.find("=") == string::npos;
+    auto containsRelations = [](const string &s) -> bool {
+        return s.find_first_of("<>=") != string::npos;
     };
 
-    if (containsNoRelations(s)) {
+    if (!containsRelations(s)) {
         return Expression(GiNaC::ex(s,variables));
     }
 
-    string ops[] = {"<",">","==","!=","="};
+    // The order is important to avoid parsing e.g. <= as <
+    string ops[] = { "==", "!=", "<=", ">=", "<", ">", "=" };
 
     for (string op : ops) {
         string::size_type pos;
         if ((pos = s.find(op)) != string::npos) {
             string lhs = s.substr(0,pos);
-
-            if (op == "<" && pos+1 < s.length() && s[pos+1] == '=') op = "<=";
-            if (op == ">" && pos+1 < s.length() && s[pos+1] == '=') op = ">=";
-
             string rhs = s.substr(pos+op.length());
-            if (!containsNoRelations(rhs)) throw InvalidRelationalExpression("Multiple relational operators: "+s);
 
-            Expression lhsExpr = fromString(lhs,variables);
-            Expression rhsExpr = fromString(rhs,variables);
+            if (containsRelations(lhs) || containsRelations(rhs)) {
+                throw InvalidRelationalExpression("Multiple relational operators: "+s);
+            }
+
+            Expression lhsExpr = GiNaC::ex(lhs,variables);
+            Expression rhsExpr = GiNaC::ex(rhs,variables);
 
             if (op == "<") return Expression(lhsExpr < rhsExpr);
             else if (op == ">") return Expression(lhsExpr > rhsExpr);
@@ -181,20 +87,17 @@ bool Expression::equalsVariable(const GiNaC::symbol &var) const {
 
 bool Expression::isInfty() const {
     //trivial cases
-    if (degree(Infty) == 0) return false;
-    if (equalsVariable(Infty)) return true;
+    if (degree(InfSymbol) == 0) return false;
+    if (equalsVariable(InfSymbol)) return true;
 
     //check if INF is used in a simple polynomial manner with positive coefficients
-    int d = degree(Infty);
-    GiNaC::ex c = coeff(Infty,d);
-    if (GiNaC::is_a<GiNaC::numeric>(c)) {
-        if (GiNaC::ex_to<GiNaC::numeric>(c).is_positive()) {
-            return true;
-        }
+    int d = degree(InfSymbol);
+    if (coeff(InfSymbol, d).info(GiNaC::info_flags::positive)) {
+        return true;
     }
 
     //we do not know if this expression is INF or not
-    debugOther("WARNING: Expression: unsure if INF: " << this);
+    debugWarn("Expression: unsure if INF: " << this);
     return false;
 }
 
@@ -270,7 +173,7 @@ void Expression::collectVariableNames(set<string> &res) const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         SymbolVisitor(set<string> &t) : target(t) {}
         void visit(const GiNaC::symbol &sym) {
-            if (sym != Infty) target.insert(sym.get_name());
+            if (sym != InfSymbol) target.insert(sym.get_name());
         }
     private:
         set<string> &target;
@@ -285,7 +188,7 @@ void Expression::collectVariables(ExprSymbolSet &res) const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         SymbolVisitor(ExprSymbolSet &t) : target(t) {}
         void visit(const GiNaC::symbol &sym) {
-            if (sym != Infty) target.insert(sym);
+            if (sym != InfSymbol) target.insert(sym);
         }
     private:
         ExprSymbolSet &target;
@@ -439,6 +342,11 @@ bool Expression::hasAtLeastTwoVariables() const {
 }
 
 
+z3::expr Expression::toZ3(Z3Context &context, GinacToZ3::Settings cfg) const {
+    GinacToZ3::convert(*this, context, cfg);
+}
+
+
 Expression Expression::removedExponents() const {
     GiNaC::exmap subsMap;
     auto vars = getVariables();
@@ -452,76 +360,70 @@ Expression Expression::removedExponents() const {
 
 
 Complexity Expression::getComplexity(const GiNaC::ex &term) {
-    //define some helpers
-    using namespace placeholders;
-    auto cpxop = [](Complexity a, Complexity b, std::function<Complexity(Complexity,Complexity)> op) -> Complexity {
-        if (a == ComplexNone || b == ComplexNone) return ComplexNone;
-        if (a == ComplexInfty || b == ComplexInfty) return ComplexInfty;
-        return (a==ComplexExp || b==ComplexExp) ? ComplexExp : op(a,b);
-    };
-    auto cpxmul = std::bind(cpxop,_1,_2,[](Complexity a, Complexity b){ return a*b; });
-    auto cpxadd = std::bind(cpxop,_1,_2,[](Complexity a, Complexity b){ return a+b; });
+    using namespace GiNaC;
 
     //traverse the expression
-    if (GiNaC::is_a<GiNaC::numeric>(term)) {
-        GiNaC::numeric num = GiNaC::ex_to<GiNaC::numeric>(term);
+    if (is_a<numeric>(term)) {
+        numeric num = ex_to<numeric>(term);
         assert(num.is_integer() || num.is_real());
-        return 0; //both for positive and negative constants, as we want to over-approximate the complexity! (e.g. A-B is O(n))
-    }
-    else if (GiNaC::is_a<GiNaC::power>(term)) {
+        //both for positive and negative constants, as we want to over-approximate the complexity! (e.g. A-B is O(n))
+        return Complexity::Const;
+
+    } else if (is_a<power>(term)) {
         assert(term.nops() == 2);
-        if (getComplexity(term.op(1)) > 0) {
-            return (term.op(0).is_zero() || term.op(0).compare(1)==0 || term.op(0).compare(-1)==0) ? 0 : ComplexExp;
+
+        // If the exponent is at least polynomial (non-constant), complexity might be exponential
+        if (getComplexity(term.op(1)) > Complexity::Const) {
+            const ex &base = term.op(0);
+            if (base.is_zero() || base.compare(1) == 0 || base.compare(-1) == 0) {
+                return Complexity::Const;
+            }
+            return Complexity::Exp;
+
+        // Otherwise the complexity is polynomial, if the exponent is nonnegative
         } else {
-            if (!GiNaC::is_a<GiNaC::numeric>(term.op(1))) return ComplexNone; //unknown
-            GiNaC::numeric numexp = GiNaC::ex_to<GiNaC::numeric>(term.op(1));
-            if (!numexp.is_nonneg_integer()) return ComplexNone; //unknown (negative/float exponent)
+            if (!is_a<numeric>(term.op(1))) {
+                return Complexity::Unknown;
+            }
+            numeric numexp = ex_to<numeric>(term.op(1));
+            if (!numexp.is_nonneg_integer()) {
+                return Complexity::Unknown;
+            }
+
             Complexity base = getComplexity(term.op(0));
             int exp = numexp.to_int();
-            return (base == -1 || exp < 0) ? ComplexNone : cpxmul(base,exp);
+            return base ^ exp;
         }
-    }
-    else if (GiNaC::is_a<GiNaC::mul>(term)) {
-        assert(term.nops() > 0);
-        Complexity cpx = getComplexity(term.op(0));
-        for (int i=1; cpx != ComplexNone && i < term.nops(); ++i) {
-            cpx = cpxadd(cpx,getComplexity(term.op(i)));
-        }
-        return cpx;
-    }
-    else if (GiNaC::is_a<GiNaC::add>(term)) {
+
+    } else if (is_a<mul>(term)) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
         for (int i=1; i < term.nops(); ++i) {
-            cpx = max(cpx,getComplexity(term.op(i)));
+            cpx = cpx * getComplexity(term.op(i));
         }
         return cpx;
-    }
-    else if (GiNaC::is_a<GiNaC::symbol>(term)) {
-        return (term.compare(Expression::Infty) == 0) ? ComplexInfty : 1;
+
+    } else if (is_a<add>(term)) {
+        assert(term.nops() > 0);
+        Complexity cpx = getComplexity(term.op(0));
+        for (int i=1; i < term.nops(); ++i) {
+            cpx = cpx + getComplexity(term.op(i));
+        }
+        return cpx;
+
+    } else if (is_a<symbol>(term)) {
+        return (term.compare(Expression::InfSymbol) == 0) ? Complexity::Nonterm : Complexity::Poly(1);
     }
 
     //unknown expression type (e.g. relational)
-    return ComplexNone;
+    debugWarn("Expression: getComplexity called on unknown expression type");
+    return Complexity::Unknown;
 }
 
 
 Complexity Expression::getComplexity() const {
     Expression simple = expand();
     return getComplexity(simple);
-}
-
-
-string Expression::complexityString(Complexity complexity) {
-    if (complexity == 0) return "const";
-    if (complexity == ComplexNone) return "none";
-    if (complexity == ComplexExp) return "EXP";
-    if (complexity == ComplexExpMore) return "EXP NESTED";
-    if (complexity == ComplexInfty) return "INF";
-    if (complexity == ComplexNonterm) return "NONTERM";
-    stringstream ss;
-    ss << "n^" << complexity;
-    return ss.str();
 }
 
 

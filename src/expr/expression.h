@@ -22,11 +22,12 @@
 
 #include <ginac/ginac.h>
 #include <z3++.h>
-
 #include <string>
 #include <vector>
 
 #include "exceptions.h"
+#include "ginactoz3.h"
+#include "complexity.h"
 
 
 class Z3Context;
@@ -38,54 +39,14 @@ typedef GiNaC::lst ExprList;
 typedef std::set<ExprSymbol, GiNaC::ex_is_less> ExprSymbolSet;
 typedef std::set<Expression, GiNaC::ex_is_less> ExpressionSet;
 
-/**
- * This class represents a runtime complexity.
- * As we can now output sublinear runtimes (e.g. n^0.5), this is now a Real value.
- */
-class Complexity {
-    int numer,denom;
-public:
-    Complexity() : numer(0),denom(1) {}
-    Complexity(int i) : numer(i),denom(1) {}
-    Complexity(int n, int d) : numer(n),denom(d) { assert(d > 0); }
-
-    Complexity divInt(int div) { return Complexity(numer,denom*div); }
-
-    bool isInt() const { return denom == 1; }
-    double val() const { return numer/(double)denom; }
-
-    bool operator==(const Complexity &other) const { return numer*other.denom == denom*other.numer; }
-    bool operator!=(const Complexity &other) const { return !(*this == other); }
-    bool operator<(const Complexity &other) const { return val() < other.val(); }
-    bool operator>(const Complexity &other) const { return val() > other.val(); }
-    bool operator<=(const Complexity &other) const { return *this < other || *this == other; }
-    bool operator>=(const Complexity &other) const { return *this > other || *this == other; }
-
-    Complexity operator+(const Complexity &other) { return Complexity(numer*other.denom + other.numer*denom, denom*other.denom); }
-    Complexity operator-(const Complexity &other) { return Complexity(numer*other.denom - other.numer*denom, denom*other.denom); }
-    Complexity operator*(const Complexity &other) { return Complexity(numer*other.numer, denom*other.denom); }
-
-    GiNaC::numeric toExpr() const { return GiNaC::numeric(numer,denom); }
-
-    std::string toString() const { return (denom == 1) ? std::to_string(numer) : "(" + std::to_string(numer) + "/" + std::to_string(denom) + ")"; }
-};
-
-std::ostream& operator<<(std::ostream &, const Complexity &);
-
-
 
 /**
  * Class for arithmetic expressions, can be converted to a z3 expression.
- * Currently based on GiNaC, might change to PURRS::Expr (?)
+ * Essentially a wrapper around GiNaC::ex which provides additional functionality.
  */
 class Expression : public GiNaC::ex {
 public:
-    static const Complexity ComplexExp;
-    static const Complexity ComplexExpMore; //2^x^x etc.
-    static const Complexity ComplexInfty; //unbounded (i.e. infinite) runtime
-    static const Complexity ComplexNonterm; //nontermination (also infinite runtime), ONLY FOR OUTPUT!
-    static const Complexity ComplexNone; //Unknown/Error
-    static const ExprSymbol Infty;
+    static const ExprSymbol InfSymbol; // special symbol "INF" to be used within cost expressions
 
 public:
     /**
@@ -95,11 +56,6 @@ public:
      */
     static Expression fromString(const std::string &s, const GiNaC::lst &variables);
     EXCEPTION(InvalidRelationalExpression,CustomException);
-
-    /**
-     * static helper to convert a ginac expression to a z3 expression
-     */
-    static z3::expr ginacToZ3(const GiNaC::ex &expr, Z3Context &context, bool freshVariables = false, bool useReals = false);
 
     /**
      * static helper to cast a ginac expression (which must be a symbol) to a ginac symbol
@@ -124,12 +80,13 @@ public:
     bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;
 
     /**
-     * Returns true iff this expression is the given variable (or with trivial arithmetic, which is resolved by GiNaC)
+     * Returns true iff this expression is the given variable (up to trivial arithmetic, which is resolved by GiNaC)
      */
     bool equalsVariable(const GiNaC::symbol &var) const;
 
     /**
-     * Returns true iff this expression represents infinity, i.e. it is the INF-symbol
+     * Checks if this expression represents infinity, i.e. if it is (equivalent to) the INF-symbol.
+     * @note Only a heuristic check, returns false if unsure.
      */
     bool isInfty() const;
 
@@ -137,6 +94,10 @@ public:
      * Returns true iff this expression is linear in the given variables
      */
     bool isLinear(const GiNaC::lst &vars) const;
+
+    // FIXME: Add isPolyomial() which uses getVariables() instead of a GiNaC::lst
+    // FIXME: Could also implement this as some kind of visitor I guess...
+    // FIXME: Since we always include *all* variables, this might be faster
 
     /**
      * Returns true iff this expression is a proper rational number,
@@ -201,25 +162,21 @@ public:
 
     /**
      * Returns true iff this Expression contains at most one variable, i.e.,
-     * getVariables().size() <= 1
+     * getVariables().size() <= 1 (but this methods is more efficient)
      */
     bool hasAtMostOneVariable() const;
 
     /**
      * Returns true iff this Expression contains at most one variable, i.e.,
-     * getVariables().size() >= 2
+     * getVariables().size() >= 2 (but this methods is more efficient)
      */
     bool hasAtLeastTwoVariables() const;
 
     /**
-     * Converts this term from a GiNaC::ex to a Z3 expression
-     * @param fresh whether to use fresh variables. If false, existing variables from the context are re-used (by name)
-     * @param reals if true, all NEWLY created variables and constants are encoded as reals (otherwise variables are integers and only real coefficients as 1/2 are used)
-     * @note if a variable name is already known and of type integer, this type is kept (unless fresh is true)
+     * Converts this term from a GiNaC::ex to a Z3 expression, see GinacToZ3
      * @return newly created z3 expression
      */
-    z3::expr toZ3(Z3Context &context, bool fresh=false, bool reals=false) const { return ginacToZ3(*this,context,fresh,reals); }
-    EXCEPTION(GinacZ3ConversionError,CustomException);
+    z3::expr toZ3(Z3Context &context, GinacToZ3::Settings cfg = {}) const;
 
     /**
      * Return new expression without any powers of symbols, e.g. x^2 * y^x --> x * y ("5^x" is kept)
@@ -232,11 +189,6 @@ public:
      * @return the complexity, or ComplexExp for exponential, or ComplexNone for unknown complexity
      */
     Complexity getComplexity() const;
-
-    /**
-     * Tiny helper to create a printable representation of the given complexity (e.g. EXP, n^2, const, unknown)
-     */
-    static std::string complexityString(Complexity complexity);
 
     /**
      * Tries to calculate the complexity class of this expression, returns i.e. y^2 for (2*y*y+y)
