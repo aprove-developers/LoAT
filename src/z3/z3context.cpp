@@ -52,13 +52,13 @@ z3::expr Z3Context::addFreshVariable(std::string basename, Z3Context::VariableTy
     return res;
 }
 
-std::string Z3Context::generateFreshName(std::string basename) {
-    string newname;
+std::string Z3Context::generateFreshName(const std::string &basename) {
+    string newname = basename;
 
-    do {
+    while (variables.find(newname) != variables.end()) {
         int cnt = basenameCount[basename]++;
         newname = basename + "_" + to_string(cnt);
-    } while (variables.find(newname) != variables.end());
+    }
 
     return newname;
 }

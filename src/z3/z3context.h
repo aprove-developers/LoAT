@@ -52,7 +52,7 @@ public:
 
 private:
     static bool isTypeEqual(const z3::expr &expr, VariableType type);
-    std::string generateFreshName(std::string basename);
+    std::string generateFreshName(const std::string &basename);
 
 private:
     // Mapping between numbers and generated variables
