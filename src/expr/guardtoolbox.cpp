@@ -17,13 +17,14 @@
 
 #include"guardtoolbox.h"
 
-#include "debug.h"
+#include "relation.h"
 #include "itrs.h"
 
 using namespace std;
+using namespace Relation;
 
 
-bool GuardToolbox::isValidGuard(const GuardList &guard) {
+bool GuardToolbox::isWellformedGuard(const GuardList &guard) {
     for (const Expression &ex : guard) {
         if (!GiNaC::is_a<GiNaC::relational>(ex) || ex.nops() != 2) return false;
         if (ex.info(GiNaC::info_flags::relation_not_equal)) return false;
@@ -40,160 +41,10 @@ bool GuardToolbox::isPolynomialGuard(const GuardList &guard, const GiNaC::lst &v
 }
 
 
-bool GuardToolbox::isEquality(const Expression &term) {
-    assert(GiNaC::is_a<GiNaC::relational>(term));
-    return term.info(GiNaC::info_flags::relation_equal);
-}
-
-
-bool GuardToolbox::isValidInequality(const Expression &term) {
-    if (!GiNaC::is_a<GiNaC::relational>(term) || term.nops() != 2) return false;
-    if (term.info(GiNaC::info_flags::relation_equal)) return false;
-    if (term.info(GiNaC::info_flags::relation_not_equal)) return false;
-    return true;
-}
-
-
-bool GuardToolbox::isNormalizedInequality(const Expression &term) {
-    return isValidInequality(term)
-           && term.info(GiNaC::info_flags::relation_greater)
-           && term.rhs().is_zero();
-}
-
-
-Expression GuardToolbox::replaceLhsRhs(const Expression &term, Expression lhs, Expression rhs) {
-    assert(isValidInequality(term));
-    if (term.info(GiNaC::info_flags::relation_less)) return lhs < rhs;
-    if (term.info(GiNaC::info_flags::relation_less_or_equal)) return lhs <= rhs;
-    if (term.info(GiNaC::info_flags::relation_greater)) return lhs > rhs;
-    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) return lhs >= rhs;
-    unreachable();
-}
-
-
-bool GuardToolbox::isLinearInequality(const Expression &term, const GiNaC::lst &vars) {
-    if (!isValidInequality(term)) return false;
-    return Expression(term.lhs()).isLinear(vars) && Expression(term.rhs()).isLinear(vars);
-}
-
-
 bool GuardToolbox::containsFreeVar(const ITRSProblem &itrs, const Expression &term) {
-    for (const string &name : term.getVariableNames()) {
-        if (itrs.isFreeVar(itrs.getVarindex(name))) return true;
-    }
-    return false;
-}
-
-
-Expression GuardToolbox::makeLessEqual(Expression term) {
-    assert(isValidInequality(term));
-
-    //flip > or >=
-    if (term.info(GiNaC::info_flags::relation_greater)) {
-        term = term.rhs() < term.lhs();
-    } else if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
-        term = term.rhs() <= term.lhs();
-    }
-
-    //change < to <=, assuming integer arithmetic
-    if (term.info(GiNaC::info_flags::relation_less)) {
-        term = term.lhs() <= (term.rhs() - 1);
-    }
-
-    assert(term.info(GiNaC::info_flags::relation_less_or_equal));
-    return term;
-}
-
-
-Expression GuardToolbox::makeGreater(Expression term) {
-    assert(isValidInequality(term));
-
-    //flip < or <=
-    if (term.info(GiNaC::info_flags::relation_less)) {
-        term = term.rhs() > term.lhs();
-    } else if (term.info(GiNaC::info_flags::relation_less_or_equal)) {
-        term = term.rhs() >= term.lhs();
-    }
-
-    //change >= to >, assuming integer arithmetic
-    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
-        term = (term.lhs() + 1) > term.rhs();
-    }
-
-    assert(term.info(GiNaC::info_flags::relation_greater));
-    return term;
-}
-
-
-Expression GuardToolbox::normalize(Expression term) {
-    assert(isValidInequality(term));
-
-    Expression greater = makeGreater(term);
-    Expression normalized = (greater.lhs() - greater.rhs()) > 0;
-
-    assert(isNormalizedInequality(normalized));
-    return normalized;
-}
-
-
-Expression GuardToolbox::turnToLess(Expression term) {
-    assert(term.info(GiNaC::info_flags::relation_equal)
-           || isValidInequality(term));
-
-    if (term.info(GiNaC::info_flags::relation_greater_or_equal)) {
-        term = term.rhs() <= term.lhs();
-    } else if (term.info(GiNaC::info_flags::relation_greater)) {
-        term = term.rhs() < term.lhs();
-    }
-
-    return term;
-}
-
-
-Expression GuardToolbox::splitVariablesAndConstants(const Expression &term) {
-    assert(isValidInequality(term));
-    assert(term.info(GiNaC::info_flags::relation_less_or_equal));
-
-    //move everything to lhs
-    GiNaC::ex newLhs = term.lhs() - term.rhs();
-    GiNaC::ex newRhs = 0;
-
-    //move all numerical constants back to rhs
-    newLhs = newLhs.expand();
-    if (GiNaC::is_a<GiNaC::add>(newLhs)) {
-        for (int i=0; i < newLhs.nops(); ++i) {
-            if (GiNaC::is_a<GiNaC::numeric>(newLhs.op(i))) {
-                newRhs = newRhs - newLhs.op(i);
-            }
-        }
-    }
-    newLhs = newLhs + newRhs;
-    return newLhs <= newRhs;
-
-}
-
-
-Expression GuardToolbox::negateLessEqualInequality(const Expression &term) {
-    assert(isValidInequality(term));
-    assert(term.info(GiNaC::info_flags::relation_less_or_equal));
-    return (-term.lhs()) <= (-term.rhs())-1;
-}
-
-
-bool GuardToolbox::isTrivialInequality(const Expression &term) {
-    assert(term.info(GiNaC::info_flags::relation_less_or_equal));
-    using namespace GiNaC;
-
-    if (is_a<numeric>(term.lhs()) && is_a<numeric>(term.rhs())) {
-        numeric lhsNum = ex_to<numeric>(term.lhs());
-        numeric rhsNum = ex_to<numeric>(term.rhs());
-        if (lhsNum.is_equal(rhsNum)) return true;
-        if (lhsNum.is_integer() && rhsNum.is_integer() && lhsNum.to_int() <= rhsNum.to_int()) return true;
-    } else {
-        if ((term.lhs()-term.rhs()).is_zero()) return true;
-    }
-
-    return false;
+    return term.hasVariableWith([&itrs](const ExprSymbol &sym) {
+        return itrs.isFreeVar(sym);
+    });
 }
 
 
@@ -264,7 +115,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::l
     //get all variables that appear in an inequality
     ExprSymbolSet tryVars;
     for (const Expression &ex : guard) {
-        if (!isValidInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) continue;
+        if (!isInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) continue;
         ex.collectVariables(tryVars);
     }
 
@@ -280,10 +131,10 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::l
             //check if this guard must be used for var
             const Expression &ex = guard[i];
             if (!ex.has(var)) continue;
-            if (!isValidInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) goto abort;
+            if (!isInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) goto abort;
 
             //make less equal
-            Expression target = makeLessEqual(ex);
+            Expression target = transformInequalityLessEq(ex);
             target = target.lhs() - target.rhs();
             if (!target.has(var)) continue; //might have changed, e.h. x <= x
 
@@ -326,11 +177,11 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
 
     for (int i=0; i < guard.size(); ++i) {
         if (isEquality(guard[i])) continue;
-        Expression term = makeLessEqual(guard[i]);
+        Expression term = transformInequalityLessEq(guard[i]);
         term = term.lhs() - term.rhs();
         for (const auto &prev : terms) {
             if ((prev.second + term).is_zero()) {
-                matches[prev.first] = make_pair(i,prev.second);
+                matches.emplace(prev.first, make_pair(i,prev.second));
             }
         }
         terms.push_back(make_pair(i,term));

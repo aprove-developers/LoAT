@@ -1,0 +1,115 @@
+/*  This file is part of LoAT.
+ *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses>.
+ */
+
+#ifndef RELATION_H
+#define RELATION_H
+
+#include "global.h"
+#include "expr/expression.h"
+
+#include <vector>
+#include <map>
+
+typedef std::vector<Expression> GuardList;
+
+class ITRSProblem;
+
+
+/**
+ * Namespace for several helpers operating on relational expressions.
+ * Note that we never allow !=, so a relation uses one of the operators <,<=,==,>=,>.
+ * Since Expression can already represent relationals, this is only a collection of functions and not a class.
+ */
+namespace Relation {
+
+    /**
+     * Checks whether ex is a relation, excluding the != operator
+     */
+    bool isRelation(const Expression &ex);
+
+    /**
+     * Checks whether ex is a == relation
+     */
+    bool isEquality(const Expression &ex);
+
+    /**
+     * Checks whether ex is a <,<=,>=,> relation
+     */
+    bool isInequality(const Expression &ex);
+
+    /**
+     * Checks whether ex is of the form "term > 0"
+     */
+    bool isNormalizedInequality(const Expression &ex);
+
+    /**
+     * Checks if ex is an inequality and if rhs and lhs are linear in the given variables
+     * (convenience function for isLinear and isInequality)
+     */
+    bool isLinearInequality(const Expression &ex, const GiNaC::lst &vars);
+
+    /**
+     * Given a relation, replaces lhs and rhs with the given arguments and keeps operator
+     * @return newly created Expression of the form lhs OP rhs (OP one of <,<=,=,>=,>).
+     */
+    Expression replaceLhsRhs(const Expression &rel, Expression lhs, Expression rhs);
+
+    /**
+     * Given an inequality, transforms it into one only using the <= operator
+     * @note assumes integer arithmetic to translate < to <=
+     */
+    Expression transformInequalityLessEq(Expression rel);
+
+    /**
+     * Given an inequality, transforms it into one only using the > operator
+     * @note assumes integer arithmetic to translate e.g. >= to >
+     */
+    Expression transformInequalityGreater(Expression rel);
+
+    /**
+     * Given an inequality, transforms it into one of the form lhs > 0
+     * @note assumes integer arithmetic to translate e.g. >= to >
+     */
+    Expression normalizeInequality(Expression rel);
+
+    /**
+     * Given an inequality using the operator > or >=,
+     * transforms it into one using the operator < or <=.
+     * Does not change equations or inequalities using the operator < or <=.
+     */
+    Expression transformInequalityLessOrLessEq(Expression rel);
+
+    /**
+     * Given a relation, moves all variables to lhs and constants to rhs
+     */
+    Expression splitVariablesAndConstants(const Expression &rel);
+
+    /**
+     * Given a <= inequality, returns a <= inequality that represents the negated expression
+     * (i.e. for lhs <= rhs, this is -lhs <= -rhs-1)
+     * @note this assumes that lhs, rhs are integer valued (so lhs > rhs can be rewritten as lhs >= rhs+1)
+     */
+    Expression negateLessEqInequality(const Expression &relLessEq);
+
+    /**
+     * Given a <= inequality, returns true if lhs and rhs are numeric and this is a tautology,
+     * or if lhs and rhs are the same (e.g. 0 <= 0 or 42 <= 127 or x <= x)
+     */
+    bool isTrivialLessEqInequality(const Expression &relLessEq);
+}
+
+#endif // RELATION_H

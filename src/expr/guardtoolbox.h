@@ -19,17 +19,18 @@
 #define GUARDTOOLBOX_H
 
 #include "global.h"
-#include "expr/expression.h"
+#include "expression.h"
+#include "its/itsproblem.h"
 
 #include <vector>
 #include <map>
 
-typedef std::vector<Expression> GuardList;
-
+// TODO: Port to new ITSProblem
 class ITRSProblem;
 
 /**
- * Namespace for several helpers operating on relational expressions found in the guard
+ * Namespace for several functions operating on guards (list of relational expressions) and related helpers.
+ * Note: We never allow != in relations.
  */
 namespace GuardToolbox {
 
@@ -87,6 +88,7 @@ namespace GuardToolbox {
      */
     bool solveTermFor(Expression &term, const ExprSymbol &var, PropagationLevel level);
 
+
     /**
      * Replaces bidirectional inequalities, e.g. x <= y, y >= x by an equality, e.g. x == y
      * @note expensive for large guards
@@ -98,32 +100,14 @@ namespace GuardToolbox {
     /**
      * Returns true iff all guard terms are relational without the use of !=
      */
-    bool isValidGuard(const GuardList &guard);
+    bool isWellformedGuard(const GuardList &guard);
 
 
     /**
      * Returns true iff all guard terms have polynomial rhs and lhs
-     * @note guard must be a valid guard
+     * @note guard must be a well-formed guard
      */
     bool isPolynomialGuard(const GuardList &guard, const GiNaC::lst &vars);
-
-
-    /**
-     * Given a relational, returns true iff this term is an equality
-     */
-    bool isEquality(const Expression &term);
-
-
-    /**
-     * Returns true iff term is a <,<=,>=,> relational with 2 arguments (not == or !=)
-     */
-    bool isValidInequality(const Expression &term);
-
-
-    /**
-     * Returns true iff term is a <,<=,>=,> relational with 2 arguments (not == or !=)
-     */
-    bool isNormalizedInequality(const Expression &term);
 
 
     /**
@@ -131,68 +115,12 @@ namespace GuardToolbox {
      */
     bool containsFreeVar(const ITRSProblem &itrs, const Expression &term);
 
-    /**
-     * Given a valid inequality, replaces lhs and rhs with the given arguments and keeps operator
-     * @return newly created Expression of the form lhs OP rhs (OP one of <,<=,>=,>).
-     */
-    Expression replaceLhsRhs(const Expression &term, Expression lhs, Expression rhs);
-
 
     /**
-     * Returns true if term is a valid inequality and if rhs and lhs are linear in the given variables
-     * (convenience function for isLinear and isValidInequality)
-     */
-    bool isLinearInequality(const Expression &term, const GiNaC::lst &vars);
-
-
-    /**
-     * Given a valid inequality, transforms it into one only using the <= operator
-     */
-    Expression makeLessEqual(Expression term);
-
-
-    /**
-     * Given a valid inequality, transforms it into one only using the > operator
-     */
-    Expression makeGreater(Expression term);
-
-
-    /**
-     * Given a valid inequality, transforms it into one of the form lhs > 0
-     */
-    Expression normalize(Expression term);
-
-    /**
-     * Given a valid inequality using the operator > or >=,
-     * transforms it into one using the operator < or <=.
-     * Does not change equations or inequalities using the operator < or <=.
-     */
-    Expression turnToLess(Expression term);
-
-
-    /**
-     * Given a <= inequality, moves all variables to lhs and constants to rhs
-     */
-    Expression splitVariablesAndConstants(const Expression &term);
-
-
-    /**
-     * Given a <= inequality, returns a <= inequality that represents the negated expression
-     * (i.e. for lhs <= rhs, this is -lhs <= -rhs-1)
-     */
-    Expression negateLessEqualInequality(const Expression &term);
-
-
-    /**
-     * Given a <= inequality, returns true if lhs and rhs are numeric and this is a tautology,
-     * or if lhs and rhs are the same (e.g. 0 <= 0 or 42 <= 127 or x <= x)
-     */
-    bool isTrivialInequality(const Expression &term);
-
-    /**
-     *
+     * Compose two substitutions, i.e. compute f ∘ g ("f after g")
      */
     GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
 }
+
 
 #endif // GUARDTOOLBOX_H
