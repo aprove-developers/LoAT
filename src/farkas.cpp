@@ -18,9 +18,10 @@
 #include "farkas.h"
 
 #include "timing.h"
-#include "guardtoolbox.h"
-#include "z3/z3toolbox.h"
+#include "expr/guardtoolbox.h"
+#include "expr/relation.h"
 #include "expr/expression.h"
+#include "z3/z3toolbox.h"
 #include "flowgraph.h"
 #include "timeout.h"
 
@@ -322,7 +323,7 @@ bool FarkasMeterGenerator::makeLinearTransition() {
         if (!makeLinear(lhs,varlistLst,subsVars,subsMap)) return false;
         Expression rhs = term.rhs().subs(subsMap);
         if (!makeLinear(rhs,varlistLst,subsVars,subsMap)) return false;
-        guard[i] = GuardToolbox::replaceLhsRhs(term,lhs,rhs);
+        guard[i] = Relation::replaceLhsRhs(term,lhs,rhs);
     }
 
     //check if substituted variables occur in guard (i.e. x^2 substituted, but x > 4 appears)
@@ -366,11 +367,15 @@ void FarkasMeterGenerator::buildConstraints() {
     constraints.reducedGuard.clear();
 
     auto make_constraint = [&](const GiNaC::ex &rel, vector<Expression> &vec) {
-        using namespace GuardToolbox;
+        using namespace Relation;
         assert(isLinearInequality(rel,itrs.getGinacVarList()));
-        GiNaC::ex tmp = makeLessEqual(rel);
+
+        GiNaC::ex tmp = transformInequalityLessEq(rel);
         tmp = splitVariablesAndConstants(tmp);
-        if (!isTrivialInequality(tmp)) vec.push_back(tmp);
+
+        if (!isTrivialLessEqInequality(tmp)) {
+            vec.push_back(tmp);
+        }
     };
 
     for (Expression ex : reducedGuard) {
@@ -477,7 +482,7 @@ z3::expr FarkasMeterGenerator::genNotGuardImplication() const {
     vector<z3::expr> res;
     vector<Expression> lhs;
     for (Expression g : constraints.reducedGuard) {
-        lhs.push_back(GuardToolbox::negateLessEqualInequality(g)); //the important negated constraint
+        lhs.push_back(Relation::negateLessEqInequality(g)); //the important negated constraint
         res.push_back(applyFarkas(lhs,symbols,coeffs,coeff0,0,context));
         lhs.pop_back();
     }
@@ -557,7 +562,7 @@ stack<GiNaC::exmap> FarkasMeterGenerator::instantiateFreeVariables() const {
             ExprSymbol free = itrs.getGinacSymbol(freeIdx);
             if (!ex.has(free)) continue;
 
-            Expression term = GuardToolbox::makeLessEqual(ex);
+            Expression term = Relation::transformInequalityLessEq(ex);
             term = term.lhs()-term.rhs();
             if (!GuardToolbox::solveTermFor(term,free,GuardToolbox::NoCoefficients)) continue;
 

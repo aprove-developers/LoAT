@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "debug.h"
+#include "expr/relation.h"
 #include "z3/z3toolbox.h"
 
 using namespace GiNaC;
@@ -17,7 +18,7 @@ LimitProblem::LimitProblem()
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
     : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
-        assert(GuardToolbox::isNormalizedInequality(ex));
+        assert(Relation::isNormalizedInequality(ex));
 
         addExpression(InftyExpression(ex.lhs(), POS));
     }
@@ -33,7 +34,7 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 LimitProblem::LimitProblem(const GuardList &normalizedGuard)
     : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
-        assert(GuardToolbox::isNormalizedInequality(ex));
+        assert(Relation::isNormalizedInequality(ex));
         addExpression(InftyExpression(ex.lhs(), POS));
     }
 

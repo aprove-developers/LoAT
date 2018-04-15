@@ -19,7 +19,7 @@
 #define INFINITY_H
 
 #include "global.h"
-#include "guardtoolbox.h"
+#include "expr/guardtoolbox.h"
 
 #include <z3++.h>
 #include <vector>

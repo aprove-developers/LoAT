@@ -6,7 +6,8 @@
 #include <z3++.h>
 
 #include "expr/expression.h"
-#include "guardtoolbox.h"
+#include "expr/guardtoolbox.h"
+#include "expr/relation.h"
 #include "timeout.h"
 
 #include "z3/z3context.h"
@@ -24,7 +25,7 @@ AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard,
                                  Expression cost, bool finalCheck)
     : its(its), guard(guard), cost(cost), finalCheck(finalCheck),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
-    assert(GuardToolbox::isValidGuard(guard));
+    assert(GuardToolbox::isWellformedGuard(guard));
 }
 
 
@@ -68,20 +69,19 @@ void AsymptoticBound::normalizeGuard() {
     debugAsymptoticBound("Normalizing guard.");
 
     for (const Expression &ex : guard) {
-        assert(ex.info(info_flags::relation_equal)
-               || GuardToolbox::isValidInequality(ex));
+        assert(Relation::isRelation(ex));
 
         if (ex.info(info_flags::relation_equal)) {
             // Split equation
-            Expression greaterEqual = GuardToolbox::normalize(ex.lhs() >= ex.rhs());
-            Expression lessEqual = GuardToolbox::normalize(ex.lhs() <= ex.rhs());
+            Expression greaterEqual = Relation::normalizeInequality(ex.lhs() >= ex.rhs());
+            Expression lessEqual = Relation::normalizeInequality(ex.lhs() <= ex.rhs());
 
             normalizedGuard.push_back(greaterEqual);
             normalizedGuard.push_back(lessEqual);
 
             debugAsymptoticBound(ex << " -> " << greaterEqual << " and " << lessEqual);
         } else {
-            Expression normalized = GuardToolbox::normalize(ex);
+            Expression normalized = Relation::normalizeInequality(ex);
 
             normalizedGuard.push_back(normalized);
 
@@ -110,8 +110,7 @@ void AsymptoticBound::propagateBounds() {
 
     // build substitutions from equations
     for (const Expression &ex : guard) {
-        assert(ex.info(info_flags::relation_equal)
-               || GuardToolbox::isValidInequality(ex));
+        assert(Relation::isRelation(ex));
 
         Expression target = ex.rhs() - ex.lhs();
         if (ex.info(info_flags::relation_equal)
@@ -161,7 +160,7 @@ void AsymptoticBound::propagateBounds() {
     for (const Expression &ex : guard) {
         if (!ex.info(info_flags::relation_equal)) {
             if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
-                Expression exT = GuardToolbox::turnToLess(ex);
+                Expression exT = Relation::transformInequalityLessOrLessEq(ex);
 
                 Expression l, r;
                 bool swap = is_a<symbol>(exT.rhs());

@@ -19,7 +19,8 @@
 
 #include "itrs.h"
 #include "flowgraph.h"
-#include "guardtoolbox.h"
+#include "expr/guardtoolbox.h"
+#include "expr/relation.h"
 #include "z3/z3toolbox.h"
 #include "timeout.h"
 
@@ -59,8 +60,10 @@ bool Preprocess::simplifyTransition(const ITRSProblem &itrs, Transition &trans) 
 bool Preprocess::removeTrivialGuards(GuardList &guard) {
     bool changed = false;
     for (int i=0; i < guard.size(); ++i) {
-        if (GuardToolbox::isEquality(guard[i])) continue;
-        if (GuardToolbox::isTrivialInequality(GuardToolbox::makeLessEqual(guard[i]))) {
+        if (Relation::isEquality(guard[i])) continue;
+
+        Expression lessEq = Relation::transformInequalityLessEq(guard[i]);
+        if (Relation::isTrivialLessEqInequality(lessEq)) {
             guard.erase(guard.begin() + i);
             i--;
             changed = true;

@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "expr/expression.h"
-#include "guardtoolbox.h"
+#include "expr/guardtoolbox.h"
 #include "infinity.h"
 #include "itrs.h"
 #include "inftyexpression.h"

@@ -20,7 +20,7 @@
 #include "timing.h"
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"
-#include "guardtoolbox.h"
+#include "expr/relation.h"
 #include "flowgraph.h"
 #include "debug.h"
 
@@ -391,8 +391,8 @@ bool InfiniteInstances::getEXPterm(const Expression &term, Expression &exp) cons
 bool InfiniteInstances::replaceEXPrelation(const Expression relation, Expression &newrelation) {
     using namespace GiNaC;
 
-    if (GuardToolbox::isEquality(relation)) return false; //exp == rhs not allowed
-    Expression term = GuardToolbox::makeLessEqual(relation);
+    if (Relation::isEquality(relation)) return false; //exp == rhs not allowed
+    Expression term = Relation::transformInequalityLessEq(relation);
     term = term.rhs() - term.lhs(); //rhs-lhs >= 0
 
     Expression exp;
@@ -488,7 +488,7 @@ void InfiniteInstances::removeEqualitiesFromGuard() {
     //manually replace == by <= and >= for all remaining equalities
     for (int i=0; i < guard.size(); ++i) {
         assert(is_a<relational>(guard[i]));
-        if (GuardToolbox::isEquality(guard[i])) {
+        if (Relation::isEquality(guard[i])) {
             guard.push_back(guard[i].lhs() <= guard[i].rhs());
             guard.push_back(guard[i].lhs() >= guard[i].rhs());
             guard.erase(guard.begin() + i);
@@ -500,7 +500,7 @@ void InfiniteInstances::removeEqualitiesFromGuard() {
 
 void InfiniteInstances::makePolynomialGuard() {
     for (int i=0; i < guard.size(); ++i) {
-        Expression tmp = GuardToolbox::makeLessEqual(guard[i]); //lhs <= rhs
+        Expression tmp = Relation::transformInequalityLessEq(guard[i]); //lhs <= rhs
         guard[i] = tmp.rhs()-tmp.lhs(); //rhs-lhs >= 0
     }
 }
@@ -896,7 +896,7 @@ Expression InfiniteInstances::buildProofBound(const exmap &constSubs) const {
 
 InfiniteInstances::Result InfiniteInstances::check(const ITRSProblem &itrs, GuardList guard, Expression cost, bool isFinalCheck) {
     Timing::Scope timer(Timing::Infinity);
-    assert(GuardToolbox::isValidGuard(guard));
+    assert(GuardToolbox::isWellformedGuard(guard));
 
     //abort if there is no model at all
     auto z3res = Z3Toolbox::checkAll(guard);

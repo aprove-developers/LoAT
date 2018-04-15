@@ -5,8 +5,9 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <memory>
 
-#include "guardtoolbox.h"
+#include "expr/guardtoolbox.h"
 #include "inftyexpression.h"
 #include "limitvector.h"
 
