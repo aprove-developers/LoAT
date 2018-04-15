@@ -106,8 +106,8 @@ namespace Relation {
     Expression negateLessEqInequality(const Expression &relLessEq);
 
     /**
-     * Given a <= inequality, returns true if lhs and rhs are numeric and this is a tautology,
-     * or if lhs and rhs are the same (e.g. 0 <= 0 or 42 <= 127 or x <= x)
+     * Given a <= inequality, performs a simple checks whether the inequality holds.
+     * Checks if rhs-lhs evaluates to a numeric and is nonnegative (so lhs <= rhs holds).
      */
     bool isTrivialLessEqInequality(const Expression &relLessEq);
 }

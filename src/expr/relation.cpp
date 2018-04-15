@@ -150,25 +150,10 @@ namespace Relation {
         using namespace GiNaC;
         assert(relLessEq.info(info_flags::relation_less_or_equal));
 
-        // TODO: This can possibly be improved by checking if rhs-lhs is a nonnegative numeric
-
-        ex lhs = relLessEq.lhs();
-        ex rhs = relLessEq.rhs();
-
-        if (is_a<numeric>(lhs) && is_a<numeric>(rhs)) {
-            numeric lhsNum = ex_to<numeric>(lhs);
-            numeric rhsNum = ex_to<numeric>(rhs);
-
-            if (lhsNum.is_equal(rhsNum)) {
-                return true;
-            }
-
-            if (lhsNum.is_integer() && rhsNum.is_integer() && lhsNum.to_int() <= rhsNum.to_int()) {
-                return true;
-            }
-
-        } else if ((lhs - rhs).is_zero()) {
-            return true;
+        ex diff = relLessEq.rhs() - relLessEq.lhs();
+        if (is_a<numeric>(diff)) {
+            numeric num = ex_to<numeric>(diff);
+            return num.is_zero() || num.is_positive();
         }
 
         return false;
