@@ -128,15 +128,15 @@ namespace Relation {
         if (GiNaC::is_a<GiNaC::add>(newLhs)) {
             for (int i=0; i < newLhs.nops(); ++i) {
                 if (GiNaC::is_a<GiNaC::numeric>(newLhs.op(i))) {
-                    newRhs = newRhs - newLhs.op(i);
+                    newRhs -= newLhs.op(i);
                 }
             }
+        } else if (GiNaC::is_a<GiNaC::numeric>(newLhs)) {
+            newRhs -= newLhs;
         }
+        //other cases (mul, pow, sym) should not include numerical constants (only numerical coefficients)
 
-        // TODO: What if newLhs is not an add, but only a numeric or only a symbol? (or e.g. 2*x)
-        // TODO: should probably apply the loop body to newLhs itself!
-
-        newLhs = newLhs + newRhs;
+        newLhs += newRhs;
         return replaceLhsRhs(rel, newLhs, newRhs);
     }
 
