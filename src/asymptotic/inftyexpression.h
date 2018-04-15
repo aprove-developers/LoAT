@@ -27,6 +27,8 @@ public:
      */
     InftyExpression(const GiNaC::basic &other, Direction dir);
 
+    // FIXME: Why is the above needed??
+
     /**
      * Creates a new InftyExpression from the given ginac expression and direction.
      */

@@ -30,6 +30,9 @@
 #include "rule.h"
 
 
+// FIXME: Avoid addTransition, printRule in subclasses by using rule.rhsBegin(), .rhsEnd()
+// can return vector iterator or just &x, &x+1 for single element
+
 // Note: Data cannot be declared within AbstractITSProblem, since it would then
 // be templated over Rule, which makes copying data from ITSProblem to LinearProblem impossible.
 namespace ITSProblemInternal {
