@@ -42,9 +42,13 @@ optional<z3::expr> Z3Context::getVariable(const std::string &name, Z3Context::Va
 }
 
 z3::expr Z3Context::addFreshVariable(std::string basename, Z3Context::VariableType type) {
+    // Generate a fresh variable
     string name = generateFreshName(basename);
     z3::expr res = (type == Integer) ? int_const(name.c_str()) : real_const(name.c_str());
-    variables.emplace(name,res);
+
+    // Map the original user-supplied name to the resulting variable
+    variables.emplace(basename, res);
+
     return res;
 }
 

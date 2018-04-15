@@ -45,8 +45,8 @@ public:
 
     /**
      * Adds a fresh variable to this context and returns it.
-     * If possible, the given name is used.
-     * If the name is already taken, it is modified by appending a number.
+     * If possible, the given name is used. If the name is already taken, it is modified by appending a number.
+     * The context maps the given name (before modification) to the generated variable.
      */
     z3::expr addFreshVariable(std::string basename, VariableType type = Integer);
 
