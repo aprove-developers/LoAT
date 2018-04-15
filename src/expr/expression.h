@@ -144,19 +144,45 @@ public:
     ExprSymbolSet getVariables() const;
 
     /**
+     * Checks whether this expression contains a variable that satisfies the given predicate.
+     * The predicate is called with a `const ExprSymbol &` as argument.
+     */
+    template <typename P>
+    bool hasVariableWith(P predicate) const {
+        struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
+            SymbolVisitor(P predicate) : predicate(predicate) {}
+            void visit(const ExprSymbol &sym) {
+                if (!res && predicate(sym)) {
+                    res = true;
+                }
+            }
+            bool result() const {
+                return res;
+            }
+        private:
+            bool res = false;
+            P predicate;
+        };
+
+        SymbolVisitor visitor(predicate);
+        traverse(visitor);
+        return visitor.result();
+    }
+
+    /**
      * Returns true iff this Expression does not contain any variables, i.e.,
-     * getVariables():size() == 0
+     * getVariables().size() == 0 (but more efficient)
      */
     bool hasNoVariables() const;
 
     /**
      * Returns true iff this Expression contains exactly one variable, i.e.,
-     * getVariables().size() == 1
+     * getVariables().size() == 1 (but more efficient)
      */
     bool hasExactlyOneVariable() const;
 
     /**
-     * Returns a variable that occurs in this Expression (if there is one)
+     * Returns a variable that occurs in this Expression (given that there is one)
      */
     ExprSymbol getAVariable() const;
 

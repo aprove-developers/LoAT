@@ -215,111 +215,79 @@ ExprSymbolSet Expression::getVariables() const {
 
 
 bool Expression::hasNoVariables() const {
-    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(bool &b)
-            : noVars(b) {
-        }
-        void visit(const GiNaC::symbol &) {
-            noVars = false;
-        }
-    private:
-        bool &noVars;
-    };
-
-    bool noVars = true;
-
-    SymbolVisitor visitor(noVars);
-    traverse(visitor);
-
-    return noVars;
+    return !hasVariableWith([](const ExprSymbol &) { return true; });
 }
 
 
 bool Expression::hasExactlyOneVariable() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(bool &b)
-            : exactlyOneVar(b), foundVar(nullptr) {
-        }
         void visit(const GiNaC::symbol &var) {
             if (foundVar == nullptr) {
                 foundVar = &var;
                 exactlyOneVar = true;
 
-            } else {
-                if (var != *foundVar) {
-                    exactlyOneVar = false;
-                }
+            } else if (exactlyOneVar && var != *foundVar) {
+                exactlyOneVar = false;
             }
         }
+        bool result() const {
+            return exactlyOneVar;
+        }
     private:
-        bool &exactlyOneVar;
-        const GiNaC::symbol *foundVar;
+        bool exactlyOneVar = false;
+        const GiNaC::symbol *foundVar = nullptr;
     };
 
-    bool exactlyOneVar = false;
-
-    SymbolVisitor visitor(exactlyOneVar);
+    SymbolVisitor visitor;
     traverse(visitor);
-
-    return exactlyOneVar;
+    return visitor.result();
 }
 
 
 ExprSymbol Expression::getAVariable() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(GiNaC::symbol &variable)
-            : variable(variable) {
-        }
         void visit(const GiNaC::symbol &var) {
             variable = var;
         }
+        ExprSymbol result() const {
+            return variable;
+        }
     private:
-        GiNaC::symbol &variable;
+        ExprSymbol variable;
     };
 
-    ExprSymbol variable;
-
-    SymbolVisitor visitor(variable);
+    SymbolVisitor visitor;
     traverse(visitor);
-
-    return variable;
+    return visitor.result();
 }
 
 
 bool Expression::hasAtMostOneVariable() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(bool &b)
-            : atMostOneVar(b), foundVar(nullptr) {
-        }
         void visit(const GiNaC::symbol &var) {
             if (foundVar == nullptr) {
                 foundVar = &var;
 
-            } else {
-                if (var != *foundVar) {
-                    atMostOneVar = false;
-                }
+            } else if (var != *foundVar) {
+                atMostOneVar = false;
             }
         }
+        bool result() const {
+            return atMostOneVar;
+        }
     private:
-        bool &atMostOneVar;
-        const GiNaC::symbol *foundVar;
+        bool atMostOneVar = true;
+        const GiNaC::symbol *foundVar = nullptr;
     };
 
-    bool atMostOneVar = true;
-
-    SymbolVisitor visitor(atMostOneVar);
+    SymbolVisitor visitor;
     traverse(visitor);
-
-    return atMostOneVar;
+    return visitor.result();
 }
 
 
 bool Expression::hasAtLeastTwoVariables() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(bool &b)
-            : atLeastTwoVars(b), foundVar(nullptr) {
-        }
         void visit(const GiNaC::symbol &var) {
             if (foundVar == nullptr) {
                 foundVar = &var;
@@ -328,17 +296,17 @@ bool Expression::hasAtLeastTwoVariables() const {
                 atLeastTwoVars = true;
             }
         }
+        bool result() const {
+            return atLeastTwoVars;
+        }
     private:
-        bool &atLeastTwoVars;
-        const GiNaC::symbol *foundVar;
+        bool atLeastTwoVars = false;
+        const GiNaC::symbol *foundVar = nullptr;
     };
 
-    bool atLeastTwoVars = false;
-
-    SymbolVisitor visitor(atLeastTwoVars);
+    SymbolVisitor visitor;
     traverse(visitor);
-
-    return atLeastTwoVars;
+    return visitor.result();
 }
 
 
