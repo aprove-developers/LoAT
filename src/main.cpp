@@ -228,23 +228,23 @@ int main(int argc, char *argv[]) {
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-    ITSProblem its;
 
     {
+        ITSProblem its;
         using namespace parser;
 
+        cout << "=== new ITSProblem ===" << endl;
         try {
             its = ITSParser::loadFromFile(filename, ITSParser::Settings());
         } catch (ITSParser::FileError err) {
             cerr << "Error: " << err.what() << endl;
             return 1;
         }
+
+        cout << "SUCCESS" << endl << endl;
+        its.print(cout);
+        cout << "=== new ITSProblem ===" << endl;
     }
-
-    cout << "SUCCESS"<< endl << endl;
-    its.print(cout);
-
-    return 42;
 
 
     ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision,checkCosts);
@@ -383,7 +383,7 @@ int main(int argc, char *argv[]) {
         if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
             proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
         } else {
-            proofout << runtime.cpx;
+            proofout << runtime.cpx << endl;
         }
     }
 
@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
         if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
             cout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
         } else {
-            cout << runtime.cpx;
+            cout << runtime.cpx << endl;
         }
     }
 #endif
