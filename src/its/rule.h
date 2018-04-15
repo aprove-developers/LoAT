@@ -62,6 +62,11 @@ struct LinearRule {
     LinearRule(RuleLhs lhs, RuleRhs rhs);
     LinearRule(LocationIdx lhsLoc, GuardList guard, LocationIdx rhsLoc, UpdateMap update); // cost 1
     LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
+
+    // iteration over right-hand sides
+    const RuleRhs* rhsBegin() const { return &rhs; };
+    const RuleRhs* rhsEnd() const { return &rhs + 1; };
+
     void collectSymbols(ExprSymbolSet &set) const;
 };
 
@@ -72,8 +77,13 @@ struct NonlinearRule {
     NonlinearRule() {}
     NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss);
 
+    // iteration over right-hand sides
+    std::vector<RuleRhs>::const_iterator rhsBegin() const { return rhss.cbegin(); }
+    std::vector<RuleRhs>::const_iterator rhsEnd() const { return rhss.cend(); }
+
     bool isLinear() const;
     LinearRule toLinearRule() const;
+
     void collectSymbols(ExprSymbolSet &set) const;
 };
 

@@ -71,7 +71,14 @@ void AbstractITSProblem<Rule>::removeRule(TransIdx transition) {
 
 template<typename Rule>
 TransIdx AbstractITSProblem<Rule>::addRule(Rule rule) {
-    TransIdx idx = addTransitionForRule(rule);
+    // gather target locations
+    vector<LocationIdx> rhsLocs;
+    for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
+        rhsLocs.push_back(it->loc);
+    }
+
+    // add transition and store mapping to rule
+    TransIdx idx = graph.addTrans(rule.lhs.loc, rhsLocs);
     rules.emplace(idx, rule);
     return idx;
 }
@@ -244,22 +251,8 @@ void AbstractITSProblem<Rule>::print(std::ostream &s) const {
     }
 }
 
-
-
-LocationIdx LinearITSProblem::getTransitionTarget(TransIdx idx) const {
-    assert(graph.getTransTargets(idx).size() == 1);
-    return graph.getTransTargets(idx).front();
-}
-
-TransIdx LinearITSProblem::addTransitionForRule(const LinearRule &rule) {
-    return graph.addTrans(rule.lhs.loc, rule.rhs.loc);
-}
-
-void LinearITSProblem::printRule(const LinearRule &rule, ostream &s) const {
-    auto printVar = [&](VariableIdx var) {
-        s << data.variables[var].name;
-    };
-
+template<typename Rule>
+void AbstractITSProblem<Rule>::printRule(const Rule &rule, std::ostream &s) const {
     auto printLoc = [&](LocationIdx loc) {
         auto it = data.locationNames.find(loc);
         if (it != data.locationNames.end()) {
@@ -272,38 +265,48 @@ void LinearITSProblem::printRule(const LinearRule &rule, ostream &s) const {
     printLoc(rule.lhs.loc);
     s << " -> ";
 
-    printLoc(rule.rhs.loc);
-    s << "{ ";
-    for (const auto &it : rule.rhs.update) {
-        printVar(it.first);
-        s << "=" << it.second;
-        s << ", ";
-    }
-    s << "} ";
+    for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
+        printLoc(it->loc);
+        s << " : ";
 
-    s << " || ";
-    for (const auto &ex : rule.lhs.guard) {
-        s << " " << ex;
+        for (auto upit : it->update) {
+            s << getVarName(upit.first) << "'";
+            s << "=" << upit.second;
+            s << ", ";
+        }
     }
 
-    s << "  ||  cost: " << rule.lhs.cost;
+    if (rule.lhs.guard.empty()) {
+        s << "[]";
+    } else {
+        s << "[ ";
+        for (int i=0; i < rule.lhs.guard.size(); ++i) {
+            if (i > 0) s << " && ";
+            s << rule.lhs.guard[i];
+        }
+        s << " ]";
+    }
+    s << ", cost: " << rule.lhs.cost;
     s << endl;
 }
 
 
+// ###################
+// ## Linear        ##
+// ###################
+
+LocationIdx LinearITSProblem::getTransitionTarget(TransIdx idx) const {
+    assert(graph.getTransTargets(idx).size() == 1);
+    return graph.getTransTargets(idx).front();
+}
+
+
+// ###################
+// ## Nonlinear     ##
+// ###################
 
 const std::vector<LocationIdx> &ITSProblem::getTransitionTargets(TransIdx idx) const {
     return graph.getTransTargets(idx);
-}
-
-TransIdx ITSProblem::addTransitionForRule(const NonlinearRule &rule) {
-    vector<LocationIdx> rhsLocs;
-
-    for (const RuleRhs &rhs : rule.rhss) {
-        rhsLocs.push_back(rhs.loc);
-    }
-
-    return graph.addTrans(rule.lhs.loc, rhsLocs);
 }
 
 bool ITSProblem::isLinear() const {
@@ -326,42 +329,4 @@ LinearITSProblem ITSProblem::toLinearProblem() const {
         res.rules.emplace(it.first, it.second.toLinearRule());
     }
     return res;
-}
-
-void ITSProblem::printRule(const NonlinearRule &rule, ostream &s) const {
-    auto printLoc = [&](LocationIdx loc) {
-        auto it = data.locationNames.find(loc);
-        if (it != data.locationNames.end()) {
-            s << it->second;
-        } else {
-            s << "[" << loc << "]";
-        }
-    };
-
-    printLoc(rule.lhs.loc);
-    s << " -> ";
-
-    for (const RuleRhs &rhs : rule.rhss) {
-        printLoc(rhs.loc);
-        s << " : ";
-
-        for (auto upit : rhs.update) {
-            s << getVarName(upit.first) << "'";
-            s << "=" << upit.second;
-            s << ", ";
-        }
-    }
-
-    if (rule.lhs.guard.empty()) {
-        s << "[]";
-    } else {
-        s << "[ ";
-        for (int i=0; i < rule.lhs.guard.size(); ++i) {
-            if (i > 0) s << " && ";
-            s << rule.lhs.guard[i];
-        }
-        s << " ]";
-    }
-    s << ", cost: " << rule.lhs.cost;
-    s << endl;
 }

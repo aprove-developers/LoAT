@@ -145,11 +145,8 @@ private:
     VariableIdx addVariable(std::string name);
     std::string getFreshName(std::string basename) const;
 
-    // helper that adds a transition for the given rule to the graph
-    virtual TransIdx addTransitionForRule(const Rule &rule) = 0;
-
-    // helper that prints a given rule, called from print
-    virtual void printRule(const Rule &rule, std::ostream &s) const = 0;
+    // helper that prints a given rule
+    void printRule(const Rule &rule, std::ostream &s) const;
 
 protected:
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
@@ -168,10 +165,7 @@ class LinearITSProblem : public AbstractITSProblem<LinearRule> {
 public:
     LocationIdx getTransitionTarget(TransIdx) const;
 
-private:
-    TransIdx addTransitionForRule(const LinearRule &rule) override;
-    void printRule(const LinearRule &rule, std::ostream &s) const override;
-
+    // For the conversion in toLinearProblem()
     friend class ITSProblem;
 };
 
@@ -182,10 +176,6 @@ public:
 
     bool isLinear() const;
     LinearITSProblem toLinearProblem() const;
-
-private:
-    TransIdx addTransitionForRule(const NonlinearRule &rule) override;
-    void printRule(const NonlinearRule &rule, std::ostream &s) const override;
 };
 
 
