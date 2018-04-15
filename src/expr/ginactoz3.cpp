@@ -135,6 +135,13 @@ z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
     // if the symbol is already known, we re-use it (regardless of its type!)
     auto optVar = context.getVariable(e.get_name());
     if (optVar) {
+        // Warn if the re-used variable does not have the correct type.
+        // This feature might be useful if useReals = true, but we want some variables to be integers.
+        // However, in most cases it is probably not intended, so we issue the warning.
+        if (!Z3Context::isSymbolOfType(optVar.get(), variableType())) {
+            debugWarn("GinacToZ3: Re-using symbol with different type: " << e << " (should have type: " << variableType() << ")");
+        }
+
         return optVar.get();
     }
 

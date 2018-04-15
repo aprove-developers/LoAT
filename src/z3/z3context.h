@@ -50,8 +50,13 @@ public:
      */
     z3::expr addFreshVariable(std::string basename, VariableType type = Integer);
 
+    /**
+     * Static wrapper around z3::expr::sort that checks if the given symbol is of the given type.
+     * @note symbol must be a symbol, not an arbitrary z3::expr!
+     */
+    static bool isSymbolOfType(const z3::expr &symbol, VariableType type);
+
 private:
-    static bool isTypeEqual(const z3::expr &expr, VariableType type);
     std::string generateFreshName(const std::string &basename);
 
 private:

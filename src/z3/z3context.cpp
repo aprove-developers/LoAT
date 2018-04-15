@@ -34,7 +34,7 @@ optional<z3::expr> Z3Context::getVariable(const std::string &name) const {
 optional<z3::expr> Z3Context::getVariable(const std::string &name, Z3Context::VariableType type) const {
     auto it = variables.find(name);
     if (it != variables.end()) {
-        if (isTypeEqual(it->second,type)) {
+        if (isSymbolOfType(it->second, type)) {
             return it->second;
         }
     }
@@ -63,8 +63,8 @@ std::string Z3Context::generateFreshName(const std::string &basename) {
     return newname;
 }
 
-bool Z3Context::isTypeEqual(const z3::expr &expr, VariableType type) {
-    const z3::sort sort = expr.get_sort();
+bool Z3Context::isSymbolOfType(const z3::expr &symbol, VariableType type) {
+    const z3::sort sort = symbol.get_sort();
     return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
 }
 
