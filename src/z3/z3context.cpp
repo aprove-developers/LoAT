@@ -68,3 +68,10 @@ bool Z3Context::isTypeEqual(const z3::expr &expr, VariableType type) {
     return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
 }
 
+std::ostream& operator<<(std::ostream &s, const Z3Context::VariableType &type) {
+    switch (type) {
+        case Z3Context::Real: s << "Real"; break;
+        case Z3Context::Integer: s << "Integer"; break;
+    }
+    return s;
+}

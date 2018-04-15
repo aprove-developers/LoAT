@@ -30,7 +30,9 @@ GinacToZ3::GinacToZ3(Z3Context &context, GinacToZ3::Settings cfg)
 
 z3::expr GinacToZ3::convert(const GiNaC::ex &expr, Z3Context &context, GinacToZ3::Settings cfg) {
     GinacToZ3 converter(context, cfg);
-    return converter.convert_ex(expr);
+    z3::expr res = converter.convert_ex(expr);
+    debugGinacToZ3("converted " << expr << " to " << res << " [context=" << &context << ", fresh=" << cfg.freshVars << ", reals=" << cfg.useReals << "]");
+    return res;
 }
 
 z3::expr GinacToZ3::convert_ex(const GiNaC::ex &e) {
@@ -139,8 +141,7 @@ z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
     // otherwise we again have to add a fresh variable,
     // but since freshVars is false at this point,
     // we do not have to remember it in freshVariables.
-    Z3Context::VariableType type = (settings.useReals) ? Z3Context::Real : Z3Context::Integer;
-    return context.addFreshVariable(e.get_name(), type);
+    return context.addFreshVariable(e.get_name(), variableType());
 }
 
 z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {
@@ -167,10 +168,13 @@ z3::expr GinacToZ3::getFreshVar(const std::string &name) {
     }
 
     // create fresh variable via context
-    Z3Context::VariableType type = (settings.useReals) ? Z3Context::Real : Z3Context::Integer;
-    z3::expr res = context.addFreshVariable(name, type);
+    z3::expr res = context.addFreshVariable(name, variableType());
 
     // remember this fresh variable (in case `name` occurs again)
     freshVariables.emplace(name, res);
     return res;
+}
+
+Z3Context::VariableType GinacToZ3::variableType() const {
+    return (settings.useReals) ? Z3Context::Real : Z3Context::Integer;
 }

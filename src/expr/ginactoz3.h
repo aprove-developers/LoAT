@@ -20,12 +20,11 @@
 
 #include "global.h"
 #include "exceptions.h"
+#include "z3/z3context.h"
 
 #include <ginac/ginac.h>
 #include <z3++.h>
 #include <map>
-
-class Z3Context;
 
 
 class GinacToZ3 {
@@ -76,6 +75,9 @@ private:
 
     // lookup in freshVariables or create a fresh variable via the context
     z3::expr getFreshVar(const std::string &name);
+
+    // returns the variable type for fresh variables according to settings
+    Z3Context::VariableType variableType() const;
 
 private:
     std::map<std::string, z3::expr> freshVariables;

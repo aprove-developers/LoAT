@@ -73,6 +73,9 @@ struct DebugStream {
 //dump z3 solvers and results
 //#define DEBUG_Z3
 
+//debugging for the conversion from GiNaC expressions to z3 expressions
+#define DEBUG_GINACTOZ3
+
 //debugging for FlowGraph and the underlying Graph class
 #define DEBUG_GRAPH
 
@@ -95,7 +98,7 @@ struct DebugStream {
 #define DEBUG_PARSER
 
 //debugging for the term parser (part of the ITS problem parser)
-#define DEBUG_TERM_PARSER
+//#define DEBUG_TERM_PARSER
 
 //debugging for PURRS
 #define DEBUG_PURRS
@@ -109,26 +112,36 @@ struct DebugStream {
 /* ### Debugging macros ### */
 
 //useful for short fixes/debugging tests:
-#define debugTest(output) do { std::cerr << "[test] " << output << std::endl; } while(0)
+#define debugTest(output) do { std::cout << "[test] " << output << std::endl; } while(0)
 
 #define dumpList(desc,guard) do {\
-    cout << "[dump-list] " << desc << ":"; for (const auto& x : (guard)) cout << " " << x; cout << endl; \
+    std::cout << "  [dump] " << desc << ":"; \
+    for (const auto& x : (guard)) std::cout << " " << x; \
+    std::cout << std::endl; \
 } while(0)
 
 #define dumpMap(desc,update) do {\
-    cout << "[dump-map] " << desc << ":"; for (auto const &it : (update)) cout << " " << it.first << "=" << it.second; cout << endl; \
+    std::cout << "  [dump] " << desc << ":"; \
+    for (auto const &it : (update)) std::cout << " " << it.first << "=" << it.second; \
+    std::cout << std::endl; \
 } while(0)
 
 #define dumpGuardUpdate(desc,guard,update) do {\
-    cout << "[dump-guard-update] " << desc << ":" << endl; \
-    dumpList("guard:",guard); \
-    dumpMap("update:",update); \
+    std::cout << "  [dump] " << desc << ":" << std::endl; \
+    dumpList("   guard",guard); \
+    dumpMap("  update",update); \
 } while(0)
 
 #ifdef DEBUG_Z3
 #define debugZ3(solver,res,location) do { std::cout << "[z3] " << (location) << " Z3 Solver: " << (solver) << "Z3 Result: " << (res) << std::endl; } while(0)
 #else
 #define debugZ3(solver,res,location) (void(0))
+#endif
+
+#ifdef DEBUG_GINACTOZ3
+#define debugGinacToZ3(output) do { std::cout << "[ginac-z3] " << output << std::endl; } while(0)
+#else
+#define debugGinacToZ3(output) (void(0))
 #endif
 
 #ifdef DEBUG_PURRS

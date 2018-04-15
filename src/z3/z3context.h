@@ -80,4 +80,10 @@ public:
 };
 
 
+/**
+ * For debugging
+ */
+std::ostream& operator<<(std::ostream &s, const Z3Context::VariableType &type);
+
+
 #endif // Z3CONTEXT_H
