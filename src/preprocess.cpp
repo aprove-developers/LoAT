@@ -62,7 +62,7 @@ bool Preprocess::removeTrivialGuards(GuardList &guard) {
     for (int i=0; i < guard.size(); ++i) {
         if (Relation::isEquality(guard[i])) continue;
 
-        Expression lessEq = Relation::transformInequalityLessEq(guard[i]);
+        Expression lessEq = Relation::toLessEq(guard[i]);
         if (Relation::isTrivialLessEqInequality(lessEq)) {
             guard.erase(guard.begin() + i);
             i--;

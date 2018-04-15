@@ -392,7 +392,7 @@ bool InfiniteInstances::replaceEXPrelation(const Expression relation, Expression
     using namespace GiNaC;
 
     if (Relation::isEquality(relation)) return false; //exp == rhs not allowed
-    Expression term = Relation::transformInequalityLessEq(relation);
+    Expression term = Relation::toLessEq(relation);
     term = term.rhs() - term.lhs(); //rhs-lhs >= 0
 
     Expression exp;
@@ -500,7 +500,7 @@ void InfiniteInstances::removeEqualitiesFromGuard() {
 
 void InfiniteInstances::makePolynomialGuard() {
     for (int i=0; i < guard.size(); ++i) {
-        Expression tmp = Relation::transformInequalityLessEq(guard[i]); //lhs <= rhs
+        Expression tmp = Relation::toLessEq(guard[i]); //lhs <= rhs
         guard[i] = tmp.rhs()-tmp.lhs(); //rhs-lhs >= 0
     }
 }

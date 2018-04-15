@@ -134,7 +134,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::l
             if (!isInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) goto abort;
 
             //make less equal
-            Expression target = transformInequalityLessEq(ex);
+            Expression target = toLessEq(ex);
             target = target.lhs() - target.rhs();
             if (!target.has(var)) continue; //might have changed, e.h. x <= x
 
@@ -177,7 +177,7 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
 
     for (int i=0; i < guard.size(); ++i) {
         if (isEquality(guard[i])) continue;
-        Expression term = transformInequalityLessEq(guard[i]);
+        Expression term = toLessEq(guard[i]);
         term = term.lhs() - term.rhs();
         for (const auto &prev : terms) {
             if ((prev.second + term).is_zero()) {

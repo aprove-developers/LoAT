@@ -160,7 +160,7 @@ void AsymptoticBound::propagateBounds() {
     for (const Expression &ex : guard) {
         if (!ex.info(info_flags::relation_equal)) {
             if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
-                Expression exT = Relation::transformInequalityLessOrLessEq(ex);
+                Expression exT = Relation::toLessOrLessEq(ex);
 
                 Expression l, r;
                 bool swap = is_a<symbol>(exT.rhs());

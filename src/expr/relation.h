@@ -72,13 +72,13 @@ namespace Relation {
      * Given an inequality, transforms it into one only using the <= operator
      * @note assumes integer arithmetic to translate < to <=
      */
-    Expression transformInequalityLessEq(Expression rel);
+    Expression toLessEq(Expression rel);
 
     /**
      * Given an inequality, transforms it into one only using the > operator
      * @note assumes integer arithmetic to translate e.g. >= to >
      */
-    Expression transformInequalityGreater(Expression rel);
+    Expression toGreater(Expression rel);
 
     /**
      * Given an inequality, transforms it into one of the form lhs > 0
@@ -91,7 +91,7 @@ namespace Relation {
      * transforms it into one using the operator < or <=.
      * Does not change equations or inequalities using the operator < or <=.
      */
-    Expression transformInequalityLessOrLessEq(Expression rel);
+    Expression toLessOrLessEq(Expression rel);
 
     /**
      * Given a relation, moves all variables to lhs and constants to rhs

@@ -55,7 +55,7 @@ namespace Relation {
         unreachable();
     }
 
-    Expression transformInequalityLessEq(Expression rel) {
+    Expression toLessEq(Expression rel) {
         assert(isInequality(rel));
 
         //flip > or >=
@@ -74,7 +74,7 @@ namespace Relation {
         return rel;
     }
 
-    Expression transformInequalityGreater(Expression rel) {
+    Expression toGreater(Expression rel) {
         assert(isInequality(rel));
 
         //flip < or <=
@@ -96,14 +96,14 @@ namespace Relation {
     Expression normalizeInequality(Expression rel) {
         assert(isInequality(rel));
 
-        Expression greater = transformInequalityGreater(rel);
+        Expression greater = toGreater(rel);
         Expression normalized = (greater.lhs() - greater.rhs()) > 0;
 
         assert(isNormalizedInequality(normalized));
         return normalized;
     }
 
-    Expression transformInequalityLessOrLessEq(Expression rel) {
+    Expression toLessOrLessEq(Expression rel) {
         assert(rel.info(GiNaC::info_flags::relation_equal)
                || isInequality(rel));
 

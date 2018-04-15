@@ -370,7 +370,7 @@ void FarkasMeterGenerator::buildConstraints() {
         using namespace Relation;
         assert(isLinearInequality(rel,itrs.getGinacVarList()));
 
-        GiNaC::ex tmp = transformInequalityLessEq(rel);
+        GiNaC::ex tmp = toLessEq(rel);
         tmp = splitVariablesAndConstants(tmp);
 
         if (!isTrivialLessEqInequality(tmp)) {
@@ -562,7 +562,7 @@ stack<GiNaC::exmap> FarkasMeterGenerator::instantiateFreeVariables() const {
             ExprSymbol free = itrs.getGinacSymbol(freeIdx);
             if (!ex.has(free)) continue;
 
-            Expression term = Relation::transformInequalityLessEq(ex);
+            Expression term = Relation::toLessEq(ex);
             term = term.lhs()-term.rhs();
             if (!GuardToolbox::solveTermFor(term,free,GuardToolbox::NoCoefficients)) continue;
 
