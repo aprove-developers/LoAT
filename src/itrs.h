@@ -30,6 +30,8 @@
 #include "util/exceptions.h"
 
 
+#include "its/variablemanager.h"
+
 //typedefs for readability
 typedef int TermIndex;
 typedef int VariableIndex;
@@ -60,7 +62,8 @@ struct Term {
  * Datatype representing an ITRS problem as defined in the sample files
  * @note variable names contain only alphanumeric characters and _
  */
-class ITRSProblem {
+// FIXME: VariableManager inheritance is just to make code compile during refactoring, must be removed!!
+class ITRSProblem : public VariableManager {
 private:
     ITRSProblem(bool allowDiv, bool checkCosts) : allowDivision(allowDiv), checkCosts(checkCosts) {}
 
