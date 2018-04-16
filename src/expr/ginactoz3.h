@@ -19,7 +19,7 @@
 #define GINACTOZ3_H
 
 #include "global.h"
-#include "exceptions.h"
+#include "util/exceptions.h"
 #include "z3/z3context.h"
 
 #include <ginac/ginac.h>

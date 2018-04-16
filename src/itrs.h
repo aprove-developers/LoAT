@@ -27,7 +27,7 @@
 #include <ginac/ginac.h>
 
 #include "expr/expression.h"
-#include "exceptions.h"
+#include "util/exceptions.h"
 
 
 //typedefs for readability

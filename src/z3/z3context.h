@@ -18,7 +18,7 @@
 #ifndef Z3CONTEXT_H
 #define Z3CONTEXT_H
 
-#include "timing.h"
+#include "util/timing.h"
 
 #include <z3++.h>
 #include <map>

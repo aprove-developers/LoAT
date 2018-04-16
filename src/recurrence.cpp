@@ -18,7 +18,7 @@
 #include "recurrence.h"
 
 #include "flowgraph.h"
-#include "timing.h"
+#include "util/timing.h"
 
 #include <purrs.hh>
 

@@ -21,7 +21,7 @@
 #include <purrs.hh>
 #include <z3++.h>
 
-#include "exceptions.h"
+#include "util/exceptions.h"
 
 #include <sstream>
 #include <fstream>
@@ -32,9 +32,9 @@ using namespace std;
 #include "itrs.h"
 #include "flowgraph.h"
 #include "preprocess.h"
-#include "stats.h"
-#include "timing.h"
-#include "timeout.h"
+#include "util/stats.h"
+#include "util/timing.h"
+#include "util/timeout.h"
 
 
 #include "parser/itsparser.h"

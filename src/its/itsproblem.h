@@ -26,7 +26,7 @@
 #include <ostream>
 
 #include "graph/hypergraph.h"
-#include "exceptions.h"
+#include "util/exceptions.h"
 #include "rule.h"
 
 

@@ -8,7 +8,7 @@
 #include "expr/expression.h"
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
-#include "timeout.h"
+#include "util/timeout.h"
 
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"

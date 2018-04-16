@@ -27,7 +27,7 @@
  */
 namespace Timing
 {
-    enum TimingAction { Total=0, FarkasTotal, FarkasLogic, Contract, Branches, Selfloops, Infinity, Z3, Purrs, Preprocess, Unknown };
+    enum TimingAction { Total=0, FarkasTotal, FarkasLogic, Contract, Branches, Selfloops, Infinity, Z3, Purrs, Preprocess, Other };
 
     void clear();
     void print(std::ostream &os);

@@ -22,7 +22,7 @@
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
 #include "z3/z3toolbox.h"
-#include "timeout.h"
+#include "util/timeout.h"
 
 using namespace std;
 

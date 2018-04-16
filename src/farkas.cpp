@@ -17,13 +17,13 @@
 
 #include "farkas.h"
 
-#include "timing.h"
+#include "util/timing.h"
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
 #include "expr/expression.h"
 #include "z3/z3toolbox.h"
 #include "flowgraph.h"
-#include "timeout.h"
+#include "util/timeout.h"
 
 #include <string>
 #include <map>

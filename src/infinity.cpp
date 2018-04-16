@@ -17,7 +17,7 @@
 
 #include "infinity.h"
 
-#include "timing.h"
+#include "util/timing.h"
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"
 #include "expr/relation.h"

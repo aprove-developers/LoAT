@@ -25,9 +25,9 @@
 #include "asymptotic/asymptoticbound.h"
 
 #include "debug.h"
-#include "stats.h"
-#include "timing.h"
-#include "timeout.h"
+#include "util/stats.h"
+#include "util/timing.h"
+#include "util/timeout.h"
 
 #include <queue>
 #include <iomanip>

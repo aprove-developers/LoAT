@@ -8,7 +8,7 @@
 #include <string>
 
 #include "its/itsproblem.h"
-#include "exceptions.h"
+#include "util/exceptions.h"
 #include "term.h"
 
 namespace parser {

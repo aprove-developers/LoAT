@@ -69,6 +69,6 @@ void Timing::print(ostream &s) {
     printLine(Infinity,"Infinity check");
     printLine(Z3,"Z3 Total");
     printLine(Purrs,"Purrs Total");
-    if (TimingSum.count(Timing::Unknown) > 0) printLine(Unknown,"Unknown");
+    if (TimingSum.count(Timing::Other) > 0) printLine(Other,"Other");
     s << " ========== TIMING ==========" << endl;
 }

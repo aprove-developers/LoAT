@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "exceptions.h"
+#include "util/exceptions.h"
 #include "ginactoz3.h"
 #include "complexity.h"
 
