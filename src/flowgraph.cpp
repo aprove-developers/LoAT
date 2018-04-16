@@ -121,7 +121,7 @@ bool FlowGraph::preprocessTransitions(bool eliminateCostConstraints) {
     for (TransIndex idx : getAllTrans()) {
         if (Timeout::preprocessing()) return changed;
         if (eliminateCostConstraints) {
-            changed = Preprocess::tryToRemoveCost(itrs,getTransData(idx).guard) || changed;
+            changed = Preprocess::tryToRemoveCost(getTransData(idx).guard) || changed;
         }
         changed = Preprocess::simplifyTransition(itrs,getTransData(idx)) || changed;
     }

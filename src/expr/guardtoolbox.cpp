@@ -16,9 +16,7 @@
  */
 
 #include"guardtoolbox.h"
-
 #include "relation.h"
-#include "itrs.h"
 
 using namespace std;
 using namespace Relation;
@@ -41,9 +39,9 @@ bool GuardToolbox::isPolynomialGuard(const GuardList &guard, const GiNaC::lst &v
 }
 
 
-bool GuardToolbox::containsFreeVar(const ITRSProblem &itrs, const Expression &term) {
-    return term.hasVariableWith([&itrs](const ExprSymbol &sym) {
-        return itrs.isFreeVar(sym);
+bool GuardToolbox::containsTempVar(const VarMan &varMan, const Expression &term) {
+    return term.hasVariableWith([&varMan](const ExprSymbol &sym) {
+        return varMan.isTempVar(sym);
     });
 }
 
@@ -66,7 +64,7 @@ bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, Propaga
 }
 
 
-bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
+bool GuardToolbox::propagateEqualities(const VarMan &varMan, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
                                        GiNaC::exmap *subs, function<bool(const ExprSymbol &)> allowFunc) {
     GiNaC::exmap varSubs;
     for (int i=0; i < guard.size(); ++i) {
@@ -74,7 +72,7 @@ bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard
         if (!GiNaC::is_a<GiNaC::relational>(ex) || !ex.info(GiNaC::info_flags::relation_equal)) continue;
 
         Expression target = ex.rhs() - ex.lhs();
-        if (!target.is_polynomial(itrs.getGinacVarList())) continue;
+        if (!target.is_polynomial(varMan.getGinacVarList())) continue;
 
         //check if equation can be solved for any single variable
         for (int level=NoCoefficients; level <= (int)maxlevel; ++level) {
@@ -86,7 +84,7 @@ bool GuardToolbox::propagateEqualities(const ITRSProblem &itrs, GuardList &guard
 
                 //disallow replacing non-free vars by a term containing free vars
                 if (freevar == NoFreeOnRhs) {
-                    if (!itrs.isFreeVar(itrs.getVarindex(var.get_name())) && containsFreeVar(itrs,target)) continue;
+                    if (!varMan.isTempVar(var) && containsTempVar(varMan, target)) continue;
                 }
 
                 //remove current equality (ok while iterating by index)

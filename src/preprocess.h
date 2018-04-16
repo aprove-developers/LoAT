@@ -18,7 +18,7 @@
 #ifndef PREPROCESSOR_H
 #define PREPROCESSOR_H
 
-#include "itrs.h"
+#include "its/variablemanager.h"
 
 struct Transition;
 
@@ -28,12 +28,12 @@ struct Transition;
 namespace Preprocess
 {
     /**
-     * Tries to remove the constraint "cost >= 0" from the guard
-     * (which is assumed to be the last element of guard!)
-     * @note if no "cost >= 0" was added, then the last guard constraint might be (soundly) removed
+     * Removes the last constraint from the guard if it is already implied by the other constraints.
+     * The last constraint is usually "cost >= 0" (to ensure user-given costs are nonnegative).
+     * @note This relies on the parsed adding "cost >= 0" as last constraint to the guard.
      * @return true iff "cost >= 0" is implied by the guard and was removed
      */
-    bool tryToRemoveCost(const ITRSProblem &itrs, GuardList &guard);
+    bool tryToRemoveCost(GuardList &guard);
 
     /**
      * Expensive preprocessing of the given transition.
@@ -41,7 +41,7 @@ namespace Preprocess
      * @param trans the transition, modified.
      * @return true iff trans was modified
      */
-    bool simplifyTransition(const ITRSProblem &itrs, Transition &trans);
+    bool simplifyTransition(const VarMan &varMan, Transition &trans);
 
     /**
      * Removes trivial terms from the given guard, i.e. 42 <= 1337 or x <= x+1
@@ -61,7 +61,7 @@ namespace Preprocess
      * Removes trivial updates of the form x <- x.
      * @return true iff update was modified
      */
-    bool removeTrivialUpdates(const ITRSProblem &itrs, UpdateMap &update);
+    bool removeTrivialUpdates(const VarMan &varMan, UpdateMap &update);
 
     /**
      * Expensive preprocessing step to remove all free variables from the update and,
@@ -69,7 +69,7 @@ namespace Preprocess
      * @param trans the transition, modified.
      * @return true iff trans was modified
      */
-    bool eliminateFreeVars(const ITRSProblem &itrs, Transition &trans);
+    bool eliminateFreeVars(const VarMan &varMan, Transition &trans);
 }
 
 #endif // PREPROCESSOR_H

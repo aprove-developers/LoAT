@@ -19,7 +19,7 @@
 #define RECURRENCE_H
 
 #include "global.h"
-#include "itrs.h"
+#include "its/variablemanager.h"
 
 struct Transition;
 
@@ -39,10 +39,10 @@ public:
      * If successful, returns true and modifies trans to contain the iterated update and cost (using the given metering function as "iteration step")
      * Otherwise, false is returned and trans is left unchanged
      */
-    static bool calcIterated(const ITRSProblem &itrs, Transition &trans, const Expression &meterfunc);
+    static bool calcIterated(const VarMan &varMan, Transition &trans, const Expression &meterfunc);
 
 private:
-    Recurrence(const ITRSProblem &itrs);
+    Recurrence(const VarMan &varMan);
 
     /**
      * Returns true iff iterated update was calculated successfully and newUpdate has been set accordingly (with runtime as "iteration step")
@@ -61,7 +61,7 @@ private:
      * If this is not possible, update is modified and addGuard is set (heuristically assume that all problematic variables have the same value)
      * @return list indicating the order
      */
-    std::vector<VariableIndex> dependencyOrder(UpdateMap &update);
+    std::vector<VariableIdx> dependencyOrder(UpdateMap &update);
 
     /**
      * Tries to find a recurrence for the given update (target is the update's lhs).
@@ -79,9 +79,9 @@ private:
 
 private:
     /**
-     * The ITRS data, to query variable names/indices
+     * To query variable names/indices
      */
-    const ITRSProblem &itrs;
+    const VariableManager &varMan;
 
     /**
      * Purrs::Recurrence::n converted to a ginac expression, for convenience only

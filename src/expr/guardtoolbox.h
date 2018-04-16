@@ -20,13 +20,11 @@
 
 #include "global.h"
 #include "expression.h"
-#include "its/itsproblem.h"
+#include "its/variablemanager.h"
 
 #include <vector>
 #include <map>
 
-// TODO: Port to new ITSProblem
-class ITRSProblem;
 
 /**
  * Namespace for several functions operating on guards (list of relational expressions) and related helpers.
@@ -58,7 +56,8 @@ namespace GuardToolbox {
      *
      * @return true if any progpagation was performed.
      */
-    bool propagateEqualities(const ITRSProblem &itrs, GuardList &guard, PropagationLevel level, PropagationFreevar freevar, GiNaC::exmap *subs = nullptr,
+    bool propagateEqualities(const VarMan &varMan, GuardList &guard, PropagationLevel level, PropagationFreevar freevar,
+                             GiNaC::exmap *subs = nullptr,
                              std::function<bool(const ExprSymbol &)> allowFunc = [](const ExprSymbol &){return true;});
 
 
@@ -111,9 +110,9 @@ namespace GuardToolbox {
 
 
     /**
-     * Returns true iff term contains a free variable (note that this is possibly not very efficient)
+     * Returns true iff term contains a temporary variable
      */
-    bool containsFreeVar(const ITRSProblem &itrs, const Expression &term);
+    bool containsTempVar(const VarMan &varMan, const Expression &term);
 
 
     /**

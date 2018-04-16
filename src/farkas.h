@@ -22,7 +22,7 @@
 
 #include "expr/expression.h"
 #include "z3/z3context.h"
-#include "itrs.h"
+#include "its/variablemanager.h"
 
 #include <vector>
 #include <map>
@@ -55,8 +55,8 @@ public:
     enum Result { Success, Unbounded, Nonlinear, ConflictVar, Unsat };
 
     /**
-     * Try to find a metering function for the given transition in the given ITRS
-     * @param itrs the ITRSProblem instance, providing lists of all symbols
+     * Try to find a metering function for the given transition
+     * @param varMan the VariableManager instance, providing lists of all symbols
      * @param t the Transition to find a metering function for, NOTE: modified by instantiation
      * @param result the resulting metering function (output only)
      * @param conflictVar if given, this is set if it would help to add A > B (or B > A) to the guard for variables A,B
@@ -64,13 +64,13 @@ public:
      *
      * @note the transition t might be modified (by freevar instantiation) only if the result is Success
      */
-    static Result generate(ITRSProblem &itrs, Transition &t, Expression &result, std::pair<VariableIndex, VariableIndex> *conflictVar = nullptr);
+    static Result generate(VarMan &varMan, Transition &t, Expression &result, std::pair<VariableIdx, VariableIdx> *conflictVar = nullptr);
 
     /**
      * Prepares the guard to get better farkas results by adding additional constraints
      * @return true iff the transition was changed
      */
-    static bool prepareGuard(ITRSProblem &itrs, Transition &t);
+    static bool prepareGuard(VarMan &varMan, Transition &t);
 
 
     /**
@@ -88,7 +88,7 @@ public:
                                 Z3Context &context);
 
 private:
-    FarkasMeterGenerator(ITRSProblem &itrs, const Transition &t);
+    FarkasMeterGenerator(VarMan &varMan, const Transition &t);
 
     /**
      * Some preprocessing steps as equality propagation and elimination by transitive closure
@@ -127,7 +127,7 @@ private:
      * @note findRelevantVariables must be called before
      * @note this uses linear search in varlist and is thus potentially slow
      */
-    bool isRelevantVariable(VariableIndex vi) const;
+    bool isRelevantVariable(VariableIdx vi) const;
 
     /**
      * Removes updates that do not update a relevant var; removes conditions from the guard
@@ -200,9 +200,9 @@ private:
 
 private:
     /**
-     * The ITRSProblem instance, used for list of variables and handling of fresh symbols
+     * The VariableManager instance, used for list of variables and handling of fresh symbols
      */
-    ITRSProblem &itrs;
+    VariableManager &varMan;
 
     /**
      * The transition data (possible modified by makeLinearTransition)
@@ -234,7 +234,7 @@ private:
     /**
      * List of all variables that are relevant and thus occur in the metering function
      */
-    std::vector<VariableIndex> varlist;
+    std::vector<VariableIdx> varlist;
 
     /**
      * Z3 symbols for the metering polynomial coefficients (absolute and per-variable)
@@ -251,7 +251,7 @@ private:
     /**
      * Maps relevant variables to a ginac symbol representing the updated (primed) variable
      */
-    std::map<VariableIndex,ExprSymbol> primedSymbols; //only relevant variables (from varlist)
+    std::map<VariableIdx,ExprSymbol> primedSymbols; //only relevant variables (from varlist)
 
     /**
      * Linear constraints (of the form "linear term <= constant") obtained from guard, reduced guard, irrelevant guard, guard and update.

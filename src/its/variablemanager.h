@@ -11,8 +11,10 @@ typedef VariableManager VarMan;
 
 /**
  * Manages variables, i.e., can map between variable indices, names and GiNaC symbols.
- * Also manages the set of temporary/free variables. Is part of an ITSProblem.
- * This is a separate class since many functions only need variable management, not the full ITSProblem.
+ * Also manages the set of temporary/free variables.
+ *
+ * This class is used as a part of an ITSProblem, but is separate since many functions
+ * only need variable management, not the full ITSProblem.
  */
 class VariableManager {
 public:
@@ -22,9 +24,9 @@ public:
     VariableIdx getVarIdx(std::string name) const;
 
     // Mapping between indices and ginac symbols
-    VariableIdx getVarIdx(const ExprSymbol &var) const;
-    ExprSymbol getGinacSymbol(VariableIdx idx) const;
-    ExprList getGinacVarList() const;
+    VariableIdx getVarIdx(const ExprSymbol &var) const; // TODO: Use this instead of getVarIdx(symbol.get_name())
+    ExprSymbol getGinacSymbol(VariableIdx idx) const; // TODO: Shorten this to getSymbol()?
+    ExprList getGinacVarList() const; // TODO: Rename to getSymbolList() ?
 
     // Handling of temporary variables
     const std::set<VariableIdx>& getTempVars() const;
@@ -41,8 +43,11 @@ public:
 
     /**
      * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the list of variables
-     * @warning the name of the created symbol is not stored, so it may be re-used by future calls!
-     * @return the newly created symbol (_not_ associated with a variable index!)
+     *
+     * @warning The name of the created symbol is not stored, so it may be re-used by future calls!
+     * Note that two generated symbols are always different (to GiNac), even if they use the same name.
+     *
+     * @return The newly created symbol (_not_ associated with a variable index!)
      */
     ExprSymbol getFreshUntrackedSymbol(std::string basename) const;
 

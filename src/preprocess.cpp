@@ -17,7 +17,6 @@
 
 #include "preprocess.h"
 
-#include "itrs.h"
 #include "flowgraph.h"
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
@@ -27,7 +26,7 @@
 using namespace std;
 
 
-bool Preprocess::tryToRemoveCost(const ITRSProblem &itrs, GuardList &guard) {
+bool Preprocess::tryToRemoveCost(GuardList &guard) {
     if (guard.empty()) return false;
     GuardList realGuard(guard.begin(),guard.end()-1);
     if (Z3Toolbox::isValidImplication(realGuard, guard.back())) {
@@ -38,7 +37,7 @@ bool Preprocess::tryToRemoveCost(const ITRSProblem &itrs, GuardList &guard) {
 }
 
 
-bool Preprocess::simplifyTransition(const ITRSProblem &itrs, Transition &trans) {
+bool Preprocess::simplifyTransition(const VarMan &varMan, Transition &trans) {
     bool result = false;
     bool changed;
 
@@ -49,8 +48,8 @@ bool Preprocess::simplifyTransition(const ITRSProblem &itrs, Transition &trans) 
     //all other steps are repeated
     do {
         changed = removeTrivialGuards(trans.guard);
-        changed = eliminateFreeVars(itrs,trans) || changed;
-        changed = removeTrivialUpdates(itrs,trans.update) || changed;
+        changed = eliminateFreeVars(varMan,trans) || changed;
+        changed = removeTrivialUpdates(varMan,trans.update) || changed;
         result = result || changed;
     } while (changed);
     return result;
@@ -97,10 +96,10 @@ timeout:
 }
 
 
-bool Preprocess::removeTrivialUpdates(const ITRSProblem &itrs, UpdateMap &update) {
+bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
     stack<VariableIndex> remove;
     for (auto it : update) {
-        if (it.second.equalsVariable(itrs.getGinacSymbol(it.first))) {
+        if (it.second.equalsVariable(varMan.getGinacSymbol(it.first))) {
             remove.push(it.first);
         }
     }
@@ -113,7 +112,7 @@ bool Preprocess::removeTrivialUpdates(const ITRSProblem &itrs, UpdateMap &update
 }
 
 
-bool Preprocess::eliminateFreeVars(const ITRSProblem &itrs, Transition &trans) {
+bool Preprocess::eliminateFreeVars(const VarMan &varMan, Transition &trans) {
     bool result = false; //final modification flag
     bool changed; //intermediate modification flag
 
@@ -124,7 +123,7 @@ bool Preprocess::eliminateFreeVars(const ITRSProblem &itrs, Transition &trans) {
 
         //helpers for guard preprocessing
         ExprSymbolSet varsInUpdate;
-        auto sym_is_free = [&](const ExprSymbol &sym){ return itrs.isFreeVar(itrs.getVarindex(sym.get_name())); };
+        auto sym_is_free = [&](const ExprSymbol &sym){ return varMan.isTempVar(varMan.getVarIdx(sym)); };
         auto free_in_update = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) > 0; };
 
         //remove free variables from update rhs (varsInUpdate, e.g. x <- free with free == x+1). Repeat for transitive closure.
@@ -134,14 +133,14 @@ bool Preprocess::eliminateFreeVars(const ITRSProblem &itrs, Transition &trans) {
             for (auto it : trans.update) it.second.collectVariables(varsInUpdate);
 
             equalSubs.clear();
-            changed = GuardToolbox::propagateEqualities(itrs,trans.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
+            changed = GuardToolbox::propagateEqualities(varMan,trans.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
             for (auto &it : trans.update) it.second = it.second.subs(equalSubs);
             trans.cost = trans.cost.subs(equalSubs);
         } while (!equalSubs.empty());
 
         //try to remove free variables from equalities
         equalSubs.clear();
-        changed = GuardToolbox::propagateEqualities(itrs,trans.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
+        changed = GuardToolbox::propagateEqualities(varMan,trans.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
         for (auto &it : trans.update) it.second = it.second.subs(equalSubs);
         trans.cost = trans.cost.subs(equalSubs);
 
@@ -149,7 +148,7 @@ bool Preprocess::eliminateFreeVars(const ITRSProblem &itrs, Transition &trans) {
         auto sym_is_free_onlyguard = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0 && !trans.cost.has(sym); };
 
         //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
-        changed = GuardToolbox::eliminateByTransitiveClosure(trans.guard,itrs.getGinacVarList(),true,sym_is_free_onlyguard) || changed;
+        changed = GuardToolbox::eliminateByTransitiveClosure(trans.guard,varMan.getGinacVarList(),true,sym_is_free_onlyguard) || changed;
 
         result = result || changed;
     } while (changed);
