@@ -61,8 +61,6 @@ struct Term {
  * @note variable names contain only alphanumeric characters and _
  */
 class ITRSProblem {
-    friend class Preprocessor; //allow direct access for the preprocessing
-
 private:
     ITRSProblem(bool allowDiv, bool checkCosts) : allowDivision(allowDiv), checkCosts(checkCosts) {}
 
