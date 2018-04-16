@@ -7,12 +7,10 @@
 #include <boost/optional.hpp>
 
 #include "term.h"
+#include "termparser.h"
 #include "its/itsproblem.h"
 
 namespace parser {
-
-class TermParser;
-
 
 class ITSParser {
 public:
@@ -52,7 +50,7 @@ private:
     };
 
 
-    ITSParser(Settings cfg) : settings(cfg) {}
+    explicit ITSParser(Settings cfg) : settings(cfg) {}
     ITSProblem load(const std::string &path);
 
     // High-level parsing steps
@@ -82,7 +80,7 @@ private:
 
 private:
     // Instance of TermParser, created after knownVariables has been set
-    mutable TermParser *termParser = nullptr;
+    mutable std::unique_ptr<TermParser> termParser = nullptr;
 
     // Step 1: Parsing into ParsedRule
     std::string initialLocation;

@@ -110,7 +110,7 @@ void ITSParser::parseFile(ifstream &file) {
                 }
 
                 // At this point, we know all variables and can thus initialize the term parser
-                termParser = new TermParser(knownVariables, settings.allowDivison);
+                termParser = std::unique_ptr<TermParser>(new TermParser(knownVariables, settings.allowDivison));
                 in_rules = true;
 
             } else if (line.back() != ')') {
