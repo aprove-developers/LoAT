@@ -163,36 +163,7 @@ void AbstractITSProblem<Rule>::removeLocationAndRules(LocationIdx loc) {
 
 template<typename Rule>
 void AbstractITSProblem<Rule>::print(std::ostream &s) const {
-    s << "Variables:";
-    for (VariableIdx i=0; i < getVariableCount(); ++i) {
-        s << " " << getVarName(i);
-        if (isTempVar(i)) {
-            s << "*";
-        }
-    }
-    s << endl;
-
-    s << "Nodes:";
-    for (LocationIdx loc : data.locations) {
-        s << " " << loc;
-        auto it = data.locationNames.find(loc);
-        if (it != data.locationNames.end()) {
-            s << "/" << it->second;
-        }
-        if (loc == data.initialLocation) {
-            s << "*";
-        }
-    }
-    s << endl;
-
-    s << "Transitions:" << endl;
-    for (LocationIdx loc : data.locations) {
-        for (TransIdx trans : getTransitionsFrom(loc)) {
-            s << "    ";
-            s << setw(3) << trans << ": ";
-            printRule(getRule(trans), s);
-        }
-    }
+    ITSExport<Rule>::printDebug(*this, s);
 }
 
 template<typename Rule>

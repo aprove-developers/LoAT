@@ -64,37 +64,6 @@ public:
     FlowGraph(ITRSProblem &itrs);
 
     /**
-     * Prints the graph in a readable but ugly format for debugging
-     * @param s the output stream to print to (e.g. cout)
-     */
-    void print(std::ostream &s) const;
-
-    /**
-     * Print the graph in a more readable format suitable for the proof output
-     */
-    void printForProof() const;
-
-    /**
-     * Print the graph in KoAT format (i.e. LoAT's input format)
-     */
-    void printKoAT() const;
-
-    /**
-     * Print the graph as dot outpus
-     * @param s the output stream to print to (the dotfile)
-     * @param step the number of the subgraph (should increase for every call)
-     * @param desc a description of the current subgraph
-     */
-    void printDot(std::ostream &s, int step, const std::string &desc) const;
-    void printDotText(std::ostream &s, int step, const std::string &desc) const;
-
-    /**
-     * Print the graph in the T2 format, to allow conversion from koat -> T2.
-     * @param s the output stream to be used
-     */
-    void printT2(std::ostream &s) const;
-
-    /**
      * Returns true if there are no (reachable) transitions from the initial location
      */
     bool isEmpty() const;
