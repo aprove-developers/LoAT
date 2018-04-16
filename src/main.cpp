@@ -246,7 +246,10 @@ int main(int argc, char *argv[]) {
         cout << "=== new ITSProblem ===" << endl;
     }
 
+    return 42;
 
+
+    /*
     ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision,checkCosts);
     FlowGraph g(res);
 
@@ -428,5 +431,6 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
+    */
 }
 
