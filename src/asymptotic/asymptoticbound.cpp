@@ -21,9 +21,9 @@ using namespace GiNaC;
 using namespace std;
 
 
-AsymptoticBound::AsymptoticBound(const ITRSProblem &its, GuardList guard,
+AsymptoticBound::AsymptoticBound(const VarMan &varMan, GuardList guard,
                                  Expression cost, bool finalCheck)
-    : its(its), guard(guard), cost(cost), finalCheck(finalCheck),
+    : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
     assert(GuardToolbox::isWellformedGuard(guard));
 }
@@ -119,7 +119,7 @@ void AsymptoticBound::propagateBounds() {
             std::vector<ExprSymbol> vars;
             std::vector<ExprSymbol> tempVars;
             for (const ExprSymbol & var : target.getVariables()) {
-                if (its.isFreeVar(var)) {
+                if (varMan.isTempVar(var)) {
                     tempVars.push_back(var);
                 } else {
                     vars.push_back(var);
@@ -305,7 +305,7 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
     for (auto const &pair : solution) {
         assert(is_a<symbol>(pair.first));
 
-        if (!its.isFreeVar(ex_to<symbol>(pair.first))) {
+        if (!varMan.isTempVar(ex_to<symbol>(pair.first))) {
             Expression sub = pair.second;
             assert(sub.is_polynomial(n));
             assert(sub.hasNoVariables()
@@ -432,7 +432,7 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         //if the problem is polynomial, try a (max)SMT encoding
-        if (smtApplicable && currentLP.isPolynomial(its.getGinacVarList())) {
+        if (smtApplicable && currentLP.isPolynomial(varMan.getGinacVarList())) {
             if (trySmtEncoding()) {
                 goto start;
             }
@@ -593,7 +593,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     }
 
     for (const ExprSymbol &var : cost.getVariables()) {
-        if (its.isFreeVar(ex_to<symbol>(var))) {
+        if (varMan.isTempVar(ex_to<symbol>(var))) {
             // we try to achieve ComplexInfty
             return false;
         }
@@ -964,7 +964,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
 
 
 bool AsymptoticBound::isSmtApplicable() {
-    return cost.is_polynomial(its.getGinacVarList());
+    return cost.is_polynomial(varMan.getGinacVarList());
 }
 
 /**
@@ -1095,9 +1095,9 @@ bool AsymptoticBound::trySmtEncoding() {
     exmap templateSubs;
     map<ExprSymbol,z3::expr,GiNaC::ex_is_less> varCoeff, varCoeff0;
     for (const ExprSymbol &var : vars) {
-        ExprSymbol c0 = its.getFreshSymbol(var.get_name()+"_0");
-        ExprSymbol c = its.getFreshSymbol(var.get_name()+"_c");
-        varCoeff.emplace(var,GinacToZ3::convert(c,context)); //HACKy HACK
+        ExprSymbol c0 = varMan.getFreshUntrackedSymbol(var.get_name()+"_0");
+        ExprSymbol c = varMan.getFreshUntrackedSymbol(var.get_name()+"_c");
+        varCoeff.emplace(var,GinacToZ3::convert(c,context)); //HACKy HACK  // FIXME: HACKy HACK sounds dangerous...
         varCoeff0.emplace(var,GinacToZ3::convert(c0,context));
         templateSubs[var] = c0 + (n * c);
     }
@@ -1157,7 +1157,7 @@ bool AsymptoticBound::trySmtEncoding() {
     // first fix that all program variables have to be constants
     // a model witnesses unbounded complexity
     for (const ExprSymbol &var : vars) {
-        if (!its.isFreeVar(var)) {
+        if (!varMan.isTempVar(var)) {
             solver.add(varCoeff.at(var) == 0);
         }
     }
@@ -1203,7 +1203,7 @@ bool AsymptoticBound::trySmtEncoding() {
 
 
 
-InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem &its,
+InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
                                                                const GuardList &guard,
                                                                const Expression &cost,
                                                                bool finalCheck) {
@@ -1233,7 +1233,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const ITRSProblem
         return InfiniteInstances::Result(Complexity::Unknown, "The cost contains infinity");
     }
 
-    AsymptoticBound asymptoticBound(its, guard, cost, finalCheck);
+    AsymptoticBound asymptoticBound(varMan, guard, cost, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 

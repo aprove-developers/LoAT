@@ -26,8 +26,6 @@
 
 typedef std::vector<Expression> GuardList;
 
-class ITRSProblem;
-
 
 /**
  * Namespace for several helpers operating on relational expressions.

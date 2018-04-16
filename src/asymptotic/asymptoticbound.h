@@ -6,8 +6,8 @@
 
 #include "expr/expression.h"
 #include "expr/guardtoolbox.h"
+#include "its/variablemanager.h"
 #include "infinity.h"
-#include "itrs.h"
 #include "inftyexpression.h"
 #include "limitproblem.h"
 
@@ -28,7 +28,7 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(const ITRSProblem &its, GuardList guard, Expression cost, bool finalCheck);
+    AsymptoticBound(const VarMan &varMan, GuardList guard, Expression cost, bool finalCheck);
 
     void initLimitVectors();
     void normalizeGuard();
@@ -64,7 +64,7 @@ private:
     z3::check_result solveByInitialSmtEncoding();
 
 private:
-    const ITRSProblem its;
+    const VariableManager &varMan;
     const GuardList guard;
     const Expression cost;
     bool finalCheck;
@@ -86,10 +86,10 @@ private:
 public:
     /**
      * Analyzes the given guard and cost.
-     * @param its the ITRSProblem instance is needed to get information about free variables
+     * @param varMan the VariableManager instance is needed to get information about free variables
      * @param finalCheck enables more sophisticated backtracking
      */
-    static InfiniteInstances::Result determineComplexity(const ITRSProblem &its,
+    static InfiniteInstances::Result determineComplexity(const VarMan &varMan,
                                                          const GuardList &guard,
                                                          const Expression &cost, bool finalCheck);
 };
