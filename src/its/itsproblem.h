@@ -25,6 +25,8 @@
 #include <string>
 #include <ostream>
 
+#include <boost/optional.hpp>
+
 #include "graph/hypergraph.h"
 #include "util/exceptions.h"
 
@@ -32,12 +34,12 @@
 #include "variablemanager.h"
 
 
-// Note: Data cannot be declared within AbstractITSProblem, since it would then
+// Note: LocationData cannot be declared within AbstractITSProblem, since it would then
 // be templated over Rule, which makes copying data from ITSProblem to LinearProblem impossible.
 namespace ITSProblemInternal {
 
     // Helper struct to encapsulate members common for ITSProblem and LinearITSProblem
-    struct Data {
+    struct LocationData {
         // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
         std::set<LocationIdx> locations;
 
@@ -59,7 +61,11 @@ public:
     // Creates an empty ITS problem. The initialLocation is set to 0
     AbstractITSProblem() {}
 
+    // True iff there are no rules
+    bool isEmpty() const;
+
     LocationIdx getInitialLocation() const;
+    bool isInitialLocation(LocationIdx loc) const;
     void setInitialLocation(LocationIdx loc);
 
     // query the rule associated with a given transition
@@ -73,6 +79,10 @@ public:
     std::vector<Rule> getRulesFrom(LocationIdx loc) const;
     std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const;
 
+    // query nodes of the graph
+    std::set<LocationIdx> getSuccessorLocations(LocationIdx loc) const;
+    std::set<LocationIdx> getPredecessorLocations(LocationIdx loc) const;
+
     // Mutation of Rules
     void removeRule(TransIdx transition);
     TransIdx addRule(Rule rule);
@@ -80,6 +90,10 @@ public:
     // Mutation for Locations
     LocationIdx addLocation();
     LocationIdx addNamedLocation(std::string name);
+
+    // Required for printing (see ITSExport)
+    std::set<LocationIdx> getLocations() const;
+    boost::optional<std::string> getLocationName(LocationIdx idx) const;
 
     // Removes a location, but does _not_ care about rules.
     // Rules from/to this location must be removed before calling this!
@@ -104,7 +118,7 @@ protected:
     std::map<TransIdx, Rule> rules;
 
     // All remaining members
-    ITSProblemInternal::Data data;
+    ITSProblemInternal::LocationData data;
 };
 
 

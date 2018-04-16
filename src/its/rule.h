@@ -33,6 +33,15 @@ typedef std::map<VariableIdx,Expression> UpdateMap;
 
 // TODO: Create abstract base class Rule?
 // TODO: LinearRule can implement all methods of NonlinearRule, with only minor performance impact.
+/*
+class Rule {
+public:
+    virtual const RuleRhs* rhsBegin() const = 0;
+    virtual const RuleRhs* rhsEnd() const = 0;
+    virtual size_t rhsCount() const = 0;
+};
+*/
+
 
 struct RuleLhs {
     LocationIdx loc;
@@ -67,8 +76,9 @@ struct LinearRule {
     LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
 
     // iteration over right-hand sides
-    const RuleRhs* rhsBegin() const { return &rhs; };
-    const RuleRhs* rhsEnd() const { return &rhs + 1; };
+    const RuleRhs* rhsBegin() const { return &rhs; }
+    const RuleRhs* rhsEnd() const { return &rhs + 1; }
+    size_t rhsCount() const { return 1; }
 
     void collectSymbols(ExprSymbolSet &set) const;
 };
@@ -83,7 +93,9 @@ struct NonlinearRule {
     // iteration over right-hand sides
     std::vector<RuleRhs>::const_iterator rhsBegin() const { return rhss.cbegin(); }
     std::vector<RuleRhs>::const_iterator rhsEnd() const { return rhss.cend(); }
+    size_t rhsCount() const { return rhss.size(); }
 
+    // conversion to linear rule
     bool isLinear() const;
     LinearRule toLinearRule() const;
 

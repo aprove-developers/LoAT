@@ -16,14 +16,26 @@
  */
 
 #include "itsproblem.h"
+#include "export.h"
 
 //using namespace ITSProblemInternal;
 using namespace std;
+using boost::optional;
 
 
 template<typename Rule>
+bool AbstractITSProblem<Rule>::isEmpty() const {
+    return rules.empty();
+}
+
+template<typename Rule>
 LocationIdx AbstractITSProblem<Rule>::getInitialLocation() const {
-    return 0;
+    return data.initialLocation;
+}
+
+template<typename Rule>
+bool AbstractITSProblem<Rule>::isInitialLocation(LocationIdx loc) const {
+    return loc == data.initialLocation;
 }
 
 template<typename Rule>
@@ -65,6 +77,16 @@ std::vector<Rule> AbstractITSProblem<Rule>::getRulesFromTo(LocationIdx from, Loc
 }
 
 template<typename Rule>
+std::set<LocationIdx> AbstractITSProblem<Rule>::getSuccessorLocations(LocationIdx loc) const {
+    return graph.getSuccessors(loc);
+}
+
+template<typename Rule>
+std::set<LocationIdx> AbstractITSProblem<Rule>::getPredecessorLocations(LocationIdx loc) const {
+    return graph.getPredecessors(loc);
+}
+
+template<typename Rule>
 void AbstractITSProblem<Rule>::removeRule(TransIdx transition) {
     graph.removeTrans(transition);
 }
@@ -95,6 +117,20 @@ LocationIdx AbstractITSProblem<Rule>::addNamedLocation(std::string name) {
     LocationIdx loc = addLocation();
     data.locationNames.emplace(loc, name);
     return loc;
+}
+
+template<typename Rule>
+set<LocationIdx> AbstractITSProblem<Rule>::getLocations() const {
+    return data.locations;
+}
+
+template<typename Rule>
+optional<string> AbstractITSProblem<Rule>::getLocationName(LocationIdx idx) const {
+    auto it = data.locationNames.find(idx);
+    if (it != data.locationNames.end()) {
+        return it->second;
+    }
+    return {};
 }
 
 template<typename Rule>

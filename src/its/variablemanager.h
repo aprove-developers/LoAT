@@ -33,6 +33,9 @@ public:
     bool isTempVar(VariableIdx idx) const;
     bool isTempVar(const ExprSymbol &var) const;
 
+    // Useful to iterate over all variables (for printing/debugging)
+    size_t getVariableCount() const;
+
     /**
      * Adds a new fresh variable based on the given name
      * (the given name is used if it is still available, otherwise it is modified)
@@ -50,9 +53,6 @@ public:
      * @return The newly created symbol (_not_ associated with a variable index!)
      */
     ExprSymbol getFreshUntrackedSymbol(std::string basename) const;
-
-protected:
-    size_t getVariableCount() const;
 
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
