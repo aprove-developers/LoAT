@@ -126,102 +126,10 @@ void AbstractITSProblem<Rule>::removeLocationAndRules(LocationIdx loc) {
 }
 
 template<typename Rule>
-bool AbstractITSProblem<Rule>::hasVarIdx(VariableIdx idx) const {
-    return idx < data.variables.size();
-}
-
-template<typename Rule>
-std::string AbstractITSProblem<Rule>::getVarName(VariableIdx idx) const {
-    return data.variables[idx].name;
-}
-
-template<typename Rule>
-VariableIdx AbstractITSProblem<Rule>::getVarIdx(std::string name) const {
-    return data.variableNameLookup.at(name);
-}
-
-template<typename Rule>
-VariableIdx AbstractITSProblem<Rule>::getVarIdx(const ExprSymbol &var) const {
-    return data.variableNameLookup.at(var.get_name());
-}
-
-template<typename Rule>
-const std::set<VariableIdx> &AbstractITSProblem<Rule>::getTempVars() const {
-    return data.temporaryVariables;
-}
-
-template<typename Rule>
-bool AbstractITSProblem<Rule>::isTempVar(VariableIdx idx) const {
-    return data.temporaryVariables.count(idx) > 0;
-}
-
-template<typename Rule>
-bool AbstractITSProblem<Rule>::isTempVar(const ExprSymbol &var) const {
-    VariableIdx idx = getVarIdx(var.get_name());
-    return data.temporaryVariables.count(idx);
-}
-
-template<typename Rule>
-ExprSymbol AbstractITSProblem<Rule>::getGinacSymbol(VariableIdx idx) const {
-    return data.variables[idx].symbol;
-}
-
-template<typename Rule>
-ExprList AbstractITSProblem<Rule>::getGinacVarList() const {
-    return data.variableSymbolList;
-}
-
-template<typename Rule>
-VariableIdx AbstractITSProblem<Rule>::addFreshVariable(std::string basename) {
-    return addVariable(getFreshName(basename));
-}
-
-template<typename Rule>
-VariableIdx AbstractITSProblem<Rule>::addFreshTemporaryVariable(std::string basename) {
-    VariableIdx idx = addVariable(getFreshName(basename));
-    data.temporaryVariables.insert(idx);
-    return idx;
-}
-
-template<typename Rule>
-ExprSymbol AbstractITSProblem<Rule>::getFreshUntrackedSymbol(std::string basename) const {
-    return ExprSymbol(getFreshName(basename));
-}
-
-template<typename Rule>
-VariableIdx AbstractITSProblem<Rule>::addVariable(std::string name) {
-    // find new index
-    VariableIdx idx = data.variables.size();
-
-    //convert to ginac
-    auto sym = GiNaC::symbol(name);
-    data.variableSymbolList.append(sym);
-
-    // remember variable
-    data.variables.push_back({name, sym});
-    data.variableNameLookup.emplace(name, idx);
-
-    return idx;
-}
-
-template<typename Rule>
-std::string AbstractITSProblem<Rule>::getFreshName(std::string basename) const {
-    int n = 1;
-    string name = basename;
-
-    while (data.variableNameLookup.count(name) != 0) {
-        name = basename + "_" + to_string(n);
-        n++;
-    }
-
-    return name;
-}
-
-template<typename Rule>
 void AbstractITSProblem<Rule>::print(std::ostream &s) const {
     s << "Variables:";
-    for (VariableIdx i=0; i < data.variables.size(); ++i) {
-        s << " " << data.variables[i].name;
+    for (VariableIdx i=0; i < getVariableCount(); ++i) {
+        s << " " << getVarName(i);
         if (isTempVar(i)) {
             s << "*";
         }

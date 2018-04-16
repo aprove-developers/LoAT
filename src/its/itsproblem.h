@@ -27,31 +27,17 @@
 
 #include "graph/hypergraph.h"
 #include "util/exceptions.h"
+
 #include "rule.h"
+#include "variablemanager.h"
 
-
-// FIXME: Avoid addTransition, printRule in subclasses by using rule.rhsBegin(), .rhsEnd()
-// can return vector iterator or just &x, &x+1 for single element
 
 // Note: Data cannot be declared within AbstractITSProblem, since it would then
 // be templated over Rule, which makes copying data from ITSProblem to LinearProblem impossible.
 namespace ITSProblemInternal {
 
-    // Data stored for each variable
-    struct Variable {
-        std::string name;
-        ExprSymbol symbol;
-    };
-
     // Helper struct to encapsulate members common for ITSProblem and LinearITSProblem
     struct Data {
-        // List of all variables (VariableIdx is an index in this list; a Variable is a name and a ginac symbol)
-        // Note: Variables are never removed, so this list is appended, but otherwise not modified
-        std::vector<Variable> variables;
-
-        // the set of variables (identified by their index) that are used as temporary variables (on rule rhss)
-        std::set<VariableIdx> temporaryVariables;
-
         // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
         std::set<LocationIdx> locations;
 
@@ -61,10 +47,6 @@ namespace ITSProblemInternal {
         // the next free location index
         LocationIdx nextUnusedLocation = 0;
 
-        // only for efficiency
-        std::map<std::string,VariableIdx> variableNameLookup; // reverse mapping for variables
-        ExprList variableSymbolList; // list of all variable symbols, since this is needed by ginac (what for?)
-
         // only for output
         std::map<LocationIdx, std::string> locationNames; // only for the original locations, not for added ones
     };
@@ -72,7 +54,7 @@ namespace ITSProblemInternal {
 
 
 template <typename Rule>
-class AbstractITSProblem {
+class AbstractITSProblem : public VariableManager {
 public:
     // Creates an empty ITS problem. The initialLocation is set to 0
     AbstractITSProblem() {}
@@ -106,45 +88,10 @@ public:
     // Removes a location and all rules that visit loc
     void removeLocationAndRules(LocationIdx loc);
 
-    // Some simple getters
-    bool hasVarIdx(VariableIdx idx) const;
-    std::string getVarName(VariableIdx idx) const;
-    VariableIdx getVarIdx(std::string name) const;
-    VariableIdx getVarIdx(const ExprSymbol &var) const;
-
-    const std::set<VariableIdx>& getTempVars() const;
-    bool isTempVar(VariableIdx idx) const;
-    bool isTempVar(const ExprSymbol &var) const;
-
-    ExprSymbol getGinacSymbol(VariableIdx idx) const;
-    ExprList getGinacVarList() const;
-
-    /**
-     * Adds a new fresh variable based on the given name
-     * (the given name is used if it is still available, otherwise it is modified)
-     * @return the VariableIdx of the newly added variable
-     */
-    VariableIdx addFreshVariable(std::string basename);
-    VariableIdx addFreshTemporaryVariable(std::string basename);
-
-    /**
-     * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the list of variables
-     * @warning the name of the created symbol is not stored, so it may be re-used by future calls!
-     * @return the newly created symbol (_not_ associated with a variable index!)
-     */
-    ExprSymbol getFreshUntrackedSymbol(std::string basename) const;
-
-    /**
-     * Prints this ITSProblem in a readable but ugly format, for debugging only
-     * @param s output stream to print to (e.g. cout)
-     */
+    // Print the ITSProblem in a simple, but user-friendly format
     void print(std::ostream &s) const;
 
 private:
-    // helpers for variable handling
-    VariableIdx addVariable(std::string name);
-    std::string getFreshName(std::string basename) const;
-
     // helper that prints a given rule
     void printRule(const Rule &rule, std::ostream &s) const;
 

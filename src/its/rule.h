@@ -31,6 +31,9 @@ typedef std::vector<Expression> GuardList;
 typedef std::map<VariableIdx,Expression> UpdateMap;
 
 
+// TODO: Create abstract base class Rule?
+// TODO: LinearRule can implement all methods of NonlinearRule, with only minor performance impact.
+
 struct RuleLhs {
     LocationIdx loc;
     GuardList guard;
