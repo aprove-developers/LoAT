@@ -75,6 +75,11 @@ public:
     }
 
     /**
+     * Applies a substitution. Like GiNaC::subs, but assigns the result to this expression.
+     */
+    void applySubs(const GiNaC::exmap &subs);
+
+    /**
      * Version of ex::find() that searches also in subexpressions of a match
      */
     bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;

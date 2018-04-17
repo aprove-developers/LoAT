@@ -62,6 +62,10 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
     unreachable();
 }
 
+void Expression::applySubs(const GiNaC::exmap &subs) {
+    *this = this->subs(subs);
+}
+
 bool Expression::findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const {
     bool anyFound = false;
 
