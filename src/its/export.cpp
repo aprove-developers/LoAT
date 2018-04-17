@@ -7,8 +7,7 @@ using namespace std;
 // TODO: E.g., for f(x,y) -> g(x), the variable y is not "bound" and is probably omitted?!
 // TODO: My guess is that this function should look on all rules for a given function symbol
 // TODO: (note that all left-hand sides use the same arguments!)
-template <typename Rule>
-set<VariableIdx> getBoundVariables(const Rule &rule, const VarMan &varMan) {
+set<VariableIdx> getBoundVariables(const AbstractRule &rule, const VarMan &varMan) {
     set<VariableIdx> res;
 
     //updated variables are always bound
@@ -20,10 +19,10 @@ set<VariableIdx> getBoundVariables(const Rule &rule, const VarMan &varMan) {
 
     //collect non-free variables from guard and cost
     ExprSymbolSet symbols;
-    for (const Expression &ex : rule.lhs.guard) {
+    for (const Expression &ex : rule.getGuard()) {
         ex.collectVariables(symbols);
     }
-    rule.lhs.cost.collectVariables(symbols);
+    rule.getCost().collectVariables(symbols);
 
     for (const ExprSymbol &var : symbols) {
         if (!varMan.isTempVar(var)) {
@@ -51,8 +50,8 @@ void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, std::os
  * Helper that prints an entire rule in a human-readable format
  */
 template <typename Rule>
-void printRule(Rule rule, const AbstractITSProblem<Rule> &its, std::ostream &s) {
-    printLocation(rule.lhs.loc, its, s);
+void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+    printLocation(rule.getLhsLoc(), its, s);
     s << " -> ";
 
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
@@ -70,17 +69,17 @@ void printRule(Rule rule, const AbstractITSProblem<Rule> &its, std::ostream &s) 
         }
     }
 
-    if (rule.lhs.guard.empty()) {
+    if (rule.getGuard().empty()) {
         s << "[]";
     } else {
         s << "[ ";
-        for (int i=0; i < rule.lhs.guard.size(); ++i) {
+        for (int i=0; i < rule.getGuard().size(); ++i) {
             if (i > 0) s << " && ";
-            s << rule.lhs.guard[i];
+            s << rule.getGuard().at(i);
         }
         s << " ]";
     }
-    s << ", cost: " << rule.lhs.cost;
+    s << ", cost: " << rule.getCost();
     s << endl;
 }
 
@@ -165,7 +164,7 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
     for (LocationIdx n : its.getLocations()) {
         //write transition in KoAT format (note that relevantVars is an ordered set)
         for (TransIdx trans : its.getTransitionsFrom(n)) {
-            const Rule &rule = its.getRule(trans);
+            const AbstractRule &rule = its.getRule(trans);
             set<VariableIdx> relevantVars = getBoundVariables(rule, its);
 
             //lhs
@@ -178,7 +177,7 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
             }
 
             //cost
-            s << ") -{" << rule.lhs.cost.expand() << "," << rule.lhs.cost.expand() << "}> ";
+            s << ") -{" << rule.getCost().expand() << "," << rule.getCost().expand() << "}> ";
 
             //rhs update
             if (rule.rhsCount() > 1) {
@@ -208,9 +207,9 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
 
             //guard
             s << ") :|: ";
-            for (int i=0; i < rule.lhs.guard.size(); ++i) {
+            for (int i=0; i < rule.getGuard().size(); ++i) {
                 if (i > 0) s << " && ";
-                s << rule.lhs.guard[i].expand();
+                s << rule.getGuard().at(i).expand();
             }
             s << endl;
         }
@@ -234,16 +233,16 @@ void LinearITSExport::printDotSubgraph(const LinearITSProblem &its, int step, co
             printNode(n); s << " -> "; printNode(succ); s << " [label=\"";
             for (TransIdx trans : its.getTransitionsFromTo(n,succ)) {
                 const LinearRule &rule = its.getRule(trans);
-                for (auto upit : rule.rhs.update) {
+                for (auto upit : rule.getUpdate()) {
                     s << its.getVarName(upit.first) << "=" << upit.second << ", ";
                 }
                 s << "[";
-                for (int i=0; i < rule.lhs.guard.size(); ++i) {
+                for (int i=0; i < rule.getGuard().size(); ++i) {
                     if (i > 0) s << ", ";
-                    s << rule.lhs.guard[i];
+                    s << rule.getGuard().at(i);
                 }
                 s << "], ";
-                s << rule.lhs.cost.expand(); //simplify for readability
+                s << rule.getCost().expand(); //simplify for readability
                 s << "\\l";
             }
             s << "\"];" << endl;
@@ -266,11 +265,11 @@ void LinearITSExport::printT2(const LinearITSProblem &its, std::ostream &s) {
         for (TransIdx idx : its.getTransitionsFrom(start)) {
             const LinearRule &rule = its.getRule(idx);
             s << "FROM: " << start << ";" << endl;
-            ExprSymbolSet vars = rule.lhs.cost.getVariables();
-            for (const Expression &ex : rule.lhs.guard) {
+            ExprSymbolSet vars = rule.getCost().getVariables();
+            for (const Expression &ex : rule.getGuard()) {
                 ex.collectVariables(vars);
             }
-            for (auto it : rule.rhs.update) {
+            for (auto it : rule.getUpdate()) {
                 it.second.collectVariables(vars);
             }
 
@@ -285,21 +284,21 @@ void LinearITSExport::printT2(const LinearITSProblem &its, std::ostream &s) {
                 }
             }
 
-            if (!rule.lhs.guard.empty()) {
+            if (!rule.getGuard().empty()) {
                 s << "assume(";
-                for (int i=0; i < rule.lhs.guard.size(); ++i) {
+                for (int i=0; i < rule.getGuard().size(); ++i) {
                     if (i > 0) s << " && ";
-                    s << rule.lhs.guard[i].subs(t2subs);
+                    s << rule.getGuard().at(i).subs(t2subs);
                 }
                 s << ");" << endl;
             }
 
-            for (auto it : rule.rhs.update) {
+            for (auto it : rule.getUpdate()) {
                 s << "v" << its.getGinacSymbol(it.first) << " := ";
                 s << it.second.subs(t2subs) << ";" << endl;
             }
 
-            s << "TO: " << rule.rhs.loc << ";" << endl << endl;
+            s << "TO: " << rule.getRhsLoc() << ";" << endl << endl;
         }
     }
 }

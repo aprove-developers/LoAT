@@ -100,7 +100,7 @@ TransIdx AbstractITSProblem<Rule>::addRule(Rule rule) {
     }
 
     // add transition and store mapping to rule
-    TransIdx idx = graph.addTrans(rule.lhs.loc, rhsLocs);
+    TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
     rules.emplace(idx, rule);
     return idx;
 }

@@ -33,14 +33,7 @@ typedef std::map<VariableIdx,Expression> UpdateMap;
 
 // TODO: Create abstract base class Rule?
 // TODO: LinearRule can implement all methods of NonlinearRule, with only minor performance impact.
-/*
-class Rule {
-public:
-    virtual const RuleRhs* rhsBegin() const = 0;
-    virtual const RuleRhs* rhsEnd() const = 0;
-    virtual size_t rhsCount() const = 0;
-};
-*/
+
 
 
 struct RuleLhs {
@@ -51,7 +44,6 @@ struct RuleLhs {
     RuleLhs() {}
     RuleLhs(LocationIdx loc, GuardList guard); // cost 1
     RuleLhs(LocationIdx loc, GuardList guard, Expression cost);
-    void collectSymbols(ExprSymbolSet &set) const;
 };
 
 struct RuleRhs {
@@ -60,47 +52,100 @@ struct RuleRhs {
 
     RuleRhs() {}
     RuleRhs(LocationIdx loc, UpdateMap update);
-
-    // Note: only collect the update expressions, not the updated variables
-    // (they belong to loc's lhs, not to this rule)
-    void collectSymbols(ExprSymbolSet &set) const;
 };
 
-struct LinearRule {
+
+// TODO: Make lhs, rhs private and add getLhs() or only getLhsLoc(), getGuard(), getCost(), ...
+// TODO: NonlinearRule might need getUpdate(idx), getRhsLoc(idx) or getRhss()
+
+/**
+ * Interface for a rule, generalizes linear and nonlinear rules to a common interface.
+ * TODO: Document how this is used (not yet sure...)
+ */
+class AbstractRule {
+public:
+    // lhs
+    virtual LocationIdx getLhsLoc() const = 0;
+    virtual const GuardList& getGuard() const = 0;
+    virtual const Expression& getCost() const = 0;
+
+    // rhs
+    virtual const RuleRhs* rhsBegin() const = 0;
+    virtual const RuleRhs* rhsEnd() const = 0;
+    virtual size_t rhsCount() const = 0;
+};
+
+
+/**
+ * A class to represent a linear rule (one lhs, one rhs).
+ * The lhs/rhs locations cannot be changed (since they are tied to the graph in ITSProblem).
+ * Guard/cost/update may be modified.
+ */
+class LinearRule : public AbstractRule {
+private:
     RuleLhs lhs;
     RuleRhs rhs;
 
+public:
     LinearRule() {};
     LinearRule(RuleLhs lhs, RuleRhs rhs);
     LinearRule(LocationIdx lhsLoc, GuardList guard, LocationIdx rhsLoc, UpdateMap update); // cost 1
     LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
 
-    // iteration over right-hand sides
-    const RuleRhs* rhsBegin() const { return &rhs; }
-    const RuleRhs* rhsEnd() const { return &rhs + 1; }
-    size_t rhsCount() const { return 1; }
+    // query lhs data
+    LocationIdx getLhsLoc() const override { return lhs.loc; }
+    const GuardList& getGuard() const override { return lhs.guard; }
+    const Expression& getCost() const override { return lhs.cost; }
 
-    void collectSymbols(ExprSymbolSet &set) const;
+    // lhs mutation
+    GuardList& getGuardMut() { return lhs.guard; }
+    Expression& getCostMut() { return lhs.cost; }
+
+    // iteration over right-hand sides
+    const RuleRhs* rhsBegin() const override { return &rhs; }
+    const RuleRhs* rhsEnd() const override { return &rhs + 1; }
+    size_t rhsCount() const override { return 1; }
+
+    // special methods for linear rules
+    LocationIdx getRhsLoc() const { return rhs.loc; }
+    const UpdateMap& getUpdate() const { return rhs.update; }
+    UpdateMap& getUpdateMut() { return rhs.update; }
 };
 
-struct NonlinearRule {
+
+class NonlinearRule : public AbstractRule {
+private:
     RuleLhs lhs;
     std::vector<RuleRhs> rhss;
 
+public:
     NonlinearRule() {}
     NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss);
 
+    // query lhs data
+    LocationIdx getLhsLoc() const override { return lhs.loc; }
+    const GuardList& getGuard() const override { return lhs.guard; }
+    const Expression& getCost() const override { return lhs.cost; }
+
+    // lhs mutation
+    GuardList& getGuardMut() { return lhs.guard; }
+    Expression& getCostMut() { return lhs.cost; }
+
     // iteration over right-hand sides
-    std::vector<RuleRhs>::const_iterator rhsBegin() const { return rhss.cbegin(); }
-    std::vector<RuleRhs>::const_iterator rhsEnd() const { return rhss.cend(); }
-    size_t rhsCount() const { return rhss.size(); }
+    const RuleRhs* rhsBegin() const override { return &rhss.front(); }
+    const RuleRhs* rhsEnd() const override { return &rhss.back()+1; }
+    size_t rhsCount() const override { return rhss.size(); }
+
+    // special methods for nonlinear rules (idx is an index to rhss)
+    LocationIdx getRhsLoc(int idx) const { return rhss[idx].loc; }
+    const UpdateMap& getUpdate(int idx) const { return rhss[idx].update; };
+    UpdateMap& getUpdateMut(int idx) { return rhss[idx].update; }
 
     // conversion to linear rule
     bool isLinear() const;
     LinearRule toLinearRule() const;
-
-    void collectSymbols(ExprSymbolSet &set) const;
 };
+
 
 
 #endif // RULE_H

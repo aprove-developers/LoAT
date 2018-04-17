@@ -418,26 +418,26 @@ void ITSParser::convertRules() {
 
 
 void ITSParser::addParsedRule(const ParsedRule &rule) {
-    NonlinearRule newRule;
-
     // Convert lhs to Ginac expressions
-    newRule.lhs.loc = getLocationData(rule.lhs).index;
-    newRule.lhs.cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : Expression(1);
+    RuleLhs lhs;
+    lhs.loc = getLocationData(rule.lhs).index;
+    lhs.cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : Expression(1);
 
-    if (!newRule.lhs.cost.is_polynomial(itsProblem.getGinacVarList())) {
+    if (!lhs.cost.is_polynomial(itsProblem.getGinacVarList())) {
         throw FileError("Non-polynomial cost in the input");
     }
 
     for (const Relation &rel : rule.guard) {
-        newRule.lhs.guard.push_back(rel.toGinacExpression(itsProblem));
+        lhs.guard.push_back(rel.toGinacExpression(itsProblem));
     }
 
     // Ensure user given costs are non-negative
     if (settings.ensureNonnegativeCosts && rule.cost) {
-        newRule.lhs.guard.push_back(newRule.lhs.cost >= 0);
+        lhs.guard.push_back(lhs.cost >= 0);
     }
 
     // Convert rhs, compute update
+    vector<RuleRhs> rhss;
     for (TermPtr rhs : rule.rhss) {
         RuleRhs newRhs;
         LocationData loc = getLocationData(rhs);
@@ -451,8 +451,10 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
             newRhs.update.emplace(var, std::move(update));
         }
 
-        newRule.rhss.push_back(newRhs);
+        rhss.push_back(newRhs);
     }
+
+    NonlinearRule newRule(std::move(lhs), std::move(rhss));
 
     // Ensure that a function symbol always occurs with the same lhs arguments,
     // e.g. if we have "f(x) -> ..." and "f(y) -> ..." we rename the variables in the second rule to get "f(x) -> ..."
@@ -463,8 +465,8 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     replaceUnboundedByTemporaryVariables(newRule, getLocationData(rule.lhs));
 
     // Remove trivial updates like "x := x" (to simplify rules)
-    for (RuleRhs &rhs : newRule.rhss) {
-        stripTrivialUpdates(rhs.update);
+    for (int i=0; i < newRule.rhsCount(); ++i) {
+        stripTrivialUpdates(newRule.getUpdateMut(i));
     }
 
     itsProblem.addRule(newRule);
@@ -590,9 +592,9 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 
 void ITSParser::replaceUnboundedByTemporaryVariables(NonlinearRule &rule, const LocationData &lhsData) {
     // Gather variables
-    ExprSymbolSet lhsVars, ruleVars;
-    rule.collectSymbols(ruleVars);
+    ExprSymbolSet ruleVars = getSymbols(rule);
 
+    ExprSymbolSet lhsVars;
     for (VariableIdx var : lhsData.lhsVars) {
         lhsVars.insert(itsProblem.getGinacSymbol(var));
     }
@@ -611,16 +613,37 @@ void ITSParser::replaceUnboundedByTemporaryVariables(NonlinearRule &rule, const 
 }
 
 
-void ITSParser::applySubstitution(NonlinearRule &rule, const GiNaC::exmap &subs) {
-    rule.lhs.cost = rule.lhs.cost.subs(subs);
+ExprSymbolSet ITSParser::getSymbols(const NonlinearRule &rule) {
+    ExprSymbolSet res;
 
-    for (Expression &ex : rule.lhs.guard) {
-        ex = ex.subs(subs);
+    // lhs
+    rule.getCost().collectVariables(res);
+    for (const Expression &ex : rule.getGuard()) {
+        ex.collectVariables(res);
     }
 
-    for (RuleRhs &rhs : rule.rhss) {
-        for (auto &it : rhs.update) {
-            it.second = it.second.subs(subs);
+    // rhs
+    // Note: For an update like x/y, only y is counted, since x is not part of this rule (but of a different lhs)
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        for (const auto &it : rhs->update) {
+            it.second.collectVariables(res);
+        }
+    }
+
+    return res;
+}
+
+
+void ITSParser::applySubstitution(NonlinearRule &rule, const GiNaC::exmap &subs) {
+    rule.getCostMut().applySubs(subs);
+
+    for (Expression &ex : rule.getGuardMut()) {
+        ex.applySubs(subs);
+    }
+
+    for (int i=0; i < rule.rhsCount(); ++i) {
+        for (auto &it : rule.getUpdateMut(i)) {
+            it.second.applySubs(subs);
         }
     }
 }
