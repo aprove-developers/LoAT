@@ -166,45 +166,6 @@ void AbstractITSProblem<Rule>::print(std::ostream &s) const {
     ITSExport<Rule>::printDebug(*this, s);
 }
 
-template<typename Rule>
-void AbstractITSProblem<Rule>::printRule(const Rule &rule, std::ostream &s) const {
-    auto printLoc = [&](LocationIdx loc) {
-        auto it = data.locationNames.find(loc);
-        if (it != data.locationNames.end()) {
-            s << it->second;
-        } else {
-            s << "[" << loc << "]";
-        }
-    };
-
-    printLoc(rule.lhs.loc);
-    s << " -> ";
-
-    for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
-        printLoc(it->loc);
-        s << " : ";
-
-        for (auto upit : it->update) {
-            s << getVarName(upit.first) << "'";
-            s << "=" << upit.second;
-            s << ", ";
-        }
-    }
-
-    if (rule.lhs.guard.empty()) {
-        s << "[]";
-    } else {
-        s << "[ ";
-        for (int i=0; i < rule.lhs.guard.size(); ++i) {
-            if (i > 0) s << " && ";
-            s << rule.lhs.guard[i];
-        }
-        s << " ]";
-    }
-    s << ", cost: " << rule.lhs.cost;
-    s << endl;
-}
-
 
 // ###################
 // ## Linear        ##

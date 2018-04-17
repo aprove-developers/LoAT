@@ -26,22 +26,9 @@ RuleLhs::RuleLhs(LocationIdx loc, GuardList guard) : loc(loc), guard(guard), cos
 RuleLhs::RuleLhs(LocationIdx loc, GuardList guard, Expression cost) : loc(loc), guard(guard), cost(cost)
 {}
 
-void RuleLhs::collectSymbols(ExprSymbolSet &set) const {
-    cost.collectVariables(set);
-    for (const Expression &ex : guard) {
-        ex.collectVariables(set);
-    }
-}
-
 
 RuleRhs::RuleRhs(LocationIdx loc, UpdateMap update) : loc(loc), update(update)
 {}
-
-void RuleRhs::collectSymbols(ExprSymbolSet &set) const {
-    for (const auto &it : update) {
-        it.second.collectVariables(set);
-    }
-}
 
 
 LinearRule::LinearRule(RuleLhs lhs, RuleRhs rhs) : lhs(lhs), rhs(rhs)
@@ -55,21 +42,10 @@ LinearRule::LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, Loc
         : lhs(lhsLoc, guard, cost), rhs(rhsLoc, update)
 {}
 
-void LinearRule::collectSymbols(ExprSymbolSet &set) const {
-    lhs.collectSymbols(set);
-    rhs.collectSymbols(set);
-}
 
 
 NonlinearRule::NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     assert(!rhss.empty());
-}
-
-void NonlinearRule::collectSymbols(ExprSymbolSet &set) const {
-    lhs.collectSymbols(set);
-    for (const RuleRhs &rhs : rhss) {
-        rhs.collectSymbols(set);
-    }
 }
 
 bool NonlinearRule::isLinear() const {
