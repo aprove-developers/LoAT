@@ -237,6 +237,8 @@ private:
      */
     bool accelerateSimpleLoops(NodeIndex node);
 
+    bool backwardAccelerateSimpleLoops(NodeIndex node);
+
     /**
      * A simple syntactic comparision. Returns true iff a and b are equal up to constants
      * in the cost term.

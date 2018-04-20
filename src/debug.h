@@ -76,6 +76,9 @@ struct DebugStream {
 //debugging for Farkas processor
 #define DEBUG_FARKAS
 
+//debugging for Farkas processor
+#define DEBUG_BACKWARD_ACCELERATION
+
 //debugging for final infinity check
 #define DEBUG_INFINITY
 
@@ -141,6 +144,12 @@ struct DebugStream {
 #define debugFarkas(output) do { std::cout << output << std::endl; } while(0)
 #else
 #define debugFarkas(output) (void(0))
+#endif
+
+#ifdef DEBUG_BACKWARD_ACCELERATION
+#define debugBackwardAcceleration(output) do { std::cout << output << std::endl; } while(0)
+#else
+#define debugBackwardAcceleration(output) (void(0))
 #endif
 
 #ifdef DEBUG_INFINITY
