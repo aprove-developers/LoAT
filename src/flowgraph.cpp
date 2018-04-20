@@ -796,11 +796,8 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
             }
             Expression lincoeff = up.coeff(x, 1);
             Expression in_up;
-            // TODO what can we do in this case?
             if (lincoeff.is_zero()) {
-                linear = false;
-                debugBackwardAcceleration("update " << up << " is not linear");
-                break;
+                in_up = up;
             } else {
                 in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
             }
@@ -833,19 +830,19 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
             vector<VariableIndex> order = dependencyOrder(inverse_update, itrs);
             if (order.size() == inverse_update.size()) {
                 debugBackwardAcceleration("successfully computed dependency order");
-                GiNaC::exmap knownPreRecurrences;
+                GiNaC::exmap iterated_inverse_update;
                 bool successfully_computed_it_update = true;
                 for (VariableIndex vi: order) {
                     Expression res;
                     ExprSymbol target = itrs.getGinacSymbol(vi);
-                    Expression todo = inverse_ginac_update.at(target).subs(knownPreRecurrences);
+                    Expression todo = inverse_ginac_update.at(target).subs(iterated_inverse_update);
                     if (!findUpdateRecurrence(todo, target, res)) {
                         successfully_computed_it_update = false;
                         debugBackwardAcceleration("failed to compute iterated inverse update for " << todo);
                         break;
                     }
                     debugBackwardAcceleration("successfully computed iterated inverse update " << res << " for " << todo);
-                    knownPreRecurrences[target] = res;
+                    iterated_inverse_update[target] = res;
                 }
                 if (successfully_computed_it_update) {
                     Transition new_transition;
@@ -870,8 +867,15 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
                         sigma.emplace(old_var, fresh_var);
                         var_map.emplace(old_var, fresh_var);
                         sigma.emplace(ginac_n, n);
+                        Expression it_up = iterated_inverse_update.at(old_var);
                         // now the value before the transition (old_var) needs to result from the value after the transition by applying the iterated inverse update
-                        new_transition.guard.push_back(old_var == knownPreRecurrences.at(old_var).subs(sigma));
+                        new_transition.guard.push_back(old_var == it_up.subs(sigma));
+                        // if the variable itself occurs in the iterated update, then the constraint above relates its pre- and post-values
+                        // otherwise, the post-value results from applying the update assuming the values before the last iteration for all other variables
+                        ExprSymbolSet vars = it_up.getVariables();
+                        if (vars.find(old_var.getAVariable()) == vars.end()) {
+                            new_transition.guard.push_back(fresh_var == transition.update.at(vi).subs(inverse_ginac_update).subs(sigma));
+                        }
                     }
                     // TODO adapt the computation of the iterated costs as soon as we support non-constant costs
                     new_transition.cost = transition.cost * n;
