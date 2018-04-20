@@ -51,7 +51,9 @@ static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCos
 #ifdef CONTRACT_CHECK_SAT_APPROXIMATE
     // Try to solve an approximate problem instead, as we the check does not affect soundness.
     if (z3res == z3::unknown) {
-        debugProblem("Contract unknown, try approximation for guard: " << newGuard);
+        // TODO: use operator<< for newGuard when implemented
+        debugProblem("Contract unknown, try approximation for guard: ");
+        dumpList("guard", newGuard);
         z3res = Z3Toolbox::checkAllApproximate(newGuard);
     }
 #endif
@@ -66,7 +68,9 @@ static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCos
 
 #ifdef DEBUG_PROBLEMS
     if (z3res == z3::unknown) {
-        debugProblem("Chaining: got z3::unknown for: " << newGuard);
+        // TODO: use operator<< for newGuard when implemented
+        debugProblem("Chaining: got z3::unknown for: ");
+        dumpList("guard", newGuard);
     }
 #endif
 
@@ -140,7 +144,7 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
  * @note: This will also chain self-loops with itself.
  */
 static void eliminateLocationByChaining(LinearITSProblem &its, LocationIdx loc, bool keepUnchainable) {
-    set<LinearRule> keepRules;
+    set<TransIdx> keepRules;
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
@@ -158,21 +162,21 @@ static void eliminateLocationByChaining(LinearITSProblem &its, LocationIdx loc, 
         if (keepUnchainable && !wasChained) {
             // Only keep the rule if it might give non-trivial complexity
             if (inRule.getCost().getComplexity() > Complexity::Const) {
-                keepRules.insert(inRule);
+                keepRules.insert(in);
             }
+        }
+    }
+
+    // backup all incoming transitions which could not be chained with any outgoing one
+    if (keepUnchainable && !keepRules.empty()) {
+        LocationIdx dummyLoc = its.addLocation();
+        for (TransIdx trans : keepRules) {
+            its.addRule(its.getRule(trans).withNewRhsLoc(dummyLoc));
         }
     }
 
     // remove the location and all incoming/outgoing transitions
     its.removeLocationAndRules(loc);
-
-    // re-add all incoming transitions which could not be chained with any outgoing one
-    if (keepUnchainable && !keepRules.empty()) {
-        LocationIdx dummyLoc = its.addLocation();
-        for (const LinearRule &rule : keepRules) {
-            its.addRule(rule.withNewRhsLoc(dummyLoc));
-        }
-    }
 }
 
 
@@ -341,7 +345,7 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
     // If we cannot eliminate node, continue with its children (DFS traversal)
     if (hasSelfloop || its.isInitialLocation(node) || transIn.empty() || transOut.empty()) {
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
-            if (eliminateALocation(its, succ, visited)) {
+            if (eliminateALocationImpl(its, succ, visited)) {
                 return true;
             }
 
@@ -387,7 +391,7 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
                 continue;
             }
 
-            auto optRule = chainRules(its, incomingRule, its.getRule(simpleLoop));
+            auto optRule = Chaining::chainRules(its, incomingRule, its.getRule(simpleLoop));
             if (optRule) {
                 its.addRule(optRule.get());
                 successfullyChained.insert(incoming);

@@ -113,7 +113,7 @@ public:
         }
 
         std::vector<Node> res;
-        for (Node from : *pred) {
+        for (Node from : pred->second) {
             for (TransIdx trans : getTransFromTo(from, to)) {
                 res.push_back(trans);
             }

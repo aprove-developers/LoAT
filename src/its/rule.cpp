@@ -80,6 +80,5 @@ std::ostream& operator<<(std::ostream &s, const LinearRule &rule) {
     s << rule.getCost();
     s << ")";
     return s;
-    }
 }
 
