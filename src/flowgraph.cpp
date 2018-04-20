@@ -740,19 +740,26 @@ vector<VariableIndex> dependencyOrder(UpdateMap &update, ITRSProblem itrs) {
     vector<VariableIndex> ordering;
     set<VariableIndex> orderedVars;
 
-    while (ordering.size() < update.size()) {
+    bool changed = true;
+    while (changed && ordering.size() < update.size()) {
+        changed = false;
         for (auto up : update) {
             if (orderedVars.count(up.first) > 0) continue;
 
+            bool ready = true;
             //check if all variables on update rhs are already processed
             for (const string &varname : up.second.getVariableNames()) {
                 VariableIndex vi = itrs.getVarindex(varname);
-                if (vi != up.first && update.count(vi) > 0 && orderedVars.count(vi) == 0)
-                    return ordering;
+                if (vi != up.first && update.count(vi) > 0 && orderedVars.count(vi) == 0) {
+                    ready = false;
+                    break;
+                }
             }
 
-            orderedVars.insert(up.first);
-            ordering.push_back(up.first);
+            if (ready) {
+                changed = changed || orderedVars.insert(up.first).second;
+                ordering.push_back(up.first);
+            }
         }
 
     }
@@ -784,15 +791,23 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
             Expression up = p.second;
             if (!up.isLinear(xList)) {
                 linear = false;
+                debugBackwardAcceleration("update " << up << " is not linear");
                 break;
             }
             Expression lincoeff = up.coeff(x, 1);
-            Expression in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
+            Expression in_up;
+            // TODO what can we do in this case?
+            if (lincoeff.is_zero()) {
+                linear = false;
+                debugBackwardAcceleration("update " << up << " is not linear");
+                break;
+            } else {
+                in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
+            }
             inverse_ginac_update.emplace(x, in_up);
             inverse_update.emplace(p.first, in_up);
         }
         if (!linear) {
-            debugBackwardAcceleration("update " << up << " is not linear");
             continue;
         }
         debugBackwardAcceleration("successfully computed inverse update " << inverse_ginac_update);
@@ -817,7 +832,7 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
             debugBackwardAcceleration("successfully checked guard implication");
             vector<VariableIndex> order = dependencyOrder(inverse_update, itrs);
             if (order.size() == inverse_update.size()) {
-                debugBackwardAcceleration("successfully computed dependency order " << order);
+                debugBackwardAcceleration("successfully computed dependency order");
                 GiNaC::exmap knownPreRecurrences;
                 bool successfully_computed_it_update = true;
                 for (VariableIndex vi: order) {
@@ -867,7 +882,7 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
                             new_transition.guard.push_back(final_constraint.subs(var_map));
                         }
                     }
-                    debugBackwardAcceleration("replacing " << transition " with " << new_transition);
+                    debugBackwardAcceleration("replacing " << transition << " with " << new_transition);
                     to_add.push_back(new_transition);
                     to_remove.push_back(tidx);
                 }
