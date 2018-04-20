@@ -106,6 +106,21 @@ public:
         return targetIt->second;
     }
 
+    std::vector<TransIdx> getTransTo(Node to) const {
+        auto pred = predecessor.find(to);
+        if (pred == predecessor.end()) {
+            return {};
+        }
+
+        std::vector<Node> res;
+        for (Node from : *pred) {
+            for (TransIdx trans : getTransFromTo(from, to)) {
+                res.push_back(trans);
+            }
+        }
+        return res;
+    }
+
     std::set<Node> getSuccessors(Node node) const {
         std::set<Node> res;
         auto it = outgoing.find(node);

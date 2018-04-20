@@ -31,6 +31,9 @@ typedef std::vector<Expression> GuardList;
 typedef std::map<VariableIdx,Expression> UpdateMap;
 
 
+// TODO: Add operator<< for GuardList, especially for UpdateMap
+
+
 // TODO: Create abstract base class Rule?
 // TODO: LinearRule can implement all methods of NonlinearRule, with only minor performance impact.
 
@@ -110,6 +113,9 @@ public:
     LocationIdx getRhsLoc() const { return rhs.loc; }
     const UpdateMap& getUpdate() const { return rhs.update; }
     UpdateMap& getUpdateMut() { return rhs.update; }
+
+    // shorthands for constructor
+    LinearRule withNewRhsLoc(LocationIdx rhsLoc) const;
 };
 
 
@@ -146,6 +152,9 @@ public:
     LinearRule toLinearRule() const;
 };
 
+
+std::ostream& operator<<(std::ostream &s, const LinearRule &rule);
+//std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule); // TODO: Implement this
 
 
 #endif // RULE_H

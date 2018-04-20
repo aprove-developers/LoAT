@@ -59,6 +59,11 @@ std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsFromTo(LocationIdx
 }
 
 template<typename Rule>
+std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsTo(LocationIdx loc) const {
+    return graph.getTransTo(loc);
+}
+
+template<typename Rule>
 std::vector<Rule> AbstractITSProblem<Rule>::getRulesFrom(LocationIdx loc) const {
     vector<Rule> res;
     for (TransIdx trans : graph.getTransFrom(loc)) {

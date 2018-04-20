@@ -74,10 +74,11 @@ public:
     // query transitions of the graph
     std::vector<TransIdx> getTransitionsFrom(LocationIdx loc) const;
     std::vector<TransIdx> getTransitionsFromTo(LocationIdx from, LocationIdx to) const;
+    std::vector<TransIdx> getTransitionsTo(LocationIdx loc) const; // note: rather inefficient
 
     // helper, combines getTransitionsFrom* + getRule
-    std::vector<Rule> getRulesFrom(LocationIdx loc) const;
-    std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const;
+    std::vector<Rule> getRulesFrom(LocationIdx loc) const; // TODO: unused?
+    std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const; // TODO: unused?
 
     // query nodes of the graph
     std::set<LocationIdx> getSuccessorLocations(LocationIdx loc) const;

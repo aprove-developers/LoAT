@@ -42,6 +42,10 @@ LinearRule::LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, Loc
         : lhs(lhsLoc, guard, cost), rhs(rhsLoc, update)
 {}
 
+LinearRule LinearRule::withNewRhsLoc(LocationIdx rhsLoc) const {
+    return LinearRule(lhs, RuleRhs(rhsLoc, rhs.update));
+}
+
 
 
 NonlinearRule::NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
@@ -55,5 +59,27 @@ bool NonlinearRule::isLinear() const {
 LinearRule NonlinearRule::toLinearRule() const {
     assert(isLinear());
     return LinearRule(lhs, rhss.front());
+}
+
+
+std::ostream& operator<<(std::ostream &s, const LinearRule &rule) {
+    s << "LRule(";
+    s << rule.getLhsLoc() << " | ";
+
+    for (auto upit : rule.getUpdate()) {
+        s << upit.first << "=" << upit.second;
+        s << ", ";
+    }
+
+    s << "| ";
+
+    for (auto expr : rule.getGuard()) {
+        s << expr << ", ";
+    }
+    s << "| ";
+    s << rule.getCost();
+    s << ")";
+    return s;
+    }
 }
 
