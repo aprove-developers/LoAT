@@ -78,7 +78,7 @@ private:
     /**
      * Helper that calls Preprocess::simplifyRule
      */
-    static void simplifyRule(LinearRule &rule);
+    static void simplifyRule(VarMan &varMan, LinearRule &rule);
 
     /**
      * Helper that chains all pairs of loops at the given location.

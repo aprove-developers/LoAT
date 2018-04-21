@@ -51,13 +51,21 @@ Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
 // #####################
 
 
-void Accelerator::simplifyRule(LinearRule &rule) {
+void Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
     Timing::start(Timing::Preprocess);
 
+    Transition t;
+    t.guard = rule.getGuard();
+    t.update = rule.getUpdate();
+    t.cost = rule.getCost();
+
     // TODO: Port preprocess to Linear/AbstractRule
-//    if (Preprocess::simplifyTransition(itrs,getTransData(tidx))) {
-//        debugGraph("Simplified transition before Farkas");
-//    }
+    if (Preprocess::simplifyTransition(varMan, t)) {
+        debugGraph("Simplified transition before Farkas");
+        rule.getGuardMut() = t.guard;
+        rule.getUpdateMut() = t.update;
+        rule.getCostMut() = t.cost;
+    }
 
     Timing::done(Timing::Preprocess);
 }
@@ -458,7 +466,7 @@ bool Accelerator::accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc) 
 
 #ifdef SELFLOOPS_ALWAYS_SIMPLIFY
     for (TransIdx loop : its.getTransitionsFromTo(loc, loc)) {
-        simplifyRule(its.getRuleMut(loop));
+        simplifyRule(its, its.getRuleMut(loop));
     }
 #endif
 
