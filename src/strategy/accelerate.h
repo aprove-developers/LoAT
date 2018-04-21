@@ -26,7 +26,7 @@
 
 #include "accelerate/farkas.h"
 
-#include <boost/optional.hpp
+#include <boost/optional.hpp>
 
 
 class Accelerator {

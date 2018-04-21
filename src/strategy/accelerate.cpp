@@ -51,7 +51,7 @@ Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
 // #####################
 
 
-static void Accelerator::simplifyRule(LinearRule &rule) {
+void Accelerator::simplifyRule(LinearRule &rule) {
     Timing::start(Timing::Preprocess);
 
     // TODO: Port preprocess to Linear/AbstractRule
@@ -63,7 +63,7 @@ static void Accelerator::simplifyRule(LinearRule &rule) {
 }
 
 
-static void Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
+void Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
     vector<TransIdx> loops = its.getTransitionsFromTo(loc, loc);
 
     for (TransIdx first : loops) {
@@ -104,11 +104,13 @@ Accelerator::MeteringResult Accelerator::meter(const LinearRule &rule) const {
 
 
 bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
-    switch (res.result) {
-        case FarkasMeterGenerator::ConflictVar:
-            rulesWithConflictingVariables.push_back({ruleIdx, res.conflictVar});
-            // fall through, ConflictVar is just UNSAT with additional information
+    if (res.result == FarkasMeterGenerator::ConflictVar) {
+        // ConflictVar is just Unsat with more information
+        res.result = FarkasMeterGenerator::Unsat;
+        rulesWithConflictingVariables.push_back({ruleIdx, res.conflictVar});
+    }
 
+    switch (res.result) {
         case FarkasMeterGenerator::Unsat:
             Stats::add(Stats::SelfloopNoRank);
             debugAccel("Farkas unsat for rule " << ruleIdx);
@@ -186,6 +188,7 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
                     return true;
                 }
             }
+        default:;
     }
     unreachable();
 }
@@ -442,7 +445,7 @@ void Accelerator::run() {
 
 
 
-static bool Accelerator::accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc) {
+bool Accelerator::accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc) {
     if (its.getTransitionsFromTo(loc, loc).empty()) {
         return false;
     }

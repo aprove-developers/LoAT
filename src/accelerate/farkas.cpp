@@ -94,7 +94,7 @@ void FarkasMeterGenerator::preprocessFreevars() {
 
 
 bool FarkasMeterGenerator::makeRelationalGuard() {
-    vector<Expression> newGuard;
+    GuardList newGuard;
     for (Expression term : guard) {
         if (term.info(GiNaC::info_flags::relation_not_equal)) return false; //not allowed
         if (term.info(GiNaC::info_flags::relation_equal)) {

@@ -36,6 +36,25 @@ struct FarkasTrans {
     Expression cost;
 };
 
+
+std::ostream& operator<<(std::ostream &s, const FarkasTrans &trans) {
+    s << "Transition(";
+    for (auto upit : trans.update) {
+        s << upit.first << "=" << upit.second;
+        s << ", ";
+    }
+    s << "| ";
+    for (auto expr : trans.guard) {
+        s << expr << ", ";
+    }
+    s << "| ";
+    s << trans.cost;
+    s << ")";
+    return s;
+}
+
+
+
 /**
  * Class to encapsulate the process of finding a metering function for a given transition using Z3 and Farkas lemma
  *
@@ -243,17 +262,17 @@ private:
      * The transition data (possible modified by makeLinearTransition)
      */
     UpdateMap update;
-    std::vector<Expression> guard;
+    GuardList guard;
 
     /**
      * The transition's guard without irrelevant constraints
      */
-    std::vector<Expression> reducedGuard;
+    GuardList reducedGuard;
 
     /**
      * The irrelevant constraints from the transition's guard (which were dropped for reducedGuard)
      */
-    std::vector<Expression> irrelevantGuard;
+    GuardList irrelevantGuard;
 
 
     /**
@@ -292,7 +311,7 @@ private:
      * Linear constraints (of the form "linear term <= constant") obtained from guard, reduced guard, irrelevant guard, guard and update.
      */
     struct {
-        std::vector<Expression> guard, reducedGuard, irrelevantGuard, guardUpdate;
+        GuardList guard, reducedGuard, irrelevantGuard, guardUpdate;
     } constraints;
 };
 
