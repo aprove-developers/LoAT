@@ -70,6 +70,7 @@ public:
 
     // query the rule associated with a given transition
     const Rule& getRule(TransIdx transition) const;
+    Rule& getRuleMut(TransIdx transition); // Note: the locations of the returned rule must not be changed!
 
     // query transitions of the graph
     std::vector<TransIdx> getTransitionsFrom(LocationIdx loc) const;

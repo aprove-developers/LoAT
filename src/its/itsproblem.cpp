@@ -49,6 +49,11 @@ const Rule &AbstractITSProblem<Rule>::getRule(TransIdx transition) const {
 }
 
 template<typename Rule>
+Rule &AbstractITSProblem<Rule>::getRuleMut(TransIdx transition) {
+    return rules.at(transition);
+}
+
+template<typename Rule>
 std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsFrom(LocationIdx loc) const {
     return graph.getTransFrom(loc);
 }

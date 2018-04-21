@@ -26,6 +26,7 @@
 
 typedef int LocationIdx;
 typedef int VariableIdx;
+typedef std::pair<VariableIdx, VariableIdx> VariablePair;
 
 typedef std::vector<Expression> GuardList;
 typedef std::map<VariableIdx,Expression> UpdateMap;
