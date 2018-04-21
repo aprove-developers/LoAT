@@ -21,7 +21,8 @@
 #include "global.h"
 #include "its/variablemanager.h"
 
-struct Transition;
+//struct Transition;
+#include "flowgraph.h"
 
 
 /**
@@ -40,6 +41,21 @@ public:
      * Otherwise, false is returned and trans is left unchanged
      */
     static bool calcIterated(const VarMan &varMan, Transition &trans, const Expression &meterfunc);
+
+    static bool calcIterated(const VarMan &varMan, LinearRule &rule, const Expression &meterfunc) {
+        Transition t;
+        t.guard = rule.getGuard();
+        t.update = rule.getUpdate();
+        t.cost = rule.getCost();
+
+        bool res = calcIterated(varMan, t, meterfunc);
+
+        rule.getGuardMut() = t.guard;
+        rule.getUpdateMut() = t.update;
+        rule.getCostMut() = t.cost;
+        return res;
+    }
+
 
 private:
     Recurrence(const VarMan &varMan);

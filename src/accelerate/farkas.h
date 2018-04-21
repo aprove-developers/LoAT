@@ -27,7 +27,14 @@
 #include <vector>
 #include <map>
 
-struct Transition;
+
+#include "flowgraph.h" // only for Transition
+
+struct FarkasTrans {
+    GuardList guard;
+    UpdateMap update;
+    Expression cost;
+};
 
 /**
  * Class to encapsulate the process of finding a metering function for a given transition using Z3 and Farkas lemma
@@ -57,20 +64,48 @@ public:
     /**
      * Try to find a metering function for the given transition
      * @param varMan the VariableManager instance, providing lists of all symbols
-     * @param t the Transition to find a metering function for, NOTE: modified by instantiation
+     * @param t the FarkasTrans to find a metering function for, NOTE: modified by instantiation
      * @param result the resulting metering function (output only)
      * @param conflictVar if given, this is set if it would help to add A > B (or B > A) to the guard for variables A,B
      * @return Success iff a metering function was found and result was set, otherwise indicates type of failure
      *
      * @note the transition t might be modified (by freevar instantiation) only if the result is Success
      */
-    static Result generate(VarMan &varMan, Transition &t, Expression &result, std::pair<VariableIdx, VariableIdx> *conflictVar = nullptr);
+    static Result generate(VarMan &varMan, FarkasTrans &t, Expression &result, std::pair<VariableIdx, VariableIdx> *conflictVar = nullptr);
+
+    // wrapper for old code
+    static Result generate(VarMan &varMan, Transition &t, Expression &result, std::pair<VariableIdx, VariableIdx> *conflictVar = nullptr) {
+        FarkasTrans ft { t.guard, t.update, t.cost };
+
+        Result res = FarkasMeterGenerator::generate(varMan, ft, result, conflictVar);
+
+        t.guard = ft.guard;
+        t.update = ft.update;
+        t.cost = ft.cost;
+
+        return res;
+    }
+
 
     /**
+     * // FIXME: This sounds like strenghening? If so, rename.
      * Prepares the guard to get better farkas results by adding additional constraints
      * @return true iff the transition was changed
      */
-    static bool prepareGuard(VarMan &varMan, Transition &t);
+    static bool prepareGuard(VarMan &varMan, FarkasTrans &t);
+
+    // wrapper for old code
+    static bool prepareGuard(VarMan &varMan, LinearRule &t) {
+        FarkasTrans ft { t.getGuard(), t.getUpdate(), t.getCost() };
+
+        bool res = FarkasMeterGenerator::prepareGuard(varMan, ft);
+
+        t.getGuardMut() = ft.guard;
+        t.getUpdateMut() = ft.update;
+        t.getCostMut() = ft.cost;
+
+        return res;
+    }
 
 
     /**
@@ -88,7 +123,7 @@ public:
                                 Z3Context &context);
 
 private:
-    FarkasMeterGenerator(VarMan &varMan, const Transition &t);
+    FarkasMeterGenerator(VarMan &varMan, const FarkasTrans &t);
 
     /**
      * Some preprocessing steps as equality propagation and elimination by transitive closure

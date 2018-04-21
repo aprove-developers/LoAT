@@ -34,7 +34,7 @@
 using namespace std;
 
 
-FarkasMeterGenerator::FarkasMeterGenerator(VarMan &varMan, const Transition &t)
+FarkasMeterGenerator::FarkasMeterGenerator(VarMan &varMan, const FarkasTrans &t)
     : varMan(varMan), update(t.update), guard(t.guard),
       coeff0(context.addFreshVariable("c", Z3Context::Real))
 {}
@@ -603,7 +603,7 @@ stack<GiNaC::exmap> FarkasMeterGenerator::instantiateFreeVariables() const {
 }
 
 
-bool FarkasMeterGenerator::prepareGuard(VarMan &varMan, Transition &t) {
+bool FarkasMeterGenerator::prepareGuard(VarMan &varMan, FarkasTrans &t) {
     Timing::Scope timer1(Timing::FarkasTotal);
     Timing::Scope timer2(Timing::FarkasLogic);
     bool changed = false;
@@ -638,11 +638,11 @@ bool FarkasMeterGenerator::prepareGuard(VarMan &varMan, Transition &t) {
 }
 
 
-FarkasMeterGenerator::Result FarkasMeterGenerator::generate(VarMan &varMan, Transition &t, Expression &result, pair<VariableIndex, VariableIndex> *conflictVar) {
+FarkasMeterGenerator::Result FarkasMeterGenerator::generate(VarMan &varMan, FarkasTrans &t, Expression &result, pair<VariableIndex, VariableIndex> *conflictVar) {
     Timing::Scope timer(Timing::FarkasTotal);
     Timing::start(Timing::FarkasLogic);
     FarkasMeterGenerator f(varMan,t);
-    debugFarkas("FARKAS Transition:" << t);
+    debugFarkas("FARKAS FarkasTrans:" << t);
 
     //preprocessing
     f.preprocessFreevars();
