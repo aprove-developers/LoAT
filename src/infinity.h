@@ -30,6 +30,8 @@ struct Transition;
 class Expression;
 
 
+// TODO: Add disclaimer that Infinity is deprecated
+
 /**
  * Class to handle the process of the final check for infinitely many models
  * @note currently, the implementation differs a bit from the paper, but should

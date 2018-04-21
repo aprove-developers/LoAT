@@ -50,7 +50,6 @@ namespace Chaining {
      */
     bool chainLinearPaths(LinearITSProblem &its);
 
-
     /**
      * Applies a more involved chaining strategy to the entire ITS problem.
      *
@@ -78,7 +77,6 @@ namespace Chaining {
      * @return true iff the ITS was modified
      */
     bool eliminateALocation(LinearITSProblem &its);
-
 
     /**
      * Applies chaining to eliminate all simple loops of the given ITS problem.

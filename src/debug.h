@@ -79,6 +79,10 @@ struct DebugStream {
 //debugging for FlowGraph and the underlying Graph class
 #define DEBUG_GRAPH
 
+#define DEBUG_CHAINING
+
+#define DEBUG_ACCELERATE
+
 //debugging for Farkas processor
 #define DEBUG_FARKAS
 
@@ -154,6 +158,18 @@ struct DebugStream {
 #define debugGraph(output) do { std::cout << "[graph] " << output << std::endl; } while(0)
 #else
 #define debugGraph(output) (void(0))
+#endif
+
+#ifdef DEBUG_CHAINING
+#define debugChain(output) do { std::cout << "[chain] " << output << std::endl; } while(0)
+#else
+#define debugChain(output) (void(0))
+#endif
+
+#ifdef DEBUG_ACCELERATE
+#define debugAccel(output) do { std::cout << "[accelerate] " << output << std::endl; } while(0)
+#else
+#define debugAccel(output) (void(0))
 #endif
 
 #ifdef DEBUG_FARKAS

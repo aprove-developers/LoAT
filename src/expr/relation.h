@@ -24,8 +24,6 @@
 #include <vector>
 #include <map>
 
-typedef std::vector<Expression> GuardList;
-
 
 /**
  * Namespace for several helpers operating on relational expressions.

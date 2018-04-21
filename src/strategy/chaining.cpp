@@ -49,6 +49,7 @@ static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCos
     // FIXME: This is probably better than using CONTRACT_CHECK_EXP_OVER_UNKNOWN
 
 #ifdef CONTRACT_CHECK_SAT_APPROXIMATE
+    // TODO: Might be a good idea to remove non-polynomial guards here, or better in checkAllApproximate?!
     // Try to solve an approximate problem instead, as we the check does not affect soundness.
     if (z3res == z3::unknown) {
         // TODO: use operator<< for newGuard when implemented
@@ -404,6 +405,8 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
 
     // Remove all incoming transitions that were successfully chained
     // FIXME: Find out why?! Is this really what the code below does?
+    // FIXME: We assume that loops are executed at least once, so after an incoming transition, a loop must be executed.
+    // FIXME: To allow skipping loops, addTransitionToSkipLoops was used. Instead, an empty simple loop can be added during acceleration.
     for (TransIdx toRemove : successfullyChained) {
         debugChain("removing transition " << its.getRule(toRemove));
         its.removeRule(toRemove);

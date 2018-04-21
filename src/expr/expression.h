@@ -127,6 +127,8 @@ public:
      */
     int getMaxDegree(const GiNaC::lst &vars) const;
 
+    // TODO: Deprecate collectVariableNames. Different symbols with same name should be treated differently
+    // TODO: (and they are treated differently when we use GiNaC::symbol and ExprSymbolSet instead of their names).
     /**
      * Adds all variable names that occur in this expression to the given set
      */

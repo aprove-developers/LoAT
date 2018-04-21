@@ -14,7 +14,6 @@
 #include "z3/z3toolbox.h"
 
 #include "inftyexpression.h"
-#include "farkas.h"
 #include "global.h"
 
 using namespace GiNaC;
