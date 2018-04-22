@@ -15,10 +15,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef PREPROCESSOR_H
-#define PREPROCESSOR_H
+#ifndef PREPROCESS_H
+#define PREPROCESS_H
 
 #include "its/variablemanager.h"
+#include "flowgraph.h"
 
 struct Transition;
 
@@ -42,6 +43,11 @@ namespace Preprocess
      * @return true iff trans was modified
      */
     bool simplifyTransition(const VarMan &varMan, Transition &trans);
+
+
+    // FIXME: remove this!
+    bool simplifyTransitionWrapper(const VarMan &varMan, LinearRule &rule);
+
 
     /**
      * Removes trivial terms from the given guard, i.e. 42 <= 1337 or x <= x+1
@@ -72,4 +78,4 @@ namespace Preprocess
     bool eliminateFreeVars(const VarMan &varMan, Transition &trans);
 }
 
-#endif // PREPROCESSOR_H
+#endif // PREPROCESS_H

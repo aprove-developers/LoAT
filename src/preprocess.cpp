@@ -56,6 +56,25 @@ bool Preprocess::simplifyTransition(const VarMan &varMan, Transition &trans) {
 }
 
 
+
+// FIXME: remove this!
+bool Preprocess::simplifyTransitionWrapper(const VarMan &varMan, LinearRule &rule) {
+    Transition t;
+    t.guard = rule.getGuard();
+    t.update = rule.getUpdate();
+    t.cost = rule.getCost();
+
+    bool res = simplifyTransition(varMan, t);
+
+    rule.getGuardMut() = t.guard;
+    rule.getUpdateMut() = t.update;
+    rule.getCostMut() = t.cost;
+
+    return res;
+}
+
+
+
 bool Preprocess::removeTrivialGuards(GuardList &guard) {
     bool changed = false;
     for (int i=0; i < guard.size(); ++i) {
