@@ -83,6 +83,8 @@ struct DebugStream {
 
 #define DEBUG_ACCELERATE
 
+#define DEBUG_PRUNE
+
 //debugging for Farkas processor
 #define DEBUG_FARKAS
 
@@ -164,6 +166,12 @@ struct DebugStream {
 #define debugChain(output) do { std::cout << "[chain] " << output << std::endl; } while(0)
 #else
 #define debugChain(output) (void(0))
+#endif
+
+#ifdef DEBUG_PRUNING
+#define debugPrune(output) do { std::cout << "[prune] " << output << std::endl; } while(0)
+#else
+#define debugPrune(output) (void(0))
 #endif
 
 #ifdef DEBUG_ACCELERATE
