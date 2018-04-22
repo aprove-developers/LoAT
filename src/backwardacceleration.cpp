@@ -219,6 +219,19 @@ boost::optional<Expression> BackwardAcceleration::computeIteratedCosts(GiNaC::ex
     return boost::optional<Expression>(res);
 }
 
+boost::optional<Expression> invert(Expression e, Expression var) {
+    GiNaC::lst var_list;
+    var_list.append(var);
+    if (e.isLinear(var_list)) {
+        Expression coeff = e.coeff(var);
+        if (!coeff.is_zero()) {
+            Expression inverted = ((var - e - coeff * var) / coeff);
+            return boost::optional<Expression>(inverted);
+        }
+    }
+    return boost::optional<Expression>();
+}
+
 Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap inverse_update, GiNaC::exmap iterated_inverse_update, Expression iterated_costs) {
     Transition new_transition;
     // use a fresh variable to represent the number of iterations to avoid clashes
@@ -230,32 +243,28 @@ Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap inverse_update,
     for (pair<VariableIndex, Expression> p: trans.update) {
         VariableIndex vi = p.first;
         Expression old_var = itrs.getGinacSymbol(vi);
+        Expression it_up = iterated_inverse_update.at(old_var);
         // create a fresh variable which represents the value of the currently processed variable after applying the accelerated transition
         VariableIndex fresh = itrs.addFreshVariable(itrs.getVarname(vi), true);
         Expression fresh_var = itrs.getGinacSymbol(fresh);
         new_transition.update.emplace(vi, fresh_var);
         // we computed the iterated _inverse_ update, so replace old_var (representing the value before the accelerated transition)
-        // with new_var (representing the value after the accelerated transition)
+        // with fresh_var (representing the value after the accelerated transition)
         GiNaC::exmap sigma;
         sigma.emplace(old_var, fresh_var);
         var_map.emplace(old_var, fresh_var);
         sigma.emplace(ginac_n, n);
-        Expression it_up = iterated_inverse_update.at(old_var);
         // now the value before the transition (old_var) needs to result from the value after the transition by applying the iterated inverse update
         new_transition.guard.push_back(old_var == it_up.subs(sigma));
-        GiNaC::lst old_var_list;
-        old_var_list.append(old_var);
-        if (it_up.isLinear(old_var_list)) {
-            Expression coeff = it_up.coeff(old_var);
-            if (!coeff.is_zero()) {
-                Expression up = ((it_up - coeff * old_var - fresh_var) / coeff).subs(ginac_n == n);
-                if (mapsToInt(up)) {
-                    new_transition.update[vi] = up;
-                }
-            }
-        }
+        // and the value after the transition (fresh_var) results from the update function applied to the values before the last iteration (inverse_udpate)
         Expression rhs = trans.update.at(vi).subs(inverse_update).subs(sigma);
         new_transition.guard.push_back(fresh_var == rhs);
+
+        // if the inverse of the iterated update is an integer function, inline it into the update of the accelerated transition
+        boost::optional<Expression> inverted = invert(it_up, old_var);
+        if (inverted.is_initialized() && mapsToInt(inverted.get().subs(ginac_n == n))) {
+            new_transition.update[vi] = inverted.get().subs(ginac_n == n);
+        }
     }
     new_transition.cost = iterated_costs.subs(ginac_n == n);
     // make sure that the transition can be applied in the last step
