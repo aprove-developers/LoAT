@@ -37,6 +37,7 @@
 
 
 using namespace std;
+using boost::optional;
 
 
 
@@ -212,6 +213,38 @@ bool Accelerator::accelerateAndStore(TransIdx ruleIdx, const LinearRule &rule, b
     }
 
     return handleMeteringResult(ruleIdx, res);
+}
+
+
+optional<LinearRule> Accelerator::accelerate(const LinearRule &rule) const {
+    MeteringResult res = meter(rule);
+
+    if (res.result == FarkasMeterGenerator::Unbounded) {
+        Stats::add(Stats::SelfloopInfinite);
+        debugAccel("Farkas (nested) unbounded for rule " << rule);
+
+        // The rule is nonterminating. We can ignore the update, but the guard still has to be kept.
+        LinearRule newRule = std::move(res.modifiedRule);
+        newRule.getCostMut() = Expression::InfSymbol;
+        newRule.getUpdateMut().clear();
+        return newRule;
+
+        // TODO: implement proof output here? (should only be called from nesting)
+    }
+
+    if (res.result == FarkasMeterGenerator::Success) {
+        debugAccel("Farkas success, got " << res.meteringFunction << " for rule " << rule);
+        LinearRule newRule = std::move(res.modifiedRule);
+
+        if (Recurrence::calcIterated(its, newRule, res.meteringFunction)) {
+            Stats::add(Stats::SelfloopRanked);
+            return newRule;
+
+            // TODO: implement proof output here? (should only be called from nesting)
+        }
+    }
+
+    return {};
 }
 
 
