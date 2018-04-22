@@ -23,6 +23,7 @@
 #include "farkas.h"
 #include "infinity.h"
 #include "asymptotic/asymptoticbound.h"
+#include "backwardacceleration.h"
 
 #include "debug.h"
 #include "stats.h"
@@ -32,6 +33,7 @@
 #include <queue>
 #include <iomanip>
 #include <purrs.hh>
+#include <boost/optional.hpp>
 
 
 namespace Purrs = Parma_Recurrence_Relation_Solver;
@@ -667,105 +669,6 @@ bool FlowGraph::chainSimpleLoops(NodeIndex node) {
     return true;
 }
 
-// TODO copied from farkas.cpp -- refactor
-std::vector<Expression> reduceGuard(ITRSProblem itrs, Transition t, Z3VariableContext &c) {
-    std::vector<Expression> reducedGuard;
-
-    //create Z3 solver here to use push/pop for efficiency
-    Z3Solver sol(c);
-    for (const Expression &ex : t.guard) sol.add(ex.toZ3(c));
-
-    for (Expression ex : t.guard) {
-        bool add = false;
-        bool add_always = false;
-        GiNaC::exmap updateSubs;
-        auto varnames = ex.getVariableNames();
-        for (string varname : varnames) {
-            VariableIndex vi = itrs.getVarindex(varname);
-            //keep constraint if it contains a free variable
-            if (itrs.isFreeVar(vi)) {
-                add_always = true;
-            }
-            //keep constraint if it contains an updated variable
-            auto upIt = t.update.find(vi);
-            if (upIt != t.update.end()) {
-                add = true;
-                updateSubs[itrs.getGinacSymbol(upIt->first)] = upIt->second;
-            }
-        }
-        //add if ex contains free var OR updated variable and is not trivially true for the update
-        if (add_always) {
-            reducedGuard.push_back(ex);
-        } else if (add) {
-            sol.push();
-            sol.add(!Expression::ginacToZ3(ex.subs(updateSubs),c));
-            bool tautology = (sol.check() == z3::unsat);
-            if (!tautology) {
-                reducedGuard.push_back(ex);
-                sol.pop();
-            }
-        }
-    }
-    return reducedGuard;
-}
-
-// TODO copied from recurrence.cpp -- refactor
-bool findUpdateRecurrence(Expression update, ExprSymbol target, Expression &result) {
-    Timing::Scope timer(Timing::Purrs);
-    Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
-    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(update.subs(target == last));
-    Purrs::Expr exact;
-
-    try {
-        Purrs::Recurrence rec(rhs);
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(update)} });
-
-        auto res = rec.compute_exact_solution();
-        if (res != Purrs::Recurrence::SUCCESS) {
-            return false;
-        }
-        rec.exact_solution(exact);
-    } catch (...) {
-        //purrs throws a runtime exception if the recurrence is too difficult
-        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << target << " for update " << update);
-        return false;
-    }
-
-    result = exact.toGiNaC();
-    return true;
-}
-
-// TODO overlaps with the corresponding method from recurrence.cpp -- refactor
-vector<VariableIndex> dependencyOrder(UpdateMap &update, ITRSProblem itrs) {
-    vector<VariableIndex> ordering;
-    set<VariableIndex> orderedVars;
-
-    bool changed = true;
-    while (changed && ordering.size() < update.size()) {
-        changed = false;
-        for (auto up : update) {
-            if (orderedVars.count(up.first) > 0) continue;
-
-            bool ready = true;
-            //check if all variables on update rhs are already processed
-            for (const string &varname : up.second.getVariableNames()) {
-                VariableIndex vi = itrs.getVarindex(varname);
-                if (vi != up.first && update.count(vi) > 0 && orderedVars.count(vi) == 0) {
-                    ready = false;
-                    break;
-                }
-            }
-
-            if (ready) {
-                changed = changed || orderedVars.insert(up.first).second;
-                ordering.push_back(up.first);
-            }
-        }
-
-    }
-    return ordering;
-}
-
 bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
     vector<TransIndex> loops = getTransFromTo(node,node);
     vector<TransIndex> to_remove;
@@ -777,124 +680,11 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
         }
         TransIndex tidx = loops[lopidx];
         Transition transition = getTransData(tidx);
-        if (!transition.cost.is_polynomial(itrs.getGinacVarList()) || !transition.cost.getMaxDegree() == 0) {
-            debugBackwardAcceleration("cost function " << transition.cost << " is not constant");
-            continue;
-        }
-        bool linear = true;
-        GiNaC::exmap inverse_ginac_update;
-        UpdateMap inverse_update;
-        for (std::pair<VariableIndex, Expression> p: transition.update) {
-            Expression x = itrs.getGinacSymbol(p.first);
-            GiNaC::lst xList;
-            xList.append(x);
-            Expression up = p.second;
-            if (!up.isLinear(xList)) {
-                linear = false;
-                debugBackwardAcceleration("update " << up << " is not linear");
-                break;
-            }
-            Expression lincoeff = up.coeff(x, 1);
-            Expression in_up;
-            if (lincoeff.is_zero()) {
-                in_up = up;
-            } else {
-                in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
-            }
-            inverse_ginac_update.emplace(x, in_up);
-            inverse_update.emplace(p.first, in_up);
-        }
-        if (!linear) {
-            continue;
-        }
-        debugBackwardAcceleration("successfully computed inverse update " << inverse_ginac_update);
-        // check if the guard implies inverse_update(reduced_guard)
-        Z3VariableContext c;
-        std::vector<Expression> reduced_guard = reduceGuard(itrs, transition, c);
-        z3::expr rhs = c.bool_val(true);
-        for (Expression e: reduced_guard) {
-            rhs = rhs && Expression::ginacToZ3(e.subs(inverse_ginac_update), c);
-        }
-        z3::expr lhs = c.bool_val(true);
-        for (Expression e: transition.guard) {
-            lhs = lhs && Expression::ginacToZ3(e, c);
-        }
-        Z3Solver solver(c);
-        z3::params params(c);
-        params.set(":timeout", Z3_CHECK_TIMEOUT);
-        solver.set(params);
-        solver.add(!rhs && lhs);
-        bool tautology = solver.check() == z3::unsat;
-        if (tautology) {
-            debugBackwardAcceleration("successfully checked guard implication");
-            vector<VariableIndex> order = dependencyOrder(inverse_update, itrs);
-            if (order.size() == inverse_update.size()) {
-                debugBackwardAcceleration("successfully computed dependency order");
-                GiNaC::exmap iterated_inverse_update;
-                bool successfully_computed_it_update = true;
-                for (VariableIndex vi: order) {
-                    Expression res;
-                    ExprSymbol target = itrs.getGinacSymbol(vi);
-                    Expression todo = inverse_ginac_update.at(target).subs(iterated_inverse_update);
-                    if (!findUpdateRecurrence(todo, target, res)) {
-                        successfully_computed_it_update = false;
-                        debugBackwardAcceleration("failed to compute iterated inverse update for " << todo);
-                        break;
-                    }
-                    debugBackwardAcceleration("successfully computed iterated inverse update " << res << " for " << todo);
-                    iterated_inverse_update[target] = res;
-                }
-                if (successfully_computed_it_update) {
-                    Transition new_transition;
-                    // use a fresh variable to represent the number of iterations to avoid clashes
-                    Expression n = itrs.getGinacSymbol(itrs.addFreshVariable("n", true));
-                    Expression ginac_n = Purrs::Expr(Purrs::Recurrence::n).toGiNaC();
-                    GiNaC::exmap var_map;
-                    // TODO here, the "irrelevant guard" would be sufficient
-                    new_transition.guard = transition.guard;
-                    // the number of iterations needs to be positive
-                    new_transition.guard.push_back(n > 0);
-                    for (std::pair<VariableIndex, Expression> p: transition.update) {
-                        VariableIndex vi = p.first;
-                        Expression old_var = itrs.getGinacSymbol(vi);
-                        // create a fresh variable which represents the value of the currently processed variable after applying the accelerated transition
-                        VariableIndex fresh = itrs.addFreshVariable(itrs.getVarname(vi), true);
-                        Expression fresh_var = itrs.getGinacSymbol(fresh);
-                        new_transition.update.emplace(vi, fresh_var);
-                        // we computed the iterated _inverse_ update, so replace old_var (representing the value before the accelerated transition)
-                        // with new_var (representing the value after the accelerated transition)
-                        GiNaC::exmap sigma;
-                        sigma.emplace(old_var, fresh_var);
-                        var_map.emplace(old_var, fresh_var);
-                        sigma.emplace(ginac_n, n);
-                        Expression it_up = iterated_inverse_update.at(old_var);
-                        // now the value before the transition (old_var) needs to result from the value after the transition by applying the iterated inverse update
-                        new_transition.guard.push_back(old_var == it_up.subs(sigma));
-                        // if the variable itself occurs in the iterated update, then the constraint above relates its pre- and post-values
-                        // otherwise, the post-value results from applying the update assuming the values before the last iteration for all other variables
-                        ExprSymbolSet vars = it_up.getVariables();
-                        if (vars.find(old_var.getAVariable()) == vars.end()) {
-                            new_transition.guard.push_back(fresh_var == transition.update.at(vi).subs(inverse_ginac_update).subs(sigma));
-                        }
-                    }
-                    // TODO adapt the computation of the iterated costs as soon as we support non-constant costs
-                    new_transition.cost = transition.cost * n;
-                    // make sure that the transition can be applied in the last step
-                    for (Expression e: transition.guard) {
-                        Expression final_constraint = e.subs(inverse_ginac_update);
-                        if (e != final_constraint) {
-                            new_transition.guard.push_back(final_constraint.subs(var_map));
-                        }
-                    }
-                    debugBackwardAcceleration("replacing " << transition << " with " << new_transition);
-                    to_add.push_back(new_transition);
-                    to_remove.push_back(tidx);
-                }
-            } else {
-                debugBackwardAcceleration("failed to computed dependency order");
-            }
-        } else {
-            debugBackwardAcceleration("failed to check guard implication");
+        BackwardAcceleration ba(itrs, transition);
+        boost::optional<Transition> new_transition = ba.accelerate();
+        if (new_transition.is_initialized()) {
+            to_add.push_back(new_transition.get());
+            to_remove.push_back(tidx);
         }
     }
     for (TransIndex ti: to_remove) {

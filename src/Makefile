@@ -1,4 +1,4 @@
-OBJECTS = global.o itrs.o expression.o flowgraph.o recurrence.o z3toolbox.o farkas.o stats.o preprocess.o infinity.o asymptotic/inftyexpression.o asymptotic/limitvector.o asymptotic/limitproblem.o asymptotic/asymptoticbound.o guardtoolbox.o timing.o debug.o timeout.o
+OBJECTS = global.o itrs.o expression.o flowgraph.o recurrence.o z3toolbox.o farkas.o stats.o preprocess.o infinity.o asymptotic/inftyexpression.o asymptotic/limitvector.o asymptotic/limitproblem.o asymptotic/asymptoticbound.o guardtoolbox.o timing.o debug.o timeout.o backwardacceleration.o
 
 .PHONY: clean all
 
