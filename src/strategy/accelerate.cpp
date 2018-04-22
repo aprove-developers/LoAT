@@ -61,7 +61,7 @@ void Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
 
     // TODO: Port preprocess to Linear/AbstractRule
     if (Preprocess::simplifyTransition(varMan, t)) {
-        debugGraph("Simplified transition before Farkas");
+        debugAccel("Simplified transition before Farkas");
         rule.getGuardMut() = t.guard;
         rule.getUpdateMut() = t.update;
         rule.getCostMut() = t.cost;

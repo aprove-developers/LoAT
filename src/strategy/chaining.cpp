@@ -286,7 +286,6 @@ bool Chaining::chainLinearPaths(LinearITSProblem &its) {
     };
 
     Timing::Scope timer(Timing::Contract);
-    Stats::addStep("Chaining::chainLinear");
     return callRepeatedlyOnEachNode(its, implementation);
 }
 
@@ -317,7 +316,6 @@ bool Chaining::chainTreePaths(LinearITSProblem &its) {
     };
 
     Timing::Scope timer(Timing::Branches);
-    Stats::addStep("Chaining::chainBranches");
     return callRepeatedlyOnEachNode(its, implementation);
 
     // TODO: Restore this functionality, i.h., call removeConstLeafsAndUnreachable after calling chainTreePaths (wherever it is called)
