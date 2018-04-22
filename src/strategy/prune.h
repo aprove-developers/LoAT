@@ -15,24 +15,23 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef LINEAR_H
-#define LINEAR_H
+#ifndef PRUNE_H
+#define PRUNE_H
 
-#include "global.h"
+#include "graph/hypergraph.h"
 
-#include "graph/graph.h"
-#include "its/itsproblem.h"
-#include "expr/expression.h"
+class LinearRule;
+class LinearITSProblem;
+
 
 namespace Pruning {
-
     /**
      * Tries to identify and remove duplicate transitions within the given list of transitions
      * @param trans list of transitions that are checked
      * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
      * @return true iff the ITS was modified (i.e. a duplicate got deleted)
      */
-    bool removeDuplicateRules(LinearITSProblem &its, const std::vector<TransIndex> &trans, bool compareUpdate = true);
+    bool removeDuplicateRules(LinearITSProblem &its, const std::vector<TransIdx> &trans, bool compareUpdate = true);
 
     /**
      * Checks initial rules (from the initial location) for satisfiability, removes unsat rules.
@@ -62,4 +61,4 @@ namespace Pruning {
     bool compareRules(const LinearRule &a, const LinearRule &b, bool compareUpdate = true);
 }
 
-#endif // LINEAR_H
+#endif // PRUNE_H

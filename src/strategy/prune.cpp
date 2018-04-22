@@ -17,14 +17,16 @@
 
 #include "prune.h"
 
-#include "z3/z3toolbox.h"
-#include "infinity.h"
-#include "asymptotic/asymptoticbound.h"
-
 #include "debug.h"
 #include "util/stats.h"
 #include "util/timing.h"
 #include "util/timeout.h"
+
+#include "its/itsproblem.h"
+
+#include "z3/z3toolbox.h"
+#include "infinity.h"
+#include "asymptotic/asymptoticbound.h"
 
 #include <queue>
 
@@ -117,7 +119,7 @@ bool Pruning::pruneParallelRules(LinearITSProblem &its) {
 
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
     // (see ComplexityResult for the latter). We first compare the complexity, then the number of inftyVars.
-    typedef tuple<TransIndex,Complexity,int> TransCpx;
+    typedef tuple<TransIdx,Complexity,int> TransCpx;
     auto comp = [](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b) || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
 
     // We use a priority queue with the aforementioned comparison of rules (and vector as underlying container).
@@ -146,7 +148,7 @@ bool Pruning::pruneParallelRules(LinearITSProblem &its) {
                 }
 
                 // Keep only the top elements of the queue
-                set<TransIndex> keep;
+                set<TransIdx> keep;
                 for (int i=0; i < PRUNE_MAX_PARALLEL_TRANSITIONS; ++i) {
                     keep.insert(get<0>(queue.top()));
                     queue.pop();
@@ -209,7 +211,7 @@ static bool removeConstLeafs(LinearITSProblem &its, LocationIdx node, set<Locati
 
 
 bool Pruning::removeLeafsAndUnreachable(LinearITSProblem &its) {
-    set<NodeIndex> visited;
+    set<LocationIdx> visited;
 
     // Remove rules to leafs if they do not give nontrivial complexity
     bool changed = removeConstLeafs(its, its.getInitialLocation(), visited);
