@@ -37,21 +37,7 @@ struct FarkasTrans {
 };
 
 
-std::ostream& operator<<(std::ostream &s, const FarkasTrans &trans) {
-    s << "Transition(";
-    for (auto upit : trans.update) {
-        s << upit.first << "=" << upit.second;
-        s << ", ";
-    }
-    s << "| ";
-    for (auto expr : trans.guard) {
-        s << expr << ", ";
-    }
-    s << "| ";
-    s << trans.cost;
-    s << ")";
-    return s;
-}
+std::ostream& operator<<(std::ostream &s, const FarkasTrans &trans);
 
 
 

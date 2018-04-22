@@ -32,11 +32,14 @@
 
 #include "its/variablemanager.h"
 
+
+#include "its/rule.h"
+
 //typedefs for readability
 typedef int TermIndex;
 typedef int VariableIndex;
-typedef std::vector<Expression> GuardList;
-typedef std::map<VariableIndex,Expression> UpdateMap;
+//typedef std::vector<Expression> GuardList;
+//typedef std::map<VariableIndex,Expression> UpdateMap;
 
 
 /**

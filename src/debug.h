@@ -76,8 +76,11 @@ struct DebugStream {
 //debugging for the conversion from GiNaC expressions to z3 expressions
 #define DEBUG_GINACTOZ3
 
-//debugging for FlowGraph and the underlying Graph class
+//debugging for the graph datastructure
 #define DEBUG_GRAPH
+
+//debugging for the analysis of linear ITS problems
+#define DEBUG_LINEAR
 
 #define DEBUG_CHAINING
 
@@ -160,6 +163,12 @@ struct DebugStream {
 #define debugGraph(output) do { std::cout << "[graph] " << output << std::endl; } while(0)
 #else
 #define debugGraph(output) (void(0))
+#endif
+
+#ifdef DEBUG_LINEAR
+#define debugLinear(output) do { std::cout << "[linear] " << output << std::endl; } while(0)
+#else
+#define debugLinear(output) (void(0))
 #endif
 
 #ifdef DEBUG_CHAINING

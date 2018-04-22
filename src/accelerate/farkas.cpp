@@ -34,6 +34,27 @@
 using namespace std;
 
 
+
+std::ostream& operator<<(std::ostream &s, const FarkasTrans &trans) {
+    s << "Transition(";
+    for (auto upit : trans.update) {
+        s << upit.first << "=" << upit.second;
+        s << ", ";
+    }
+    s << "| ";
+    for (auto expr : trans.guard) {
+        s << expr << ", ";
+    }
+    s << "| ";
+    s << trans.cost;
+    s << ")";
+    return s;
+}
+
+
+
+
+
 FarkasMeterGenerator::FarkasMeterGenerator(VarMan &varMan, const FarkasTrans &t)
     : varMan(varMan), update(t.update), guard(t.guard),
       coeff0(context.addFreshVariable("c", Z3Context::Real))

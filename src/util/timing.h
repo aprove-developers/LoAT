@@ -27,17 +27,19 @@
  */
 namespace Timing
 {
+    // FIXME: Revise this list, e.g. "Branches" vs "Contract" does not make much sense if we also have chainSimpleLoops
     enum TimingAction { Total=0, FarkasTotal, FarkasLogic, Contract, Branches, Selfloops, Infinity, Z3, Purrs, Preprocess, Other };
 
     void clear();
     void print(std::ostream &os);
 
-    //adds the current time as starting point of the given action. Note that this must not be nested
+    // Adds the current time as starting point of the given action. Note that this must not be nested
     void start(TimingAction action);
 
-    //uses the current time as an end point for the given action, adds the delta to the total elapsed time for this action
+    // Uses the current time as an end point for the given action, adds the delta to the total elapsed time for this action
     void done(TimingAction action);
 
+    // Starts the given action upon construction, stops it upon destruction
     class Scope {
     public:
         Scope(TimingAction ac) : action(ac) { Timing::start(action); }

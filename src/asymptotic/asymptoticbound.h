@@ -84,6 +84,7 @@ private:
     std::vector<LimitVector> toApply;
 
 public:
+    // FIXME: Avoid the old InfiniteInstances::Result, maybe prefer the private ComplexityResult?
     /**
      * Analyzes the given guard and cost.
      * @param varMan the VariableManager instance is needed to get information about free variables
