@@ -115,8 +115,10 @@ public:
     const UpdateMap& getUpdate() const { return rhs.update; }
     UpdateMap& getUpdateMut() { return rhs.update; }
 
-    // shorthands for constructor
+    // some shorthands
     LinearRule withNewRhsLoc(LocationIdx rhsLoc) const;
+    static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc); // empty guard/update, cost 0
+    bool isDummyRule() const; // empty guard/update, cost 0
 };
 
 

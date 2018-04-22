@@ -443,7 +443,7 @@ void Accelerator::run() {
 
     // Add a dummy rule to simulate the effect of not executing any loop
     if (addEmptyRuleToSkipLoops) {
-        TransIdx t = its.addRule(LinearRule(targetLoc, {}, Expression(0), targetLoc, {}));
+        TransIdx t = its.addRule(LinearRule::dummyRule(targetLoc, targetLoc));
         proofout << "  Adding an empty self-loop: " << t << "." << endl;
     }
 

@@ -46,6 +46,13 @@ LinearRule LinearRule::withNewRhsLoc(LocationIdx rhsLoc) const {
     return LinearRule(lhs, RuleRhs(rhsLoc, rhs.update));
 }
 
+bool LinearRule::isDummyRule() const {
+    return lhs.guard.empty() && rhs.update.empty() && lhs.cost.is_zero();
+}
+
+LinearRule LinearRule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
+    return LinearRule(lhsLoc, {}, Expression(0), rhsLoc, {});
+}
 
 
 NonlinearRule::NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
