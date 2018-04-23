@@ -244,7 +244,7 @@ bool FlowGraph::accelerateSimpleLoops() {
     bool res = false;
     for (NodeIndex node : nodes) {
         if (!getTransFromTo(node,node).empty()) {
-            res = backwardAccelerateSimpleLoops(node) || res;
+            res = accelerateSimpleLoops(node) || res;
             if (Timeout::soft()) return res;
         }
     }
@@ -721,6 +721,14 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
                 return true;
             }
         }
+        BackwardAcceleration ba(itrs, data);
+        boost::optional<Transition> new_transition = ba.accelerate();
+        if (new_transition.is_initialized()) {
+            data.cost = new_transition.get().cost;
+            data.update = new_transition.get().update;
+            data.guard = new_transition.get().guard;
+            return true;
+        }
         return false;
     };
 
@@ -798,18 +806,42 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
                 addTrans(node,node,getTransData(tidx)); //keep old
             }
             else if (result == FarkasMeterGenerator::Unsat) {
-                Stats::add(Stats::SelfloopNoRank);
-                debugGraph("Farkas unsat!");
-                addTransitionToSkipLoops.insert(node);
-                added_unranked.insert(addTrans(node,node,data)); //keep old, mark as unsat
+                BackwardAcceleration ba(itrs, getTransData(tidx));
+                boost::optional<Transition> new_transition = ba.accelerate();
+                if (new_transition.is_initialized()) {
+                    data.cost = new_transition.get().cost;
+                    data.update = new_transition.get().update;
+                    data.guard = new_transition.get().guard;
+                    TransIndex tnew = addTrans(node,node,data);
+                    added_ranked.insert(tnew);
+                    added_unranked.insert(tidx); //try nesting also with original transition
+                    map_to_original[tnew] = tidx;
+                } else {
+                    Stats::add(Stats::SelfloopNoRank);
+                    debugGraph("Farkas unsat!");
+                    addTransitionToSkipLoops.insert(node);
+                    added_unranked.insert(addTrans(node,node,data)); //keep old, mark as unsat
+                }
             }
             else if (result == FarkasMeterGenerator::Success) {
                 debugGraph("RANK: " << rankfunc);
                 if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
-                    //do not add to added_unranked, as this will probably not help with nested loops
-                    Stats::add(Stats::SelfloopNoUpdate);
-                    addTransitionToSkipLoops.insert(node);
-                    addTrans(node,node,getTransData(tidx)); //keep old
+                    BackwardAcceleration ba(itrs, getTransData(tidx));
+                    boost::optional<Transition> new_transition = ba.accelerate();
+                    if (new_transition.is_initialized()) {
+                        data.cost = new_transition.get().cost;
+                        data.update = new_transition.get().update;
+                        data.guard = new_transition.get().guard;
+                        TransIndex tnew = addTrans(node,node,data);
+                        added_ranked.insert(tnew);
+                        added_unranked.insert(tidx); //try nesting also with original transition
+                        map_to_original[tnew] = tidx;
+                    } else {
+                        //do not add to added_unranked, as this will probably not help with nested loops
+                        Stats::add(Stats::SelfloopNoUpdate);
+                        addTransitionToSkipLoops.insert(node);
+                        addTrans(node,node,getTransData(tidx)); //keep old
+                    }
                 } else {
                     Stats::add(Stats::SelfloopRanked);
                     TransIndex tnew = addTrans(node,node,data);
