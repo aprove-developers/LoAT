@@ -61,6 +61,9 @@ public:
     // Creates an empty ITS problem. The initialLocation is set to 0
     AbstractITSProblem() {}
 
+    // Creates an empty ITS problem with the given variables
+    AbstractITSProblem(VariableManager varMan) : VariableManager(varMan) {};
+
     // True iff there are no rules
     bool isEmpty() const;
 
@@ -127,6 +130,10 @@ protected:
 class LinearITSProblem : public AbstractITSProblem<LinearRule> {
 public:
     LocationIdx getTransitionTarget(TransIdx) const;
+
+private:
+    // Creates an empty problem with the given variables, required for toLinearProblem()
+    LinearITSProblem(VariableManager varMan) : AbstractITSProblem(varMan) {}
 
     // For the conversion in toLinearProblem()
     friend class ITSProblem;

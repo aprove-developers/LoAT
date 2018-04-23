@@ -207,10 +207,15 @@ bool ITSProblem::isLinear() const {
 LinearITSProblem ITSProblem::toLinearProblem() const {
     assert(isLinear());
 
-    LinearITSProblem res;
+    // Initialize the linear ITS with our variables
+    const VariableManager &varMan = *this;
+    LinearITSProblem res(varMan);
+
+    // Copy all other members
     res.data = data;
     res.graph = graph;
 
+    // Convert rules
     for (const auto &it : rules) {
         res.rules.emplace(it.first, it.second.toLinearRule());
     }
