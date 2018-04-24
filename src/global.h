@@ -64,7 +64,7 @@
  * how often the successfully nested loops are tried to be nested again
  * NOTE: nesting is always aborted if no new nested loops are created
  */
-#define NESTING_MAX_ITERATIONS 3
+#define NESTING_MAX_ITERATIONS 1
 
 /*
  * if defined, ranked selfloops are chained (if possible).
