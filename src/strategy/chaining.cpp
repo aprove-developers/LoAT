@@ -346,7 +346,7 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
     vector<TransIdx> transIn = its.getTransitionsTo(node);
     vector<TransIdx> transOut = its.getTransitionsFrom(node);
 
-    bool hasSelfloop = its.getTransitionsFromTo(node, node).empty();
+    bool hasSelfloop = !its.getTransitionsFromTo(node, node).empty();
 
     // If we cannot eliminate node, continue with its children (DFS traversal)
     if (hasSelfloop || its.isInitialLocation(node) || transIn.empty() || transOut.empty()) {
