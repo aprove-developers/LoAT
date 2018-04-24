@@ -44,17 +44,23 @@
 #define unimplemented() assert(false && "not implemented")
 
 
-/* ### Define a dummy ostream object ### */
+/* ### Colored debugging output (disable if your terminal does not support ANSI color codes) */
 
-struct DebugStream {
-    static std::ostream dummy;
-};
+#define DEBUG_COLORS
 
-
-/* ### Define for the proof output (can be used to disable proof output) ### */
-
-#define proofout std::cout
-//#define proofout DebugStream::dummy
+#ifdef DEBUG_COLORS
+#define COLOR_WARN "\033[1;31m" // bold red
+#define COLOR_PROBLEM "\033[1;33m" // bold yellow
+#define COLOR_DEBUG "\033[0;90m" // gray/bright black (avoid distraction from proof output)
+#define COLOR_HIGHLIGHT "\033[0;36m" // cyan (to be quickly visible)
+#define COLOR_NONE "\033[0m" // reset color to default
+#else
+#define COLOR_WARN ""
+#define COLOR_PROBLEM ""
+#define COLOR_DEBUG ""
+#define COLOR_HIGHLIGHT ""
+#define COLOR_NONE ""
+#endif
 
 
 /* ### Individual debugging flags ### */
@@ -81,12 +87,9 @@ struct DebugStream {
 
 //debugging for the analysis of linear ITS problems
 #define DEBUG_LINEAR
-
 #define DEBUG_CHAINING
-
 #define DEBUG_ACCELERATE
-
-#define DEBUG_PRUNE
+#define DEBUG_PRUNING
 
 //debugging for Farkas processor
 #define DEBUG_FARKAS
@@ -121,124 +124,127 @@ struct DebugStream {
 /* ### Debugging macros ### */
 
 //useful for short fixes/debugging tests:
-#define debugTest(output) do { std::cout << "[test] " << output << std::endl; } while(0)
+#define debugTest(output) do { std::cout << COLOR_HIGHLIGHT << "[test] " << output << COLOR_NONE << std::endl; } while(0)
 
 #define dumpList(desc,guard) do {\
-    std::cout << "  [dump] " << desc << ":"; \
+    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":"; \
     for (const auto& x : (guard)) std::cout << " " << x; \
-    std::cout << std::endl; \
+    std::cout << COLOR_NONE << std::endl; \
 } while(0)
 
 #define dumpMap(desc,update) do {\
-    std::cout << "  [dump] " << desc << ":"; \
+    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":"; \
     for (auto const &it : (update)) std::cout << " " << it.first << "=" << it.second; \
-    std::cout << std::endl; \
+    std::cout << COLOR_NONE << std::endl; \
 } while(0)
 
 #define dumpGuardUpdate(desc,guard,update) do {\
-    std::cout << "  [dump] " << desc << ":" << std::endl; \
+    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":" << std::endl; \
     dumpList("   guard",guard); \
     dumpMap("  update",update); \
 } while(0)
 
 #ifdef DEBUG_Z3
-#define debugZ3(solver,res,location) do { std::cout << "[z3] " << (location) << " Z3 Solver: " << (solver) << "Z3 Result: " << (res) << std::endl; } while(0)
+#define debugZ3(solver,res,location) do {\
+    std::cout << COLOR_DEBUG << "[z3] " << (location) << " Z3 Solver: " << (solver);\
+    std::cout << "Z3 Result: " << (res) << COLOR_NONE << std::endl;\
+} while(0)
 #else
 #define debugZ3(solver,res,location) (void(0))
 #endif
 
 #ifdef DEBUG_GINACTOZ3
-#define debugGinacToZ3(output) do { std::cout << "[ginac-z3] " << output << std::endl; } while(0)
+#define debugGinacToZ3(output) do { std::cout << COLOR_DEBUG << "[ginac-z3] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugGinacToZ3(output) (void(0))
 #endif
 
 #ifdef DEBUG_PURRS
-#define debugPurrs(output) do { std::cout << "[purrs] " << output << std::endl; } while(0)
+#define debugPurrs(output) do { std::cout << COLOR_DEBUG << "[purrs] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugPurrs(output) (void(0))
 #endif
 
 #ifdef DEBUG_GRAPH
-#define debugGraph(output) do { std::cout << "[graph] " << output << std::endl; } while(0)
+#define debugGraph(output) do { std::cout << COLOR_DEBUG << "[graph] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugGraph(output) (void(0))
 #endif
 
 #ifdef DEBUG_LINEAR
-#define debugLinear(output) do { std::cout << "[linear] " << output << std::endl; } while(0)
+#define debugLinear(output) do { std::cout << COLOR_HIGHLIGHT << "[linear] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugLinear(output) (void(0))
 #endif
 
 #ifdef DEBUG_CHAINING
-#define debugChain(output) do { std::cout << "[chain] " << output << std::endl; } while(0)
+#define debugChain(output) do { std::cout << COLOR_HIGHLIGHT << "[chain] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugChain(output) (void(0))
 #endif
 
 #ifdef DEBUG_PRUNING
-#define debugPrune(output) do { std::cout << "[prune] " << output << std::endl; } while(0)
+#define debugPrune(output) do { std::cout << COLOR_HIGHLIGHT << "[prune] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugPrune(output) (void(0))
 #endif
 
 #ifdef DEBUG_ACCELERATE
-#define debugAccel(output) do { std::cout << "[accelerate] " << output << std::endl; } while(0)
+#define debugAccel(output) do { std::cout << COLOR_HIGHLIGHT << "[accelerate] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugAccel(output) (void(0))
 #endif
 
 #ifdef DEBUG_FARKAS
-#define debugFarkas(output) do { std::cout << "[farkas] " << output << std::endl; } while(0)
+#define debugFarkas(output) do { std::cout << COLOR_DEBUG << "[farkas] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugFarkas(output) (void(0))
 #endif
 
 #ifdef DEBUG_INFINITY
-#define debugInfinity(output) do { std::cout << "[infinity] " << output << std::endl; } while(0)
+#define debugInfinity(output) do { std::cout << COLOR_DEBUG << "[infinity] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugInfinity(output) (void(0))
 #endif
 
 #ifdef DEBUG_LIMIT_PROBLEMS
-#define debugLimitProblem(output) do { std::cout << "[limitproblem] " << output << std::endl; } while(0)
+#define debugLimitProblem(output) do { std::cout << COLOR_DEBUG << "[limitproblem] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugLimitProblem(output) (void(0))
 #endif
 
 #ifdef DEBUG_ASYMPTOTIC_BOUNDS
-#define debugAsymptoticBound(output) do { std::cout << "[asymptotic] " << output << std::endl; } while(0)
+#define debugAsymptoticBound(output) do { std::cout << COLOR_DEBUG << "[asymptotic] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugAsymptoticBound(output) (void(0))
 #endif
 
 #ifdef DEBUG_PROBLEMS
-#define debugProblem(output) do { std::cerr << "[PROBLEM] " << output << std::endl; } while(0)
+#define debugProblem(output) do { std::cout << COLOR_PROBLEM << "[PROBLEM] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugProblem(output) (void(0))
 #endif
 
 #ifdef DEBUG_PARSER
-#define debugParser(output) do { std::cout << "[parser] " << output << std::endl; } while(0)
+#define debugParser(output) do { std::cout << COLOR_DEBUG << "[parser] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugParser(output) (void(0))
 #endif
 
 #ifdef DEBUG_TERM_PARSER
-#define debugTermParser(output) do { std::cout << "[termparser] " << output << std::endl; } while(0)
+#define debugTermParser(output) do { std::cout << COLOR_DEBUG << "[termparser] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugTermParser(output) (void(0))
 #endif
 
 #ifdef DEBUG_OTHER
-#define debugOther(output) do { std::cout << "[other] " << output << std::endl; } while(0)
+#define debugOther(output) do { std::cout << COLOR_DEBUG << "[other] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugOther(output) (void(0))
 #endif
 
 #ifdef DEBUG_WARN
-#define debugWarn(output) do { std::cout << "[WARNING] " << output << std::endl; } while(0)
+#define debugWarn(output) do { std::cout << COLOR_WARN << "[WARNING] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugWarn(output) (void(0))
 #endif
