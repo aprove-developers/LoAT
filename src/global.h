@@ -20,6 +20,17 @@
 
 //enable debugging
 #include "debug.h"
+#include "util/proofoutput.h"
+
+/*
+ * if defined, proof output is enabled (might be useful to disable during debugging)
+ */
+#define PROOF_OUTPUT_ENABLE
+
+/*
+ * if defined, the proof output uses ANSI color codes (disable if your terminal does not support it)
+ */
+//#define PROOF_OUTPUT_COLORS
 
 /*
  * if defined, it is checked if the combined guard is SAT before each chaining step
@@ -126,10 +137,24 @@
 #define LIMIT_PROBLEM_DISCARD_SIZE 10
 
 
-//settings (can be specified on the command line)
+// settings (can be specified on the command line)
 namespace GlobalFlags {
-extern bool limitSmt;
+    extern bool limitSmt;
 }
 
+// global variables
+namespace GlobalVariables {
+    extern ProofOutput proofOutput;
+}
+
+// shorthands for global variables
+#define proofout (GlobalVariables::proofOutput)
+
+// dummy stream (to disable proof output)
+#ifndef PROOF_OUTPUT_ENABLE
+struct DummyStream {
+    static std::ostream dummy;
+};
+#endif
 
 #endif //GLOBAL_H
