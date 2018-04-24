@@ -135,6 +135,10 @@ bool Pruning::pruneParallelRules(LinearITSProblem &its) {
         if (Timeout::soft()) break;
 
         for (LocationIdx pre : its.getPredecessorLocations(node)) {
+            // First remove duplicates
+            removeDuplicateRules(its, its.getTransitionsFromTo(pre, node));
+
+            // Then prune rules by only keeping the "best" ones (heuristically)
             const vector<TransIdx> &parallel = its.getTransitionsFromTo(pre, node);
 
             if (parallel.size() > PRUNE_MAX_PARALLEL_TRANSITIONS) {
