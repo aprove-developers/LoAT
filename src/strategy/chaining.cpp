@@ -117,7 +117,7 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
 #endif
 
     // Compose both updates
-    UpdateMap newUpdate;
+    UpdateMap newUpdate = first.getUpdate();
     for (auto it : second.getUpdate()) {
         newUpdate[it.first] = it.second.subs(updateSubs);
     }
