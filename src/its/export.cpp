@@ -63,10 +63,6 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
             s << "=" << upit.second;
             s << ", ";
         }
-
-        if (it->update.empty()) {
-            s << ", ";
-        }
     }
 
     if (rule.getGuard().empty()) {

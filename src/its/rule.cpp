@@ -85,6 +85,8 @@ std::ostream& operator<<(std::ostream &s, const LinearRule &rule) {
     }
     s << "| ";
     s << rule.getCost();
+
+    s << " | " << rule.getRhsLoc();
     s << ")";
     return s;
 }
