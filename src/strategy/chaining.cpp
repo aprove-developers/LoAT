@@ -308,9 +308,11 @@ bool Chaining::chainTreePaths(LinearITSProblem &its) {
             }
 
             // Chain transitions from node to succ with all transitions from succ.
-            eliminateLocationByChaining(its, succ, true);
+            if (!its.getSuccessorLocations(succ).empty()) {
+                eliminateLocationByChaining(its, succ, true);
+                changed = true;
+            }
 
-            changed = true;
             Stats::add(Stats::ContractBranch);
             if (Timeout::soft()) break;
         }
