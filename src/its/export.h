@@ -11,6 +11,11 @@ template <typename Rule>
 class ITSExport {
 public:
     /**
+     * Print the given rule in a readable format, prefixed with its index (used for proof output)
+     */
+    static void printLabeledRule(TransIdx rule, const AbstractITSProblem<Rule> &its, std::ostream &s);
+
+    /**
      * Prints the ITS problem in a readable but ugly format for debugging
      */
     static void printDebug(const AbstractITSProblem<Rule> &its, std::ostream &s);

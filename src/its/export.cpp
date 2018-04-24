@@ -85,6 +85,13 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
 
 
 template <typename Rule>
+void ITSExport<Rule>::printLabeledRule(TransIdx rule, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+    s << setw(4) << rule << ": ";
+    printRule(its.getRule(rule), its, s);
+}
+
+
+template <typename Rule>
 void ITSExport<Rule>::printDebug(const AbstractITSProblem<Rule> &its, std::ostream &s) {
     s << "Variables:";
     for (VariableIdx i=0; i < its.getVariableCount(); ++i) {
@@ -111,9 +118,7 @@ void ITSExport<Rule>::printDebug(const AbstractITSProblem<Rule> &its, std::ostre
     s << "Transitions:" << endl;
     for (LocationIdx loc : its.getLocations()) {
         for (TransIdx trans : its.getTransitionsFrom(loc)) {
-            s << "    ";
-            s << setw(3) << trans << ": ";
-            printRule(its.getRule(trans), its, s);
+            printLabeledRule(trans, its, s);
         }
     }
 }
@@ -121,23 +126,20 @@ void ITSExport<Rule>::printDebug(const AbstractITSProblem<Rule> &its, std::ostre
 
 template <typename Rule>
 void ITSExport<Rule>::printForProof(const AbstractITSProblem<Rule> &its, std::ostream &s) {
-    s << "  Start location: ";
+    s << "Start location: ";
     printLocation(its.getInitialLocation(), its, s);
     s << endl;
 
     if (its.isEmpty()) {
-        s << "    <empty>" << endl;
+        s << "  <empty>" << endl;
         return;
     }
 
     for (LocationIdx n : its.getLocations()) {
         for (TransIdx trans : its.getTransitionsFrom(n)) {
-            s << "    ";
-            s << setw(3) << trans << ": ";
-            printRule(its.getRule(trans), its, s);
+            printLabeledRule(trans, its, s);
         }
     }
-    s << endl;
 }
 
 
