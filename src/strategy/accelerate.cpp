@@ -338,7 +338,7 @@ bool Accelerator::nestRules(const InnerNestingCandidate &inner, const OuterNesti
         if (accelerated) {
             LinearRule newRule = accelerated.get();
 
-            if (newRule.getCost().getComplexity() <= innerRule.getCost().getComplexity()) {
+            if (newRule.getCost().getComplexity() >= innerRule.getCost().getComplexity()) {
                 res = true;
 
                 // Add the accelerated rule.
@@ -356,7 +356,7 @@ bool Accelerator::nestRules(const InnerNestingCandidate &inner, const OuterNesti
         if (accelerated) {
             LinearRule newRule = accelerated.get();
 
-            if (newRule.getCost().getComplexity() <= innerRule.getCost().getComplexity()) {
+            if (newRule.getCost().getComplexity() >= innerRule.getCost().getComplexity()) {
                 res = true;
 
                 // Add the accelerated rule.
