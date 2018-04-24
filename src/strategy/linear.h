@@ -43,7 +43,7 @@ struct RuntimeResult {
     bool reducedCpx;
 
     // Default constructor yields unknown complexity
-    RuntimeResult() : bound(0), cpx(Complexity::Unknown), reducedCpx(false) {}
+    RuntimeResult() : cpx(Complexity::Unknown), bound(0), reducedCpx(false) {}
 };
 
 
@@ -119,7 +119,11 @@ private:
     RuntimeResult getMaxRuntime();
 
     /**
-     * In case of a timeout (when the ITS is not fully chained), this tries to find a good partial result at least
+     * In case of a timeout (when the ITS is not fully chained), this tries to find a good partial result.
+     *
+     * To this end, the complexity of all rules from the initial location is computed (using asymptotic bounds),
+     * Then, these rules are chained with their successors and the process is repeated.
+     * This way, complexity results are quickly obtained and deeper rules are considered if enough time is left.
      */
     RuntimeResult getMaxPartialResult();
 

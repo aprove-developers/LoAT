@@ -28,8 +28,42 @@ typedef int LocationIdx;
 typedef int VariableIdx;
 typedef std::pair<VariableIdx, VariableIdx> VariablePair;
 
-typedef std::vector<Expression> GuardList;
-typedef std::map<VariableIdx,Expression> UpdateMap;
+//typedef std::vector<Expression> GuardList;
+//typedef std::map<VariableIdx,Expression> UpdateMap;
+
+
+// TODO: GuardList should probably be an ExpressionSet instead of a vector
+// TODO: Unless the performance penalty is too high.
+// TODO: Might try to normalize terms before adding them to the guard (e.g. all variables left, only <, <=, ==)
+// TODO: To do this, avoid inheriting from ExpressionSet, re-implement the required methods
+
+// GuardList is a list of expressions with some additional methods for convenience
+class GuardList : public std::vector<Expression> {
+public:
+    // inherit constructors of base class
+    using std::vector<Expression>::vector;
+
+    void collectVariables(ExprSymbolSet &res) const {
+        for (const Expression &ex : *this) {
+            ex.collectVariables(res);
+        }
+    }
+};
+
+// UpdateMap is a map from variables (as indices) to an expression (with which the variable is updated),
+// with some additional methods for convenience
+class UpdateMap : public std::map<VariableIdx,Expression> {
+public:
+    bool isUpdated(VariableIdx var) const {
+        return find(var) != end();
+    }
+
+    Expression getUpdate(VariableIdx var) const {
+        auto it = find(var);
+        assert(it != end());
+        return it->second;
+    }
+};
 
 
 // TODO: Add operator<< for GuardList, especially for UpdateMap

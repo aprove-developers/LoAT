@@ -76,13 +76,27 @@
  * NOTE: nesting is always aborted if no new nested loops are created
  */
 #define NESTING_MAX_ITERATIONS 3
+// FIXME: The value 3 is probably too high, 2 should really be sufficient, check on benchmarks
 
+
+// TODO: This heuristic has been removed
 /*
  * if defined, ranked selfloops are chained (if possible).
  * This increases time and branches, but might be valuable in certain examples.
  * (e.g. if you first want to take one path, then the second one through a single loop body)
  */
 //#define NESTING_CHAIN_RANKED
+
+
+/*
+ * If defined, all simple loops of one location are chained with each other
+ * before trying to accelerate them. This increases time and the number of rules,
+ * but might help in certain examples (e.g. if we have a loop body with two different
+ * paths A, B which we want to alternate, i.e., A, B, A, B, A, B, ...)
+ */
+#define CHAIN_BEFORE_ACCELERATE
+
+
 
 /*
  * if defined, in case of an unsat result from farkas, some additional constraints are added to the guard

@@ -57,6 +57,9 @@ RuntimeResult LinearITSAnalysis::run() {
     proofout.headline("Initial linear ITS problem");
     printForProof("Initial");
 
+    // TODO: Add the "cost >= 0" terms here, this is not something the parser should do!
+    // TODO: But only add if it is not already implied (this is much better than the hacky removeal of the last guard element)
+
     if (ensureProperInitialLocation()) {
         proofout.headline("Added a fresh start location (such that it has no incoming rules):");
         printForProof("Fresh start");
