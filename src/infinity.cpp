@@ -17,12 +17,12 @@
 
 #include "infinity.h"
 
+#include "global.h"
 #include "util/timing.h"
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"
 #include "expr/relation.h"
 #include "flowgraph.h"
-#include "debug.h"
 
 #include <queue>
 

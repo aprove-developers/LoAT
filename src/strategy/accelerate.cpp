@@ -166,7 +166,7 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
 
                 TransIdx t = its.addRule(std::move(newRule));
 
-                proofout << "  Self-Loop " << ruleIdx << " has unbounded runtime, ";
+                proofout << "Simple loop " << ruleIdx << " has unbounded runtime, ";
                 proofout << "resulting in the new transition " << t << "." << endl;
             }
             return true;
@@ -198,7 +198,7 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
                     // We also try the original, unaccelerated rule as outer loop for nesting (as in the Unsat case)
                     outerNestingCandidates.push_back({ ruleIdx });
 
-                    proofout << "  Self-Loop " << ruleIdx << " has the metering function ";
+                    proofout << "Simple loop " << ruleIdx << " has the metering function ";
                     proofout << res.meteringFunction << ", resulting in the new transition ";
                     proofout << newIdx << "." << endl;
                     return true;
@@ -295,7 +295,7 @@ void Accelerator::addNestedRule(const LinearRule &accelerated, const LinearRule 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
 
-    proofout << "  Nested parallel self-loops " << outer << " (outer loop) and " << inner;
+    proofout << "Nested parallel self-loops " << outer << " (outer loop) and " << inner;
     proofout << " (inner loop), resulting in the new transitions: " << newTrans;
 
     // Try to combine chain and the accelerated loop
@@ -379,7 +379,16 @@ bool Accelerator::nestRules(const InnerNestingCandidate &inner, const OuterNesti
 
 void Accelerator::run() {
     // Since we might add accelerated loops, we store the list of loops before acceleration
-    vector<TransIndex> loops = its.getTransitionsFromTo(targetLoc, targetLoc);
+    vector<TransIdx> loops = its.getTransitionsFromTo(targetLoc, targetLoc);
+    assert(!loops.empty());
+
+
+    // Proof output
+    proofout << "Accelerating the following rules:" << endl;
+    for (TransIdx loop : loops) {
+        LinearITSExport::printLabeledRule(loop, its, proofout);
+    }
+
 
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
@@ -476,7 +485,7 @@ void Accelerator::run() {
     timeout:;
 
     // Remove old rules
-    proofout << "  Removing the self-loops:";
+    proofout << "Removing the self-loops:";
     for (TransIdx loop : loops) {
         if (keepRules.count(loop) == 0) {
             proofout << " " << loop;
@@ -488,7 +497,7 @@ void Accelerator::run() {
     // Add a dummy rule to simulate the effect of not executing any loop
     if (addEmptyRuleToSkipLoops) {
         TransIdx t = its.addRule(LinearRule::dummyRule(targetLoc, targetLoc));
-        proofout << "  Adding an empty self-loop: " << t << "." << endl;
+        proofout << "Adding an empty self-loop: " << t << "." << endl;
     }
 
     // FIXME: Remember to call this after accelerating loops!
@@ -502,21 +511,35 @@ bool Accelerator::accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc) 
         return false;
     }
 
-    // Preprocessing
+    proofout << endl;
+    proofout.setLineStyle(ProofOutput::Headline);
+    proofout << "Accelerating simple loops of location " << loc << "." << endl;
+    proofout.increaseIndention();
 
+    // Preprocessing
 #ifdef CHAIN_BEFORE_ACCELERATE
-    Accelerator::chainAllLoops(its, loc);
+    if (Accelerator::chainAllLoops(its, loc)) {
+        proofout << "Chained all pairs of simple loops (where possible)" << endl;
+    }
 #endif
 
 #ifdef SELFLOOPS_ALWAYS_SIMPLIFY
+    bool simplifiedAny = false;
     for (TransIdx loop : its.getTransitionsFromTo(loc, loc)) {
-        simplifyRule(its, its.getRuleMut(loop));
+        if (simplifyRule(its, its.getRuleMut(loop))) {
+            simplifiedAny = true;
+            debugAccel("Simplified rule " << loop << " to " << its.getRule(loop));
+        }
+    }
+    if (simplifiedAny) {
+        proofout << "Simplified some of the simple loops" << endl;
     }
 #endif
 
     // Accelerate all loops (includes optimizations like nesting)
-
     Accelerator accel(its, loc);
     accel.run();
+
+    proofout.decreaseIndention();
     return true;
 }

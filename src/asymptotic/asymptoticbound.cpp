@@ -488,7 +488,11 @@ bool AsymptoticBound::solveLimitProblem() {
 
     } else if (currentLP.isSolved()) {
         solvedLimitProblems.push_back(currentLP);
+
+        proofout << "Solved the limit problem by the following transformations:" << endl;
+        proofout.increaseIndention();
         proofout << currentLP.getProof();
+        proofout.decreaseIndention();
 
         if (isAdequateSolution(currentLP)) {
             debugAsymptoticBound("Found adequate solution.");
@@ -1246,9 +1250,11 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
                 << " solved problem(s))");
 
         proofout << "Solution:" << std::endl;
+        proofout.increaseIndention();
         for (const auto &pair : asymptoticBound.bestComplexity.solution) {
             proofout << pair.first << " / " << pair.second << std::endl;
         }
+        proofout.decreaseIndention();
 
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,

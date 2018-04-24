@@ -49,16 +49,21 @@ LinearITSAnalysis::LinearITSAnalysis(LinearITSProblem &its, AnalysisSettings cfg
 
 
 RuntimeResult LinearITSAnalysis::run() {
-    proofout << endl << "Initial Control flow graph problem:" << endl;
+    if (cfg.dotOutput) {
+        cfg.dotStream << "digraph {" << endl;
+    }
+
+    proofout.section("Pre-processing the ITS problem");
+    proofout.headline("Initial linear ITS problem");
     printForProof("Initial");
 
     if (ensureProperInitialLocation()) {
-        proofout << endl << "Added a fresh start location (such that it has no incoming rules):" << endl;
+        proofout.headline("Added a fresh start location (such that it has no incoming rules):");
         printForProof("Fresh start");
     }
 
     if (Pruning::removeUnsatInitialRules(its)) {
-        proofout << endl << "Removed unsatisfiable initial rules:" << endl;
+        proofout.headline("Removed unsatisfiable initial rules:");
         printForProof("Reduced initial");
     }
 
@@ -71,10 +76,12 @@ RuntimeResult LinearITSAnalysis::run() {
 
     if (cfg.doPreprocessing) {
         if (preprocessRules()) {
-            proofout << endl <<  "Simplified all rules, resulting in:" << endl;
+            proofout.headline("Simplified all rules, resulting in:");
             printForProof("Simplify");
         }
     }
+
+    proofout.section("Simplification by acceleration and chaining");
 
     while (!isFullySimplified()) {
 
@@ -85,27 +92,31 @@ RuntimeResult LinearITSAnalysis::run() {
 
             if (accelerateSimpleLoops()) {
                 changed = true;
-                proofout << endl <<  "Accelerated all simple loops using metering functions";
-                proofout << " (where possible):" << endl;
+                proofout.headline("Accelerated all simple loops using metering functions (where possible):");
                 printForProof("Accelerate simple loops");
             }
             if (Timeout::soft()) break;
 
             if (chainSimpleLoops()) {
                 changed = true;
-                proofout << endl <<  "Chained simple loops:" << endl;
+                proofout.headline("Chained simple loops (with incoming rules):");
                 printForProof("Chain simple loops");
             }
             if (Timeout::soft()) break;
 
             if (chainLinearPaths()) {
                 changed = true;
-                proofout << endl <<  "Eliminated locations (on linear paths):" << endl;
+                proofout.headline("Eliminated locations (on linear paths):");
                 printForProof("Chain linear paths");
             }
             if (Timeout::soft()) break;
 
         } while (changed);
+
+        // Avoid wasting time on chaining/pruning if we are already done
+        if (isFullySimplified()) {
+            break;
+        }
 
         // Try more involved chaining strategies if we no longer make progress
         if (chainTreePaths()) {
@@ -120,13 +131,15 @@ RuntimeResult LinearITSAnalysis::run() {
 
         // Try to avoid rule explosion
         if (pruneRules()) {
-            proofout << endl <<  "Applied pruning:" << endl;
+            proofout << endl <<  "Applied pruning (of leafs and parallel rules):" << endl;
             printForProof("Prune");
         }
         if (Timeout::soft()) break;
     }
 
     if (Timeout::soft()) {
+        proofout << endl;
+        proofout.setLineStyle(ProofOutput::Warning);
         proofout << "Aborted due to lack of remaining time" << endl << endl;
     }
 
@@ -135,24 +148,26 @@ RuntimeResult LinearITSAnalysis::run() {
         Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false);
     }
 
-    proofout << endl << "Final control flow graph problem, now checking costs for infinitely many models:" << endl;
-    printForProof("Final");
-
     if (cfg.printSimplifiedAsKoAT) {
-        proofout << endl << "Simplified program in input format:" << endl;
+        proofout.headline("Fully simplified program in input format:");
         LinearITSExport::printKoAT(its, proofout);
         proofout << endl;
     }
 
+    proofout.section("Computing asymptotic complexity");
+    proofout.headline("Fully simplified ITS problem");
+    printForProof("Final");
+
     if (!isFullySimplified()) {
         // A timeout occurred before we managed to complete the analysis.
         // We try to quickly extract at least some complexity results.
+        proofout.setLineStyle(ProofOutput::Warning);
         proofout << "This is only a partial result (probably due to a timeout)." << endl;
-        proofout << "Trying to find the maximal complexity that has already been derived." << endl << endl;
+        proofout << "Trying to find the maximal complexity that has already been derived." << endl;
 
         // Reduce the number of rules to avoid z3 invocations
         removeConstantPathsAfterTimeout();
-        proofout << "Removed rules with constant/unknown complexity:" << endl;
+        proofout.headline("Removed rules with constant/unknown complexity:");
         printForProof("Removed constant");
 
         // Try to find a high complexity in the remaining problem (with chaining, but without acceleration)
@@ -160,7 +175,6 @@ RuntimeResult LinearITSAnalysis::run() {
 
     } else {
         // No timeout, fully simplified, find the maximum runtime
-        proofout << endl;
         runtime = getMaxRuntime();
     }
 
@@ -169,6 +183,11 @@ RuntimeResult LinearITSAnalysis::run() {
         runtime.cpx = Complexity::Const;
         runtime.bound = Expression(1);
         runtime.guard.clear();
+    }
+
+    if (cfg.dotOutput) {
+        LinearITSExport::printDotText(++dotCounter, runtime.cpx.toString(), cfg.dotStream);
+        cfg.dotStream << "}" << endl;
     }
 
     return runtime;
@@ -337,9 +356,9 @@ static RuntimeResult getMaxComplexity(const LinearITSProblem &its, vector<TransI
 
 RuntimeResult LinearITSAnalysis::getMaxRuntime() {
     auto rules = its.getTransitionsFrom(its.getInitialLocation());
-    proofout << "Computing complexity for remaining " << rules.size() << " rules." << endl << endl;
 
 #ifndef FINAL_INFINITY_CHECK
+    proofout.setLineStyle(ProofOutput::Warning);
     proofout << "WARNING: The asymptotic check is disabled, the result might be unsound!" << endl << endl;
     return getMaxComplexity(its, rules);
 #endif
@@ -351,15 +370,27 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks
         Complexity cpxUpperbound = rule.getCost().getComplexity();
         if (cpxUpperbound <= res.cpx) {
+            proofout << "Skipping rule " << ruleIdx << " since it cannot improve the complexity" << endl;
             continue;
         }
 
+        proofout << endl;
+        proofout.setLineStyle(ProofOutput::Headline);
+        proofout << "Computing asymptotic complexity for rule " << ruleIdx << endl;
+        proofout.increaseIndention();
+
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
+
         debugLinear("Asymptotic result: " << checkRes.cpx << " because: " << checkRes.reason);
+        proofout << "Resulting cost " << checkRes.cost << " has complexity: " << checkRes.cpx << endl;
+        proofout.decreaseIndention();
 
         if (checkRes.cpx > res.cpx) {
-            proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl << endl;
+            proofout << endl;
+            proofout.setLineStyle(ProofOutput::Result);
+            proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl;
+
             res.cpx = checkRes.cpx;
             res.bound = checkRes.cost;
             res.reducedCpx = checkRes.reducedCpx;
@@ -370,7 +401,8 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
             }
         }
 
-        if (Timeout::hard()) return res;
+        proofout << endl;
+        if (Timeout::hard()) break;
     }
 
 #ifdef DEBUG_PROBLEMS
@@ -435,13 +467,25 @@ RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
             const LinearRule &rule = its.getRule(trans);
             if (rule.getCost().getComplexity() <= max(res.cpx, Complexity::Const)) continue;
 
+            proofout << endl;
+            proofout.setLineStyle(ProofOutput::Headline);
+            proofout << "Computing asymptotic complexity for rule " << trans << endl;
+            proofout.increaseIndention();
+
             auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
+
+            proofout.decreaseIndention();
+
             if (checkRes.cpx > res.cpx) {
-                proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl << endl;
+                proofout << endl;
+                proofout.setLineStyle(ProofOutput::Result);
+                proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl;
+
                 res.cpx = checkRes.cpx;
                 res.bound = checkRes.cost;
                 res.reducedCpx = checkRes.reducedCpx;
                 res.guard = rule.getGuard();
+
                 if (res.cpx >= Complexity::Infty) goto done;
             }
             if (Timeout::hard()) goto abort;
@@ -467,7 +511,7 @@ RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
                 its.removeRule(first);
             }
         }
-        proofout << "Performed chaining from the start location:" << endl;
+        proofout.headline("Performed chaining from the start location:");
         printForProof("Chaining from start");
     }
 
@@ -479,6 +523,11 @@ done:
 
 
 void LinearITSAnalysis::printForProof(const std::string &dotDescription) {
+    // Proof output
+    proofout.increaseIndention();
     LinearITSExport::printForProof(its, proofout);
+    proofout.decreaseIndention();
+
+    // dot output
     LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, cfg.dotStream);
 }
