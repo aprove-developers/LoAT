@@ -38,6 +38,7 @@ using namespace std;
 
 
 #include "parser/itsparser.h"
+#include "strategy/linear.h"
 
 
 /**
@@ -222,7 +223,6 @@ int main(int argc, char *argv[]) {
             cout << "Error: Unable to open file: " << dotFile << endl;
             return 1;
         }
-        dotStream << "digraph {" << endl;
     }
 
     Timing::start(Timing::Total);
@@ -244,7 +244,13 @@ int main(int argc, char *argv[]) {
         cout << "SUCCESS" << endl << endl;
         its.print(cout);
         cout << "=== new ITSProblem ===" << endl;
+
+        LinearITSProblem lits = its.toLinearProblem();
+
+        LinearITSAnalysis::AnalysisSettings cfg(dotStream);
+        LinearITSAnalysis::analyze(lits, cfg);
     }
+
 
     return 42;
 
