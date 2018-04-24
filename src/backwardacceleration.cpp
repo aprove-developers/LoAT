@@ -16,6 +16,9 @@ vector<Expression> BackwardAcceleration::reduceGuard(Z3VariableContext &c) {
 
     //create Z3 solver here to use push/pop for efficiency
     Z3Solver sol(c);
+    z3::params params(c);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    sol.set(params);
     for (const Expression &ex : trans.guard) sol.add(ex.toZ3(c));
 
     for (Expression ex : trans.guard) {
@@ -124,9 +127,8 @@ bool BackwardAcceleration::costFunctionSupported() {
     }
 }
 
-boost::optional<pair<GiNaC::exmap, UpdateMap>> BackwardAcceleration::computeInverseUpdate() {
-    GiNaC::exmap inverse_ginac_update;
-    UpdateMap inverse_update;
+boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate() {
+    GiNaC::exmap inverse_update;
     for (pair<VariableIndex, Expression> p: trans.update) {
         Expression x = itrs.getGinacSymbol(p.first);
         GiNaC::lst xList;
@@ -134,7 +136,7 @@ boost::optional<pair<GiNaC::exmap, UpdateMap>> BackwardAcceleration::computeInve
         Expression up = p.second;
         if (!up.isLinear(xList)) {
             debugBackwardAcceleration("update " << up << " is not linear");
-            return boost::optional<pair<GiNaC::exmap, UpdateMap>>();
+            return boost::optional<GiNaC::exmap>();
         }
         Expression lincoeff = up.coeff(x, 1);
         Expression in_up;
@@ -143,11 +145,10 @@ boost::optional<pair<GiNaC::exmap, UpdateMap>> BackwardAcceleration::computeInve
         } else {
             in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
         }
-        inverse_ginac_update.emplace(x, in_up);
-        inverse_update.emplace(p.first, in_up);
+        inverse_update.emplace(x, in_up);
     }
-    debugBackwardAcceleration("successfully computed inverse update " << inverse_ginac_update);
-    return boost::optional<pair<GiNaC::exmap, UpdateMap>>(pair<GiNaC::exmap, UpdateMap>(inverse_ginac_update, inverse_update));
+    debugBackwardAcceleration("successfully computed inverse update " << inverse_update);
+    return boost::optional<GiNaC::exmap>(inverse_update);
 }
 
 bool BackwardAcceleration::checkGuardImplication(GiNaC::exmap inverse_update) {
@@ -175,64 +176,61 @@ bool BackwardAcceleration::checkGuardImplication(GiNaC::exmap inverse_update) {
     }
 }
 
-boost::optional<GiNaC::exmap> BackwardAcceleration::computeIteratedInverseUpdate(GiNaC::exmap inverse_update, vector<VariableIndex> order) {
-    GiNaC::exmap iterated_inverse_update;
+boost::optional<GiNaC::exmap> BackwardAcceleration::computeIteratedUpdate(UpdateMap update, vector<VariableIndex> order) {
+    GiNaC::exmap iterated_update;
     for (VariableIndex vi: order) {
         Expression res;
         ExprSymbol target = itrs.getGinacSymbol(vi);
-        Expression todo = inverse_update.at(target).subs(iterated_inverse_update);
+        Expression todo = update.at(vi).subs(iterated_update);
         if (!findUpdateRecurrence(todo, target, res)) {
-            debugBackwardAcceleration("failed to compute iterated inverse update for " << target);
+            debugBackwardAcceleration("failed to compute iterated update for " << target);
             return boost::optional<GiNaC::exmap>();
         }
-        debugBackwardAcceleration("successfully computed iterated inverse update " << res << " for " << target);
-        iterated_inverse_update[target] = res;
+        debugBackwardAcceleration("successfully computed iterated update " << res << " for " << target);
+        iterated_update[target] = res;
     }
-    return boost::optional<GiNaC::exmap>(iterated_inverse_update);
+    return boost::optional<GiNaC::exmap>(iterated_update);
 }
 
-// TODO very similar to Recurrence::findCostRecurrence -- refactor
-boost::optional<Expression> BackwardAcceleration::computeIteratedCosts(GiNaC::exmap iterated_inverse_update) {
-    Expression rhs_costs = trans.cost.subs(iterated_inverse_update).subs(ginac_n == ginac_n - 1);
-    Purrs::Expr rhs = Purrs::x(Purrs::Recurrence::n - 1) + Purrs::Expr::fromGiNaC(rhs_costs);
-    Purrs::Expr exact;
+// TODO mostly copied from Recurrence::findCostRecurrence -- refactor
+boost::optional<Expression> BackwardAcceleration::computeIteratedCosts(GiNaC::exmap iterated_update) {
+    debugBackwardAcceleration("computing iterated costs");
+    Timing::Scope timer(Timing::Purrs);
+    Expression cost = trans.cost.subs(iterated_update); //replace variables by their recurrence equations
+
+    //e.g. if cost = y, the result is x(n) = x(n-1) + y(n-1), with x(0) = 0
+    Purrs::Expr rhs = Purrs::x(Purrs::Recurrence::n - 1) + Purrs::Expr::fromGiNaC(cost);
+    Purrs::Expr sol;
+
     try {
         Purrs::Recurrence rec(rhs);
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(trans.cost)} });
-        debugBackwardAcceleration("recurrence equations for iterated costs: x(n) = " << rhs << ", x(1) = " << trans.cost);
+        rec.set_initial_conditions({ {0, 0} }); //costs for no iterations are hopefully 0
+
+        debugPurrs("COST REC: " << rhs);
+
         auto res = rec.compute_exact_solution();
         if (res != Purrs::Recurrence::SUCCESS) {
             res = rec.compute_lower_bound();
             if (res != Purrs::Recurrence::SUCCESS) {
-                debugBackwardAcceleration("failed to compute iterated costs");
+                debugBackwardAcceleration("Purrs failed on x(n) = " << rhs << " with initial x(0)=0 for cost" << cost);
                 return boost::optional<Expression>();
+            } else {
+                rec.lower_bound(sol);
             }
+        } else {
+            rec.exact_solution(sol);
         }
-        rec.exact_solution(exact);
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
-        debugBackwardAcceleration("failed to compute iterated costs");
+        debugBackwardAcceleration("Purrs failed on x(n) = " << rhs << " with initial x(0)=0 for cost" << cost);
         return boost::optional<Expression>();
     }
-    Expression res = exact.toGiNaC();
-    debugBackwardAcceleration("successfully computed iterated costs " << res << " for " << trans.cost);
-    return boost::optional<Expression>(res);
+
+    debugBackwardAcceleration("successfully computed iterated costs");
+    return boost::optional<Expression>(sol.toGiNaC());
 }
 
-boost::optional<Expression> invert(Expression e, Expression var) {
-    GiNaC::lst var_list;
-    var_list.append(var);
-    if (e.isLinear(var_list)) {
-        Expression coeff = e.coeff(var);
-        if (!coeff.is_zero()) {
-            Expression inverted = ((var - e - coeff * var) / coeff);
-            return boost::optional<Expression>(inverted);
-        }
-    }
-    return boost::optional<Expression>();
-}
-
-Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap inverse_update, GiNaC::exmap iterated_inverse_update, Expression iterated_costs) {
+Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap inverse_update, GiNaC::exmap iterated_update, Expression iterated_costs) {
     Transition new_transition;
     // use a fresh variable to represent the number of iterations to avoid clashes
     Expression n = itrs.getGinacSymbol(itrs.addFreshVariable("n", true));
@@ -243,99 +241,31 @@ Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap inverse_update,
     for (pair<VariableIndex, Expression> p: trans.update) {
         VariableIndex vi = p.first;
         Expression old_var = itrs.getGinacSymbol(vi);
-        Expression it_up = iterated_inverse_update.at(old_var);
-        // create a fresh variable which represents the value of the currently processed variable after applying the accelerated transition
-        VariableIndex fresh = itrs.addFreshVariable(itrs.getVarname(vi), true);
-        Expression fresh_var = itrs.getGinacSymbol(fresh);
-        new_transition.update.emplace(vi, fresh_var);
-        // we computed the iterated _inverse_ update, so replace old_var (representing the value before the accelerated transition)
-        // with fresh_var (representing the value after the accelerated transition)
-        GiNaC::exmap sigma;
-        sigma.emplace(old_var, fresh_var);
-        var_map.emplace(old_var, fresh_var);
-        sigma.emplace(ginac_n, n);
-        // now the value before the transition (old_var) needs to result from the value after the transition by applying the iterated inverse update
-        new_transition.guard.push_back(old_var == it_up.subs(sigma));
-        // and the value after the transition (fresh_var) results from the update function applied to the values before the last iteration (inverse_udpate)
-        Expression rhs = trans.update.at(vi).subs(inverse_update).subs(sigma);
-        new_transition.guard.push_back(fresh_var == rhs);
-
-        // if the inverse of the iterated update is an integer function, inline it into the update of the accelerated transition
-        boost::optional<Expression> inverted = invert(it_up, old_var);
-        if (inverted.is_initialized() && mapsToInt(inverted.get().subs(ginac_n == n))) {
-            new_transition.update[vi] = inverted.get().subs(ginac_n == n);
+        debugBackwardAcceleration("first subs");
+        new_transition.update.emplace(vi, iterated_update.at(old_var).subs(ginac_n == n));
+        for (Expression e: trans.guard) {
+            debugBackwardAcceleration("subs for " << e);
+            new_transition.guard.push_back(e.subs(iterated_update).subs(ginac_n == n-1));
         }
     }
+    debugBackwardAcceleration("last subs");
     new_transition.cost = iterated_costs.subs(ginac_n == n);
-    // make sure that the transition can be applied in the last step
-    for (Expression e: trans.guard) {
-        Expression final_constraint = e.subs(inverse_update);
-        if (e != final_constraint) {
-            new_transition.guard.push_back(final_constraint.subs(var_map));
-        }
-    }
     debugBackwardAcceleration("backward-accelerating " << trans << " yielded " << new_transition);
     return new_transition;
 }
 
-bool BackwardAcceleration::mapsToInt(Expression e) {
-    debugBackwardAcceleration("checking if " << e << " maps to int");
-    auto vars = itrs.getGinacVarList();
-    if (!e.is_polynomial(vars)) {
-        return false;
-    }
-    vector<int> degrees;
-    vector<int> subs;
-    for (Expression x: vars) {
-        GiNaC::exmap x_subs;
-        for (Expression y: vars) {
-            if (x != y) {
-                x_subs.emplace(y, 1);
-            }
-        }
-        degrees.push_back(e.subs(x_subs).degree(x));
-        subs.push_back(0);
-    }
-    while (true) {
-        bool found_next = false;
-        for (int i = 0; i < degrees.size(); i++) {
-            if (subs[i] == degrees[i]) {
-                subs[i] = 0;
-            } else {
-                subs[i] = subs[i] + 1;
-                found_next = true;
-                break;
-            }
-        }
-        if (!found_next) {
-            debugBackwardAcceleration("it does!");
-            return true;
-        }
-        GiNaC::exmap g_subs;
-        for (int i = 0; i < degrees.size(); i++) {
-            g_subs.emplace(vars[i], subs[i]);
-        }
-        Expression res = e.subs(g_subs);
-        if (!e.subs(g_subs).info(GiNaC::info_flags::integer)) {
-            debugBackwardAcceleration("it does not for " << g_subs << " where it yields " << res);
-            return false;
-        }
-    }
-}
-
 boost::optional<Transition> BackwardAcceleration::accelerate() {
     if (costFunctionSupported()) {
-        boost::optional<pair<GiNaC::exmap, UpdateMap>> inverse_update = computeInverseUpdate();
+        boost::optional<GiNaC::exmap> inverse_update = computeInverseUpdate();
         if (inverse_update.is_initialized()) {
-            GiNaC::exmap i_up = inverse_update.get().first;
-            if (checkGuardImplication(i_up)) {
-                boost::optional<vector<VariableIndex>> order = dependencyOrder(inverse_update.get().second);
+            if (checkGuardImplication(inverse_update.get())) {
+                boost::optional<vector<VariableIndex>> order = dependencyOrder(trans.update);
                 if (order.is_initialized()) {
-                    boost::optional<GiNaC::exmap> iterated_inverse_update = computeIteratedInverseUpdate(i_up, order.get());
-                    if (iterated_inverse_update.is_initialized()) {
-                        boost::optional<Expression> iterated_costs = computeIteratedCosts(iterated_inverse_update.get());
+                    boost::optional<GiNaC::exmap> iterated_update = computeIteratedUpdate(trans.update, order.get());
+                    if (iterated_update.is_initialized()) {
+                        boost::optional<Expression> iterated_costs = computeIteratedCosts(iterated_update.get());
                         if (iterated_costs.is_initialized()) {
-                            Transition new_transition = buildNewTransition(i_up, iterated_inverse_update.get(), iterated_costs.get());
+                            Transition new_transition = buildNewTransition(inverse_update.get(), iterated_update.get(), iterated_costs.get());
                             return boost::optional<Transition>(new_transition);
                         }
                     }

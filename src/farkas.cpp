@@ -61,6 +61,7 @@ void FarkasMeterGenerator::preprocessFreevars() {
     //try to remove free variables from the update rhs first
     GiNaC::exmap equalSubs;
     GuardToolbox::propagateEqualities(itrs,guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update);
+    debugFarkas("FARKAS: propagating the equalities " << equalSubs);
     for (auto &it : update) it.second = it.second.subs(equalSubs);
 
 #ifdef DEBUG_FARKAS
@@ -115,6 +116,9 @@ void FarkasMeterGenerator::reduceGuard() {
     //create Z3 solver here to use push/pop for efficiency
     Z3VariableContext c;
     Z3Solver sol(c);
+    z3::params params(c);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    sol.set(params);
     for (const Expression &ex : guard) sol.add(ex.toZ3(c));
 
     for (Expression ex : guard) {
