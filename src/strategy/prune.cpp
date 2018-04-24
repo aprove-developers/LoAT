@@ -111,6 +111,8 @@ bool Pruning::removeUnsatInitialRules(LinearITSProblem &its) {
 
 
 bool Pruning::pruneParallelRules(LinearITSProblem &its) {
+    debugPrune("Pruning parallel rules");
+
     // FIXME: this method used to also call removeConstLeafsAndUnreachable (at the start)
     // FIXME: Remember to call this method wherever pruneParallelRules is called!
     //bool changed = removeConstLeafsAndUnreachable();
@@ -167,10 +169,12 @@ bool Pruning::pruneParallelRules(LinearITSProblem &its) {
                 for (TransIdx rule : parallel) {
                     if (keep.count(rule) == 0) {
                         Stats::add(Stats::PruneRemove);
+                        debugPrune("  removing rule " << rule << " from location " << pre << " to " << node);
                         its.removeRule(rule);
                     }
                 }
                 if (hasDummy) {
+                    debugPrune("  re-adding dummy rule from location " << pre << " to " << node);
                     its.addRule(LinearRule::dummyRule(pre, node));
                 }
 
@@ -199,6 +203,7 @@ static bool removeConstLeafs(LinearITSProblem &its, LocationIdx node, set<Locati
         if (its.getTransitionsFrom(next).empty()) {
             for (TransIdx rule : its.getTransitionsFromTo(node, next)) {
                 if (its.getRule(rule).getCost().getComplexity() == Complexity::Const) {
+                    debugPrune("  removing constant leaf rule: " << rule);
                     its.removeRule(rule);
                     changed = true;
                 }
@@ -212,6 +217,7 @@ static bool removeConstLeafs(LinearITSProblem &its, LocationIdx node, set<Locati
 
 bool Pruning::removeLeafsAndUnreachable(LinearITSProblem &its) {
     set<LocationIdx> visited;
+    debugPrune("Removing leafs and unreachable");
 
     // Remove rules to leafs if they do not give nontrivial complexity
     bool changed = removeConstLeafs(its, its.getInitialLocation(), visited);
@@ -219,6 +225,7 @@ bool Pruning::removeLeafsAndUnreachable(LinearITSProblem &its) {
     // Remove all nodes that have not been reached in the DFS traversal
     for (LocationIdx node : its.getLocations()) {
         if (visited.count(node) == 0) {
+            debugPrune("  removing unreachable location: " << node);
             its.removeLocationAndRules(node);
             changed = true;
         }

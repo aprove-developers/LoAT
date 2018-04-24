@@ -77,14 +77,16 @@ private:
 
     /**
      * Helper that calls Preprocess::simplifyRule
+     * Returns true iff the rule was modified.
      */
-    static void simplifyRule(VarMan &varMan, LinearRule &rule);
+    static bool simplifyRule(VarMan &varMan, LinearRule &rule);
 
     /**
      * Helper that chains all pairs of loops at the given location.
      * Resulting rules are added to the ITS.
+     * Returns true iff the ITS was modified.
      */
-    static void chainAllLoops(LinearITSProblem &its, LocationIdx loc);
+    static bool chainAllLoops(LinearITSProblem &its, LocationIdx loc);
 
 
     /**

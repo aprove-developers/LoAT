@@ -25,6 +25,7 @@
 #include "asymptotic/asymptoticbound.h"
 
 #include "its/rule.h"
+#include "its/export.h"
 
 #include "chaining.h"
 
@@ -52,8 +53,8 @@ Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
 // #####################
 
 
-void Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
-    Timing::start(Timing::Preprocess);
+bool Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
+    Timing::Scope(Timing::Preprocess);
 
     Transition t;
     t.guard = rule.getGuard();
@@ -62,18 +63,20 @@ void Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
 
     // TODO: Port preprocess to Linear/AbstractRule
     if (Preprocess::simplifyTransition(varMan, t)) {
-        debugAccel("Simplified transition before Farkas");
         rule.getGuardMut() = t.guard;
         rule.getUpdateMut() = t.update;
         rule.getCostMut() = t.cost;
+        return true;
     }
 
-    Timing::done(Timing::Preprocess);
+    return false;
 }
 
 
-void Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
+bool Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
+    bool changed = false;
     vector<TransIdx> loops = its.getTransitionsFromTo(loc, loc);
+    debugAccel("Chaining all loops before acceleration");
 
     for (TransIdx first : loops) {
         for (TransIdx second : loops) {
@@ -83,10 +86,14 @@ void Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
 
             auto chained = Chaining::chainRules(its, its.getRule(first), its.getRule(second));
             if (chained) {
-                its.addRule(chained.get());
+                TransIdx added = its.addRule(chained.get());
+                debugAccel("  chained rules " << first << " and " << second << ", resulting in new rule: " << added);
+                changed = true;
             }
         }
     }
+
+    return changed;
 }
 
 
@@ -378,6 +385,7 @@ void Accelerator::run() {
     for (TransIdx loop : loops) {
         // don't try to accelerate loops with INF cost
         if (its.getRule(loop).getCost().isInfty()) {
+            debugAccel("Keeping unaccelerated rule with infty cost: " << loop);
             keepRules.insert(loop);
             continue;
         }
@@ -395,9 +403,10 @@ void Accelerator::run() {
     for (const ConflictVarsCandidate &can : rulesWithConflictingVariables) {
         VariableIdx A,B;
         tie(A,B) = can.conflictVars;
+        LinearRule rule = its.getRule(can.oldRule);
+        debugAccel("Trying MinMax heuristic with variables " << its.getVarName(A) << ", " << its.getVarName(B) << " for rule " << rule);
 
         // Add A > B to the guard, try to accelerate
-        LinearRule rule = its.getRule(can.oldRule);
         rule.getGuardMut().push_back(its.getGinacSymbol(A) > its.getGinacSymbol(B));
         if (accelerateAndStore(can.oldRule, rule, true)) {
             debugAccel("MinMax heuristic (A > B) successful with rule: " << rule);
@@ -417,10 +426,11 @@ void Accelerator::run() {
     // Guard strengthening heuristic (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
         LinearRule rule = its.getRule(loop);
+        debugAccel("Trying guard strengthening for rule: " << rule);
 
         if (FarkasMeterGenerator::prepareGuard(its, rule)) {
             if (accelerateAndStore(loop, rule, true)) {
-                debugAccel("Guard strengthening successful with rule: " << rule);
+                debugAccel("Guard strengthening successful with modified rule: " << rule);
             }
         }
 
@@ -433,6 +443,7 @@ void Accelerator::run() {
 
     // Nesting
     for (int i=0; i < NESTING_MAX_ITERATIONS; ++i) {
+        debugAccel("Nesting iteration: " << i);
         bool changed = false;
         vector<InnerNestingCandidate> newInnerCandidates;
 

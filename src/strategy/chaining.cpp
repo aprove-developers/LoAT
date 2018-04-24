@@ -111,7 +111,7 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
     // Avoid chaining if the resulting rule can never be taken
     if (!checkSatisfiable(newGuard, newCost)) {
         Stats::add(Stats::ContractUnsat);
-        debugChain("Aborting due to z3::unsat/unknown for rules: " << first << " + " << second);
+        debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
     }
 #endif
@@ -146,6 +146,7 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
  */
 static void eliminateLocationByChaining(LinearITSProblem &its, LocationIdx loc, bool keepUnchainable) {
     set<TransIdx> keepRules;
+    debugChain("  eliminating location " << loc << " by chaining (keep unchainable: " << keepUnchainable << ")");
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
@@ -286,6 +287,7 @@ bool Chaining::chainLinearPaths(LinearITSProblem &its) {
     };
 
     Timing::Scope timer(Timing::Contract);
+    debugChain("Chaining linear paths");
     return callRepeatedlyOnEachNode(its, implementation);
 }
 
@@ -316,9 +318,12 @@ bool Chaining::chainTreePaths(LinearITSProblem &its) {
     };
 
     Timing::Scope timer(Timing::Branches);
+    debugChain("Chaining tree paths");
     return callRepeatedlyOnEachNode(its, implementation);
 
     // TODO: Restore this functionality, i.h., call removeConstLeafsAndUnreachable after calling chainTreePaths (wherever it is called)
+    // TODO: Since we now use eliminateLocationByChaining, this is probably not needed
+    // TODO: (but of course might still remove nodes that were unreachable even before calling this, so we have to check whether it makes a difference!)
     //only for the main caller, reduce unreachable stuff
     // if (node == initial) {
     //     removeConstLeafsAndUnreachable();
@@ -334,7 +339,7 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
         return false;
     }
 
-    debugChain("trying to eliminate location " << node);
+    debugChain("  checking if we can eliminate location " << node);
 
     vector<TransIdx> transIn = its.getTransitionsTo(node);
     vector<TransIdx> transOut = its.getTransitionsFrom(node);
@@ -356,6 +361,7 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
     }
 
     // Otherwise, we can eliminate node
+    debugChain("  found location to eliminate: " << node);
     eliminateLocationByChaining(its, node, true);
     return true;
 }
@@ -364,6 +370,7 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
 bool Chaining::eliminateALocation(LinearITSProblem &its) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("Chaining::eliminateALocation");
+    debugChain("Trying to eliminate a location");
 
     set<NodeIndex> visited;
     return eliminateALocationImpl(its, its.getInitialLocation(), visited);
@@ -374,7 +381,7 @@ bool Chaining::eliminateALocation(LinearITSProblem &its) {
  * Core implementation for chainSimpleLoops
  */
 static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
-    debugChain("Chaining simple loops.");
+    debugChain("Chaining simple loops at location " << node);
     assert(!its.isInitialLocation(node));
     assert(!its.getTransitionsFromTo(node, node).empty());
 
@@ -392,12 +399,13 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
 
             auto optRule = Chaining::chainRules(its, incomingRule, its.getRule(simpleLoop));
             if (optRule) {
-                its.addRule(optRule.get());
+                TransIdx added = its.addRule(optRule.get());
                 successfullyChained.insert(incoming);
+                debugChain("  chained incoming rule " << incoming << " with simple loop " << simpleLoop << ", resulting in new rule: " << added);
             }
         }
 
-        debugChain("removing simple loop " << its.getRule(simpleLoop));
+        debugChain("  removing simple loop " << its.getRule(simpleLoop));
         its.removeRule(simpleLoop);
     }
 
@@ -406,7 +414,7 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
     // FIXME: We assume that loops are executed at least once, so after an incoming transition, a loop must be executed.
     // FIXME: To allow skipping loops, addTransitionToSkipLoops was used. Instead, an empty simple loop can be added during acceleration.
     for (TransIdx toRemove : successfullyChained) {
-        debugChain("removing transition " << its.getRule(toRemove));
+        debugChain("  removing chained incoming rule " << its.getRule(toRemove));
         its.removeRule(toRemove);
     }
 
