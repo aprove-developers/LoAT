@@ -71,16 +71,19 @@ bool Pruning::removeDuplicateRules(LinearITSProblem &its, const vector<TransIdx>
 
     for (int i=0; i < trans.size(); ++i) {
         for (int j=i+1; j < trans.size(); ++j) {
-            const LinearRule &a = its.getRule(trans[i]);
-            const LinearRule &b = its.getRule(trans[j]);
+            TransIdx idxA = trans[i];
+            TransIdx idxB = trans[j];
+
+            const LinearRule &ruleA = its.getRule(idxA);
+            const LinearRule &ruleB = its.getRule(idxB);
 
             // if rules are identical up to cost, keep the one with the higher cost
-            if (compareRules(a, b ,compareUpdate)) {
-                if (GiNaC::ex_to<GiNaC::numeric>(a.getCost() - b.getCost()).is_positive()) {
-                    toRemove.insert(j);
+            if (compareRules(ruleA, ruleB ,compareUpdate)) {
+                if (GiNaC::ex_to<GiNaC::numeric>(ruleA.getCost() - ruleB.getCost()).is_positive()) {
+                    toRemove.insert(idxB);
                 } else {
-                    toRemove.insert(i);
-                    break; // do not remove i again
+                    toRemove.insert(idxA);
+                    break; // do not remove trans[i] again
                 }
             }
         }
