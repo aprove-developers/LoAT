@@ -241,14 +241,11 @@ Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap inverse_update,
     for (pair<VariableIndex, Expression> p: trans.update) {
         VariableIndex vi = p.first;
         Expression old_var = itrs.getGinacSymbol(vi);
-        debugBackwardAcceleration("first subs");
         new_transition.update.emplace(vi, iterated_update.at(old_var).subs(ginac_n == n));
         for (Expression e: trans.guard) {
-            debugBackwardAcceleration("subs for " << e);
             new_transition.guard.push_back(e.subs(iterated_update).subs(ginac_n == n-1));
         }
     }
-    debugBackwardAcceleration("last subs");
     new_transition.cost = iterated_costs.subs(ginac_n == n);
     debugBackwardAcceleration("backward-accelerating " << trans << " yielded " << new_transition);
     return new_transition;
