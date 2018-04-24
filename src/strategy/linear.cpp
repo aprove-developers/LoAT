@@ -123,11 +123,11 @@ RuntimeResult LinearITSAnalysis::run() {
 
         // Try more involved chaining strategies if we no longer make progress
         if (chainTreePaths()) {
-            proofout << endl <<  "Eliminated locations (on tree-shaped paths):" << endl;
+            proofout.headline("Eliminated locations (on tree-shaped paths):");
             printForProof("Chain tree paths");
 
         } else if (eliminateALocation()) {
-            proofout << endl <<  "Eliminated a location:" << endl;
+            proofout.headline("Eliminated a location (as a last resort):");
             printForProof("Eliminate location");
         }
         if (Timeout::soft()) break;
