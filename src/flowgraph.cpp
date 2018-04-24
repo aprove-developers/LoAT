@@ -682,8 +682,8 @@ bool FlowGraph::backwardAccelerateSimpleLoops(NodeIndex node) {
         Transition transition = getTransData(tidx);
         BackwardAcceleration ba(itrs, transition);
         boost::optional<Transition> new_transition = ba.accelerate();
-        if (new_transition.is_initialized()) {
-            to_add.push_back(new_transition.get());
+        if (new_transition) {
+            to_add.push_back(*new_transition);
             to_remove.push_back(tidx);
         }
     }
@@ -723,10 +723,10 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
         }
         BackwardAcceleration ba(itrs, data);
         boost::optional<Transition> new_transition = ba.accelerate();
-        if (new_transition.is_initialized()) {
-            data.cost = new_transition.get().cost;
-            data.update = new_transition.get().update;
-            data.guard = new_transition.get().guard;
+        if (new_transition) {
+            data.cost = (*new_transition).cost;
+            data.update = (*new_transition).update;
+            data.guard = (*new_transition).guard;
             return true;
         }
         return false;
@@ -808,10 +808,10 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
             else if (result == FarkasMeterGenerator::Unsat) {
                 BackwardAcceleration ba(itrs, getTransData(tidx));
                 boost::optional<Transition> new_transition = ba.accelerate();
-                if (new_transition.is_initialized()) {
-                    data.cost = new_transition.get().cost;
-                    data.update = new_transition.get().update;
-                    data.guard = new_transition.get().guard;
+                if (new_transition) {
+                    data.cost = (*new_transition).cost;
+                    data.update = (*new_transition).update;
+                    data.guard = (*new_transition).guard;
                     TransIndex tnew = addTrans(node,node,data);
                     added_ranked.insert(tnew);
                     added_unranked.insert(tidx); //try nesting also with original transition
@@ -828,10 +828,10 @@ bool FlowGraph::accelerateSimpleLoops(NodeIndex node) {
                 if (!Recurrence::calcIterated(itrs,data,rankfunc)) {
                     BackwardAcceleration ba(itrs, getTransData(tidx));
                     boost::optional<Transition> new_transition = ba.accelerate();
-                    if (new_transition.is_initialized()) {
-                        data.cost = new_transition.get().cost;
-                        data.update = new_transition.get().update;
-                        data.guard = new_transition.get().guard;
+                    if (new_transition) {
+                        data.cost = (*new_transition).cost;
+                        data.update = (*new_transition).update;
+                        data.guard = (*new_transition).guard;
                         TransIndex tnew = addTrans(node,node,data);
                         added_ranked.insert(tnew);
                         added_unranked.insert(tidx); //try nesting also with original transition

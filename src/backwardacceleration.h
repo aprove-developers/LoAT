@@ -10,14 +10,14 @@ public:
     boost::optional<Transition> accelerate();
 
 private:
-    bool costFunctionSupported();
+    bool shouldAccelerate();
     std::vector<Expression> reduceGuard(Z3VariableContext &c);
     boost::optional<std::vector<VariableIndex>> dependencyOrder(UpdateMap &update);
     boost::optional<GiNaC::exmap> computeInverseUpdate();
     bool checkGuardImplication(GiNaC::exmap inverse_update);
     boost::optional<GiNaC::exmap> computeIteratedUpdate(UpdateMap inverse_update, std::vector<VariableIndex> order);
     boost::optional<Expression> computeIteratedCosts(GiNaC::exmap iterated_update);
-    Transition buildNewTransition(GiNaC::exmap inverse_update, GiNaC::exmap iterated_inverse_update, Expression iterated_costs);
+    Transition buildNewTransition(GiNaC::exmap iterated_inverse_update, Expression iterated_costs);
 
 private:
     Transition trans;
