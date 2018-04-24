@@ -102,6 +102,10 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, GuardList &guard, P
     for (Expression &ex: guard) {
         ex = ex.subs(varSubs);
     }
+
+    // FIXME: Substitution is only applied to the guard, what about update and cost?
+    // FIXME: Make sure that this is done on the callsite (see Florians bug report)
+
     bool res = !varSubs.empty();
     if (subs) *subs = std::move(varSubs);
     return res;
