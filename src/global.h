@@ -31,13 +31,13 @@
  * if defined, in case of unknown for the SAT check an approximate (not 100% sound) check is done
  * (currently, this is done by treating all variables/constants as reals instead of integers)
  */
-#define CONTRACT_CHECK_SAT_APPROXIMATE
+// #define CONTRACT_CHECK_SAT_APPROXIMATE
 
 /*
  * if defined, in case of unknown for the SAT check edges are still chained if
  * the resulting cost is exponential (z3 cannot handle exponentials)
  */
-#define CONTRACT_CHECK_EXP_OVER_UNKNOWN
+// #define CONTRACT_CHECK_EXP_OVER_UNKNOWN
 
 /*
  * if defined, the number of transitions is heuristically recuded (see below)

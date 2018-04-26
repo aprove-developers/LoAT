@@ -412,7 +412,7 @@ bool FlowGraph::chainTransitionData(Transition &trans, const Transition &followT
     }
 #endif
 
-    if (z3res != z3::sat) {
+    if (z3res == z3::unsat) {
         debugGraph("Contract: aborting due to UNSAT for transitions: " << trans << " + " << followTrans);
         Stats::add(Stats::ContractUnsat);
 #ifdef DEBUG_PROBLEMS
