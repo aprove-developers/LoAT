@@ -73,6 +73,7 @@ bool Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
 }
 
 
+// TODO: Move this to chaining, rename to chainAllPairs(its, vec<TransIdx>);
 bool Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
     bool changed = false;
     vector<TransIdx> loops = its.getTransitionsFromTo(loc, loc);
@@ -414,6 +415,8 @@ void Accelerator::run() {
         tie(A,B) = can.conflictVars;
         LinearRule rule = its.getRule(can.oldRule);
         debugAccel("Trying MinMax heuristic with variables " << its.getVarName(A) << ", " << its.getVarName(B) << " for rule " << rule);
+
+        // TODO: check satisfiability after adding constraints?
 
         // Add A > B to the guard, try to accelerate
         rule.getGuardMut().push_back(its.getGinacSymbol(A) > its.getGinacSymbol(B));
