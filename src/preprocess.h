@@ -28,6 +28,7 @@ struct Transition;
  */
 namespace Preprocess
 {
+    // FIXME: Remove this, add "cost >= 0" in LinearITSAnalysis (where we can directly check if it is implied)
     /**
      * Removes the last constraint from the guard if it is already implied by the other constraints.
      * The last constraint is usually "cost >= 0" (to ensure user-given costs are nonnegative).

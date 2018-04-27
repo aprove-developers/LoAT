@@ -34,10 +34,24 @@ class Z3Context;
 class Expression;
 
 //Useful typedefs for readability
-typedef GiNaC::symbol ExprSymbol;
-typedef GiNaC::lst ExprList;
-typedef std::set<ExprSymbol, GiNaC::ex_is_less> ExprSymbolSet;
-typedef std::set<Expression, GiNaC::ex_is_less> ExpressionSet;
+
+using ExprSymbol = GiNaC::symbol; // TODO: rename to just Symbol (and SymbolSet, SymbolMap)?
+using ExprList = GiNaC::lst;
+
+using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
+using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>
+
+template <typename T>
+using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
+
+// TODO: Add alias for GiNaC::exmap (Substitution / Subs), or even a class?
+
+//typedef GiNaC::symbol ExprSymbol;
+//typedef GiNaC::lst ExprList;
+//typedef std::set<ExprSymbol, GiNaC::ex_is_less> ExprSymbolSet;
+//typedef std::set<Expression, GiNaC::ex_is_less> ExpressionSet;
+
+
 
 
 /**

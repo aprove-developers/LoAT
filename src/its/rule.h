@@ -24,9 +24,9 @@
 #include "expr/expression.h"
 
 
-typedef int LocationIdx;
-typedef int VariableIdx;
-typedef std::pair<VariableIdx, VariableIdx> VariablePair;
+using LocationIdx = int;
+using VariableIdx = int;
+using VariablePair = std::pair<VariableIdx, VariableIdx>;
 
 //typedef std::vector<Expression> GuardList;
 //typedef std::map<VariableIdx,Expression> UpdateMap;
