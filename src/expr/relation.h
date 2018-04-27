@@ -48,15 +48,20 @@ namespace Relation {
     bool isInequality(const Expression &ex);
 
     /**
-     * Checks whether ex is of the form "term > 0"
-     */
-    bool isNormalizedInequality(const Expression &ex);
-
-    /**
      * Checks if ex is an inequality and if rhs and lhs are linear in the given variables
      * (convenience function for isLinear and isInequality)
      */
     bool isLinearInequality(const Expression &ex, const GiNaC::lst &vars);
+
+    /**
+     * Checks whether ex is of the form "term > 0"
+     */
+    bool isGreaterThanZero(const Expression &ex);
+
+    /**
+     * Checks if ex is a <= inequality (less or equal)
+     */
+    bool isLessOrEqual(const Expression &ex);
 
     /**
      * Given a relation, replaces lhs and rhs with the given arguments and keeps operator

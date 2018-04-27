@@ -18,7 +18,7 @@ LimitProblem::LimitProblem()
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
     : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
-        assert(Relation::isNormalizedInequality(ex));
+        assert(Relation::isGreaterThanZero(ex));
 
         addExpression(InftyExpression(ex.lhs(), POS));
     }
@@ -34,7 +34,7 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 LimitProblem::LimitProblem(const GuardList &normalizedGuard)
     : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
-        assert(Relation::isNormalizedInequality(ex));
+        assert(Relation::isGreaterThanZero(ex));
         addExpression(InftyExpression(ex.lhs(), POS));
     }
 

@@ -34,15 +34,19 @@ namespace Relation {
         return isRelation(ex) && !isEquality(ex);
     }
 
-    bool isNormalizedInequality(const Expression &ex) {
+    bool isLinearInequality(const Expression &ex, const GiNaC::lst &vars) {
+        if (!isInequality(ex)) return false;
+        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
+    }
+
+    bool isGreaterThanZero(const Expression &ex) {
         return isInequality(ex)
                && ex.info(GiNaC::info_flags::relation_greater)
                && ex.rhs().is_zero();
     }
 
-    bool isLinearInequality(const Expression &ex, const GiNaC::lst &vars) {
-        if (!isInequality(ex)) return false;
-        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
+    bool isLessOrEqual(const Expression &ex) {
+        return isInequality(ex) && ex.info(GiNaC::info_flags::relation_less_or_equal);
     }
 
     Expression replaceLhsRhs(const Expression &rel, Expression lhs, Expression rhs) {
@@ -99,7 +103,7 @@ namespace Relation {
         Expression greater = toGreater(rel);
         Expression normalized = (greater.lhs() - greater.rhs()) > 0;
 
-        assert(isNormalizedInequality(normalized));
+        assert(isGreaterThanZero(normalized));
         return normalized;
     }
 
