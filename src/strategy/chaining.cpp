@@ -81,19 +81,16 @@ static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCos
 
 optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second) {
     // Build a substitution corresponding to the first rule's update
-    GiNaC::exmap updateSubs;
-    for (auto it : first.getUpdate()) {
-        updateSubs[varMan.getGinacSymbol(it.first)] = it.second;
-    }
+    GiNaC::exmap firstUpdate = first.getUpdate().toSubstitution(varMan);
 
     // Concatenate both guards, but apply the first rule's update to second guard
     GuardList newGuard = first.getGuard();
     for (const Expression &ex : second.getGuard()) {
-        newGuard.push_back(ex.subs(updateSubs));
+        newGuard.push_back(ex.subs(firstUpdate));
     }
 
     // Add the costs, but apply first rule's update to second cost
-    Expression newCost = first.getCost() + second.getCost().subs(updateSubs);
+    Expression newCost = first.getCost() + second.getCost().subs(firstUpdate);
 
     // As a small optimization: Keep an INF symbol (easier to identify INF cost later on)
     if (first.getCost().isInfty() || second.getCost().isInfty()) {
@@ -119,7 +116,7 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
     // Compose both updates
     UpdateMap newUpdate = first.getUpdate();
     for (auto it : second.getUpdate()) {
-        newUpdate[it.first] = it.second.subs(updateSubs);
+        newUpdate[it.first] = it.second.subs(firstUpdate);
     }
 
     return LinearRule(first.getLhsLoc(), newGuard, newCost, second.getRhsLoc(), newUpdate);

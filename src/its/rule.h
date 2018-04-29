@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "expr/expression.h"
+#include "its/variablemanager.h"
 
 
 using LocationIdx = int;
@@ -62,6 +63,14 @@ public:
         auto it = find(var);
         assert(it != end());
         return it->second;
+    }
+
+    GiNaC::exmap toSubstitution(const VarMan &varMan) const {
+        GiNaC::exmap subs;
+        for (const auto &it : *this) {
+            subs[varMan.getGinacSymbol(it.first)] = it.second;
+        }
+        return subs;
     }
 };
 
