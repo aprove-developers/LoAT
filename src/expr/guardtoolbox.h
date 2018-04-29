@@ -88,6 +88,7 @@ namespace GuardToolbox {
     bool solveTermFor(Expression &term, const ExprSymbol &var, PropagationLevel level);
 
 
+    // TODO: rename to express that this actually modifies guard!
     /**
      * Replaces bidirectional inequalities, e.g. x <= y, y >= x by an equality, e.g. x == y
      * @note expensive for large guards

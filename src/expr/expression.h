@@ -109,14 +109,23 @@ public:
      */
     bool isInfty() const;
 
+    // TODO: replace by isLinear and isLinearWithin(ExprSymbolSet)
+    // TODO: This is probably cleaner than the getGinacVarList() everywhere...
     /**
      * Returns true iff this expression is linear in the given variables
      */
     bool isLinear(const GiNaC::lst &vars) const;
 
-    // FIXME: Add isPolyomial() which uses getVariables() instead of a GiNaC::lst
-    // FIXME: Could also implement this as some kind of visitor I guess...
-    // FIXME: Since we always include *all* variables, this might be faster
+    /**
+     * Returns true iff this expression is polynomial in the given variables
+     */
+    bool isPolynomialWithin(const ExprSymbolSet &vars) const;
+
+    // TODO: Check if performance is ok if we use this instead of is_polynomial
+    /**
+     * Returns true iff this expression is polynomial in the given variables
+     */
+    bool isPolynomial() const;
 
     /**
      * Returns true iff this expression is a proper rational number,

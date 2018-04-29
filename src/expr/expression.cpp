@@ -123,6 +123,16 @@ bool Expression::isLinear(const GiNaC::lst &vars) const {
 }
 
 
+bool Expression::isPolynomialWithin(const ExprSymbolSet &vars) const {
+    std::all_of(vars.begin(), vars.end(), [](const ExprSymbol &var){ return is_polynomial(var); });
+}
+
+
+bool Expression::isPolynomial() const {
+    return isPolynomialWithin(getVariables());
+}
+
+
 bool Expression::isProperRational() const {
     return this->info(GiNaC::info_flags::rational)
            && !this->info(GiNaC::info_flags::integer);
