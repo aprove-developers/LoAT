@@ -117,8 +117,8 @@ bool Linearize::linearizeGuard() {
         Expression rhs = term.rhs().subs(subsMap);
 
         // then try to linearize lhs and rhs (by enlarging the substitution, if possible)
-        if (!linearizeExpression(lhs) return false;
-        if (!linearizeExpression(rhs) return false;
+        if (!linearizeExpression(lhs)) return false;
+        if (!linearizeExpression(rhs)) return false;
 
         term = Relation::replaceLhsRhs(term, lhs, rhs);
     }

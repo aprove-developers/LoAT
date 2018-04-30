@@ -124,7 +124,7 @@ bool Expression::isLinear(const GiNaC::lst &vars) const {
 
 
 bool Expression::isPolynomialWithin(const ExprSymbolSet &vars) const {
-    std::all_of(vars.begin(), vars.end(), [](const ExprSymbol &var){ return is_polynomial(var); });
+    std::all_of(vars.begin(), vars.end(), [&](const ExprSymbol &var){ return is_polynomial(var); });
 }
 
 

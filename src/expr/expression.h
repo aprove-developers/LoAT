@@ -39,7 +39,7 @@ using ExprSymbol = GiNaC::symbol; // TODO: rename to just Symbol (and SymbolSet,
 using ExprList = GiNaC::lst;
 
 using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
-using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>
+using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>;
 
 template <typename T>
 using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
