@@ -62,7 +62,7 @@ public:
      * Requires guard to only contain inequalities.
      * Returns the reverse substitution, if linearization was successful.
      */
-    boost::optional<GiNaC::exmap> linearizeGuardUpdate(GuardList &guard, UpdateMap &update, VarMan &varMan);
+    static boost::optional<GiNaC::exmap> linearizeGuardUpdate(VarMan &varMan, GuardList &guard, UpdateMap &update);
 
 private:
     Linearize(GuardList &guard, UpdateMap &update, VarMan &varMan) : guard(guard), update(update), varMan(varMan) {}
@@ -101,6 +101,11 @@ private:
     void applySubstitution();
 
     /**
+     * Returns the additional guard
+     */
+    GuardList getAdditionalGuard() const;
+
+    /**
      * Computes the reverse substitution of subsMap
      */
     GiNaC::exmap reverseSubstitution() const;
@@ -108,16 +113,20 @@ private:
 private:
     // The set of all variables occurring in substituted expressions.
     // If we substitute x^2/z, then x is added to this set.
+    // This is used to check for conflicting substitutions (e.g. x^2 and x^3).
     ExprSymbolSet subsVars;
 
     // The substitution of nonlinear expression, e.g. x^2/z.
     // Note that this is not a substitution of variables, but of expressions.
     GiNaC::exmap subsMap;
 
-    // Guard and update of the rule, may both be modified
-    // (by substituting nonlinear expressions; guard can also be extended)
+    // Guard and update of the rule, only modified by applying substitutions.
     GuardList &guard;
     UpdateMap &update;
+
+    // Additional constraints to be added to the resulting guard.
+    // They retain information that is lost durng substitution, e.g. that x^2 is always nonnegative.
+    GuardList additionalGuard;
 
     // For fresh variables
     VariableManager &varMan;

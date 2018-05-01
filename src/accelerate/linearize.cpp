@@ -68,7 +68,7 @@ bool Linearize::linearizeExpression(Expression &term) {
 
                 //squared variables are always non-negative, keep this information
                 if (deg % 2 == 0) {
-                    guard.push_back(subsMap[pow] >= 0);
+                    additionalGuard.push_back(subsMap.at(pow) >= 0);
                 }
             }
             // heuristic to substitute simple variable products, e.g. x*y --> "xy"
@@ -172,6 +172,11 @@ void Linearize::applySubstitution() {
 }
 
 
+GuardList Linearize::getAdditionalGuard() const {
+    return additionalGuard;
+}
+
+
 GiNaC::exmap Linearize::reverseSubstitution() const {
     // Calculate reverse substitution
     Substitution reverseSubs;
@@ -183,7 +188,7 @@ GiNaC::exmap Linearize::reverseSubstitution() const {
 
 
 
-optional<Substitution> Linearize::linearizeGuardUpdate(GuardList &guard, UpdateMap &update, VarMan &varMan) {
+optional<Substitution> Linearize::linearizeGuardUpdate(VarMan &varMan, GuardList &guard, UpdateMap &update) {
     Linearize lin(guard, update, varMan);
 
     if (!lin.linearizeGuard()) {
@@ -197,6 +202,11 @@ optional<Substitution> Linearize::linearizeGuardUpdate(GuardList &guard, UpdateM
     // Make sure that the resulting substitution is applied everywhere.
     // (for the current implementation, this is probably not necessary).
     lin.applySubstitution();
+
+    // Add the additional guard (to retain the information that x^2 is nonnegative)
+    for (Expression ex : lin.getAdditionalGuard()) {
+        guard.push_back(ex);
+    }
 
     return lin.reverseSubstitution();
 }
