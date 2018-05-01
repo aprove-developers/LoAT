@@ -572,7 +572,7 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
         if (subs.count(newSym) > 0 || subsMore.count(newSym) > 0) continue;
 
         // Otherwise, if newSym occurs in rule, add it to the substitution
-        VariableIdx newVar = itsProblem.getVarIdx(newSym.get_name());
+        VariableIdx newVar = itsProblem.getVarIdx(newSym);
         if (ruleVars.count(newVar) > 0) {
             VariableIdx freshVar = itsProblem.addFreshVariable(newSym.get_name());
             ExprSymbol freshSym = itsProblem.getGinacSymbol(freshVar);

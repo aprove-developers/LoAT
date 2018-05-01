@@ -1,7 +1,13 @@
 #ifndef VARIABLEMANAGER_H
 #define VARIABLEMANAGER_H
 
-#include "rule.h"
+#include "types.h"
+#include "expr/expression.h"
+
+#include <set>
+#include <map>
+#include <vector>
+#include <string>
 
 
 // Abbreviation since the VariableManager is passed around quite a bit
@@ -21,7 +27,7 @@ public:
     // Mapping between indices and names
     bool hasVarIdx(VariableIdx idx) const;
     std::string getVarName(VariableIdx idx) const;
-    VariableIdx getVarIdx(std::string name) const;
+    VariableIdx getVarIdx(std::string name) const; // TODO: is this even used?
 
     // Mapping between indices and ginac symbols
     VariableIdx getVarIdx(const ExprSymbol &var) const; // TODO: Use this instead of getVarIdx(symbol.get_name())

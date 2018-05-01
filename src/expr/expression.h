@@ -38,6 +38,8 @@ class Expression;
 using ExprSymbol = GiNaC::symbol; // TODO: rename to just Symbol (and SymbolSet, SymbolMap)?
 using ExprList = GiNaC::lst;
 
+// using Substitution = GiNaC::exmap; // TODO: use this everywhere
+
 using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
 using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>;
 
