@@ -179,7 +179,7 @@ GuardList Linearize::getAdditionalGuard() const {
 
 GiNaC::exmap Linearize::reverseSubstitution() const {
     // Calculate reverse substitution
-    Substitution reverseSubs;
+    GiNaC::exmap reverseSubs;
     for (auto it : subsMap) {
         reverseSubs[it.second] = it.first;
     }
@@ -188,7 +188,7 @@ GiNaC::exmap Linearize::reverseSubstitution() const {
 
 
 
-optional<Substitution> Linearize::linearizeGuardUpdate(VarMan &varMan, GuardList &guard, UpdateMap &update) {
+optional<GiNaC::exmap> Linearize::linearizeGuardUpdate(VarMan &varMan, GuardList &guard, UpdateMap &update) {
     Linearize lin(guard, update, varMan);
 
     if (!lin.linearizeGuard()) {
