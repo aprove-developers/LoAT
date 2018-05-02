@@ -323,7 +323,7 @@ bool LinearITSAnalysis::pruneRules() {
     // Prune parallel transitions if enabled
 #ifdef PRUNING_ENABLE
     Stats::addStep("Linear::pruneRules");
-    changed = Pruning::pruneParallelRules(its);
+    changed = Pruning::pruneParallelRules(its) || changed;
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER PRUNING ==========\\ " << endl;
     print(cout);
