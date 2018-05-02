@@ -110,10 +110,6 @@ public:
     // Print the ITSProblem in a simple, but user-friendly format
     void print(std::ostream &s) const;
 
-private:
-    // helper that prints a given rule
-    void printRule(const Rule &rule, std::ostream &s) const;
-
 protected:
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
     HyperGraph<LocationIdx> graph;

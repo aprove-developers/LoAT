@@ -18,26 +18,8 @@
 #ifndef LINEARIZE_H
 #define LINEARIZE_H
 
-#include "global.h"
-
 #include "expr/expression.h"
-#include "z3/z3context.h"
 #include "its/variablemanager.h"
-
-#include <vector>
-#include <map>
-
-
-#include "flowgraph.h" // only for Transition
-
-struct FarkasTrans {
-    GuardList guard;
-    UpdateMap update;
-    Expression cost;
-};
-
-
-std::ostream& operator<<(std::ostream &s, const FarkasTrans &trans);
 
 
 /**
