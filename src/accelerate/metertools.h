@@ -45,7 +45,6 @@ namespace MeteringToolbox {
 
 
 
-    // TODO: What about examples like "i := i+a" with guard "a == 1". Should "a == 1" be part of the reduced guard?
     /**
      * Computes a guard by only keeping those constraints that might be relevant for the metering function.
      *
