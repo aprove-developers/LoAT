@@ -46,6 +46,7 @@ MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const Upd
 /* ### Step 1: Pre-processing, filter relevant constraints/variables ### */
 
 void MeteringFinder::simplifyAndFindVariables() {
+    irrelevantGuard.clear(); // clear in case this method is called twice
     reducedGuard = MT::reduceGuard(varMan, guard, update, &irrelevantGuard);
     relevantVars = MT::findRelevantVariables(varMan, reducedGuard, update);
 
@@ -82,6 +83,7 @@ bool MeteringFinder::preprocessAndLinearize() {
 /* ### Step 2: Construction of linear constraints and metering function template ### */
 
 void MeteringFinder::buildMeteringVariables() {
+    // clear generated fields in case this method is called twice
     meterVars.symbols.clear();
     meterVars.coeffs.clear();
     meterVars.primedSymbols.clear();
@@ -107,6 +109,7 @@ void MeteringFinder::buildMeteringVariables() {
 }
 
 void MeteringFinder::buildLinearConstraints() {
+    // clear generated fields in case this method is called twice
     linearConstraints.guard.clear();
     linearConstraints.guardUpdate.clear();
     linearConstraints.reducedGuard.clear();
@@ -293,12 +296,14 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const LinearRule
 
     // linearize and simplify the problem
     if (!meter.preprocessAndLinearize()) {
+        Timing::done(Timing::FarkasLogic);
         result.result = Nonlinear;
         return result;
     }
 
     // identify trivially unbounded loops (no guard constraint is limiting the loop's execution)
     if (meter.reducedGuard.empty()) {
+        Timing::done(Timing::FarkasLogic);
         result.result = Unbounded;
         return result;
     }
