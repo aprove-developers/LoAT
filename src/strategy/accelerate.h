@@ -23,8 +23,7 @@
 #include "graph/graph.h"
 #include "its/itsproblem.h"
 #include "expr/expression.h"
-
-#include "accelerate/farkas.h"
+#include "accelerate/metering.h"
 
 #include <boost/optional.hpp>
 
@@ -43,14 +42,6 @@ public:
     static bool accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc);
 
 private:
-    // All data returned by FarkasMeterGenerator::generate
-    struct MeteringResult {
-        FarkasMeterGenerator::Result result;
-        Expression meteringFunction;
-        VariablePair conflictVar;
-        LinearRule modifiedRule;
-    };
-
     // Potential candidate for the inner loop when nesting two loops.
     // Inner loops are always accelerated loops, so this stores the original and the accelerated rule.
     struct InnerNestingCandidate {
@@ -97,11 +88,6 @@ private:
 
 
     /**
-     * Tries to find a metering function for the given rule
-     */
-    MeteringResult meter(const LinearRule &rule) const;
-
-    /**
      * Processes the result of finding a metering function for the given rule.
      * If a metering function was found, the iterated cost and update are computed.
      * If successful, the rule is added to the ITS.
@@ -117,7 +103,7 @@ private:
      *
      * @returns true if acceleration was successful or we found an non-terminating loop
      */
-    bool handleMeteringResult(TransIdx originalRule, MeteringResult meterResult);
+    bool handleMeteringResult(TransIdx originalRule, const LinearRule &rule, MeteringFinder::Result meterResult);
 
     /**
      * Tries to accelerate the given loop by searching for a metering function
@@ -191,7 +177,8 @@ private:
     // In some cases (heuristic), it might be better to not execute any loop.
     // To support this, an empty loop is added in the end (parallel to the other accelerated loops),
     // so chaining with this loop has the same effect as executing none of the accelerated loops.
-    bool addEmptyRuleToSkipLoops = false;
+    // If this set (of rules we failed to accelerate) is non-empty, an empty loop is added in the end.
+    std::set<TransIdx> failedRulesNeedingEmptyLoop;
 
     // The ITS problem. Accelerated rules are added to the ITS immediately,
     // but no rules are removed until the very end (end of run()).

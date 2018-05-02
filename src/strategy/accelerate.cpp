@@ -20,7 +20,7 @@
 #include "preprocess.h"
 #include "accelerate/recurrence.h"
 #include "z3/z3toolbox.h"
-#include "accelerate/farkas.h"
+#include "accelerate/metering.h"
 #include "infinity.h"
 #include "asymptotic/asymptoticbound.h"
 
@@ -104,36 +104,22 @@ bool Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
 // #####################################
 
 
-Accelerator::MeteringResult Accelerator::meter(const LinearRule &rule) const {
-    FarkasTrans t {.guard = rule.getGuard(), .update = rule.getUpdate(), .cost = rule.getCost()};
+bool Accelerator::handleMeteringResult(TransIdx ruleIdx, const LinearRule &rule, MeteringFinder::Result res) {
+    // TODO: Add proof output also for failures
 
-    MeteringResult res;
-    res.result = FarkasMeterGenerator::generate(its, t, res.meteringFunction, &res.conflictVar);
-
-    // Farkas might modify the rule (e.g. by instantiating free variables)
-    // TODO: Fix this! Might call generate() with mutable guard and constant update (guard has to be appended if reals are allowed)
-    // TODO: The only thing that modifies farkasTrans is the free var instantiation, which could also be done separately!
-    LinearRule newRule(rule.getLhsLoc(), t.guard, t.cost, rule.getRhsLoc(), t.update);
-    res.modifiedRule = newRule;
-
-    return res;
-}
-
-
-bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
-    if (res.result == FarkasMeterGenerator::ConflictVar) {
+    if (res.result == MeteringFinder::ConflictVar) {
         // ConflictVar is just Unsat with more information
-        res.result = FarkasMeterGenerator::Unsat;
+        res.result = MeteringFinder::Unsat;
         rulesWithConflictingVariables.push_back({ruleIdx, res.conflictVar});
     }
 
     switch (res.result) {
-        case FarkasMeterGenerator::Unsat:
+        case MeteringFinder::Unsat:
             Stats::add(Stats::SelfloopNoRank);
             debugAccel("Farkas unsat for rule " << ruleIdx);
 
-            // Maybe the loop is just too difficult for us, so we allow to skip it
-            addEmptyRuleToSkipLoops = true;
+            // Maybe the loop is just too difficult for us, so we allow to skip it (in the end)
+            failedRulesNeedingEmptyLoop.insert(ruleIdx);
 
             // Maybe we can only find a metering function if we nest this loop with an accelerated inner loop,
             // or if we try to strengthen the guard
@@ -144,24 +130,28 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
             keepRules.insert(ruleIdx);
             return false;
 
-        case FarkasMeterGenerator::Nonlinear:
+        case MeteringFinder::Nonlinear:
             Stats::add(Stats::SelfloopNoRank);
             debugAccel("Farkas nonlinear for rule " << ruleIdx);
 
-            // Maybe the loop is just too difficult for us, so we allow to skip it
-            addEmptyRuleToSkipLoops = true;
+            // Maybe the loop is just too difficult for us, so we allow to skip it (in the end)
+            failedRulesNeedingEmptyLoop.insert(ruleIdx);
 
             // We cannot accelerate, so we just keep the unaccelerated rule
             keepRules.insert(ruleIdx);
             return false;
 
-        case FarkasMeterGenerator::Unbounded:
+        case MeteringFinder::Unbounded:
             Stats::add(Stats::SelfloopInfinite);
             debugAccel("Farkas unbounded for rule " << ruleIdx);
 
+            // In case we only got here in a second attempt (by some heuristic), clear some statistics
+            failedRulesNeedingEmptyLoop.erase(ruleIdx);
+            keepRules.erase(ruleIdx);
+
             // The rule is nonterminating. We can ignore the update, but the guard still has to be kept.
             {
-                LinearRule newRule = std::move(res.modifiedRule);
+                LinearRule newRule = rule;
                 newRule.getCostMut() = Expression::InfSymbol;
                 newRule.getUpdateMut().clear();
 
@@ -172,15 +162,21 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
             }
             return true;
 
-        case FarkasMeterGenerator::Success:
-            debugAccel("Farkas success, got " << res.meteringFunction << " for rule " << ruleIdx);
+        case MeteringFinder::Success:
+            debugAccel("Farkas success, got " << res.metering << " for rule " << ruleIdx);
             {
-                LinearRule newRule = std::move(res.modifiedRule);
-                if (!Recurrence::calcIterated(its, newRule, res.meteringFunction)) {
+                // The metering function might need additional guards
+                LinearRule newRule = rule;
+                if (res.integralConstraint) {
+                    newRule.getGuardMut().push_back(res.integralConstraint.get());
+                }
+
+                // Compute new update and cost
+                if (!Recurrence::calcIterated(its, newRule, res.metering)) {
                     Stats::add(Stats::SelfloopNoUpdate);
 
-                    // Maybe the loop is just too difficult for us, so we allow to skip it
-                    addEmptyRuleToSkipLoops = true;
+                    // Maybe the loop is just too difficult for us, so we allow to skip it (in the end)
+                    failedRulesNeedingEmptyLoop.insert(ruleIdx);
 
                     // We cannot accelerate, so we just keep the unaccelerated rule
                     keepRules.insert(ruleIdx);
@@ -193,6 +189,10 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
                     Stats::add(Stats::SelfloopRanked);
                     TransIdx newIdx = its.addRule(std::move(newRule));
 
+                    // In case we only got here in a second attempt (by some heuristic), clear some statistics
+                    failedRulesNeedingEmptyLoop.erase(ruleIdx);
+                    keepRules.erase(ruleIdx);
+
                     // Since acceleration worked, the resulting rule could be an inner loop for nesting
                     innerNestingCandidates.push_back({ ruleIdx, newIdx });
 
@@ -200,7 +200,7 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
                     outerNestingCandidates.push_back({ ruleIdx });
 
                     proofout << "Simple loop " << ruleIdx << " has the metering function ";
-                    proofout << res.meteringFunction << ", resulting in the new transition ";
+                    proofout << res.metering << ", resulting in the new transition ";
                     proofout << newIdx << "." << endl;
                     return true;
                 }
@@ -212,27 +212,27 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, MeteringResult res) {
 
 
 bool Accelerator::accelerateAndStore(TransIdx ruleIdx, const LinearRule &rule, bool storeOnlySuccessful) {
-    MeteringResult res = meter(rule);
+    MeteringFinder::Result res = MeteringFinder::generate(its, rule);
 
     if (storeOnlySuccessful
-        && res.result != FarkasMeterGenerator::Unbounded
-        && res.result != FarkasMeterGenerator::Success) {
+        && res.result != MeteringFinder::Unbounded
+        && res.result != MeteringFinder::Success) {
         return false;
     }
 
-    return handleMeteringResult(ruleIdx, res);
+    return handleMeteringResult(ruleIdx, rule, res);
 }
 
 
 optional<LinearRule> Accelerator::accelerate(const LinearRule &rule) const {
-    MeteringResult res = meter(rule);
+    MeteringFinder::Result res = MeteringFinder::generate(its, rule);
 
-    if (res.result == FarkasMeterGenerator::Unbounded) {
+    if (res.result == MeteringFinder::Unbounded) {
         Stats::add(Stats::SelfloopInfinite);
         debugAccel("Farkas (nested) unbounded for rule " << rule);
 
         // The rule is nonterminating. We can ignore the update, but the guard still has to be kept.
-        LinearRule newRule = std::move(res.modifiedRule);
+        LinearRule newRule = rule;
         newRule.getCostMut() = Expression::InfSymbol;
         newRule.getUpdateMut().clear();
         return newRule;
@@ -240,11 +240,16 @@ optional<LinearRule> Accelerator::accelerate(const LinearRule &rule) const {
         // TODO: implement proof output here? (should only be called from nesting)
     }
 
-    if (res.result == FarkasMeterGenerator::Success) {
-        debugAccel("Farkas success, got " << res.meteringFunction << " for rule " << rule);
-        LinearRule newRule = std::move(res.modifiedRule);
+    if (res.result == MeteringFinder::Success) {
+        debugAccel("Farkas success, got " << res.metering << " for rule " << rule);
 
-        if (Recurrence::calcIterated(its, newRule, res.meteringFunction)) {
+        // The metering function might need additional guards
+        LinearRule newRule = rule;
+        if (res.integralConstraint) {
+            newRule.getGuardMut().push_back(res.integralConstraint.get());
+        }
+
+        if (Recurrence::calcIterated(its, newRule, res.metering)) {
             Stats::add(Stats::SelfloopRanked);
             return newRule;
 
@@ -391,6 +396,12 @@ void Accelerator::run() {
     }
 
 
+    // TODO: Might restructure this code to apply all heuristics directly for each rule (so we do not need rulesWith*)
+    // TODO: This might simplify the decision of what to do with the rule (nest it? add empty rule? keep it?)
+
+    // TODO: Maybe: Add method handleWithResult() and pass the original result (before the heuristics), but only if heuristics fail
+    // TODO: Or add a methods handleFailed(), handleSuccessful() etc.
+
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
         // don't try to accelerate loops with INF cost
@@ -407,6 +418,24 @@ void Accelerator::run() {
         }
     }
 
+
+#ifdef FARKAS_HEURISTIC_INSTANTIATE_FREEVARS
+    // Instantiate temporary variables by their bounds (might help to find a metering function)
+    for (TransIdx loop : rulesWithUnsatMetering) {
+        LinearRule rule = its.getRule(loop);
+        debugAccel("Trying temp var instantiation for rule: " << rule);
+
+        if (MeteringFinder::instantiateTempVarsHeuristic(its, rule)) {
+            if (accelerateAndStore(loop, rule, true)) {
+                debugAccel("Temp var instantiation successful with modified rule: " << rule);
+            }
+        }
+
+        if (Timeout::soft()) {
+            goto timeout;
+        }
+    }
+#endif
 
 #ifdef FARKAS_HEURISTIC_FOR_MINMAX
     // Min-Max heuristic (workaround for missing min/max(A,B) support)
@@ -432,7 +461,6 @@ void Accelerator::run() {
         }
     }
 #endif
-
 
 #ifdef FARKAS_TRY_ADDITIONAL_GUARD
     // Guard strengthening heuristic (might help to find a metering function)
@@ -498,7 +526,7 @@ void Accelerator::run() {
     proofout << "." << endl;
 
     // Add a dummy rule to simulate the effect of not executing any loop
-    if (addEmptyRuleToSkipLoops) {
+    if (!failedRulesNeedingEmptyLoop.empty()) {
         TransIdx t = its.addRule(LinearRule::dummyRule(targetLoc, targetLoc));
         proofout << "Adding an empty self-loop: " << t << "." << endl;
     }
