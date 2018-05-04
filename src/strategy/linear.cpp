@@ -224,7 +224,7 @@ bool LinearITSAnalysis::preprocessRules() {
             if (cfg.eliminateCostConstraints) {
                 changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
             }
-            changed = Preprocess::simplifyTransitionWrapper(its, rule) || changed;
+            changed = Preprocess::simplifyRule(its, rule) || changed;
         }
     }
 

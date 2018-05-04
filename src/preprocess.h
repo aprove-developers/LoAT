@@ -18,8 +18,8 @@
 #ifndef PREPROCESS_H
 #define PREPROCESS_H
 
+#include "its/rule.h"
 #include "its/variablemanager.h"
-#include "flowgraph.h"
 
 struct Transition;
 
@@ -43,12 +43,7 @@ namespace Preprocess
      * @param trans the transition, modified.
      * @return true iff trans was modified
      */
-    bool simplifyTransition(const VarMan &varMan, Transition &trans);
-
-
-    // FIXME: remove this!
-    bool simplifyTransitionWrapper(const VarMan &varMan, LinearRule &rule);
-
+    bool simplifyRule(const VarMan &varMan, LinearRule &trans);
 
     /**
      * Removes trivial terms from the given guard, i.e. 42 <= 1337 or x <= x+1
@@ -73,10 +68,10 @@ namespace Preprocess
     /**
      * Expensive preprocessing step to remove all free variables from the update and,
      * where possible, also from the guard.
-     * @param trans the transition, modified.
-     * @return true iff trans was modified
+     * @param rule the rule, modified
+     * @return true iff rule was modified
      */
-    bool eliminateFreeVars(const VarMan &varMan, Transition &trans);
+    bool eliminateFreeVars(const VarMan &varMan, LinearRule &rule);
 }
 
 #endif // PREPROCESS_H

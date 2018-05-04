@@ -55,21 +55,7 @@ Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
 
 bool Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
     Timing::Scope(Timing::Preprocess);
-
-    Transition t;
-    t.guard = rule.getGuard();
-    t.update = rule.getUpdate();
-    t.cost = rule.getCost();
-
-    // TODO: Port preprocess to Linear/AbstractRule
-    if (Preprocess::simplifyTransition(varMan, t)) {
-        rule.getGuardMut() = t.guard;
-        rule.getUpdateMut() = t.update;
-        rule.getCostMut() = t.cost;
-        return true;
-    }
-
-    return false;
+    return Preprocess::simplifyRule(varMan, rule);
 }
 
 

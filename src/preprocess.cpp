@@ -17,7 +17,6 @@
 
 #include "preprocess.h"
 
-#include "flowgraph.h"
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
 #include "z3/z3toolbox.h"
@@ -37,42 +36,23 @@ bool Preprocess::tryToRemoveCost(GuardList &guard) {
 }
 
 
-bool Preprocess::simplifyTransition(const VarMan &varMan, Transition &trans) {
+bool Preprocess::simplifyRule(const VarMan &varMan, LinearRule &rule) {
     bool result = false;
     bool changed;
 
     //do removeWeakerGuards only once, as this involves z3 and is potentially slow
-    result = removeTrivialGuards(trans.guard);
-    result = removeWeakerGuards(trans.guard) || result;
+    result = removeTrivialGuards(rule.getGuardMut());
+    result = removeWeakerGuards(rule.getGuardMut()) || result;
 
     //all other steps are repeated
     do {
-        changed = removeTrivialGuards(trans.guard);
-        changed = eliminateFreeVars(varMan,trans) || changed;
-        changed = removeTrivialUpdates(varMan,trans.update) || changed;
+        changed = removeTrivialGuards(rule.getGuardMut());
+        changed = eliminateFreeVars(varMan,rule) || changed;
+        changed = removeTrivialUpdates(varMan, rule.getUpdateMut()) || changed;
         result = result || changed;
     } while (changed);
     return result;
 }
-
-
-
-// FIXME: remove this!
-bool Preprocess::simplifyTransitionWrapper(const VarMan &varMan, LinearRule &rule) {
-    Transition t;
-    t.guard = rule.getGuard();
-    t.update = rule.getUpdate();
-    t.cost = rule.getCost();
-
-    bool res = simplifyTransition(varMan, t);
-
-    rule.getGuardMut() = t.guard;
-    rule.getUpdateMut() = t.update;
-    rule.getCostMut() = t.cost;
-
-    return res;
-}
-
 
 
 bool Preprocess::removeTrivialGuards(GuardList &guard) {
@@ -116,7 +96,7 @@ timeout:
 
 
 bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
-    stack<VariableIndex> remove;
+    stack<VariableIdx> remove;
     for (auto it : update) {
         if (it.second.equalsVariable(varMan.getGinacSymbol(it.first))) {
             remove.push(it.first);
@@ -131,13 +111,13 @@ bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
 }
 
 
-bool Preprocess::eliminateFreeVars(const VarMan &varMan, Transition &trans) {
+bool Preprocess::eliminateFreeVars(const VarMan &varMan, LinearRule &rule) {
     bool result = false; //final modification flag
     bool changed; //intermediate modification flag
 
     do {
         //equalities allow easy propagation, thus transform x <= y, x >= y into x == y
-        changed = GuardToolbox::findEqualities(trans.guard);
+        changed = GuardToolbox::findEqualities(rule.getGuardMut());
         if (result && !changed) break;
 
         //helpers for guard preprocessing
@@ -149,25 +129,31 @@ bool Preprocess::eliminateFreeVars(const VarMan &varMan, Transition &trans) {
         GiNaC::exmap equalSubs;
         do {
             varsInUpdate.clear();
-            for (auto it : trans.update) it.second.collectVariables(varsInUpdate);
+            for (auto it : rule.getUpdate()) it.second.collectVariables(varsInUpdate);
 
             equalSubs.clear();
-            changed = GuardToolbox::propagateEqualities(varMan,trans.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
-            for (auto &it : trans.update) it.second = it.second.subs(equalSubs);
-            trans.cost = trans.cost.subs(equalSubs);
+            changed = GuardToolbox::propagateEqualities(varMan,rule.getGuardMut(),GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
+
+            for (auto &it : rule.getUpdateMut()) {
+                it.second.applySubs(equalSubs);
+            }
+            rule.getCostMut().applySubs(equalSubs);
         } while (!equalSubs.empty());
 
         //try to remove free variables from equalities
         equalSubs.clear();
-        changed = GuardToolbox::propagateEqualities(varMan,trans.guard,GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
-        for (auto &it : trans.update) it.second = it.second.subs(equalSubs);
-        trans.cost = trans.cost.subs(equalSubs);
+        changed = GuardToolbox::propagateEqualities(varMan,rule.getGuardMut(),GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
+
+        for (auto &it : rule.getUpdateMut()) {
+            it.second.applySubs(equalSubs);
+        }
+        rule.getCostMut().applySubs(equalSubs);
 
         //find all free variables that do not occur in update and cost
-        auto sym_is_free_onlyguard = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0 && !trans.cost.has(sym); };
+        auto sym_is_free_onlyguard = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym); };
 
         //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
-        changed = GuardToolbox::eliminateByTransitiveClosure(trans.guard,varMan.getGinacVarList(),true,sym_is_free_onlyguard) || changed;
+        changed = GuardToolbox::eliminateByTransitiveClosure(rule.getGuardMut(),varMan.getGinacVarList(),true,sym_is_free_onlyguard) || changed;
 
         result = result || changed;
     } while (changed);
