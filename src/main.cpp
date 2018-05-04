@@ -29,8 +29,6 @@
 using namespace std;
 
 
-#include "itrs.h"
-#include "flowgraph.h"
 #include "preprocess.h"
 #include "util/stats.h"
 #include "util/timing.h"

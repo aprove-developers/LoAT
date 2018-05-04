@@ -22,7 +22,6 @@
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"
 #include "expr/relation.h"
-#include "flowgraph.h"
 
 #include <queue>
 
@@ -466,7 +465,7 @@ void InfiniteInstances::removeEqualitiesFromGuard() {
     for (const auto &it : equalSubs) {
         if (varMan.isTempVar(varMan.getVarIdx(GiNaC::ex_to<GiNaC::symbol>(it.first).get_name()))) continue; //free/free2 imposes no bounds on anything
         for (string varname : Expression(it.second).getVariableNames()) {
-            VariableIndex vi = varMan.getVarIdx(varname);
+            VariableIdx vi = varMan.getVarIdx(varname);
             if (varMan.isTempVar(vi)) freeBoundedVars.insert(varMan.getGinacSymbol(vi));
         }
     }
