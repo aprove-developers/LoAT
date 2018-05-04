@@ -17,7 +17,6 @@
 
 #include "recurrence.h"
 
-#include "flowgraph.h"
 #include "util/timing.h"
 
 #include <purrs.hh>
@@ -33,9 +32,9 @@ Recurrence::Recurrence(const VarMan &varMan)
 
 
 //NOTE: very stupid and not very efficient; better use a graph for this problem
-vector<VariableIndex> Recurrence::dependencyOrder(UpdateMap &update) {
-    vector<VariableIndex> ordering;
-    set<VariableIndex> orderedVars;
+vector<VariableIdx> Recurrence::dependencyOrder(UpdateMap &update) {
+    vector<VariableIdx> ordering;
+    set<VariableIdx> orderedVars;
 
     while (ordering.size() < update.size()) {
         bool changed = false;
@@ -44,7 +43,7 @@ vector<VariableIndex> Recurrence::dependencyOrder(UpdateMap &update) {
 
             //check if all variables on update rhs are already processed
             for (const string &varname : up.second.getVariableNames()) {
-                VariableIndex vi = varMan.getVarIdx(varname);
+                VariableIdx vi = varMan.getVarIdx(varname);
                 if (vi != up.first && update.count(vi) > 0 && orderedVars.count(vi) == 0)
                     goto skipUpdate;
             }
@@ -142,11 +141,11 @@ bool Recurrence::calcIteratedUpdate(const UpdateMap &oldUpdate, const Expression
     assert(newUpdate.empty());
 
     UpdateMap update = oldUpdate; //might be changed by dependencyOrder, so copy here
-    vector<VariableIndex> order = dependencyOrder(update);
+    vector<VariableIdx> order = dependencyOrder(update);
     assert(order.size() == update.size());
 
     //in the given order try to solve the recurrence for every updated variable
-    for (VariableIndex vi : order) {
+    for (VariableIdx vi : order) {
         Expression res;
         ExprSymbol target = varMan.getGinacSymbol(vi);
 
@@ -179,24 +178,25 @@ bool Recurrence::calcIteratedCost(const Expression &cost, const Expression &mete
 }
 
 
-bool Recurrence::calcIterated(const VarMan &varMan, Transition &trans, const Expression &meterfunc) {
+bool Recurrence::calcIterated(const VarMan &varMan, LinearRule &rule, const Expression &meterfunc) {
     Recurrence rec(varMan);
 
     UpdateMap newUpdate;
-    if (!rec.calcIteratedUpdate(trans.update,meterfunc,newUpdate)) {
+    if (!rec.calcIteratedUpdate(rule.getUpdate(), meterfunc, newUpdate)) {
         debugPurrs("calcIterated: failed to calculate update recurrence");
         return false;
     }
 
     Expression newCost;
-    if (!rec.calcIteratedCost(trans.cost,meterfunc,newCost)) {
+    if (!rec.calcIteratedCost(rule.getCost(),meterfunc,newCost)) {
         debugPurrs("calcIterated: failed to calculate cost recurrence");
         return false;
     }
 
-    trans.update = std::move(newUpdate);
-    trans.cost = newCost;
-    trans.guard.insert(trans.guard.end(),rec.addGuard.begin(),rec.addGuard.end());
+    // TODO: Add and use rule.setUpdate, rule.setCost
+    rule.getUpdateMut() = std::move(newUpdate);
+    rule.getCostMut() = newCost;
+    rule.getGuardMut().insert(rule.getGuard().end(), rec.addGuard.begin(), rec.addGuard.end());
     return true;
 }
 

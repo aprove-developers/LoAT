@@ -18,11 +18,9 @@
 #ifndef RECURRENCE_H
 #define RECURRENCE_H
 
-#include "global.h"
+#include "its/rule.h"
 #include "its/variablemanager.h"
 
-//struct Transition;
-#include "flowgraph.h"
 
 
 /**
@@ -34,32 +32,18 @@ class Recurrence
 private:
 
 public:
-    //Updates trans.update and trans.cost, but only if result is true, otherwise unchanged
     /**
      * Tries to solve recurrences for the iterated update and cost.
-     * If successful, returns true and modifies trans to contain the iterated update and cost (using the given metering function as "iteration step")
-     * Otherwise, false is returned and trans is left unchanged
+     * If successful, returns true and modifies rule to contain the iterated update and cost
+     * (using the given metering function as "iteration step")
+     * Otherwise, false is returned and rule is left unchanged
      */
-    static bool calcIterated(const VarMan &varMan, Transition &trans, const Expression &meterfunc);
-
-    static bool calcIterated(const VarMan &varMan, LinearRule &rule, const Expression &meterfunc) {
-        Transition t;
-        t.guard = rule.getGuard();
-        t.update = rule.getUpdate();
-        t.cost = rule.getCost();
-
-        bool res = calcIterated(varMan, t, meterfunc);
-
-        rule.getGuardMut() = t.guard;
-        rule.getUpdateMut() = t.update;
-        rule.getCostMut() = t.cost;
-        return res;
-    }
-
+    static bool calcIterated(const VarMan &varMan, LinearRule &rule, const Expression &meterfunc);
 
 private:
     Recurrence(const VarMan &varMan);
 
+    // TODO: Use optional<UpdateMap> and optional<Expression> below
     /**
      * Returns true iff iterated update was calculated successfully and newUpdate has been set accordingly (with runtime as "iteration step")
      */
