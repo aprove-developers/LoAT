@@ -47,6 +47,8 @@ public:
      */
     enum ResultKind { Success, Unbounded, Nonlinear, ConflictVar, Unsat };
 
+    // TODO: integrate free var instantiation back into generate(), include (but not apply) the substitution here?
+    // TODO: Alternateively, add a field "modifiedRule" (with applied substitution and added integralConstraint)
     struct Result {
         // Flag indicating whether a metering function was successfully found
         ResultKind result;

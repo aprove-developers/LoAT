@@ -78,6 +78,14 @@ private:
     bool linearizeUpdate();
 
     /**
+     * Checks if any of the substituted variables (i.e., the variables in subsVars)
+     * still occurs in the guard or update (this would be a conflict).
+     * This is necessary, e.g. if "y < x" appears but we later substitute x^2
+     * @return true iff there are no conflicts (so the substitution is sound)
+     */
+    bool checkForConflicts() const;
+
+    /**
      * Applies the computed substitution subsMap to the entire guard and update.
      */
     void applySubstitution();

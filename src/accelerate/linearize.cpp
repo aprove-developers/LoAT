@@ -123,15 +123,6 @@ bool Linearize::linearizeGuard() {
         term = Relation::replaceLhsRhs(term, lhs, rhs);
     }
 
-    // Check if any of the substituted variables still occurs (e.g. x^2 substituted, but x > 4 appears)
-    for (const Expression &term : guard) {
-        for (const ExprSymbol &var : subsVars) {
-            if (term.has(var)) {
-                return false;
-            }
-        }
-    }
-
     return true;
 }
 
@@ -147,7 +138,21 @@ bool Linearize::linearizeUpdate() {
         }
     }
 
-    // Check if any of the substituted variables still occurs (e.g. x^2 substituted, but y := x + 4 appears)
+    return true;
+}
+
+
+bool Linearize::checkForConflicts() const {
+    // Check guard (e.g. x^2 substituted, but x > 4 appeared before, so we did not notice)
+    for (const Expression &term : guard) {
+        for (const ExprSymbol &var : subsVars) {
+            if (term.has(var)) {
+                return false;
+            }
+        }
+    }
+
+    // Check the update (e.g. if y := x^2 was substituted, but we also have the guard x < 4)
     for (const auto &it : update) {
         for (const ExprSymbol &var : subsVars) {
             if (it.second.has(var)) {
@@ -196,6 +201,10 @@ optional<GiNaC::exmap> Linearize::linearizeGuardUpdate(VarMan &varMan, GuardList
     }
 
     if (!lin.linearizeUpdate()) {
+        return {};
+    }
+
+    if (!lin.checkForConflicts()) {
         return {};
     }
 
