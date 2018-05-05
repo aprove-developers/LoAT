@@ -106,7 +106,7 @@ TransIdx AbstractITSProblem<Rule>::addRule(Rule rule) {
     // gather target locations
     vector<LocationIdx> rhsLocs;
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
-        rhsLocs.push_back(it->loc);
+        rhsLocs.push_back(it->getLoc());
     }
 
     // add transition and store mapping to rule

@@ -43,11 +43,11 @@ LinearRule::LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, Loc
 {}
 
 LinearRule LinearRule::withNewRhsLoc(LocationIdx rhsLoc) const {
-    return LinearRule(lhs, RuleRhs(rhsLoc, rhs.update));
+    return LinearRule(lhs, RuleRhs(rhsLoc, rhs.getUpdate()));
 }
 
 bool LinearRule::isDummyRule() const {
-    return lhs.guard.empty() && rhs.update.empty() && lhs.cost.is_zero();
+    return lhs.guard.empty() && rhs.getUpdate().empty() && lhs.cost.is_zero();
 }
 
 LinearRule LinearRule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {

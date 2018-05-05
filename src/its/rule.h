@@ -39,12 +39,17 @@ struct RuleLhs {
     RuleLhs(LocationIdx loc, GuardList guard, Expression cost);
 };
 
-struct RuleRhs {
+class RuleRhs {
     LocationIdx loc;
     UpdateMap update;
 
+public:
     RuleRhs() {}
     RuleRhs(LocationIdx loc, UpdateMap update);
+
+    LocationIdx getLoc() const { return loc; }
+    const UpdateMap& getUpdate() const { return update; }
+    UpdateMap& getUpdateMut() { return update; }
 };
 
 
@@ -66,6 +71,12 @@ public:
     virtual const RuleRhs* rhsBegin() const = 0;
     virtual const RuleRhs* rhsEnd() const = 0;
     virtual size_t rhsCount() const = 0;
+
+    // mutable access
+    virtual GuardList& getGuardMut() = 0;
+    virtual Expression& getCostMut() = 0;
+    virtual RuleRhs* rhsBegin() = 0;
+    virtual RuleRhs* rhsEnd() = 0;
 };
 
 
@@ -91,18 +102,20 @@ public:
     const Expression& getCost() const override { return lhs.cost; }
 
     // lhs mutation
-    GuardList& getGuardMut() { return lhs.guard; }
-    Expression& getCostMut() { return lhs.cost; }
+    GuardList& getGuardMut() override { return lhs.guard; }
+    Expression& getCostMut() override { return lhs.cost; }
 
     // iteration over right-hand sides
     const RuleRhs* rhsBegin() const override { return &rhs; }
     const RuleRhs* rhsEnd() const override { return &rhs + 1; }
+    RuleRhs* rhsBegin() override { return &rhs; }
+    RuleRhs* rhsEnd() override { return &rhs + 1; }
     size_t rhsCount() const override { return 1; }
 
     // special methods for linear rules
-    LocationIdx getRhsLoc() const { return rhs.loc; }
-    const UpdateMap& getUpdate() const { return rhs.update; }
-    UpdateMap& getUpdateMut() { return rhs.update; }
+    LocationIdx getRhsLoc() const { return rhs.getLoc(); }
+    const UpdateMap& getUpdate() const { return rhs.getUpdate(); }
+    UpdateMap& getUpdateMut() { return rhs.getUpdateMut(); }
 
     // some shorthands
     LinearRule withNewRhsLoc(LocationIdx rhsLoc) const;
@@ -132,12 +145,14 @@ public:
     // iteration over right-hand sides
     const RuleRhs* rhsBegin() const override { return &rhss.front(); }
     const RuleRhs* rhsEnd() const override { return &rhss.back()+1; }
+    RuleRhs* rhsBegin() override { return &rhss.front(); }
+    RuleRhs* rhsEnd() override { return &rhss.back()+1; }
     size_t rhsCount() const override { return rhss.size(); }
 
     // special methods for nonlinear rules (idx is an index to rhss)
-    LocationIdx getRhsLoc(int idx) const { return rhss[idx].loc; }
-    const UpdateMap& getUpdate(int idx) const { return rhss[idx].update; };
-    UpdateMap& getUpdateMut(int idx) { return rhss[idx].update; }
+    LocationIdx getRhsLoc(int idx) const { return rhss[idx].getLoc(); }
+    const UpdateMap& getUpdate(int idx) const { return rhss[idx].getUpdate(); };
+    UpdateMap& getUpdateMut(int idx) { return rhss[idx].getUpdateMut(); }
 
     // conversion to linear rule
     bool isLinear() const;

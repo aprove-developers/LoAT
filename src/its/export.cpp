@@ -12,7 +12,7 @@ set<VariableIdx> getBoundVariables(const AbstractRule &rule, const VarMan &varMa
 
     //updated variables are always bound
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        for (const auto &it : rhs->update) {
+        for (const auto &it : rhs->getUpdate()) {
             res.insert(it.first);
         }
     }
@@ -55,10 +55,10 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
     s << " -> ";
 
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
-        printLocation(it->loc, its, s);
+        printLocation(it->getLoc(), its, s);
         s << " : ";
 
-        for (auto upit : it->update) {
+        for (auto upit : it->getUpdate()) {
             s << its.getVarName(upit.first) << "'";
             s << "=" << upit.second;
             s << ", ";
@@ -184,13 +184,13 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
 
             for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
                 if (rhs != rule.rhsBegin()) s << ",";
-                printNode(rhs->loc);
+                printNode(rhs->getLoc());
 
                 first = true;
                 for (VariableIdx var : relevantVars) {
                     s << ((first) ? "(" : ",");
-                    auto it = rhs->update.find(var);
-                    if (it != rhs->update.end()) {
+                    auto it = rhs->getUpdate().find(var);
+                    if (it != rhs->getUpdate().end()) {
                         s << it->second.expand();
                     } else {
                         s << its.getVarName(var);

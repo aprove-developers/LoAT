@@ -439,19 +439,18 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert rhs, compute update
     vector<RuleRhs> rhss;
     for (TermPtr rhs : rule.rhss) {
-        RuleRhs newRhs;
         LocationData loc = getLocationData(rhs);
         const vector<TermPtr> args = static_cast<TermFunApp*>(rhs.get())->getArguments();
 
-        newRhs.loc = loc.index;
-
+        LocationIdx rhsLoc = loc.index;
+        UpdateMap rhsUpdate;
         for (int i=0; i < loc.arity; ++i) {
             VariableIdx var = loc.lhsVars[i];
             Expression update = args[i]->toGinacExpression(itsProblem);
-            newRhs.update.emplace(var, std::move(update));
+            rhsUpdate.emplace(var, std::move(update));
         }
 
-        rhss.push_back(newRhs);
+        rhss.push_back(RuleRhs(rhsLoc, rhsUpdate));
     }
 
     NonlinearRule newRule(std::move(lhs), std::move(rhss));
@@ -625,7 +624,7 @@ ExprSymbolSet ITSParser::getSymbols(const NonlinearRule &rule) {
     // rhs
     // Note: For an update like x/y, only y is counted, since x is not part of this rule (but of a different lhs)
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        for (const auto &it : rhs->update) {
+        for (const auto &it : rhs->getUpdate()) {
             it.second.collectVariables(res);
         }
     }
