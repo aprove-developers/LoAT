@@ -25,6 +25,7 @@
 using namespace std;
 
 
+// FIXME: Remove this! Instead provide method to add the "cost >= 0" constraint, and check if it is implied there
 bool Preprocess::tryToRemoveCost(GuardList &guard) {
     if (guard.empty()) return false;
     GuardList realGuard(guard.begin(),guard.end()-1);
@@ -36,9 +37,8 @@ bool Preprocess::tryToRemoveCost(GuardList &guard) {
 }
 
 
-bool Preprocess::simplifyRule(const VarMan &varMan, LinearRule &rule) {
-    bool result = false;
-    bool changed;
+bool Preprocess::simplifyRule(const VarMan &varMan, AbstractRule &rule) {
+    bool changed, result;
 
     //do removeWeakerGuards only once, as this involves z3 and is potentially slow
     result = removeTrivialGuards(rule.getGuardMut());
@@ -46,11 +46,18 @@ bool Preprocess::simplifyRule(const VarMan &varMan, LinearRule &rule) {
 
     //all other steps are repeated
     do {
+        // simplify guard
         changed = removeTrivialGuards(rule.getGuardMut());
         changed = eliminateFreeVars(varMan,rule) || changed;
-        changed = removeTrivialUpdates(varMan, rule.getUpdateMut()) || changed;
+
+        // simplify updates
+        for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+            changed = removeTrivialUpdates(varMan, rhs->getUpdateMut()) || changed;
+        }
+
         result = result || changed;
     } while (changed);
+
     return result;
 }
 
@@ -111,7 +118,7 @@ bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
 }
 
 
-bool Preprocess::eliminateFreeVars(const VarMan &varMan, LinearRule &rule) {
+bool Preprocess::eliminateFreeVars(const VarMan &varMan, AbstractRule &rule) {
     bool result = false; //final modification flag
     bool changed; //intermediate modification flag
 
@@ -129,25 +136,38 @@ bool Preprocess::eliminateFreeVars(const VarMan &varMan, LinearRule &rule) {
         GiNaC::exmap equalSubs;
         do {
             varsInUpdate.clear();
-            for (auto it : rule.getUpdate()) it.second.collectVariables(varsInUpdate);
+            for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+                for (const auto &it : rhs->getUpdate()) {
+                    it.second.collectVariables(varsInUpdate);
+                }
+            }
 
             equalSubs.clear();
             changed = GuardToolbox::propagateEqualities(varMan,rule.getGuardMut(),GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
 
-            for (auto &it : rule.getUpdateMut()) {
-                it.second.applySubs(equalSubs);
+            if (!equalSubs.empty()) {
+                for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+                    for (auto &it : rhs->getUpdateMut()) {
+                        it.second.applySubs(equalSubs);
+                    }
+                }
+                rule.getCostMut().applySubs(equalSubs);
             }
-            rule.getCostMut().applySubs(equalSubs);
+
         } while (!equalSubs.empty());
 
         //try to remove free variables from equalities
         equalSubs.clear();
         changed = GuardToolbox::propagateEqualities(varMan,rule.getGuardMut(),GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
 
-        for (auto &it : rule.getUpdateMut()) {
-            it.second.applySubs(equalSubs);
+        if (!equalSubs.empty()) {
+            for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+                for (auto &it : rhs->getUpdateMut()) {
+                    it.second.applySubs(equalSubs);
+                }
+            }
+            rule.getCostMut().applySubs(equalSubs);
         }
-        rule.getCostMut().applySubs(equalSubs);
 
         //find all free variables that do not occur in update and cost
         auto sym_is_free_onlyguard = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym); };

@@ -43,7 +43,7 @@ namespace Preprocess
      * @param trans the transition, modified.
      * @return true iff trans was modified
      */
-    bool simplifyRule(const VarMan &varMan, LinearRule &trans);
+    bool simplifyRule(const VarMan &varMan, AbstractRule &rule);
 
     /**
      * Removes trivial terms from the given guard, i.e. 42 <= 1337 or x <= x+1
@@ -71,7 +71,7 @@ namespace Preprocess
      * @param rule the rule, modified
      * @return true iff rule was modified
      */
-    bool eliminateFreeVars(const VarMan &varMan, LinearRule &rule);
+    bool eliminateFreeVars(const VarMan &varMan, AbstractRule &rule);
 }
 
 #endif // PREPROCESS_H
