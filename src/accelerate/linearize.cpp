@@ -128,7 +128,7 @@ bool Linearize::linearizeGuard() {
 
 
 bool Linearize::linearizeUpdate() {
-    for (auto it : update) {
+    for (auto &it : update) {
         // first apply the current substitution
         it.second.applySubs(subsMap);
 
@@ -170,7 +170,7 @@ void Linearize::applySubstitution() {
         for (Expression &term : guard) {
             term.applySubs(subsMap);
         }
-        for (auto it : update) {
+        for (auto &it : update) {
             it.second.applySubs(subsMap);
         }
     }
