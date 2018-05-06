@@ -27,11 +27,12 @@ class LinearITSProblem;
 namespace Pruning {
     /**
      * Tries to identify and remove duplicate transitions within the given list of transitions
-     * @param trans list of transitions that are checked
+     * @param trans list/set of transitions that are checked
      * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
      * @return true iff the ITS was modified (i.e. a duplicate got deleted)
      */
-    bool removeDuplicateRules(LinearITSProblem &its, const std::vector<TransIdx> &trans, bool compareUpdate = true);
+    template <typename Container>
+    bool removeDuplicateRules(LinearITSProblem &its, const Container &trans, bool compareUpdate = true);
 
     /**
      * Checks initial rules (from the initial location) for satisfiability, removes unsat rules.

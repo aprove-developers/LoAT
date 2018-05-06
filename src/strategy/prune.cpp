@@ -66,13 +66,14 @@ bool Pruning::compareRules(const LinearRule &a, const LinearRule &b, bool compar
 }
 
 
-bool Pruning::removeDuplicateRules(LinearITSProblem &its, const vector<TransIdx> &trans, bool compareUpdate) {
+template <typename Container>
+bool Pruning::removeDuplicateRules(LinearITSProblem &its, const Container &trans, bool compareUpdate) {
     set<TransIdx> toRemove;
 
-    for (int i=0; i < trans.size(); ++i) {
-        for (int j=i+1; j < trans.size(); ++j) {
-            TransIdx idxA = trans[i];
-            TransIdx idxB = trans[j];
+    for (auto i = trans.begin(); i != trans.end(); ++i) {
+        for (auto j = i; ++j != trans.end(); /**/) {
+            TransIdx idxA = *i;
+            TransIdx idxB = *j;
 
             const LinearRule &ruleA = its.getRule(idxA);
             const LinearRule &ruleB = its.getRule(idxB);
@@ -242,4 +243,6 @@ bool Pruning::removeLeafsAndUnreachable(LinearITSProblem &its) {
 }
 
 
-
+// instantiate templates (since the implementation is not in the header file)
+template bool Pruning::removeDuplicateRules(LinearITSProblem &, const std::vector<TransIdx> &, bool);
+template bool Pruning::removeDuplicateRules(LinearITSProblem &, const std::set<TransIdx> &, bool);

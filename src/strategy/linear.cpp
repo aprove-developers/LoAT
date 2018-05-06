@@ -199,7 +199,7 @@ RuntimeResult LinearITSAnalysis::run() {
 
 
 bool LinearITSAnalysis::ensureProperInitialLocation() {
-    if (!its.getPredecessorLocations(its.getInitialLocation()).empty()) {
+    if (its.hasTransitionsTo(its.getInitialLocation())) {
         LocationIdx newStart = its.addLocation();
         its.addRule(LinearRule::dummyRule(newStart, its.getInitialLocation()));
         its.setInitialLocation(newStart);
@@ -244,7 +244,7 @@ bool LinearITSAnalysis::preprocessRules() {
 bool LinearITSAnalysis::isFullySimplified() const {
     for (LocationIdx node : its.getLocations()) {
         if (its.isInitialLocation(node)) continue;
-        if (!its.getTransitionsFrom(node).empty()) return false;
+        if (its.hasTransitionsFrom(node)) return false;
     }
     return true;
 }
@@ -341,7 +341,7 @@ bool LinearITSAnalysis::pruneRules() {
  * Helper for getMaxRuntime that searches for the maximal cost.getComplexity().
  * Note that this does not involve the asymptotic bounds check and thus not give sound results!
  */
-static RuntimeResult getMaxComplexity(const LinearITSProblem &its, vector<TransIdx> rules) {
+static RuntimeResult getMaxComplexity(const LinearITSProblem &its, set<TransIdx> rules) {
     RuntimeResult res;
 
     for (TransIdx rule : rules) {

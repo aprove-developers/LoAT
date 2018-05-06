@@ -340,13 +340,12 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
 
     debugChain("  checking if we can eliminate location " << node);
 
-    vector<TransIdx> transIn = its.getTransitionsTo(node);
-    vector<TransIdx> transOut = its.getTransitionsFrom(node);
-
-    bool hasSelfloop = !its.getTransitionsFromTo(node, node).empty();
+    bool hasIncoming = its.hasTransitionsTo(node);
+    bool hasOutgoing = its.hasTransitionsFrom(node);
+    bool hasSelfloop = its.hasTransitionsFromTo(node, node);
 
     // If we cannot eliminate node, continue with its children (DFS traversal)
-    if (hasSelfloop || its.isInitialLocation(node) || transIn.empty() || transOut.empty()) {
+    if (hasSelfloop || its.isInitialLocation(node) || !hasIncoming || !hasOutgoing) {
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
             if (eliminateALocationImpl(its, succ, visited)) {
                 return true;
@@ -385,7 +384,7 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
     assert(!its.getTransitionsFromTo(node, node).empty());
 
     set<TransIdx> successfullyChained;
-    vector<TransIdx> transIn = its.getTransitionsTo(node);
+    set<TransIdx> transIn = its.getTransitionsTo(node);
 
     for (TransIdx simpleLoop : its.getTransitionsFromTo(node, node)) {
         for (TransIdx incoming : transIn) {
