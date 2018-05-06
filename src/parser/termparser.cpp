@@ -35,7 +35,7 @@ TermParser::TermParser(const std::map<std::string, VariableIdx> &knownVariables,
 
 
 TermPtr TermParser::parseTerm(const std::string &term) {
-    debugTermParser("Parsing " << term);
+    debugTermParser("Now parsing term: " << term);
     toParseReversed = term;
     std::reverse(toParseReversed.begin(), toParseReversed.end());
 
@@ -58,7 +58,7 @@ void TermParser::nextSymbol() {
     }
 
     char nextChar = toParseReversed.back();
-    debugTermParser("read symbol: " << nextChar);
+    debugTermParser("nextSymbol read char: " << nextChar);
 
     if (isdigit(nextChar)) {
         lastIdent.clear();
@@ -68,6 +68,7 @@ void TermParser::nextSymbol() {
         }
 
         symbol = NUMBER;
+        debugTermParser("nextSymbol found number: " << lastIdent);
 
     } else if (isalpha(nextChar)) {
         lastIdent.clear();
@@ -79,9 +80,11 @@ void TermParser::nextSymbol() {
 
         if (toParseReversed.back() == '(') {
             symbol = FUNCTIONSYMBOL;
+            debugTermParser("nextSymbol found function symbol: " << lastIdent);
 
         } else {
             symbol = VARIABLE;
+            debugTermParser("nextSymbol found variable: " << lastIdent);
         }
 
     } else {
@@ -114,6 +117,7 @@ void TermParser::nextSymbol() {
         }
 
         toParseReversed.pop_back();
+        debugTermParser("[nextSymbol] found symbol");
     }
 }
 
