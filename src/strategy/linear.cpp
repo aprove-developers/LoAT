@@ -303,7 +303,14 @@ bool LinearITSAnalysis::accelerateSimpleLoops() {
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
-        res = Accelerator::accelerateSimpleLoops(its, node) || res;
+        if (Accelerator::accelerateSimpleLoops(its, node)) {
+            // Acceleration might produce duplicate rules
+            // TODO: check if this is necessary or if it only wastes time! (the old impl did this)
+            Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, node));
+
+            res = true;
+        }
+
         if (Timeout::soft()) return res;
     }
 
