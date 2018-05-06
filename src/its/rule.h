@@ -58,6 +58,7 @@ public:
 
 /**
  * Interface for a rule, generalizes linear and nonlinear rules to a common interface.
+ * One could also use templates (for more performance), but this is easier to read and allows proper types.
  * TODO: Document how this is used (not yet sure...)
  */
 class AbstractRule {
@@ -77,6 +78,16 @@ public:
     virtual Expression& getCostMut() = 0;
     virtual RuleRhs* rhsBegin() = 0;
     virtual RuleRhs* rhsEnd() = 0;
+
+    // output
+    friend std::ostream& operator<<(std::ostream &s, const AbstractRule &rule) {
+        rule.dumpToStream(s);
+        return s;
+    }
+
+private:
+    // to implement operator<< for AbstractRule
+    virtual void dumpToStream(std::ostream &s) const = 0;
 };
 
 
@@ -121,6 +132,9 @@ public:
     LinearRule withNewRhsLoc(LocationIdx rhsLoc) const;
     static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc); // empty guard/update, cost 0
     bool isDummyRule() const; // empty guard/update, cost 0
+
+private:
+    void dumpToStream(std::ostream &s) const override;
 };
 
 
@@ -174,11 +188,10 @@ public:
 
     // checks if lhs location coincides with at least _one_ rhs location
     bool hasSelfLoop() const;
+
+private:
+    void dumpToStream(std::ostream &s) const override;
 };
-
-
-std::ostream& operator<<(std::ostream &s, const LinearRule &rule);
-std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule);
 
 
 #endif // RULE_H

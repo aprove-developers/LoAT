@@ -95,48 +95,45 @@ bool NonlinearRule::hasSelfLoop() const {
 }
 
 
-
-std::ostream& operator<<(std::ostream &s, const LinearRule &rule) {
+void LinearRule::dumpToStream(std::ostream &s) const {
     s << "LRule(";
 
     // lhs (loc, guard, cost)
-    s << rule.getLhsLoc() << " | ";
+    s << getLhsLoc() << " | ";
 
-    for (auto expr : rule.getGuard()) {
+    for (auto expr : getGuard()) {
         s << expr << ", ";
     }
     s << "| ";
-    s << rule.getCost();
+    s << getCost();
 
     // rhs (loc, update)
-    s << " || " << rule.getRhsLoc() << " | ";
+    s << " || " << getRhsLoc() << " | ";
 
-    for (auto upit : rule.getUpdate()) {
+    for (auto upit : getUpdate()) {
         s << upit.first << "=" << upit.second;
         s << ", ";
     }
 
     s << ")";
-    return s;
 }
 
-
-std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule) {
+void NonlinearRule::dumpToStream(std::ostream &s) const {
     s << "NLRule(";
 
     // lhs (loc, guard, cost)
-    s << rule.getLhsLoc() << " | ";
+    s << getLhsLoc() << " | ";
 
-    for (auto expr : rule.getGuard()) {
+    for (auto expr : getGuard()) {
         s << expr << ", ";
     }
     s << "| ";
-    s << rule.getCost();
+    s << getCost();
 
     // rhs (loc, update)*
     s << " |";
 
-    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+    for (auto rhs = rhsBegin(); rhs != rhsEnd(); ++rhs) {
         s << "| " << rhs->getLoc() << " | ";
 
         for (auto upit : rhs->getUpdate()) {
@@ -146,5 +143,4 @@ std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule) {
     }
 
     s << ")";
-    return s;
 }
