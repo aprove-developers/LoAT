@@ -54,7 +54,7 @@ Rule &AbstractITSProblem<Rule>::getRuleMut(TransIdx transition) {
 }
 
 template<typename Rule>
-std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsFrom(LocationIdx loc) const {
+std::set<TransIdx> AbstractITSProblem<Rule>::getTransitionsFrom(LocationIdx loc) const {
     return graph.getTransFrom(loc);
 }
 
@@ -64,26 +64,23 @@ std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsFromTo(LocationIdx
 }
 
 template<typename Rule>
-std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsTo(LocationIdx loc) const {
+std::set<TransIdx> AbstractITSProblem<Rule>::getTransitionsTo(LocationIdx loc) const {
     return graph.getTransTo(loc);
 }
 
 template<typename Rule>
-std::vector<Rule> AbstractITSProblem<Rule>::getRulesFrom(LocationIdx loc) const {
-    vector<Rule> res;
-    for (TransIdx trans : graph.getTransFrom(loc)) {
-        res.push_back(getRule(trans));
-    }
-    return res;
+bool AbstractITSProblem<Rule>::hasTransitionsFrom(LocationIdx loc) const {
+    return graph.hasTransFrom(loc);
 }
 
 template<typename Rule>
-std::vector<Rule> AbstractITSProblem<Rule>::getRulesFromTo(LocationIdx from, LocationIdx to) const {
-    vector<Rule> res;
-    for (TransIdx trans : graph.getTransFromTo(from, to)) {
-        res.push_back(getRule(trans));
-    }
-    return res;
+bool AbstractITSProblem<Rule>::hasTransitionsFromTo(LocationIdx from, LocationIdx to) const {
+    return graph.hasTransFromTo(from, to);
+}
+
+template<typename Rule>
+bool AbstractITSProblem<Rule>::hasTransitionsTo(LocationIdx loc) const {
+    return graph.hasTransTo(loc);
 }
 
 template<typename Rule>
@@ -104,9 +101,9 @@ void AbstractITSProblem<Rule>::removeRule(TransIdx transition) {
 template<typename Rule>
 TransIdx AbstractITSProblem<Rule>::addRule(Rule rule) {
     // gather target locations
-    vector<LocationIdx> rhsLocs;
+    set<LocationIdx> rhsLocs;
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
-        rhsLocs.push_back(it->getLoc());
+        rhsLocs.insert(it->getLoc());
     }
 
     // add transition and store mapping to rule
@@ -183,7 +180,7 @@ void AbstractITSProblem<Rule>::print(std::ostream &s) const {
 
 LocationIdx LinearITSProblem::getTransitionTarget(TransIdx idx) const {
     assert(graph.getTransTargets(idx).size() == 1);
-    return graph.getTransTargets(idx).front();
+    return *graph.getTransTargets(idx).begin();
 }
 
 
@@ -191,7 +188,7 @@ LocationIdx LinearITSProblem::getTransitionTarget(TransIdx idx) const {
 // ## Nonlinear     ##
 // ###################
 
-const std::vector<LocationIdx> &ITSProblem::getTransitionTargets(TransIdx idx) const {
+const std::set<LocationIdx> &ITSProblem::getTransitionTargets(TransIdx idx) const {
     return graph.getTransTargets(idx);
 }
 

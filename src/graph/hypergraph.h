@@ -60,7 +60,7 @@ public:
      * Add a new transition with several targets (there must be at least one)
      * @return the index of the added transition
      */
-    TransIdx addTrans(Node from, std::vector<Node> to) {
+    TransIdx addTrans(Node from, std::set<Node> to) {
         assert(!to.empty());
         assert(check() == Valid);
         TransIdx currIdx = nextIdx++;
@@ -70,6 +70,8 @@ public:
         // An edge "f -> g,h" (from f to g and h) means that f is a predecessor of both g and h.
         // Moreover, when we query edges from f to g (or h), we want to include this edge
         // (this makes sense, since we can always simplify "f -> g,h" to just "f -> g").
+        // (note that we only add one edge "f -> g" for the rule "f -> g,g" since we use sets).
+
         for (Node t : to) {
             predecessor[t].insert(from);
             outgoing[from][t].push_back(currIdx);
@@ -83,19 +85,41 @@ public:
         return transitions.size();
     }
 
-    std::vector<TransIdx> getTransFrom(Node from) const {
-        std::vector<TransIdx> res;
+    bool hasTransTo(Node node) const {
+        return predecessor.find(node) != predecessor.end();
+    }
+
+    bool hasTransFrom(Node node) const {
+        auto it = outgoing.find(node);
+        return it != outgoing.end() && !it->second.empty();
+    }
+
+    bool hasTransFromTo(Node from, Node to) const {
+        auto it = outgoing.find(from);
+        if (it == outgoing.end()) return false;
+
+        auto targetIt = it->second.find(to);
+        if (targetIt == it->second.end()) return false;
+
+        return !targetIt->second.empty();
+    }
+
+    // To avoid duplicates (when using hyperedges), this returns a set
+    std::set<TransIdx> getTransFrom(Node from) const {
+        std::set<TransIdx> res;
         auto it = outgoing.find(from);
         if (it != outgoing.end()) {
             for (auto targetIt : it->second) {
                 for (TransIdx trans : targetIt.second) {
-                    res.push_back(trans);
+                    res.insert(trans);
                 }
             }
         }
         return res;
     }
 
+    // The returned vector does not contain any duplicates,
+    // so we prefer a vector over a set for performance
     std::vector<TransIdx> getTransFromTo(Node from, Node to) const {
         auto it = outgoing.find(from);
         if (it == outgoing.end()) return {};
@@ -106,16 +130,17 @@ public:
         return targetIt->second;
     }
 
-    std::vector<TransIdx> getTransTo(Node to) const {
+    // To avoid duplicates (when using hyperedges), this returns a set
+    std::set<TransIdx> getTransTo(Node to) const {
         auto pred = predecessor.find(to);
         if (pred == predecessor.end()) {
             return {};
         }
 
-        std::vector<Node> res;
+        std::set<TransIdx> res;
         for (Node from : pred->second) {
             for (TransIdx trans : getTransFromTo(from, to)) {
-                res.push_back(trans);
+                res.insert(trans);
             }
         }
         return res;
@@ -138,7 +163,7 @@ public:
     }
 
     inline Node getTransSource(TransIdx idx) const { return transitions.at(idx).from; }
-    inline const std::vector<Node>& getTransTargets(TransIdx idx) const { return transitions.at(idx).to; }
+    inline const std::set<Node>& getTransTargets(TransIdx idx) const { return transitions.at(idx).to; }
 
     std::vector<TransIdx> getAllTrans() const {
         std::vector<TransIdx> res;
@@ -152,7 +177,7 @@ public:
      * Changes the given transition to point to the given new target
      * (no new transition is added, data is kept)
      */
-    void changeTransTargets(TransIdx trans, std::vector<Node> newTargets) {
+    void changeTransTargets(TransIdx trans, std::set<Node> newTargets) {
         assert(check() == Valid);
         removeTransFromGraph(trans);
         InternalTransition &t = transitions[trans];
@@ -314,7 +339,7 @@ private:
 private:
     struct InternalTransition {
         Node from;
-        std::vector<Node> to;
+        std::set<Node> to;
     };
 
     std::map<TransIdx,InternalTransition> transitions;

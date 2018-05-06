@@ -76,13 +76,17 @@ public:
     Rule& getRuleMut(TransIdx transition); // Note: the locations of the returned rule must not be changed!
 
     // query transitions of the graph
-    std::vector<TransIdx> getTransitionsFrom(LocationIdx loc) const;
+    std::set<TransIdx> getTransitionsFrom(LocationIdx loc) const;
     std::vector<TransIdx> getTransitionsFromTo(LocationIdx from, LocationIdx to) const;
-    std::vector<TransIdx> getTransitionsTo(LocationIdx loc) const; // note: rather inefficient
+    std::set<TransIdx> getTransitionsTo(LocationIdx loc) const;
+
+    bool hasTransitionsFrom(LocationIdx loc) const;
+    bool hasTransitionsFromTo(LocationIdx from, LocationIdx to) const;
+    bool hasTransitionsTo(LocationIdx loc) const;
 
     // helper, combines getTransitionsFrom* + getRule
-    std::vector<Rule> getRulesFrom(LocationIdx loc) const; // TODO: unused?
-    std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const; // TODO: unused?
+//    std::vector<Rule> getRulesFrom(LocationIdx loc) const; // TODO: unused?
+//    std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const; // TODO: unused?
 
     // query nodes of the graph
     std::set<LocationIdx> getSuccessorLocations(LocationIdx loc) const;
@@ -125,7 +129,7 @@ protected:
 
 class LinearITSProblem : public AbstractITSProblem<LinearRule> {
 public:
-    LocationIdx getTransitionTarget(TransIdx) const;
+    LocationIdx getTransitionTarget(TransIdx) const; // TODO: Remove, since unused?
 
 private:
     // Creates an empty problem with the given variables, required for toLinearProblem()
@@ -138,7 +142,7 @@ private:
 
 class ITSProblem : public AbstractITSProblem<NonlinearRule> {
 public:
-    const std::vector<LocationIdx>& getTransitionTargets(TransIdx) const;
+    const std::set<LocationIdx>& getTransitionTargets(TransIdx) const; // TODO: Remove, since unused?
 
     bool isLinear() const;
     LinearITSProblem toLinearProblem() const;
