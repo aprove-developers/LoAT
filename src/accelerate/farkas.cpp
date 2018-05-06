@@ -35,11 +35,10 @@ z3::expr FarkasLemma::apply(
     assert(vars.size() == coeffs.size());
 
 #ifdef DEBUG_FARKAS
-    debugFarkas("FARKAS");
-    dumpList(" cstrt", constraints);
-    dumpList(" vars ", vars);
-    dumpList(" coeff", coeffs);
-    debugFarkas(" delta: " << delta);
+    debugFarkas("Applying Farkas Lemma to: (A*x <= b) implies (c*x + " << c0 << " <= " << delta << ")");
+    dumpList("constraints A*x", constraints);
+    dumpList("variables x    ", vars);
+    dumpList("coefficients c ", coeffs);
 #endif
 
     // List of expressions whose conjunction will be the result
@@ -94,9 +93,8 @@ z3::expr FarkasLemma::apply(
     res.push_back(sum <= delta);
 
 #ifdef DEBUG_FARKAS
-    debugFarkas(" result:");
+    debugFarkas("Resulting z3 expressions:");
     for (z3::expr x : res) debugFarkas(" - " << x);
-    debugFarkas("---");
 #endif
 
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);

@@ -80,7 +80,7 @@
 //#define DEBUG_Z3
 
 //debugging for the conversion from GiNaC expressions to z3 expressions
-#define DEBUG_GINACTOZ3
+//#define DEBUG_GINACTOZ3
 
 //debugging for the graph datastructure
 #define DEBUG_GRAPH
@@ -91,6 +91,10 @@
 #define DEBUG_ACCELERATE
 #define DEBUG_PRUNING
 
+// debugging for metering
+#define DEBUG_METERING
+
+// TODO: refine FARKAS debugging to refactored code (Farkas, Metering, Linearize etc.)
 //debugging for Farkas processor
 #define DEBUG_FARKAS
 
@@ -138,11 +142,27 @@
     std::cout << COLOR_NONE << std::endl; \
 } while(0)
 
+#define dumpMaps(desc,updates) do {\
+    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":"; \
+    for (int i=0; i < (updates).size(); ++i) { \
+        std::cout << std::endl << "     [" << i << "]"; \
+        for (auto const &it : (updates)[i]) std::cout << " " << it.first << "=" << it.second; \
+    } \
+    std::cout << COLOR_NONE << std::endl; \
+} while(0)
+
 #define dumpGuardUpdate(desc,guard,update) do {\
     std::cout << COLOR_DEBUG << "  [dump] " << desc << ":" << std::endl; \
     dumpList("   guard",guard); \
     dumpMap("  update",update); \
 } while(0)
+
+#define dumpGuardUpdates(desc,guard,updates) do {\
+    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":" << std::endl; \
+    dumpList("   guard",guard); \
+    dumpMaps("  update",updates); \
+} while(0)
+
 
 #ifdef DEBUG_Z3
 #define debugZ3(solver,res,location) do {\
@@ -193,6 +213,12 @@
 #define debugAccel(output) do { std::cout << COLOR_HIGHLIGHT << "[accelerate] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugAccel(output) (void(0))
+#endif
+
+#ifdef DEBUG_METERING
+#define debugMeter(output) do { std::cout << COLOR_HIGHLIGHT << "[meter] " << output << COLOR_NONE << std::endl; } while(0)
+#else
+#define debugMeter(output) (void(0))
 #endif
 
 #ifdef DEBUG_FARKAS
