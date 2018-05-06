@@ -37,6 +37,7 @@ using namespace std;
 
 #include "parser/itsparser.h"
 #include "strategy/linear.h"
+#include "strategy_nonlinear/nl_linear.h"
 
 
 /**
@@ -243,12 +244,35 @@ int main(int argc, char *argv[]) {
         its.print(cout);
         cout << "=== new ITSProblem ===" << endl;
 
-        LinearITSProblem lits = its.toLinearProblem();
-
-        LinearITSAnalysis::AnalysisSettings cfg(dotStream);
-        LinearITSAnalysis::analyze(lits, cfg);
+        if (its.isLinear()) {
+            LinearITSProblem lits = its.toLinearProblem();
+            LinearITSAnalysis::AnalysisSettings cfg(dotStream);
+            auto runtime = LinearITSAnalysis::analyze(lits, cfg);
+            proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
+            proofout << "  Complexity class: " << runtime.cpx << endl;
+            proofout << "  Complexity value: ";
+            {
+                if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
+                    proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
+                } else {
+                    proofout << runtime.cpx << endl;
+                }
+            }
+        } else {
+            NonlinearITSAnalysis::AnalysisSettings cfg(dotStream);
+            auto runtime = NonlinearITSAnalysis::analyze(its, cfg);
+            proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
+            proofout << "  Complexity class: " << runtime.cpx << endl;
+            proofout << "  Complexity value: ";
+            {
+                if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
+                    proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
+                } else {
+                    proofout << runtime.cpx << endl;
+                }
+            }
+        }
     }
-
 
     return 42;
 
