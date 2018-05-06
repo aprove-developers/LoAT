@@ -62,7 +62,7 @@ void TermParser::nextSymbol() {
 
     if (isdigit(nextChar)) {
         lastIdent.clear();
-        while (isdigit(toParseReversed.back())) {
+        while (!toParseReversed.empty() && isdigit(toParseReversed.back())) {
             lastIdent += toParseReversed.back();
             toParseReversed.pop_back();
         }
@@ -72,13 +72,14 @@ void TermParser::nextSymbol() {
 
     } else if (isalpha(nextChar)) {
         lastIdent.clear();
-        while (isalnum(toParseReversed.back())
-               || specialCharsInVarNames.count(toParseReversed.back()) == 1) {
+        while (!toParseReversed.empty()
+               && (isalnum(toParseReversed.back()) || specialCharsInVarNames.count(toParseReversed.back()) == 1))
+        {
             lastIdent += toParseReversed.back();
             toParseReversed.pop_back();
         }
 
-        if (toParseReversed.back() == '(') {
+        if (!toParseReversed.empty() && toParseReversed.back() == '(') {
             symbol = FUNCTIONSYMBOL;
             debugTermParser("nextSymbol found function symbol: " << lastIdent);
 
