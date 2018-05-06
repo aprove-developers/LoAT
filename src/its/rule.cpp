@@ -59,6 +59,24 @@ NonlinearRule::NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs),
     assert(!rhss.empty());
 }
 
+NonlinearRule::NonlinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
+        : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)})
+{}
+
+NonlinearRule::NonlinearRule(RuleLhs lhs, RuleRhs rhs)
+        : lhs(lhs), rhss({rhs})
+{}
+
+NonlinearRule NonlinearRule::fromLinear(const LinearRule &linRule) {
+    RuleLhs lhs(linRule.getLhsLoc(), linRule.getGuard(), linRule.getCost());
+    RuleRhs rhs(linRule.getRhsLoc(), linRule.getUpdate());
+    return NonlinearRule(lhs, rhs);
+}
+
+NonlinearRule NonlinearRule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
+    return NonlinearRule(lhsLoc, {}, Expression(0), rhsLoc, {});
+}
+
 bool NonlinearRule::isLinear() const {
     return rhss.size() == 1;
 }
@@ -68,17 +86,21 @@ LinearRule NonlinearRule::toLinearRule() const {
     return LinearRule(lhs, rhss.front());
 }
 
+bool NonlinearRule::isSimpleLoop() const {
+    return std::all_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.loc; });
+}
+
+bool NonlinearRule::hasSelfLoop() const {
+    return std::any_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.loc; });
+}
+
+
 
 std::ostream& operator<<(std::ostream &s, const LinearRule &rule) {
     s << "LRule(";
+
+    // lhs (loc, guard, cost)
     s << rule.getLhsLoc() << " | ";
-
-    for (auto upit : rule.getUpdate()) {
-        s << upit.first << "=" << upit.second;
-        s << ", ";
-    }
-
-    s << "| ";
 
     for (auto expr : rule.getGuard()) {
         s << expr << ", ";
@@ -86,8 +108,43 @@ std::ostream& operator<<(std::ostream &s, const LinearRule &rule) {
     s << "| ";
     s << rule.getCost();
 
-    s << " | " << rule.getRhsLoc();
+    // rhs (loc, update)
+    s << " || " << rule.getRhsLoc() << " | ";
+
+    for (auto upit : rule.getUpdate()) {
+        s << upit.first << "=" << upit.second;
+        s << ", ";
+    }
+
     s << ")";
     return s;
 }
 
+
+std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule) {
+    s << "NLRule(";
+
+    // lhs (loc, guard, cost)
+    s << rule.getLhsLoc() << " | ";
+
+    for (auto expr : rule.getGuard()) {
+        s << expr << ", ";
+    }
+    s << "| ";
+    s << rule.getCost();
+
+    // rhs (loc, update)*
+    s << " |";
+
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        s << "| " << rhs->getLoc() << " | ";
+
+        for (auto upit : rhs->getUpdate()) {
+            s << upit.first << "=" << upit.second;
+            s << ", ";
+        }
+    }
+
+    s << ")";
+    return s;
+}

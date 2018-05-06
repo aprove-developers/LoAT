@@ -91,7 +91,7 @@ private:
     RuleRhs rhs;
 
 public:
-    LinearRule() {};
+    LinearRule() {}; // TODO: this is bad, disallow default ctor
     LinearRule(RuleLhs lhs, RuleRhs rhs);
     LinearRule(LocationIdx lhsLoc, GuardList guard, LocationIdx rhsLoc, UpdateMap update); // cost 1
     LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
@@ -130,8 +130,19 @@ private:
     std::vector<RuleRhs> rhss;
 
 public:
-    NonlinearRule() {}
+    NonlinearRule() {} // TODO: this is bad, disallow default ctor
     NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss);
+
+    // constructs a linear NonlinearRule
+    NonlinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
+    NonlinearRule(RuleLhs lhs, RuleRhs rhs);
+    static NonlinearRule fromLinear(const LinearRule &linRule);
+
+    // constructs an empty rule (guard/update empty, cost 0)
+    static NonlinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
+
+    const RuleLhs& getLhs() const { return lhs; }
+    const std::vector<RuleRhs>& getRhss() const { return rhss; }
 
     // query lhs data
     LocationIdx getLhsLoc() const override { return lhs.loc; }
@@ -151,17 +162,23 @@ public:
 
     // special methods for nonlinear rules (idx is an index to rhss)
     LocationIdx getRhsLoc(int idx) const { return rhss[idx].getLoc(); }
-    const UpdateMap& getUpdate(int idx) const { return rhss[idx].getUpdate(); };
+    const UpdateMap& getUpdate(int idx) const { return rhss[idx].getUpdate(); }
     UpdateMap& getUpdateMut(int idx) { return rhss[idx].getUpdateMut(); }
 
     // conversion to linear rule
     bool isLinear() const;
     LinearRule toLinearRule() const;
+
+    // checks if lhs location coincides with _all_ rhs locations
+    bool isSimpleLoop() const;
+
+    // checks if lhs location coincides with at least _one_ rhs location
+    bool hasSelfLoop() const;
 };
 
 
 std::ostream& operator<<(std::ostream &s, const LinearRule &rule);
-//std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule); // TODO: Implement this
+std::ostream& operator<<(std::ostream &s, const NonlinearRule &rule);
 
 
 #endif // RULE_H
