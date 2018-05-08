@@ -13,7 +13,7 @@ private:
     bool shouldAccelerate();
     std::vector<Expression> reduceGuard(Z3VariableContext &c);
     boost::optional<std::vector<VariableIndex>> dependencyOrder(UpdateMap &update);
-    boost::optional<GiNaC::exmap> computeInverseUpdate();
+    boost::optional<GiNaC::exmap> computeInverseUpdate(std::vector<VariableIndex>);
     bool checkGuardImplication(GiNaC::exmap inverse_update);
     boost::optional<GiNaC::exmap> computeIteratedUpdate(UpdateMap inverse_update, std::vector<VariableIndex> order);
     boost::optional<Expression> computeIteratedCosts(GiNaC::exmap iterated_update);

@@ -127,16 +127,29 @@ bool BackwardAcceleration::shouldAccelerate() {
     }
 }
 
-boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate() {
+boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(vector<VariableIndex> order) {
     set<VariableIndex> relevant_vars;
     for (Expression e: trans.guard) {
         for (string s: e.getVariableNames()) {
             relevant_vars.insert(itrs.getVarindex(s));
         }
     }
+    bool changed;
+    // we also need to know the inverse update for every variable that occurs in the update of a relevant variable
+    do {
+        changed = false;
+        for (VariableIndex vi: relevant_vars) {
+            if (trans.update.find(vi) == trans.update.end()) {
+                continue;
+            }
+            for (string s: trans.update[vi].getVariableNames()) {
+                changed = changed || relevant_vars.insert(itrs.getVarindex(s)).second;
+            }
+        }
+    } while (changed);
     GiNaC::exmap inverse_update;
-    for (VariableIndex vi: relevant_vars) {
-        if (trans.update.find(vi) == trans.update.end()) {
+    for (VariableIndex vi: order) {
+        if (relevant_vars.find(vi) == relevant_vars.end() || trans.update.find(vi) == trans.update.end()) {
             continue;
         }
         Expression x = itrs.getGinacSymbol(vi);
@@ -154,6 +167,7 @@ boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate() {
         } else {
             in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
         }
+        in_up = in_up.subs(inverse_update);
         inverse_update.emplace(x, in_up);
     }
     debugBackwardAcceleration("successfully computed inverse update " << inverse_update);
@@ -261,11 +275,11 @@ Transition BackwardAcceleration::buildNewTransition(GiNaC::exmap iterated_update
 
 boost::optional<Transition> BackwardAcceleration::accelerate() {
     if (shouldAccelerate()) {
-        boost::optional<GiNaC::exmap> inverse_update = computeInverseUpdate();
-        if (inverse_update) {
-            if (checkGuardImplication(*inverse_update)) {
-                boost::optional<vector<VariableIndex>> order = dependencyOrder(trans.update);
-                if (order) {
+        boost::optional<vector<VariableIndex>> order = dependencyOrder(trans.update);
+        if (order) {
+            boost::optional<GiNaC::exmap> inverse_update = computeInverseUpdate(*order);
+            if (inverse_update) {
+                if (checkGuardImplication(*inverse_update)) {
                     boost::optional<GiNaC::exmap> iterated_update = computeIteratedUpdate(trans.update, *order);
                     if (iterated_update) {
                         boost::optional<Expression> iterated_costs = computeIteratedCosts(*iterated_update);
