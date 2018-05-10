@@ -127,7 +127,7 @@ optional<NonlinearRule> ChainingNL::chainRulesOnRhs(const VarMan &varMan,
     // insert the rhss of second, composed with first's update
     for (const RuleRhs &secondRhs : second.getRhss()) {
         UpdateMap newUpdate = first.getUpdate(firstRhsIdx);
-        for (auto it : secondRhs.getUpdate()) {
+        for (const auto &it : secondRhs.getUpdate()) {
             newUpdate[it.first] = it.second.subs(firstUpdate);
         }
         newRhss.push_back(RuleRhs(secondRhs.getLoc(), newUpdate));
@@ -149,7 +149,7 @@ optional<NonlinearRule> ChainingNL::chainRules(const VarMan &varMan, const Nonli
     int rhsIdx = 0;
     while (rhsIdx < res.rhsCount()) {
         if (first.getRhsLoc(rhsIdx) == second.getLhsLoc()) {
-            auto chained = chainRulesOnRhs(varMan, first, rhsIdx, second);
+            auto chained = chainRulesOnRhs(varMan, res, rhsIdx, second);
             if (!chained) {
                 // we have to chain all rhss that lead to the second rule,
                 // so we give up if any of the chaining operations fails.
@@ -206,7 +206,10 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
             auto optRule = ChainingNL::chainRules(its, inRule, its.getRule(out));
             if (optRule) {
                 wasChained = true;
-                its.addRule(optRule.get());
+                TransIdx added = its.addRule(optRule.get());
+                debugChain("    chained " << in << " and " << out << " to new rule: " << added);
+            } else {
+                debugChain("    failed to chain " << in << " and " << out);
             }
         }
 
@@ -224,7 +227,8 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         for (TransIdx trans : keepRules) {
             // keep lhs, ignore rhss and updates
             NonlinearRule backup(its.getRule(trans).getLhs(), RuleRhs(dummyLoc, {}));
-            its.addRule(backup);
+            TransIdx added = its.addRule(backup);
+            debugChain("    keeping rule " << trans << " by adding dummy rule: " << added);
         }
     }
 
@@ -334,7 +338,6 @@ bool ChainingNL::chainLinearPaths(ITSProblem &its) {
             // Only apply chaining if succ has exactly one in- and one outgoing transition
             if (isOnLinearPath(its, succ)) {
                 eliminateLocationByChaining(its, succ, true);
-
                 changed = true;
                 Stats::add(Stats::ContractLinear);
             }
