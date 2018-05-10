@@ -285,6 +285,12 @@ bool MeteringToolboxNL::strengthenGuard(const VarMan &varMan, GuardList &guard, 
             // (this makes the guard stronger and might thus help to find a metering function)
             ExprSymbol lhsVar = varMan.getGinacSymbol(it.first);
 
+            // TODO: It might be better to apply the entire update!
+            // TODO: Consider FibonacciNew: loop(B,C) -> Com_2(loop(B-1,1), loop(B-2,1)) :|: B >= 2 && B >= C
+            // TODO: Adding B >= 1 makes no sense, but adding B-2 >= 1 would help!
+            // TODO: So for every term containing C, we should just apply the update!
+            // TODO: This is *much* better, since then the constraint is trivially true after the update and thus not part of the reducedGuard!
+
             GiNaC::exmap subs;
             subs[varMan.getGinacSymbol(it.first)] = it.second; // TODO: Use Substitution::singleton;
 

@@ -279,6 +279,24 @@ void AcceleratorNL::run() {
         }
     }
 
+#ifdef FARKAS_HEURISTIC_INSTANTIATE_FREEVARS
+    // Instantiate temporary variables by their bounds (might help to find a metering function)
+    for (TransIdx loop : rulesWithUnsatMetering) {
+        NonlinearRule rule = its.getRule(loop);
+        debugAccel("Trying temp var instantiation for rule: " << rule);
+
+        if (MeteringFinderNL::instantiateTempVarsHeuristic(its, rule)) {
+            if (accelerateAndStore(loop, rule, true)) {
+                debugAccel("Temp var instantiation successful with modified rule: " << rule);
+            }
+        }
+
+        if (Timeout::soft()) {
+            goto timeout;
+        }
+    }
+#endif
+
 /*
 #ifdef FARKAS_HEURISTIC_FOR_MINMAX
     // Min-Max heuristic (workaround for missing min/max(A,B) support)
@@ -304,14 +322,15 @@ void AcceleratorNL::run() {
         }
     }
 #endif
+*/
 
 #ifdef FARKAS_TRY_ADDITIONAL_GUARD
     // Guard strengthening heuristic (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
-        LinearRule rule = its.getRule(loop);
+        NonlinearRule rule = its.getRule(loop);
         debugAccel("Trying guard strengthening for rule: " << rule);
 
-        if (FarkasMeterGenerator::prepareGuard(its, rule)) {
+        if (MeteringFinderNL::strengthenGuard(its, rule)) {
             if (accelerateAndStore(loop, rule, true)) {
                 debugAccel("Guard strengthening successful with modified rule: " << rule);
             }
@@ -322,7 +341,7 @@ void AcceleratorNL::run() {
         }
     }
 #endif
-*/
+
 
     // in case of a timeout, we perform no further acceleration, but still delete the old rules
     timeout:;

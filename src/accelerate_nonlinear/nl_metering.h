@@ -85,7 +85,10 @@ public:
      *
      * @return true iff instantiation was successful (and rule has been modified accordingly)
      */
-//    static bool instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &rule); // TODO: adapt this to nonlinear rule
+    static bool instantiateTempVarsHeuristic(VarMan &varMan, NonlinearRule &rule);
+
+    // see MeteringToolbox::strengthenGuard
+    static bool strengthenGuard(VarMan &varMan, NonlinearRule &rule);
 
 private:
     MeteringFinderNL(VarMan &varMan, const GuardList &guard, const std::vector<UpdateMap> &update);

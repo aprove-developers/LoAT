@@ -450,9 +450,22 @@ MeteringFinderNL::Result MeteringFinderNL::generate(VarMan &varMan, const Nonlin
 
 
 /* ### Heuristics to help finding more metering functions ### */
-/*
-bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &rule) {
-    MeteringFinderNL meter(varMan, rule.getGuard(), rule.getUpdate());
+
+bool MeteringFinderNL::strengthenGuard(VarMan &varMan, NonlinearRule &rule) {
+    vector<UpdateMap> updates;
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        updates.push_back(rhs->getUpdate());
+    }
+    return MeteringToolboxNL::strengthenGuard(varMan, rule.getGuardMut(), updates);
+}
+
+bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, NonlinearRule &rule) {
+    vector<UpdateMap> updates;
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        updates.push_back(rhs->getUpdate());
+    }
+
+    MeteringFinderNL meter(varMan, rule.getGuard(), updates);
 
     // We first perform the same steps as in generate()
 
@@ -464,7 +477,7 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &
 
     Z3Solver solver(meter.context);
     solver.add(meter.genNotGuardImplication());
-    solver.add(meter.genUpdateImplication());
+    solver.add(meter.genUpdateImplications());
     solver.add(meter.genNonTrivial());
     z3::check_result z3res = solver.check();
     assert(z3res == z3::unsat); // this method must only be called if generate() fails
@@ -472,10 +485,10 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &
     // Now try all possible instantiations until the solver is satisfied
 
     GuardList oldGuard = meter.guard;
-    UpdateMap oldUpdate = meter.update;
+    vector<UpdateMap> oldUpdates = meter.updates;
 
     GiNaC::exmap successfulSubs;
-    stack<GiNaC::exmap> freeSubs = MeteringToolbox::findInstantiationsForTempVars(varMan, meter.guard);
+    stack<GiNaC::exmap> freeSubs = MeteringToolboxNL::findInstantiationsForTempVars(varMan, meter.guard);
 
     while (!freeSubs.empty()) {
         if (Timeout::soft()) break;
@@ -483,11 +496,18 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &
         const GiNaC::exmap &sub = freeSubs.top();
         debugFarkas("Trying instantiation: " << sub);
 
-        //apply substitution
+        //apply current substitution (and forget the previous one)
         meter.guard.clear();
         for (Expression &ex : oldGuard) meter.guard.push_back(ex.subs(sub));
-        meter.update.clear();
-        for (const auto &up : oldUpdate) meter.update[up.first] = up.second.subs(sub);
+
+        meter.updates.clear();
+        for (const UpdateMap &oldUpdate : oldUpdates) {
+            UpdateMap update;
+            for (const auto &up : oldUpdate) {
+                update[up.first] = up.second.subs(sub);
+            }
+            meter.updates.push_back(update);
+        }
 
         // Perform the first steps from generate() again (guard/update have changed)
         meter.simplifyAndFindVariables();
@@ -496,7 +516,7 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &
 
         solver.reset();
         solver.add(meter.genNotGuardImplication());
-        solver.add(meter.genUpdateImplication());
+        solver.add(meter.genUpdateImplications());
         solver.add(meter.genNonTrivial());
         z3res = solver.check();
 
@@ -517,11 +537,12 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &
     for (Expression &ex : rule.getGuardMut()) {
         ex.applySubs(successfulSubs);
     }
-    for (auto &it : rule.getUpdateMut()) {
-        it.second.applySubs(successfulSubs);
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        for (auto &it : rhs->getUpdateMut()) {
+            it.second.applySubs(successfulSubs);
+        }
     }
     rule.getCostMut().applySubs(successfulSubs);
 
     return true;
 }
-*/
