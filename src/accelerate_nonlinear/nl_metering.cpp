@@ -58,6 +58,9 @@ void MeteringFinderNL::simplifyAndFindVariables() {
 
 bool MeteringFinderNL::preprocessAndLinearize() {
     // preprocessing to avoid free variables
+    // FIXME: BUG: the substitution from this call has to be applied to the original rule before computed iterated cost/update!
+    // FIXME: Otherwise, a temporary variable in the cost is condiered to be constant when computing iterated cost.
+    // FIXME: But if it is replaced by an updated variable (say free/A+B), its value may change!
     MT::eliminateTempVars(varMan, guard, updates);
     guard = MT::replaceEqualities(guard);
 
@@ -533,6 +536,9 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, NonlinearRul
         return false;
     }
 
+    // FIXME: We have to combine/check conflicts of successfulSubs with nonlinearSubs from linearization!
+    // FIXME: Example: x^2/z by linearization and then z/a by this heuristic
+    // FIXME: So we should just forbid to instantiate variables introduced by linearization
     // Apply the successful instantiation to the entire rule
     for (Expression &ex : rule.getGuardMut()) {
         ex.applySubs(successfulSubs);

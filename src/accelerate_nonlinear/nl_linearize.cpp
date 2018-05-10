@@ -34,6 +34,9 @@ bool LinearizeNL::substituteExpression(const Expression &ex, string name) {
         if (MeteringToolboxNL::isUpdatedByAny(varMan.getVarIdx(sym), updates)) return false;
     }
 
+    // FIXME: If we substitute a free variable, the result should be free as well?!
+    // FIXME: This *might* be soundness critical!
+    // FIXME: Alternative: Never substitute fresh variables (and check if this affects the benchmarks)
     VariableIdx freshVar = varMan.addFreshVariable(name);
     subsVars.insert(vars.begin(), vars.end());
     subsMap[ex] = varMan.getGinacSymbol(freshVar);

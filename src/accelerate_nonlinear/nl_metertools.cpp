@@ -44,6 +44,7 @@ bool MeteringToolboxNL::isUpdatedByAny(VariableIdx var, const MultiUpdate &updat
 
 /* ### Preprocessing ### */
 
+// FIXME: Return the applied substitution
 void MeteringToolboxNL::eliminateTempVars(const VarMan &varMan, GuardList &guard, MultiUpdate &updates) {
     //equalities might be helpful to remove free variables
     GuardToolbox::findEqualities(guard);
