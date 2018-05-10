@@ -3,6 +3,21 @@
 using namespace std;
 
 
+#ifdef COLORS_ITS_EXPORT
+    #define COLOR_LOCATION "\033[0;34m" // bold blue
+    #define COLOR_UPDATE "\033[0;36m" // cyan
+    #define COLOR_GUARD "\033[0;32m" // green
+    #define COLOR_COST "\033[0;33m" // yellow
+    #define COLOR_NONE "\033[0m" // reset color to default
+#else
+    #define COLOR_LOCATION ""
+    #define COLOR_UPDATE ""
+    #define COLOR_GUARD ""
+    #define COLOR_COST ""
+    #define COLOR_NONE ""
+#endif
+
+
 // TODO: Looks suspiciuos, might produce a function symbol with different number of arguments
 // TODO: E.g., for f(x,y) -> g(x), the variable y is not "bound" and is probably omitted?!
 // TODO: My guess is that this function should look on all rules for a given function symbol
@@ -38,12 +53,14 @@ set<VariableIdx> getBoundVariables(const AbstractRule &rule, const VarMan &varMa
  */
 template <typename Rule>
 void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+    s << COLOR_LOCATION;
     auto optName = its.getLocationName(loc);
     if (optName) {
         s << optName.get();
     } else {
         s << "[" << loc << "]";
     }
+    s << COLOR_NONE;
 }
 
 /**
@@ -59,8 +76,10 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
         s << " : ";
 
         for (auto upit : it->getUpdate()) {
+            s << COLOR_UPDATE;
             s << its.getVarName(upit.first) << "'";
             s << "=" << upit.second;
+            s << COLOR_NONE;
             s << ", ";
         }
     }
@@ -71,11 +90,12 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
         s << "[ ";
         for (int i=0; i < rule.getGuard().size(); ++i) {
             if (i > 0) s << " && ";
-            s << rule.getGuard().at(i);
+            s << COLOR_GUARD << rule.getGuard().at(i) << COLOR_NONE;
         }
         s << " ]";
     }
-    s << ", cost: " << rule.getCost();
+    s << ", cost: ";
+    s << COLOR_COST << rule.getCost() << COLOR_NONE;
     s << endl;
 }
 

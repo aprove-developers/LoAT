@@ -18,19 +18,22 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-//enable debugging
-#include "debug.h"
-#include "util/proofoutput.h"
-
 /*
  * if defined, proof output is enabled (might be useful to disable during debugging)
  */
 #define PROOF_OUTPUT_ENABLE
 
 /*
- * if defined, the proof output uses ANSI color codes (disable if your terminal does not support it)
+ * these defines control whether the output is colored using ANSI color codes
+ * (disable all defines if your terminal does not support ANSI escape sequences)
  */
-//#define PROOF_OUTPUT_COLORS
+#define COLORS_PROOF
+#define COLORS_DEBUG
+#define COLORS_ITS_EXPORT
+
+// enable debugging and access to proof output (after the defines for COLORS)
+#include "debug.h"
+#include "util/proofoutput.h"
 
 /*
  * if defined, it is checked if the combined guard is SAT before each chaining step

@@ -44,22 +44,20 @@
 #define unimplemented() assert(false && "not implemented")
 
 
-/* ### Colored debugging output (disable if your terminal does not support ANSI color codes) */
+/* ### Colored debugging output */
 
-#define DEBUG_COLORS
-
-#ifdef DEBUG_COLORS
-#define COLOR_WARN "\033[1;31m" // bold red
-#define COLOR_PROBLEM "\033[1;33m" // bold yellow
-#define COLOR_DEBUG "\033[0;90m" // gray/bright black (avoid distraction from proof output)
-#define COLOR_HIGHLIGHT "\033[0;36m" // cyan (to be quickly visible)
-#define COLOR_NONE "\033[0m" // reset color to default
+#ifdef COLORS_DEBUG
+    #define COLOR_WARN "\033[1;31m" // bold red
+    #define COLOR_PROBLEM "\033[1;33m" // bold yellow
+    #define COLOR_DEBUG "\033[0;90m" // gray/bright black (avoid distraction from proof output)
+    #define COLOR_HIGHLIGHT "\033[0;36m" // cyan (to be quickly visible)
+    #define COLOR_NONE "\033[0m" // reset color to default
 #else
-#define COLOR_WARN ""
-#define COLOR_PROBLEM ""
-#define COLOR_DEBUG ""
-#define COLOR_HIGHLIGHT ""
-#define COLOR_NONE ""
+    #define COLOR_WARN ""
+    #define COLOR_PROBLEM ""
+    #define COLOR_DEBUG ""
+    #define COLOR_HIGHLIGHT ""
+    #define COLOR_NONE ""
 #endif
 
 
