@@ -133,6 +133,9 @@ public:
     static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc); // empty guard/update, cost 0
     bool isDummyRule() const; // empty guard/update, cost 0
 
+    // checks if lhs location coincides with the rhs location
+    bool isSimpleLoop() const { return getLhsLoc() == getRhsLoc(); }
+
 private:
     void dumpToStream(std::ostream &s) const override;
 };
@@ -187,7 +190,7 @@ public:
     bool isSimpleLoop() const;
 
     // checks if lhs location coincides with at least _one_ rhs location
-    bool hasSelfLoop() const;
+    bool hasSelfLoop() const; // TODO: is this ever used?
 
 private:
     void dumpToStream(std::ostream &s) const override;

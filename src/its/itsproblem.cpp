@@ -84,6 +84,17 @@ bool AbstractITSProblem<Rule>::hasTransitionsTo(LocationIdx loc) const {
 }
 
 template<typename Rule>
+std::vector<TransIdx> AbstractITSProblem<Rule>::getSimpleLoopsAt(LocationIdx loc) const {
+    vector<TransIdx> res;
+    for (TransIdx rule : getTransitionsFromTo(loc, loc)) {
+        if (getRule(rule).isSimpleLoop()) {
+            res.push_back(rule);
+        }
+    }
+    return res;
+}
+
+template<typename Rule>
 std::set<LocationIdx> AbstractITSProblem<Rule>::getSuccessorLocations(LocationIdx loc) const {
     return graph.getSuccessors(loc);
 }

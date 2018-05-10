@@ -84,6 +84,10 @@ public:
     bool hasTransitionsFromTo(LocationIdx from, LocationIdx to) const;
     bool hasTransitionsTo(LocationIdx loc) const;
 
+    // returns transitions from loc to loc for which isSimpleLoops() holds
+    std::vector<TransIdx> getSimpleLoopsAt(LocationIdx loc) const;
+
+
     // helper, combines getTransitionsFrom* + getRule
 //    std::vector<Rule> getRulesFrom(LocationIdx loc) const; // TODO: unused?
 //    std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const; // TODO: unused?
