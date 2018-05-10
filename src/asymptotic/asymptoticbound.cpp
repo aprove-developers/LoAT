@@ -547,8 +547,15 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
             res.lowerBound = -res.lowerBound;
             debugAsymptoticBound("Complexity: Omega(" << res.lowerBound << "^" << "(" << n << "^"
                                  << "(1/" << res.upperBound << ")" << ")" << ")" << std::endl);
-
             res.complexity = Complexity::Exp;
+
+            // Note: 2^sqrt(n) is not exponential, we just give up such cases (where the exponent might be sublinear)
+            // Example: cost 2^y with guard x > y^2
+            if (res.upperBound > 1) {
+                res.complexity = Complexity::Unknown;
+                debugWarn("Complexity is possibly sub-exponential, giving up (solution: " << res.solution << ")");
+            }
+
         } else {
             debugAsymptoticBound("Complexity: Omega(" << n << "^" << "(" << res.lowerBound
                                  << "/" << res.upperBound << ")" << ")" << std::endl);
