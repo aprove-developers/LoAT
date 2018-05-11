@@ -505,6 +505,9 @@ bool ChainingNL::chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx>
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("ChainingNL::chainSimpleLoops");
 
+    // set of incoming rules that were successfully chained and are removed in the end
+    set<TransIdx> successfullyChained;
+
     for (TransIdx accel : acceleratedLoops) {
         debugChain("Chaining accelerated rule " << accel);
         const NonlinearRule &accelRule = its.getRule(accel);
@@ -522,6 +525,7 @@ bool ChainingNL::chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx>
 
             auto optRule = ChainingNL::chainRules(its, incomingRule, accelRule);
             if (optRule) {
+                successfullyChained.insert(incoming);
                 TransIdx added = its.addRule(optRule.get());
                 debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
             }
@@ -529,6 +533,13 @@ bool ChainingNL::chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx>
 
         debugChain("  removing accelerated rule " << accel);
         its.removeRule(accel);
+    }
+
+    // TODO: Removing chained incoming rules deviates from the algorithm in the paper,
+    // TODO: but without the removal, the number of rules often explodes.
+    for (TransIdx toRemove : successfullyChained) {
+        debugChain("  removing chained incoming rule " << its.getRule(toRemove));
+        its.removeRule(toRemove);
     }
 
     return !acceleratedLoops.empty();
