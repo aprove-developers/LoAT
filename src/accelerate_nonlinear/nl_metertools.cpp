@@ -297,7 +297,14 @@ bool MeteringToolboxNL::strengthenGuard(const VarMan &varMan, GuardList &guard, 
 
             for (const Expression &ex : reducedGuard) {
                 if (ex.has(lhsVar)) {
-                    guard.push_back(ex.subs(subs));
+
+                    // TODO: This is the implementation corresponding to the above comment
+                    // TODO: This helps for the FibonacciNew example!
+                    guard.push_back(ex.subs(update.toSubstitution(varMan)));
+
+                    // TODO: This is the old implementation, which is probably just stupid :P
+                    //guard.push_back(ex.subs(subs));
+
                     changed = true;
                 }
             }

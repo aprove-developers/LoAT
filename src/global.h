@@ -126,6 +126,7 @@
  * the maximum number of bounds that are tried for a single free variable,
  * when instantiation is applied in farkas code (this limit is there to prevent exponential complexity)
  */
+#define FARKAS_HEURISTIC_INSTANTIATE_FREEVARS
 #define FREEVAR_INSTANTIATE_MAXBOUNDS 3
 
 /*

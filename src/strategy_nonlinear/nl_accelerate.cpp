@@ -320,7 +320,8 @@ void AcceleratorNL::run() {
 #endif
 */
 
-#ifdef FARKAS_TRY_ADDITIONAL_GUARD
+//#ifdef FARKAS_TRY_ADDITIONAL_GUARD
+#if 1
     // Guard strengthening heuristic (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
         NonlinearRule rule = its.getRule(loop);
