@@ -178,42 +178,6 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
                 proofout << res.metering << ", resulting in the new transition ";
                 proofout << newIdx << "." << endl;
                 return true;
-
-
-                // Compute new update and cost
-/*                if (!RecurrenceNL::calcIteratedcost(its, newRule, res.metering)) {
-                    Stats::add(Stats::SelfloopNoUpdate);
-
-                    // Maybe the loop is just too difficult for us, so we allow to skip it (in the end)
-                    failedRulesNeedingEmptyLoop.insert(ruleIdx);
-
-                    // We cannot accelerate, so we just keep the unaccelerated rule
-                    keepRules.insert(ruleIdx);
-
-                    // Note: We do not add this rule to outerNestingCandidates,
-                    // since it will probably still fail after nesting.
-                    return false;
-
-                } else {
-                    Stats::add(Stats::SelfloopRanked);
-                    TransIdx newIdx = its.addRule(std::move(newRule));
-
-                    // In case we only got here in a second attempt (by some heuristic), clear some statistics
-                    failedRulesNeedingEmptyLoop.erase(ruleIdx);
-                    keepRules.erase(ruleIdx);
-
-                    // Since acceleration worked, the resulting rule could be an inner loop for nesting
-                    innerNestingCandidates.push_back({ ruleIdx, newIdx });
-
-                    // We also try the original, unaccelerated rule as outer loop for nesting (as in the Unsat case)
-                    outerNestingCandidates.push_back({ ruleIdx });
-
-                    proofout << "Simple loop " << ruleIdx << " has the metering function ";
-                    proofout << res.metering << ", resulting in the new transition ";
-                    proofout << newIdx << "." << endl;
-                    return true;
-                }
-                */
             }
         default:;
     }

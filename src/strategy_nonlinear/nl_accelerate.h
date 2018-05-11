@@ -101,7 +101,7 @@ private:
      *
      * No members are modified, so the rule is _not_ added to accelerateRules
      */
-    boost::optional<LinearRule> accelerate(const NonlinearRule &rule) const;
+    //boost::optional<LinearRule> accelerate(const NonlinearRule &rule) const;
 
 private:
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
