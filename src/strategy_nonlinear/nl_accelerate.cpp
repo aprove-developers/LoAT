@@ -317,6 +317,12 @@ void AcceleratorNL::run() {
     }
     proofout << "." << endl;
 
+    // Add keepRules to acceleratedRules, since we want to apply chaining to these rules
+    // (and then remove them, since we do not want to try to accelerate them again)
+    for (TransIdx rule : keepRules) {
+        acceleratedRules.insert(rule);
+    }
+
     // Add a dummy rule to simulate the effect of not executing any loop
     // FIXME: This is no longer necessary, since we do not remove incoming rules after chaining with accelerated loops!
     // FIXME: So we always allow not executing any loop
