@@ -83,18 +83,17 @@ namespace ChainingNL {
     bool eliminateALocation(ITSProblem &its);
 
     /**
-     * Applies chaining to eliminate all simple loops of the given ITS problem.
+     * Chains all rules of the given vector (the list of successfully accelerated rules)
+     * with their predecessors (if possible), unless the predecessor is itself an accelerated rule.
+     * All rules of the given vector are removed afterwards.
+     * Should be called directly after acceleration.
      *
-     * Each simple loop is chained with all preceeding transitions, i.e., if node N
-     * has simple loops, then for each predecessor P of N, all transitions from P to N
-     * are chained with all simple loops of N each.
+     * Note: Accelerated rules are never chained with other accelerated rules.
+     * Note: The predecessor rules (that are chained) are _not_ removed.
      *
-     * All simple loops are removed from the ITS. Each transition from P to N that has been
-     * successfully chained with a simple loop at least once is also removed.
-     *
-     * @return true iff the graph was modified
+     * @return true iff acceleratedLoops was non-empty (the return value is just for convenience)
      */
-    bool chainSimpleLoops(ITSProblem &its);
+    bool chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx> &acceleratedLoops);
 
 };
 

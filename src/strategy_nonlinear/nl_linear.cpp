@@ -92,6 +92,7 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
         bool changed;
         do {
             changed = false;
+            set<TransIdx> acceleratedRules;
 
             if (removeSinkRhss()) {
                 changed = true;
@@ -100,17 +101,17 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
             }
             if (Timeout::soft()) break;
 
-            if (accelerateSimpleLoops()) {
+            if (accelerateSimpleLoops(acceleratedRules)) {
                 changed = true;
                 proofout.headline("Accelerated all simple loops using metering functions (where possible):");
                 printForProof("Accelerate simple loops");
             }
             if (Timeout::soft()) break;
 
-            if (chainSimpleLoops()) {
+            if (chainAcceleratedLoops(acceleratedRules)) {
                 changed = true;
-                proofout.headline("Chained simple loops (with incoming rules):");
-                printForProof("Chain simple loops");
+                proofout.headline("Chained accelerated rules (with preceding rules):");
+                printForProof("Chain accelerated rules");
             }
             if (Timeout::soft()) break;
 
@@ -139,7 +140,7 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
         }
         if (Timeout::soft()) break;
 
-        // Try to avoid rule explosion
+        // Try to avoid rule explosion (often caused by the above chaining strategies)
         if (pruneRules()) {
             proofout << endl <<  "Applied pruning (of leafs and parallel rules):" << endl;
             printForProof("Prune");
@@ -355,9 +356,9 @@ bool NonlinearITSAnalysis::eliminateALocation() {
 }
 
 
-bool NonlinearITSAnalysis::chainSimpleLoops() {
-    Stats::addStep("FlowGraph::chainSimpleLoops");
-    bool res = ChainingNL::chainSimpleLoops(its);
+bool NonlinearITSAnalysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
+    Stats::addStep("Nonlinear::chainAcceleratedLoops");
+    bool res = ChainingNL::chainAcceleratedLoops(its, acceleratedRules);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
     its.print(cout);
@@ -367,12 +368,12 @@ bool NonlinearITSAnalysis::chainSimpleLoops() {
 }
 
 
-bool NonlinearITSAnalysis::accelerateSimpleLoops() {
+bool NonlinearITSAnalysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
     Stats::addStep("FlowGraph::accelerateSimpleLoops");
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
-        res = AcceleratorNL::accelerateSimpleLoops(its, node) || res;
+        res = AcceleratorNL::accelerateSimpleLoops(its, node, acceleratedRules) || res;
         // TODO: Remove duplicates (we need the fresh sink location, should pass it to Accelerator!!!)
         if (Timeout::soft()) return res;
     }

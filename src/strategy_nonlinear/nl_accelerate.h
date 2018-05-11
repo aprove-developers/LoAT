@@ -39,7 +39,7 @@ public:
      * @return true iff the ITS was modified
      *         (which is always the case if any simple loops were present)
      */
-    static bool accelerateSimpleLoops(ITSProblem &its, LocationIdx loc);
+    static bool accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &acceleratedRules);
 
 private:
     // Potential candidate for the min-max heuristic for conflicting variables.
@@ -50,7 +50,7 @@ private:
     };
 
 private:
-    AcceleratorNL(ITSProblem &its, LocationIdx loc);
+    AcceleratorNL(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &acceleratedRules);
 
 
     /**
@@ -133,6 +133,9 @@ private:
 
     // The sink location accelerated rules lead to (has to be a fresh location)
     LocationIdx sinkLocation;
+
+    // The set of all resulting accelerated rules (only used as return value)
+    std::set<TransIdx> &acceleratedRules;
 };
 
 #endif // ACCELERATE_H

@@ -109,8 +109,8 @@ private:
     bool chainLinearPaths();
     bool chainTreePaths();
     bool eliminateALocation();
-    bool chainSimpleLoops();
-    bool accelerateSimpleLoops();
+    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules);
+    bool chainAcceleratedLoops(const std::set<TransIdx> &acceleratedRules);
     bool pruneRules();
 
 

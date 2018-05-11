@@ -42,8 +42,8 @@ using boost::optional;
 
 
 
-AcceleratorNL::AcceleratorNL(ITSProblem &its, LocationIdx loc)
-        : its(its), targetLoc(loc) {
+AcceleratorNL::AcceleratorNL(ITSProblem &its, LocationIdx loc, set<TransIdx> &acceleratedRules)
+        : its(its), targetLoc(loc), acceleratedRules(acceleratedRules) {
     // Use a fresh location as destination of accelerated rules.
     // This is needed, since we do not know what a nonlinear loop results in.
     sinkLocation = its.addLocation();
@@ -111,6 +111,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
             {
                 NonlinearRule newRule(rule.getLhsLoc(), rule.getGuard(), Expression::InfSymbol, sinkLocation, {});
                 TransIdx t = its.addRule(std::move(newRule));
+                acceleratedRules.insert(t);
 
                 proofout << "Simple loop " << ruleIdx << " has unbounded runtime, ";
                 proofout << "resulting in the new transition " << t << "." << endl;
@@ -167,6 +168,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
 
                 Stats::add(Stats::SelfloopRanked);
                 TransIdx newIdx = its.addRule(std::move(newRule));
+                acceleratedRules.insert(newIdx);
 
                 // In case we only got here in a second attempt (by some heuristic), clear some statistics
                 failedRulesNeedingEmptyLoop.erase(ruleIdx);
@@ -240,13 +242,7 @@ bool AcceleratorNL::accelerateAndStore(TransIdx ruleIdx, const NonlinearRule &ru
 
 void AcceleratorNL::run() {
     // Since we might add accelerated loops, we store the list of loops before acceleration
-    set<TransIdx> loops;
-    for (TransIdx idx : its.getTransitionsFromTo(targetLoc, targetLoc)) {
-        if (its.getRule(idx).isSimpleLoop()) {
-            loops.insert(idx);
-        }
-    }
-
+    const vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
     if (loops.empty()) return;
 
 
@@ -357,10 +353,13 @@ void AcceleratorNL::run() {
     proofout << "." << endl;
 
     // Add a dummy rule to simulate the effect of not executing any loop
-    if (!failedRulesNeedingEmptyLoop.empty()) {
+    // FIXME: This is no longer necessary, since we do not remove incoming rules after chaining with accelerated loops!
+    // FIXME: So we always allow not executing any loop
+/*    if (!failedRulesNeedingEmptyLoop.empty()) {
         TransIdx t = its.addRule(NonlinearRule::dummyRule(targetLoc, targetLoc));
         proofout << "Adding an empty self-loop: " << t << "." << endl;
     }
+    */
 
     // FIXME: Remember to call this after accelerating loops!
     // removeDuplicateTransitions(getTransFromTo(node,node));
@@ -368,8 +367,8 @@ void AcceleratorNL::run() {
 
 
 
-bool AcceleratorNL::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc) {
-    if (its.getTransitionsFromTo(loc, loc).empty()) {
+bool AcceleratorNL::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, set<TransIdx> &acceleratedRules) {
+    if (its.getSimpleLoopsAt(loc).empty()) {
         return false;
     }
 
@@ -379,7 +378,7 @@ bool AcceleratorNL::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc) {
     proofout.increaseIndention();
 
     // Accelerate all loops (includes optimizations like nesting)
-    AcceleratorNL accel(its, loc);
+    AcceleratorNL accel(its, loc, acceleratedRules);
     accel.run();
 
     proofout.decreaseIndention();

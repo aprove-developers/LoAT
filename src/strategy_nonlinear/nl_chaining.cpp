@@ -199,8 +199,9 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         bool wasChained = false;
         const NonlinearRule &inRule = its.getRule(in);
 
-        // We cannot eliminate locations if they have selfloops
-        assert(inRule.getLhsLoc() != loc);
+        // If a loop starts in loc, it (and all chained versions of it) will be removed anyway, so we skip it.
+        // Note that this only happens for rules with self-loops, e.g. f -> f,g (where f is loc)
+        if (inRule.getLhsLoc() == loc) continue;
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
             auto optRule = ChainingNL::chainRules(its, inRule, its.getRule(out));
@@ -221,7 +222,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         }
     }
 
-    // backup all incoming transitions which could not be chained with any outgoing one
+    // Backup all incoming transitions which could not be chained with any outgoing one
     if (keepUnchainable && !keepRules.empty()) {
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
@@ -232,8 +233,26 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         }
     }
 
-    // remove the location and all incoming/outgoing transitions
-    its.removeLocationAndRules(loc);
+    // Remove all outgoing rules from loc
+    for (TransIdx idx : its.getTransitionsFrom(loc)) {
+        its.removeRule(idx);
+    }
+
+    // In case of nonlinear rules, we do not want to remove all rules leading to loc.
+    // Instead, we only removed rules where _all_ rhss lead to loc, but keep the other rules.
+    auto rhsLeadsToLoc = [&](const RuleRhs &rhs){ return rhs.getLoc() == loc; };
+
+    for (TransIdx idx : its.getTransitionsTo(loc)) {
+        const NonlinearRule &rule = its.getRule(idx);
+        if (std::all_of(rule.rhsBegin(), rule.rhsEnd(), rhsLeadsToLoc)) {
+            its.removeRule(idx);
+        }
+    }
+
+    // Remove the location if it is no longer used
+    if (!its.hasTransitionsTo(loc)) {
+        its.removeOnlyLocation(loc);
+    }
 }
 
 
@@ -391,7 +410,6 @@ bool ChainingNL::chainTreePaths(ITSProblem &its) {
     // }
 }
 
-
 /**
  * Implementation of eliminateALocation
  */
@@ -404,10 +422,10 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
 
     bool hasIncoming = its.hasTransitionsTo(node);
     bool hasOutgoing = its.hasTransitionsFrom(node);
-    bool hasSelfloop = its.hasTransitionsFromTo(node, node);
+    bool hasSimpleLoop = !its.getSimpleLoopsAt(node).empty();
 
     // If we cannot eliminate node, continue with its children (DFS traversal)
-    if (hasSelfloop || its.isInitialLocation(node) || !hasIncoming || !hasOutgoing) {
+    if (hasSimpleLoop || its.isInitialLocation(node) || !hasIncoming || !hasOutgoing) {
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
             if (eliminateALocationImpl(its, succ, visited)) {
                 return true;
@@ -447,11 +465,13 @@ static bool chainSimpleLoopsAt(ITSProblem &its, LocationIdx node) {
 
     set<TransIdx> successfullyChained;
     set<TransIdx> transIn = its.getTransitionsTo(node);
+    vector<TransIdx> loops = its.getSimpleLoopsAt(node);
 
-    for (TransIdx loop : its.getTransitionsFromTo(node, node)) {
-        const NonlinearRule &loopRule = its.getRule(loop);
-        if (!loopRule.isSimpleLoop()) continue; // only chain with simple loops
+    if (loops.empty()) {
+        return false; // no simple loops to chain with
+    }
 
+    for (TransIdx loop : loops) {
         for (TransIdx incoming : transIn) {
             const NonlinearRule &incomingRule = its.getRule(incoming);
 
@@ -459,7 +479,7 @@ static bool chainSimpleLoopsAt(ITSProblem &its, LocationIdx node) {
             // (no matter if they are simple or not)
             if (incomingRule.getLhsLoc() == node) continue;
 
-            auto optRule = ChainingNL::chainRules(its, incomingRule, loopRule);
+            auto optRule = ChainingNL::chainRules(its, incomingRule, its.getRule(loop));
             if (optRule) {
                 TransIdx added = its.addRule(optRule.get());
                 successfullyChained.insert(incoming);
@@ -481,22 +501,35 @@ static bool chainSimpleLoopsAt(ITSProblem &its, LocationIdx node) {
 }
 
 
-bool ChainingNL::chainSimpleLoops(ITSProblem &its) {
+bool ChainingNL::chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx> &acceleratedLoops) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("ChainingNL::chainSimpleLoops");
 
-    bool res = false;
-    for (NodeIndex node : its.getLocations()) {
-        if (its.hasTransitionsFromTo(node, node)) {
-            if (chainSimpleLoopsAt(its, node)) {
-                res = true;
-            }
+    for (TransIdx accel : acceleratedLoops) {
+        debugChain("Chaining accelerated rule " << accel);
+        const NonlinearRule &accelRule = its.getRule(accel);
+        LocationIdx node = accelRule.getLhsLoc();
 
-            if (Timeout::soft()) {
-                return res;
+        for (TransIdx incoming : its.getTransitionsTo(node)) {
+            const NonlinearRule &incomingRule = its.getRule(incoming);
+
+            // Do not chain with incoming loops that are themselves self-loops at node
+            // (no matter if they are simple or not)
+            if (incomingRule.getLhsLoc() == node) continue;
+
+            // Do not chain with another accelerated rule (already be covered by the previous check)
+            assert(acceleratedLoops.count(incoming) == 0);
+
+            auto optRule = ChainingNL::chainRules(its, incomingRule, accelRule);
+            if (optRule) {
+                TransIdx added = its.addRule(optRule.get());
+                debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
             }
         }
+
+        debugChain("  removing accelerated rule " << accel);
+        its.removeRule(accel);
     }
 
-    return res;
+    return !acceleratedLoops.empty();
 }
