@@ -15,23 +15,23 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "nl_linearize.h"
+#include "linearize.h"
 
 #include "expr/relation.h"
-#include "nl_metertools.h"
+#include "metertools.h"
 
 using namespace std;
 using boost::optional;
 
 
-bool LinearizeNL::substituteExpression(const Expression &ex, string name) {
+bool Linearize::substituteExpression(const Expression &ex, string name) {
     ExprSymbolSet vars = ex.getVariables();
 
     // Check if the variables have already been substituted in a different way or are updated.
     // (it is not sound to substitute x^2 and x^3 by different, independent variables)
     for (const ExprSymbol &sym : vars) {
         if (subsVars.count(sym) > 0) return false;
-        if (MeteringToolboxNL::isUpdatedByAny(varMan.getVarIdx(sym), updates)) return false;
+        if (MeteringToolbox::isUpdatedByAny(varMan.getVarIdx(sym), updates)) return false;
     }
 
     // FIXME: If we substitute a free variable, the result should be free as well?!
@@ -45,7 +45,7 @@ bool LinearizeNL::substituteExpression(const Expression &ex, string name) {
 };
 
 
-bool LinearizeNL::linearizeExpression(Expression &term) {
+bool Linearize::linearizeExpression(Expression &term) {
     // term must be a polynomial ...
     ExprSymbolSet vars = term.getVariables();
     if (!term.isPolynomialWithin(vars)) {
@@ -74,7 +74,7 @@ bool LinearizeNL::linearizeExpression(Expression &term) {
                     additionalGuard.push_back(subsMap.at(pow) >= 0);
                 }
             }
-                // heuristic to substitute simple variable products, e.g. x*y --> "xy"
+            // heuristic to substitute simple variable products, e.g. x*y --> "xy"
             else if (deg == 1) {
                 GiNaC::ex coeff = term.coeff(var,1);
                 if (GiNaC::is_a<GiNaC::numeric>(coeff)) break; // linear occurrences are ok
@@ -104,7 +104,7 @@ bool LinearizeNL::linearizeExpression(Expression &term) {
 }
 
 
-bool LinearizeNL::linearizeGuard() {
+bool Linearize::linearizeGuard() {
     // Collect all variables from the guard
     ExprSymbolSet vars;
     for (const Expression &term : guard) {
@@ -130,7 +130,7 @@ bool LinearizeNL::linearizeGuard() {
 }
 
 
-bool LinearizeNL::linearizeUpdates() {
+bool Linearize::linearizeUpdates() {
     for (UpdateMap &update : updates) {
         for (auto &it : update) {
             // first apply the current substitution
@@ -147,7 +147,7 @@ bool LinearizeNL::linearizeUpdates() {
 }
 
 
-bool LinearizeNL::checkForConflicts() const {
+bool Linearize::checkForConflicts() const {
     // Check guard (e.g. x^2 substituted, but x > 4 appeared before, so we did not notice)
     for (const Expression &term : guard) {
         for (const ExprSymbol &var : subsVars) {
@@ -172,7 +172,7 @@ bool LinearizeNL::checkForConflicts() const {
 }
 
 
-void LinearizeNL::applySubstitution() {
+void Linearize::applySubstitution() {
     if (!subsMap.empty()) {
         for (Expression &term : guard) {
             term.applySubs(subsMap);
@@ -186,12 +186,12 @@ void LinearizeNL::applySubstitution() {
 }
 
 
-GuardList LinearizeNL::getAdditionalGuard() const {
+GuardList Linearize::getAdditionalGuard() const {
     return additionalGuard;
 }
 
 
-GiNaC::exmap LinearizeNL::reverseSubstitution() const {
+GiNaC::exmap Linearize::reverseSubstitution() const {
     // Calculate reverse substitution
     GiNaC::exmap reverseSubs;
     for (auto it : subsMap) {
@@ -202,8 +202,8 @@ GiNaC::exmap LinearizeNL::reverseSubstitution() const {
 
 
 
-optional<GiNaC::exmap> LinearizeNL::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
-    LinearizeNL lin(guard, updates, varMan);
+optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+    Linearize lin(guard, updates, varMan);
 
     if (!lin.linearizeGuard()) {
         return {};

@@ -23,7 +23,7 @@
 #include "graph/graph.h"
 #include "its/itsproblem.h"
 #include "expr/expression.h"
-#include "accelerate_nonlinear/nl_metering.h"
+#include "meter/metering.h"
 
 #include <boost/optional.hpp>
 
@@ -76,7 +76,7 @@ private:
      *
      * @returns true if acceleration was successful or we found an non-terminating loop
      */
-    bool handleMeteringResult(TransIdx originalRule, const NonlinearRule &rule, MeteringFinderNL::Result meterResult);
+    bool handleMeteringResult(TransIdx originalRule, const NonlinearRule &rule, MeteringFinder::Result meterResult);
 
     /**
      * Tries to accelerate the given loop by searching for a metering function

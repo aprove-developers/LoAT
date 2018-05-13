@@ -30,12 +30,28 @@
  */
 namespace MeteringToolbox {
 
+    // just a shorthand
+    using MultiUpdate = std::vector<UpdateMap>;
+
+    /**
+     * Helper that applies a given substitution to all right-hand sides of all given updates.
+     */
+    void applySubsToUpdates(const GiNaC::exmap &subs, MultiUpdate &update);
+
+    /**
+     * Checks if the given variable is affected by any of the given updates
+     */
+    bool isUpdatedByAny(VariableIdx var, const MultiUpdate &updates);
+
+
+
     /**
      * Some pre-processing steps like equality propagation and elimination by transitive closure
      * to remove as many temporary variables from the given guard/update as possible.
      * @note the current implementation calls reduceGuard() and findRelevantVariables(), so this is rather expensive.
+     * TODO: calling reduceGuard is too expensive (since reduceGuard does many z3 queries!)
      */
-    void eliminateTempVars(const VarMan &varMan, GuardList &guard, UpdateMap &update);
+    void eliminateTempVars(const VarMan &varMan, GuardList &guard, MultiUpdate &updates);
 
     /**
      * Modifies guard (member) to contain only <,<=,>=,> by replacing == with <= and >=
@@ -48,7 +64,9 @@ namespace MeteringToolbox {
     /**
      * Computes a guard by only keeping those constraints that might be relevant for the metering function.
      *
-     * A constraint is relevant if it has an updated/temporary variable and is not trivially true after the update.
+     * A constraint is relevant if
+     * (1) it has a temporary variable, or
+     * (2) it has an updated variable and there is at least one update such that the constraint is not implied after applying the update
      * (e.g. in n >= 0, i >= 0, i < n with i=i+1, the constraints n >= 0 and i >= 0 are not relevant.
      * The former only contains n, which is not updated. For the latter, note that it reads i+1 >= 0
      * after applying the update. If the guard holds (so i >= 0), then i+1 >= 0 also holds, so it is not relevant.)
@@ -58,7 +76,7 @@ namespace MeteringToolbox {
      * Note: The result of this method is soundness critical, since removing too many constraints
      * from the guard would allow incorrect metering functions (removing too few is not a soundness issue).
      */
-    GuardList reduceGuard(const VarMan &varMan, const GuardList &guard, const UpdateMap &update, GuardList *irrelevantGuard = nullptr);
+    GuardList reduceGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates, GuardList *irrelevantGuard = nullptr);
 
     /**
      * Computes a list of variables that might occur in the metering function
@@ -66,17 +84,17 @@ namespace MeteringToolbox {
      *
      * A variable is relevant if
      *  a) it appears in the (reduced) guard and might thus influence the rank func
-     *  b) it appears on update rhs, where the lhs appears in any guard (indirect influence)
+     *  b) it appears on any update rhs, where the lhs is already relevant (indirect influence)
      * In other cases, the variable is irrelevant for the metering function.
      *
      * Note: The result of this method is important to find metering functions, but does not affect soundness
      */
-    std::set<VariableIdx> findRelevantVariables(const VarMan &varMan, const GuardList &reducedGuard, const UpdateMap &update);
+    std::set<VariableIdx> findRelevantVariables(const VarMan &varMan, const GuardList &reducedGuard, const MultiUpdate &updates);
 
     /**
      * Removes updates that do not update a variable from vars.
      */
-    void restrictUpdateToVariables(UpdateMap &update, const std::set<VariableIdx> &vars);
+    void restrictUpdatesToVariables(MultiUpdate &updates, const std::set<VariableIdx> &vars);
 
     /**
      * Removes constraints that do not contain a variable from vars.
@@ -92,9 +110,11 @@ namespace MeteringToolbox {
      * and there is a constraint on x (e.g. x > 0), a metering function might be difficult to find.
      * This method propagates such constant updates to the guard by adding 4 > 0 or y > 0 to the guard.
      *
+     * This is performed individually for every update, so each update may lead to adding some constraints.
+     *
      * @return true iff the guard was modified (extended).
      */
-    bool strengthenGuard(const VarMan &varMan, GuardList &guard, const UpdateMap &update);
+    bool strengthenGuard(const VarMan &varMan, GuardList &guard, const MultiUpdate &updates);
 
     /**
      * Creates all combinations of instantiating temporary variables by their bounds (i.e. free <= x --> set free=x)

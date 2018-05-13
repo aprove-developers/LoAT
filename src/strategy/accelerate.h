@@ -23,7 +23,7 @@
 #include "graph/graph.h"
 #include "its/itsproblem.h"
 #include "expr/expression.h"
-#include "accelerate/metering.h"
+#include "meter/metering.h"
 
 #include <boost/optional.hpp>
 

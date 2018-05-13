@@ -34,9 +34,13 @@
  *  (1)  (not G)   implies  f(x) <= 0
  *  (2)   G        implies  f(x) >= 1 (equivalent to f(x) > 0 on integers)
  *  (3)  (G and U) implies  f(x) <= f(x') + 1
+ *
+ * The search is performed by constructing a linear template f(x) = c*x + c0,
+ * where x are variables (only those we consider relevant for the metering function)
+ * and c are the corresponding coefficients (c0 is the absolute coefficient).
+ * The values for c and c0 are determined by a z3 query, such that constraints (1)-(3) are satisfied.
  */
-class MeteringFinder
-{
+class MeteringFinder {
 public:
     /**
      * Success: metering function was found
@@ -49,6 +53,7 @@ public:
 
     // TODO: integrate free var instantiation back into generate(), include (but not apply) the substitution here?
     // TODO: Alternateively, add a field "modifiedRule" (with applied substitution and added integralConstraint)
+    // TODO: Or, even better, add a field "tempVarSubstitution" since we need this anyway (when using eliminateTempVars)
     struct Result {
         // Flag indicating whether a metering function was successfully found
         ResultKind result;
@@ -71,7 +76,7 @@ public:
      *
      * @return The resulting metering function or the reason for failure (and possibly additional information).
      */
-    static Result generate(VarMan &varMan, const LinearRule &rule);
+    static Result generate(VarMan &varMan, const AbstractRule &rule);
 
     /**
      * Heuristic to instantiate temporary variables by their bounds (e.g. for "x <= 4", instantiate x by 4).
@@ -83,10 +88,18 @@ public:
      *
      * @return true iff instantiation was successful (and rule has been modified accordingly)
      */
-    static bool instantiateTempVarsHeuristic(VarMan &varMan, LinearRule &rule);
+    static bool instantiateTempVarsHeuristic(VarMan &varMan, AbstractRule &rule);
+
+    // see MeteringToolbox::strengthenGuard
+    static bool strengthenGuard(VarMan &varMan, AbstractRule &rule);
 
 private:
-    MeteringFinder(VarMan &varMan, const GuardList &guard, const UpdateMap &update);
+    MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<UpdateMap> &update);
+
+    /**
+     * Helper for convenience, collects all updates of the given rule into a vector.
+     */
+    static std::vector<UpdateMap> getUpdateList(const AbstractRule &rule);
 
     /**
      * Simplifies guard/update by removing constraints that do not affect the metering function.
@@ -121,7 +134,7 @@ private:
     /**
      * Helper to build the implication: "(G and U) --> f(x)-f(x') <= 1" using applyFarkas
      */
-    z3::expr genUpdateImplication() const;
+    z3::expr genUpdateImplications() const;
 
     /**
      * Helper to build the implication: "(not G) --> f(x) <= 0" using multiple applyFarkas calls (which are AND-concated)
@@ -162,6 +175,10 @@ private:
      */
     void ensureIntegralMetering(Result &result, const z3::model &model) const;
 
+
+    void dump(const std::string &msg) const;
+
+
 private:
     /**
      * The VariableManager instance, used for fresh variables and for conversion between indices/symbols
@@ -178,7 +195,7 @@ private:
     /**
      * The rule's data, is modified by linearization and when restricting to relevant variables
      */
-    UpdateMap update;
+    std::vector<UpdateMap> updates;
     GuardList guard;
 
     /**
@@ -209,7 +226,7 @@ private:
         GuardList guard;
         GuardList reducedGuard;
         GuardList irrelevantGuard;
-        GuardList guardUpdate;
+        std::vector<GuardList> guardUpdate; // one for each update
     } linearConstraints;
 
     /**

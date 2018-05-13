@@ -18,11 +18,9 @@
 #include "accelerate.h"
 
 #include "preprocess.h"
-#include "accelerate/recurrence.h"
+#include "meter/recurrence.h"
+#include "meter/metering.h"
 #include "z3/z3toolbox.h"
-#include "accelerate/metering.h"
-#include "infinity.h"
-#include "asymptotic/asymptoticbound.h"
 
 #include "its/rule.h"
 #include "its/export.h"

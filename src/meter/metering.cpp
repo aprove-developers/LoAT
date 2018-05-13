@@ -15,11 +15,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "nl_metering.h"
+#include "metering.h"
 
-#include "accelerate/farkas.h"
-#include "nl_linearize.h"
-#include "nl_metertools.h"
+#include "farkas.h"
+#include "linearize.h"
+#include "metertools.h"
 
 #include "util/timing.h"
 #include "expr/guardtoolbox.h"
@@ -32,10 +32,10 @@
 
 using namespace std;
 using boost::optional;
-namespace MT = MeteringToolboxNL;
+namespace MT = MeteringToolbox;
 
 
-MeteringFinderNL::MeteringFinderNL(VarMan &varMan, const GuardList &guard, const vector<UpdateMap> &updates)
+MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vector<UpdateMap> &updates)
     : varMan(varMan),
       updates(updates),
       guard(guard),
@@ -43,9 +43,38 @@ MeteringFinderNL::MeteringFinderNL(VarMan &varMan, const GuardList &guard, const
 {}
 
 
+/* ### Helpers ### */
+
+void MeteringFinder::dump(const string &msg) const {
+#ifdef DEBUG_METERING
+    debugMeter("### Metering: " << msg << " ###");
+
+    stringstream ss;
+    for (VariableIdx var : relevantVars) {
+        ss << " " << var << "/" << varMan.getGinacSymbol(var);
+    }
+    debugMeter("Relevant variables: " << ss.str());
+
+    dumpList("guard           ", guard);
+    dumpList("reduced guard   ", reducedGuard);
+    dumpList("irrelevant guard", irrelevantGuard);
+    dumpMaps("updates", updates);
+#endif
+}
+
+vector<UpdateMap> MeteringFinder::getUpdateList(const AbstractRule &rule) {
+    vector<UpdateMap> res;
+    res.reserve(rule.rhsCount());
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        res.push_back(rhs->getUpdate());
+    }
+    return res;
+}
+
+
 /* ### Step 1: Pre-processing, filter relevant constraints/variables ### */
 
-void MeteringFinderNL::simplifyAndFindVariables() {
+void MeteringFinder::simplifyAndFindVariables() {
     irrelevantGuard.clear(); // clear in case this method is called twice
     reducedGuard = MT::reduceGuard(varMan, guard, updates, &irrelevantGuard);
     relevantVars = MT::findRelevantVariables(varMan, reducedGuard, updates);
@@ -56,7 +85,7 @@ void MeteringFinderNL::simplifyAndFindVariables() {
     MT::restrictUpdatesToVariables(updates, relevantVars);
 }
 
-bool MeteringFinderNL::preprocessAndLinearize() {
+bool MeteringFinder::preprocessAndLinearize() {
     // preprocessing to avoid free variables
     // FIXME: BUG: the substitution from this call has to be applied to the original rule before computed iterated cost/update!
     // FIXME: Otherwise, a temporary variable in the cost is condiered to be constant when computing iterated cost.
@@ -68,7 +97,7 @@ bool MeteringFinderNL::preprocessAndLinearize() {
     simplifyAndFindVariables();
 
     // linearize (try to substitute nonlinear parts)
-    auto optSubs = LinearizeNL::linearizeGuardUpdates(varMan, guard, updates);
+    auto optSubs = Linearize::linearizeGuardUpdates(varMan, guard, updates);
     if (optSubs) {
         nonlinearSubs = optSubs.get();
     } else {
@@ -85,7 +114,7 @@ bool MeteringFinderNL::preprocessAndLinearize() {
 
 /* ### Step 2: Construction of linear constraints and metering function template ### */
 
-void MeteringFinderNL::buildMeteringVariables() {
+void MeteringFinder::buildMeteringVariables() {
     // clear generated fields in case this method is called twice
     meterVars.symbols.clear();
     meterVars.coeffs.clear();
@@ -115,7 +144,7 @@ void MeteringFinderNL::buildMeteringVariables() {
     }
 }
 
-void MeteringFinderNL::buildLinearConstraints() {
+void MeteringFinder::buildLinearConstraints() {
     // clear generated fields in case this method is called twice
     linearConstraints.guard.clear();
     linearConstraints.guardUpdate.clear();
@@ -176,7 +205,7 @@ void MeteringFinderNL::buildLinearConstraints() {
 
 /* ### Step 3: Construction of the final constraints for the metering function using Farkas lemma ### */
 
-z3::expr MeteringFinderNL::genNotGuardImplication() const {
+z3::expr MeteringFinder::genNotGuardImplication() const {
     debugMeter("Constructing not-guard implication");
     vector<z3::expr> res;
     vector<Expression> lhs;
@@ -191,7 +220,7 @@ z3::expr MeteringFinderNL::genNotGuardImplication() const {
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
-z3::expr MeteringFinderNL::genGuardPositiveImplication(bool strict) const {
+z3::expr MeteringFinder::genGuardPositiveImplication(bool strict) const {
     debugMeter("Constructing guard positive implication (strict = " << strict << ")");
     //G ==> f(x) > 0, which is equivalent to -f(x) < 0  ==  -f(x) <= -1 (on integers)
     vector<z3::expr> negCoeff;
@@ -203,7 +232,7 @@ z3::expr MeteringFinderNL::genGuardPositiveImplication(bool strict) const {
     return FarkasLemma::apply(linearConstraints.guard, meterVars.symbols, negCoeff, -absCoeff, delta, context);
 }
 
-z3::expr MeteringFinderNL::genUpdateImplications() const {
+z3::expr MeteringFinder::genUpdateImplications() const {
     debugMeter("Constructing update implication");
 
     // For each update, build f(x)-f(x') => x-x'
@@ -242,7 +271,7 @@ z3::expr MeteringFinderNL::genUpdateImplications() const {
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
-z3::expr MeteringFinderNL::genNonTrivial() const {
+z3::expr MeteringFinder::genNonTrivial() const {
     debugMeter("Constructing non-trivial constraint");
     vector<z3::expr> res;
     for (const z3::expr &c : meterVars.coeffs) {
@@ -254,7 +283,7 @@ z3::expr MeteringFinderNL::genNonTrivial() const {
 
 /* ### Step 4: Result and model interpretation ### */
 
-Expression MeteringFinderNL::buildResult(const z3::model &model) const {
+Expression MeteringFinder::buildResult(const z3::model &model) const {
     const auto &coeffs = meterVars.coeffs;
     const auto &symbols = meterVars.symbols;
 
@@ -271,7 +300,7 @@ Expression MeteringFinderNL::buildResult(const z3::model &model) const {
     return result;
 }
 
-void MeteringFinderNL::ensureIntegralMetering(Result &result, const z3::model &model) const {
+void MeteringFinder::ensureIntegralMetering(Result &result, const z3::model &model) const {
     bool has_reals = false;
     int mult = 1;
 
@@ -299,7 +328,7 @@ void MeteringFinderNL::ensureIntegralMetering(Result &result, const z3::model &m
     }
 }
 
-optional<VariablePair> MeteringFinderNL::findConflictVars() const {
+optional<VariablePair> MeteringFinder::findConflictVars() const {
     set<VariableIdx> conflictingVars;
 
     // find variables on which the loop's runtime might depend (simple heuristic)
@@ -337,35 +366,12 @@ optional<VariablePair> MeteringFinderNL::findConflictVars() const {
 
 /* ### Main function ### */
 
-void MeteringFinderNL::dump(const string &msg) const {
-#ifdef DEBUG_METERING
-    debugMeter("### Metering: " << msg << " ###");
-
-    stringstream ss;
-    for (VariableIdx var : relevantVars) {
-        ss << " " << var << "/" << varMan.getGinacSymbol(var);
-    }
-    debugMeter("Relevant variables: " << ss.str());
-
-    dumpList("guard           ", guard);
-    dumpList("reduced guard   ", reducedGuard);
-    dumpList("irrelevant guard", irrelevantGuard);
-    dumpMaps("updates", updates);
-#endif
-}
-
-
-MeteringFinderNL::Result MeteringFinderNL::generate(VarMan &varMan, const NonlinearRule &rule) {
+MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const AbstractRule &rule) {
     Timing::Scope timer(Timing::FarkasTotal);
     Timing::start(Timing::FarkasLogic);
 
     Result result;
-    vector<UpdateMap> updates;
-    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        updates.push_back(rhs->getUpdate());
-    }
-
-    MeteringFinderNL meter(varMan, rule.getGuard(), updates);
+    MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
 
     meter.dump("Initial");
 
@@ -454,23 +460,13 @@ MeteringFinderNL::Result MeteringFinderNL::generate(VarMan &varMan, const Nonlin
 
 /* ### Heuristics to help finding more metering functions ### */
 
-bool MeteringFinderNL::strengthenGuard(VarMan &varMan, NonlinearRule &rule) {
-    vector<UpdateMap> updates;
-    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        updates.push_back(rhs->getUpdate());
-    }
-    return MeteringToolboxNL::strengthenGuard(varMan, rule.getGuardMut(), updates);
+bool MeteringFinder::strengthenGuard(VarMan &varMan, AbstractRule &rule) {
+    return MT::strengthenGuard(varMan, rule.getGuardMut(), getUpdateList(rule));
 }
 
-bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, NonlinearRule &rule) {
-    vector<UpdateMap> updates;
-    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        updates.push_back(rhs->getUpdate());
-    }
-
-    MeteringFinderNL meter(varMan, rule.getGuard(), updates);
-
+bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, AbstractRule &rule) {
     // We first perform the same steps as in generate()
+    MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
 
     if (!meter.preprocessAndLinearize()) return {};
     assert(!meter.reducedGuard.empty()); // this method must only be called if generate() fails
@@ -491,7 +487,7 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, NonlinearRul
     vector<UpdateMap> oldUpdates = meter.updates;
 
     GiNaC::exmap successfulSubs;
-    stack<GiNaC::exmap> freeSubs = MeteringToolboxNL::findInstantiationsForTempVars(varMan, meter.guard);
+    stack<GiNaC::exmap> freeSubs = MT::findInstantiationsForTempVars(varMan, meter.guard);
 
     while (!freeSubs.empty()) {
         if (Timeout::soft()) break;
@@ -500,17 +496,11 @@ bool MeteringFinderNL::instantiateTempVarsHeuristic(VarMan &varMan, NonlinearRul
         debugFarkas("Trying instantiation: " << sub);
 
         //apply current substitution (and forget the previous one)
-        meter.guard.clear();
-        for (Expression &ex : oldGuard) meter.guard.push_back(ex.subs(sub));
+        meter.guard = oldGuard; // copy
+        for (Expression &ex : meter.guard) ex.applySubs(sub);
 
-        meter.updates.clear();
-        for (const UpdateMap &oldUpdate : oldUpdates) {
-            UpdateMap update;
-            for (const auto &up : oldUpdate) {
-                update[up.first] = up.second.subs(sub);
-            }
-            meter.updates.push_back(update);
-        }
+        meter.updates = oldUpdates; // copy
+        MT::applySubsToUpdates(sub, meter.updates);
 
         // Perform the first steps from generate() again (guard/update have changed)
         meter.simplifyAndFindVariables();

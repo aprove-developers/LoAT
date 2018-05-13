@@ -25,21 +25,41 @@ using namespace std;
 using boost::optional;
 
 
+/* ### Helpers ### */
+
+void MeteringToolbox::applySubsToUpdates(const GiNaC::exmap &subs, MultiUpdate &updates) {
+    for (UpdateMap &update : updates) {
+        for (auto &it : update) {
+            it.second.applySubs(subs);
+        }
+    }
+}
+
+
+bool MeteringToolbox::isUpdatedByAny(VariableIdx var, const MultiUpdate &updates) {
+    auto updatesVar = [&](const UpdateMap &update) { return update.isUpdated(var); };
+    return std::any_of(updates.begin(), updates.end(), updatesVar);
+}
+
+
 /* ### Preprocessing ### */
 
-void MeteringToolbox::eliminateTempVars(const VarMan &varMan, GuardList &guard, UpdateMap &update) {
+// FIXME: Return the applied substitution
+void MeteringToolbox::eliminateTempVars(const VarMan &varMan, GuardList &guard, MultiUpdate &updates) {
     //equalities might be helpful to remove free variables
     GuardToolbox::findEqualities(guard);
 
     //precalculate relevant variables (probably just an estimate at this point) to improve free var elimination
-    GuardList reducedGuard = reduceGuard(varMan, guard, update);
-    set<VariableIdx> relevantVars = findRelevantVariables(varMan, reducedGuard, update);
+    GuardList reducedGuard = reduceGuard(varMan, guard, updates);
+    set<VariableIdx> relevantVars = findRelevantVariables(varMan, reducedGuard, updates);
 
     //collect all variables that appear in the rhs of the update of a relevant variable
     ExprSymbolSet varsInUpdate;
-    for (const auto &it : update) {
-        if (relevantVars.count(it.first) > 0) {
-            it.second.collectVariables(varsInUpdate);
+    for (UpdateMap &update : updates) {
+        for (const auto &it : update) {
+            if (relevantVars.count(it.first) > 0) {
+                it.second.collectVariables(varsInUpdate);
+            }
         }
     }
 
@@ -51,24 +71,20 @@ void MeteringToolbox::eliminateTempVars(const VarMan &varMan, GuardList &guard, 
     //try to remove free variables from the update by equality propagation (they are removed from guard and update)
     GiNaC::exmap equalSubs;
     GuardToolbox::propagateEqualities(varMan, guard, GuardToolbox::NoCoefficients, GuardToolbox::NoFreeOnRhs, &equalSubs, isTempInUpdate);
-    for (auto &it : update) {
-        it.second.applySubs(equalSubs);
-    }
+    applySubsToUpdates(equalSubs, updates);
 
 #ifdef DEBUG_FARKAS
-    dumpGuardUpdate("Update propagation", guard, update);
+    dumpGuardUpdates("Update propagation", guard, updates);
 #endif
 
     //try to remove all free variables by equality propagation
     //(due to the above step, this should only affect the guard. We still update the update to be on the safe side)
     equalSubs.clear();
     GuardToolbox::propagateEqualities(varMan, guard, GuardToolbox::NoCoefficients, GuardToolbox::NoFreeOnRhs, &equalSubs, isTemp);
-    for (auto &it : update) {
-        it.second.applySubs(equalSubs);
-    }
+    applySubsToUpdates(equalSubs, updates);
 
 #ifdef DEBUG_FARKAS
-    dumpGuardUpdate("Propagated Guard", guard, update);
+    dumpGuardUpdates("Propagated Guard", guard, updates);
 #endif
 
     //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
@@ -101,7 +117,7 @@ GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
 
 /* ### Filter relevant constarints/variables ### */
 
-GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &guard, const UpdateMap &update,
+GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates,
                                        GuardList *irrelevantGuard)
 {
     assert(!irrelevantGuard || irrelevantGuard->empty());
@@ -126,7 +142,7 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
                 break;
             }
             // keep constraints that contain updated variables
-            if (update.count(varMan.getVarIdx(var)) > 0) {
+            if (isUpdatedByAny(varMan.getVarIdx(var), updates)) {
                 add = true;
             }
         }
@@ -135,18 +151,26 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
             reducedGuard.push_back(ex);
 
         } else if (add) {
-            // Only add constraints with updated variables if they are not implied after the update
-            solver.push();
-            solver.add(!GinacToZ3::convert(ex.subs(update.toSubstitution(varMan)), context));
-            bool implied = (solver.check() == z3::unsat);
+            // Only add constraints with updated variables if they are not implied by EACH update (individually)
+            bool implied = true;
+            for (const UpdateMap &update : updates) {
+                solver.push();
+                solver.add(!GinacToZ3::convert(ex.subs(update.toSubstitution(varMan)), context));
+                auto z3res = solver.check();
+                solver.pop();
+
+                // unsat means that the updated `ex` must always hold (i.e., is implied after the update)
+                if (z3res != z3::unsat) {
+                    implied = false;
+                    break;
+                }
+            }
 
             if (!implied) {
                 reducedGuard.push_back(ex);
             } else {
                 if (irrelevantGuard) irrelevantGuard->push_back(ex);
             }
-
-            solver.pop();
 
         } else {
             if (irrelevantGuard) irrelevantGuard->push_back(ex);
@@ -157,7 +181,7 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 }
 
 
-set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, const GuardList &guard, const UpdateMap &update) {
+set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates) {
     set<VariableIdx> res;
 
     // Add all variables appearing in the guard
@@ -169,17 +193,19 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
         res.insert(varMan.getVarIdx(sym));
     }
 
-    // Compute the closure of res under update,
+    // Compute the closure of res under ALL updates
     // so if an updated variable is in res, also add all variables of the update's rhs
     set<VariableIdx> todo = res;
     while (!todo.empty()) {
         ExprSymbolSet next;
 
         for (VariableIdx var : todo) {
-            auto it = update.find(var);
-            if (it != update.end()) {
-                ExprSymbolSet rhsVars = it->second.getVariables();
-                next.insert(rhsVars.begin(), rhsVars.end());
+            for (const UpdateMap &update : updates) {
+                auto it = update.find(var);
+                if (it != update.end()) {
+                    ExprSymbolSet rhsVars = it->second.getVariables();
+                    next.insert(rhsVars.begin(), rhsVars.end());
+                }
             }
         }
 
@@ -199,17 +225,19 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
 }
 
 
-void MeteringToolbox::restrictUpdateToVariables(UpdateMap &update, const set<VariableIdx> &vars) {
-    set<VariableIdx> toRemove;
+void MeteringToolbox::restrictUpdatesToVariables(MultiUpdate &updates, const set<VariableIdx> &vars) {
+    for (UpdateMap &update : updates) {
+        set<VariableIdx> toRemove;
 
-    for (auto it : update) {
-        if (vars.count(it.first) == 0) {
-            toRemove.insert(it.first);
+        for (auto it : update) {
+            if (vars.count(it.first) == 0) {
+                toRemove.insert(it.first);
+            }
         }
-    }
 
-    for (VariableIdx var : toRemove) {
-        update.erase(var);
+        for (VariableIdx var : toRemove) {
+            update.erase(var);
+        }
     }
 }
 
@@ -231,37 +259,54 @@ void MeteringToolbox::restrictGuardToVariables(const VarMan &varMan, GuardList &
 
 /* ### Heuristics to improve metering results ### */
 
-bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, const UpdateMap &update) {
+bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, const MultiUpdate &updates) {
     // TODO: timing (was FarkasLogic and FarkasTotal before)?
-
-    auto isUpdated = [&](const ExprSymbol &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
     bool changed = false;
 
     // first remove irrelevant constraints from the guard
-    GuardList reducedGuard = reduceGuard(varMan, guard, update);
-    set<VariableIdx> relevantVars = findRelevantVariables(varMan, reducedGuard, update);
+    GuardList reducedGuard = reduceGuard(varMan, guard, updates);
+    set<VariableIdx> relevantVars = findRelevantVariables(varMan, reducedGuard, updates);
 
-    for (const auto &it : update) {
-        // only consider relevant variables
-        if (relevantVars.count(it.first) == 0) continue;
+    // consider each update independently of the others
+    for (const UpdateMap &update : updates) {
+        // helper lambda to pass as argument
+        auto isUpdated = [&](const ExprSymbol &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
 
-        // only proceed if the update's rhs contains no updated variables
-        ExprSymbolSet rhsVars = it.second.getVariables();
-        if (std::any_of(rhsVars.begin(), rhsVars.end(), isUpdated)) continue;
+        for (const auto &it : update) {
+            // only consider relevant variables
+            if (relevantVars.count(it.first) == 0) continue;
 
-        // for every constraint containing it.first,
-        // add a new constraint with it.first replaced by the update's rhs
-        // (e.g. if x := 4 and the guard is x > 0, we also add 4 > 0)
-        // (this makes the guard stronger and might thus help to find a metering function)
-        ExprSymbol lhsVar = varMan.getGinacSymbol(it.first);
+            // only proceed if the update's rhs contains no updated variables
+            ExprSymbolSet rhsVars = it.second.getVariables();
+            if (std::any_of(rhsVars.begin(), rhsVars.end(), isUpdated)) continue;
 
-        GiNaC::exmap subs;
-        subs[varMan.getGinacSymbol(it.first)] = it.second; // TODO: Use Substitution::singleton;
+            // for every constraint containing it.first,
+            // add a new constraint with it.first replaced by the update's rhs
+            // (e.g. if x := 4 and the guard is x > 0, we also add 4 > 0)
+            // (this makes the guard stronger and might thus help to find a metering function)
+            ExprSymbol lhsVar = varMan.getGinacSymbol(it.first);
 
-        for (const Expression &ex : reducedGuard) {
-            if (ex.has(lhsVar)) {
-                guard.push_back(ex.subs(subs));
-                changed = true;
+            // TODO: It might be better to apply the entire update!
+            // TODO: Consider FibonacciNew: loop(B,C) -> Com_2(loop(B-1,1), loop(B-2,1)) :|: B >= 2 && B >= C
+            // TODO: Adding B >= 1 makes no sense, but adding B-2 >= 1 would help!
+            // TODO: So for every term containing C, we should just apply the update!
+            // TODO: This is *much* better, since then the constraint is trivially true after the update and thus not part of the reducedGuard!
+
+            GiNaC::exmap subs;
+            subs[varMan.getGinacSymbol(it.first)] = it.second; // TODO: Use Substitution::singleton;
+
+            for (const Expression &ex : reducedGuard) {
+                if (ex.has(lhsVar)) {
+
+                    // TODO: This is the implementation corresponding to the above comment
+                    // TODO: This helps for the FibonacciNew example!
+                    guard.push_back(ex.subs(update.toSubstitution(varMan)));
+
+                    // TODO: This is the old implementation, which is probably just stupid :P
+                    //guard.push_back(ex.subs(subs));
+
+                    changed = true;
+                }
             }
         }
     }

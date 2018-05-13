@@ -18,13 +18,10 @@
 #include "nl_accelerate.h"
 
 //#include "preprocess.h"
-//#include "accelerate_nonlinear/nl_recurrence.h"
-#include "accelerate/recurrence.h" // for linear rules
-#include "accelerate_nonlinear/nl_metering.h"
+#include "meter/recurrence.h" // for linear rules
+#include "meter/metering.h"
 
 #include "z3/z3toolbox.h"
-#include "infinity.h"
-#include "asymptotic/asymptoticbound.h"
 
 #include "its/rule.h"
 #include "its/export.h"
@@ -63,17 +60,17 @@ AcceleratorNL::AcceleratorNL(ITSProblem &its, LocationIdx loc, set<TransIdx> &ac
 // #####################################
 
 
-bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &rule, MeteringFinderNL::Result res) {
+bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &rule, MeteringFinder::Result res) {
     // TODO: Add proof output also for failures
 
-    if (res.result == MeteringFinderNL::ConflictVar) {
+    if (res.result == MeteringFinder::ConflictVar) {
         // ConflictVar is just Unsat with more information
-        res.result = MeteringFinderNL::Unsat;
+        res.result = MeteringFinder::Unsat;
         rulesWithConflictingVariables.push_back({ruleIdx, res.conflictVar});
     }
 
     switch (res.result) {
-        case MeteringFinderNL::Unsat:
+        case MeteringFinder::Unsat:
             Stats::add(Stats::SelfloopNoRank);
             debugAccel("Farkas unsat for rule " << ruleIdx);
 
@@ -88,7 +85,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
             keepRules.insert(ruleIdx);
             return false;
 
-        case MeteringFinderNL::Nonlinear:
+        case MeteringFinder::Nonlinear:
             Stats::add(Stats::SelfloopNoRank);
             debugAccel("Farkas nonlinear for rule " << ruleIdx);
 
@@ -99,7 +96,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
             keepRules.insert(ruleIdx);
             return false;
 
-        case MeteringFinderNL::Unbounded:
+        case MeteringFinder::Unbounded:
             Stats::add(Stats::SelfloopInfinite);
             debugAccel("Farkas unbounded for rule " << ruleIdx);
 
@@ -118,7 +115,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
             }
             return true;
 
-        case MeteringFinderNL::Success:
+        case MeteringFinder::Success:
             debugAccel("Farkas success, got " << res.metering << " for rule " << ruleIdx);
             {
                 NonlinearRule newRule = rule;
@@ -186,11 +183,11 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
 
 
 bool AcceleratorNL::accelerateAndStore(TransIdx ruleIdx, const NonlinearRule &rule, bool storeOnlySuccessful) {
-    MeteringFinderNL::Result res = MeteringFinderNL::generate(its, rule);
+    MeteringFinder::Result res = MeteringFinder::generate(its, rule);
 
     if (storeOnlySuccessful
-        && res.result != MeteringFinderNL::Unbounded
-        && res.result != MeteringFinderNL::Success) {
+        && res.result != MeteringFinder::Unbounded
+        && res.result != MeteringFinder::Success) {
         return false;
     }
 
@@ -245,7 +242,7 @@ void AcceleratorNL::run() {
         NonlinearRule rule = its.getRule(loop);
         debugAccel("Trying temp var instantiation for rule: " << rule);
 
-        if (MeteringFinderNL::instantiateTempVarsHeuristic(its, rule)) {
+        if (MeteringFinder::instantiateTempVarsHeuristic(its, rule)) {
             if (accelerateAndStore(loop, rule, true)) {
                 debugAccel("Temp var instantiation successful with modified rule: " << rule);
             }
@@ -291,7 +288,7 @@ void AcceleratorNL::run() {
         NonlinearRule rule = its.getRule(loop);
         debugAccel("Trying guard strengthening for rule: " << rule);
 
-        if (MeteringFinderNL::strengthenGuard(its, rule)) {
+        if (MeteringFinder::strengthenGuard(its, rule)) {
             if (accelerateAndStore(loop, rule, true)) {
                 debugAccel("Guard strengthening successful with modified rule: " << rule);
             }

@@ -44,10 +44,10 @@ public:
      * Requires guard to only contain inequalities.
      * Returns the reverse substitution, if linearization was successful.
      */
-    static boost::optional<GiNaC::exmap> linearizeGuardUpdate(VarMan &varMan, GuardList &guard, UpdateMap &update);
+    static boost::optional<GiNaC::exmap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
 
 private:
-    Linearize(GuardList &guard, UpdateMap &update, VarMan &varMan) : guard(guard), update(update), varMan(varMan) {}
+    Linearize(GuardList &guard, std::vector<UpdateMap> &updates, VarMan &varMan) : guard(guard), updates(updates), varMan(varMan) {}
 
     /**
      * Checks if we can substitute the given expression by a fresh variable (with the given name).
@@ -75,7 +75,7 @@ private:
      * If possible, modifies update, subsVar, subsMap.
      * Might also modify guard (see linearizeExpression).
      */
-    bool linearizeUpdate();
+    bool linearizeUpdates();
 
     /**
      * Checks if any of the substituted variables (i.e., the variables in subsVars)
@@ -110,9 +110,9 @@ private:
     // Note that this is not a substitution of variables, but of expressions.
     GiNaC::exmap subsMap;
 
-    // Guard and update of the rule, only modified by applying substitutions.
+    // Guard and updates of the rule, only modified by applying substitutions.
     GuardList &guard;
-    UpdateMap &update;
+    std::vector<UpdateMap> &updates;
 
     // Additional constraints to be added to the resulting guard.
     // They retain information that is lost durng substitution, e.g. that x^2 is always nonnegative.
@@ -122,4 +122,4 @@ private:
     VariableManager &varMan;
 };
 
-#endif // LINEARIZE_H
+#endif
