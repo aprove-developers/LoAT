@@ -97,8 +97,8 @@
  * but might help in certain examples (e.g. if we have a loop body with two different
  * paths A, B which we want to alternate, i.e., A, B, A, B, A, B, ...)
  */
-#define CHAIN_BEFORE_ACCELERATE
-
+//#define CHAIN_BEFORE_ACCELERATE
+// TODO: CHAIN_AFTER_ACCELERATE
 
 
 /*
@@ -106,6 +106,7 @@
  * (similar to chaining, but without modifying the update).
  * NOTE: this might help for some loops (with constant update rhs), but also increases time and branching
  */
+// Note: This was disabled in the old version!
 //#define FARKAS_TRY_ADDITIONAL_GUARD
 
 /*
