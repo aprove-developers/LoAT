@@ -80,6 +80,8 @@ public:
     std::vector<TransIdx> getTransitionsFromTo(LocationIdx from, LocationIdx to) const;
     std::set<TransIdx> getTransitionsTo(LocationIdx loc) const;
 
+    std::vector<TransIdx> getAllTransitions() const;
+
     bool hasTransitionsFrom(LocationIdx loc) const;
     bool hasTransitionsFromTo(LocationIdx from, LocationIdx to) const;
     bool hasTransitionsTo(LocationIdx loc) const;

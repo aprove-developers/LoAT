@@ -69,6 +69,11 @@ std::set<TransIdx> AbstractITSProblem<Rule>::getTransitionsTo(LocationIdx loc) c
 }
 
 template<typename Rule>
+std::vector<TransIdx> AbstractITSProblem<Rule>::getAllTransitions() const {
+    return graph.getAllTrans();
+}
+
+template<typename Rule>
 bool AbstractITSProblem<Rule>::hasTransitionsFrom(LocationIdx loc) const {
     return graph.hasTransFrom(loc);
 }

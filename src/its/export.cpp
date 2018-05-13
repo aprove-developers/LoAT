@@ -18,41 +18,36 @@ using namespace std;
 #endif
 
 
-// TODO: Looks suspiciuos, might produce a function symbol with different number of arguments
-// TODO: E.g., for f(x,y) -> g(x), the variable y is not "bound" and is probably omitted?!
-// TODO: My guess is that this function should look on all rules for a given function symbol
-// TODO: (note that all left-hand sides use the same arguments!)
-set<VariableIdx> getBoundVariables(const AbstractRule &rule, const VarMan &varMan) {
-    set<VariableIdx> res;
-
-    //updated variables are always bound
+// collects all variables appearing in the given rule
+static void collectAllVariables(const AbstractRule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
-            res.insert(it.first);
+            vars.insert(varMan.getGinacSymbol(it.first));
+            it.second.collectVariables(vars);
         }
     }
-
-    //collect non-free variables from guard and cost
-    ExprSymbolSet symbols;
-    for (const Expression &ex : rule.getGuard()) {
-        ex.collectVariables(symbols);
-    }
-    rule.getCost().collectVariables(symbols);
-
-    for (const ExprSymbol &var : symbols) {
-        if (!varMan.isTempVar(var)) {
-            res.insert(varMan.getVarIdx(var));
-        }
-    }
-
-    return res;
+    rule.getGuard().collectVariables(vars);
+    rule.getCost().collectVariables(vars);
 }
+
+// collects all non-temporary variables of the given rule
+static void collectBoundVariables(const AbstractRule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
+    ExprSymbolSet allVars;
+    collectAllVariables(rule, varMan, allVars);
+
+    for (const ExprSymbol &var : allVars) {
+        if (!varMan.isTempVar(var)) {
+            vars.insert(var);
+        }
+    }
+}
+
 
 /**
  * Helper that prints the location's name or (if it has no name) its index to the given stream
  */
 template <typename Rule>
-void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+static void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, std::ostream &s) {
     s << COLOR_LOCATION;
     auto optName = its.getLocationName(loc);
     if (optName) {
@@ -67,7 +62,7 @@ void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, std::os
  * Helper that prints an entire rule in a human-readable format
  */
 template <typename Rule>
-void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+static void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, std::ostream &s, bool colors) {
     printLocation(rule.getLhsLoc(), its, s);
     s << " -> ";
 
@@ -76,10 +71,10 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
         s << " : ";
 
         for (auto upit : it->getUpdate()) {
-            s << COLOR_UPDATE;
+            if (colors) s << COLOR_UPDATE;
             s << its.getVarName(upit.first) << "'";
             s << "=" << upit.second;
-            s << COLOR_NONE;
+            if (colors) s << COLOR_NONE;
             s << ", ";
         }
     }
@@ -90,12 +85,16 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
         s << "[ ";
         for (int i=0; i < rule.getGuard().size(); ++i) {
             if (i > 0) s << " && ";
-            s << COLOR_GUARD << rule.getGuard().at(i) << COLOR_NONE;
+            if (colors) s << COLOR_GUARD;
+            s << rule.getGuard().at(i);
+            if (colors) s << COLOR_NONE;
         }
         s << " ]";
     }
     s << ", cost: ";
-    s << COLOR_COST << rule.getCost() << COLOR_NONE;
+    if (colors) s << COLOR_COST;
+    s << rule.getCost();
+    if (colors) s << COLOR_NONE;
     s << endl;
 }
 
@@ -103,7 +102,7 @@ void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, st
 template <typename Rule>
 void ITSExport<Rule>::printLabeledRule(TransIdx rule, const AbstractITSProblem<Rule> &its, std::ostream &s) {
     s << setw(4) << rule << ": ";
-    printRule(its.getRule(rule), its, s);
+    printRule(its.getRule(rule), its, s, true);
 }
 
 
@@ -174,30 +173,42 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
     s << "(GOAL COMPLEXITY)" << endl;
     s << "(STARTTERM (FUNCTIONSYMBOLS "; printNode(its.getInitialLocation()); s << "))" << endl;
     s << "(VAR";
-    for (const ex &var : its.getGinacVarList()) {
+
+    // collect variables that actually appear in the rules
+    ExprSymbolSet vars;
+    for (TransIdx rule : its.getAllTransitions()) {
+        collectAllVariables(its.getRule(rule), its, vars);
+    }
+    for (const ExprSymbol &var : vars) {
         s << " " << var;
     }
+
     s << ")" << endl << "(RULES" << endl;
 
     for (LocationIdx n : its.getLocations()) {
+        // figure out which variables appear on the lhs of the given location
+        ExprSymbolSet relevantVars;
+        for (TransIdx trans : its.getTransitionsFrom(n)) {
+            collectBoundVariables(its.getRule(trans), its, relevantVars);
+        }
+
         //write transition in KoAT format (note that relevantVars is an ordered set)
         for (TransIdx trans : its.getTransitionsFrom(n)) {
             const AbstractRule &rule = its.getRule(trans);
-            set<VariableIdx> relevantVars = getBoundVariables(rule, its);
 
             //lhs
             printNode(n);
             bool first = true;
-            for (VariableIdx var : relevantVars) {
+            for (const ExprSymbol &var : relevantVars) {
                 s << ((first) ? "(" : ",");
-                s << its.getVarName(var);
+                s << var;
                 first = false;
             }
 
             //cost
             s << ") -{" << rule.getCost().expand() << "," << rule.getCost().expand() << "}> ";
 
-            //rhs update
+            //rhs updates
             if (rule.rhsCount() > 1) {
                 s << "Com_" << rule.rhsCount() << "(";
             }
@@ -207,13 +218,13 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
                 printNode(rhs->getLoc());
 
                 first = true;
-                for (VariableIdx var : relevantVars) {
+                for (const ExprSymbol &var : relevantVars) {
                     s << ((first) ? "(" : ",");
-                    auto it = rhs->getUpdate().find(var);
+                    auto it = rhs->getUpdate().find(its.getVarIdx(var));
                     if (it != rhs->getUpdate().end()) {
                         s << it->second.expand();
                     } else {
-                        s << its.getVarName(var);
+                        s << var;
                     }
                     first = false;
                 }

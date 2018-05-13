@@ -104,6 +104,16 @@ public:
         return !targetIt->second.empty();
     }
 
+    // Returns list of all transitions (without duplicates)
+    std::vector<TransIdx> getAllTrans() const {
+        std::vector<TransIdx> res;
+        res.reserve(transitions.size());
+        for (const auto &it : transitions) {
+            res.push_back(it.first);
+        }
+        return res;
+    }
+
     // To avoid duplicates (when using hyperedges), this returns a set
     std::set<TransIdx> getTransFrom(Node from) const {
         std::set<TransIdx> res;
@@ -165,13 +175,6 @@ public:
     inline Node getTransSource(TransIdx idx) const { return transitions.at(idx).from; }
     inline const std::set<Node>& getTransTargets(TransIdx idx) const { return transitions.at(idx).to; }
 
-    std::vector<TransIdx> getAllTrans() const {
-        std::vector<TransIdx> res;
-        for (auto it : transitions) {
-            res.push_back(it.first);
-        }
-        return res;
-    }
 
     /**
      * Changes the given transition to point to the given new target
