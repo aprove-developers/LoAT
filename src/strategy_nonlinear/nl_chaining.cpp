@@ -455,52 +455,6 @@ bool ChainingNL::eliminateALocation(ITSProblem &its) {
 }
 
 
-/**
- * Core implementation for chainSimpleLoops
- */
-static bool chainSimpleLoopsAt(ITSProblem &its, LocationIdx node) {
-    debugChain("Chaining simple loops at location " << node);
-    assert(!its.isInitialLocation(node));
-    assert(!its.getTransitionsFromTo(node, node).empty());
-
-    set<TransIdx> successfullyChained;
-    set<TransIdx> transIn = its.getTransitionsTo(node);
-    vector<TransIdx> loops = its.getSimpleLoopsAt(node);
-
-    if (loops.empty()) {
-        return false; // no simple loops to chain with
-    }
-
-    for (TransIdx loop : loops) {
-        for (TransIdx incoming : transIn) {
-            const NonlinearRule &incomingRule = its.getRule(incoming);
-
-            // Do not chain with incoming loops that are themselves self-loops at node
-            // (no matter if they are simple or not)
-            if (incomingRule.getLhsLoc() == node) continue;
-
-            auto optRule = ChainingNL::chainRules(its, incomingRule, its.getRule(loop));
-            if (optRule) {
-                TransIdx added = its.addRule(optRule.get());
-                successfullyChained.insert(incoming);
-                debugChain("  chained incoming rule " << incoming << " with simple loop " << loop << ", resulting in new rule: " << added);
-            }
-        }
-
-        debugChain("  removing simple loop " << loop);
-        its.removeRule(loop);
-    }
-
-    // Remove all incoming transitions that were successfully chained
-    for (TransIdx toRemove : successfullyChained) {
-        debugChain("  removing chained incoming rule " << its.getRule(toRemove));
-        its.removeRule(toRemove);
-    }
-
-    return true;
-}
-
-
 bool ChainingNL::chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx> &acceleratedLoops) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("ChainingNL::chainSimpleLoops");
