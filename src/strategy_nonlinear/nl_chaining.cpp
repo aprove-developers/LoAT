@@ -239,7 +239,8 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
     }
 
     // In case of nonlinear rules, we do not want to remove all rules leading to loc.
-    // Instead, we only removed rules where _all_ rhss lead to loc, but keep the other rules.
+    // Instead, we only remove rules where _all_ rhss lead to loc, but keep the other rules.
+    // If all rules are linear, this is equivalent to just removing all rules.
     auto rhsLeadsToLoc = [&](const RuleRhs &rhs){ return rhs.getLoc() == loc; };
 
     for (TransIdx idx : its.getTransitionsTo(loc)) {

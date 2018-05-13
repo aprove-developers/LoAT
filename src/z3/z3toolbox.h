@@ -49,6 +49,7 @@ namespace Z3Toolbox {
      */
     z3::check_result checkAll(const std::vector<Expression> &list);
 
+    // TODO: Rename to checkConjunection or something better, adapt documentation
     /**
      * Extended version of checkExpressionsSAT that works on a given context and can be used to obtain the model
      * @note the model must have been created with the given context

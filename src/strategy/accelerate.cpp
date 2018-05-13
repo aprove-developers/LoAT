@@ -52,7 +52,7 @@ Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
 
 
 bool Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
-    Timing::Scope(Timing::Preprocess);
+    Timing::Scope(Timing::Preprocess); // FIXME: This is not pre-processing!
     return Preprocess::simplifyRule(varMan, rule);
 }
 
