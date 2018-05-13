@@ -18,7 +18,7 @@
 #include "accelerate.h"
 
 #include "preprocess.h"
-#include "meter/recurrence.h"
+#include "recurrence/recurrence.h"
 #include "meter/metering.h"
 #include "z3/z3toolbox.h"
 
@@ -156,7 +156,7 @@ bool Accelerator::handleMeteringResult(TransIdx ruleIdx, const LinearRule &rule,
                 }
 
                 // Compute new update and cost
-                if (!Recurrence::calcIterated(its, newRule, res.metering)) {
+                if (!Recurrence::iterateRule(its, newRule, res.metering)) {
                     Stats::add(Stats::SelfloopNoUpdate);
 
                     // Maybe the loop is just too difficult for us, so we allow to skip it (in the end)
@@ -233,7 +233,7 @@ optional<LinearRule> Accelerator::accelerate(const LinearRule &rule) const {
             newRule.getGuardMut().push_back(res.integralConstraint.get());
         }
 
-        if (Recurrence::calcIterated(its, newRule, res.metering)) {
+        if (Recurrence::iterateRule(its, newRule, res.metering)) {
             Stats::add(Stats::SelfloopRanked);
             return newRule;
 

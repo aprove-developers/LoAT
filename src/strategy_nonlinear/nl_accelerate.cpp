@@ -18,7 +18,7 @@
 #include "nl_accelerate.h"
 
 //#include "preprocess.h"
-#include "meter/recurrence.h" // for linear rules
+#include "recurrence/recurrence.h" // for linear rules
 #include "meter/metering.h"
 
 #include "z3/z3toolbox.h"
@@ -130,7 +130,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
                     LinearRule linRule = newRule.toLinearRule();
 
                     // Compute iterated update and cost
-                    if (!Recurrence::calcIterated(its, linRule, res.metering)) {
+                    if (!Recurrence::iterateRule(its, linRule, res.metering)) {
                         Stats::add(Stats::SelfloopNoUpdate);
 
                         // Maybe the loop is just too difficult for us, so we allow to skip it (in the end)
