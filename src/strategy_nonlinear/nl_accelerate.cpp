@@ -146,13 +146,9 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
                     newRule = NonlinearRule::fromLinear(linRule);
 
                 } else {
-                    // NOTE: At the moment, we do not know how to compute the correct iterated cost!
-                    // We therefore assume that the cost is >= 1 and then reduce it to just 1.
-                    // To be able to make this assumption, we have to add it to the guard,
-                    // since we usually only assume cost >= 0.
-                    newRule.getGuardMut().push_back(rule.getCost() >= 1);
-
-                    // Compute the cost (assuming every step has cost 1)
+                    // Note: Since the cost is exponential anyway, we do not compute the iterated cost
+                    // (which would be more involved for nonlinear rules).
+                    // Instead, we assume the cost of every step is at least 1 (we added cost >= 1 to the guard)
                     int degree = rule.rhsCount();
                     Expression newCost = GiNaC::pow(degree, res.metering); // d^b
                     newCost = (newCost - 1) / (degree - 1); // (d^b-1)/(d-1), the ceiling is not important (we do lower bounds)
@@ -204,7 +200,23 @@ bool AcceleratorNL::accelerateAndStore(TransIdx ruleIdx, const NonlinearRule &ru
 void AcceleratorNL::run() {
     // Since we might add accelerated loops, we store the list of loops before acceleration
     const vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
-    if (loops.empty()) return;
+    assert(!loops.empty());
+
+
+    // Since we cannot compute iterated costs for nonlinear rules, we have to assume cost >= 1.
+    // This has to hold in all loop iterations, so we add it to the guard before metering!
+    bool addedCost = false;
+    for (TransIdx idx : its.getSimpleLoopsAt(targetLoc)) {
+        NonlinearRule &rule = its.getRuleMut(idx);
+        if (!rule.isLinear()) {
+            addedCost = true;
+            rule.getGuardMut().push_back(rule.getCost() >= 1);
+        }
+    }
+
+    if (addedCost) {
+        proofout << "Added the constraint 'cost >= 1' to the guard of nonlinear rules." << endl;
+    }
 
 
     // Proof output
