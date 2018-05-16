@@ -18,6 +18,7 @@ private:
     boost::optional<GiNaC::exmap> computeIteratedUpdate(UpdateMap inverse_update, std::vector<VariableIndex> order);
     boost::optional<Expression> computeIteratedCosts(GiNaC::exmap iterated_update);
     Transition buildNewTransition(GiNaC::exmap iterated_inverse_update, Expression iterated_costs);
+    bool mapsToInt(Expression e);
 
 private:
     Transition trans;

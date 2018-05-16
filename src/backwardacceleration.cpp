@@ -294,3 +294,42 @@ boost::optional<Transition> BackwardAcceleration::accelerate() {
     }
     return boost::optional<Transition>();
 }
+
+bool BackwardAcceleration::mapsToInt(Expression e) {
+    debugBackwardAcceleration("checking if " << e << " maps to int");
+    auto vars = itrs.getGinacVarList();
+    if (!e.is_polynomial(vars)) {
+        return false;
+    }
+    vector<int> degrees;
+    vector<int> subs;
+    for (Expression x: vars) {
+        degrees.push_back(e.degree(x));
+        subs.push_back(0);
+    }
+    while (true) {
+        GiNaC::exmap g_subs;
+        for (int i = 0; i < degrees.size(); i++) {
+            g_subs.emplace(vars[i], subs[i]);
+        }
+        Expression res = e.subs(g_subs);
+        if (!e.subs(g_subs).info(GiNaC::info_flags::integer)) {
+            debugBackwardAcceleration("it does not for " << g_subs << " where it yields " << res);
+            return false;
+        }
+        bool found_next = false;
+        for (int i = 0; i < degrees.size(); i++) {
+            if (subs[i] == degrees[i]) {
+                subs[i] = 0;
+            } else {
+                subs[i] = subs[i] + 1;
+                found_next = true;
+                break;
+            }
+        }
+        if (!found_next) {
+            debugBackwardAcceleration("it does!");
+            return true;
+        }
+    }
+}
