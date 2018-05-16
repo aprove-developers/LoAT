@@ -148,26 +148,52 @@ boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(vector<
         }
     } while (changed);
     GiNaC::exmap inverse_update;
+    GiNaC::exmap update;
     for (VariableIndex vi: order) {
         if (relevant_vars.find(vi) == relevant_vars.end() || trans.update.find(vi) == trans.update.end()) {
             continue;
         }
         Expression x = itrs.getGinacSymbol(vi);
-        GiNaC::lst xList;
-        xList.append(x);
-        Expression up = trans.update.at(vi);
-        if (!up.isLinear(xList)) {
+        Expression up = trans.update.at(vi).eval();
+        if (!up.degree(x) <= 1) {
             debugBackwardAcceleration("update " << up << " is not linear");
             return boost::optional<GiNaC::exmap>();
         }
         Expression lincoeff = up.coeff(x, 1);
         Expression in_up;
+        // if x does not occur in update(x), then we know how to compute the inverse udpate in some cases...
         if (lincoeff.is_zero()) {
-            in_up = up;
+            // ...e.g., if update(update(x)) = update(x)...
+            if (up.subs(update) == up) {
+                in_up = up;
+            // ...and in some cases also if update(inverse_update(update(x))) = update(x)...
+            } else if (up.subs(inverse_update).subs(update).eval() == up) {
+                // check if update and inverse_update commute for all relevant variables which are smaller than 'vi' according to 'order'
+                // TODO 'order' is a linearization of a partial order and hence we potentially check to many variables here
+                //      if we knew the partial order, then this check could be refined
+                for (VariableIndex smaller: order) {
+                    if (relevant_vars.find(smaller) == relevant_vars.end()) continue;
+                    // we successfully checked all smaller variables
+                    if (smaller == vi) break;
+                    Expression y = itrs.getGinacSymbol(smaller);
+                    if (y.subs(update).subs(inverse_update).eval() != y.subs(inverse_update).subs(update).eval()) {
+                        // the check failed for y
+                        return boost::optional<GiNaC::exmap>();
+                    }
+                }
+                in_up = up.subs(inverse_update).subs(inverse_update);
+            // ...but in all other cases, we have no idea
+            } else {
+                return boost::optional<GiNaC::exmap>();
+            }
+        // we also know how to compute the inverse update if update(x) is linear in x and x's coefficient is a constant
+        // TODO Does GiNaC::info_flags::rational really mean that we have a rational constant?
+        } else if (lincoeff.info(GiNaC::info_flags::rational)) {
+            in_up = ((x / lincoeff) - (up - lincoeff * x) / lincoeff).subs(inverse_update);;
         } else {
-            in_up = (x / lincoeff) - (up - lincoeff * x) / lincoeff;
+            return boost::optional<GiNaC::exmap>();
         }
-        in_up = in_up.subs(inverse_update);
+        update.emplace(x, up);
         inverse_update.emplace(x, in_up);
     }
     debugBackwardAcceleration("successfully computed inverse update " << inverse_update);
