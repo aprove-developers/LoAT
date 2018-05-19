@@ -1,0 +1,204 @@
+#include "backwardacceleration.h"
+
+#include "debug.h"
+#include "z3/z3toolbox.h"
+
+#include "recurrence/dependencyorder.h"
+#include "recurrence/recurrence.h"
+#include "meter/metertools.h"
+
+#include <purrs.hh>
+
+namespace Purrs = Parma_Recurrence_Relation_Solver;
+using namespace std;
+
+BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule)
+        : varMan(varMan), rule(rule)
+{}
+
+
+bool BackwardAcceleration::shouldAccelerate() const {
+    return rule.getCost().isPolynomial();
+}
+
+
+boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<VariableIdx> &order) const {
+    // Gather guard variables
+    set<VariableIdx> relevantVars;
+    for (const Expression &ex : rule.getGuard()) {
+        for (const ExprSymbol &var : ex.getVariables()) {
+            relevantVars.insert(varMan.getVarIdx(var));
+        }
+    }
+
+    // we also need to know the inverse update for every variable that occurs in the update of a relevant variable
+    const UpdateMap &update = rule.getUpdate();
+    bool changed;
+    do {
+        changed = false;
+        for (VariableIdx var : relevantVars) {
+            auto it = update.find(var);
+            if (it != update.end()) {
+                for (const ExprSymbol &rhsVar : it->second.getVariables()) {
+                    changed = relevantVars.insert(varMan.getVarIdx(rhsVar)).second || changed;
+                }
+            }
+        }
+    } while (changed);
+
+    // Compute the inverse update for all relevant variables, in the given order.
+    // Given e.g. x' = x+3, we basically solve for x and get x/x-3 as inverse update.
+    // We have to be careful if other variables appear in the update (e.g. x' = x+y or x' = y).
+
+    const GiNaC::exmap &updateSubs = update.toSubstitution(varMan);
+    GiNaC::exmap inverseUpdate;
+
+    for (VariableIdx var : order) {
+        if (relevantVars.count(var) == 0) {
+            continue;
+        }
+        assert(update.count(var) > 0); // order only contains updated variables
+
+        ExprSymbol x = varMan.getGinacSymbol(var);
+        Expression rhs = update.at(var);
+        Expression inverseRhs;
+
+        if (rhs.degree(x) > 1) {
+            debugBackwardAccel("update " << rhs << " is not linear (in its left-hand side " << x << ")");
+            return {};
+        }
+
+        // Distinguish 3 cases as in the paper, for x := alpha*x + beta.
+        Expression alpha = rhs.coeff(x, 1);
+        Expression beta = rhs.coeff(x, 0);
+        assert(rhs.is_equal(alpha * x + beta));
+
+        // If x does not occur in update(x), then we know how to compute the inverse udpate in some cases...
+        if (alpha.is_zero()) {
+            // ...e.g., if update(update(x)) = update(x)...
+            if (rhs.subs(updateSubs) == rhs) {
+                inverseRhs = rhs;
+
+            // ...and in some cases also if update(inverse_update(update(x))) = update(x)...
+            } else if (rhs.subs(inverseUpdate).subs(updateSubs).is_equal(rhs)) {
+                // inverse update and update must commute for all variables in update(x)
+                for (const ExprSymbol &rhsVar : rhs.getVariables()) {
+                    Expression ui = rhsVar.subs(updateSubs).subs(inverseUpdate);
+                    Expression iu = rhsVar.subs(inverseUpdate).subs(updateSubs);
+                    if (!ui.is_equal(iu)) {
+                        debugBackwardAccel("inverse update " << inverseUpdate << " does not commute for " << rhsVar \
+                                << " (required for the update " << rhs << " of " << x << ")");
+                        return {};
+                    }
+                }
+                inverseRhs = rhs.subs(inverseUpdate).subs(inverseUpdate);
+
+            // ...but in all other cases, we have no idea.
+            } else {
+                debugBackwardAccel("don't know how to inverse update " << rhs << " for variable " << x);
+                return {};
+            }
+
+        // We also know how to compute the inverse update if x's coefficient is a constant
+        } else if (alpha.isRationalConstant()) {
+            inverseRhs = (x - beta.subs(inverseUpdate)) / alpha;
+
+        } else {
+            debugBackwardAccel("update " << rhs << " has non-constant coefficient for " << x);
+            return {};
+        }
+
+        // Computation of inverse update was successful for x
+        inverseUpdate[x] = inverseRhs;
+    }
+
+    debugBackwardAccel("successfully computed inverse update " << inverseUpdate);
+    return inverseUpdate;
+}
+
+
+bool BackwardAcceleration::checkGuardImplication(const GiNaC::exmap &inverseUpdate) const {
+    Z3Context context;
+    Z3Solver solver(context);
+
+    z3::params params(context);
+    params.set(":timeout", Z3_CHECK_TIMEOUT);
+    solver.set(params);
+
+    // remove constraints that are irrelevant for the loop's execution
+    GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {rule.getUpdate()});
+
+    // build the implication by applying the inverse update to every guard constraint
+    vector<z3::expr> lhss, rhss;
+    for (const Expression &ex : reducedGuard) {
+        lhss.push_back(GinacToZ3::convert(ex, context));
+        rhss.push_back(GinacToZ3::convert(ex.subs(inverseUpdate), context));
+    }
+    z3::expr lhs = Z3Toolbox::concat(context, lhss, Z3Toolbox::ConcatAnd);
+    z3::expr rhs = Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd);
+
+    // call z3
+    solver.add(!rhs && lhs);
+    return (solver.check() == z3::unsat);
+}
+
+
+LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedUpdate,
+                                                      const Expression &iteratedCost,
+                                                      const ExprSymbol &N) const
+{
+    GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
+
+    // Extend the old guard by the updated constraints
+    // and require that the number of iterations N is positive
+    GuardList newGuard = rule.getGuard();
+    newGuard.push_back(N > 0);
+    for (const Expression &ex : rule.getGuard()) {
+        newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
+    }
+
+    LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(), iteratedUpdate);
+    debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
+    return res;
+}
+
+
+boost::optional<LinearRule> BackwardAcceleration::run() {
+    if (!shouldAccelerate()) {
+        debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
+        return {};
+    }
+
+    auto order = DependencyOrder::findOrder(varMan, rule.getUpdate());
+    if (!order) {
+        debugBackwardAccel("failed to compute dependency order for rule " << rule);
+        return {};
+    }
+
+    auto inverseUpdate = computeInverseUpdate(order.get());
+    if (!inverseUpdate) {
+        return {};
+    }
+
+    if (!checkGuardImplication(inverseUpdate.get())) {
+        debugBackwardAccel("Failed to check guard implication");
+        return {};
+    }
+
+    // compute the iterated update and cost, with a fresh variable N as iteration step
+    ExprSymbol N = varMan.getGinacSymbol(varMan.addFreshTemporaryVariable("n"));
+
+    UpdateMap iteratedUpdate = rule.getUpdate();
+    Expression iteratedCost = rule.getCost();
+    if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N)) {
+        return {};
+    }
+
+    return buildAcceleratedRule(iteratedUpdate, iteratedCost, N);
+}
+
+
+boost::optional<LinearRule> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
+    BackwardAcceleration ba(varMan, rule);
+    return ba.run();
+}

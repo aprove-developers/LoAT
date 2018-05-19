@@ -96,6 +96,9 @@
 //debugging for Farkas processor
 #define DEBUG_FARKAS
 
+//debugging for the backward acceleration technique
+#define DEBUG_BACKWARD_ACCELERATION
+
 //debugging for final infinity check
 #define DEBUG_INFINITY
 
@@ -224,6 +227,13 @@
 #else
 #define debugFarkas(output) (void(0))
 #endif
+
+#ifdef DEBUG_BACKWARD_ACCELERATION
+#define debugBackwardAccel(output) do { std::cout << COLOR_HIGHLIGHT << "[backward accel] " << output << COLOR_NONE << std::endl; } while(0)
+#else
+#define debugBackwardAccel(output) (void(0))
+#endif
+
 
 #ifdef DEBUG_INFINITY
 #define debugInfinity(output) do { std::cout << COLOR_DEBUG << "[infinity] " << output << COLOR_NONE << std::endl; } while(0)

@@ -133,6 +133,11 @@ bool Expression::isPolynomial() const {
 }
 
 
+bool Expression::isRationalConstant() const {
+    return this->info(GiNaC::info_flags::rational);
+}
+
+
 bool Expression::isProperRational() const {
     return this->info(GiNaC::info_flags::rational)
            && !this->info(GiNaC::info_flags::integer);
