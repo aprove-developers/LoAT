@@ -244,7 +244,7 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
         // (the idea is that subs takes all possible combinations of 0,...,degree[i]+1 for every entry i)
         bool foundNext = false;
         for (int i = 0; i < degrees.size(); i++) {
-            if (subs[i] == degrees[i]) {
+            if (subs[i] >= degrees[i]+1) {
                 subs[i] = 0;
             } else {
                 subs[i] += 1;
