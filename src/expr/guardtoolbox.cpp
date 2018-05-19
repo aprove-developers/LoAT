@@ -210,6 +210,57 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
 }
 
 
+bool GuardToolbox::mapsToInt(const Expression &e) {
+    debugBackwardAccel("mapsToInt: checking if " << e << " maps to int");
+    assert(e.isPolynomial());
+
+    // collect variables from e into a vector
+    vector<ExprSymbol> vars;
+    for (ExprSymbol sym : e.getVariables()) {
+        vars.push_back(sym);
+    }
+
+    // degrees, subs share indices with vars
+    vector<int> degrees;
+    vector<int> subs;
+    for (const ExprSymbol &x: vars) {
+        degrees.push_back(e.degree(x));
+        subs.push_back(0);
+    }
+
+    while (true) {
+        // substitute every variable x_i by the integer subs[i] and check if the result is an integer
+        GiNaC::exmap currSubs;
+        for (int i = 0; i < degrees.size(); i++) {
+            currSubs.emplace(vars[i], subs[i]);
+        }
+        Expression res = e.subs(currSubs);
+        if (!res.isIntegerConstant()) {
+            debugOther("mapsToInt: " << e << " does not map to an integer for " << currSubs << " where it yields " << res);
+            return false;
+        }
+
+        // increase subs (lexicographically) if possible
+        // (the idea is that subs takes all possible combinations of 0,...,degree[i]+1 for every entry i)
+        bool foundNext = false;
+        for (int i = 0; i < degrees.size(); i++) {
+            if (subs[i] == degrees[i]) {
+                subs[i] = 0;
+            } else {
+                subs[i] += 1;
+                foundNext = true;
+                break;
+            }
+        }
+
+        if (!foundNext) {
+            debugBackwardAccel("mapsToInt: it does!");
+            return true;
+        }
+    }
+}
+
+
 GiNaC::exmap GuardToolbox::composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g) {
     GiNaC::exmap substitution;
 

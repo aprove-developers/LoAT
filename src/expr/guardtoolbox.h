@@ -117,6 +117,15 @@ namespace GuardToolbox {
 
 
     /**
+     * Given a polynomial expression, checks if the given term always evaluates
+     * to an integer if all occurring variables are instantiated by integer values.
+     * @note expensive for large polynomials (roughly d^n for degree d and n variables)
+     * @note the given expression must be a polynomial!
+     */
+    bool mapsToInt(const Expression &e);
+
+
+    /**
      * Compose two substitutions, i.e. compute f ∘ g ("f after g")
      */
     GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
