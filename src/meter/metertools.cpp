@@ -130,6 +130,8 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
         solver.add(ex.toZ3(context));
     }
 
+    // TODO: Set timeout for the Z3 solver (see backwardaccel branch)
+
     for (Expression ex : guard) {
         bool add = false;
         bool forceAdd = false;

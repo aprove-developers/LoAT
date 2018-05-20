@@ -24,6 +24,7 @@
 class VariableManager;
 
 
+// FIXME: better switch to unsigned long?
 // some typedefs for clarity
 using LocationIdx = int;
 using VariableIdx = int;

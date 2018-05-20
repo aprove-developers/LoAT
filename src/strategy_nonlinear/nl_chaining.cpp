@@ -79,6 +79,7 @@ static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCos
 }
 
 
+// FIXME: Rename free variables!
 optional<NonlinearRule> ChainingNL::chainRulesOnRhs(const VarMan &varMan,
                                                     const NonlinearRule &first, int firstRhsIdx,
                                                     const NonlinearRule &second)

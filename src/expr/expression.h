@@ -114,7 +114,8 @@ public:
     // TODO: replace by isLinear and isLinearWithin(ExprSymbolSet)
     // TODO: This is probably cleaner than the getGinacVarList() everywhere...
     /**
-     * Returns true iff this expression is linear in the given variables
+     * Returns true iff this expression is linear
+     * (e.g. 1/2*x+y is linear, but x^2 or x*y are not considered linear)
      */
     bool isLinear(const GiNaC::lst &vars) const;
 

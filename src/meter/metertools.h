@@ -67,6 +67,7 @@ namespace MeteringToolbox {
      * A constraint is relevant if
      * (1) it has a temporary variable, or
      * (2) it has an updated variable and there is at least one update such that the constraint is not implied after applying the update
+     *
      * (e.g. in n >= 0, i >= 0, i < n with i=i+1, the constraints n >= 0 and i >= 0 are not relevant.
      * The former only contains n, which is not updated. For the latter, note that it reads i+1 >= 0
      * after applying the update. If the guard holds (so i >= 0), then i+1 >= 0 also holds, so it is not relevant.)
