@@ -6,11 +6,14 @@
 #include "recurrence/dependencyorder.h"
 #include "recurrence/recurrence.h"
 #include "meter/metertools.h"
+#include "expr/guardtoolbox.h"
+#include "expr/relation.h"
 
 #include <purrs.hh>
 
 namespace Purrs = Parma_Recurrence_Relation_Solver;
 using namespace std;
+using boost::optional;
 
 BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule)
         : varMan(varMan), rule(rule)
@@ -22,7 +25,7 @@ bool BackwardAcceleration::shouldAccelerate() const {
 }
 
 
-boost::optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<VariableIdx> &order) const {
+optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<VariableIdx> &order) const {
     // Gather guard variables
     set<VariableIdx> relevantVars;
     for (const Expression &ex : rule.getGuard()) {
@@ -163,11 +166,91 @@ LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedU
 }
 
 
-boost::optional<LinearRule> BackwardAcceleration::run() {
+// TODO: Refactor this to be more general, can then also be used for free var instantiation (see metertools)
+// TODO: A general method can return a list of <Expression,BoundType> with BoundType = { Lower, Upper, Equality }.
+optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
+    // First check if there is an equality constraint (we can then ignore all other upper bounds)
+    for (const Expression &ex : guard) {
+        if (Relation::isEquality(ex) && ex.has(N)) {
+            Expression term = ex.lhs() - ex.rhs();
+            if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::LinearCoefficients)) {
+                debugBackwardAccel("unable to compute upperbound from equality " << ex);
+                return {};
+            }
+            if (!GuardToolbox::mapsToInt(term)) {
+                debugBackwardAccel("upperbound " << term << " (from " << ex << ") does not map to int");
+                return {};
+            }
+            // One equality is enough, as all other bounds must also satisfy this equality
+            return vector<Expression>({term});
+        }
+    }
+
+    // Otherwise, collect all upper bounds
+    vector<Expression> bounds;
+    for (const Expression &ex : guard) {
+        if (Relation::isEquality(ex) || !ex.has(N)) continue;
+
+        Expression term = Relation::toLessEq(ex);
+        term = term.lhs() - term.rhs();
+        if (term.degree(N) != 1) continue;
+
+        // ignore lower bounds (terms of the form -N <= 0)
+        if (term.coeff(N, 1).info(GiNaC::info_flags::negative)) {
+            continue;
+        }
+
+        // compute the upper bound represented by N and check that it is integral
+        if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::LinearCoefficients)) {
+            debugBackwardAccel("unable to compute upperbound from " << ex);
+            return {};
+        }
+        if (!GuardToolbox::mapsToInt(term)) {
+            debugBackwardAccel("upperbound " << term << " (from " << ex << ") does not map to int");
+            return {};
+        }
+        bounds.push_back(term);
+    }
+
+    if (bounds.empty()) {
+        debugBackwardAccel("warning: no upperbounds found, not instantiating " << N);
+        return {};
+    }
+
+    return bounds;
+}
+
+
+vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, const LinearRule &rule) {
+    // gather all upper bounds (if possible)
+    auto bounds = computeUpperbounds(N, rule.getGuard());
+
+    // avoid rule explosion (by not instantiating N if there are too many bounds)
+    if (!bounds || bounds.get().size() > BACKWARD_ACCEL_MAXBOUNDS) {
+        return {rule};
+    }
+
+    // create one rule for each upper bound, by instantiating N with this bound
+    vector<LinearRule> res;
+    for (const Expression &bound : bounds.get()) {
+        GiNaC::exmap subs;
+        subs[N] = bound;
+
+        LinearRule instantiated = rule;
+        instantiated.applyTempVarSubstitution(subs);
+        res.push_back(instantiated);
+        debugBackwardAccel("instantiation " << subs << " yielded " << instantiated);
+    }
+    return res;
+}
+
+
+optional<vector<LinearRule>> BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
         return {};
     }
+    debugBackwardAccel("Trying to accelerate rule " << rule);
 
     auto order = DependencyOrder::findOrder(varMan, rule.getUpdate());
     if (!order) {
@@ -177,6 +260,7 @@ boost::optional<LinearRule> BackwardAcceleration::run() {
 
     auto inverseUpdate = computeInverseUpdate(order.get());
     if (!inverseUpdate) {
+        debugBackwardAccel("Failed to compute inverse update");
         return {};
     }
 
@@ -191,14 +275,17 @@ boost::optional<LinearRule> BackwardAcceleration::run() {
     UpdateMap iteratedUpdate = rule.getUpdate();
     Expression iteratedCost = rule.getCost();
     if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N)) {
+        debugBackwardAccel("Failed to compute iterated cost/update");
         return {};
     }
 
-    return buildAcceleratedRule(iteratedUpdate, iteratedCost, N);
+    // compute the resulting rule and try to simplify it by instantiating N
+    LinearRule accelerated = buildAcceleratedRule(iteratedUpdate, iteratedCost, N);
+    return replaceByUpperbounds(N, accelerated);
 }
 
 
-boost::optional<LinearRule> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
+optional<vector<LinearRule>> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
     BackwardAcceleration ba(varMan, rule);
     return ba.run();
 }
