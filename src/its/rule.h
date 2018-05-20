@@ -136,6 +136,11 @@ public:
     // checks if lhs location coincides with the rhs location
     bool isSimpleLoop() const { return getLhsLoc() == getRhsLoc(); }
 
+    // applies the given substitution to guard, cost, and the update's rhss (not to the update's lhss!)
+    // NOTE: This method is sound as long as only temporary variables are substituted (which is not checked!)
+    // NOTE: Otherwise, results can be incorrect if an updated variable is substituted.
+    void applyTempVarSubstitution(const GiNaC::exmap &subs);
+
 private:
     void dumpToStream(std::ostream &s) const override;
 };

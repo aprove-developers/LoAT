@@ -131,6 +131,12 @@
 #define FREEVAR_INSTANTIATE_MAXBOUNDS 3
 
 /*
+ * The maximum number of rules that result from backward acceleration by replacing the introduced
+ * temp var N by its upper bounds. If more upper bounds are found, N is not replaced.
+ */
+#define BACKWARD_ACCEL_MAXBOUNDS 5
+
+/*
  * the max exponent n up to which a power of the form expr^n is rewritten as multiplication.
  * (z3 does not support exponents well, while multiplication works with bit-blasting)
  * NOTE: increasing this might make z3 run extremely long on certain examples

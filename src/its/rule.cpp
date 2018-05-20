@@ -54,6 +54,16 @@ LinearRule LinearRule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
     return LinearRule(lhsLoc, {}, Expression(0), rhsLoc, {});
 }
 
+void LinearRule::applyTempVarSubstitution(const GiNaC::exmap &subs) {
+    this->getCostMut().applySubs(subs);
+    for (Expression &ex : this->getGuardMut()) {
+        ex.applySubs(subs);
+    }
+    for (auto &it : this->getUpdateMut()) {
+        it.second.applySubs(subs);
+    }
+}
+
 
 NonlinearRule::NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     assert(!rhss.empty());

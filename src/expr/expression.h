@@ -130,6 +130,11 @@ public:
     bool isPolynomial() const;
 
     /**
+     * Returns true iff this expression is an integer value (and thus a constant).
+     */
+    bool isIntegerConstant() const;
+
+    /**
      * Returns true iff this expression is a rational number (and thus a constant).
      */
     bool isRationalConstant() const;
