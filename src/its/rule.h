@@ -24,28 +24,31 @@
 #include "types.h"
 
 
-// TODO: Create abstract base class Rule?
-// TODO: LinearRule can implement all methods of NonlinearRule, with only minor performance impact.
 
-
-
-struct RuleLhs {
+// TODO: turn into a class
+class RuleLhs {
     LocationIdx loc;
     GuardList guard;
     Expression cost;
 
-    RuleLhs() {}
-    RuleLhs(LocationIdx loc, GuardList guard); // cost 1
-    RuleLhs(LocationIdx loc, GuardList guard, Expression cost);
+public:
+    RuleLhs(LocationIdx loc, GuardList guard) : RuleLhs(loc, guard, Expression(1)) {}
+    RuleLhs(LocationIdx loc, GuardList guard, Expression cost) : loc(loc), guard(guard), cost(cost) {}
+
+    LocationIdx getLoc() const { return loc; }
+    const GuardList& getGuard() const { return guard; }
+    GuardList& getGuardMut() { return guard; }
+    const Expression& getCost() const { return cost; }
+    Expression& getCostMut() { return cost; }
 };
+
 
 class RuleRhs {
     LocationIdx loc;
     UpdateMap update;
 
 public:
-    RuleRhs() {}
-    RuleRhs(LocationIdx loc, UpdateMap update);
+    RuleRhs(LocationIdx loc, UpdateMap update) : loc(loc), update(update) {}
 
     LocationIdx getLoc() const { return loc; }
     const UpdateMap& getUpdate() const { return update; }
@@ -53,134 +56,49 @@ public:
 };
 
 
-// TODO: Make lhs, rhs private and add getLhs() or only getLhsLoc(), getGuard(), getCost(), ...
-// TODO: NonlinearRule might need getUpdate(idx), getRhsLoc(idx) or getRhss()
+class LinearRule;
 
 /**
- * Interface for a rule, generalizes linear and nonlinear rules to a common interface.
- * One could also use templates (for more performance), but this is easier to read and allows proper types.
- * TODO: Document how this is used (not yet sure...)
+ * A general rule, consisting of a left-hand side with location, guard and cost
+ * and several (but at least one) right-hand sides, each with location and update.
+ *
+ * The lhs/rhs locations must not (and cannot) be changed, as they are tied to the graph in ITSProblem.
+ * The content of the rule (guard/cost/update) may be modified (e.g. via getGuardMut()).
  */
-class AbstractRule {
-public:
-    // lhs
-    virtual LocationIdx getLhsLoc() const = 0;
-    virtual const GuardList& getGuard() const = 0;
-    virtual const Expression& getCost() const = 0;
-
-    // rhs
-    virtual const RuleRhs* rhsBegin() const = 0;
-    virtual const RuleRhs* rhsEnd() const = 0;
-    virtual size_t rhsCount() const = 0;
-
-    // mutable access
-    virtual GuardList& getGuardMut() = 0;
-    virtual Expression& getCostMut() = 0;
-    virtual RuleRhs* rhsBegin() = 0;
-    virtual RuleRhs* rhsEnd() = 0;
-
-    // output
-    friend std::ostream& operator<<(std::ostream &s, const AbstractRule &rule) {
-        rule.dumpToStream(s);
-        return s;
-    }
-
-private:
-    // to implement operator<< for AbstractRule
-    virtual void dumpToStream(std::ostream &s) const = 0;
-};
-
-
-/**
- * A class to represent a linear rule (one lhs, one rhs).
- * The lhs/rhs locations cannot be changed (since they are tied to the graph in ITSProblem).
- * Guard/cost/update may be modified.
- */
-class LinearRule : public AbstractRule {
-private:
-    RuleLhs lhs;
-    RuleRhs rhs;
-
-public:
-    LinearRule() {}; // TODO: this is bad, disallow default ctor
-    LinearRule(RuleLhs lhs, RuleRhs rhs);
-    LinearRule(LocationIdx lhsLoc, GuardList guard, LocationIdx rhsLoc, UpdateMap update); // cost 1
-    LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
-
-    // query lhs data
-    LocationIdx getLhsLoc() const override { return lhs.loc; }
-    const GuardList& getGuard() const override { return lhs.guard; }
-    const Expression& getCost() const override { return lhs.cost; }
-
-    // lhs mutation
-    GuardList& getGuardMut() override { return lhs.guard; }
-    Expression& getCostMut() override { return lhs.cost; }
-
-    // iteration over right-hand sides
-    const RuleRhs* rhsBegin() const override { return &rhs; }
-    const RuleRhs* rhsEnd() const override { return &rhs + 1; }
-    RuleRhs* rhsBegin() override { return &rhs; }
-    RuleRhs* rhsEnd() override { return &rhs + 1; }
-    size_t rhsCount() const override { return 1; }
-
-    // special methods for linear rules
-    LocationIdx getRhsLoc() const { return rhs.getLoc(); }
-    const UpdateMap& getUpdate() const { return rhs.getUpdate(); }
-    UpdateMap& getUpdateMut() { return rhs.getUpdateMut(); }
-
-    // some shorthands
-    LinearRule withNewRhsLoc(LocationIdx rhsLoc) const;
-    static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc); // empty guard/update, cost 0
-    bool isDummyRule() const; // empty guard/update, cost 0
-
-    // checks if lhs location coincides with the rhs location
-    bool isSimpleLoop() const { return getLhsLoc() == getRhsLoc(); }
-
-    // applies the given substitution to guard, cost, and the update's rhss (not to the update's lhss!)
-    // NOTE: This method is sound as long as only temporary variables are substituted (which is not checked!)
-    // NOTE: Otherwise, results can be incorrect if an updated variable is substituted.
-    void applyTempVarSubstitution(const GiNaC::exmap &subs);
-
-private:
-    void dumpToStream(std::ostream &s) const override;
-};
-
-
-class NonlinearRule : public AbstractRule {
+class Rule {
 private:
     RuleLhs lhs;
     std::vector<RuleRhs> rhss;
 
 public:
-    NonlinearRule() {} // TODO: this is bad, disallow default ctor
-    NonlinearRule(RuleLhs lhs, std::vector<RuleRhs> rhss);
+    Rule(RuleLhs lhs, std::vector<RuleRhs> rhss);
 
-    // constructs a linear NonlinearRule
-    NonlinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
-    NonlinearRule(RuleLhs lhs, RuleRhs rhs);
-    static NonlinearRule fromLinear(const LinearRule &linRule);
+    // constructors for linear rules
+    Rule(RuleLhs lhs, RuleRhs rhs);
+    Rule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
 
     // constructs an empty rule (guard/update empty, cost 0)
-    static NonlinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
+    static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
+    bool isDummyRule() const;
 
     const RuleLhs& getLhs() const { return lhs; }
     const std::vector<RuleRhs>& getRhss() const { return rhss; }
 
     // query lhs data
-    LocationIdx getLhsLoc() const override { return lhs.loc; }
-    const GuardList& getGuard() const override { return lhs.guard; }
-    const Expression& getCost() const override { return lhs.cost; }
+    LocationIdx getLhsLoc() const { return lhs.getLoc(); }
+    const GuardList& getGuard() const { return lhs.getGuard(); }
+    const Expression& getCost() const { return lhs.getCost(); }
 
     // lhs mutation
-    GuardList& getGuardMut() { return lhs.guard; }
-    Expression& getCostMut() { return lhs.cost; }
+    GuardList& getGuardMut() { return lhs.getGuardMut(); }
+    Expression& getCostMut() { return lhs.getCostMut(); }
 
     // iteration over right-hand sides
-    const RuleRhs* rhsBegin() const override { return &rhss.front(); }
-    const RuleRhs* rhsEnd() const override { return &rhss.back()+1; }
-    RuleRhs* rhsBegin() override { return &rhss.front(); }
-    RuleRhs* rhsEnd() override { return &rhss.back()+1; }
-    size_t rhsCount() const override { return rhss.size(); }
+    const RuleRhs* rhsBegin() const { return &rhss.front(); }
+    const RuleRhs* rhsEnd() const { return &rhss.back()+1; }
+    RuleRhs* rhsBegin() { return &rhss.front(); }
+    RuleRhs* rhsEnd() { return &rhss.back()+1; }
+    size_t rhsCount() const { return rhss.size(); }
 
     // special methods for nonlinear rules (idx is an index to rhss)
     LocationIdx getRhsLoc(int idx) const { return rhss[idx].getLoc(); }
@@ -189,7 +107,7 @@ public:
 
     // conversion to linear rule
     bool isLinear() const;
-    LinearRule toLinearRule() const;
+    LinearRule toLinear() const;
 
     // checks if lhs location coincides with _all_ rhs locations
     bool isSimpleLoop() const;
@@ -197,9 +115,45 @@ public:
     // checks if lhs location coincides with at least _one_ rhs location
     bool hasSelfLoop() const; // TODO: is this ever used?
 
-private:
-    void dumpToStream(std::ostream &s) const override;
+    // applies the given substitution to guard, cost, and the update's rhss (not to the update's lhss!)
+    // Note: Result may be incorrect if an updated variable is updated (which is not checked!)
+    // Note: It is always safe if only temporary variables are substituted.
+    void applySubstitution(const GiNaC::exmap &subs);
+
+    // Creates a new rule that only leads to the given location, the updates are cleared, guard/cost are kept
+    LinearRule replaceRhssBySink(LocationIdx sink) const;
 };
+
+
+/**
+ * A linear rule is a rule with exactly one right-hand side.
+ *
+ * To simplify the code, linear rules are just a subclass of Rule,
+ * so they use the same data representation (a vector of right-hand sides).
+ * The result is that most of the code can work with the more general Rule,
+ * at the cost of a minor performance loss (which is probably not critical).
+ *
+ * This class is only used to have more expressive function signatures.
+ * If performance is critical, all uses of LinearRule can be replaced by Rule
+ * together with assertions that the Rule is in fact linear.
+ */
+class LinearRule : public Rule {
+public:
+    LinearRule(RuleLhs lhs, RuleRhs rhs) : Rule(lhs, rhs) {}
+    LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
+            : Rule(lhsLoc, guard, cost, rhsLoc, update) {}
+
+    // special shorthands for linear rules, overwriting the general ones
+    LocationIdx getRhsLoc() const { return Rule::getRhsLoc(0); }
+    const UpdateMap& getUpdate() const { return Rule::getUpdate(0); }
+    UpdateMap& getUpdateMut() { return Rule::getUpdateMut(0); }
+};
+
+
+/**
+ * For debugging output (not very readable)
+ */
+std::ostream& operator<<(std::ostream &s, const Rule &rule);
 
 
 #endif // RULE_H

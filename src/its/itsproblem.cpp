@@ -23,73 +23,77 @@ using namespace std;
 using boost::optional;
 
 
-template<typename Rule>
-bool AbstractITSProblem<Rule>::isEmpty() const {
+
+bool ITSProblem::isEmpty() const {
     return rules.empty();
 }
 
-template<typename Rule>
-LocationIdx AbstractITSProblem<Rule>::getInitialLocation() const {
-    return data.initialLocation;
+bool ITSProblem::isLinear() const {
+    for (const auto &it : rules) {
+        if (!it.second.isLinear()) {
+            return false;
+        }
+    }
+    return true;
 }
 
-template<typename Rule>
-bool AbstractITSProblem<Rule>::isInitialLocation(LocationIdx loc) const {
-    return loc == data.initialLocation;
+LocationIdx ITSProblem::getInitialLocation() const {
+    return initialLocation;
 }
 
-template<typename Rule>
-void AbstractITSProblem<Rule>::setInitialLocation(LocationIdx loc) {
-    data.initialLocation = loc;
+bool ITSProblem::isInitialLocation(LocationIdx loc) const {
+    return loc == initialLocation;
 }
 
-template<typename Rule>
-const Rule &AbstractITSProblem<Rule>::getRule(TransIdx transition) const {
+void ITSProblem::setInitialLocation(LocationIdx loc) {
+    initialLocation = loc;
+}
+
+const Rule& ITSProblem::getRule(TransIdx transition) const {
     return rules.at(transition);
 }
 
-template<typename Rule>
-Rule &AbstractITSProblem<Rule>::getRuleMut(TransIdx transition) {
+Rule& ITSProblem::getRuleMut(TransIdx transition) {
     return rules.at(transition);
 }
 
-template<typename Rule>
-std::set<TransIdx> AbstractITSProblem<Rule>::getTransitionsFrom(LocationIdx loc) const {
+LinearRule ITSProblem::getLinearRule(TransIdx transition) const {
+    return rules.at(transition).toLinear();
+}
+
+const std::set<LocationIdx>& ITSProblem::getTransitionTargets(TransIdx idx) const {
+    return graph.getTransTargets(idx);
+}
+
+std::set<TransIdx> ITSProblem::getTransitionsFrom(LocationIdx loc) const {
     return graph.getTransFrom(loc);
 }
 
-template<typename Rule>
-std::vector<TransIdx> AbstractITSProblem<Rule>::getTransitionsFromTo(LocationIdx from, LocationIdx to) const {
+std::vector<TransIdx> ITSProblem::getTransitionsFromTo(LocationIdx from, LocationIdx to) const {
     return graph.getTransFromTo(from, to);
 }
 
-template<typename Rule>
-std::set<TransIdx> AbstractITSProblem<Rule>::getTransitionsTo(LocationIdx loc) const {
+std::set<TransIdx> ITSProblem::getTransitionsTo(LocationIdx loc) const {
     return graph.getTransTo(loc);
 }
 
-template<typename Rule>
-std::vector<TransIdx> AbstractITSProblem<Rule>::getAllTransitions() const {
+std::vector<TransIdx> ITSProblem::getAllTransitions() const {
     return graph.getAllTrans();
 }
 
-template<typename Rule>
-bool AbstractITSProblem<Rule>::hasTransitionsFrom(LocationIdx loc) const {
+bool ITSProblem::hasTransitionsFrom(LocationIdx loc) const {
     return graph.hasTransFrom(loc);
 }
 
-template<typename Rule>
-bool AbstractITSProblem<Rule>::hasTransitionsFromTo(LocationIdx from, LocationIdx to) const {
+bool ITSProblem::hasTransitionsFromTo(LocationIdx from, LocationIdx to) const {
     return graph.hasTransFromTo(from, to);
 }
 
-template<typename Rule>
-bool AbstractITSProblem<Rule>::hasTransitionsTo(LocationIdx loc) const {
+bool ITSProblem::hasTransitionsTo(LocationIdx loc) const {
     return graph.hasTransTo(loc);
 }
 
-template<typename Rule>
-std::vector<TransIdx> AbstractITSProblem<Rule>::getSimpleLoopsAt(LocationIdx loc) const {
+std::vector<TransIdx> ITSProblem::getSimpleLoopsAt(LocationIdx loc) const {
     vector<TransIdx> res;
     for (TransIdx rule : getTransitionsFromTo(loc, loc)) {
         if (getRule(rule).isSimpleLoop()) {
@@ -99,23 +103,19 @@ std::vector<TransIdx> AbstractITSProblem<Rule>::getSimpleLoopsAt(LocationIdx loc
     return res;
 }
 
-template<typename Rule>
-std::set<LocationIdx> AbstractITSProblem<Rule>::getSuccessorLocations(LocationIdx loc) const {
+std::set<LocationIdx> ITSProblem::getSuccessorLocations(LocationIdx loc) const {
     return graph.getSuccessors(loc);
 }
 
-template<typename Rule>
-std::set<LocationIdx> AbstractITSProblem<Rule>::getPredecessorLocations(LocationIdx loc) const {
+std::set<LocationIdx> ITSProblem::getPredecessorLocations(LocationIdx loc) const {
     return graph.getPredecessors(loc);
 }
 
-template<typename Rule>
-void AbstractITSProblem<Rule>::removeRule(TransIdx transition) {
+void ITSProblem::removeRule(TransIdx transition) {
     graph.removeTrans(transition);
 }
 
-template<typename Rule>
-TransIdx AbstractITSProblem<Rule>::addRule(Rule rule) {
+TransIdx ITSProblem::addRule(Rule rule) {
     // gather target locations
     set<LocationIdx> rhsLocs;
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
@@ -128,54 +128,48 @@ TransIdx AbstractITSProblem<Rule>::addRule(Rule rule) {
     return idx;
 }
 
-template<typename Rule>
-LocationIdx AbstractITSProblem<Rule>::addLocation() {
-    LocationIdx loc = data.nextUnusedLocation++;
-    data.locations.insert(loc);
+LocationIdx ITSProblem::addLocation() {
+    LocationIdx loc = nextUnusedLocation++;
+    locations.insert(loc);
     return loc;
 }
 
-template<typename Rule>
-LocationIdx AbstractITSProblem<Rule>::addNamedLocation(std::string name) {
+LocationIdx ITSProblem::addNamedLocation(std::string name) {
     LocationIdx loc = addLocation();
-    data.locationNames.emplace(loc, name);
+    locationNames.emplace(loc, name);
     return loc;
 }
 
-template<typename Rule>
-set<LocationIdx> AbstractITSProblem<Rule>::getLocations() const {
-    return data.locations;
+set<LocationIdx> ITSProblem::getLocations() const {
+    return locations;
 }
 
-template<typename Rule>
-optional<string> AbstractITSProblem<Rule>::getLocationName(LocationIdx idx) const {
-    auto it = data.locationNames.find(idx);
-    if (it != data.locationNames.end()) {
+optional<string> ITSProblem::getLocationName(LocationIdx idx) const {
+    auto it = locationNames.find(idx);
+    if (it != locationNames.end()) {
         return it->second;
     }
     return {};
 }
 
-template<typename Rule>
-void AbstractITSProblem<Rule>::removeOnlyLocation(LocationIdx loc) {
+void ITSProblem::removeOnlyLocation(LocationIdx loc) {
     // The initial location must not be removed
-    assert(loc != data.initialLocation);
+    assert(loc != initialLocation);
 
-    data.locations.erase(loc);
-    data.locationNames.erase(loc);
+    locations.erase(loc);
+    locationNames.erase(loc);
     set<TransIdx> removed = graph.removeNode(loc);
 
     // Check that all rules from/to loc were removed before
     assert(removed.empty());
 }
 
-template<typename Rule>
-void AbstractITSProblem<Rule>::removeLocationAndRules(LocationIdx loc) {
+void ITSProblem::removeLocationAndRules(LocationIdx loc) {
     // The initial location must not be removed
-    assert(loc != data.initialLocation);
+    assert(loc != initialLocation);
 
-    data.locations.erase(loc);
-    data.locationNames.erase(loc);
+    locations.erase(loc);
+    locationNames.erase(loc);
     set<TransIdx> removed = graph.removeNode(loc);
 
     // Also remove all rules from/to loc
@@ -184,53 +178,6 @@ void AbstractITSProblem<Rule>::removeLocationAndRules(LocationIdx loc) {
     }
 }
 
-template<typename Rule>
-void AbstractITSProblem<Rule>::print(std::ostream &s) const {
-    ITSExport<Rule>::printDebug(*this, s);
-}
-
-
-// ###################
-// ## Linear        ##
-// ###################
-
-LocationIdx LinearITSProblem::getTransitionTarget(TransIdx idx) const {
-    assert(graph.getTransTargets(idx).size() == 1);
-    return *graph.getTransTargets(idx).begin();
-}
-
-
-// ###################
-// ## Nonlinear     ##
-// ###################
-
-const std::set<LocationIdx> &ITSProblem::getTransitionTargets(TransIdx idx) const {
-    return graph.getTransTargets(idx);
-}
-
-bool ITSProblem::isLinear() const {
-    for (const auto &it : rules) {
-        if (!it.second.isLinear()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-LinearITSProblem ITSProblem::toLinearProblem() const {
-    assert(isLinear());
-
-    // Initialize the linear ITS with our variables
-    const VariableManager &varMan = *this;
-    LinearITSProblem res(varMan);
-
-    // Copy all other members
-    res.data = data;
-    res.graph = graph;
-
-    // Convert rules
-    for (const auto &it : rules) {
-        res.rules.emplace(it.first, it.second.toLinearRule());
-    }
-    return res;
+void ITSProblem::print(std::ostream &s) const {
+    ITSExport::printDebug(*this, s);
 }

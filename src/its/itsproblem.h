@@ -25,47 +25,27 @@
 #include <string>
 #include <ostream>
 
-#include <boost/optional.hpp>
-
 #include "graph/hypergraph.h"
 #include "util/exceptions.h"
+#include "util/option.h"
 
 #include "rule.h"
 #include "variablemanager.h"
 
 
-// Note: LocationData cannot be declared within AbstractITSProblem, since it would then
-// be templated over Rule, which makes copying data from ITSProblem to LinearProblem impossible.
-namespace ITSProblemInternal {
-
-    // Helper struct to encapsulate members common for ITSProblem and LinearITSProblem
-    struct LocationData {
-        // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
-        std::set<LocationIdx> locations;
-
-        // the initial location
-        LocationIdx initialLocation = 0;
-
-        // the next free location index
-        LocationIdx nextUnusedLocation = 0;
-
-        // only for output
-        std::map<LocationIdx, std::string> locationNames; // only for the original locations, not for added ones
-    };
-}
-
-
-template <typename Rule>
-class AbstractITSProblem : public VariableManager {
+class ITSProblem : public VariableManager {
 public:
     // Creates an empty ITS problem. The initialLocation is set to 0
-    AbstractITSProblem() {}
+    ITSProblem() = default;
 
     // Creates an empty ITS problem with the given variables
-    AbstractITSProblem(VariableManager varMan) : VariableManager(varMan) {};
+    explicit ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {};
 
     // True iff there are no rules
     bool isEmpty() const;
+
+    // True iff all rules are linear
+    bool isLinear() const;
 
     LocationIdx getInitialLocation() const;
     bool isInitialLocation(LocationIdx loc) const;
@@ -74,6 +54,12 @@ public:
     // query the rule associated with a given transition
     const Rule& getRule(TransIdx transition) const;
     Rule& getRuleMut(TransIdx transition); // Note: the locations of the returned rule must not be changed!
+
+    // the rule associated with the given index must be linear!
+    LinearRule getLinearRule(TransIdx transition) const; // TODO: Is this useful at all?
+
+    // returns the destinations of the given transition
+    const std::set<LocationIdx> &getTransitionTargets(TransIdx idx) const;
 
     // query transitions of the graph
     std::set<TransIdx> getTransitionsFrom(LocationIdx loc) const;
@@ -89,11 +75,6 @@ public:
     // returns transitions from loc to loc for which isSimpleLoops() holds
     std::vector<TransIdx> getSimpleLoopsAt(LocationIdx loc) const;
 
-
-    // helper, combines getTransitionsFrom* + getRule
-//    std::vector<Rule> getRulesFrom(LocationIdx loc) const; // TODO: unused?
-//    std::vector<Rule> getRulesFromTo(LocationIdx from, LocationIdx to) const; // TODO: unused?
-
     // query nodes of the graph
     std::set<LocationIdx> getSuccessorLocations(LocationIdx loc) const;
     std::set<LocationIdx> getPredecessorLocations(LocationIdx loc) const;
@@ -108,7 +89,7 @@ public:
 
     // Required for printing (see ITSExport)
     std::set<LocationIdx> getLocations() const;
-    boost::optional<std::string> getLocationName(LocationIdx idx) const;
+    option<std::string> getLocationName(LocationIdx idx) const;
 
     // Removes a location, but does _not_ care about rules.
     // Rules from/to this location must be removed before calling this!
@@ -128,37 +109,18 @@ protected:
     // The map allows to efficiently add/delete rules.
     std::map<TransIdx, Rule> rules;
 
-    // All remaining members
-    ITSProblemInternal::LocationData data;
+    // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
+    std::set<LocationIdx> locations;
+
+    // the initial location
+    LocationIdx initialLocation = 0;
+
+    // the next free location index
+    LocationIdx nextUnusedLocation = 0;
+
+    // only for output, remembers the original location names
+    std::map<LocationIdx, std::string> locationNames;
 };
-
-
-class LinearITSProblem : public AbstractITSProblem<LinearRule> {
-public:
-    LocationIdx getTransitionTarget(TransIdx) const; // TODO: Remove, since unused?
-
-private:
-    // Creates an empty problem with the given variables, required for toLinearProblem()
-    LinearITSProblem(VariableManager varMan) : AbstractITSProblem(varMan) {}
-
-    // For the conversion in toLinearProblem()
-    friend class ITSProblem;
-};
-
-
-class ITSProblem : public AbstractITSProblem<NonlinearRule> {
-public:
-    const std::set<LocationIdx>& getTransitionTargets(TransIdx) const; // TODO: Remove, since unused?
-
-    bool isLinear() const;
-    LinearITSProblem toLinearProblem() const;
-};
-
-
-// Since the implementation of AbstractITSProblem is not in the header,
-// we have to explicitly declare all required instantiations.
-template class AbstractITSProblem<LinearRule>;
-template class AbstractITSProblem<NonlinearRule>;
 
 
 #endif // ITSPROBLEM_H
