@@ -141,17 +141,17 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
  *
  * @note: This will also chain self-loops with itself.
  */
-static void eliminateLocationByChaining(LinearITSProblem &its, LocationIdx loc, bool keepUnchainable) {
+static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool keepUnchainable) {
     set<TransIdx> keepRules;
     debugChain("  eliminating location " << loc << " by chaining (keep unchainable: " << keepUnchainable << ")");
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
         bool wasChained = false;
-        const LinearRule &inRule = its.getRule(in);
+        const LinearRule &inRule = its.getLinearRule(in);
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
-            auto optRule = Chaining::chainRules(its, inRule, its.getRule(out));
+            auto optRule = Chaining::chainRules(its, inRule, its.getLinearRule(out));
             if (optRule) {
                 wasChained = true;
                 its.addRule(optRule.get());
@@ -170,7 +170,7 @@ static void eliminateLocationByChaining(LinearITSProblem &its, LocationIdx loc, 
     if (keepUnchainable && !keepRules.empty()) {
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
-            its.addRule(its.getRule(trans).withNewRhsLoc(dummyLoc));
+            its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
         }
     }
 
@@ -183,7 +183,7 @@ static void eliminateLocationByChaining(LinearITSProblem &its, LocationIdx loc, 
  * Implementation of dfsTraversalWithRepeatedChanges
  */
 template <typename F>
-static bool callRepeatedlyImpl(LinearITSProblem &its, F function, LocationIdx node, set<LocationIdx> &visited) {
+static bool callRepeatedlyImpl(ITSProblem &its, F function, LocationIdx node, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -228,7 +228,7 @@ static bool callRepeatedlyImpl(LinearITSProblem &its, F function, LocationIdx no
  * The return value is true iff at least one call of the given function returned true.
  */
 template <typename F>
-static bool callRepeatedlyOnEachNode(LinearITSProblem &its, F function) {
+static bool callRepeatedlyOnEachNode(ITSProblem &its, F function) {
     set<LocationIdx> visited;
     return callRepeatedlyImpl(its, function, its.getInitialLocation(), visited);
 }
@@ -238,7 +238,7 @@ static bool callRepeatedlyOnEachNode(LinearITSProblem &its, F function) {
  * Checks whether the given node lies on a linear path (and is not an endpoint of the path).
  * See chainLinearPaths for an explanation.
  */
-static bool isOnLinearPath(LinearITSProblem &its, LocationIdx node) {
+static bool isOnLinearPath(ITSProblem &its, LocationIdx node) {
     // If node is a leaf, we return false (we cannot chain over leafs)
     if (its.getTransitionsFrom(node).size() != 1) {
         return false;
@@ -262,8 +262,8 @@ static bool isOnLinearPath(LinearITSProblem &its, LocationIdx node) {
 // ############################
 
 
-bool Chaining::chainLinearPaths(LinearITSProblem &its) {
-    auto implementation = [](LinearITSProblem &its, LocationIdx node) {
+bool Chaining::chainLinearPaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -289,8 +289,8 @@ bool Chaining::chainLinearPaths(LinearITSProblem &its) {
 }
 
 
-bool Chaining::chainTreePaths(LinearITSProblem &its) {
-    auto implementation = [](LinearITSProblem &its, LocationIdx node) {
+bool Chaining::chainTreePaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -333,7 +333,7 @@ bool Chaining::chainTreePaths(LinearITSProblem &its) {
 /**
  * Implementation of eliminateALocation
  */
-static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
+static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -365,7 +365,7 @@ static bool eliminateALocationImpl(LinearITSProblem &its, LocationIdx node, set<
 }
 
 
-bool Chaining::eliminateALocation(LinearITSProblem &its) {
+bool Chaining::eliminateALocation(ITSProblem &its) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("Chaining::eliminateALocation");
     debugChain("Trying to eliminate a location");
@@ -378,7 +378,7 @@ bool Chaining::eliminateALocation(LinearITSProblem &its) {
 /**
  * Core implementation for chainSimpleLoops
  */
-static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
+static bool chainSimpleLoopsAt(ITSProblem &its, LocationIdx node) {
     debugChain("Chaining simple loops at location " << node);
     assert(!its.isInitialLocation(node));
     assert(!its.getTransitionsFromTo(node, node).empty());
@@ -388,14 +388,14 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
 
     for (TransIdx simpleLoop : its.getTransitionsFromTo(node, node)) {
         for (TransIdx incoming : transIn) {
-            const LinearRule &incomingRule = its.getRule(incoming);
+            const LinearRule incomingRule = its.getLinearRule(incoming);
 
             // Skip simple loops
             if (incomingRule.getLhsLoc() == incomingRule.getRhsLoc()) {
                 continue;
             }
 
-            auto optRule = Chaining::chainRules(its, incomingRule, its.getRule(simpleLoop));
+            auto optRule = Chaining::chainRules(its, incomingRule, its.getLinearRule(simpleLoop));
             if (optRule) {
                 TransIdx added = its.addRule(optRule.get());
                 successfullyChained.insert(incoming);
@@ -428,7 +428,7 @@ static bool chainSimpleLoopsAt(LinearITSProblem &its, LocationIdx node) {
 }
 
 
-bool Chaining::chainSimpleLoops(LinearITSProblem &its) {
+bool Chaining::chainSimpleLoops(ITSProblem &its) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("Chaining::chainSimpleLoops");
 

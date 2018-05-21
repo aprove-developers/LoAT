@@ -80,9 +80,9 @@ static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCos
 
 
 // FIXME: Rename free variables!
-optional<NonlinearRule> ChainingNL::chainRulesOnRhs(const VarMan &varMan,
-                                                    const NonlinearRule &first, int firstRhsIdx,
-                                                    const NonlinearRule &second)
+optional<Rule> ChainingNL::chainRulesOnRhs(const VarMan &varMan,
+                                                    const Rule &first, int firstRhsIdx,
+                                                    const Rule &second)
 {
     // Build a substitution corresponding to the first rule's update
     GiNaC::exmap firstUpdate = first.getUpdate(firstRhsIdx).toSubstitution(varMan);
@@ -139,12 +139,12 @@ optional<NonlinearRule> ChainingNL::chainRulesOnRhs(const VarMan &varMan,
         newRhss.push_back(firstRhss[i]);
     }
 
-    return NonlinearRule(RuleLhs(first.getLhsLoc(), newGuard, newCost), newRhss);
+    return Rule(RuleLhs(first.getLhsLoc(), newGuard, newCost), newRhss);
 }
 
 
-optional<NonlinearRule> ChainingNL::chainRules(const VarMan &varMan, const NonlinearRule &first, const NonlinearRule &second) {
-    NonlinearRule res = first;
+optional<Rule> ChainingNL::chainRules(const VarMan &varMan, const Rule &first, const Rule &second) {
+    Rule res = first;
 
     // Iterate over rhss, note that the number of rhss can increase while iterating
     int rhsIdx = 0;
@@ -198,7 +198,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
         bool wasChained = false;
-        const NonlinearRule &inRule = its.getRule(in);
+        const Rule &inRule = its.getRule(in);
 
         // If a loop starts in loc, it (and all chained versions of it) will be removed anyway, so we skip it.
         // Note that this only happens for rules with self-loops, e.g. f -> f,g (where f is loc)
@@ -228,8 +228,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
             // keep lhs, ignore rhss and updates
-            NonlinearRule backup(its.getRule(trans).getLhs(), RuleRhs(dummyLoc, {}));
-            TransIdx added = its.addRule(backup);
+            TransIdx added = its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
             debugChain("    keeping rule " << trans << " by adding dummy rule: " << added);
         }
     }
@@ -245,7 +244,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
     auto rhsLeadsToLoc = [&](const RuleRhs &rhs){ return rhs.getLoc() == loc; };
 
     for (TransIdx idx : its.getTransitionsTo(loc)) {
-        const NonlinearRule &rule = its.getRule(idx);
+        const Rule &rule = its.getRule(idx);
         if (std::all_of(rule.rhsBegin(), rule.rhsEnd(), rhsLeadsToLoc)) {
             its.removeRule(idx);
         }
@@ -463,11 +462,11 @@ bool ChainingNL::chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx>
 
     for (TransIdx accel : acceleratedLoops) {
         debugChain("Chaining accelerated rule " << accel);
-        const NonlinearRule &accelRule = its.getRule(accel);
+        const Rule &accelRule = its.getRule(accel);
         LocationIdx node = accelRule.getLhsLoc();
 
         for (TransIdx incoming : its.getTransitionsTo(node)) {
-            const NonlinearRule &incomingRule = its.getRule(incoming);
+            const Rule &incomingRule = its.getRule(incoming);
 
             // Do not chain with incoming loops that are themselves self-loops at node
             // (no matter if they are simple or not)

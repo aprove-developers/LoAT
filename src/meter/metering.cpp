@@ -62,7 +62,7 @@ void MeteringFinder::dump(const string &msg) const {
 #endif
 }
 
-vector<UpdateMap> MeteringFinder::getUpdateList(const AbstractRule &rule) {
+vector<UpdateMap> MeteringFinder::getUpdateList(const Rule &rule) {
     vector<UpdateMap> res;
     res.reserve(rule.rhsCount());
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
@@ -366,7 +366,7 @@ optional<VariablePair> MeteringFinder::findConflictVars() const {
 
 /* ### Main function ### */
 
-MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const AbstractRule &rule) {
+MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule) {
     Timing::Scope timer(Timing::FarkasTotal);
     Timing::start(Timing::FarkasLogic);
 
@@ -460,11 +460,11 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const AbstractRu
 
 /* ### Heuristics to help finding more metering functions ### */
 
-bool MeteringFinder::strengthenGuard(VarMan &varMan, AbstractRule &rule) {
+bool MeteringFinder::strengthenGuard(VarMan &varMan, Rule &rule) {
     return MT::strengthenGuard(varMan, rule.getGuardMut(), getUpdateList(rule));
 }
 
-bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, AbstractRule &rule) {
+bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     // We first perform the same steps as in generate()
     MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
 

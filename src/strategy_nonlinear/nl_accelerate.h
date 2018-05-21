@@ -76,7 +76,7 @@ private:
      *
      * @returns true if acceleration was successful or we found an non-terminating loop
      */
-    bool handleMeteringResult(TransIdx originalRule, const NonlinearRule &rule, MeteringFinder::Result meterResult);
+    bool handleMeteringResult(TransIdx originalRule, const Rule &rule, MeteringFinder::Result meterResult);
 
     /**
      * Tries to accelerate the given loop by searching for a metering function
@@ -92,7 +92,7 @@ private:
      *
      * @return the return value of handleMeteringResult (or false if not called)
      */
-    bool accelerateAndStore(TransIdx originalRule, const NonlinearRule &rule, bool storeOnlySuccessful = false);
+    bool accelerateAndStore(TransIdx originalRule, const Rule &rule, bool storeOnlySuccessful = false);
 
     /**
      * Tries to accelerate the given loop.
@@ -101,7 +101,7 @@ private:
      *
      * No members are modified, so the rule is _not_ added to accelerateRules
      */
-    //boost::optional<LinearRule> accelerate(const NonlinearRule &rule) const;
+    //boost::optional<LinearRule> accelerate(const Rule &rule) const;
 
 private:
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.

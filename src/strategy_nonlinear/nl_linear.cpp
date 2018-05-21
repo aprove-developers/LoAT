@@ -161,7 +161,7 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
 
     if (cfg.printSimplifiedAsKoAT) {
         proofout.headline("Fully simplified program in input format:");
-        LinearITSExport::printKoAT(its, proofout);
+        ITSExport::printKoAT(its, proofout);
         proofout << endl;
     }
 
@@ -210,7 +210,7 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
 bool NonlinearITSAnalysis::ensureProperInitialLocation() {
     if (its.hasTransitionsTo(its.getInitialLocation())) {
         LocationIdx newStart = its.addLocation();
-        its.addRule(NonlinearRule::dummyRule(newStart, its.getInitialLocation()));
+        its.addRule(Rule::dummyRule(newStart, its.getInitialLocation()));
         its.setInitialLocation(newStart);
         return true;
     }
@@ -229,7 +229,7 @@ bool NonlinearITSAnalysis::preprocessRules() {
         for (TransIdx idx : its.getTransitionsFrom(node)) {
             if (Timeout::preprocessing()) return changed;
 
-            NonlinearRule &rule = its.getRuleMut(idx);
+            Rule &rule = its.getRuleMut(idx);
             if (cfg.eliminateCostConstraints) {
                 changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
             }
@@ -261,7 +261,7 @@ bool NonlinearITSAnalysis::isFullySimplified() const {
 
 // Deletes all right-hand sides of the given rule that lead to loc, but always keeps at least one rhs.
 bool NonlinearITSAnalysis::partialDeletion(TransIdx ruleIdx, LocationIdx loc) {
-    const NonlinearRule &rule = its.getRule(ruleIdx);
+    const Rule &rule = its.getRule(ruleIdx);
     set<LocationIdx> targets = its.getTransitionTargets(ruleIdx);
     assert(targets.count(loc) > 0);
 
@@ -271,7 +271,7 @@ bool NonlinearITSAnalysis::partialDeletion(TransIdx ruleIdx, LocationIdx loc) {
     // Special case: All right-hand sides of this rule end in loc.
     // Replace the rule by a linear one without update
     if (targets.size() == 1) {
-        NonlinearRule newRule(rule.getLhs(), RuleRhs(loc, {}));
+        Rule newRule(rule.getLhs(), RuleRhs(loc, {}));
         its.removeRule(ruleIdx);
         TransIdx newIdx = its.addRule(newRule);
         debugLinear("Partial deletion (special case): Replaced rule " << ruleIdx << " by new rule " << newIdx);
@@ -286,7 +286,7 @@ bool NonlinearITSAnalysis::partialDeletion(TransIdx ruleIdx, LocationIdx loc) {
         }
     }
 
-    NonlinearRule newRule(rule.getLhs(), newRhss);
+    Rule newRule(rule.getLhs(), newRhss);
     its.removeRule(ruleIdx);
     TransIdx newIdx = its.addRule(newRule);
     debugLinear("Partial deletion: Replaced rule " << ruleIdx << " by new rule " << newIdx);
@@ -450,7 +450,7 @@ RuntimeResultNL NonlinearITSAnalysis::getMaxRuntime() {
 
     RuntimeResultNL res;
     for (TransIdx ruleIdx : rules) {
-        const NonlinearRule &rule = its.getRule(ruleIdx);
+        const Rule &rule = its.getRule(ruleIdx);
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks
         Complexity cpxUpperbound = rule.getCost().getComplexity();
@@ -618,7 +618,7 @@ done:
 void NonlinearITSAnalysis::printForProof(const std::string &dotDescription) {
     // Proof output
     proofout.increaseIndention();
-    NonlinearITSExport::printForProof(its, proofout);
+    ITSExport::printForProof(its, proofout);
     proofout.decreaseIndention();
 
     // dot output

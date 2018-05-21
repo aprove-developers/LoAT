@@ -20,7 +20,7 @@
 
 #include "graph/hypergraph.h"
 
-class NonlinearRule;
+class Rule;
 class ITSProblem;
 
 
@@ -58,7 +58,7 @@ namespace PruningNL {
      * @param compareUpdate if false, the update is not compared (i.e., rules with different update might be equal)
      * @return true if the rules are equal up to constants in the cost term, false if they differ or we are unsure.
      */
-    bool compareRules(const NonlinearRule &a, const NonlinearRule &b, bool compareUpdate = true);
+    bool compareRules(const Rule &a, const Rule &b, bool compareUpdate = true);
 }
 
 #endif // PRUNE_H

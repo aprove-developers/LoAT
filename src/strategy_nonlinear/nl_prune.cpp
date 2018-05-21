@@ -34,7 +34,7 @@
 using namespace std;
 
 
-bool PruningNL::compareRules(const NonlinearRule &a, const NonlinearRule &b, bool compareRhss) {
+bool PruningNL::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     const GuardList &guardA = a.getGuard();
     const GuardList &guardB = b.getGuard();
 
@@ -81,8 +81,8 @@ bool PruningNL::removeDuplicateRules(ITSProblem &its, const vector<TransIdx> &tr
             TransIdx idxA = trans[i];
             TransIdx idxB = trans[j];
 
-            const NonlinearRule &ruleA = its.getRule(idxA);
-            const NonlinearRule &ruleB = its.getRule(idxB);
+            const Rule &ruleA = its.getRule(idxA);
+            const Rule &ruleB = its.getRule(idxB);
 
             // if rules are identical up to cost, keep the one with the higher cost
             if (compareRules(ruleA, ruleB ,compareUpdate)) {
@@ -220,7 +220,7 @@ static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx>
         // If next is (now) a leaf, rules leading to next are candidates for removal
         if (isLeaf(next)) {
             for (TransIdx ruleIdx : its.getTransitionsFromTo(node, next)) {
-                const NonlinearRule &rule = its.getRule(ruleIdx);
+                const Rule &rule = its.getRule(ruleIdx);
 
                 // only remove rules with constant complexity
                 if (rule.getCost().getComplexity() > Complexity::Const) continue;

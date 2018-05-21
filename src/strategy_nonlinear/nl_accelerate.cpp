@@ -60,7 +60,7 @@ AcceleratorNL::AcceleratorNL(ITSProblem &its, LocationIdx loc, set<TransIdx> &ac
 // #####################################
 
 
-bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &rule, MeteringFinder::Result res) {
+bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const Rule &rule, MeteringFinder::Result res) {
     // TODO: Add proof output also for failures
 
     if (res.result == MeteringFinder::ConflictVar) {
@@ -106,7 +106,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
 
             // The rule is nonterminating. We can ignore the update, but the guard still has to be kept.
             {
-                NonlinearRule newRule(rule.getLhsLoc(), rule.getGuard(), Expression::InfSymbol, sinkLocation, {});
+                Rule newRule(rule.getLhsLoc(), rule.getGuard(), Expression::InfSymbol, sinkLocation, {});
                 TransIdx t = its.addRule(std::move(newRule));
                 acceleratedRules.insert(t);
 
@@ -118,7 +118,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
         case MeteringFinder::Success:
             debugAccel("Farkas success, got " << res.metering << " for rule " << ruleIdx);
             {
-                NonlinearRule newRule = rule;
+                Rule newRule = rule;
 
                 // The metering function might need additional guards
                 if (res.integralConstraint) {
@@ -127,7 +127,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
 
                 if (newRule.isLinear()) {
                     // Use iterated cost/update computation as for linear rules
-                    LinearRule linRule = newRule.toLinearRule();
+                    LinearRule linRule = newRule.toLinear();
 
                     // Compute iterated update and cost
                     if (!Recurrence::iterateRule(its, linRule, res.metering)) {
@@ -143,7 +143,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
                         // since it will probably still fail after nesting.
                         return false;
                     }
-                    newRule = NonlinearRule::fromLinear(linRule);
+                    newRule = linRule;
 
                 } else {
                     // Note: Since the cost is exponential anyway, we do not compute the iterated cost
@@ -156,7 +156,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
 
                     // We don't know to what result the rule evaluates (multiple rhss, so no single result).
                     // So we have to clear the rhs (fresh sink location, update is irrelevant).
-                    newRule = NonlinearRule(newRule.getLhs(), RuleRhs(sinkLocation, {}));
+                    newRule = Rule(newRule.getLhs(), RuleRhs(sinkLocation, {}));
                 }
 
                 Stats::add(Stats::SelfloopRanked);
@@ -178,7 +178,7 @@ bool AcceleratorNL::handleMeteringResult(TransIdx ruleIdx, const NonlinearRule &
 }
 
 
-bool AcceleratorNL::accelerateAndStore(TransIdx ruleIdx, const NonlinearRule &rule, bool storeOnlySuccessful) {
+bool AcceleratorNL::accelerateAndStore(TransIdx ruleIdx, const Rule &rule, bool storeOnlySuccessful) {
     MeteringFinder::Result res = MeteringFinder::generate(its, rule);
 
     if (storeOnlySuccessful
@@ -207,7 +207,7 @@ void AcceleratorNL::run() {
     // This has to hold in all loop iterations, so we add it to the guard before metering!
     bool addedCost = false;
     for (TransIdx idx : its.getSimpleLoopsAt(targetLoc)) {
-        NonlinearRule &rule = its.getRuleMut(idx);
+        Rule &rule = its.getRuleMut(idx);
         if (!rule.isLinear()) {
             addedCost = true;
             rule.getGuardMut().push_back(rule.getCost() >= 1);
@@ -222,7 +222,7 @@ void AcceleratorNL::run() {
     // Proof output
     proofout << "Accelerating the following rules:" << endl;
     for (TransIdx loop : loops) {
-        NonlinearITSExport::printLabeledRule(loop, its, proofout);
+        ITSExport::printLabeledRule(loop, its, proofout);
     }
 
 
@@ -251,7 +251,7 @@ void AcceleratorNL::run() {
 #ifdef FARKAS_HEURISTIC_INSTANTIATE_FREEVARS
     // Instantiate temporary variables by their bounds (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
-        NonlinearRule rule = its.getRule(loop);
+        Rule rule = its.getRule(loop);
         debugAccel("Trying temp var instantiation for rule: " << rule);
 
         if (MeteringFinder::instantiateTempVarsHeuristic(its, rule)) {
@@ -297,7 +297,7 @@ void AcceleratorNL::run() {
 #if 1
     // Guard strengthening heuristic (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
-        NonlinearRule rule = its.getRule(loop);
+        Rule rule = its.getRule(loop);
         debugAccel("Trying guard strengthening for rule: " << rule);
 
         if (MeteringFinder::strengthenGuard(its, rule)) {
@@ -336,7 +336,7 @@ void AcceleratorNL::run() {
     // FIXME: This is no longer necessary, since we do not remove incoming rules after chaining with accelerated loops!
     // FIXME: So we always allow not executing any loop
 /*    if (!failedRulesNeedingEmptyLoop.empty()) {
-        TransIdx t = its.addRule(NonlinearRule::dummyRule(targetLoc, targetLoc));
+        TransIdx t = its.addRule(Rule::dummyRule(targetLoc, targetLoc));
         proofout << "Adding an empty self-loop: " << t << "." << endl;
     }
     */

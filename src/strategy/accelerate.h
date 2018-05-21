@@ -39,7 +39,7 @@ public:
      * @return true iff the ITS was modified
      *         (which is always the case if any simple loops were present)
      */
-    static bool accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc);
+    static bool accelerateSimpleLoops(ITSProblem &its, LocationIdx loc);
 
 private:
     // Potential candidate for the inner loop when nesting two loops.
@@ -63,21 +63,21 @@ private:
     };
 
 private:
-    Accelerator(LinearITSProblem &its, LocationIdx loc);
+    Accelerator(ITSProblem &its, LocationIdx loc);
 
 
     /**
      * Helper that calls Preprocess::simplifyRule
      * Returns true iff the rule was modified.
      */
-    static bool simplifyRule(VarMan &varMan, LinearRule &rule);
+    static bool simplifyRule(VarMan &varMan, Rule &rule);
 
     /**
      * Helper that chains all pairs of loops at the given location.
      * Resulting rules are added to the ITS.
      * Returns true iff the ITS was modified.
      */
-    static bool chainAllLoops(LinearITSProblem &its, LocationIdx loc);
+    static bool chainAllLoops(ITSProblem &its, LocationIdx loc);
 
 
     /**
@@ -182,7 +182,7 @@ private:
 
     // The ITS problem. Accelerated rules are added to the ITS immediately,
     // but no rules are removed until the very end (end of run()).
-    LinearITSProblem &its;
+    ITSProblem &its;
 
     // The location for which simple loops shall be accelerated.
     LocationIdx targetLoc;

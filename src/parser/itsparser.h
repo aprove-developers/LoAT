@@ -69,15 +69,14 @@ private:
     void addAndCheckLocationData(TermPtr term, bool lhs);
     const LocationData& getLocationData(TermPtr term) const;
     GiNaC::exmap computeSubstitutionToUnifyLhs(const ParsedRule &rule);
-    void replaceUnboundedByTemporaryVariables(NonlinearRule &rule, const LocationData &lhsData);
+    void replaceUnboundedByTemporaryVariables(Rule &rule, const LocationData &lhsData);
     void stripTrivialUpdates(UpdateMap &update) const;
     void addParsedRule(const ParsedRule &rule);
 
     // Helpers
     static std::string escapeVariableName(const std::string &name);
     static std::set<VariableIdx> getVariables(const ParsedRule &rule);
-    static ExprSymbolSet getSymbols(const NonlinearRule &rule);
-    static void applySubstitution(NonlinearRule &rule, const GiNaC::exmap &subs);
+    static ExprSymbolSet getSymbols(const Rule &rule);
 
 private:
     // Instance of TermParser, created after knownVariables has been set

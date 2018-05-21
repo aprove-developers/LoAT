@@ -21,7 +21,7 @@
 #include "graph/hypergraph.h"
 
 class LinearRule;
-class LinearITSProblem;
+class ITSProblem;
 
 
 namespace Pruning {
@@ -32,26 +32,26 @@ namespace Pruning {
      * @return true iff the ITS was modified (i.e. a duplicate got deleted)
      */
     template <typename Container>
-    bool removeDuplicateRules(LinearITSProblem &its, const Container &trans, bool compareUpdate = true);
+    bool removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareUpdate = true);
 
     /**
      * Checks initial rules (from the initial location) for satisfiability, removes unsat rules.
      * @return true iff the ITS was modified
      */
-    bool removeUnsatInitialRules(LinearITSProblem &its);
+    bool removeUnsatInitialRules(ITSProblem &its);
 
     /**
      * Reduces the number of parallel rules by applying some greedy heuristic to find the "best" rules
      * @note also removes unreachable nodes and irrelevant const transitions using removeConstLeafsAndUnreachable()
      * @return true iff the ITS was modified (transitions were deleted)
      */
-    bool pruneParallelRules(LinearITSProblem &its);
+    bool pruneParallelRules(ITSProblem &its);
 
     /**
      * Removes all unreachable nodes and rules to leafs with constant cost, as they have no impact on the runtime
      * @return true iff the ITS was modified
      */
-    bool removeLeafsAndUnreachable(LinearITSProblem &its);
+    bool removeLeafsAndUnreachable(ITSProblem &its);
 
     /**
      * A simple syntactic comparision. Returns true iff a and b are equal up to constants in the cost term.

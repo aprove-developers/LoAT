@@ -76,7 +76,7 @@ public:
      *
      * @return The resulting metering function or the reason for failure (and possibly additional information).
      */
-    static Result generate(VarMan &varMan, const AbstractRule &rule);
+    static Result generate(VarMan &varMan, const Rule &rule);
 
     /**
      * Heuristic to instantiate temporary variables by their bounds (e.g. for "x <= 4", instantiate x by 4).
@@ -88,10 +88,10 @@ public:
      *
      * @return true iff instantiation was successful (and rule has been modified accordingly)
      */
-    static bool instantiateTempVarsHeuristic(VarMan &varMan, AbstractRule &rule);
+    static bool instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule);
 
     // see MeteringToolbox::strengthenGuard
-    static bool strengthenGuard(VarMan &varMan, AbstractRule &rule);
+    static bool strengthenGuard(VarMan &varMan, Rule &rule);
 
 private:
     MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<UpdateMap> &update);
@@ -99,7 +99,7 @@ private:
     /**
      * Helper for convenience, collects all updates of the given rule into a vector.
      */
-    static std::vector<UpdateMap> getUpdateList(const AbstractRule &rule);
+    static std::vector<UpdateMap> getUpdateList(const Rule &rule);
 
     /**
      * Simplifies guard/update by removing constraints that do not affect the metering function.

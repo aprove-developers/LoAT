@@ -19,7 +19,7 @@ using namespace std;
 
 
 // collects all variables appearing in the given rule
-static void collectAllVariables(const AbstractRule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
+static void collectAllVariables(const Rule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
             vars.insert(varMan.getGinacSymbol(it.first));
@@ -31,7 +31,7 @@ static void collectAllVariables(const AbstractRule &rule, const VarMan &varMan, 
 }
 
 // collects all non-temporary variables of the given rule
-static void collectBoundVariables(const AbstractRule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
+static void collectBoundVariables(const Rule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
     ExprSymbolSet allVars;
     collectAllVariables(rule, varMan, allVars);
 
@@ -46,8 +46,7 @@ static void collectBoundVariables(const AbstractRule &rule, const VarMan &varMan
 /**
  * Helper that prints the location's name or (if it has no name) its index to the given stream
  */
-template <typename Rule>
-static void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &s) {
     s << COLOR_LOCATION;
     auto optName = its.getLocationName(loc);
     if (optName) {
@@ -62,7 +61,7 @@ static void printLocation(LocationIdx loc, const AbstractITSProblem<Rule> &its, 
  * Helper that prints an entire rule in a human-readable format
  */
 template <typename Rule>
-static void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &its, std::ostream &s, bool colors) {
+static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, bool colors) {
     printLocation(rule.getLhsLoc(), its, s);
     s << " -> ";
 
@@ -99,15 +98,13 @@ static void printRule(const AbstractRule &rule, const AbstractITSProblem<Rule> &
 }
 
 
-template <typename Rule>
-void ITSExport<Rule>::printLabeledRule(TransIdx rule, const AbstractITSProblem<Rule> &its, std::ostream &s) {
+void ITSExport::printLabeledRule(TransIdx rule, const ITSProblem &its, std::ostream &s) {
     s << setw(4) << rule << ": ";
     printRule(its.getRule(rule), its, s, true);
 }
 
 
-template <typename Rule>
-void ITSExport<Rule>::printDebug(const AbstractITSProblem<Rule> &its, std::ostream &s) {
+void ITSExport::printDebug(const ITSProblem &its, std::ostream &s) {
     s << "Variables:";
     for (VariableIdx i=0; i < its.getVariableCount(); ++i) {
         s << " " << its.getVarName(i);
@@ -139,8 +136,7 @@ void ITSExport<Rule>::printDebug(const AbstractITSProblem<Rule> &its, std::ostre
 }
 
 
-template <typename Rule>
-void ITSExport<Rule>::printForProof(const AbstractITSProblem<Rule> &its, std::ostream &s) {
+void ITSExport::printForProof(const ITSProblem &its, std::ostream &s) {
     s << "Start location: ";
     printLocation(its.getInitialLocation(), its, s);
     s << endl;
@@ -158,8 +154,7 @@ void ITSExport<Rule>::printForProof(const AbstractITSProblem<Rule> &its, std::os
 }
 
 
-template <typename Rule>
-void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostream &s) {
+void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
     using namespace GiNaC;
     auto printNode = [&](LocationIdx n) {
         auto optName = its.getLocationName(n);
@@ -194,7 +189,7 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
 
         //write transition in KoAT format (note that relevantVars is an ordered set)
         for (TransIdx trans : its.getTransitionsFrom(n)) {
-            const AbstractRule &rule = its.getRule(trans);
+            const Rule &rule = its.getRule(trans);
 
             //lhs
             printNode(n);
@@ -248,7 +243,8 @@ void ITSExport<Rule>::printKoAT(const AbstractITSProblem<Rule> &its, std::ostrea
 
 
 
-void LinearITSExport::printDotSubgraph(const LinearITSProblem &its, int step, const std::string &desc, std::ostream &s) {
+void LinearITSExport::printDotSubgraph(const ITSProblem &its, int step, const std::string &desc, std::ostream &s) {
+    assert(its.isLinear());
     auto printNode = [&](LocationIdx n) { s << "node_" << step << "_" << n; };
 
     s << "subgraph cluster_" << step << " {" << endl;
@@ -261,7 +257,7 @@ void LinearITSExport::printDotSubgraph(const LinearITSProblem &its, int step, co
         for (LocationIdx succ : its.getSuccessorLocations(n)) {
             printNode(n); s << " -> "; printNode(succ); s << " [label=\"";
             for (TransIdx trans : its.getTransitionsFromTo(n,succ)) {
-                const LinearRule &rule = its.getRule(trans);
+                const LinearRule rule = its.getLinearRule(trans);
                 for (auto upit : rule.getUpdate()) {
                     s << its.getVarName(upit.first) << "=" << upit.second << ", ";
                 }
@@ -288,11 +284,12 @@ void LinearITSExport::printDotText(int step, const std::string &txt, std::ostrea
     s << "}" << endl;
 }
 
-void LinearITSExport::printT2(const LinearITSProblem &its, std::ostream &s) {
+void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
+    assert(its.isLinear());
     s << "START: 0;" << endl << endl;
     for (LocationIdx start : its.getLocations()) {
         for (TransIdx idx : its.getTransitionsFrom(start)) {
-            const LinearRule &rule = its.getRule(idx);
+            const LinearRule rule = its.getLinearRule(idx);
             s << "FROM: " << start << ";" << endl;
             ExprSymbolSet vars = rule.getCost().getVariables();
             for (const Expression &ex : rule.getGuard()) {

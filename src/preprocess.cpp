@@ -37,7 +37,7 @@ bool Preprocess::tryToRemoveCost(GuardList &guard) {
 }
 
 
-bool Preprocess::simplifyRule(const VarMan &varMan, AbstractRule &rule) {
+bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
     bool changed, result;
 
     //do removeWeakerGuards only once, as this involves z3 and is potentially slow
@@ -118,7 +118,7 @@ bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
 }
 
 
-bool Preprocess::eliminateFreeVars(const VarMan &varMan, AbstractRule &rule) {
+bool Preprocess::eliminateFreeVars(const VarMan &varMan, Rule &rule) {
     bool result = false; //final modification flag
     bool changed; //intermediate modification flag
 

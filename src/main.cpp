@@ -245,9 +245,8 @@ int main(int argc, char *argv[]) {
         cout << "=== new ITSProblem ===" << endl;
 
         if (its.isLinear()) {
-            LinearITSProblem lits = its.toLinearProblem();
             LinearITSAnalysis::AnalysisSettings cfg(dotStream);
-            auto runtime = LinearITSAnalysis::analyze(lits, cfg);
+            auto runtime = LinearITSAnalysis::analyze(its, cfg);
             proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
             proofout << "  Complexity class: " << runtime.cpx << endl;
             proofout << "  Complexity value: ";

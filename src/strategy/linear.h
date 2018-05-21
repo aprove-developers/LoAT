@@ -48,8 +48,8 @@ struct RuntimeResult {
 
 
 /**
- * Flow graph for an ITRS.
- * This class implements the main logic of chaining and metering.
+ * Analysis of ITSProblems where all rules are linear.
+ * This class controls how chaining, acceleration and pruning are applied.
  */
 class LinearITSAnalysis {
 public:
@@ -73,11 +73,11 @@ public:
         AnalysisSettings(std::ostream &dotStream) : dotStream(dotStream) {}
     };
 
-    static RuntimeResult analyze(LinearITSProblem &its, AnalysisSettings cfg);
+    static RuntimeResult analyze(ITSProblem &its, AnalysisSettings cfg);
 
 
 private:
-    LinearITSAnalysis(LinearITSProblem &its, AnalysisSettings cfg);
+    LinearITSAnalysis(ITSProblem &its, AnalysisSettings cfg);
 
     /**
      * Main analysis algorithm.
@@ -140,7 +140,7 @@ private:
     void printForProof(const std::string &dotDescription);
 
 private:
-    LinearITSProblem &its;
+    ITSProblem &its;
     AnalysisSettings cfg;
 
     // Counts how many graphs have already been written to the dot export (they have to be numbered)

@@ -40,7 +40,7 @@ using boost::optional;
 
 
 
-Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
+Accelerator::Accelerator(ITSProblem &its, LocationIdx loc)
         : its(its), targetLoc(loc) {
 }
 
@@ -51,14 +51,14 @@ Accelerator::Accelerator(LinearITSProblem &its, LocationIdx loc)
 // #####################
 
 
-bool Accelerator::simplifyRule(VarMan &varMan, LinearRule &rule) {
+bool Accelerator::simplifyRule(VarMan &varMan, Rule &rule) {
     Timing::Scope(Timing::Preprocess); // FIXME: This is not pre-processing!
     return Preprocess::simplifyRule(varMan, rule);
 }
 
 
 // TODO: Move this to chaining, rename to chainAllPairs(its, vec<TransIdx>);
-bool Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
+bool Accelerator::chainAllLoops(ITSProblem &its, LocationIdx loc) {
     bool changed = false;
     vector<TransIdx> loops = its.getTransitionsFromTo(loc, loc);
     debugAccel("Chaining all loops before acceleration");
@@ -69,7 +69,7 @@ bool Accelerator::chainAllLoops(LinearITSProblem &its, LocationIdx loc) {
                 continue;
             }
 
-            auto chained = Chaining::chainRules(its, its.getRule(first), its.getRule(second));
+            auto chained = Chaining::chainRules(its, its.getLinearRule(first), its.getLinearRule(second));
             if (chained) {
                 TransIdx added = its.addRule(chained.get());
                 debugAccel("  chained rules " << first << " and " << second << ", resulting in new rule: " << added);
@@ -303,8 +303,8 @@ void Accelerator::addNestedRule(const LinearRule &accelerated, const LinearRule 
 bool Accelerator::nestRules(const InnerNestingCandidate &inner, const OuterNestingCandidate &outer,
                             vector<InnerNestingCandidate> &nested) {
     bool res = false;
-    const LinearRule &innerRule = its.getRule(inner.newRule);
-    const LinearRule &outerRule = its.getRule(outer.oldRule);
+    const LinearRule innerRule = its.getLinearRule(inner.newRule);
+    const LinearRule outerRule = its.getLinearRule(outer.oldRule);
 
     // Avoid nesting a loop with its original transition or itself
     if (inner.oldRule == outer.oldRule || inner.newRule == outer.oldRule) {
@@ -376,7 +376,7 @@ void Accelerator::run() {
     // Proof output
     proofout << "Accelerating the following rules:" << endl;
     for (TransIdx loop : loops) {
-        LinearITSExport::printLabeledRule(loop, its, proofout);
+        ITSExport::printLabeledRule(loop, its, proofout);
     }
 
 
@@ -395,7 +395,7 @@ void Accelerator::run() {
             continue;
         }
 
-        accelerateAndStore(loop, its.getRule(loop));
+        accelerateAndStore(loop, its.getLinearRule(loop));
 
         if (Timeout::soft()) {
             goto timeout;
@@ -406,7 +406,7 @@ void Accelerator::run() {
 #ifdef FARKAS_HEURISTIC_INSTANTIATE_FREEVARS
     // Instantiate temporary variables by their bounds (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
-        LinearRule rule = its.getRule(loop);
+        LinearRule rule = its.getLinearRule(loop);
         debugAccel("Trying temp var instantiation for rule: " << rule);
 
         if (MeteringFinder::instantiateTempVarsHeuristic(its, rule)) {
@@ -426,7 +426,7 @@ void Accelerator::run() {
     for (const ConflictVarsCandidate &can : rulesWithConflictingVariables) {
         VariableIdx A,B;
         tie(A,B) = can.conflictVars;
-        LinearRule rule = its.getRule(can.oldRule);
+        LinearRule rule = its.getLinearRule(can.oldRule);
         debugAccel("Trying MinMax heuristic with variables " << its.getVarName(A) << ", " << its.getVarName(B) << " for rule " << rule);
 
         // TODO: check satisfiability after adding constraints?
@@ -449,7 +449,7 @@ void Accelerator::run() {
 #ifdef FARKAS_TRY_ADDITIONAL_GUARD
     // Guard strengthening heuristic (might help to find a metering function)
     for (TransIdx loop : rulesWithUnsatMetering) {
-        LinearRule rule = its.getRule(loop);
+        LinearRule rule = its.getLinearRule(loop);
         debugAccel("Trying guard strengthening for rule: " << rule);
 
         if (FarkasMeterGenerator::prepareGuard(its, rule)) {
@@ -521,7 +521,7 @@ void Accelerator::run() {
 
 
 
-bool Accelerator::accelerateSimpleLoops(LinearITSProblem &its, LocationIdx loc) {
+bool Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc) {
     if (its.getTransitionsFromTo(loc, loc).empty()) {
         return false;
     }

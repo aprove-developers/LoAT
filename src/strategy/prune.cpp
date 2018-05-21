@@ -67,7 +67,7 @@ bool Pruning::compareRules(const LinearRule &a, const LinearRule &b, bool compar
 
 
 template <typename Container>
-bool Pruning::removeDuplicateRules(LinearITSProblem &its, const Container &trans, bool compareUpdate) {
+bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareUpdate) {
     set<TransIdx> toRemove;
 
     for (auto i = trans.begin(); i != trans.end(); ++i) {
@@ -75,8 +75,8 @@ bool Pruning::removeDuplicateRules(LinearITSProblem &its, const Container &trans
             TransIdx idxA = *i;
             TransIdx idxB = *j;
 
-            const LinearRule &ruleA = its.getRule(idxA);
-            const LinearRule &ruleB = its.getRule(idxB);
+            const LinearRule ruleA = its.getLinearRule(idxA);
+            const LinearRule ruleB = its.getLinearRule(idxB);
 
             // if rules are identical up to cost, keep the one with the higher cost
             if (compareRules(ruleA, ruleB ,compareUpdate)) {
@@ -99,7 +99,7 @@ bool Pruning::removeDuplicateRules(LinearITSProblem &its, const Container &trans
 }
 
 
-bool Pruning::removeUnsatInitialRules(LinearITSProblem &its) {
+bool Pruning::removeUnsatInitialRules(ITSProblem &its) {
     bool changed = false;
 
     for (TransIdx rule : its.getTransitionsFrom(its.getInitialLocation())) {
@@ -114,7 +114,7 @@ bool Pruning::removeUnsatInitialRules(LinearITSProblem &its) {
 }
 
 
-bool Pruning::pruneParallelRules(LinearITSProblem &its) {
+bool Pruning::pruneParallelRules(ITSProblem &its) {
     debugPrune("Pruning parallel rules");
 
     // FIXME: this method used to also call removeConstLeafsAndUnreachable (at the start)
@@ -150,7 +150,7 @@ bool Pruning::pruneParallelRules(LinearITSProblem &its) {
                     int idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
 
                     TransIdx ruleIdx = parallel[idx];
-                    const LinearRule &rule = its.getRule(parallel[idx]);
+                    const LinearRule rule = its.getLinearRule(parallel[idx]);
 
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
                     auto res = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), false);
@@ -199,7 +199,7 @@ bool Pruning::pruneParallelRules(LinearITSProblem &its) {
  * Performs a DFS and removes rules to leafs with constant complexity.
  * Returns true iff the ITS was modified.
  */
-static bool removeConstLeafs(LinearITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
+static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) return false; // already present
 
     bool changed = false;
@@ -223,7 +223,7 @@ static bool removeConstLeafs(LinearITSProblem &its, LocationIdx node, set<Locati
 }
 
 
-bool Pruning::removeLeafsAndUnreachable(LinearITSProblem &its) {
+bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
     set<LocationIdx> visited;
     debugPrune("Removing leafs and unreachable");
 
@@ -244,5 +244,5 @@ bool Pruning::removeLeafsAndUnreachable(LinearITSProblem &its) {
 
 
 // instantiate templates (since the implementation is not in the header file)
-template bool Pruning::removeDuplicateRules(LinearITSProblem &, const std::vector<TransIdx> &, bool);
-template bool Pruning::removeDuplicateRules(LinearITSProblem &, const std::set<TransIdx> &, bool);
+template bool Pruning::removeDuplicateRules(ITSProblem &, const std::vector<TransIdx> &, bool);
+template bool Pruning::removeDuplicateRules(ITSProblem &, const std::set<TransIdx> &, bool);

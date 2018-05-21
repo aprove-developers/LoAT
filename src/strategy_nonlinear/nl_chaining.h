@@ -34,10 +34,10 @@ namespace ChainingNL {
      * Returns the resulting rule, unless it can be shown to be unsatisfiable.
      */
     // chain the specified rhs of first with second.
-    boost::optional<NonlinearRule> chainRulesOnRhs(const VarMan &varMan, const NonlinearRule &first, int firstRhsIdx, const NonlinearRule &second);
+    boost::optional<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int firstRhsIdx, const Rule &second);
 
     // chain all rhss of first leading to second's lhs location with second.
-    boost::optional<NonlinearRule> chainRules(const VarMan &varMan, const NonlinearRule &first, const NonlinearRule &second);
+    boost::optional<Rule> chainRules(const VarMan &varMan, const Rule &first, const Rule &second);
 
     /**
      * Applies a simple chaining strategy to the entire ITS problem.

@@ -48,7 +48,7 @@ namespace Chaining {
      *
      * @return true iff the ITS was modified
      */
-    bool chainLinearPaths(LinearITSProblem &its);
+    bool chainLinearPaths(ITSProblem &its);
 
     /**
      * Applies a more involved chaining strategy to the entire ITS problem.
@@ -64,7 +64,7 @@ namespace Chaining {
      *
      * @return true iff the ITS was modified
      */
-    bool chainTreePaths(LinearITSProblem &its);
+    bool chainTreePaths(ITSProblem &its);
 
     /**
      * Starting from the initial location and performing a DFS traversal,
@@ -76,7 +76,7 @@ namespace Chaining {
      *
      * @return true iff the ITS was modified
      */
-    bool eliminateALocation(LinearITSProblem &its);
+    bool eliminateALocation(ITSProblem &its);
 
     /**
      * Applies chaining to eliminate all simple loops of the given ITS problem.
@@ -90,7 +90,7 @@ namespace Chaining {
      *
      * @return true iff the graph was modified
      */
-    bool chainSimpleLoops(LinearITSProblem &its);
+    bool chainSimpleLoops(ITSProblem &its);
 
 };
 

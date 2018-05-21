@@ -237,7 +237,7 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
         subs[N] = bound;
 
         LinearRule instantiated = rule;
-        instantiated.applyTempVarSubstitution(subs);
+        instantiated.applySubstitution(subs);
         res.push_back(instantiated);
         debugBackwardAccel("instantiation " << subs << " yielded " << instantiated);
     }

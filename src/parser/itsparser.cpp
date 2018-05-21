@@ -419,21 +419,22 @@ void ITSParser::convertRules() {
 
 void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert lhs to Ginac expressions
-    RuleLhs lhs;
-    lhs.loc = getLocationData(rule.lhs).index;
-    lhs.cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : Expression(1);
+    LocationIdx lhsLoc = getLocationData(rule.lhs).index;
+    Expression cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : Expression(1);
+    RuleLhs lhs(lhsLoc, {}, cost);
 
-    if (!lhs.cost.is_polynomial(itsProblem.getGinacVarList())) {
+    if (!cost.is_polynomial(itsProblem.getGinacVarList())) {
         throw FileError("Non-polynomial cost in the input");
     }
 
     for (const Relation &rel : rule.guard) {
-        lhs.guard.push_back(rel.toGinacExpression(itsProblem));
+        lhs.getGuardMut().push_back(rel.toGinacExpression(itsProblem));
     }
 
     // Ensure user given costs are non-negative
+    // TODO: Don't do this here!
     if (settings.ensureNonnegativeCosts && rule.cost) {
-        lhs.guard.push_back(lhs.cost >= 0);
+        lhs.getGuardMut().push_back(lhs.getCost() >= 0);
     }
 
     // Convert rhs, compute update
@@ -453,12 +454,12 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
         rhss.push_back(RuleRhs(rhsLoc, rhsUpdate));
     }
 
-    NonlinearRule newRule(std::move(lhs), std::move(rhss));
+    Rule newRule(std::move(lhs), std::move(rhss));
 
     // Ensure that a function symbol always occurs with the same lhs arguments,
     // e.g. if we have "f(x) -> ..." and "f(y) -> ..." we rename the variables in the second rule to get "f(x) -> ..."
     GiNaC::exmap subsLhs = computeSubstitutionToUnifyLhs(rule);
-    applySubstitution(newRule, subsLhs);
+    newRule.applySubstitution(subsLhs);
 
     // Replace unbounded variables (which do not occur in lhs) by fresh temporary variables
     replaceUnboundedByTemporaryVariables(newRule, getLocationData(rule.lhs));
@@ -589,7 +590,7 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 }
 
 
-void ITSParser::replaceUnboundedByTemporaryVariables(NonlinearRule &rule, const LocationData &lhsData) {
+void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationData &lhsData) {
     // Gather variables
     ExprSymbolSet ruleVars = getSymbols(rule);
 
@@ -608,11 +609,11 @@ void ITSParser::replaceUnboundedByTemporaryVariables(NonlinearRule &rule, const 
         }
     }
 
-    applySubstitution(rule, subs);
+    rule.applySubstitution(subs);
 }
 
 
-ExprSymbolSet ITSParser::getSymbols(const NonlinearRule &rule) {
+ExprSymbolSet ITSParser::getSymbols(const Rule &rule) {
     ExprSymbolSet res;
 
     // lhs
@@ -630,21 +631,6 @@ ExprSymbolSet ITSParser::getSymbols(const NonlinearRule &rule) {
     }
 
     return res;
-}
-
-
-void ITSParser::applySubstitution(NonlinearRule &rule, const GiNaC::exmap &subs) {
-    rule.getCostMut().applySubs(subs);
-
-    for (Expression &ex : rule.getGuardMut()) {
-        ex.applySubs(subs);
-    }
-
-    for (int i=0; i < rule.rhsCount(); ++i) {
-        for (auto &it : rule.getUpdateMut(i)) {
-            it.second.applySubs(subs);
-        }
-    }
 }
 
 

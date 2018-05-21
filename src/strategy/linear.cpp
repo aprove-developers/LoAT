@@ -32,19 +32,22 @@
 #include "preprocess.h"
 #include "its/export.h"
 
+#include "accelerate/backwardacceleration.h"
+
 
 using namespace std;
 
 
 
-RuntimeResult LinearITSAnalysis::analyze(LinearITSProblem &its, AnalysisSettings cfg) {
+RuntimeResult LinearITSAnalysis::analyze(ITSProblem &its, AnalysisSettings cfg) {
     LinearITSAnalysis analysis(its, cfg);
     return analysis.run();
 }
 
 
-LinearITSAnalysis::LinearITSAnalysis(LinearITSProblem &its, AnalysisSettings cfg)
+LinearITSAnalysis::LinearITSAnalysis(ITSProblem &its, AnalysisSettings cfg)
         : its(its), cfg(cfg) {
+    assert(its.isLinear());
 }
 
 
@@ -153,7 +156,7 @@ RuntimeResult LinearITSAnalysis::run() {
 
     if (cfg.printSimplifiedAsKoAT) {
         proofout.headline("Fully simplified program in input format:");
-        LinearITSExport::printKoAT(its, proofout);
+        ITSExport::printKoAT(its, proofout);
         proofout << endl;
     }
 
@@ -220,7 +223,7 @@ bool LinearITSAnalysis::preprocessRules() {
         for (TransIdx idx : its.getTransitionsFrom(node)) {
             if (Timeout::preprocessing()) return changed;
 
-            LinearRule &rule = its.getRuleMut(idx);
+            Rule &rule = its.getRuleMut(idx);
             if (cfg.eliminateCostConstraints) {
                 changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
             }
@@ -348,7 +351,7 @@ bool LinearITSAnalysis::pruneRules() {
  * Helper for getMaxRuntime that searches for the maximal cost.getComplexity().
  * Note that this does not involve the asymptotic bounds check and thus not give sound results!
  */
-static RuntimeResult getMaxComplexity(const LinearITSProblem &its, set<TransIdx> rules) {
+static RuntimeResult getMaxComplexity(const ITSProblem &its, set<TransIdx> rules) {
     RuntimeResult res;
 
     for (TransIdx rule : rules) {
@@ -375,7 +378,7 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
 
     RuntimeResult res;
     for (TransIdx ruleIdx : rules) {
-        const LinearRule &rule = its.getRule(ruleIdx);
+        const Rule &rule = its.getRule(ruleIdx);
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks
         Complexity cpxUpperbound = rule.getCost().getComplexity();
@@ -435,7 +438,7 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
  * Helper for removeConstantRulesAfterTimeout.
  * Returns true if there are no non-constant rules reachable from curr.
  */
-static bool removeConstantPathsImpl(LinearITSProblem &its, LocationIdx curr, set<LocationIdx> &visited) {
+static bool removeConstantPathsImpl(ITSProblem &its, LocationIdx curr, set<LocationIdx> &visited) {
     if (visited.insert(curr).second == false) return true; //already seen, remove any transitions forming a loop
 
     for (LocationIdx next : its.getSuccessorLocations(curr)) {
@@ -474,7 +477,7 @@ RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
 
         //get current max cost (with asymptotic bounds check)
         for (TransIdx trans : its.getTransitionsFrom(initial)) {
-            const LinearRule &rule = its.getRule(trans);
+            const LinearRule rule = its.getLinearRule(trans);
             if (rule.getCost().getComplexity() <= max(res.cpx, Complexity::Const)) continue;
 
             proofout << endl;
@@ -509,7 +512,7 @@ RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
             for (TransIdx first : its.getTransitionsFromTo(initial,succ)) {
                 for (TransIdx second : its.getTransitionsFrom(succ)) {
 
-                    auto chained = Chaining::chainRules(its, its.getRule(first), its.getRule(second));
+                    auto chained = Chaining::chainRules(its, its.getLinearRule(first), its.getLinearRule(second));
                     if (chained) {
                         its.addRule(chained.get());
                     }
@@ -535,7 +538,7 @@ done:
 void LinearITSAnalysis::printForProof(const std::string &dotDescription) {
     // Proof output
     proofout.increaseIndention();
-    LinearITSExport::printForProof(its, proofout);
+    ITSExport::printForProof(its, proofout);
     proofout.decreaseIndention();
 
     // dot output
