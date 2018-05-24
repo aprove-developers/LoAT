@@ -34,25 +34,32 @@
 using namespace std;
 
 
-bool Pruning::compareRules(const LinearRule &a, const LinearRule &b, bool compareUpdate) {
+bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     const GuardList &guardA = a.getGuard();
     const GuardList &guardB = b.getGuard();
-    const UpdateMap &updateA = a.getUpdate();
-    const UpdateMap &updateB = b.getUpdate();
 
     // Some trivial syntactic checks
     if (guardA.size() != guardB.size()) return false;
-    if (compareUpdate && updateA.size() != updateB.size()) return false;
+    if (compareRhss && a.rhsCount() != b.rhsCount()) return false;
 
     // Costs have to be equal up to a numeric constant
     if (!GiNaC::is_a<GiNaC::numeric>(a.getCost() - b.getCost())) return false;
 
-    // Update has to be fully equal (this check suffices, since the size is equal)
-    if (compareUpdate) {
-        for (const auto &itA : updateA) {
-            auto itB = updateB.find(itA.first);
-            if (itB == updateB.end()) return false;
-            if (!itB->second.is_equal(itA.second)) return false;
+    // All right-hand sides have to match exactly
+    if (compareRhss) {
+        for (int i=0; i < a.rhsCount(); ++i) {
+            const UpdateMap &updateA = a.getUpdate(i);
+            const UpdateMap &updateB = b.getUpdate(i);
+
+            if (a.getRhsLoc(i) != b.getRhsLoc(i)) return false;
+            if (updateA.size() != updateB.size()) return false;
+
+            // update has to be fully equal (one inclusion suffices, since the size is equal)
+            for (const auto &itA : updateA) {
+                auto itB = updateB.find(itA.first);
+                if (itB == updateB.end()) return false;
+                if (!itB->second.is_equal(itA.second)) return false;
+            }
         }
     }
 
@@ -67,7 +74,7 @@ bool Pruning::compareRules(const LinearRule &a, const LinearRule &b, bool compar
 
 
 template <typename Container>
-bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareUpdate) {
+bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareRhss) {
     set<TransIdx> toRemove;
 
     for (auto i = trans.begin(); i != trans.end(); ++i) {
@@ -79,7 +86,7 @@ bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool
             const LinearRule ruleB = its.getLinearRule(idxB);
 
             // if rules are identical up to cost, keep the one with the higher cost
-            if (compareRules(ruleA, ruleB ,compareUpdate)) {
+            if (compareRules(ruleA, ruleB, compareRhss)) {
                 if (GiNaC::ex_to<GiNaC::numeric>(ruleA.getCost() - ruleB.getCost()).is_positive()) {
                     toRemove.insert(idxB);
                 } else {
@@ -150,7 +157,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     int idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
 
                     TransIdx ruleIdx = parallel[idx];
-                    const LinearRule rule = its.getLinearRule(parallel[idx]);
+                    const Rule &rule = its.getRule(parallel[idx]);
 
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
                     auto res = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), false);
@@ -173,11 +180,18 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     }
                 }
 
-                // Remove all rules except for the one in keep, add a dummy rule if there was one before
+                // Remove all rules except for the ones in keep, add a dummy rule if there was one before
+                // Note that for nonlinear rules, we only remove edges (so only single rhss), not the entire rule
                 for (TransIdx rule : parallel) {
                     if (keep.count(rule) == 0) {
                         Stats::add(Stats::PruneRemove);
-                        debugPrune("  removing rule " << rule << " from location " << pre << " to " << node);
+                        debugPrune("  removing all right-hand sides of " << rule << " from location " << pre << " to " << node);
+
+                        auto optRule = its.getRule(rule).stripRhsLocation(node);
+                        if (optRule) {
+                            its.addRule(optRule.get());
+                        }
+
                         its.removeRule(rule);
                     }
                 }
@@ -202,17 +216,27 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) return false; // already present
 
+    // for brevity only
+    auto isLeaf = [&its](LocationIdx loc){ return !its.hasTransitionsFrom(loc); };
+    auto isLeafRhs = [&](const RuleRhs &rhs){ return isLeaf(rhs.getLoc()); };
+
     bool changed = false;
     for (LocationIdx next : its.getSuccessorLocations(node)) {
         // recurse first
         changed = removeConstLeafs(its, next, visited) || changed;
 
-        // if next is (now) a leaf, remove all rules to next that have constant cost
-        if (its.getTransitionsFrom(next).empty()) {
-            for (TransIdx rule : its.getTransitionsFromTo(node, next)) {
-                if (its.getRule(rule).getCost().getComplexity() == Complexity::Const) {
-                    debugPrune("  removing constant leaf rule: " << rule);
-                    its.removeRule(rule);
+        // If next is (now) a leaf, rules leading to next are candidates for removal
+        if (isLeaf(next)) {
+            for (TransIdx ruleIdx : its.getTransitionsFromTo(node, next)) {
+                const Rule &rule = its.getRule(ruleIdx);
+
+                // only remove rules with constant complexity
+                if (rule.getCost().getComplexity() > Complexity::Const) continue;
+
+                // only remove rules where _all_ right-hand sides lead to leaves
+                if (rule.rhsCount() == 1 || std::all_of(rule.rhsBegin(), rule.rhsEnd(), isLeafRhs)) {
+                    debugPrune("  removing constant leaf rule: " << ruleIdx);
+                    its.removeRule(ruleIdx);
                     changed = true;
                 }
             }

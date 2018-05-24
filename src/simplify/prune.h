@@ -20,14 +20,14 @@
 
 #include "graph/hypergraph.h"
 
-class LinearRule;
+class Rule;
 class ITSProblem;
 
 
 namespace Pruning {
     /**
-     * Tries to identify and remove duplicate transitions within the given list of transitions
-     * @param trans list/set of transitions that are checked
+     * Tries to identify and remove duplicate transitions within the given list/set of transitions
+     * @param trans vector/set/... of transitions that are checked
      * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
      * @return true iff the ITS was modified (i.e. a duplicate got deleted)
      */
@@ -42,7 +42,8 @@ namespace Pruning {
 
     /**
      * Reduces the number of parallel rules by applying some greedy heuristic to find the "best" rules
-     * @note also removes unreachable nodes and irrelevant const transitions using removeConstLeafsAndUnreachable()
+     * @note Two nonlinear rules are considered parallel if they have at least one target location in common.
+     * @note For nonlinear rules, only certain right-hand sides are removed, but not necessarily entire rules.
      * @return true iff the ITS was modified (transitions were deleted)
      */
     bool pruneParallelRules(ITSProblem &its);
@@ -56,10 +57,11 @@ namespace Pruning {
     /**
      * A simple syntactic comparision. Returns true iff a and b are equal up to constants in the cost term.
      * @note as this is a syntactic check, false has no guaranteed meaning
-     * @param compareUpdate if false, the update is not compared (i.e., rules with different update might be equal)
+     * @param compareRhss if false, the rhs locations and updates are not compared
+     * (i.e., rules with different update might be equal)
      * @return true if the rules are equal up to constants in the cost term, false if they differ or we are unsure.
      */
-    bool compareRules(const LinearRule &a, const LinearRule &b, bool compareUpdate = true);
+    bool compareRules(const Rule &a, const Rule &b, bool compareRhss = true);
 }
 
 #endif // PRUNE_H

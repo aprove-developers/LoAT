@@ -25,11 +25,11 @@
 #include "util/timing.h"
 #include "util/timeout.h"
 
-#include "nl_prune.h"
+#include "simplify/prune.h"
 #include "nl_chaining.h"
 #include "nl_accelerate.h"
 
-#include "preprocess.h"
+#include "simplify/preprocess.h"
 #include "its/export.h"
 
 
@@ -65,7 +65,7 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
         printForProof("Fresh start");
     }
 
-    if (PruningNL::removeUnsatInitialRules(its)) {
+    if (Pruning::removeUnsatInitialRules(its)) {
         proofout.headline("Removed unsatisfiable initial rules:");
         printForProof("Reduced initial");
     }
@@ -222,7 +222,7 @@ bool NonlinearITSAnalysis::preprocessRules() {
     Timing::Scope _timer(Timing::Preprocess);
 
     // remove unreachable transitions/nodes
-    bool changed = PruningNL::removeLeafsAndUnreachable(its);
+    bool changed = Pruning::removeLeafsAndUnreachable(its);
 
     // update/guard preprocessing
     for (LocationIdx node : its.getLocations()) {
@@ -242,7 +242,7 @@ bool NonlinearITSAnalysis::preprocessRules() {
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
             if (Timeout::preprocessing()) return changed;
 
-            changed = PruningNL::removeDuplicateRules(its, its.getTransitionsFromTo(node, succ)) || changed;
+            changed = Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, succ)) || changed;
         }
     }
 

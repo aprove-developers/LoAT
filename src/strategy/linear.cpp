@@ -25,11 +25,11 @@
 #include "util/timing.h"
 #include "util/timeout.h"
 
-#include "prune.h"
+#include "simplify/prune.h"
 #include "chaining.h"
 #include "accelerate/accelerator.h"
 
-#include "preprocess.h"
+#include "simplify/preprocess.h"
 #include "its/export.h"
 
 #include "accelerate/backwardacceleration.h"

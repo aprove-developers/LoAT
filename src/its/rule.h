@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "types.h"
+#include "util/option.h"
 
 
 
@@ -122,6 +123,9 @@ public:
 
     // Creates a new rule that only leads to the given location, the updates are cleared, guard/cost are kept
     LinearRule replaceRhssBySink(LocationIdx sink) const;
+
+    // Removes all right-hand sides that lead to the given location, returns none if all rhss would be removed
+    option<Rule> stripRhsLocation(LocationIdx toRemove) const;
 };
 
 

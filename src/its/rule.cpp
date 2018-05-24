@@ -73,6 +73,21 @@ LinearRule Rule::replaceRhssBySink(LocationIdx sink) const {
     return LinearRule(getLhs(), RuleRhs(sink, {}));
 }
 
+option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
+    vector<RuleRhs> newRhss;
+    for (const RuleRhs &rhs : rhss) {
+        if (rhs.getLoc() != toRemove) {
+            newRhss.push_back(rhs);
+        }
+    }
+
+    if (newRhss.empty()) {
+        return {};
+    } else {
+        return Rule(lhs, newRhss);
+    }
+}
+
 ostream& operator<<(ostream &s, const Rule &rule) {
     s << "Rule(";
 

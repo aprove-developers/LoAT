@@ -29,7 +29,7 @@
 using namespace std;
 
 
-#include "preprocess.h"
+#include "simplify/preprocess.h"
 #include "util/stats.h"
 #include "util/timing.h"
 #include "util/timeout.h"
