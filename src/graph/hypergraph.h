@@ -236,14 +236,15 @@ public:
         }
 
         //find incoming transitions
-        for (Node pre : getPredecessors(idx)) {
-            for (TransIdx removeIdx : getTransFromTo(pre,idx)) {
-                toRemove.insert(removeIdx);
-            }
+        for (TransIdx in : getTransTo(idx)) {
+            toRemove.insert(in);
         }
 
         //remove it all
-        for (TransIdx idx : toRemove) removeTrans(idx);
+        for (TransIdx idx : toRemove) {
+            removeTrans(idx);
+        }
+
         assert(outgoing.count(idx) == 0);
         assert(predecessor.count(idx) == 0);
         assert(check() == Valid);
