@@ -27,7 +27,7 @@
 
 #include "prune.h"
 #include "chaining.h"
-#include "accelerate.h"
+#include "accelerate/accelerator.h"
 
 #include "preprocess.h"
 #include "its/export.h"
@@ -304,9 +304,10 @@ bool LinearITSAnalysis::chainSimpleLoops() {
 bool LinearITSAnalysis::accelerateSimpleLoops() {
     Stats::addStep("FlowGraph::accelerateSimpleLoops");
     bool res = false;
+    set<TransIdx> resultingRules;
 
     for (LocationIdx node : its.getLocations()) {
-        if (Accelerator::accelerateSimpleLoops(its, node)) {
+        if (Accelerator::accelerateSimpleLoops(its, node, resultingRules)) {
             // Acceleration might produce duplicate rules
             // TODO: check if this is necessary or if it only wastes time! (the old impl did this)
             Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, node));
