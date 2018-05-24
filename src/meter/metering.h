@@ -78,6 +78,7 @@ public:
      */
     static Result generate(VarMan &varMan, const Rule &rule);
 
+    // TODO: This should rather return option<Rule>
     /**
      * Heuristic to instantiate temporary variables by their bounds (e.g. for "x <= 4", instantiate x by 4).
      * This might help to find a metering function, but of course makes the rule less general.

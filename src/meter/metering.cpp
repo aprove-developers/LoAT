@@ -530,6 +530,8 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     // FIXME: Example: x^2/z by linearization and then z/a by this heuristic
     // FIXME: So we should just forbid to instantiate variables introduced by linearization
     // Apply the successful instantiation to the entire rule
+
+    // TODO: Use rule.applySubstitution
     for (Expression &ex : rule.getGuardMut()) {
         ex.applySubs(successfulSubs);
     }
