@@ -60,7 +60,6 @@ static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &
 /**
  * Helper that prints an entire rule in a human-readable format
  */
-template <typename Rule>
 static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, bool colors) {
     printLocation(rule.getLhsLoc(), its, s);
     s << " -> ";

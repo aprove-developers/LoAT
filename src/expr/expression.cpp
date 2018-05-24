@@ -465,3 +465,9 @@ Expression Expression::calcComplexityClass() const {
     return simplifyForComplexity(term);
 }
 
+
+string Expression::toString() const {
+    stringstream ss;
+    ss << *this;
+    return ss.str();
+}

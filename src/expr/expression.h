@@ -266,6 +266,10 @@ public:
     Expression calcComplexityClass() const;
     EXCEPTION(UnknownComplexityClassException,CustomException);
 
+    /**
+     * Converts this expression to a string by using GiNaC's operator<<
+     */
+    std::string toString() const;
 
 private:
     /**

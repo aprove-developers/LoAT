@@ -49,6 +49,10 @@ void ITSProblem::setInitialLocation(LocationIdx loc) {
     initialLocation = loc;
 }
 
+bool ITSProblem::hasRule(TransIdx transition) const {
+    return rules.find(transition) != rules.end();
+}
+
 const Rule& ITSProblem::getRule(TransIdx transition) const {
     return rules.at(transition);
 }
