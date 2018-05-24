@@ -17,6 +17,7 @@
 
 #include "z3toolbox.h"
 
+#include "z3solver.h"
 #include "z3context.h"
 #include "expr/expression.h"
 #include "debug.h"

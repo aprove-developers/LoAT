@@ -19,6 +19,7 @@
 
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
+#include "z3/z3solver.h"
 #include "z3/z3toolbox.h"
 
 using namespace std;

@@ -25,6 +25,7 @@
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
 #include "expr/expression.h"
+#include "z3/z3solver.h"
 #include "z3/z3toolbox.h"
 #include "util/timeout.h"
 

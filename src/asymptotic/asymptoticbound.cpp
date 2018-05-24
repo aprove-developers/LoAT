@@ -10,6 +10,7 @@
 #include "expr/relation.h"
 #include "util/timeout.h"
 
+#include "z3/z3solver.h"
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"
 

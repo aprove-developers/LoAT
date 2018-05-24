@@ -70,23 +70,6 @@ private:
 
 
 /**
- * Wrapper around z3 solver to track timing information
- */
-class Z3Solver : public z3::solver {
-public:
-    // TODO: Add timeout
-    explicit Z3Solver(Z3Context &context) : z3::solver(context) {}
-
-    inline z3::check_result check() {
-        Timing::start(Timing::Z3);
-        z3::check_result res = z3::solver::check();
-        Timing::done(Timing::Z3);
-        return res;
-    }
-};
-
-
-/**
  * For debugging
  */
 std::ostream& operator<<(std::ostream &s, const Z3Context::VariableType &type);
