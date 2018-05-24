@@ -111,6 +111,7 @@ private:
     bool eliminateALocation();
     bool chainSimpleLoops();
     bool accelerateSimpleLoops();
+    bool backwardAccelerateSimpleLoops();
     bool pruneRules();
 
     /**

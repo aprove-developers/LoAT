@@ -97,6 +97,7 @@ RuntimeResult LinearITSAnalysis::run() {
             changed = false;
 
             if (accelerateSimpleLoops()) {
+//            if (backwardAccelerateSimpleLoops()) {
                 changed = true;
                 proofout.headline("Accelerated all simple loops using metering functions (where possible):");
                 printForProof("Accelerate simple loops");
@@ -322,6 +323,45 @@ bool LinearITSAnalysis::accelerateSimpleLoops() {
     cout << " /========== AFTER SELFLOOPS ==========\\ " << endl;
     print(cout);
     cout << " \\========== AFTER SELFLOOPS ==========/ " << endl;
+#endif
+    return res;
+}
+
+
+bool LinearITSAnalysis::backwardAccelerateSimpleLoops() {
+    Stats::addStep("FlowGraph::backwardAccelerateSimpleLoops");
+    bool res = false;
+
+    for (LocationIdx node : its.getLocations()) {
+        vector<TransIdx> loops = its.getTransitionsFromTo(node, node);
+        vector<TransIdx> toRemove;
+        vector<LinearRule> toAdd;
+
+        debugBackwardAccel("trying to backward-accelerate " << loops.size() << " loops at location " << node);
+        for (TransIdx loop : loops) {
+            if (Timeout::soft()) break;
+
+            auto optRules = BackwardAcceleration::accelerate(its, its.getLinearRule(loop));
+            if (optRules) {
+                vector<LinearRule> rules = optRules.get();
+                toAdd.insert(toAdd.end(), rules.begin(), rules.end());
+                toRemove.push_back(loop);
+            }
+        }
+
+        for (TransIdx rule : toRemove) {
+            its.removeRule(rule);
+        }
+        for (LinearRule rule : toAdd) {
+            its.addRule(rule);
+        }
+        res = res || !toRemove.empty();
+    }
+
+#ifdef DEBUG_PRINTSTEPS
+    cout << " /========== AFTER BACK ACCEL ==========\\ " << endl;
+    print(cout);
+    cout << " \\========== AFTER BACK ACCEL ==========/ " << endl;
 #endif
     return res;
 }
