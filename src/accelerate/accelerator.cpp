@@ -70,11 +70,20 @@ bool Accelerator::simplifySimpleLoops() {
     bool res = false;
 
 #ifdef SELFLOOPS_ALWAYS_SIMPLIFY
-    for (TransIdx loop : its.getTransitionsFromTo(targetLoc, targetLoc)) {
+    vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
+
+    // Simplify all simple loops
+    for (TransIdx loop : loops) {
         if (Preprocess::simplifyRule(its, its.getRuleMut(loop))) {
             res = true;
             debugAccel("Simplified rule " << loop << " to " << its.getRule(loop));
         }
+    }
+
+    // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
+    if (Pruning::removeDuplicateRules(its, loops)) {
+        res = true;
+        debugAccel("Removed some duplicate simple loops");
     }
 #endif
 
@@ -272,7 +281,7 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 void Accelerator::run() {
     // Simplifying rules might make it easier to find metering functions
     if (simplifySimpleLoops()) {
-        proofout << "Simplified some of the simple loops." << endl;
+        proofout << "Simplified some of the simple loops (and removed duplicate rules)." << endl;
     }
 
     // Since we might add accelerated loops, we store the list of loops before acceleration
