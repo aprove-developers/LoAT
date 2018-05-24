@@ -196,6 +196,9 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
     }
 #endif
 
+    // TODO: Delete some rhss of nonlinear rules and try again! (see paper step 3.2)
+    // TODO: Trying all combinations is probably way too expensive, so maybe just drop the last one (repeatedly)?
+
     assert(res.result == NoMetering && res.rules.empty());
     return res;
 }

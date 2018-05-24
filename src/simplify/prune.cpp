@@ -82,8 +82,8 @@ bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool
             TransIdx idxA = *i;
             TransIdx idxB = *j;
 
-            const LinearRule ruleA = its.getLinearRule(idxA);
-            const LinearRule ruleB = its.getLinearRule(idxB);
+            const Rule &ruleA = its.getRule(idxA);
+            const Rule &ruleB = its.getRule(idxB);
 
             // if rules are identical up to cost, keep the one with the higher cost
             if (compareRules(ruleA, ruleB, compareRhss)) {

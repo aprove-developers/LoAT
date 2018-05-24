@@ -285,7 +285,7 @@ void Accelerator::run() {
     }
 
     // Since we might add accelerated loops, we store the list of loops before acceleration
-    vector<TransIdx> loops = its.getTransitionsFromTo(targetLoc, targetLoc);
+    vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
     assert(!loops.empty());
 
     // Proof output
@@ -333,7 +333,9 @@ void Accelerator::run() {
                 break;
 
             case Forward::NoMetering:
-                outerCandidates.push_back({loop, "NoMetering"});
+                if (its.getRule(loop).isLinear()) {
+                    outerCandidates.push_back({loop, "NoMetering"});
+                }
                 keepRules.insert(loop);
                 proofout << "Found no metering function for rule " << loop << "." << endl;
                 break;
@@ -342,14 +344,19 @@ void Accelerator::run() {
                 // Add accelerated rules, also mark them as inner nesting candidates
                 for (Forward::MeteredRule accel : res.rules) {
                     TransIdx added = addResultingRule(accel.rule);
-                    innerCandidates.push_back(InnerCandidate{.oldRule=loop,.newRule=added});
+                    if (accel.rule.isSimpleLoop()) {
+                        // accel.rule is a simple loop iff the original was linear and not non-terminating.
+                        innerCandidates.push_back(InnerCandidate{.oldRule=loop,.newRule=added});
+                    }
                     proofout << "Accelerated rule " << loop << " with " << accel.info;
                     proofout << ", yielding the new rule " << added << "." << endl;
                 }
 
                 // The original rule could still be an outer loop for nesting
                 // TODO: Check via benchmarks if this ever happens (or if we only waste time here)
-                outerCandidates.push_back({loop, "Ranked"});
+                if (its.getRule(loop).isLinear()) {
+                    outerCandidates.push_back({loop, "Ranked"});
+                }
                 break;
         }
     }
@@ -385,7 +392,7 @@ timeout:;
 // #######################
 
 bool Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules) {
-    if (its.getTransitionsFromTo(loc, loc).empty()) {
+    if (its.getSimpleLoopsAt(loc).empty()) {
         return false;
     }
 
