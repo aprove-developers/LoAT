@@ -27,7 +27,7 @@
 
 #include "simplify/prune.h"
 #include "nl_chaining.h"
-#include "nl_accelerate.h"
+#include "accelerate/accelerator.h"
 
 #include "simplify/preprocess.h"
 #include "its/export.h"
@@ -373,7 +373,7 @@ bool NonlinearITSAnalysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
-        res = AcceleratorNL::accelerateSimpleLoops(its, node, acceleratedRules) || res;
+        res = Accelerator::accelerateSimpleLoops(its, node, acceleratedRules) || res;
         // TODO: Remove duplicates (we need the fresh sink location, should pass it to Accelerator!!!)
         if (Timeout::soft()) return res;
     }
