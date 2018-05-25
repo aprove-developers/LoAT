@@ -407,7 +407,11 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
 
 
 Complexity Expression::getComplexity() const {
-    Expression simple = expand();
+    if (isInfSymbol()) {
+        return Complexity::Nonterm;
+    }
+
+    Expression simple = expand(); // multiply out
     return getComplexity(simple);
 }
 
