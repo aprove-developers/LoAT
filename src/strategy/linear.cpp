@@ -76,6 +76,7 @@ RuntimeResult LinearITSAnalysis::run() {
 
     RuntimeResult runtime; // defaults to unknown complexity
     string eliminatedLocation; // for proof output of eliminateALocation
+    bool acceleratedOnce = false; // whether we did at least one acceleration step
 
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
@@ -102,6 +103,7 @@ RuntimeResult LinearITSAnalysis::run() {
             if (accelerateSimpleLoops(acceleratedRules)) {
 //            if (backwardAccelerateSimpleLoops()) {
                 changed = true;
+                acceleratedOnce = true;
                 proofout.headline("Accelerated all simple loops using metering functions (where possible):");
                 printForProof("Accelerate simple loops");
             }
@@ -146,8 +148,9 @@ RuntimeResult LinearITSAnalysis::run() {
         }
         if (Timeout::soft()) break;
 
-        // Try to avoid rule explosion (often caused by chainTreePaths)
-        if (pruneRules()) {
+        // Try to avoid rule explosion (often caused by chainTreePaths).
+        // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
+        if (acceleratedOnce && pruneRules()) {
             proofout.headline("Applied pruning (of leafs and parallel rules):");
             printForProof("Prune");
         }
