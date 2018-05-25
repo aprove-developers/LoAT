@@ -89,20 +89,13 @@ bool Expression::equalsVariable(const GiNaC::symbol &var) const {
 }
 
 
-bool Expression::isInfty() const {
-    //trivial cases
-    if (degree(InfSymbol) == 0) return false;
-    if (equalsVariable(InfSymbol)) return true;
+bool Expression::isInfSymbol() const {
+    bool res = equalsVariable(InfSymbol);
 
-    //check if INF is used in a simple polynomial manner with positive coefficients
-    int d = degree(InfSymbol);
-    if (coeff(InfSymbol, d).info(GiNaC::info_flags::positive)) {
-        return true;
-    }
-
-    //we do not know if this expression is INF or not
-    debugWarn("Expression: unsure if INF: " << this);
-    return false;
+    // TODO: Remove this assertion if it is never hit.
+    // TODO: Since chaining handles the case where one of the costs is INF, there should never be an INF within an arithmetic expression
+    assert(degree(InfSymbol) == 0 || res);
+    return res;
 }
 
 

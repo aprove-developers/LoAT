@@ -902,7 +902,7 @@ InfiniteInstances::Result InfiniteInstances::check(const VarMan &varMan, GuardLi
     if (z3res == z3::unsat) return Result(Complexity::Unknown,"unsat");
 
     //if cost is INF, a single model for the guard is sufficient
-    if (cost.isInfty() && z3res == z3::sat) return Result(Complexity::Infty,false,Expression::InfSymbol,0,"INF sat");
+    if (cost.isInfSymbol() && z3res == z3::sat) return Result(Complexity::Infty,false,Expression::InfSymbol,0,"INF sat");
 
     //abort if cost is trivial
     debugInfinity("COST: " << cost);

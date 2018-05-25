@@ -307,7 +307,7 @@ void Accelerator::run() {
         // rules with INF cost should never be self loops (they should always lead to sink states)
         // this assertion is mostly relevant during refactoring.
         // TODO: remove this later
-        assert(!its.getRule(loop).getCost().isInfty());
+        assert(!its.getRule(loop).getCost().isInfSymbol());
 
         // Forward acceleration
         Forward::Result res = Forward::accelerate(its, its.getRule(loop), sinkLoc);

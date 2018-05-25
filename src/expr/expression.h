@@ -110,8 +110,9 @@ public:
     /**
      * Checks if this expression represents infinity, i.e. if it is (equivalent to) the INF-symbol.
      * @note Only a heuristic check, returns false if unsure.
+     * TODO: Update documentation
      */
-    bool isInfty() const;
+    bool isInfSymbol() const;
 
     // TODO: replace by isLinear and isLinearWithin(ExprSymbolSet)
     // TODO: This is probably cleaner than the getGinacVarList() everywhere...

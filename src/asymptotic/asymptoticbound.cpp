@@ -1229,6 +1229,9 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
     debugAsymptoticBound("");
 
     Expression expandedCost = cost.expand();
+
+    // TODO: Simplify this check by only using isInfSymbol (and otherwise asserting that InfSymbol does not occur),
+    // TODO: See Expression::isInfSymbol for the explanation.
     //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
     if (expandedCost.has(Expression::InfSymbol)) {
         Expression inftyCoeff = expandedCost.coeff(Expression::InfSymbol);
