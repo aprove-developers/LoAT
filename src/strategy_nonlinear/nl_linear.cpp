@@ -259,40 +259,40 @@ bool NonlinearITSAnalysis::isFullySimplified() const {
 }
 
 
-// Deletes all right-hand sides of the given rule that lead to loc, but always keeps at least one rhs.
+// Deletes all right-hand sides of the given rule that lead to loc.
+// If all rhss lead to loc, then the rule is completely deleted if it has constant complexity,
+// if it has higher complexity, the rule's rhss are replaced by a single dummy rhs.
 bool NonlinearITSAnalysis::partialDeletion(TransIdx ruleIdx, LocationIdx loc) {
     const Rule &rule = its.getRule(ruleIdx);
-    set<LocationIdx> targets = its.getTransitionTargets(ruleIdx);
-    assert(targets.count(loc) > 0);
+    assert(its.getTransitionTargets(ruleIdx).count(loc) > 0); // should only call this if we can delete something
 
-    // If loc is the only target of this rule, we cannot remove it
-    if (rule.isLinear()) return false;
-
-    // Special case: All right-hand sides of this rule end in loc.
-    // Replace the rule by a linear one without update
-    if (targets.size() == 1) {
-        Rule newRule(rule.getLhs(), RuleRhs(loc, {}));
-        its.removeRule(ruleIdx);
-        TransIdx newIdx = its.addRule(newRule);
-        debugLinear("Partial deletion (special case): Replaced rule " << ruleIdx << " by new rule " << newIdx);
-        return true;
+    // If the rule only has one rhs, we do not change it (this ensures termination of the overall algorithm)
+    if (rule.isLinear()) {
+        return false;
     }
 
-    // Remove all right-hand sides leading to loc, keep the other ones
-    vector<RuleRhs> newRhss;
-    for (const RuleRhs &rhs : rule.getRhss()) {
-        if (rhs.getLoc() != loc) {
-            newRhss.push_back(rhs);
+    // Replace the rule by a stripped rule (without rhss leading to loc), if possible
+    auto optRule = rule.stripRhsLocation(loc);
+    if (optRule) {
+        TransIdx newIdx = its.addRule(optRule.get());
+        debugLinear("Partial deletion: Added stripped rule " << newIdx << " (for rule " << ruleIdx << ")");
+    }
+
+    // If all rhss would be deleted, we still keep the rule if it has an interesting complexity.
+    if (!optRule) {
+        if (rule.getCost().getComplexity() > Complexity::Const) {
+            // Note that it is only sound to add a dummy transition to loc if loc is a sink location.
+            // This should be the case when partialDeletion is called, at least for the current implementation.
+            assert(!its.hasTransitionsFrom(loc));
+            TransIdx newIdx = its.addRule(rule.replaceRhssBySink(loc));
+            debugLinear("Partial deletion: Added dummy rule " << newIdx << " (for rule " << ruleIdx << ")");
         }
     }
 
-    Rule newRule(rule.getLhs(), newRhss);
+    // Remove the original rule
     its.removeRule(ruleIdx);
-    TransIdx newIdx = its.addRule(newRule);
-    debugLinear("Partial deletion: Replaced rule " << ruleIdx << " by new rule " << newIdx);
     return true;
 }
-
 
 
 // remove edges to locations without outdegree 0 (sink)
