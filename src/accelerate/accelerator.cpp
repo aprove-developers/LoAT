@@ -354,23 +354,36 @@ void Accelerator::run() {
                 // fall-through
 
             case Forward::Success:
+            {
+                bool isNonterm = false;
+
                 // Add accelerated rules, also mark them as inner nesting candidates
                 for (Forward::MeteredRule accel : res.rules) {
                     TransIdx added = addResultingRule(accel.rule);
+                    proofout << "Accelerated rule " << loop << " with " << accel.info;
+                    proofout << ", yielding the new rule " << added << "." << endl;
+
                     if (accel.rule.isSimpleLoop()) {
                         // accel.rule is a simple loop iff the original was linear and not non-terminating.
                         innerCandidates.push_back(InnerCandidate{.oldRule=loop,.newRule=added});
                     }
-                    proofout << "Accelerated rule " << loop << " with " << accel.info;
-                    proofout << ", yielding the new rule " << added << "." << endl;
+
+                    isNonterm = isNonterm || accel.rule.getCost().isInfSymbol();
                 }
 
-                // The original rule could still be an outer loop for nesting
+                // If the guard was modified, the original rule might not be non-terminating
+                if (res.result == Forward::SuccessWithRestriction) {
+                    isNonterm = false;
+                }
+
+                // The original rule could still be an outer loop for nesting,
+                // unless it is non-terminating (so nesting will not improve the result).
                 // TODO: Check via benchmarks if this ever happens (or if we only waste time here)
-                if (its.getRule(loop).isLinear()) {
+                if (its.getRule(loop).isLinear() && !isNonterm) {
                     outerCandidates.push_back({loop, "Ranked"});
                 }
                 break;
+            }
         }
     }
 
