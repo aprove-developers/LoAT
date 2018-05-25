@@ -172,9 +172,10 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
             res.rules.push_back(accelRule.get().appendInfo(" [after adding " + Expression(A < B).toString() + "]"));
         }
 
-        // Check if at least one attempt was successful
+        // Check if at least one attempt was successful.
+        // If both were successful, then there is no real restriction (since we add both alternatives).
         if (!res.rules.empty()) {
-            res.result = Success;
+            res.result = (res.rules.size() == 2) ? Success : SuccessWithRestriction;
             return res;
         }
     }
@@ -190,7 +191,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         auto accelRule = accelerateFast(varMan, newRule, sink);
         if (accelRule) {
             res.rules.push_back(accelRule.get().appendInfo(" [after strengthening guard]"));
-            res.result = Success;
+            res.result = SuccessWithRestriction;
             return res;
         }
     }

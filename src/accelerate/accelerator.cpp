@@ -317,9 +317,10 @@ void Accelerator::run() {
         // Forward acceleration
         Forward::Result res = Forward::accelerate(its, its.getRule(loop), sinkLoc);
 
-        // Try backward acceleration only if forward acceleration failed
+        // Try backward acceleration only if forward acceleration failed,
+        // or if it only succeeded by restricting the guard. In this case,
+        // we keep the rules from forward and just add the ones from backward acceleration.
         if (res.result != Forward::Success && its.getRule(loop).isLinear()) {
-            assert(res.rules.empty());
             auto optRules = Backward::accelerate(its, its.getLinearRule(loop));
             if (optRules) {
                 res.result = Forward::Success;
@@ -344,6 +345,13 @@ void Accelerator::run() {
                 keepRules.insert(loop);
                 proofout << "Found no metering function for rule " << loop << "." << endl;
                 break;
+
+            case Forward::SuccessWithRestriction:
+                // If we only succeed by extending the rule's guard, we make the rule more restrictive
+                // and can thus lose execution paths. So we also keep the original, unaccelerated rule.
+                keepRules.insert(loop);
+
+                // fall-through
 
             case Forward::Success:
                 // Add accelerated rules, also mark them as inner nesting candidates
