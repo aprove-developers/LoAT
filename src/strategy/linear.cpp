@@ -420,6 +420,7 @@ static RuntimeResult getMaxComplexity(const ITSProblem &its, set<TransIdx> rules
 
 RuntimeResult LinearITSAnalysis::getMaxRuntime() {
     auto rules = its.getTransitionsFrom(its.getInitialLocation());
+    auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); };
 
 #ifndef FINAL_INFINITY_CHECK
     proofout.setLineStyle(ProofOutput::Warning);
@@ -431,9 +432,11 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
     for (TransIdx ruleIdx : rules) {
         const Rule &rule = its.getRule(ruleIdx);
 
-        // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks
+        // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
+        // We have to be careful with temp variables, since they can lead to unbounded cost.
         Complexity cpxUpperbound = rule.getCost().getComplexity();
-        if (cpxUpperbound <= res.cpx) {
+        bool hasTempVar = rule.getCost().hasVariableWith(isTempVar);
+        if (cpxUpperbound <= res.cpx && !hasTempVar) {
             proofout << "Skipping rule " << ruleIdx << " since it cannot improve the complexity" << endl;
             continue;
         }
