@@ -72,6 +72,7 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
     }
 
     RuntimeResultNL runtime; // defaults to unknown complexity
+    string eliminatedLocation; // for proof output of eliminateALocation
 
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
@@ -135,8 +136,8 @@ RuntimeResultNL NonlinearITSAnalysis::run() {
             proofout.headline("Eliminated locations (on tree-shaped paths):");
             printForProof("Chain tree paths");
 
-        } else if (eliminateALocation()) {
-            proofout.headline("Eliminated a location (as a last resort):");
+        } else if (eliminateALocation(eliminatedLocation)) {
+            proofout.headline("Eliminated location " + eliminatedLocation + " (as a last resort):");
             printForProof("Eliminate location");
         }
         if (Timeout::soft()) break;
@@ -345,9 +346,9 @@ bool NonlinearITSAnalysis::chainTreePaths() {
 }
 
 
-bool NonlinearITSAnalysis::eliminateALocation() {
+bool NonlinearITSAnalysis::eliminateALocation(string &eliminatedLocation) {
     Stats::addStep("Nonlinear::eliminateALocation");
-    bool res = Chaining::eliminateALocation(its);
+    bool res = Chaining::eliminateALocation(its, eliminatedLocation);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
     its.print(cout);

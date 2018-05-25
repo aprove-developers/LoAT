@@ -48,12 +48,7 @@ static void collectBoundVariables(const Rule &rule, const VarMan &varMan, ExprSy
  */
 static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &s) {
     s << COLOR_LOCATION;
-    auto optName = its.getLocationName(loc);
-    if (optName) {
-        s << optName.get();
-    } else {
-        s << "[" << loc << "]";
-    }
+    s << its.getPrintableLocationName(loc);
     s << COLOR_NONE;
 }
 

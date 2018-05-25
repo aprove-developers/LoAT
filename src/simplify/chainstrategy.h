@@ -65,9 +65,11 @@ namespace Chaining {
      * A node is applicable for elimination if it has no simple loops,
      * has both in- and outgoing transitions and is not the initial location.
      *
+     * @param eliminatedLocation Set to the printable name of the eliminated location (if result is true).
+     *
      * @return true iff the ITS was modified
      */
-    bool eliminateALocation(ITSProblem &its);
+    bool eliminateALocation(ITSProblem &its, std::string &eliminatedLocation);
 
     /**
      * Chains all rules of the given vector (the list of successfully accelerated rules)

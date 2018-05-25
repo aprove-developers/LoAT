@@ -91,6 +91,7 @@ public:
     // Required for printing (see ITSExport)
     std::set<LocationIdx> getLocations() const;
     option<std::string> getLocationName(LocationIdx idx) const;
+    std::string getPrintableLocationName(LocationIdx idx) const; // returns "[idx]" if there is no name
 
     // Removes a location, but does _not_ care about rules.
     // Rules from/to this location must be removed before calling this!

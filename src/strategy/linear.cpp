@@ -75,6 +75,7 @@ RuntimeResult LinearITSAnalysis::run() {
     }
 
     RuntimeResult runtime; // defaults to unknown complexity
+    string eliminatedLocation; // for proof output of eliminateALocation
 
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
@@ -139,15 +140,15 @@ RuntimeResult LinearITSAnalysis::run() {
             proofout.headline("Eliminated locations (on tree-shaped paths):");
             printForProof("Chain tree paths");
 
-        } else if (eliminateALocation()) {
-            proofout.headline("Eliminated a location (as a last resort):");
+        } else if (eliminateALocation(eliminatedLocation)) {
+            proofout.headline("Eliminated location " + eliminatedLocation + " (as a last resort):");
             printForProof("Eliminate location");
         }
         if (Timeout::soft()) break;
 
-        // Try to avoid rule explosion
+        // Try to avoid rule explosion (often caused by chainTreePaths)
         if (pruneRules()) {
-            proofout << endl <<  "Applied pruning (of leafs and parallel rules):" << endl;
+            proofout.headline("Applied pruning (of leafs and parallel rules):");
             printForProof("Prune");
         }
         if (Timeout::soft()) break;
@@ -287,9 +288,9 @@ bool LinearITSAnalysis::chainTreePaths() {
 }
 
 
-bool LinearITSAnalysis::eliminateALocation() {
+bool LinearITSAnalysis::eliminateALocation(string &eliminatedLocation) {
     Stats::addStep("Linear::eliminateALocation");
-    bool res = Chaining::eliminateALocation(its);
+    bool res = Chaining::eliminateALocation(its, eliminatedLocation);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
     its.print(cout);

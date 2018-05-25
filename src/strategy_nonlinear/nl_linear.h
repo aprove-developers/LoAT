@@ -108,7 +108,7 @@ private:
     // Wrapper methods for Chaining/Accelerator/Pruning methods (adding statistics, debug output)
     bool chainLinearPaths();
     bool chainTreePaths();
-    bool eliminateALocation();
+    bool eliminateALocation(std::string &eliminatedLocation);
     bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules);
     bool chainAcceleratedLoops(const std::set<TransIdx> &acceleratedRules);
     bool pruneRules();

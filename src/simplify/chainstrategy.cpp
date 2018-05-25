@@ -259,7 +259,7 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
 /**
  * Implementation of eliminateALocation
  */
-static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
+static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited, string &eliminated) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -273,7 +273,7 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
     // If we cannot eliminate node, continue with its children (DFS traversal)
     if (hasSimpleLoop || its.isInitialLocation(node) || !hasIncoming || !hasOutgoing) {
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
-            if (eliminateALocationImpl(its, succ, visited)) {
+            if (eliminateALocationImpl(its, succ, visited, eliminated)) {
                 return true;
             }
 
@@ -285,19 +285,20 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
     }
 
     // Otherwise, we can eliminate node
+    eliminated = its.getPrintableLocationName(node);
     debugChain("  found location to eliminate: " << node);
     eliminateLocationByChaining(its, node, true);
     return true;
 }
 
 
-bool Chaining::eliminateALocation(ITSProblem &its) {
+bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("Chaining::eliminateALocation");
     debugChain("Trying to eliminate a location");
 
     set<LocationIdx> visited;
-    return eliminateALocationImpl(its, its.getInitialLocation(), visited);
+    return eliminateALocationImpl(its, its.getInitialLocation(), visited, eliminatedLocation);
 }
 
 

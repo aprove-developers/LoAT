@@ -156,6 +156,15 @@ optional<string> ITSProblem::getLocationName(LocationIdx idx) const {
     return {};
 }
 
+string ITSProblem::getPrintableLocationName(LocationIdx idx) const {
+    auto it = locationNames.find(idx);
+    if (it != locationNames.end()) {
+        return it->second;
+    }
+    return "[" + to_string(idx) + "]";
+}
+
+
 void ITSProblem::removeOnlyLocation(LocationIdx loc) {
     // The initial location must not be removed
     assert(loc != initialLocation);
