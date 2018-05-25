@@ -130,9 +130,11 @@ void Accelerator::addNestedRule(const Forward::MeteredRule &metered, const Linea
     // Add the new rule
     TransIdx added = addResultingRule(metered.rule);
 
-    // Try to use the resulting rule as inner rule again later on
-    // (in case there are actually 3 nested loops)
-    nested.push_back(InnerCandidate{.oldRule=inner, .newRule=added});
+    // Try to use the resulting rule as inner rule again later on (in case there are actually 3 nested loops).
+    // We can only do this if the rule is still a simple loop (which is not the case we proved NONTERM).
+    if (metered.rule.isSimpleLoop()) {
+        nested.push_back(InnerCandidate{.oldRule=inner, .newRule=added});
+    }
 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
@@ -145,8 +147,11 @@ void Accelerator::addNestedRule(const Forward::MeteredRule &metered, const Linea
     auto chained = Chaining::chainRules(its, chain, metered.rule);
     if (chained) {
         TransIdx added = addResultingRule(chained.get());
-        nested.push_back(InnerCandidate{.oldRule=inner, .newRule=added});
         proofout << ", " << added;
+
+        if (chained->isSimpleLoop()) {
+            nested.push_back(InnerCandidate{.oldRule=inner, .newRule=added});
+        }
     }
     proofout << "." << endl;
 }
