@@ -108,8 +108,15 @@ RuntimeResult LinearITSAnalysis::run() {
 
             if (chainAcceleratedLoops(acceleratedRules)) {
                 changed = true;
-                proofout.headline("Chained simple loops (with incoming rules):");
-                printForProof("Chain simple loops");
+                proofout.headline("Chained accelerated rules (with incoming rules):");
+                printForProof("Chain accelerated rules");
+            }
+            if (Timeout::soft()) break;
+
+            if (Pruning::removeLeafsAndUnreachable(its)) {
+                changed = true;
+                proofout.headline("Removed unreachable locations (and leaf rules with constant cost):");
+                printForProof("Remove unreachable");
             }
             if (Timeout::soft()) break;
 
