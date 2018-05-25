@@ -240,6 +240,12 @@ static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx>
                     changed = true;
                 }
             }
+
+            // If we removed all rules to the leaf, we can safely delete it
+            if (!its.hasTransitionsTo(next)) {
+                debugPrune("  removing isolated sink: " << next);
+                its.removeOnlyLocation(next);
+            }
         }
     }
 
