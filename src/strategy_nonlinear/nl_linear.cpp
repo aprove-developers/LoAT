@@ -26,7 +26,8 @@
 #include "util/timeout.h"
 
 #include "simplify/prune.h"
-#include "nl_chaining.h"
+#include "simplify/chain.h"
+#include "simplify/chainstrategy.h"
 #include "accelerate/accelerator.h"
 
 #include "simplify/preprocess.h"
@@ -322,7 +323,7 @@ bool NonlinearITSAnalysis::removeSinkRhss() {
 
 bool NonlinearITSAnalysis::chainLinearPaths() {
     Stats::addStep("Nonlinear::chainLinearPaths");
-    bool res = ChainingNL::chainLinearPaths(its);
+    bool res = Chaining::chainLinearPaths(its);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CHAIN LINEAR ===========\\ " << endl;
     its.print(cout);
@@ -334,7 +335,7 @@ bool NonlinearITSAnalysis::chainLinearPaths() {
 
 bool NonlinearITSAnalysis::chainTreePaths() {
     Stats::addStep("Nonlinear::chainTreePaths");
-    bool res = ChainingNL::chainTreePaths(its);
+    bool res = Chaining::chainTreePaths(its);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CHAIN TREE ===========\\ " << endl;
     its.print(cout);
@@ -346,7 +347,7 @@ bool NonlinearITSAnalysis::chainTreePaths() {
 
 bool NonlinearITSAnalysis::eliminateALocation() {
     Stats::addStep("Nonlinear::eliminateALocation");
-    bool res = ChainingNL::eliminateALocation(its);
+    bool res = Chaining::eliminateALocation(its);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
     its.print(cout);
@@ -358,7 +359,7 @@ bool NonlinearITSAnalysis::eliminateALocation() {
 
 bool NonlinearITSAnalysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
     Stats::addStep("Nonlinear::chainAcceleratedLoops");
-    bool res = ChainingNL::chainAcceleratedLoops(its, acceleratedRules);
+    bool res = Chaining::chainAcceleratedRules(its, acceleratedRules, true);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
     its.print(cout);

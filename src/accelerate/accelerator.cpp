@@ -26,7 +26,7 @@
 #include "its/export.h"
 
 // TODO: Move these to proper folders after refactoring
-#include "strategy/chaining.h"
+#include "simplify/chain.h"
 #include "simplify/prune.h"
 
 #include "debug.h"

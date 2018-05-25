@@ -26,7 +26,8 @@
 #include "util/timeout.h"
 
 #include "simplify/prune.h"
-#include "chaining.h"
+#include "simplify/chain.h"
+#include "simplify/chainstrategy.h"
 #include "accelerate/accelerator.h"
 
 #include "simplify/preprocess.h"
@@ -95,8 +96,9 @@ RuntimeResult LinearITSAnalysis::run() {
         bool changed;
         do {
             changed = false;
+            set<TransIdx> acceleratedRules;
 
-            if (accelerateSimpleLoops()) {
+            if (accelerateSimpleLoops(acceleratedRules)) {
 //            if (backwardAccelerateSimpleLoops()) {
                 changed = true;
                 proofout.headline("Accelerated all simple loops using metering functions (where possible):");
@@ -104,7 +106,7 @@ RuntimeResult LinearITSAnalysis::run() {
             }
             if (Timeout::soft()) break;
 
-            if (chainSimpleLoops()) {
+            if (chainAcceleratedLoops(acceleratedRules)) {
                 changed = true;
                 proofout.headline("Chained simple loops (with incoming rules):");
                 printForProof("Chain simple loops");
@@ -290,9 +292,10 @@ bool LinearITSAnalysis::eliminateALocation() {
 }
 
 
-bool LinearITSAnalysis::chainSimpleLoops() {
+bool LinearITSAnalysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
     Stats::addStep("FlowGraph::chainSimpleLoops");
-    bool res = Chaining::chainSimpleLoops(its);
+    // TODO: Check if we can pass false (so we keep incoming edges)
+    bool res = Chaining::chainAcceleratedRules(its, acceleratedRules, true);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
     its.print(cout);
@@ -302,13 +305,12 @@ bool LinearITSAnalysis::chainSimpleLoops() {
 }
 
 
-bool LinearITSAnalysis::accelerateSimpleLoops() {
+bool LinearITSAnalysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
     Stats::addStep("FlowGraph::accelerateSimpleLoops");
     bool res = false;
-    set<TransIdx> resultingRules;
 
     for (LocationIdx node : its.getLocations()) {
-        if (Accelerator::accelerateSimpleLoops(its, node, resultingRules)) {
+        if (Accelerator::accelerateSimpleLoops(its, node, acceleratedRules)) {
             // Acceleration might produce duplicate rules
             // TODO: check if this is necessary or if it only wastes time! (the old impl did this)
             Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, node));

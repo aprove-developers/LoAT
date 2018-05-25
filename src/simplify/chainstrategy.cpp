@@ -15,9 +15,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "chaining.h"
+#include "chainstrategy.h"
 
-#include "z3/z3toolbox.h"
+#include "chain.h"
 
 #include "debug.h"
 #include "util/stats.h"
@@ -25,111 +25,16 @@
 #include "util/timeout.h"
 
 
-
 using namespace std;
-using boost::optional;
 
 
-
-// #####################
-// ##  Chaining Core  ##
-// #####################
-
-
-/**
- * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
- * If z3 returns unknown, applies some heuristic (which involves the (chained) cost).
- */
-static bool checkSatisfiable(const GuardList &newGuard, const Expression &newCost) {
-    auto z3res = Z3Toolbox::checkAll(newGuard);
-
-    // FIXME: Only ask z3 for polynomials, since z3 cannot handle exponentials well
-    // FIXME: Just keep exponentials (hopefully there are not that many)
-    // FIXME: This is probably better than using CONTRACT_CHECK_EXP_OVER_UNKNOWN
-
-#ifdef CONTRACT_CHECK_SAT_APPROXIMATE
-    // TODO: Might be a good idea to remove non-polynomial guards here, or better in checkAllApproximate?!
-    // Try to solve an approximate problem instead, as we the check does not affect soundness.
-    if (z3res == z3::unknown) {
-        // TODO: use operator<< for newGuard when implemented
-        debugProblem("Contract unknown, try approximation for guard: ");
-        dumpList("guard", newGuard);
-        z3res = Z3Toolbox::checkAllApproximate(newGuard);
-    }
-#endif
-
-#ifdef CONTRACT_CHECK_EXP_OVER_UNKNOWN
-    // Treat unknown as sat if the new cost is exponential
-    if (z3res == z3::unknown && newCost.getComplexity() == Complexity::Exp) {
-        debugChain("Ignoring z3::unknown because of exponential cost");
-        return true;
-    }
-#endif
-
-#ifdef DEBUG_PROBLEMS
-    if (z3res == z3::unknown) {
-        // TODO: use operator<< for newGuard when implemented
-        debugProblem("Chaining: got z3::unknown for: ");
-        dumpList("guard", newGuard);
-    }
-#endif
-
-    return z3res == z3::sat;
-}
-
-
-optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second) {
-    // Build a substitution corresponding to the first rule's update
-    GiNaC::exmap firstUpdate = first.getUpdate().toSubstitution(varMan);
-
-    // Concatenate both guards, but apply the first rule's update to second guard
-    GuardList newGuard = first.getGuard();
-    for (const Expression &ex : second.getGuard()) {
-        newGuard.push_back(ex.subs(firstUpdate));
-    }
-
-    // Add the costs, but apply first rule's update to second cost
-    Expression newCost = first.getCost() + second.getCost().subs(firstUpdate);
-
-    // As a small optimization: Keep an INF symbol (easier to identify INF cost later on)
-    if (first.getCost().isInfty() || second.getCost().isInfty()) {
-        newCost = Expression::InfSymbol;
-    }
-
-#ifdef CONTRACT_CHECK_SAT
-
-    // FIXME: If z3 says unsat, it makes no sense to keep both transitions (and try to chain them again and again later on)
-    // FIXME: Instead, the second one should be deleted, at least in chainLinearPaths (where we can be sure that the second transition is only reachable by the first one).
-
-    // FIXME: We have to think about the z3::unknown case. Since z3 often takes long on unknowns, calling z3 again and again is pretty bad.
-    // FIXME: So either we remove the second transition (might lose complexity if the guard was actually sat) or chain them (lose complexity if it was unsat) => BENCHMARKS
-
-    // Avoid chaining if the resulting rule can never be taken
-    if (!checkSatisfiable(newGuard, newCost)) {
-        Stats::add(Stats::ContractUnsat);
-        debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
-        return {};
-    }
-#endif
-
-    // Compose both updates
-    UpdateMap newUpdate = first.getUpdate();
-    for (auto it : second.getUpdate()) {
-        newUpdate[it.first] = it.second.subs(firstUpdate);
-    }
-
-    return LinearRule(first.getLhsLoc(), newGuard, newCost, second.getRhsLoc(), newUpdate);
-}
-
-
-
-// ##############################
-// ##  Helpers for Strategies  ##
-// ##############################
-
+// ############################
+// ##  Location Elimination  ##
+// ############################
 
 /**
  * Eliminates the given location by chaining every incoming with every outgoing transition.
+ * @note The given location must not have any self-loops (simple or non-simple).
  *
  * If keepUnchainable is true and some incoming transition T cannot be chained with at least one outgoing transition,
  * then a new dummy location is inserted and T is kept, connecting its its old source to the new dummy location.
@@ -137,8 +42,6 @@ optional<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule
  *
  * The old location is removed, together with all old transitions. So if an outgoing transition cannot be chained
  * with any incoming transition, it will simply be removed.
- *
- * @note: This will also chain self-loops with itself.
  */
 static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool keepUnchainable) {
     set<TransIdx> keepRules;
@@ -147,13 +50,20 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
         bool wasChained = false;
-        const LinearRule &inRule = its.getLinearRule(in);
+        const Rule &inRule = its.getRule(in);
+
+        // We require that loc must not have any self-loops (since we would destroy the self-loop by chaining).
+        // E.g. chaining f -> g, g -> g would result in f -> g without the self-loop.
+        assert(inRule.getLhsLoc() != loc);
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
-            auto optRule = Chaining::chainRules(its, inRule, its.getLinearRule(out));
+            auto optRule = Chaining::chainRules(its, inRule, its.getRule(out));
             if (optRule) {
                 wasChained = true;
-                its.addRule(optRule.get());
+                TransIdx added = its.addRule(optRule.get());
+                debugChain("    chained " << in << " and " << out << " to new rule: " << added);
+            } else {
+                debugChain("    failed to chain " << in << " and " << out);
             }
         }
 
@@ -165,21 +75,35 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         }
     }
 
-    // backup all incoming transitions which could not be chained with any outgoing one
+    // Backup all incoming transitions which could not be chained with any outgoing one
     if (keepUnchainable && !keepRules.empty()) {
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
-            its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
+            auto newRule = its.getRule(trans).stripRhsLocation(loc);
+            if (newRule) {
+                // In case of nonlinear rules, we can simply delete all rhss leading to loc, but keep the other ones
+                TransIdx added = its.addRule(newRule.get());
+                debugChain("    keeping rule " << trans << " by adding stripped rule: " << added);
+            } else {
+                // If all rhss lead to loc (for instance if the rule is linear), we add a new dummy rhs
+                TransIdx added = its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
+                debugChain("    keeping rule " << trans << " by adding dummy rule: " << added);
+            }
         }
     }
 
-    // remove the location and all incoming/outgoing transitions
+    // Remove loc and all incoming/outgoing rules.
+    // Note that all rules have already been chained (or backed up), so removing these rules is ok.
     its.removeLocationAndRules(loc);
 }
 
 
+// ##############################
+// ##  Helpers for Strategies  ##
+// ##############################
+
 /**
- * Implementation of dfsTraversalWithRepeatedChanges
+ * Implementation of callRepeatedlyOnEachNode
  */
 template <typename F>
 static bool callRepeatedlyImpl(ITSProblem &its, F function, LocationIdx node, set<LocationIdx> &visited) {
@@ -249,17 +173,20 @@ static bool isOnLinearPath(ITSProblem &its, LocationIdx node) {
         return false;
     }
 
+    // ... it must not have a self-loop ...
+    if (preds.count(node) > 0) {
+        return false;
+    }
+
     // ... or two (or zero) incoming edges (possibly from the same predecessor)
     LocationIdx pred = *preds.begin();
     return its.getTransitionsFromTo(pred, node).size() == 1;
 }
 
 
-
-// ############################
-// ##  Chaining  Strategies  ##
-// ############################
-
+// ###########################
+// ##  Chaining Strategies  ##
+// ###########################
 
 bool Chaining::chainLinearPaths(ITSProblem &its) {
     auto implementation = [](ITSProblem &its, LocationIdx node) {
@@ -341,10 +268,10 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
 
     bool hasIncoming = its.hasTransitionsTo(node);
     bool hasOutgoing = its.hasTransitionsFrom(node);
-    bool hasSelfloop = its.hasTransitionsFromTo(node, node);
+    bool hasSimpleLoop = !its.getSimpleLoopsAt(node).empty();
 
     // If we cannot eliminate node, continue with its children (DFS traversal)
-    if (hasSelfloop || its.isInitialLocation(node) || !hasIncoming || !hasOutgoing) {
+    if (hasSimpleLoop || its.isInitialLocation(node) || !hasIncoming || !hasOutgoing) {
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
             if (eliminateALocationImpl(its, succ, visited)) {
                 return true;
@@ -369,80 +296,57 @@ bool Chaining::eliminateALocation(ITSProblem &its) {
     Stats::addStep("Chaining::eliminateALocation");
     debugChain("Trying to eliminate a location");
 
-    set<NodeIndex> visited;
+    set<LocationIdx> visited;
     return eliminateALocationImpl(its, its.getInitialLocation(), visited);
 }
 
 
-/**
- * Core implementation for chainSimpleLoops
- */
-static bool chainSimpleLoopsAt(ITSProblem &its, LocationIdx node) {
-    debugChain("Chaining simple loops at location " << node);
-    assert(!its.isInitialLocation(node));
-    assert(!its.getTransitionsFromTo(node, node).empty());
+// ###################################
+// ##  Chaining after Acceleration  ##
+// ###################################
 
+bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules, bool removeIncoming) {
+    Timing::Scope timer(Timing::Contract);
+    Stats::addStep("ChainingNL::chainSimpleLoops");
     set<TransIdx> successfullyChained;
-    set<TransIdx> transIn = its.getTransitionsTo(node);
 
-    for (TransIdx simpleLoop : its.getTransitionsFromTo(node, node)) {
-        for (TransIdx incoming : transIn) {
-            const LinearRule incomingRule = its.getLinearRule(incoming);
+    for (TransIdx accel : acceleratedRules) {
+        if (Timeout::soft()) break;
+        debugChain("Chaining accelerated rule " << accel);
 
-            // Skip simple loops
-            if (incomingRule.getLhsLoc() == incomingRule.getRhsLoc()) {
-                continue;
-            }
+        const Rule &accelRule = its.getRule(accel);
+        LocationIdx node = accelRule.getLhsLoc();
 
-            auto optRule = Chaining::chainRules(its, incomingRule, its.getLinearRule(simpleLoop));
+        for (TransIdx incoming : its.getTransitionsTo(node)) {
+            const Rule &incomingRule = its.getRule(incoming);
+
+            // Do not chain with incoming loops that are themselves self-loops at node
+            // (no matter if they are simple or not)
+            if (incomingRule.getLhsLoc() == node) continue;
+
+            // Do not chain with another accelerated rule (already covered by the previous check)
+            assert(acceleratedRules.count(incoming) == 0);
+
+            auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
             if (optRule) {
                 TransIdx added = its.addRule(optRule.get());
+                debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
                 successfullyChained.insert(incoming);
-                debugChain("  chained incoming rule " << incoming << " with simple loop " << simpleLoop << ", resulting in new rule: " << added);
             }
         }
 
-        debugChain("  removing simple loop " << its.getRule(simpleLoop));
-        its.removeRule(simpleLoop);
+        debugChain("  removing accelerated rule " << accel);
+        its.removeRule(accel);
     }
 
-    // Remove all incoming transitions that were successfully chained
-    // FIXME: Find out why?! Is this really what the code below does?
-    // FIXME: We assume that loops are executed at least once, so after an incoming transition, a loop must be executed.
-    // FIXME: To allow skipping loops, addTransitionToSkipLoops was used. Instead, an empty simple loop can be added during acceleration.
-    for (TransIdx toRemove : successfullyChained) {
-        debugChain("  removing chained incoming rule " << its.getRule(toRemove));
-        its.removeRule(toRemove);
-    }
-
-    // TODO: Figure out what this code is actually supposed to do...
-//    for (const std::pair<TransIndex,bool> &pair : transitions) {
-//        if (pair.second && !(addTransitionToSkipLoops.count(node) > 0)) {
-//            debugChain("removing transition " << pair.first);
-//            removeTrans(pair.first);
-//        }
-//    }
-
-    return true;
-}
-
-
-bool Chaining::chainSimpleLoops(ITSProblem &its) {
-    Timing::Scope timer(Timing::Contract);
-    Stats::addStep("Chaining::chainSimpleLoops");
-
-    bool res = false;
-    for (NodeIndex node : its.getLocations()) {
-        if (!its.getTransitionsFromTo(node, node).empty()) {
-            if (chainSimpleLoopsAt(its, node)) {
-                res = true;
-            }
-
-            if (Timeout::soft()) {
-                return res;
-            }
+    // Removing chained incoming rules may help to avoid too many rules.
+    // However, it may also lose good results if we should not execute any of the accelerated loops.
+    if (removeIncoming) {
+        for (TransIdx toRemove : successfullyChained) {
+            debugChain("  removing chained incoming rule " << its.getRule(toRemove));
+            its.removeRule(toRemove);
         }
     }
 
-    return res;
+    return !acceleratedRules.empty();
 }

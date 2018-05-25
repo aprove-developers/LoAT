@@ -15,36 +15,23 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef NL_CHAINING_H
-#define NL_CHAINING_H
+#ifndef CHAINSTRATEGY_H
+#define CHAINSTRATEGY_H
 
 #include "global.h"
 
-#include <boost/optional.hpp>
-
-#include "graph/graph.h"
+#include "graph/hypergraph.h"
 #include "its/itsproblem.h"
-#include "expr/expression.h"
+#include "util/option.h"
 
 
-namespace ChainingNL {
-
-    /**
-     * Performs one chaining step by chaining the two given rules
-     * Returns the resulting rule, unless it can be shown to be unsatisfiable.
-     */
-    // chain the specified rhs of first with second.
-    boost::optional<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int firstRhsIdx, const Rule &second);
-
-    // chain all rhss of first leading to second's lhs location with second.
-    boost::optional<Rule> chainRules(const VarMan &varMan, const Rule &first, const Rule &second);
-
+namespace Chaining {
     /**
      * Applies a simple chaining strategy to the entire ITS problem.
      *
      * Starting from the initial node, all "linear paths" are chained (in a DFS traversal).
      * Here, "linear path" is a path where each node has at most one incoming and outgoing edge.
-     * Such pathes have no interesting control flow and can safely be chained into a single edge.
+     * Such paths have no interesting control flow and can safely be chained into a single edge.
      *
      * After calling this, all nodes with exactly one in- and one outgoing edge have either been
      * (1) eliminated, if chaining the in- and outgoing edge was possible, or
@@ -84,17 +71,18 @@ namespace ChainingNL {
 
     /**
      * Chains all rules of the given vector (the list of successfully accelerated rules)
-     * with their predecessors (if possible), unless the predecessor is itself an accelerated rule.
+     * with their predecessors (if possible), unless the predecessor is itself an accelerated rule or self-loop.
      * All rules of the given vector are removed afterwards.
+     *
+     * The incoming rules (predecessors) which are successfully chained are
+     * removed if removeIncoming is true, otherwise they are kept.
+     *
      * Should be called directly after acceleration.
      *
-     * Note: Accelerated rules are never chained with other accelerated rules.
-     * Note: The predecessor rules (that are chained) are _not_ removed.
-     *
-     * @return true iff acceleratedLoops was non-empty (the return value is just for convenience)
+     * @return true iff the ITS was modified, which is the case iff acceleratedRules was non-empty.
      */
-    bool chainAcceleratedLoops(ITSProblem &its, const std::set<TransIdx> &acceleratedLoops);
+    bool chainAcceleratedRules(ITSProblem &its, const std::set<TransIdx> &acceleratedRules, bool removeIncoming);
 
 };
 
-#endif // CHAINING_H
+#endif // CHAINSTRATEGY_H
