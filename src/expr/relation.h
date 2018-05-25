@@ -20,6 +20,7 @@
 
 #include "global.h"
 #include "expr/expression.h"
+#include "util/option.h"
 
 #include <vector>
 #include <map>
@@ -111,6 +112,13 @@ namespace Relation {
      * Checks if rhs-lhs evaluates to a numeric and is nonnegative (so lhs <= rhs holds).
      */
     bool isTrivialLessEqInequality(const Expression &relLessEq);
+
+    /**
+     * Given an arbitrary relation, checks if the relation is trivially true or false,
+     * by checking if rhs-lhs is a numeric value. If unsure, returns none.
+     * @return true/false if the relation is trivially valid/invalid
+     */
+    option<bool> checkTrivial(const Expression &rel);
 }
 
 #endif // RELATION_H

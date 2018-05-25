@@ -274,6 +274,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
     for (const UpdateMap &update : updates) {
         // helper lambda to pass as argument
         auto isUpdated = [&](const ExprSymbol &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
+        GiNaC::exmap updateSubs = update.toSubstitution(varMan);
 
         for (const auto &it : update) {
             // only consider relevant variables
@@ -301,14 +302,23 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             for (const Expression &ex : reducedGuard) {
                 if (ex.has(lhsVar)) {
 
-                    // TODO: This is the implementation corresponding to the above comment
-                    // TODO: This helps for the FibonacciNew example!
-                    guard.push_back(ex.subs(update.toSubstitution(varMan)));
+                    // We want to make sure that all constraints with lhsVar hold after the update.
+                    // E.g. if x := 4, y := y+1 and the guard is x > y, we add 4 > y+1.
+                    // Note that only updating x (i.e., adding 4 > y) might not be sufficient.
+                    Expression add = ex.subs(updateSubs);
 
-                    // TODO: This is the old implementation, which is probably just stupid :P
-                    //guard.push_back(ex.subs(subs));
+                    // Adding trivial constraints does not make sense (no matter if they are true/false).
+                    bool isTrivial = Relation::checkTrivial(add).is_initialized();
+                    if (!isTrivial) {
+                        // TODO: This is the implementation corresponding to the above comment
+                        // TODO: This helps for the FibonacciNew example!
+                        guard.push_back(add);
 
-                    changed = true;
+                        // TODO: This is the old implementation, which is probably just stupid :P
+                        //guard.push_back(ex.subs(subs));
+
+                        changed = true;
+                    }
                 }
             }
         }

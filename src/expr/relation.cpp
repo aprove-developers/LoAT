@@ -162,4 +162,21 @@ namespace Relation {
 
         return false;
     }
+
+    option<bool> checkTrivial(const Expression &rel) {
+        using namespace GiNaC;
+        Expression diff = rel.lhs() - rel.rhs();
+
+        if (is_a<numeric>(diff)) {
+            relational relZero = ex_to<relational>(replaceLhsRhs(rel, diff, Expression(0)));
+            // cast to relZero to bool to evaluate it
+            if (relZero) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return {};
+    }
 }
