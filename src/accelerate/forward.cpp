@@ -69,7 +69,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             return res;
 
         case MeteringFinder::ConflictVar:
-            res.result = TooComplicated;
+            res.result = NoMetering;
             conflictVar = meter.conflictVar;
             return res;
 
