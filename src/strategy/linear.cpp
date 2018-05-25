@@ -431,11 +431,12 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
     RuntimeResult res;
     for (TransIdx ruleIdx : rules) {
         const Rule &rule = its.getRule(ruleIdx);
+        const Expression &cost = rule.getCost();
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
         // We have to be careful with temp variables, since they can lead to unbounded cost.
-        Complexity cpxUpperbound = rule.getCost().getComplexity();
-        bool hasTempVar = rule.getCost().hasVariableWith(isTempVar);
+        Complexity cpxUpperbound = cost.getComplexity();
+        bool hasTempVar = !cost.isInfSymbol() && cost.hasVariableWith(isTempVar);
         if (cpxUpperbound <= res.cpx && !hasTempVar) {
             proofout << "Skipping rule " << ruleIdx << " since it cannot improve the complexity" << endl;
             continue;
@@ -447,7 +448,7 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
         proofout.increaseIndention();
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-        auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
+        auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), cost, true);
 
         debugLinear("Asymptotic result: " << checkRes.cpx << " because: " << checkRes.reason);
         proofout << "Resulting cost " << checkRes.cost << " has complexity: " << checkRes.cpx << endl;
