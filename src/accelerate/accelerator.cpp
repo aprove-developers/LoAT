@@ -78,6 +78,7 @@ bool Accelerator::simplifySimpleLoops() {
             res = true;
             debugAccel("Simplified rule " << loop << " to " << its.getRule(loop));
         }
+        if (Timeout::soft()) return res;
     }
 
     // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
@@ -307,7 +308,7 @@ void Accelerator::run() {
 
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
-        if (Timeout::soft()) goto timeout;
+        if (Timeout::soft()) return;
 
         // rules with INF cost should never be self loops (they should always lead to sink states)
         // this assertion is mostly relevant during refactoring.
@@ -389,6 +390,7 @@ void Accelerator::run() {
 
     // Nesting
     performNesting(std::move(innerCandidates), std::move(outerCandidates));
+    if (Timeout::soft()) return;
 
     // If we failed for any rule, we add a dummy rule to simulate the effect of not executing any loop.
     // The reason is that we later chain the accelerated rules with incoming rules. So we only allow
@@ -399,9 +401,6 @@ void Accelerator::run() {
         TransIdx added = addResultingRule(Rule::dummyRule(targetLoc, targetLoc));
         proofout << "Adding an empty simple loop: " << added << "." << endl;
     }
-
-    // in case of a timeout, we perform no further acceleration, but still delete the old rules
-timeout:;
 
     // Keep rules for which acceleration failed (maybe these rules are in fact not loops)
     for (TransIdx rule : keepRules) {
