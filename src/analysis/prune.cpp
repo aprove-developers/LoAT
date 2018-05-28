@@ -123,10 +123,6 @@ bool Pruning::removeUnsatInitialRules(ITSProblem &its) {
 bool Pruning::pruneParallelRules(ITSProblem &its) {
     debugPrune("Pruning parallel rules");
 
-    // FIXME: this method used to also call removeConstLeafsAndUnreachable (at the start)
-    // FIXME: Remember to call this method wherever pruneParallelRules is called!
-    //bool changed = removeConstLeafsAndUnreachable();
-
     // FIXME: Remember to check PRUNING_ENABLE and do Stats::addStep("Flowgraph::pruneTransitions");
 
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
@@ -142,7 +138,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
         if (Timeout::soft()) break;
 
         for (LocationIdx pre : its.getPredecessorLocations(node)) {
-            // First remove duplicates
+            // First remove duplicates (this is rather cheap)
             removeDuplicateRules(its, its.getTransitionsFromTo(pre, node));
 
             // Then prune rules by only keeping the "best" ones (heuristically)

@@ -307,50 +307,26 @@ void Analysis::printForProof(const std::string &dotDescription) {
 
 bool Analysis::chainLinearPaths() {
     Stats::addStep("Linear::chainLinearPaths");
-    bool res = Chaining::chainLinearPaths(its);
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER CHAIN LINEAR ===========\\ " << endl;
-    its.print(cout);
-    cout << " \\========== AFTER CHAIN LINEAR ===========/ " << endl;
-#endif
-    return res;
+    return Chaining::chainLinearPaths(its);
 }
 
 
 bool Analysis::chainTreePaths() {
     Stats::addStep("Linear::chainTreePaths");
-    bool res = Chaining::chainTreePaths(its);
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER CHAIN TREE ===========\\ " << endl;
-    its.print(cout);
-    cout << " \\========== AFTER CHAIN TREE ===========/ " << endl;
-#endif
-    return res;
+    return Chaining::chainTreePaths(its);
 }
 
 
 bool Analysis::eliminateALocation(string &eliminatedLocation) {
     Stats::addStep("Linear::eliminateALocation");
-    bool res = Chaining::eliminateALocation(its, eliminatedLocation);
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER ELIMINATING LOCATIONS ===========\\ " << endl;
-    its.print(cout);
-    cout << " \\========== AFTER ELIMINATING LOCATIONS ===========/ " << endl;
-#endif
-    return res;
+    return Chaining::eliminateALocation(its, eliminatedLocation);
 }
 
 
 bool Analysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
     Stats::addStep("Linear::chainAcceleratedLoops");
     // TODO: Check if we can pass false (so we keep incoming edges)
-    bool res = Chaining::chainAcceleratedRules(its, acceleratedRules, false);
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
-    its.print(cout);
-    cout << " \\========== AFTER CHAINING SIMPLE LOOPS ===========/ " << endl;
-#endif
-    return res;
+    return Chaining::chainAcceleratedRules(its, acceleratedRules, false);
 }
 
 
@@ -363,11 +339,6 @@ bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
         if (Timeout::soft()) return res;
     }
 
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER SELFLOOPS ==========\\ " << endl;
-    print(cout);
-    cout << " \\========== AFTER SELFLOOPS ==========/ " << endl;
-#endif
     return res;
 }
 
@@ -401,12 +372,6 @@ bool Analysis::backwardAccelerateSimpleLoops() {
         }
         res = res || !toRemove.empty();
     }
-
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER BACK ACCEL ==========\\ " << endl;
-    print(cout);
-    cout << " \\========== AFTER BACK ACCEL ==========/ " << endl;
-#endif
     return res;
 }
 */
@@ -419,11 +384,6 @@ bool Analysis::pruneRules() {
 #ifdef PRUNING_ENABLE
     Stats::addStep("Linear::pruneRules");
     changed = Pruning::pruneParallelRules(its) || changed;
-#ifdef DEBUG_PRINTSTEPS
-    cout << " /========== AFTER PRUNING ==========\\ " << endl;
-    print(cout);
-    cout << " \\========== AFTER PRUNING ==========/ " << endl;
-#endif
 #endif
 
     return changed;
