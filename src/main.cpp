@@ -246,31 +246,16 @@ int main(int argc, char *argv[]) {
         its.print(cout);
         cout << "=== new ITSProblem ===" << endl;
 
-        if (its.isLinear()) {
-            LinearITSAnalysis::AnalysisSettings cfg(dotStream);
-            auto runtime = LinearITSAnalysis::analyze(its, cfg);
-            proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
-            proofout << "  Complexity class: " << runtime.cpx << endl;
-            proofout << "  Complexity value: ";
-            {
-                if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
-                    proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
-                } else {
-                    proofout << runtime.cpx << endl;
-                }
-            }
-        } else {
-            NonlinearITSAnalysis::AnalysisSettings cfg(dotStream);
-            auto runtime = NonlinearITSAnalysis::analyze(its, cfg);
-            proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
-            proofout << "  Complexity class: " << runtime.cpx << endl;
-            proofout << "  Complexity value: ";
-            {
-                if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
-                    proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
-                } else {
-                    proofout << runtime.cpx << endl;
-                }
+        Analysis::AnalysisSettings cfg(dotStream);
+        auto runtime = Analysis::analyze(its, cfg);
+        proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
+        proofout << "  Complexity class: " << runtime.cpx << endl;
+        proofout << "  Complexity value: ";
+        {
+            if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
+                proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
+            } else {
+                proofout << runtime.cpx << endl;
             }
         }
     }
