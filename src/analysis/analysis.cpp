@@ -344,7 +344,7 @@ bool Analysis::eliminateALocation(string &eliminatedLocation) {
 bool Analysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
     Stats::addStep("Linear::chainAcceleratedLoops");
     // TODO: Check if we can pass false (so we keep incoming edges)
-    bool res = Chaining::chainAcceleratedRules(its, acceleratedRules, true);
+    bool res = Chaining::chainAcceleratedRules(its, acceleratedRules, false);
 #ifdef DEBUG_PRINTSTEPS
     cout << " /========== AFTER CHAINING SIMPLE LOOPS ===========\\ " << endl;
     its.print(cout);
