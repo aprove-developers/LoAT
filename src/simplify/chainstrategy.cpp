@@ -34,7 +34,9 @@ using namespace std;
 
 /**
  * Eliminates the given location by chaining every incoming with every outgoing transition.
- * @note The given location must not have any self-loops (simple or non-simple).
+ *
+ * @note The given location must not have any self-loops (simple or non-simple),
+ * unless allowSelfloops is true (but even then, it must not have simple loops!).
  *
  * If keepUnchainable is true and some incoming transition T cannot be chained with at least one outgoing transition,
  * then a new dummy location is inserted and T is kept, connecting its its old source to the new dummy location.
@@ -43,7 +45,9 @@ using namespace std;
  * The old location is removed, together with all old transitions. So if an outgoing transition cannot be chained
  * with any incoming transition, it will simply be removed.
  */
-static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool keepUnchainable) {
+static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
+                                        bool keepUnchainable, bool allowSelfloops = false)
+{
     set<TransIdx> keepRules;
     debugChain("  eliminating location " << loc << " by chaining (keep unchainable: " << keepUnchainable << ")");
 
@@ -52,13 +56,25 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc, bool k
         bool wasChained = false;
         const Rule &inRule = its.getRule(in);
 
-        // We require that loc must not have any self-loops (since we would destroy the self-loop by chaining).
+        // We usually require that loc doesn't have any self-loops (since we would destroy the self-loop by chaining).
         // E.g. chaining f -> g, g -> g would result in f -> g without the self-loop.
-        assert(inRule.getLhsLoc() != loc);
+        assert(allowSelfloops || inRule.getLhsLoc() != loc);
+
+        // If we allow self-loops, we ignore them for incoming rules,
+        // since the resulting chained rule would in the end be deleted (together with loc) anyway.
+        if (inRule.getLhsLoc() == loc) continue;
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
             auto optRule = Chaining::chainRules(its, inRule, its.getRule(out));
             if (optRule) {
+                // If we allow self loops at loc, then chained rules may still lead to loc,
+                // e.g. if h -> f and f -> f,g are chained to h -> f,g (where f is loc).
+                // Since we want to eliminate loc, we remove all rhss leading to loc (e.g. h -> g).
+                if (allowSelfloops) {
+                    optRule = optRule.get().stripRhsLocation(loc);
+                    assert(optRule); // this only happens for simple loops, which we disallow
+                }
+
                 wasChained = true;
                 TransIdx added = its.addRule(optRule.get());
                 debugChain("    chained " << in << " and " << out << " to new rule: " << added);
@@ -288,7 +304,7 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
     // Otherwise, we can eliminate node
     eliminated = its.getPrintableLocationName(node);
     debugChain("  found location to eliminate: " << node);
-    eliminateLocationByChaining(its, node, true);
+    eliminateLocationByChaining(its, node, true, true);
     return true;
 }
 
