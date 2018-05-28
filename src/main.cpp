@@ -197,6 +197,8 @@ int main(int argc, char *argv[]) {
     }
     if (timeout > 0) {
         Timeout::setTimeouts(timeout);
+    } else {
+        Timeout::setTimeouts(0);
     }
 
     if (allowDivision) {

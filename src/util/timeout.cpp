@@ -30,14 +30,22 @@ static timeoutpoint timeout_soft;
 static timeoutpoint timeout_hard;
 
 void Timeout::setTimeouts(int seconds) {
-    assert(seconds >= 10);
+    assert(seconds == 0 || seconds >= 10);
     timeoutpoint now = chrono::steady_clock::now();
-
     timeout_start = now;
-    timeout_preprocess = now + static_cast<std::chrono::seconds>((seconds < 30) ? 3 : 5);
-    timeout_soft = now + static_cast<std::chrono::seconds>(seconds-((seconds < 30) ? 4 : 8));
-    timeout_hard = now + static_cast<std::chrono::seconds>(seconds-1);
-    timeout_enable = true;
+
+    // TODO: We need more time after the soft timeout (since we easily miss the soft timeout by some seconds).
+    if (seconds > 0) {
+        timeout_preprocess = now + static_cast<std::chrono::seconds>((seconds < 30) ? 3 : 5);
+        timeout_soft = now + static_cast<std::chrono::seconds>(seconds-((seconds < 30) ? 4 : 8));
+        timeout_hard = now + static_cast<std::chrono::seconds>(seconds-1);
+        timeout_enable = true;
+    }
+}
+
+// TODO: Rename? getStartTime()
+timeoutpoint Timeout::start() {
+    return timeout_start;
 }
 
 bool Timeout::preprocessing() {

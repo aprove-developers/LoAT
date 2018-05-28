@@ -22,6 +22,10 @@
 #include <ostream>
 #include <string>
 
+#include "util/timeout.h"
+#include <sstream>
+#include <iomanip>
+
 
 class StreambufIndenter : public std::streambuf {
 public:
@@ -51,6 +55,10 @@ public:
         }
     }
 
+    void enableTimestamps(bool enable) {
+        printTimestamps = enable;
+    }
+
     // print the given string before the next \n
     void printBeforeNewline(std::string s) {
         beforeNewline = s;
@@ -60,6 +68,12 @@ protected:
     // override printing to insert indention
     int overflow(int ch) override {
         if (atStartOfLine && ch != '\n') {
+            // possibly print timestamp
+            if (printTimestamps) {
+                std::string timeStr = formatTimestamp();
+                dst->sputn(timeStr.data(), timeStr.size());
+            }
+
             // print indention ("put characters")
             dst->sputn(indention.data(), indention.size());
         }
@@ -73,6 +87,18 @@ protected:
         return dst->sputc(ch);
     }
 
+    // helper to display timestamps
+    static std::string formatTimestamp() {
+        using namespace std;
+        timeoutpoint now = chrono::steady_clock::now();
+        chrono::duration<float> elapsed = now - Timeout::start();
+
+        stringstream ss;
+        ss << "[" << std::fixed << std::setprecision(3) << std::setw(7) << elapsed.count() << "] ";
+
+        return ss.str();
+    }
+
 private:
     // The StreambufIndenter forwards output from src to dst, but adds indention
     std::streambuf *dst;
@@ -82,6 +108,9 @@ private:
     bool atStartOfLine = true;
     std::string indention;
     std::string beforeNewline;
+
+    // Options
+    bool printTimestamps = false;
 };
 
 
@@ -96,11 +125,13 @@ public:
         Result
     };
 
-    ProofOutput(std::ostream &s, bool allowAnsiCodes)
+    ProofOutput(std::ostream &s, bool allowAnsiCodes, bool printTimestamps = true)
             : std::ostream(s.rdbuf()),
               allowAnsi(allowAnsiCodes),
               indenter(*this)
-    {}
+    {
+        indenter.enableTimestamps(printTimestamps);
+    }
 
     void increaseIndention() {
         indenter.increaseIndention();
@@ -140,7 +171,6 @@ public:
 
 private:
     bool allowAnsi;
-    bool resetStyle;
     StreambufIndenter indenter;
 };
 
