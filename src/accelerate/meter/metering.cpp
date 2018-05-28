@@ -409,7 +409,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
         debugMeter("z3 pre unsat");
         debugProblem("Farkas pre unsat for: " << rule);
 
-#ifdef FARKAS_HEURISTIC_FOR_MINMAX
+#ifdef METER_HEURISTIC_CONFLICTVAR
         auto conflictVar = meter.findConflictVars();
         if (conflictVar) {
             result.conflictVar = conflictVar.get();
