@@ -64,9 +64,9 @@ namespace MeteringToolbox {
     /**
      * Computes a guard by only keeping those constraints that might be relevant for the metering function.
      *
-     * A constraint is relevant if
-     * (1) it has a temporary variable, or
-     * (2) it has an updated variable and there is at least one update such that the constraint is not implied after applying the update
+     * A constraint is relevant if there is at least one update such that the constraint
+     * is not implied after applying the update (given that the guard holds before the update).
+     * In other words, a constraint is relevant if it may cause the loop to terminate.
      *
      * (e.g. in n >= 0, i >= 0, i < n with i=i+1, the constraints n >= 0 and i >= 0 are not relevant.
      * The former only contains n, which is not updated. For the latter, note that it reads i+1 >= 0

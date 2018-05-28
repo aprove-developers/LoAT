@@ -124,6 +124,15 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
     assert(!irrelevantGuard || irrelevantGuard->empty());
     GuardList reducedGuard;
 
+    // Collect all updated variables (updated by any of the updates)
+    ExprSymbolSet updatedVars;
+    for (const UpdateMap &update : updates) {
+        for (const auto &it : update) {
+            updatedVars.insert(varMan.getGinacSymbol(it.first));
+        }
+    }
+    auto isUpdated = [&](const ExprSymbol &var){ return updatedVars.count(var) > 0; };
+
     // create Z3 solver with the guard here to use push/pop for efficiency
     Z3Context context;
     Z3Solver solver(context);
@@ -133,28 +142,12 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 
     // TODO: Set timeout for the Z3 solver (see backwardaccel branch)
 
-    for (Expression ex : guard) {
-        bool add = false;
-        bool forceAdd = false;
+    for (const Expression &ex : guard) {
+        // only keep constraints that contain updated variables (otherwise they still hold after the update)
+        bool add = ex.hasVariableWith(isUpdated);
 
-        // Check if the constraint is relevant and should be added
-        for (const ExprSymbol &var : ex.getVariables()) {
-            // always keep constraints that contain free variables
-            if (varMan.isTempVar(var)) {
-                forceAdd = true;
-                break;
-            }
-            // keep constraints that contain updated variables
-            if (isUpdatedByAny(varMan.getVarIdx(var), updates)) {
-                add = true;
-            }
-        }
-
-        if (forceAdd) {
-            reducedGuard.push_back(ex);
-
-        } else if (add) {
-            // Only add constraints with updated variables if they are not implied by EACH update (individually)
+        // and only if they are not implied after each update (so they may cause the loop to terminate)
+        if (add) {
             bool implied = true;
             for (const UpdateMap &update : updates) {
                 solver.push();
@@ -169,12 +162,14 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
                 }
             }
 
-            if (!implied) {
-                reducedGuard.push_back(ex);
-            } else {
-                if (irrelevantGuard) irrelevantGuard->push_back(ex);
+            if (implied) {
+                add = false;
             }
+        }
 
+        // add the constraint, or remember it as being irrelevant
+        if (add) {
+            reducedGuard.push_back(ex);
         } else {
             if (irrelevantGuard) irrelevantGuard->push_back(ex);
         }
