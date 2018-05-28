@@ -107,7 +107,8 @@
  * NOTE: this might help for some loops (with constant update rhs), but also increases time and branching
  */
 // Note: This was disabled in the old version!
-//#define FARKAS_TRY_ADDITIONAL_GUARD
+// Note: But the current implementation only applies it to nonlinear rules
+#define METER_HEURISTIC_CONSTANT_UPDATE
 
 /*
  * if defined, real coefficients are allowed in metering functions.
@@ -121,7 +122,14 @@
  * I.e. the loop's termination depends on two variables, and we do not know which limit is hit first,
  * thus add A > B rsp. B > A to make the problem solvable. Note that the heuristic is quite simple.
  */
-#define FARKAS_HEURISTIC_FOR_MINMAX
+#define METER_HEURISTIC_CONFLICTVAR
+
+/*
+ * If defined, right-hand sides are dropped one by one if we fail to accelerate a nonlinear rule.
+ * This might help if only one of the updates makes it difficult to find a metering function.
+ * FIXME: Not yet implemented (but proposed in the paper)
+ */
+#define METER_HEURISTIC_DROP_RHS
 
 /*
  * the maximum number of bounds that are tried for a single free variable,

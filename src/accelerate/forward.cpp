@@ -147,7 +147,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         return res; // either successful or there is no point in applying heuristics
     }
 
-#ifdef FARKAS_HEURISTIC_FOR_MINMAX
+#ifdef METER_HEURISTIC_CONFLICTVAR
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
     if (conflictVar) {
         ExprSymbol A = varMan.getGinacSymbol(conflictVar->first);
@@ -181,24 +181,29 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
     }
 #endif
 
-#ifndef FARKAS_TRY_ADDITIONAL_GUARD
-    // Guard strengthening heuristic (helps in the presence of constant updates like x := 5)
-    Rule newRule = rule;
-    debugAccel("Trying guard strengthening for rule: " << newRule);
+#ifdef METER_HEURISTIC_CONSTANT_UPDATE
+    // Guard strengthening heuristic (helps in the presence of constant updates like x := 5).
+    // Does not help very often, so we only apply it to nonlinear rules (since they can give exponential bounds).
+    if (!rule.isLinear()) {
+        Rule newRule = rule;
+        debugAccel("Trying guard strengthening for rule: " << newRule);
 
-    // Apply heuristic if applicable, this modifies newRule
-    if (MeteringFinder::strengthenGuard(varMan, newRule)) {
-        auto accelRule = accelerateFast(varMan, newRule, sink);
-        if (accelRule) {
-            res.rules.push_back(accelRule.get().appendInfo(" [after strengthening guard]"));
-            res.result = SuccessWithRestriction;
-            return res;
+        // Check and (possibly) apply heuristic, this modifies newRule
+        if (MeteringFinder::strengthenGuard(varMan, newRule)) {
+            auto accelRule = accelerateFast(varMan, newRule, sink);
+            if (accelRule) {
+                res.rules.push_back(accelRule.get().appendInfo(" (after strengthening guard)"));
+                res.result = SuccessWithRestriction;
+                return res;
+            }
         }
     }
 #endif
 
+#ifdef METER_HEURISTIC_DROP_RHS
     // TODO: Delete some rhss of nonlinear rules and try again! (see paper step 3.2)
     // TODO: Trying all combinations is probably way too expensive, so maybe just drop the last one (repeatedly)?
+#endif
 
     assert(res.result == NoMetering && res.rules.empty());
     return res;

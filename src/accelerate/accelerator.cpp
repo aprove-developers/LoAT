@@ -218,6 +218,7 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
 
 
 void Accelerator::performNesting(vector<InnerCandidate> inner, vector<OuterCandidate> outer) {
+    // TODO: Multiple nesting iterations are very likely overkill, simplify the code to only do one iteration
     for (int i=0; i < NESTING_MAX_ITERATIONS; ++i) {
         debugAccel("Nesting iteration: " << i);
         bool changed = false;
