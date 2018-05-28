@@ -51,7 +51,7 @@ struct RuntimeResult {
  * Analysis of ITSProblems where all rules are linear.
  * This class controls how chaining, acceleration and pruning are applied.
  */
-class LinearITSAnalysis {
+class Analysis {
 public:
     struct AnalysisSettings {
         // Perform expensive preprocessing before the analysis?
@@ -77,7 +77,7 @@ public:
 
 
 private:
-    LinearITSAnalysis(ITSProblem &its, AnalysisSettings cfg);
+    Analysis(ITSProblem &its, AnalysisSettings cfg);
 
     /**
      * Main analysis algorithm.
@@ -111,7 +111,7 @@ private:
     bool eliminateALocation(std::string &eliminatedLocation);
     bool chainAcceleratedLoops(const std::set<TransIdx> &acceleratedRules);
     bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules);
-    bool backwardAccelerateSimpleLoops();
+    //bool backwardAccelerateSimpleLoops();
     bool pruneRules();
 
     /**

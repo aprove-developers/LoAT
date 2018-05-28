@@ -33,6 +33,7 @@
 #include "simplify/preprocess.h"
 #include "its/export.h"
 
+// TODO: Remove after testing
 #include "accelerate/backwardacceleration.h"
 
 
@@ -40,19 +41,21 @@ using namespace std;
 
 
 
-RuntimeResult LinearITSAnalysis::analyze(ITSProblem &its, AnalysisSettings cfg) {
-    LinearITSAnalysis analysis(its, cfg);
+RuntimeResult Analysis::analyze(ITSProblem &its, AnalysisSettings cfg) {
+    Analysis analysis(its, cfg);
     return analysis.run();
 }
 
 
-LinearITSAnalysis::LinearITSAnalysis(ITSProblem &its, AnalysisSettings cfg)
-        : its(its), cfg(cfg) {
-    assert(its.isLinear());
-}
+Analysis::Analysis(ITSProblem &its, AnalysisSettings cfg)
+        : its(its), cfg(cfg) {}
 
 
-RuntimeResult LinearITSAnalysis::run() {
+// ##############################
+// ## Main Analysis Algorithm  ##
+// ##############################
+
+RuntimeResult Analysis::run() {
     if (cfg.dotOutput) {
         cfg.dotStream << "digraph {" << endl;
     }
@@ -77,6 +80,7 @@ RuntimeResult LinearITSAnalysis::run() {
     RuntimeResult runtime; // defaults to unknown complexity
     string eliminatedLocation; // for proof output of eliminateALocation
     bool acceleratedOnce = false; // whether we did at least one acceleration step
+    bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
@@ -100,8 +104,15 @@ RuntimeResult LinearITSAnalysis::run() {
             changed = false;
             set<TransIdx> acceleratedRules;
 
+            // Special handling of nonlinear rules
+            if (nonlinearProblem && Pruning::removeSinkRhss(its)) {
+                changed = true;
+                proofout.headline("Removed locations with no outgoing rules from right-hand sides");
+                printForProof("Removed sinks");
+            }
+            if (Timeout::soft()) break;
+
             if (accelerateSimpleLoops(acceleratedRules)) {
-//            if (backwardAccelerateSimpleLoops()) {
                 changed = true;
                 acceleratedOnce = true;
                 proofout.headline("Accelerated all simple loops using metering functions (where possible):");
@@ -130,6 +141,13 @@ RuntimeResult LinearITSAnalysis::run() {
             }
             if (Timeout::soft()) break;
 
+            // Check if the ITS is now linear (we accelerated all nonlinear rules)
+            if (changed && nonlinearProblem) {
+                nonlinearProblem = !its.isLinear();
+                if (!nonlinearProblem) {
+                    proofout.section("Obtained a tail recursive problem, continuing simplification");
+                }
+            }
         } while (changed);
 
         // Avoid wasting time on chaining/pruning if we are already done
@@ -214,11 +232,14 @@ RuntimeResult LinearITSAnalysis::run() {
 }
 
 
+// ############################
+// ## Preprocessing, Output  ##
+// ############################
 
-bool LinearITSAnalysis::ensureProperInitialLocation() {
+bool Analysis::ensureProperInitialLocation() {
     if (its.hasTransitionsTo(its.getInitialLocation())) {
         LocationIdx newStart = its.addLocation();
-        its.addRule(LinearRule::dummyRule(newStart, its.getInitialLocation()));
+        its.addRule(Rule::dummyRule(newStart, its.getInitialLocation()));
         its.setInitialLocation(newStart);
         return true;
     }
@@ -226,7 +247,7 @@ bool LinearITSAnalysis::ensureProperInitialLocation() {
 }
 
 
-bool LinearITSAnalysis::preprocessRules() {
+bool Analysis::preprocessRules() {
     Timing::Scope _timer(Timing::Preprocess);
 
     // remove unreachable transitions/nodes
@@ -258,7 +279,7 @@ bool LinearITSAnalysis::preprocessRules() {
 }
 
 
-bool LinearITSAnalysis::isFullySimplified() const {
+bool Analysis::isFullySimplified() const {
     for (LocationIdx node : its.getLocations()) {
         if (its.isInitialLocation(node)) continue;
         if (its.hasTransitionsFrom(node)) return false;
@@ -267,7 +288,24 @@ bool LinearITSAnalysis::isFullySimplified() const {
 }
 
 
-bool LinearITSAnalysis::chainLinearPaths() {
+void Analysis::printForProof(const std::string &dotDescription) {
+    // Proof output
+    proofout.increaseIndention();
+    ITSExport::printForProof(its, proofout);
+    proofout.decreaseIndention();
+
+    // dot output
+    if (its.isLinear()) { // TODO: Replace this check by a proper configuration upon construction
+        LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, cfg.dotStream);
+    }
+}
+
+
+// ##############################
+// ## Acceleration & Chaining  ##
+// ##############################
+
+bool Analysis::chainLinearPaths() {
     Stats::addStep("Linear::chainLinearPaths");
     bool res = Chaining::chainLinearPaths(its);
 #ifdef DEBUG_PRINTSTEPS
@@ -279,7 +317,7 @@ bool LinearITSAnalysis::chainLinearPaths() {
 }
 
 
-bool LinearITSAnalysis::chainTreePaths() {
+bool Analysis::chainTreePaths() {
     Stats::addStep("Linear::chainTreePaths");
     bool res = Chaining::chainTreePaths(its);
 #ifdef DEBUG_PRINTSTEPS
@@ -291,7 +329,7 @@ bool LinearITSAnalysis::chainTreePaths() {
 }
 
 
-bool LinearITSAnalysis::eliminateALocation(string &eliminatedLocation) {
+bool Analysis::eliminateALocation(string &eliminatedLocation) {
     Stats::addStep("Linear::eliminateALocation");
     bool res = Chaining::eliminateALocation(its, eliminatedLocation);
 #ifdef DEBUG_PRINTSTEPS
@@ -303,8 +341,8 @@ bool LinearITSAnalysis::eliminateALocation(string &eliminatedLocation) {
 }
 
 
-bool LinearITSAnalysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
-    Stats::addStep("FlowGraph::chainSimpleLoops");
+bool Analysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
+    Stats::addStep("Linear::chainAcceleratedLoops");
     // TODO: Check if we can pass false (so we keep incoming edges)
     bool res = Chaining::chainAcceleratedRules(its, acceleratedRules, true);
 #ifdef DEBUG_PRINTSTEPS
@@ -316,19 +354,12 @@ bool LinearITSAnalysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRu
 }
 
 
-bool LinearITSAnalysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
+bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
     Stats::addStep("FlowGraph::accelerateSimpleLoops");
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
-        if (Accelerator::accelerateSimpleLoops(its, node, acceleratedRules)) {
-            // Acceleration might produce duplicate rules
-            // TODO: check if this is necessary or if it only wastes time! (the old impl did this)
-            Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, node));
-
-            res = true;
-        }
-
+        res = Accelerator::accelerateSimpleLoops(its, node, acceleratedRules) || res;
         if (Timeout::soft()) return res;
     }
 
@@ -340,8 +371,8 @@ bool LinearITSAnalysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
     return res;
 }
 
-
-bool LinearITSAnalysis::backwardAccelerateSimpleLoops() {
+/*
+bool Analysis::backwardAccelerateSimpleLoops() {
     Stats::addStep("FlowGraph::backwardAccelerateSimpleLoops");
     bool res = false;
 
@@ -378,9 +409,9 @@ bool LinearITSAnalysis::backwardAccelerateSimpleLoops() {
 #endif
     return res;
 }
+*/
 
-
-bool LinearITSAnalysis::pruneRules() {
+bool Analysis::pruneRules() {
     // Always remove unreachable rules
     bool changed = Pruning::removeLeafsAndUnreachable(its);
 
@@ -399,7 +430,9 @@ bool LinearITSAnalysis::pruneRules() {
 }
 
 
-/* ### Final complexity calcuation ### */
+// #############################
+// ## Complexity Computation  ##
+// #############################
 
 /**
  * Helper for getMaxRuntime that searches for the maximal cost.getComplexity().
@@ -421,7 +454,7 @@ static RuntimeResult getMaxComplexity(const ITSProblem &its, set<TransIdx> rules
 }
 
 
-RuntimeResult LinearITSAnalysis::getMaxRuntime() {
+RuntimeResult Analysis::getMaxRuntime() {
     auto rules = its.getTransitionsFrom(its.getInitialLocation());
     auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); };
 
@@ -490,7 +523,9 @@ RuntimeResult LinearITSAnalysis::getMaxRuntime() {
 }
 
 
-/* ### Recovering after timeout ### */
+// ###############################
+// ## Complexity After Timeout  ##
+// ###############################
 
 /**
  * Helper for removeConstantRulesAfterTimeout.
@@ -518,16 +553,20 @@ static bool removeConstantPathsImpl(ITSProblem &its, LocationIdx curr, set<Locat
 }
 
 
-void LinearITSAnalysis::removeConstantPathsAfterTimeout() {
+// TODO: generalize this to remove all rules below a certain complexity
+// TODO: this can then be called again whenever a new complexity has been derived
+// TODO: This should help quite a bit, since we can get rid of expensive chaining costs
+void Analysis::removeConstantPathsAfterTimeout() {
     set<LocationIdx> visited;
     removeConstantPathsImpl(its, its.getInitialLocation(), visited);
 }
 
 
-RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
+RuntimeResult Analysis::getMaxPartialResult() {
     //contract and always compute the maximum complexity to allow abortion at any time
     RuntimeResult res;
     LocationIdx initial = its.getInitialLocation(); // just a shorthand
+    auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); }; // just a shorthand
 
     while (true) {
         //always check for timeouts
@@ -535,8 +574,12 @@ RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
 
         //get current max cost (with asymptotic bounds check)
         for (TransIdx trans : its.getTransitionsFrom(initial)) {
-            const LinearRule rule = its.getLinearRule(trans);
-            if (rule.getCost().getComplexity() <= max(res.cpx, Complexity::Const)) continue;
+            const Rule &rule = its.getLinearRule(trans);
+
+            // check if we can skip this rule
+            const Expression &cost = rule.getCost();
+            bool hasTempVar = !cost.isInfSymbol() && cost.hasVariableWith(isTempVar);
+            if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) continue;
 
             proofout << endl;
             proofout.setLineStyle(ProofOutput::Headline);
@@ -570,7 +613,7 @@ RuntimeResult LinearITSAnalysis::getMaxPartialResult() {
             for (TransIdx first : its.getTransitionsFromTo(initial,succ)) {
                 for (TransIdx second : its.getTransitionsFrom(succ)) {
 
-                    auto chained = Chaining::chainRules(its, its.getLinearRule(first), its.getLinearRule(second));
+                    auto chained = Chaining::chainRules(its, its.getRule(first), its.getRule(second));
                     if (chained) {
                         its.addRule(chained.get());
                     }
@@ -592,13 +635,3 @@ done:
     return res;
 }
 
-
-void LinearITSAnalysis::printForProof(const std::string &dotDescription) {
-    // Proof output
-    proofout.increaseIndention();
-    ITSExport::printForProof(its, proofout);
-    proofout.decreaseIndention();
-
-    // dot output
-    LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, cfg.dotStream);
-}

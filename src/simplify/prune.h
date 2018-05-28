@@ -26,6 +26,15 @@ class ITSProblem;
 
 namespace Pruning {
     /**
+     * A simple syntactic comparision. Returns true iff a and b are equal up to constants in the cost term.
+     * @note as this is a syntactic check, false has no guaranteed meaning
+     * @param compareRhss if false, the rhs locations and updates are not compared
+     * (i.e., rules with different update might be equal)
+     * @return true if the rules are equal up to constants in the cost term, false if they differ or we are unsure.
+     */
+    bool compareRules(const Rule &a, const Rule &b, bool compareRhss = true);
+
+    /**
      * Tries to identify and remove duplicate transitions within the given list/set of transitions
      * @param trans vector/set/... of transitions that are checked
      * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
@@ -55,13 +64,16 @@ namespace Pruning {
     bool removeLeafsAndUnreachable(ITSProblem &its);
 
     /**
-     * A simple syntactic comparision. Returns true iff a and b are equal up to constants in the cost term.
-     * @note as this is a syntactic check, false has no guaranteed meaning
-     * @param compareRhss if false, the rhs locations and updates are not compared
-     * (i.e., rules with different update might be equal)
-     * @return true if the rules are equal up to constants in the cost term, false if they differ or we are unsure.
+     * Removes sink locations (locations without outgoing rules) from right-hand sides of nonlinear rules.
+     * Example: f -> f,g and g has no outgoing rules, then the rule is reduced to f -> f.
+     *
+     * If all right-hand sides of a single rule would be deleted, the rule is either removed
+     * or a dummy right-hand side (with trivial update) is added to retain the rule.
+     * The sink location itself is also removed if it becomes isolated (it no longer apperas on any rhs).
+     *
+     * @return true iff the ITS was modified
      */
-    bool compareRules(const Rule &a, const Rule &b, bool compareRhss = true);
+    bool removeSinkRhss(ITSProblem &its);
 }
 
 #endif // PRUNE_H

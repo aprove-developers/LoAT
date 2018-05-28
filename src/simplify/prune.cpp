@@ -273,6 +273,70 @@ bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
 }
 
 
+/**
+ * Helper for removeSinkRhss.
+ * Deletes all rhss of the given rule that lead to the given location.
+ * If all rhss lead to loc, then the rule is completely deleted (if it has constant complexity)
+ * or a dummy rhs is added (if the rule has more than constant complexity).
+ * @return true iff the ITS was modified
+ */
+static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) {
+    const Rule &rule = its.getRule(ruleIdx);
+    assert(its.getTransitionTargets(ruleIdx).count(loc) > 0); // should only call this if we can delete something
+
+    // If the rule only has one rhs, we do not change it (this ensures termination of the overall algorithm)
+    if (rule.isLinear()) {
+        return false;
+    }
+
+    // Replace the rule by a stripped rule (without rhss leading to loc), if possible
+    auto optRule = rule.stripRhsLocation(loc);
+    if (optRule) {
+        TransIdx newIdx = its.addRule(optRule.get());
+        debugLinear("Partial deletion: Added stripped rule " << newIdx << " (for rule " << ruleIdx << ")");
+    }
+
+    // If all rhss would be deleted, we still keep the rule if it has an interesting complexity.
+    if (!optRule) {
+        if (rule.getCost().getComplexity() > Complexity::Const) {
+            // Note that it is only sound to add a dummy transition to loc if loc is a sink location.
+            // This should be the case when partialDeletion is called, at least for the current implementation.
+            assert(!its.hasTransitionsFrom(loc));
+            TransIdx newIdx = its.addRule(rule.replaceRhssBySink(loc));
+            debugLinear("Partial deletion: Added dummy rule " << newIdx << " (for rule " << ruleIdx << ")");
+        }
+    }
+
+    // Remove the original rule
+    its.removeRule(ruleIdx);
+    return true;
+}
+
+
+// remove edges to locations without outdegree 0 (sink)
+bool Pruning::removeSinkRhss(ITSProblem &its) {
+    bool changed = false;
+
+    for (LocationIdx node : its.getLocations()) {
+        // if the location is a sink, remove it from all rules
+        if (!its.hasTransitionsFrom(node)) {
+            debugPrune("Applying partial deletion to sink location: " << node);
+            for (TransIdx rule : its.getTransitionsTo(node)) {
+                changed = partialDeletion(its, rule, node) || changed;
+            }
+
+            // if we could remove all incoming rules, we can remove the sink
+            if (!its.isInitialLocation(node) && !its.hasTransitionsTo(node)) {
+                debugPrune("Removing unreachable sink (after partial deletion): " << node);
+                its.removeOnlyLocation(node);
+            }
+        }
+    }
+
+    return changed;
+}
+
+
 // instantiate templates (since the implementation is not in the header file)
 template bool Pruning::removeDuplicateRules(ITSProblem &, const std::vector<TransIdx> &, bool);
 template bool Pruning::removeDuplicateRules(ITSProblem &, const std::set<TransIdx> &, bool);
