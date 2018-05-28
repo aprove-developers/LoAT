@@ -160,7 +160,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         auto accelRule = accelerateFast(varMan, newRule, sink);
         if (accelRule) {
             debugAccel("MinMax heuristic (A > B) successful with rule: " << newRule);
-            res.rules.push_back(accelRule.get().appendInfo(" [after adding " + Expression(A > B).toString() + "]"));
+            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A > B).toString() + ")"));
         }
 
         // Add A < B to the guard, try to accelerate
@@ -169,7 +169,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         accelRule = accelerateFast(varMan, newRule, sink);
         if (accelRule) {
             debugAccel("MinMax heuristic (A < B) successful with rule: " << newRule);
-            res.rules.push_back(accelRule.get().appendInfo(" [after adding " + Expression(A < B).toString() + "]"));
+            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A < B).toString() + ")"));
         }
 
         // Check if at least one attempt was successful.

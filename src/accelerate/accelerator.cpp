@@ -392,6 +392,10 @@ void Accelerator::run() {
     performNesting(std::move(innerCandidates), std::move(outerCandidates));
     if (Timeout::soft()) return;
 
+    // TODO: Do we also want to chain accelerated rules with themselves?
+    // TODO: We could do this if the number of accelerated rules is below a certain threshold
+    // TODO: (e.g. similar to PRUNE_MAX_PARALLEL_RULES)
+
     // If we failed for any rule, we add a dummy rule to simulate the effect of not executing any loop.
     // The reason is that we later chain the accelerated rules with incoming rules. So we only allow
     // execution paths that take one of the accelerated (or kept) rules, but we do not allow an execution

@@ -139,7 +139,7 @@ z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
         // This feature might be useful if useReals = true, but we want some variables to be integers.
         // However, in most cases it is probably not intended, so we issue the warning.
         if (!Z3Context::isSymbolOfType(optVar.get(), variableType())) {
-            debugWarn("GinacToZ3: Re-using symbol with different type: " << e << " (should have type: " << variableType() << ")");
+            debugWarn("GinacToZ3: Re-using existing symbol of type: " << e << " (but it should have type: " << variableType() << ")");
         }
 
         return optVar.get();

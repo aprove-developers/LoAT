@@ -78,6 +78,7 @@ bool Preprocess::removeTrivialGuards(GuardList &guard) {
 }
 
 
+// TODO: This method is extremely expensive (it does O(n^2) SMT queries), even though its not very effective!
 bool Preprocess::removeWeakerGuards(GuardList &guard) {
     auto tout = Timeout::create(3); //this function is very expensive, limit the time spent here
     set<int> remove;
