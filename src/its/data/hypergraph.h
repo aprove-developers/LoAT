@@ -25,10 +25,7 @@
 #include <algorithm>
 
 #include "debug.h"
-
-
-//typedefs for readability
-typedef int TransIdx;
+#include "its/types.h" // for TransIdx
 
 
 /**
