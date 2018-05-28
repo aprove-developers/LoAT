@@ -26,6 +26,7 @@ class VariableManager;
 
 // FIXME: better switch to unsigned long?
 // some typedefs for clarity
+using TransIdx = int;
 using LocationIdx = int;
 using VariableIdx = int;
 using VariablePair = std::pair<VariableIdx, VariableIdx>;

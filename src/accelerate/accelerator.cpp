@@ -17,7 +17,7 @@
 
 #include "accelerator.h"
 
-#include "simplify/preprocess.h"
+#include "analysis/preprocess.h"
 #include "recurrence/recurrence.h"
 #include "meter/metering.h"
 #include "z3/z3toolbox.h"
@@ -26,8 +26,8 @@
 #include "its/export.h"
 
 // TODO: Move these to proper folders after refactoring
-#include "simplify/chain.h"
-#include "simplify/prune.h"
+#include "analysis/chain.h"
+#include "analysis/prune.h"
 
 #include "debug.h"
 #include "util/stats.h"

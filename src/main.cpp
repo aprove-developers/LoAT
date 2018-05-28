@@ -29,15 +29,14 @@
 using namespace std;
 
 
-#include "simplify/preprocess.h"
+#include "analysis/preprocess.h"
 #include "util/stats.h"
 #include "util/timing.h"
 #include "util/timeout.h"
 
 
-#include "parser/itsparser.h"
-#include "strategy/linear.h"
-#include "strategy_nonlinear/nl_linear.h"
+#include "its/parser/itsparser.h"
+#include "analysis/analysis.h"
 
 
 /**

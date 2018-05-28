@@ -20,7 +20,7 @@
 
 #include "global.h"
 
-#include "graph/graph.h"
+#include "its/types.h"
 #include "its/itsproblem.h"
 #include "expr/expression.h"
 #include "meter/metering.h"

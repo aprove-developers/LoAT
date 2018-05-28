@@ -25,7 +25,6 @@
 #include "its/itsproblem.h"
 
 #include "z3/z3toolbox.h"
-#include "infinity.h"
 #include "asymptotic/asymptoticbound.h"
 
 #include <queue>

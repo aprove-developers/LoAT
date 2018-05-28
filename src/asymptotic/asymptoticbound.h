@@ -7,9 +7,11 @@
 #include "expr/expression.h"
 #include "expr/guardtoolbox.h"
 #include "its/variablemanager.h"
-#include "infinity.h"
 #include "inftyexpression.h"
 #include "limitproblem.h"
+
+// TODO: Avoid this include by moving the required datastrutures here (and clean them up)
+#include "deprecated/infinity.h"
 
 
 

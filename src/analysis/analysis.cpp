@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "linear.h"
+#include "analysis.h"
 
 #include "z3/z3toolbox.h"
 #include "asymptotic/asymptoticbound.h"
@@ -25,12 +25,12 @@
 #include "util/timing.h"
 #include "util/timeout.h"
 
-#include "simplify/prune.h"
-#include "simplify/chain.h"
-#include "simplify/chainstrategy.h"
+#include "prune.h"
+#include "preprocess.h"
+#include "chain.h"
+#include "chainstrategy.h"
 #include "accelerate/accelerator.h"
 
-#include "simplify/preprocess.h"
 #include "its/export.h"
 
 // TODO: Remove after testing

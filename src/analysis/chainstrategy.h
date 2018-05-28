@@ -20,7 +20,7 @@
 
 #include "global.h"
 
-#include "graph/hypergraph.h"
+#include "its/types.h"
 #include "its/itsproblem.h"
 #include "util/option.h"
 

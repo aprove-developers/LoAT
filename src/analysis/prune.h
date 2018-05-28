@@ -18,8 +18,6 @@
 #ifndef PRUNE_H
 #define PRUNE_H
 
-#include "graph/hypergraph.h"
-
 class Rule;
 class ITSProblem;
 

@@ -25,12 +25,12 @@
 #include <string>
 #include <ostream>
 
-#include "graph/hypergraph.h"
 #include "util/exceptions.h"
 #include "util/option.h"
 
 #include "rule.h"
 #include "variablemanager.h"
+#include "data/hypergraph.h"
 
 
 class ITSProblem : public VariableManager {
