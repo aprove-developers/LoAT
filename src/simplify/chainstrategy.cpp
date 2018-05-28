@@ -311,37 +311,49 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
     Stats::addStep("ChainingNL::chainSimpleLoops");
     set<TransIdx> successfullyChained;
 
+    // Find all lhs locations of accelerated rules, so we can iterate over them.
+    // If we would iterate over acceleratedRules directly, we might consider an lhs location twice,
+    // so we would use chained rules from the first visit as incoming rules for the second visit.
+    set<LocationIdx> nodes;
     for (TransIdx accel : acceleratedRules) {
-        if (Timeout::soft()) break;
-        debugChain("Chaining accelerated rule " << accel);
+        nodes.insert(its.getRule(accel).getLhsLoc());
+    }
 
-        const Rule &accelRule = its.getRule(accel);
-        LocationIdx node = accelRule.getLhsLoc();
+    for (LocationIdx node : nodes) {
+        for (TransIdx accel : its.getTransitionsFrom(node)) {
+            if (Timeout::soft()) break;
 
-        for (TransIdx incoming : its.getTransitionsTo(node)) {
-            const Rule &incomingRule = its.getRule(incoming);
+            // Only chain accelerated rules
+            if (acceleratedRules.count(accel) == 0) continue;
+            const Rule &accelRule = its.getRule(accel);
+            debugChain("Chaining accelerated rule " << accel);
 
-            // Do not chain with incoming loops that are themselves self-loops at node
-            // (no matter if they are simple or not)
-            if (incomingRule.getLhsLoc() == node) continue;
+            // We only query the incoming transitions once, before adding new rules starting at node
+            for (TransIdx incoming : its.getTransitionsTo(node)) {
+                const Rule &incomingRule = its.getRule(incoming);
 
-            // Do not chain with another accelerated rule (already covered by the previous check)
-            assert(acceleratedRules.count(incoming) == 0);
+                // Do not chain with incoming loops that are themselves self-loops at node
+                // (no matter if they are simple or not)
+                if (incomingRule.getLhsLoc() == node) continue;
 
-            auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
-            if (optRule) {
-                TransIdx added = its.addRule(optRule.get());
-                debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
-                successfullyChained.insert(incoming);
+                // Do not chain with another accelerated rule (already covered by the previous check)
+                assert(acceleratedRules.count(incoming) == 0);
+
+                auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
+                if (optRule) {
+                    TransIdx added = its.addRule(optRule.get());
+                    debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
+                    successfullyChained.insert(incoming);
+                }
             }
-        }
 
-        debugChain("  removing accelerated rule " << accel);
-        its.removeRule(accel);
+            debugChain("  removing accelerated rule " << accel);
+            its.removeRule(accel);
+        }
     }
 
     // Removing chained incoming rules may help to avoid too many rules.
-    // However, it may also lose good results if we should not execute any of the accelerated loops.
+    // However, we also lose execution paths (especially if there are more loops, which are not simple).
     if (removeIncoming) {
         for (TransIdx toRemove : successfullyChained) {
             debugChain("  removing chained incoming rule " << its.getRule(toRemove));
