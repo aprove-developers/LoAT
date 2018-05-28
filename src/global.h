@@ -154,7 +154,8 @@
 /*
  * timeouts for z3 in ms
  */
-#define Z3_CHECK_TIMEOUT 100u
+#define Z3_DEFAULT_TIMEOUT 100u
+#define Z3_METER_TIMEOUT 500u
 #define Z3_LIMITSMT_TIMEOUT 500u
 
 /*

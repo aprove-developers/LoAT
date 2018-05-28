@@ -29,8 +29,14 @@
  */
 class Z3Solver : public z3::solver {
 public:
-    // TODO: Add timeout
-    explicit Z3Solver(Z3Context &context) : z3::solver(context) {}
+    // Constructs a new solver with the given timeout, pass 0 to disable timeout
+    explicit Z3Solver(Z3Context &context, unsigned int timeout = Z3_DEFAULT_TIMEOUT) : z3::solver(context) {
+        if (timeout > 0) {
+            z3::params params(context);
+            params.set(":timeout", timeout);
+            set(params);
+        }
+    }
 
     inline z3::check_result check() {
         Timing::start(Timing::Z3);

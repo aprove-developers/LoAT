@@ -398,7 +398,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     Timing::done(Timing::FarkasLogic);
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    Z3Solver solver(meter.context);
+    Z3Solver solver(meter.context, Z3_METER_TIMEOUT);
     solver.add(meter.genNotGuardImplication());
     solver.add(meter.genUpdateImplications());
     solver.add(meter.genNonTrivial());
@@ -475,7 +475,7 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    Z3Solver solver(meter.context);
+    Z3Solver solver(meter.context, Z3_METER_TIMEOUT);
     solver.add(meter.genNotGuardImplication());
     solver.add(meter.genUpdateImplications());
     solver.add(meter.genNonTrivial());

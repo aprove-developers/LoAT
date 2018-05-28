@@ -125,10 +125,6 @@ bool BackwardAcceleration::checkGuardImplication(const GiNaC::exmap &inverseUpda
     Z3Context context;
     Z3Solver solver(context);
 
-    z3::params params(context);
-    params.set(":timeout", Z3_CHECK_TIMEOUT);
-    solver.set(params);
-
     // remove constraints that are irrelevant for the loop's execution
     GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {rule.getUpdate()});
 

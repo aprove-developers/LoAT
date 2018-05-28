@@ -1091,10 +1091,7 @@ bool AsymptoticBound::trySmtEncoding() {
     InftyExpressionSet::const_iterator it;
 
     // initialize z3
-    Z3Solver solver(context);
-    z3::params params(context);
-    params.set(":timeout", Z3_LIMITSMT_TIMEOUT);
-    solver.set(params);
+    Z3Solver solver(context, Z3_LIMITSMT_TIMEOUT);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();

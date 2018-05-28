@@ -64,9 +64,6 @@ z3::check_result Z3Toolbox::checkAll(const vector<Expression> &list, Z3Context &
     z3::expr target = concat(context, exprvec, ConcatAnd);
 
     Z3Solver solver(context);
-    z3::params params(context);
-    params.set(":timeout", Z3_CHECK_TIMEOUT);
-    solver.set(params);
     solver.add(target);
     z3::check_result z3res = solver.check();
     debugZ3(solver,z3res,"checkExprSAT");
@@ -90,9 +87,6 @@ z3::check_result Z3Toolbox::checkAllApproximate(const std::vector<Expression> &l
     z3::expr target = concat(context, exprvec, ConcatAnd);
 
     Z3Solver solver(context);
-    z3::params params(context);
-    params.set(":timeout", Z3_CHECK_TIMEOUT);
-    solver.set(params);
     solver.add(target);
     z3::check_result z3res = solver.check();
     debugZ3(solver,z3res,"checkExprSATapprox");
@@ -112,9 +106,6 @@ bool Z3Toolbox::isValidImplication(const vector<Expression> &lhs, const Expressi
     }
 
     Z3Solver solver(context);
-    z3::params params(context);
-    params.set(":timeout", Z3_CHECK_TIMEOUT);
-    solver.set(params);
     solver.add(!rhsExpr && concat(context, lhsList, ConcatAnd));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
 }
