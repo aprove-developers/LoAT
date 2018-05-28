@@ -337,6 +337,9 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
     }
 
     for (LocationIdx node : nodes) {
+        // We only query the incoming transitions once, before adding new rules starting at node
+        set<TransIdx> incomingTransitions = its.getTransitionsTo(node);
+
         for (TransIdx accel : its.getTransitionsFrom(node)) {
             if (Timeout::soft()) break;
 
@@ -345,8 +348,7 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
             const Rule &accelRule = its.getRule(accel);
             debugChain("Chaining accelerated rule " << accel);
 
-            // We only query the incoming transitions once, before adding new rules starting at node
-            for (TransIdx incoming : its.getTransitionsTo(node)) {
+            for (TransIdx incoming : incomingTransitions) {
                 const Rule &incomingRule = its.getRule(incoming);
 
                 // Do not chain with incoming loops that are themselves self-loops at node
