@@ -42,10 +42,12 @@ namespace Pruning {
     bool removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareUpdate = true);
 
     /**
-     * Checks initial rules (from the initial location) for satisfiability, removes unsat rules.
-     * @return true iff the ITS was modified
+     * Removes all rules within the given list/set/... whose guard is found to be unsatisfiable.
+     * This involves a single z3 query for every transition.
+     * @return true iff the ITS was modified (i.e., an unsat rule got deleted)
      */
-    bool removeUnsatInitialRules(ITSProblem &its);
+    template <typename Container>
+    bool removeUnsatRules(ITSProblem &its, const Container &trans);
 
     /**
      * Reduces the number of parallel rules by applying some greedy heuristic to find the "best" rules

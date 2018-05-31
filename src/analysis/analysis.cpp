@@ -72,7 +72,7 @@ RuntimeResult Analysis::run() {
         printForProof("Fresh start");
     }
 
-    if (Pruning::removeUnsatInitialRules(its)) {
+    if (Pruning::removeUnsatRules(its, its.getTransitionsFrom(its.getInitialLocation()))) {
         proofout.headline("Removed unsatisfiable initial rules:");
         printForProof("Reduced initial");
     }

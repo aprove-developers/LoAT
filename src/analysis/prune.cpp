@@ -105,10 +105,12 @@ bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool
 }
 
 
-bool Pruning::removeUnsatInitialRules(ITSProblem &its) {
+
+template <typename Container>
+bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
     bool changed = false;
 
-    for (TransIdx rule : its.getTransitionsFrom(its.getInitialLocation())) {
+    for (TransIdx rule : trans) {
         if (Z3Toolbox::checkAll(its.getRule(rule).getGuard()) == z3::unsat) {
             debugPrune("Removing unsat rule: " << rule);
             its.removeRule(rule);
@@ -335,3 +337,5 @@ bool Pruning::removeSinkRhss(ITSProblem &its) {
 // instantiate templates (since the implementation is not in the header file)
 template bool Pruning::removeDuplicateRules(ITSProblem &, const std::vector<TransIdx> &, bool);
 template bool Pruning::removeDuplicateRules(ITSProblem &, const std::set<TransIdx> &, bool);
+template bool Pruning::removeUnsatRules(ITSProblem &, const std::vector<TransIdx> &);
+template bool Pruning::removeUnsatRules(ITSProblem &, const std::set<TransIdx> &);
