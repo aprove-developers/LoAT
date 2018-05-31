@@ -293,7 +293,10 @@ void Accelerator::run() {
 
     // Since we might add accelerated loops, we store the list of loops before acceleration
     vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
-    assert(!loops.empty());
+    if (loops.empty()) {
+        proofout << "No simple loops left to accelerate." << endl;
+        return; // may happen if rules get removed in simplifySimpleLoops
+    }
 
     // Proof output
     proofout << "Accelerating the following rules:" << endl;

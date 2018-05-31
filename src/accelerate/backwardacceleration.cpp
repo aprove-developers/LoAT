@@ -83,18 +83,8 @@ optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<V
             if (rhs.subs(updateSubs) == rhs) {
                 inverseRhs = rhs;
 
-            // ...and in some cases also if update(inverse_update(update(x))) = update(x)...
+            // ...and if update(inverse_update(update(x))) = update(x)...
             } else if (rhs.subs(inverseUpdate).subs(updateSubs).is_equal(rhs)) {
-                // inverse update and update must commute for all variables in update(x)
-                for (const ExprSymbol &rhsVar : rhs.getVariables()) {
-                    Expression ui = rhsVar.subs(updateSubs).subs(inverseUpdate);
-                    Expression iu = rhsVar.subs(inverseUpdate).subs(updateSubs);
-                    if (!ui.is_equal(iu)) {
-                        debugBackwardAccel("inverse update " << inverseUpdate << " does not commute for " << rhsVar \
-                                << " (required for the update " << rhs << " of " << x << ")");
-                        return {};
-                    }
-                }
                 inverseRhs = rhs.subs(inverseUpdate).subs(inverseUpdate);
 
             // ...but in all other cases, we have no idea.
