@@ -115,19 +115,26 @@ bool BackwardAcceleration::checkGuardImplication(const GiNaC::exmap &inverseUpda
     Z3Context context;
     Z3Solver solver(context);
 
-    // remove constraints that are irrelevant for the loop's execution
+    // Remove constraints that are irrelevant for the loop's execution
     GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {rule.getUpdate()});
 
-    // build the implication by applying the inverse update to every guard constraint
+    // Build the implication by applying the inverse update to every guard constraint.
+    // For the left-hand side, we use the full guard (might be stronger than the reduced guard).
+    // For the right-hand side, we only check the reduced guard, as we only care about relevant constraints.
     vector<z3::expr> lhss, rhss;
-    for (const Expression &ex : reducedGuard) {
+
+    for (const Expression &ex : rule.getGuard()) {
         lhss.push_back(GinacToZ3::convert(ex, context));
-        rhss.push_back(GinacToZ3::convert(ex.subs(inverseUpdate), context));
     }
     z3::expr lhs = Z3Toolbox::concat(context, lhss, Z3Toolbox::ConcatAnd);
+
+    for (const Expression &ex : reducedGuard) {
+        rhss.push_back(GinacToZ3::convert(ex.subs(inverseUpdate), context));
+    }
     z3::expr rhs = Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd);
 
     // call z3
+    debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
     solver.add(!rhs && lhs);
     return (solver.check() == z3::unsat);
 }
