@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     bool allowDivision = false;
     bool checkCosts = true;
     bool doPreprocessing = true;
-    bool limitSmtSolving = false;
+    bool limitSmtSolving = true;
     string filename;
     int timeout = 0;
 
