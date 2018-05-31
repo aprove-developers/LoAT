@@ -20,6 +20,7 @@
 
 #include "z3context.h"
 #include "util/timing.h"
+#include "global.h"
 
 #include <z3++.h>
 

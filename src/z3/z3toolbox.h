@@ -59,7 +59,7 @@ namespace Z3Toolbox {
 
     /**
      * Returns an approximation of the z3 result (sat/unsat/unknown) for the check if all expressions are satisfiable
-     * @note currently, integer are treated as reals to reduce unknowns
+     * @note currently, integer are treated as reals to reduce unknowns and exponential expressions are skipped
      * @note using this function is *NOT* sound (since it is only an approximation)
      */
     z3::check_result checkAllApproximate(const std::vector<Expression> &list);
