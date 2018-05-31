@@ -50,14 +50,6 @@ static bool checkSatisfiability(const GuardList &newGuard, const Expression &new
     }
 #endif
 
-#ifdef CONTRACT_CHECK_EXP_OVER_UNKNOWN
-    // Treat unknown as sat if the new cost is exponential
-    if (z3res == z3::unknown && newCost.getComplexity() == Complexity::Exp) {
-        debugChain("Ignoring z3::unknown because of exponential cost");
-        return true;
-    }
-#endif
-
 #ifdef DEBUG_PROBLEMS
     if (z3res == z3::unknown) {
         // TODO: use operator<< for newGuard when implemented
@@ -66,7 +58,8 @@ static bool checkSatisfiability(const GuardList &newGuard, const Expression &new
     }
 #endif
 
-    return z3res == z3::sat;
+    // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure
+    return z3res != z3::unsat;
 }
 
 
