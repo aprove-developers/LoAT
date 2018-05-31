@@ -71,10 +71,10 @@ static bool checkSatisfiability(const GuardList &newGuard, const Expression &new
  * Part of the main chaining algorithm.
  * Chains the given first rule's lhs with the second rule's lhs,
  * by applying the first rule's update to the second rule's lhs (guard/cost).
- * Also checks whether the resulting guard is satisfiable (and returns none if not).
+ * Also checks whether the resulting guard is satisfiable (and returns none if not), unless checkSat is false.
  */
 static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, const UpdateMap &firstUpdate,
-                                 const RuleLhs &secondLhs)
+                                 const RuleLhs &secondLhs, bool checkSat)
 {
     // Build a substitution corresponding to the first rule's update
     GiNaC::exmap updateSubs = firstUpdate.toSubstitution(varMan);
@@ -102,7 +102,7 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
     // FIXME: So either we remove the second transition (might lose complexity if the guard was actually sat) or chain them (lose complexity if it was unsat) => BENCHMARKS
 
     // Avoid chaining if the resulting rule can never be taken
-    if (!checkSatisfiability(newGuard, newCost)) {
+    if (checkSat && !checkSatisfiability(newGuard, newCost)) {
         Stats::add(Stats::ContractUnsat);
         return {};
     }
@@ -138,10 +138,12 @@ static UpdateMap chainUpdates(const VarMan &varMan, const UpdateMap &first, cons
  * Special case for chaining linear rules.
  * The behaviour is the same as for general rules, but the implementation is simpler (and possibly faster).
  */
-static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second) {
+static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second,
+                                           bool checkSat)
+{
     assert(first.getRhsLoc() == second.getLhsLoc());
 
-    auto newLhs = chainLhss(varMan, first.getLhs(), first.getUpdate(), second.getLhs());
+    auto newLhs = chainLhss(varMan, first.getLhs(), first.getUpdate(), second.getLhs(), checkSat);
     if (!newLhs) {
         debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
@@ -163,10 +165,12 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
  * with the second rule (the locations must match).
  * @return The resulting rule, unless it can be shown to be unsatisfiable.
  */
-static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int firstRhsIdx, const Rule &second) {
+static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int firstRhsIdx, const Rule &second,
+                                    bool checkSat)
+{
     const UpdateMap &firstUpdate = first.getUpdate(firstRhsIdx);
 
-    auto newLhs = chainLhss(varMan, first.getLhs(), firstUpdate, second.getLhs());
+    auto newLhs = chainLhss(varMan, first.getLhs(), firstUpdate, second.getLhs(), checkSat);
     if (!newLhs) {
         debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
@@ -199,7 +203,7 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int
  * Implementation of chaining for nonlinear rules,
  * chains all rhss that lead to second's lhs loc with second.
  */
-static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first, const Rule &second) {
+static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first, const Rule &second, bool checkSat) {
     Rule res = first;
 
     // Iterate over rhss, chain every rhs whose location matches second's lhs location.
@@ -208,7 +212,7 @@ static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first,
     int rhsIdx = 0;
     while (rhsIdx < res.rhsCount()) {
         if (first.getRhsLoc(rhsIdx) == second.getLhsLoc()) {
-            auto chained = chainRulesOnRhs(varMan, res, rhsIdx, second);
+            auto chained = chainRulesOnRhs(varMan, res, rhsIdx, second, checkSat);
             if (!chained) {
                 // we have to chain all rhss that lead to the second rule,
                 // so we give up if any of the chaining operations fails.
@@ -234,19 +238,21 @@ static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first,
 // ##  Public Interface  ##
 // ########################
 
-option<Rule> Chaining::chainRules(const VarMan &varMan, const Rule &first, const Rule &second) {
+option<Rule> Chaining::chainRules(const VarMan &varMan, const Rule &first, const Rule &second, bool checkSat) {
     // Use the simpler/faster implementation if applicable (even if we have to copy for the conversion)
     if (first.isLinear() && second.isLinear()) {
-        auto res = chainLinearRules(varMan, first.toLinear(), second.toLinear());
+        auto res = chainLinearRules(varMan, first.toLinear(), second.toLinear(), checkSat);
         if (res) {
             return res.get(); // implicit cast from LinearRule to Rule
         }
         return {};
     }
 
-    return chainNonlinearRules(varMan, first, second);
+    return chainNonlinearRules(varMan, first, second, checkSat);
 }
 
-option<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second) {
-    return chainLinearRules(varMan, first.toLinear(), second.toLinear());
+option<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second,
+                                        bool checkSat)
+{
+    return chainLinearRules(varMan, first.toLinear(), second.toLinear(), checkSat);
 }
