@@ -20,6 +20,7 @@
 #include "recurrence/recurrence.h"
 #include "meter/metering.h"
 
+#include "global.h"
 #include "debug.h"
 #include "util/stats.h"
 #include "util/timing.h"
