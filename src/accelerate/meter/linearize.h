@@ -47,69 +47,62 @@ public:
     static boost::optional<GiNaC::exmap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
 
 private:
-    Linearize(GuardList &guard, std::vector<UpdateMap> &updates, VarMan &varMan) : guard(guard), updates(updates), varMan(varMan) {}
+    Linearize(GuardList &guard, std::vector<UpdateMap> &updates, VarMan &varMan)
+        : guard(guard), updates(updates), varMan(varMan) {}
 
     /**
-     * Checks if we can substitute the given expression by a fresh variable (with the given name).
-     * If applicable, updates subsMap and subsVars accordingly.
+    * Tries to add all nonlinear terms of the given expression to the given set.
+    * Fails if the nonlinear terms are too complicated, e.g., if ex is non-polynomial
+    * or contains an expression like y*x^2 (we only handl x^n) or x*y*z (we only handle x*y).
+    * @return true if successful (all nonlinear subterms have been added to the set)
+    */
+    static bool collectNonlinearTerms(const Expression &ex, ExpressionSet &nonlinearTerms);
+
+    /**
+     * Collects all nonlinear terms of the guard via collectNonlinearTerms
      */
-    bool substituteExpression(const Expression &ex, std::string name);
+    bool collectNonlinearTermsInGuard(ExpressionSet &nonlinearTerms) const;
 
     /**
-     * Tries to linearize the given expression.
-     * If possible, modifies the given term and subsVar, subsMap.
-     * Might also extend guard (to keep information that is lost when substituting).
+     * Collects all nonlinear terms of all updates via collectNonlinearTerms
+     */
+    bool collectNonlinearTermsInUpdates(ExpressionSet &nonlinearTerms) const;
+
+    /**
+     * Checks if it is safe to replace the given nonlinear terms.
+     * This is the case if each variable occurs in at most one term,
+     * and if no term contains an updated variable.
+     * @return true if the replacement is safe
+     */
+    bool checkForConflicts(const ExpressionSet &nonlinearTerms) const;
+
+    /**
+     * Constructs a substitution (on terms, not on variables, e.g., x^2/z)
+     * that maps every term of the given set to an individual fresh variable.
      *
-     * @return true iff linearization was successful
+     * Note that fresh variables are non-temporary, even if the original variable
+     * was a temporary variable.
+     *
+     * If an even power is substituted (e.g. x^2/z), a constraint is added
+     * to additionalGuard to remember that its value is non-negative (e.g. z >= 0).
+     *
+     * @return The constructed substitution (map from terms to variables)
      */
-    bool linearizeExpression(Expression &term);
+    GiNaC::exmap buildSubstitution(const ExpressionSet &nonlinearTerms);
 
     /**
-     * Tries to linearize guard.
-     * If possible, modifies guard, subsVar, subsMap.
+     * Applies the given substitution to the entire guard and update.
+     * Takes care of the unintuitive behaviour of GiNaC::subs
      */
-    bool linearizeGuard();
+    void applySubstitution(const GiNaC::exmap &subs);
 
     /**
-     * Tries to linearize update.
-     * If possible, modifies update, subsVar, subsMap.
-     * Might also modify guard (see linearizeExpression).
+     * Computes the reverse substitution of the given mapping.
      */
-    bool linearizeUpdates();
+    static GiNaC::exmap reverseSubstitution(const GiNaC::exmap &subs);
 
-    /**
-     * Checks if any of the substituted variables (i.e., the variables in subsVars)
-     * still occurs in the guard or update (this would be a conflict).
-     * This is necessary, e.g. if "y < x" appears but we later substitute x^2
-     * @return true iff there are no conflicts (so the substitution is sound)
-     */
-    bool checkForConflicts() const;
-
-    /**
-     * Applies the computed substitution subsMap to the entire guard and update.
-     */
-    void applySubstitution();
-
-    /**
-     * Returns the additional guard
-     */
-    GuardList getAdditionalGuard() const;
-
-    /**
-     * Computes the reverse substitution of subsMap
-     */
-    GiNaC::exmap reverseSubstitution() const;
 
 private:
-    // The set of all variables occurring in substituted expressions.
-    // If we substitute x^2/z, then x is added to this set.
-    // This is used to check for conflicting substitutions (e.g. x^2 and x^3).
-    ExprSymbolSet subsVars;
-
-    // The substitution of nonlinear expression, e.g. x^2/z.
-    // Note that this is not a substitution of variables, but of expressions.
-    GiNaC::exmap subsMap;
-
     // Guard and updates of the rule, only modified by applying substitutions.
     GuardList &guard;
     std::vector<UpdateMap> &updates;

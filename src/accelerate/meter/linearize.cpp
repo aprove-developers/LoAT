@@ -19,212 +19,231 @@
 
 #include "expr/relation.h"
 #include "metertools.h"
+#include "debug.h"
 
 using namespace std;
 using boost::optional;
 
 
-bool Linearize::substituteExpression(const Expression &ex, string name) {
-    ExprSymbolSet vars = ex.getVariables();
-
-    // Check if the variables have already been substituted in a different way or are updated.
-    // (it is not sound to substitute x^2 and x^3 by different, independent variables)
-    for (const ExprSymbol &sym : vars) {
-        if (subsVars.count(sym) > 0) return false;
-        if (MeteringToolbox::isUpdatedByAny(varMan.getVarIdx(sym), updates)) return false;
+bool Linearize::collectNonlinearTerms(const Expression &ex, ExpressionSet &nonlinearTerms) {
+    // We can only handle polynomials
+    if (!ex.isPolynomial()) {
+        debugLinearize("Too complicated, not polynomial: " << ex);
+        return false;
     }
+
+    // Check if we are linear in every variable
+    for (const ExprSymbol &var : ex.getVariables()) {
+        int deg = ex.degree(var);
+        assert(deg >= 0); // since ex is a polynomial
+
+        // If x occurs with different degrees, we cannot substitute both (e.g. x^2 + x)
+        if (deg > 1) {
+            // remove the absolute coeff to exclude degree 0 when calling ldegree
+            Expression shifted = (ex - ex.coeff(var,0)).expand(); // expand appears to be needed for ldegree
+            int lowdeg = shifted.ldegree(var);
+            assert(lowdeg > 0);
+
+            if (lowdeg != deg) {
+                debugLinearize("Too complicated, " << var << " appears with different degrees: " << ex);
+                return false;
+            }
+        }
+
+        if (deg > 1) {
+            // Substitute powers of x, e.g. 4*x^2 should later become 4*z.
+            // We don't handle cases like y*x^2 to keep linearization simple.
+            if (!ex.coeff(var, deg).info(GiNaC::info_flags::numeric)) {
+                debugLinearize("Too complicated, " << var << " has power with non-constant coeff: " << ex);
+                return false; // too complicated
+            }
+            nonlinearTerms.insert(GiNaC::pow(var, deg));
+
+        } else {
+            // If deg == 1, we can still have a nonlinear term like x*y, so we have to check the coefficient.
+            // We don't handle more complicated cases like x*y*z or (y+z)*x.
+            Expression coeff = ex.coeff(var, deg);
+            ExprSymbolSet coeffVars = coeff.getVariables();
+
+            if (coeffVars.size() > 1) {
+                debugLinearize("Too complicated, " << var << " has coeff with mutliple variables: " << ex);
+                return false; // too complicated
+            }
+
+            if (coeffVars.size() == 1) {
+                ExprSymbol coeffVar = *coeffVars.begin();
+                nonlinearTerms.insert(coeffVar * var);
+            }
+        }
+    }
+    return true;
+}
+
+
+bool Linearize::collectNonlinearTermsInGuard(ExpressionSet &nonlinearTerms) const {
+    for (const Expression &ex : guard) {
+        assert(Relation::isInequality(ex));
+
+        if (!collectNonlinearTerms(ex.lhs(), nonlinearTerms)) {
+            return false;
+        }
+
+        if (!collectNonlinearTerms(ex.rhs(), nonlinearTerms)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool Linearize::collectNonlinearTermsInUpdates(ExpressionSet &nonlinearTerms) const {
+    for (const UpdateMap &update : updates) {
+        for (const auto &it : update) {
+            if (!collectNonlinearTerms(it.second, nonlinearTerms)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+bool Linearize::checkForConflicts(const ExpressionSet &nonlinearTerms) const {
+    ExprSymbolSet vars;
+    for (const Expression &term : nonlinearTerms) {
+        for (ExprSymbol var : term.getVariables()) {
+            // If we already know this variable, we have a conflict,
+            // since we cannot replace a variable in two different ways.
+            if (vars.count(var) > 0) {
+                return false;
+            }
+
+            // If the variable is updated, we cannot replace it
+            if (MeteringToolbox::isUpdatedByAny(varMan.getVarIdx(var), updates)) {
+                return false;
+            }
+
+            // Otherwise the replacement is safe
+            vars.insert(var);
+        }
+    }
+    return true;
+}
+
+
+GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &nonlinearTerms) {
+    using namespace GiNaC;
 
     // FIXME: If we substitute a free variable, the result should be free as well?!
     // FIXME: This *might* be soundness critical!
     // FIXME: Alternative: Never substitute fresh variables (and check if this affects the benchmarks)
-    VariableIdx freshVar = varMan.addFreshVariable(name);
-    subsVars.insert(vars.begin(), vars.end());
-    subsMap[ex] = varMan.getGinacSymbol(freshVar);
 
-    return true;
-};
+    GiNaC::exmap res;
+    for (const Expression &term: nonlinearTerms) {
+        if (is_a<power>(term)) {
+            symbol base = ex_to<symbol>(term.op(0));
+            int exponent = ex_to<numeric>(term.op(1)).to_int();
 
+            VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent));
+            ExprSymbol fresh = varMan.getGinacSymbol(freshIdx);
+            res[term] = fresh;
 
-bool Linearize::linearizeExpression(Expression &term) {
-    // term must be a polynomial ...
-    ExprSymbolSet vars = term.getVariables();
-    if (!term.isPolynomialWithin(vars)) {
-        return false;
-    }
-
-    // ... and linear in every variable
-    for (const ExprSymbol &var : vars) {
-
-        for (;;) {
-            int deg = term.degree(var);
-            assert(deg >= 0); // we only consider polynomials
-
-            // substitute powers, e.g. x^2 --> "x2"
-            if (deg > 1) {
-                Expression pow = GiNaC::pow(var,deg);
-                if (!substituteExpression(pow, var.get_name()+to_string(deg))) {
-                    return false;
-                }
-
-                // apply the substitution (so degree changes in the next iteration)
-                term.applySubs(subsMap);
-
-                //squared variables are always non-negative, keep this information
-                if (deg % 2 == 0) {
-                    additionalGuard.push_back(subsMap.at(pow) >= 0);
-                }
+            // Remember that e.g. x^2 is always nonnegative
+            if (exponent % 2 == 0) {
+                additionalGuard.push_back(fresh >= 0);
             }
-            // heuristic to substitute simple variable products, e.g. x*y --> "xy"
-            else if (deg == 1) {
-                GiNaC::ex coeff = term.coeff(var,1);
-                if (GiNaC::is_a<GiNaC::numeric>(coeff)) break; // linear occurrences are ok
 
-                // give up on complicated cases like x*y*z
-                ExprSymbolSet syms = Expression(coeff).getVariables();
-                if (syms.size() > 1) {
-                    debugFarkas("Nonlinear substitution: too complex for simple heuristic");
-                    return false;
-                }
+        } else {
+            assert(term.nops() == 2 && is_a<mul>(term)); // form x*y
+            symbol x = ex_to<symbol>(term.op(0));
+            symbol y = ex_to<symbol>(term.op(1));
 
-                assert(!syms.empty()); //otherwise coeff would be numeric above
-                ExprSymbol var2 = *syms.begin();
-                if (!substituteExpression(var*var2, var.get_name()+var2.get_name())) {
-                    return false;
-                }
-
-                // apply the substitution (so degree changes in the next iteration)
-                term.applySubs(subsMap);
-            }
-            else {
-                break; // we substituted all occurrences
-            }
+            VariableIdx freshIdx = varMan.addFreshVariable(x.get_name() + y.get_name());
+            ExprSymbol fresh = varMan.getGinacSymbol(freshIdx);
+            res[term] = fresh;
         }
     }
-    return true;
+    return res;
 }
 
 
-bool Linearize::linearizeGuard() {
-    // Collect all variables from the guard
-    ExprSymbolSet vars;
-    for (const Expression &term : guard) {
-        term.collectVariables(vars);
-    }
+void Linearize::applySubstitution(const GiNaC::exmap &subs) {
+    // We have to enable algebraic substitutions, as otherwise x*y*z stays x*y*z
+    // if we apply the exmap x*y/xy (since x*y only matches a part of the GiNaC::mul).
+    // See the GiNaC documentation/tutorial on subs() for more details.
+    auto subsOptions = GiNaC::subs_options::algebraic;
 
-    // Linearize guard
     for (Expression &term : guard) {
-        assert(Relation::isInequality(term));
-
-        // first apply the current substitution
-        Expression lhs = term.lhs().subs(subsMap);
-        Expression rhs = term.rhs().subs(subsMap);
-
-        // then try to linearize lhs and rhs (by enlarging the substitution, if possible)
-        if (!linearizeExpression(lhs)) return false;
-        if (!linearizeExpression(rhs)) return false;
-
-        term = Relation::replaceLhsRhs(term, lhs, rhs);
+        term = term.subs(subs, subsOptions);
     }
 
-    return true;
-}
-
-
-bool Linearize::linearizeUpdates() {
     for (UpdateMap &update : updates) {
         for (auto &it : update) {
-            // first apply the current substitution
-            it.second.applySubs(subsMap);
-
-            // then try to linearize the update expression
-            if (!linearizeExpression(it.second)) {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-
-bool Linearize::checkForConflicts() const {
-    // Check guard (e.g. x^2 substituted, but x > 4 appeared before, so we did not notice)
-    for (const Expression &term : guard) {
-        for (const ExprSymbol &var : subsVars) {
-            if (term.has(var)) {
-                return false;
-            }
-        }
-    }
-
-    // Check the updates (e.g. if y := x^2 was substituted, but we also have the guard x < 4)
-    for (const UpdateMap &update : updates) {
-        for (const auto &it : update) {
-            for (const ExprSymbol &var : subsVars) {
-                if (it.second.has(var)) {
-                    return false;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
-
-void Linearize::applySubstitution() {
-    if (!subsMap.empty()) {
-        for (Expression &term : guard) {
-            term.applySubs(subsMap);
-        }
-        for (UpdateMap &update : updates) {
-            for (auto &it : update) {
-                it.second.applySubs(subsMap);
-            }
+            it.second = it.second.subs(subs, subsOptions);
         }
     }
 }
 
 
-GuardList Linearize::getAdditionalGuard() const {
-    return additionalGuard;
-}
-
-
-GiNaC::exmap Linearize::reverseSubstitution() const {
-    // Calculate reverse substitution
+GiNaC::exmap Linearize::reverseSubstitution(const GiNaC::exmap &subs) {
     GiNaC::exmap reverseSubs;
-    for (auto it : subsMap) {
+    for (auto it : subs) {
+        assert(it.second.info(GiNaC::info_flags::symbol));
         reverseSubs[it.second] = it.first;
     }
     return reverseSubs;
 }
 
 
-
 optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+    debugLinearize("Trying to linearize the following guard/updates:");
+    dumpGuardUpdates("linearize", guard, updates);
     Linearize lin(guard, updates, varMan);
 
-    if (!lin.linearizeGuard()) {
+    // Collect all nonlinear terms that have to be replaced (if possible)
+    ExpressionSet nonlinearTerms;
+    if (!lin.collectNonlinearTermsInGuard(nonlinearTerms)) {
+        debugLinearize("Cannot linearize, guard too complicated");
+        return {};
+    }
+    if (!lin.collectNonlinearTermsInUpdates(nonlinearTerms)) {
+        debugLinearize("Cannot linearize, guard too complicated");
         return {};
     }
 
-    if (!lin.linearizeUpdates()) {
+    // If everything is linear, there is nothing to do
+    if (nonlinearTerms.empty()) {
+        debugLinearize("Everything is linear, nothing to do");
+        return GiNaC::exmap(); // empty substitution
+    }
+
+    // Check if it is safe to replace all nonlinear terms
+    if (!lin.checkForConflicts(nonlinearTerms)) {
+        debugLinearize("Cannot linearize due to conflicts");
         return {};
     }
 
-    if (!lin.checkForConflicts()) {
-        return {};
+    // Construct the replacement and apply it
+    GiNaC::exmap subs = lin.buildSubstitution(nonlinearTerms);
+    lin.applySubstitution(subs);
+
+    // Check that everything is now indeed linear (can be removed, just to check the current implementation)
+    // FIXME: Remove this if it is never hit
+    for (const Expression &ex : guard) {
+        assert(Expression(ex.lhs()).isLinear());
+        assert(Expression(ex.rhs()).isLinear());
+    }
+    for (const UpdateMap &update : updates) {
+        for (const auto &it : update) {
+            assert(it.second.isLinear());
+        }
     }
 
-    // Make sure that the resulting substitution is applied everywhere.
-    // (for the current implementation, this is probably not necessary).
-    lin.applySubstitution();
-
-    // Add the additional guard (to retain the information that x^2 is nonnegative)
-    for (Expression ex : lin.getAdditionalGuard()) {
+    // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)
+    for (Expression ex : lin.additionalGuard) {
         guard.push_back(ex);
     }
 
-    return lin.reverseSubstitution();
+    debugLinearize("Applied linearization: " << subs);
+    return lin.reverseSubstitution(subs);
 }
