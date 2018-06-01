@@ -214,6 +214,11 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
     debugBackwardAccel("mapsToInt: checking if " << e << " maps to int");
     assert(e.isPolynomial());
 
+    // shortcut for the common case
+    if (e.isPolynomialWithIntegerCoeffs()) {
+        return true;
+    }
+
     // collect variables from e into a vector
     vector<ExprSymbol> vars;
     for (ExprSymbol sym : e.getVariables()) {
