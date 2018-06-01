@@ -99,17 +99,28 @@ bool Expression::isInfSymbol() const {
 }
 
 
-bool Expression::isLinear(const GiNaC::lst &vars) const {
-    //this must be a polynomial expression
-    if (!is_polynomial(vars)) return false;
+bool Expression::isLinear(const GiNaC::lst &_vars) const {
+    return isLinear();
+}
 
-    for (auto var : vars) {
+
+bool Expression::isLinear() const {
+    // linear expressions are always polynomials
+    if (!isPolynomial()) return false;
+
+    // GiNaC does not provide an info flag for this, so we check the degree of every variable.
+    // We also have to check if the coefficient contains variables,
+    // e.g. y has degree 1 in x*y, but we don't consider x*y to be linear.
+    for (const ExprSymbol &var : getVariables()) {
         int deg = degree(var);
-        if (deg > 1 || deg < 0) return false; //nonlinear
+        if (deg > 1 || deg < 0) {
+            return false;
+        }
 
-        //coefficient must not contain any variables (e.g. x*y is nonlinear)
         if (deg == 1) {
-            if (!GiNaC::is_a<GiNaC::numeric>(coeff(var,deg))) return false;
+            if (!coeff(var,deg).info(GiNaC::info_flags::numeric)) {
+                return false;
+            }
         }
     }
     return true;
@@ -122,7 +133,12 @@ bool Expression::isPolynomialWithin(const ExprSymbolSet &vars) const {
 
 
 bool Expression::isPolynomial() const {
-    return isPolynomialWithin(getVariables());
+    return this->info(GiNaC::info_flags::polynomial);
+}
+
+
+bool Expression::isPolynomialWithIntegerCoeffs() const {
+    return this->info(GiNaC::info_flags::integer_polynomial);
 }
 
 
@@ -157,19 +173,12 @@ bool Expression::isProperNaturalPower() const {
 
 
 int Expression::getMaxDegree() const {
-    assert(info(GiNaC::info_flags::polynomial));
+    assert(isPolynomial());
 
     int res = 0;
     for (auto var : getVariables()) {
-        if (is_polynomial(var)) {
-            int deg = degree(var);
-
-            if (deg > res) {
-                res = deg;
-            }
-        }
+        res = std::max(res, degree(var));
     }
-
     return res;
 }
 

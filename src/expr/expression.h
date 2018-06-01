@@ -122,16 +122,24 @@ public:
      */
     bool isLinear(const GiNaC::lst &vars) const;
 
+    bool isLinear() const;
+
+    // TODO: Remove this method, it is never used (all usages actually use isPolynomial())
     /**
-     * Returns true iff this expression is polynomial in the given variables
+     * Returns true iff this expression is polynomial in the given variables.
+     * Example: x^2 * 2^y is polynomial in {x} and {x,z}, but not in {y} or {x,y}.
      */
     bool isPolynomialWithin(const ExprSymbolSet &vars) const;
 
-    // TODO: Check if performance is ok if we use this instead of is_polynomial
     /**
-     * Returns true iff this expression is polynomial in the given variables
+     * Returns true iff this expression is polynomial, e.g. 1/2 * y * x^2 + y^3.
      */
     bool isPolynomial() const;
+
+    /**
+     * Returns true iff this expression is polynomial where all coefficients are integers.
+     */
+    bool isPolynomialWithIntegerCoeffs() const;
 
     /**
      * Returns true iff this expression is an integer value (and thus a constant).
@@ -160,6 +168,7 @@ public:
      */
     int getMaxDegree() const;
 
+    // TODO: deprecate this
     /**
      * Returns the highest degree of any of the given variables in this polynomial expression
      * @note this must be polynomial in vars!
