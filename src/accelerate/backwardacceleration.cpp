@@ -171,7 +171,7 @@ optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const Expr
                 debugBackwardAccel("unable to compute upperbound from equality " << ex);
                 return {};
             }
-            if (!GuardToolbox::mapsToInt(term)) {
+            if (!term.isPolynomial() || !GuardToolbox::mapsToInt(term)) {
                 debugBackwardAccel("upperbound " << term << " (from " << ex << ") does not map to int");
                 return {};
             }
@@ -199,7 +199,7 @@ optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const Expr
             debugBackwardAccel("unable to compute upperbound from " << ex);
             return {};
         }
-        if (!GuardToolbox::mapsToInt(term)) {
+        if (!term.isPolynomial() || !GuardToolbox::mapsToInt(term)) {
             debugBackwardAccel("upperbound " << term << " (from " << ex << ") does not map to int");
             return {};
         }
