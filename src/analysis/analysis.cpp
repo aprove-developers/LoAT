@@ -72,26 +72,37 @@ RuntimeResult Analysis::run() {
         printForProof("Fresh start");
     }
 
-    if (Pruning::removeUnsatRules(its, its.getTransitionsFrom(its.getInitialLocation()))) {
-        proofout.headline("Removed unsatisfiable initial rules:");
-        printForProof("Reduced initial");
-    }
-
     RuntimeResult runtime; // defaults to unknown complexity
     string eliminatedLocation; // for proof output of eliminateALocation
     bool acceleratedOnce = false; // whether we did at least one acceleration step
     bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
-    // We cannot prove any lower bound for an empty ITS
-    if (its.isEmpty()) {
-        return runtime;
-    }
-
     if (cfg.doPreprocessing) {
+        Timing::Scope _timer(Timing::Preprocess);
+
+        if (Pruning::removeLeafsAndUnreachable(its)) {
+            proofout.headline("Removed unreachable and leaf rules:");
+            printForProof("Removed unreachable");
+        }
+
+        if (removeUnsatRules()) {
+            proofout.headline("Removed rules with unsatisfiable guard:");
+            printForProof("Removed unsat");
+        }
+
         if (preprocessRules()) {
             proofout.headline("Simplified all rules, resulting in:");
             printForProof("Simplify");
         }
+
+        if (Timeout::preprocessing()) {
+            debugWarn("Timeout for pre-processing exceeded!");
+        }
+    }
+
+    // We cannot prove any lower bound for an empty ITS
+    if (its.isEmpty()) {
+        return runtime;
     }
 
     proofout.section("Simplification by acceleration and chaining");
@@ -247,23 +258,34 @@ bool Analysis::ensureProperInitialLocation() {
 }
 
 
-bool Analysis::preprocessRules() {
-    Timing::Scope _timer(Timing::Preprocess);
+bool Analysis::removeUnsatRules() {
+    bool changed = false;
 
-    // remove unreachable transitions/nodes
-    bool changed = Pruning::removeLeafsAndUnreachable(its);
+    for (TransIdx rule : its.getAllTransitions()) {
+        if (Timeout::preprocessing()) break;
+
+        if (Z3Toolbox::checkAll(its.getRule(rule).getGuard()) == z3::unsat) {
+            its.removeRule(rule);
+            changed = true;
+        }
+    }
+
+    return changed;
+}
+
+
+bool Analysis::preprocessRules() {
+    bool changed = false;
 
     // update/guard preprocessing
-    for (LocationIdx node : its.getLocations()) {
-        for (TransIdx idx : its.getTransitionsFrom(node)) {
-            if (Timeout::preprocessing()) return changed;
+    for (TransIdx idx : its.getAllTransitions()) {
+        if (Timeout::preprocessing()) return changed;
 
-            Rule &rule = its.getRuleMut(idx);
-            if (cfg.eliminateCostConstraints) {
-                changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
-            }
-            changed = Preprocess::preprocessRule(its, rule) || changed;
+        Rule &rule = its.getRuleMut(idx);
+        if (cfg.eliminateCostConstraints) {
+            changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
         }
+        changed = Preprocess::preprocessRule(its, rule) || changed;
     }
 
     // remove duplicates

@@ -49,8 +49,7 @@ bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
 
     // Simplify with smt only once
     result |= simplifyGuard(rule.getGuardMut());
-    result |= removeWeakerGuards(rule.getGuardMut());
-    //result |= simplifyGuardBySmt(rule.getGuardMut()); // this is probably better
+    result |= simplifyGuardBySmt(rule.getGuardMut());
 
     // The other steps are repeated (might not help very often, but is probably cheap enough)
     do {

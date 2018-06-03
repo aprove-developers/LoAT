@@ -93,6 +93,13 @@ private:
     bool ensureProperInitialLocation();
 
     /**
+     * Removes all rules whose guard can be proven unsatisfiable by z3.
+     * Note that this involves many z3 queries!
+     * @return true iff the ITS was modified (a rule was removed)
+     */
+    bool removeUnsatRules();
+
+    /**
      * Performs extensive preprocessing to simplify the ITS (i.e. remove unreachable nodes, simplify guards)
      * @note this is a slow operation and should be used rarely (e.g. only once before the processing begins)
      * @param eliminateCostConstraints if true, "cost >= 0" is removed from the guard if it is implied by the guard
