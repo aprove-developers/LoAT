@@ -17,6 +17,7 @@
 
 #include "prune.h"
 
+#include "global.h"
 #include "debug.h"
 #include "util/stats.h"
 #include "util/timing.h"
@@ -290,7 +291,7 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
     auto optRule = rule.stripRhsLocation(loc);
     if (optRule) {
         TransIdx newIdx = its.addRule(optRule.get());
-        debugLinear("Partial deletion: Added stripped rule " << newIdx << " (for rule " << ruleIdx << ")");
+        debugPrune("Partial deletion: Added stripped rule " << newIdx << " (for rule " << ruleIdx << ")");
     }
 
     // If all rhss would be deleted, we still keep the rule if it has an interesting complexity.
@@ -300,7 +301,7 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
             // This should be the case when partialDeletion is called, at least for the current implementation.
             assert(!its.hasTransitionsFrom(loc));
             TransIdx newIdx = its.addRule(rule.replaceRhssBySink(loc));
-            debugLinear("Partial deletion: Added dummy rule " << newIdx << " (for rule " << ruleIdx << ")");
+            debugPrune("Partial deletion: Added dummy rule " << newIdx << " (for rule " << ruleIdx << ")");
         }
     }
 

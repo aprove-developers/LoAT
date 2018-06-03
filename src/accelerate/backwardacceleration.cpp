@@ -256,7 +256,7 @@ optional<vector<LinearRule>> BackwardAcceleration::run() {
     }
 
     // compute the iterated update and cost, with a fresh variable N as iteration step
-    ExprSymbol N = varMan.getGinacSymbol(varMan.addFreshTemporaryVariable("n"));
+    ExprSymbol N = varMan.getGinacSymbol(varMan.addFreshTemporaryVariable("k"));
 
     UpdateMap iteratedUpdate = rule.getUpdate();
     Expression iteratedCost = rule.getCost();

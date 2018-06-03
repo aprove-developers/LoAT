@@ -91,10 +91,11 @@
 
 // debugging for metering
 #define DEBUG_METERING
+#define DEBUG_METER_LINEARIZE
 
 // TODO: refine FARKAS debugging to refactored code (Farkas, Metering, Linearize etc.)
 //debugging for Farkas processor
-#define DEBUG_FARKAS
+//#define DEBUG_FARKAS
 
 //debugging for the backward acceleration technique
 #define DEBUG_BACKWARD_ACCELERATION
@@ -103,16 +104,16 @@
 #define DEBUG_INFINITY
 
 //debugging for limit problems
-#define DEBUG_LIMIT_PROBLEMS
+//#define DEBUG_LIMIT_PROBLEMS
 
 //debugging for asymptotic bounds
-#define DEBUG_ASYMPTOTIC_BOUNDS
+//#define DEBUG_ASYMPTOTIC_BOUNDS
 
 //debugging for the Expression class
 #define DEBUG_EXPRESSION
 
 //debugging for the ITS problem parser
-#define DEBUG_PARSER
+//#define DEBUG_PARSER
 
 //debugging for the term parser (part of the ITS problem parser)
 //#define DEBUG_TERM_PARSER
@@ -199,13 +200,13 @@
 #endif
 
 #ifdef DEBUG_CHAINING
-#define debugChain(output) do { std::cout << COLOR_HIGHLIGHT << "[chain] " << output << COLOR_NONE << std::endl; } while(0)
+#define debugChain(output) do { std::cout << COLOR_DEBUG << "[chain] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugChain(output) (void(0))
 #endif
 
 #ifdef DEBUG_PRUNING
-#define debugPrune(output) do { std::cout << COLOR_HIGHLIGHT << "[prune] " << output << COLOR_NONE << std::endl; } while(0)
+#define debugPrune(output) do { std::cout << COLOR_DEBUG << "[prune] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugPrune(output) (void(0))
 #endif
@@ -220,6 +221,12 @@
 #define debugMeter(output) do { std::cout << COLOR_HIGHLIGHT << "[meter] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugMeter(output) (void(0))
+#endif
+
+#ifdef DEBUG_METER_LINEARIZE
+#define debugLinearize(output) do { std::cout << COLOR_HIGHLIGHT << "[linearize] " << output << COLOR_NONE << std::endl; } while(0)
+#else
+#define debugLinearize(output) (void(0))
 #endif
 
 #ifdef DEBUG_FARKAS

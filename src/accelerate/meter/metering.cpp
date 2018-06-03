@@ -439,8 +439,8 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     }
 
     // If we succeed, extract the metering function from the model
+    debugMeter("Success (z3 result: " << z3res << ")");
     z3::model model = solver.get_model();
-    debugMeter("Success, z3 model: " << model);
     result.metering = meter.buildResult(model);
     result.result = Success;
 
