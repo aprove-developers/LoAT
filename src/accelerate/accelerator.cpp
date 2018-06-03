@@ -68,16 +68,12 @@ TransIdx Accelerator::addResultingRule(Rule rule) {
 
 bool Accelerator::simplifySimpleLoops() {
     bool res = false;
-
-#ifdef SELFLOOPS_ALWAYS_SIMPLIFY
     vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
 
-    // Simplify all simple loops
+    // Simplify all all simple loops.
+    // This is especially useful to eliminate temporary variables before metering.
     for (TransIdx loop : loops) {
-        if (Preprocess::simplifyRule(its, its.getRuleMut(loop))) {
-            res = true;
-            debugAccel("Simplified rule " << loop << " to " << its.getRule(loop));
-        }
+        res |= Preprocess::simplifyRule(its, its.getRuleMut(loop));
         if (Timeout::soft()) return res;
     }
 
@@ -86,7 +82,6 @@ bool Accelerator::simplifySimpleLoops() {
         res = true;
         debugAccel("Removed some duplicate simple loops");
     }
-#endif
 
     return res;
 }
