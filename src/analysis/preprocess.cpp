@@ -119,64 +119,40 @@ bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
 }
 
 
-bool Preprocess::eliminateFreeVars(const VarMan &varMan, Rule &rule) {
-    bool result = false; //final modification flag
-    bool changed; //intermediate modification flag
+bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
+    bool changed = false;
 
-    do {
-        //equalities allow easy propagation, thus transform x <= y, x >= y into x == y
-        changed = GuardToolbox::findEqualities(rule.getGuardMut());
-        if (result && !changed) break;
-
-        //helpers for guard preprocessing
-        ExprSymbolSet varsInUpdate;
-        auto sym_is_free = [&](const ExprSymbol &sym){ return varMan.isTempVar(varMan.getVarIdx(sym)); };
-        auto free_in_update = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) > 0; };
-
-        //remove free variables from update rhs (varsInUpdate, e.g. x <- free with free == x+1). Repeat for transitive closure.
-        GiNaC::exmap equalSubs;
-        do {
-            varsInUpdate.clear();
-            for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-                for (const auto &it : rhs->getUpdate()) {
-                    it.second.collectVariables(varsInUpdate);
-                }
-            }
-
-            equalSubs.clear();
-            changed = GuardToolbox::propagateEqualities(varMan,rule.getGuardMut(),GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,free_in_update) || changed;
-
-            if (!equalSubs.empty()) {
-                for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-                    for (auto &it : rhs->getUpdateMut()) {
-                        it.second.applySubs(equalSubs);
-                    }
-                }
-                rule.getCostMut().applySubs(equalSubs);
-            }
-
-        } while (!equalSubs.empty());
-
-        //try to remove free variables from equalities
-        equalSubs.clear();
-        changed = GuardToolbox::propagateEqualities(varMan,rule.getGuardMut(),GuardToolbox::NoCoefficients,GuardToolbox::NoFreeOnRhs,&equalSubs,sym_is_free) || changed;
-
-        if (!equalSubs.empty()) {
-            for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-                for (auto &it : rhs->getUpdateMut()) {
-                    it.second.applySubs(equalSubs);
-                }
-            }
-            rule.getCostMut().applySubs(equalSubs);
+    //collect all variables that appear in the rhs of any update
+    ExprSymbolSet varsInUpdate;
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        for (const auto &it : rhs->getUpdate()) {
+            it.second.collectVariables(varsInUpdate);
         }
+    }
 
-        //find all free variables that do not occur in update and cost
-        auto sym_is_free_onlyguard = [&](const ExprSymbol &sym){ return sym_is_free(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym); };
+    //declare helper lambdas to filter variables, to be passed as arguments
+    auto isTemp = [&](const ExprSymbol &sym) {
+        return varMan.isTempVar(sym);
+    };
+    auto isTempInUpdate = [&](const ExprSymbol &sym) {
+        return isTemp(sym) && varsInUpdate.count(sym) > 0;
+    };
+    auto isTempOnlyInGuard = [&](const ExprSymbol &sym) {
+        return isTemp(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym);
+    };
 
-        //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
-        changed = GuardToolbox::eliminateByTransitiveClosure(rule.getGuardMut(),varMan.getGinacVarList(),true,sym_is_free_onlyguard) || changed;
+    //equalities allow easy propagation, thus transform x <= y, x >= y into x == y
+    changed |= GuardToolbox::makeEqualities(rule.getGuardMut());
 
-        result = result || changed;
-    } while (changed);
-    return result;
+    //try to remove temp variables from the update by equality propagation (they are removed from guard and update)
+    changed |= GuardToolbox::propagateEqualities(varMan, rule, GuardToolbox::ResultMapsToInt, isTempInUpdate);
+
+    //try to remove all remaining temp variables (we do 2 steps to priorizie removing vars from the update)
+    changed |= GuardToolbox::propagateEqualities(varMan, rule, GuardToolbox::ResultMapsToInt, isTemp);
+
+    //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
+    //(not sound if x appears in update or cost, since we then need the value of x)
+    changed |= GuardToolbox::eliminateByTransitiveClosure(rule.getGuardMut(), true, isTempOnlyInGuard);
+
+    return changed;
 }

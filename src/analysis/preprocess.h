@@ -65,12 +65,13 @@ namespace Preprocess
     bool removeTrivialUpdates(const VarMan &varMan, UpdateMap &update);
 
     /**
-     * Expensive preprocessing step to remove all free variables from the update and,
-     * where possible, also from the guard.
+     * Tries to remove as many temporary variables from update right-hand sides
+     * and the guard as possible. Temporary variables are eliminated by equality propagation
+     * (e.g. for free == 2*x) and transitive elimination (e.g. a <= free <= b becomes a <= b).
      * @param rule the rule, modified
      * @return true iff rule was modified
      */
-    bool eliminateFreeVars(const VarMan &varMan, Rule &rule);
+    bool eliminateTempVars(const VarMan &varMan, Rule &rule);
 }
 
 #endif // PREPROCESS_H
