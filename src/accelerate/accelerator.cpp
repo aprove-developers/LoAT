@@ -176,8 +176,13 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
     // Try to nest, executing inner loop first
     auto innerFirst = Chaining::chainRules(its, innerRule, outerRule);
     if (innerFirst) {
+        Rule nestedRule = innerFirst.get();
+
+        // Simplify the rule again (chaining can introduce many useless constraints)
+        Preprocess::simplifyRule(its, nestedRule);
+
         // TODO: Use full accelerate with heuristics (and backward acceleration)?
-        auto accelerated = Forward::accelerateFast(its, innerFirst.get(), sinkLoc);
+        auto accelerated = Forward::accelerateFast(its, nestedRule, sinkLoc);
         if (accelerated) {
             Forward::MeteredRule meteredRule = accelerated.get();
             if (meteredRule.rule.getCost().getComplexity() >= innerRule.getCost().getComplexity()) {
@@ -194,7 +199,12 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
     // Try to nest, executing outer loop first
     auto outerFirst = Chaining::chainRules(its, outerRule, innerRule);
     if (outerFirst) {
-        auto accelerated = Forward::accelerateFast(its, outerFirst.get(), sinkLoc);
+        Rule nestedRule = outerFirst.get();
+
+        // Simplify the rule again (chaining can introduce many useless constraints)
+        Preprocess::simplifyRule(its, nestedRule);
+
+        auto accelerated = Forward::accelerateFast(its, nestedRule, sinkLoc);
         if (accelerated) {
             Forward::MeteredRule meteredRule = accelerated.get();
             if (meteredRule.rule.getCost().getComplexity() >= innerRule.getCost().getComplexity()) {
