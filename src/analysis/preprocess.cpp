@@ -20,6 +20,7 @@
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
 #include "z3/z3toolbox.h"
+#include "z3/z3solver.h"
 #include "util/timeout.h"
 
 using namespace std;
@@ -37,22 +38,25 @@ bool Preprocess::tryToRemoveCost(GuardList &guard) {
 }
 
 
-bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
-    bool changed, result;
+bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
+    bool changed;
+    bool result = false;
 
-    //do removeWeakerGuards only once, as this involves z3 and is potentially slow
-    result = removeTrivialGuards(rule.getGuardMut());
-    result = removeWeakerGuards(rule.getGuardMut()) || result;
+    //simplify with smt only once
+    result |= simplifyGuard(rule.getGuardMut());
+    result |= removeWeakerGuards(rule.getGuardMut());
+    //result |= simplifyGuardBySmt(rule.getGuardMut()); // this is probably better
 
     //all other steps are repeated
     do {
-        // simplify guard
-        changed = removeTrivialGuards(rule.getGuardMut());
-        changed = eliminateFreeVars(varMan,rule) || changed;
+        changed = eliminateTempVars(varMan,rule);
 
-        // simplify updates
+        if (changed) {
+            changed |= simplifyGuard(rule.getGuardMut());
+        }
+
         for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-            changed = removeTrivialUpdates(varMan, rhs->getUpdateMut()) || changed;
+            changed |= removeTrivialUpdates(varMan, rhs->getUpdateMut());
         }
 
         result = result || changed;
@@ -62,19 +66,96 @@ bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
 }
 
 
-bool Preprocess::removeTrivialGuards(GuardList &guard) {
+bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
     bool changed = false;
-    for (int i=0; i < guard.size(); ++i) {
-        if (Relation::isEquality(guard[i])) continue;
 
-        Expression lessEq = Relation::toLessEq(guard[i]);
-        if (Relation::isTrivialLessEqInequality(lessEq)) {
-            guard.erase(guard.begin() + i);
-            i--;
-            changed = true;
+    changed |= eliminateTempVars(varMan, rule);
+    changed |= simplifyGuard(rule.getGuardMut());
+
+    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+        changed = removeTrivialUpdates(varMan, rhs->getUpdateMut()) || changed;
+    }
+
+    return changed;
+}
+
+
+bool Preprocess::simplifyGuard(GuardList &guard) {
+    GuardList newGuard;
+
+    for (const Expression &ex : guard) {
+        // Skip trivially true constraints
+        auto optTrivial = Relation::checkTrivial(ex);
+        if (optTrivial && optTrivial.get()) continue;
+
+        // If a constraint is trivially false, we drop all other constraints
+        if (optTrivial && !optTrivial.get()) {
+            newGuard = {ex};
+            break;
+        }
+
+        // Check if the constraint is syntactically implied by one of the other constraints.
+        // Also check if one of the others is implied by the new constraint.
+        bool implied = false;
+        for (int i=0; i < newGuard.size(); ++i) {
+            if (GuardToolbox::isTrivialImplication(newGuard.at(i), ex)) {
+                implied = true;
+
+            } else if (GuardToolbox::isTrivialImplication(ex, newGuard.at(i))) {
+                // remove old constraint from newGuard, but preserve order
+                newGuard.erase(newGuard.begin() + i);
+                i--;
+            }
+        }
+
+        if (!implied) {
+            newGuard.push_back(ex);
         }
     }
-    return changed;
+
+    guard.swap(newGuard);
+    return guard.size() != newGuard.size();
+}
+
+
+bool Preprocess::simplifyGuardBySmt(GuardList &guard) {
+    GuardList newGuard;
+    Z3Context context;
+    Z3Solver solver(context);
+
+    // iterates once over guard and drops constraints that are implied by previous constraints
+    auto dropImplied = [&]() {
+        for (const Expression &ex : guard) {
+            solver.push();
+            solver.add( ! ex.toZ3(context) );
+            auto z3res = solver.check();
+            solver.pop();
+
+            // unsat means that ex is implied by the previous constraints
+            if (z3res != z3::unsat) {
+                newGuard.push_back(ex);
+                solver.add(ex.toZ3(context));
+            }
+        }
+    };
+
+    // iterated once, drop implied constraints
+    dropImplied();
+
+    // reverse the guard
+    std::reverse(newGuard.begin(), newGuard.end());
+    guard.swap(newGuard);
+
+    // iterate over the reversed guard, drop more implied constraints,
+    // e.g. for "A > 0, A > 1" only the reverse iteration can remove "A > 0".
+    newGuard.clear();
+    solver.reset();
+    dropImplied();
+
+    // reverse again to preserve original order
+    std::reverse(newGuard.begin(), newGuard.end());
+    guard.swap(newGuard);
+    return guard.size() != newGuard.size();
 }
 
 

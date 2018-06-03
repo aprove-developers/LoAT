@@ -262,7 +262,7 @@ bool Analysis::preprocessRules() {
             if (cfg.eliminateCostConstraints) {
                 changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
             }
-            changed = Preprocess::simplifyRule(its, rule) || changed;
+            changed = Preprocess::preprocessRule(its, rule) || changed;
         }
     }
 

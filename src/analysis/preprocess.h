@@ -37,21 +37,43 @@ namespace Preprocess
     bool tryToRemoveCost(GuardList &guard);
 
     /**
-     * Expensive preprocessing of the given transition.
-     * This includes finding equalities, removing free variables, removing trivial constraints.
-     * @param trans the transition, modified.
-     * @return true iff trans was modified
+     * Main preprocessing function which combines the methods below in a suitable way.
+     * Calls simplifyGuardBySmt, so this method involves many smt queries!
+     *
+     * @param rule The rule to be simplified, is modified.
+     * @returns true iff rule was modified
+     */
+    bool preprocessRule(const VarMan &varMan, Rule &rule);
+
+    /**
+     * A simpler/cheaper version of preprocessRule without any smt queries.
      */
     bool simplifyRule(const VarMan &varMan, Rule &rule);
 
     /**
-     * Removes trivial terms from the given guard, i.e. 42 <= 1337 or x <= x+1
-     * @note this does _not_ involve any SMT queries and thus only removes very trivial terms
-     * @return true iff guard was modified
+     * Simplifies the guard by dropping trivial constraints and constraints
+     * which are (syntactically!) implied by one of the other constraints.
+     * E.g. "x+1 >= x" is trivially true and "x > 1" implies "x > 0",
+     * whereas "x^2 >= 0" is not recognized by the syntactic check.
+     *
+     * This method does not involve any z3 queries, so it only checks for
+     * syntactically similar terms. The complexity is quadratic, but does
+     * not involve any z3 queries.
+     *
+     * @return true iff the given guard was modified (some constraints were removed)
      */
-    bool removeTrivialGuards(GuardList &guard);
+    bool simplifyGuard(GuardList &guard);
 
     /**
+     * Performs z3 queries to remove constraints which are implied by the previous
+     * constraints. This involves a linear number of queries and is thus rather slow.
+     *
+     * @return true iff the given guard was modified (some constraints were removed)
+     */
+    bool simplifyGuardBySmt(GuardList &guard);
+
+    /**
+     * NOTE: Use simplifyGuardBySmt instead, unless this removes too many constraints!
      * Removes terms for which stronger variants appear in the guard, i.e. x >= 0, x > 0 --> x > 0
      * @note this _does_ involve many SMT queries (though only for every pair, transitivity is not checked)
      * @return true iff guard was modified
