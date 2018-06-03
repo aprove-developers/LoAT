@@ -45,59 +45,6 @@ bool MeteringToolbox::isUpdatedByAny(VariableIdx var, const MultiUpdate &updates
 
 /* ### Preprocessing ### */
 
-// FIXME: Return the applied substitution
-void MeteringToolbox::eliminateTempVars(const VarMan &varMan, GuardList &guard, MultiUpdate &updates) {
-    //equalities might be helpful to remove free variables
-    GuardToolbox::findEqualities(guard);
-
-    //precalculate relevant variables (probably just an estimate at this point) to improve free var elimination
-    GuardList reducedGuard = reduceGuard(varMan, guard, updates);
-    set<VariableIdx> relevantVars = findRelevantVariables(varMan, reducedGuard, updates);
-
-    //collect all variables that appear in the rhs of the update of a relevant variable
-    ExprSymbolSet varsInUpdate;
-    for (UpdateMap &update : updates) {
-        for (const auto &it : update) {
-            if (relevantVars.count(it.first) > 0) {
-                it.second.collectVariables(varsInUpdate);
-            }
-        }
-    }
-
-    //declare helper lambdas to be passed as arguments
-    auto isTemp = [&](const ExprSymbol &sym){ return varMan.isTempVar(sym); };
-    auto isTempInUpdate = [&](const ExprSymbol &sym){ return isTemp(sym) && varsInUpdate.count(sym) > 0; };
-    auto isTempNoUpdate = [&](const ExprSymbol &sym){ return isTemp(sym) && varsInUpdate.count(sym) == 0; };
-
-    //try to remove free variables from the update by equality propagation (they are removed from guard and update)
-    GiNaC::exmap equalSubs;
-    GuardToolbox::propagateEqualities(varMan, guard, GuardToolbox::NoCoefficients, GuardToolbox::NoFreeOnRhs, &equalSubs, isTempInUpdate);
-    applySubsToUpdates(equalSubs, updates);
-
-#ifdef DEBUG_FARKAS
-    dumpGuardUpdates("Update propagation", guard, updates);
-#endif
-
-    //try to remove all free variables by equality propagation
-    //(due to the above step, this should only affect the guard. We still update the update to be on the safe side)
-    equalSubs.clear();
-    GuardToolbox::propagateEqualities(varMan, guard, GuardToolbox::NoCoefficients, GuardToolbox::NoFreeOnRhs, &equalSubs, isTemp);
-    applySubsToUpdates(equalSubs, updates);
-
-#ifdef DEBUG_FARKAS
-    dumpGuardUpdates("Propagated Guard", guard, updates);
-#endif
-
-    //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
-    //(it is not sound for variables that appear in the update, since we need their value for the update)
-    GuardToolbox::eliminateByTransitiveClosure(guard, varMan.getGinacVarList(), true, isTempNoUpdate);
-
-#ifdef DEBUG_FARKAS
-    dumpList("Transitive Elimination Guard", guard);
-#endif
-}
-
-
 GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
     GuardList newGuard;
 

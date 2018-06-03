@@ -46,20 +46,10 @@ namespace MeteringToolbox {
 
 
     /**
-     * Some pre-processing steps like equality propagation and elimination by transitive closure
-     * to remove as many temporary variables from the given guard/update as possible.
-     * @note the current implementation calls reduceGuard() and findRelevantVariables(), so this is rather expensive.
-     * TODO: calling reduceGuard is too expensive (since reduceGuard does many z3 queries!)
-     */
-    void eliminateTempVars(const VarMan &varMan, GuardList &guard, MultiUpdate &updates);
-
-    /**
      * Modifies guard (member) to contain only <,<=,>=,> by replacing == with <= and >=
      * @return true iff successfull, false if guard contains != which cannot be handled
      */
     GuardList replaceEqualities(const GuardList &guard);
-
-
 
     /**
      * Computes a guard by only keeping those constraints that might be relevant for the metering function.

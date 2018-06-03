@@ -87,14 +87,8 @@ void MeteringFinder::simplifyAndFindVariables() {
 }
 
 bool MeteringFinder::preprocessAndLinearize() {
-    // preprocessing to avoid free variables
-    // FIXME: BUG: the substitution from this call has to be applied to the original rule before computed iterated cost/update!
-    // FIXME: Otherwise, a temporary variable in the cost is condiered to be constant when computing iterated cost.
-    // FIXME: But if it is replaced by an updated variable (say free/A+B), its value may change!
-    MT::eliminateTempVars(varMan, guard, updates);
-    guard = MT::replaceEqualities(guard);
-
     // simplify guard/update before linearization (expensive, but might remove nonlinear constraints)
+    guard = MT::replaceEqualities(guard);
     simplifyAndFindVariables();
 
     // linearize (try to substitute nonlinear parts)
