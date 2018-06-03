@@ -352,7 +352,7 @@ vector<Relation> ITSParser::parseGuard(const std::string &guard) const {
                     lhs = term.substr(0, relpos);
                     trim(lhs);
 
-                    rhs = term.substr(relpos + 2);
+                    rhs = term.substr(relpos + symbols[i].size());
                     trim(rhs);
 
                     TermPtr l = parseTerm(lhs);
