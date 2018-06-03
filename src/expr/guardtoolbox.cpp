@@ -44,6 +44,31 @@ bool GuardToolbox::containsTempVar(const VarMan &varMan, const Expression &term)
 }
 
 
+bool GuardToolbox::isTrivialImplication(const Expression &a, const Expression &b) {
+    assert(isRelation(a) && isRelation(b));
+
+    // an equality can only be implied by an equality
+    if (isEquality(b)) {
+        if (!isEquality(a)) return false;
+
+        Expression aDiff = a.rhs() - a.lhs();
+        Expression bDiff = b.rhs() - b.lhs();
+        return (aDiff - bDiff).expand().is_zero();
+    }
+
+    Expression bLhs = normalizeInequality(b).lhs(); // b is of the form bLhs > 0
+    if (!isEquality(a)) {
+        Expression aLhs = normalizeInequality(a).lhs(); // a is of the form aLhs > 0
+        return isTriviallyTrue(aLhs <= bLhs); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
+    }
+
+    // if a is an equality, we can use aDiff >= 0 or aDiff <= 0, so we check both
+    // note that we need a strict check below, as we want to show bLhs > 0
+    Expression aDiff = a.rhs() - a.lhs();
+    return isTriviallyTrue(aDiff < bLhs) || isTriviallyTrue((-aDiff) < bLhs);
+}
+
+
 bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, SolvingLevel level) {
     assert(!GiNaC::is_a<GiNaC::relational>(term));
 

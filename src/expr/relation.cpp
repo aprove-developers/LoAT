@@ -26,6 +26,11 @@ namespace Relation {
                && !ex.info(GiNaC::info_flags::relation_not_equal);
     }
 
+    bool isPolynomial(const Expression &ex) {
+        if (!isRelation(ex)) return false;
+        return Expression(ex.lhs()).isPolynomial() && Expression(ex.rhs()).isPolynomial();
+    }
+
     bool isEquality(const Expression &ex) {
         return isRelation(ex) && ex.info(GiNaC::info_flags::relation_equal);
     }
@@ -150,24 +155,13 @@ namespace Relation {
         return (-relLessEq.lhs()) <= (-relLessEq.rhs())-1;
     }
 
-    bool isTrivialLessEqInequality(const Expression &relLessEq) {
-        using namespace GiNaC;
-        assert(relLessEq.info(info_flags::relation_less_or_equal));
-
-        ex diff = relLessEq.rhs() - relLessEq.lhs();
-        if (is_a<numeric>(diff)) {
-            numeric num = ex_to<numeric>(diff);
-            return num.is_zero() || num.is_positive();
-        }
-
-        return false;
-    }
-
     option<bool> checkTrivial(const Expression &rel) {
         using namespace GiNaC;
-        Expression diff = rel.lhs() - rel.rhs();
+        assert(isRelation(rel));
 
-        if (is_a<numeric>(diff)) {
+        Expression diff = (rel.lhs() - rel.rhs()).expand();
+
+        if (diff.isRationalConstant()) {
             relational relZero = ex_to<relational>(replaceLhsRhs(rel, diff, Expression(0)));
             // cast to relZero to bool to evaluate it
             if (relZero) {
@@ -178,5 +172,10 @@ namespace Relation {
         }
 
         return {};
+    }
+
+    bool isTriviallyTrue(const Expression &rel) {
+        auto optTrivial = checkTrivial(rel);
+        return (optTrivial && optTrivial.get());
     }
 }

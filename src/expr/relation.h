@@ -39,6 +39,11 @@ namespace Relation {
     bool isRelation(const Expression &ex);
 
     /**
+     * Checks whether ex is a relation where lhs and rhs are polynomial
+     */
+    bool isPolynomial(const Expression &ex);
+
+    /**
      * Checks whether ex is a == relation
      */
     bool isEquality(const Expression &ex);
@@ -108,17 +113,17 @@ namespace Relation {
     Expression negateLessEqInequality(const Expression &relLessEq);
 
     /**
-     * Given a <= inequality, performs a simple checks whether the inequality holds.
-     * Checks if rhs-lhs evaluates to a numeric and is nonnegative (so lhs <= rhs holds).
-     */
-    bool isTrivialLessEqInequality(const Expression &relLessEq);
-
-    /**
-     * Given an arbitrary relation, checks if the relation is trivially true or false,
+     * Given any relation, checks if the relation is trivially true or false,
      * by checking if rhs-lhs is a numeric value. If unsure, returns none.
      * @return true/false if the relation is trivially valid/invalid
      */
     option<bool> checkTrivial(const Expression &rel);
+
+    /**
+     * Wrapper around checkTrivial() to check if a given relation is trivially true.
+     * @return true if the relation is a tautology, false has no meaning
+     */
+    bool isTriviallyTrue(const Expression &rel);
 }
 
 #endif // RELATION_H

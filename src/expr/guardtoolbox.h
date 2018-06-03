@@ -95,9 +95,18 @@ namespace GuardToolbox {
 
 
     /**
-     * Replaces bidirectional inequalities, e.g. x <= y, y >= x by an equality, e.g. x == y
+     * Given two relations lhs and rhs, checks if rhs is trivially (syntactically) implied by lhs.
+     * For example, A > 0 or A == 0 both imply A+1 > 0
+     * @return true if lhsConstraint implies rhsConstraint, false has no meaning.
+     */
+    bool isTrivialImplication(const Expression &lhsConstraint, const Expression &rhsConstraint);
+
+
+    /**
+     * Replaces bidirectional inequalities, e.g. x <= y, y >= x by an equality, e.g. x == y.
+     * The inequalties are removed, the equality is added to guard.
      * @note expensive for large guards
-     * @return true iff guard was changed. The inequalties are rmoved, the equality is added to guard
+     * @return true iff guard was changed.
      */
     bool makeEqualities(GuardList &guard);
 
@@ -135,6 +144,7 @@ namespace GuardToolbox {
      * Compose two substitutions, i.e. compute f ∘ g ("f after g")
      */
     GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
+
 }
 
 

@@ -153,8 +153,9 @@ void MeteringFinder::buildLinearConstraints() {
     auto makeConstraint = [&](const GiNaC::ex &rel, vector<Expression> &vec) {
         using namespace Relation;
         assert(isLinearInequality(rel,varMan.getGinacVarList()));
+
         Expression res = splitVariablesAndConstants(toLessEq(rel));
-        if (!isTrivialLessEqInequality(res)) {
+        if (!isTriviallyTrue(res)) {
             vec.push_back(res);
         }
     };
