@@ -25,7 +25,7 @@ using namespace std;
 using boost::optional;
 
 
-bool Linearize::collectNonlinearTerms(const Expression &ex, ExpressionSet &nonlinearTerms) {
+bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials) {
     // We can only handle polynomials
     if (!ex.isPolynomial()) {
         debugLinearize("Too complicated, not polynomial: " << ex);
@@ -57,7 +57,7 @@ bool Linearize::collectNonlinearTerms(const Expression &ex, ExpressionSet &nonli
                 debugLinearize("Too complicated, " << var << " has power with non-constant coeff: " << ex);
                 return false; // too complicated
             }
-            nonlinearTerms.insert(GiNaC::pow(var, deg));
+            monomials.insert(GiNaC::pow(var, deg));
 
         } else {
             // If deg == 1, we can still have a nonlinear term like x*y, so we have to check the coefficient.
@@ -72,7 +72,17 @@ bool Linearize::collectNonlinearTerms(const Expression &ex, ExpressionSet &nonli
 
             if (coeffVars.size() == 1) {
                 ExprSymbol coeffVar = *coeffVars.begin();
-                nonlinearTerms.insert(coeffVar * var);
+                monomials.insert(coeffVar * var);
+
+                // Check if var also occurs alone, e.g. for (1+y)*x, we also have 1*x.
+                // So we are interested in the absolute coefficient of the coeff (1+y).
+                if (!coeff.coeff(coeffVar, 0).is_zero()) {
+                    monomials.insert(var);
+                }
+
+            } else {
+                // var occurs only alone
+                monomials.insert(var);
             }
         }
     }
@@ -80,15 +90,15 @@ bool Linearize::collectNonlinearTerms(const Expression &ex, ExpressionSet &nonli
 }
 
 
-bool Linearize::collectNonlinearTermsInGuard(ExpressionSet &nonlinearTerms) const {
+bool Linearize::collectMonomialsInGuard(ExpressionSet &monomials) const {
     for (const Expression &ex : guard) {
         assert(Relation::isInequality(ex));
 
-        if (!collectNonlinearTerms(ex.lhs(), nonlinearTerms)) {
+        if (!collectMonomials(ex.lhs(), monomials)) {
             return false;
         }
 
-        if (!collectNonlinearTerms(ex.rhs(), nonlinearTerms)) {
+        if (!collectMonomials(ex.rhs(), monomials)) {
             return false;
         }
     }
@@ -96,10 +106,10 @@ bool Linearize::collectNonlinearTermsInGuard(ExpressionSet &nonlinearTerms) cons
 }
 
 
-bool Linearize::collectNonlinearTermsInUpdates(ExpressionSet &nonlinearTerms) const {
+bool Linearize::collectMonomialsInUpdates(ExpressionSet &monomials) const {
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
-            if (!collectNonlinearTerms(it.second, nonlinearTerms)) {
+            if (!collectMonomials(it.second, monomials)) {
                 return false;
             }
         }
@@ -108,9 +118,9 @@ bool Linearize::collectNonlinearTermsInUpdates(ExpressionSet &nonlinearTerms) co
 }
 
 
-bool Linearize::checkForConflicts(const ExpressionSet &nonlinearTerms) const {
+bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
     ExprSymbolSet vars;
-    for (const Expression &term : nonlinearTerms) {
+    for (const Expression &term : monomials) {
         for (ExprSymbol var : term.getVariables()) {
             // If we already know this variable, we have a conflict,
             // since we cannot replace a variable in two different ways.
@@ -119,7 +129,8 @@ bool Linearize::checkForConflicts(const ExpressionSet &nonlinearTerms) const {
             }
 
             // If the variable is updated, we cannot replace it
-            if (MeteringToolbox::isUpdatedByAny(varMan.getVarIdx(var), updates)) {
+            // (note that we must replace term whenever term is not linear, i.e., not a single variable)
+            if (!term.isLinear() && MeteringToolbox::isUpdatedByAny(varMan.getVarIdx(var), updates)) {
                 return false;
             }
 
@@ -131,7 +142,7 @@ bool Linearize::checkForConflicts(const ExpressionSet &nonlinearTerms) const {
 }
 
 
-GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &nonlinearTerms) {
+GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &monomials) {
     using namespace GiNaC;
 
     // FIXME: If we substitute a free variable, the result should be free as well?!
@@ -139,8 +150,11 @@ GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &nonlinearTerms) {
     // FIXME: Alternative: Never substitute fresh variables (and check if this affects the benchmarks)
 
     GiNaC::exmap res;
-    for (const Expression &term: nonlinearTerms) {
-        if (is_a<power>(term)) {
+    for (const Expression &term: monomials) {
+        if (is_a<symbol>(term)) {
+            continue;
+
+        } else if (is_a<power>(term)) {
             symbol base = ex_to<symbol>(term.op(0));
             int exponent = ex_to<numeric>(term.op(1)).to_int();
 
@@ -174,12 +188,12 @@ void Linearize::applySubstitution(const GiNaC::exmap &subs) {
     auto subsOptions = GiNaC::subs_options::algebraic;
 
     for (Expression &term : guard) {
-        term = term.subs(subs, subsOptions);
+        term = term.expand().subs(subs, subsOptions);
     }
 
     for (UpdateMap &update : updates) {
         for (auto &it : update) {
-            it.second = it.second.subs(subs, subsOptions);
+            it.second = it.second.expand().subs(subs, subsOptions);
         }
     }
 }
@@ -201,31 +215,32 @@ optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardLis
     Linearize lin(guard, updates, varMan);
 
     // Collect all nonlinear terms that have to be replaced (if possible)
-    ExpressionSet nonlinearTerms;
-    if (!lin.collectNonlinearTermsInGuard(nonlinearTerms)) {
+    ExpressionSet monomials;
+    if (!lin.collectMonomialsInGuard(monomials)) {
         debugLinearize("Cannot linearize, guard too complicated");
         return {};
     }
-    if (!lin.collectNonlinearTermsInUpdates(nonlinearTerms)) {
+    if (!lin.collectMonomialsInUpdates(monomials)) {
         debugLinearize("Cannot linearize, guard too complicated");
         return {};
     }
 
     // If everything is linear, there is nothing to do
-    if (nonlinearTerms.empty()) {
+    if (monomials.empty()) {
         debugLinearize("Everything is linear, nothing to do");
         return GiNaC::exmap(); // empty substitution
     }
 
     // Check if it is safe to replace all nonlinear terms
-    if (!lin.checkForConflicts(nonlinearTerms)) {
+    if (!lin.checkForConflicts(monomials)) {
         debugLinearize("Cannot linearize due to conflicts");
         return {};
     }
 
     // Construct the replacement and apply it
-    GiNaC::exmap subs = lin.buildSubstitution(nonlinearTerms);
+    GiNaC::exmap subs = lin.buildSubstitution(monomials);
     lin.applySubstitution(subs);
+    debugLinearize("Applied linearization: " << subs);
 
     // Check that everything is now indeed linear (can be removed, just to check the current implementation)
     // FIXME: Remove this if it is never hit
@@ -241,9 +256,9 @@ optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardLis
 
     // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)
     for (Expression ex : lin.additionalGuard) {
+        debugLinearize("Adding additional guard constraint: " << ex);
         guard.push_back(ex);
     }
 
-    debugLinearize("Applied linearization: " << subs);
     return lin.reverseSubstitution(subs);
 }

@@ -51,30 +51,36 @@ private:
         : guard(guard), updates(updates), varMan(varMan) {}
 
     /**
-    * Tries to add all nonlinear terms of the given expression to the given set.
-    * Fails if the nonlinear terms are too complicated, e.g., if ex is non-polynomial
-    * or contains an expression like y*x^2 (we only handl x^n) or x*y*z (we only handle x*y).
-    * @return true if successful (all nonlinear subterms have been added to the set)
-    */
-    static bool collectNonlinearTerms(const Expression &ex, ExpressionSet &nonlinearTerms);
-
-    /**
-     * Collects all nonlinear terms of the guard via collectNonlinearTerms
+     * Tries to add all monomials of the given expression to the given set.
+     * A monomial is a product of variable powers, e.g. x, x^2, x*y etc.
+     *
+     * Fails if a nonlinear term is too complicated, e.g., if ex is non-polynomial
+     * or contains an expression like y*x^2 (we only handle x^n) or x*y*z (we only handle x*y).
+     *
+     * @return true if successful (all nonlinear subterms have been added to the set)
      */
-    bool collectNonlinearTermsInGuard(ExpressionSet &nonlinearTerms) const;
+    static bool collectMonomials(const Expression &ex, ExpressionSet &monomials);
 
     /**
-     * Collects all nonlinear terms of all updates via collectNonlinearTerms
+     * Collects all monomials of the guard via collectMonomials
      */
-    bool collectNonlinearTermsInUpdates(ExpressionSet &nonlinearTerms) const;
+    bool collectMonomialsInGuard(ExpressionSet &monomials) const;
 
     /**
-     * Checks if it is safe to replace the given nonlinear terms.
-     * This is the case if each variable occurs in at most one term,
+     * Collects all monomials of all updates via collectMonomials
+     */
+    bool collectMonomialsInUpdates(ExpressionSet &monomials) const;
+
+    /**
+     * Checks if it is safe to replace all nonlinear monomials of the given set.
+     * This is the case if each variable occurs in at most one monomial,
      * and if no term contains an updated variable.
+     *
+     * For instance, we cannot replace x^2 if x (or x^3 or x*y) also occurs somewhere.
+     *
      * @return true if the replacement is safe
      */
-    bool checkForConflicts(const ExpressionSet &nonlinearTerms) const;
+    bool checkForConflicts(const ExpressionSet &monomials) const;
 
     /**
      * Constructs a substitution (on terms, not on variables, e.g., x^2/z)
