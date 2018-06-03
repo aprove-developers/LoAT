@@ -44,6 +44,7 @@ using ForwardAcceleration::MeteredRule;
 static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, option<VariablePair> &conflictVar) {
     using namespace ForwardAcceleration;
     Result res;
+    proofout.increaseIndention();
 
     // For nonlinear rules, we approximate the costs by 1 in every step, so they must never be 0
     // Note that we have to add this before searching for a metering function, since it has to hold in every step
@@ -63,6 +64,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             rule = instantiatedRule;
         }
     }
+    proofout.decreaseIndention();
 
     switch (meter.result) {
         case MeteringFinder::Nonlinear:
