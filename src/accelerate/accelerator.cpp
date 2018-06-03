@@ -405,6 +405,12 @@ void Accelerator::run() {
     // TODO: We could do this if the number of accelerated rules is below a certain threshold
     // TODO: (e.g. similar to PRUNE_MAX_PARALLEL_RULES)
 
+    // Simplify the guards of accelerated rules.
+    // Especially backward acceleration and nesting can introduce superfluous constraints.
+    for (TransIdx rule : resultingRules) {
+        Preprocess::simplifyGuard(its.getRuleMut(rule).getGuardMut());
+    }
+
     // If we failed for any rule, we add a dummy rule to simulate the effect of not executing any loop.
     // The reason is that we later chain the accelerated rules with incoming rules. So we only allow
     // execution paths that take one of the accelerated (or kept) rules, but we do not allow an execution
