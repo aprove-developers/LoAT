@@ -167,12 +167,8 @@ optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const Expr
     for (const Expression &ex : guard) {
         if (Relation::isEquality(ex) && ex.has(N)) {
             Expression term = ex.lhs() - ex.rhs();
-            if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::LinearCoefficients)) {
+            if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt)) {
                 debugBackwardAccel("unable to compute upperbound from equality " << ex);
-                return {};
-            }
-            if (!term.isPolynomial() || !GuardToolbox::mapsToInt(term)) {
-                debugBackwardAccel("upperbound " << term << " (from " << ex << ") does not map to int");
                 return {};
             }
             // One equality is enough, as all other bounds must also satisfy this equality
@@ -195,12 +191,8 @@ optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const Expr
         }
 
         // compute the upper bound represented by N and check that it is integral
-        if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::LinearCoefficients)) {
+        if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt)) {
             debugBackwardAccel("unable to compute upperbound from " << ex);
-            return {};
-        }
-        if (!term.isPolynomial() || !GuardToolbox::mapsToInt(term)) {
-            debugBackwardAccel("upperbound " << term << " (from " << ex << ") does not map to int");
             return {};
         }
         bounds.push_back(term);

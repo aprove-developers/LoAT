@@ -132,8 +132,7 @@ void AsymptoticBound::propagateBounds() {
             // check program variables first
             for (const ExprSymbol &var : vars) {
                 //solve target for var (result is in target)
-                if (GuardToolbox::solveTermFor(target, var,
-                                                GuardToolbox::PropagationLevel::NoCoefficients)) {
+                if (GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs)) {
                     exmap sub;
                     sub.insert(std::make_pair(var, target));
 

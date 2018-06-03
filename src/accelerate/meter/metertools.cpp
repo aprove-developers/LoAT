@@ -341,7 +341,7 @@ stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan 
 
             Expression term = Relation::toLessEq(ex);
             term = term.lhs()-term.rhs();
-            if (!GuardToolbox::solveTermFor(term,free,GuardToolbox::NoCoefficients)) continue;
+            if (!GuardToolbox::solveTermFor(term,free,GuardToolbox::ResultMapsToInt)) continue;
 
             freeBounds[freeIdx].insert(term);
         }
