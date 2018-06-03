@@ -25,6 +25,8 @@
 #include <vector>
 #include <map>
 
+class Rule;
+
 
 /**
  * Namespace for several functions operating on guards (list of relational expressions) and related helpers.
@@ -32,8 +34,16 @@
  */
 namespace GuardToolbox {
 
-    enum PropagationLevel { NoCoefficients=0, LinearCoefficients=1, Nonlinear=2 };
-    enum PropagationFreevar { NoFreeOnRhs=0, AllowFreeOnRhs=1 };
+    // Specifies for which coefficients c we can solve "c*x == t" for x.
+    enum SolvingLevel {
+        TrivialCoeffs = 0, // only c=1 and c=-1 is allowed
+        ResultMapsToInt = 1, // c can be any rational constant, as long as x = t/c maps to int
+        ConstantCoeffs = 2, // c can be any rational constant
+    };
+
+    // Shorthand for lambdas that check if a given symbol is accepted/allowed (depending on the context)
+    using SymbolAcceptor = std::function<bool(const ExprSymbol &)>;
+
 
     /**
      * Tries to remove equalities by propagating them into the other guard expressions
@@ -56,27 +66,23 @@ namespace GuardToolbox {
      *
      * @return true if any progpagation was performed.
      */
-    bool propagateEqualities(const VarMan &varMan, GuardList &guard, PropagationLevel level, PropagationFreevar freevar,
-                             GiNaC::exmap *subs = nullptr,
-                             std::function<bool(const ExprSymbol &)> allowFunc = [](const ExprSymbol &){return true;});
+    bool propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel level, SymbolAcceptor allow);
 
 
     /**
-     * Tries to replace inequalities using thir transitive closure
-     * E.g. A <= x and x <= B will be replaced by A <= B.
+     * Tries to replace inequalities using their transitive closure,
+     * so A <= x and x <= B will be replaced by A <= B (for any terms A,B).
      * Note that for soundness, all terms with x must be replaced at once.
      * Note that x may not have any coefficient in any of these terms.
      *
      * @note this is only sound for the resulting runtime, if only free variables are allowed to be eliminated!
      *
-     * @param vars all variable symbols that may appear in the guard
      * @param removeHalfBounds if true, terms like a <= x (without x <= b) will also be removed!
      * @param allowFunc if lambda is false, the given variable may not be considered for elimination.
      *
      * @return true if any changes have been made
      */
-    bool eliminateByTransitiveClosure(GuardList &guard, const GiNaC::lst &vars, bool removeHalfBounds,
-                                      std::function<bool(const ExprSymbol &)> allowFunc);
+    bool eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow);
 
 
     /**
@@ -85,16 +91,15 @@ namespace GuardToolbox {
      * @param term both input and output
      * @return true if successful and term contains the result. False otherwise (term is left unchanged!)
      */
-    bool solveTermFor(Expression &term, const ExprSymbol &var, PropagationLevel level);
+    bool solveTermFor(Expression &term, const ExprSymbol &var, SolvingLevel level);
 
 
-    // TODO: rename to express that this actually modifies guard!
     /**
      * Replaces bidirectional inequalities, e.g. x <= y, y >= x by an equality, e.g. x == y
      * @note expensive for large guards
      * @return true iff guard was changed. The inequalties are rmoved, the equality is added to guard
      */
-    bool findEqualities(GuardList &guard);
+    bool makeEqualities(GuardList &guard);
 
 
     /**
@@ -107,7 +112,7 @@ namespace GuardToolbox {
      * Returns true iff all guard terms have polynomial rhs and lhs
      * @note guard must be a well-formed guard
      */
-    bool isPolynomialGuard(const GuardList &guard, const GiNaC::lst &vars);
+    bool isPolynomialGuard(const GuardList &guard);
 
 
     /**

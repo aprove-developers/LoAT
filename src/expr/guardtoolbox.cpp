@@ -15,8 +15,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include"guardtoolbox.h"
+#include "guardtoolbox.h"
 #include "relation.h"
+#include "its/rule.h"
 
 using namespace std;
 using namespace Relation;
@@ -31,11 +32,8 @@ bool GuardToolbox::isWellformedGuard(const GuardList &guard) {
 }
 
 
-bool GuardToolbox::isPolynomialGuard(const GuardList &guard, const GiNaC::lst &vars) {
-    for (const Expression &ex : guard) {
-        if (!ex.lhs().is_polynomial(vars) || !ex.rhs().is_polynomial(vars)) return false;
-    }
-    return true;
+bool GuardToolbox::isPolynomialGuard(const GuardList &guard) {
+    return std::all_of(guard.begin(), guard.end(), isPolynomial);
 }
 
 
@@ -46,51 +44,61 @@ bool GuardToolbox::containsTempVar(const VarMan &varMan, const Expression &term)
 }
 
 
-bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, PropagationLevel level) {
+bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, SolvingLevel level) {
     assert(!GiNaC::is_a<GiNaC::relational>(term));
 
+    // we can only solve linear expressions...
     if (term.degree(var) != 1) return false;
 
+    // ...with rational coefficients
+    term = term.expand();
     Expression c = term.coeff(var);
-    if (level != Nonlinear) {
-        if (!GiNaC::is_a<GiNaC::numeric>(c)) return false;
-        if (level == NoCoefficients) {
-            if (c.compare(1) != 0 && c.compare(-1) != 0) return false;
-        }
+    if (!c.isRationalConstant()) return false;
+
+    if (level == TrivialCoeffs) {
+        if (c.compare(1) != 0 && c.compare(-1) != 0) return false;
     }
 
     term = (term - c*var) / (-c);
+
+    if (level == ResultMapsToInt) {
+        if (!term.isPolynomial() || !mapsToInt(term)) return false;
+    }
+
     return true;
 }
 
 
-bool GuardToolbox::propagateEqualities(const VarMan &varMan, GuardList &guard, PropagationLevel maxlevel, PropagationFreevar freevar,
-                                       GiNaC::exmap *subs, function<bool(const ExprSymbol &)> allowFunc) {
+bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
     GiNaC::exmap varSubs;
+    GuardList &guard = rule.getGuardMut();
+
     for (int i=0; i < guard.size(); ++i) {
         Expression ex = guard[i].subs(varSubs);
-        if (!GiNaC::is_a<GiNaC::relational>(ex) || !ex.info(GiNaC::info_flags::relation_equal)) continue;
+        if (!ex.info(GiNaC::info_flags::relation_equal)) continue;
 
         Expression target = ex.rhs() - ex.lhs();
-        if (!target.is_polynomial(varMan.getGinacVarList())) continue;
+        if (!target.isPolynomial()) continue;
 
-        //check if equation can be solved for any single variable
-        for (int level=NoCoefficients; level <= (int)maxlevel; ++level) {
+        // Check if equation can be solved for any single variable.
+        // We prefer to solve for variables where this is easy,
+        // e.g. in x+2*y = 0 we prefer x since x has only the trivial coefficient 1.
+        for (int level=TrivialCoeffs; level <= (int)maxlevel; ++level) {
             for (const ExprSymbol &var : target.getVariables()) {
-                if (!allowFunc(var)) continue;
+                if (!allow(var)) continue;
 
                 //solve target for var (result is in target)
-                if (!solveTermFor(target,var,(PropagationLevel)level)) continue;
+                if (!solveTermFor(target,var,(SolvingLevel)level)) continue;
 
                 //disallow replacing non-free vars by a term containing free vars
-                if (freevar == NoFreeOnRhs) {
-                    if (!varMan.isTempVar(var) && containsTempVar(varMan, target)) continue;
-                }
+                //could be unsound, as free vars can lead to unbounded complexity
+                if (!varMan.isTempVar(var) && containsTempVar(varMan, target)) continue;
 
                 //remove current equality (ok while iterating by index)
                 guard.erase(guard.begin() + i);
                 i--;
 
+                //extend the substitution, use compose in case var occurs on some rhs of varSubs
                 varSubs[var] = target;
                 varSubs = composeSubs(varSubs, varSubs);
                 goto next;
@@ -98,47 +106,39 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, GuardList &guard, P
         }
         next:;
     }
-    //apply substitution to guard and update
-    for (Expression &ex: guard) {
-        ex = ex.subs(varSubs);
-    }
 
-    // FIXME: Substitution is only applied to the guard, what about update and cost?
-    // FIXME: Make sure that this is done on the callsite (see Florians bug report)
-
-    bool res = !varSubs.empty();
-    if (subs) *subs = std::move(varSubs);
-    return res;
+    //apply substitution to the entire rule
+    rule.applySubstitution(varSubs);
+    return !varSubs.empty();
 }
 
 
-bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::lst &vars, bool removeHalfBounds,
-                                                function<bool(const ExprSymbol &)> allowFunc) {
+bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow) {
     //get all variables that appear in an inequality
     ExprSymbolSet tryVars;
     for (const Expression &ex : guard) {
-        if (!isInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) continue;
+        if (!isInequality(ex) || !isPolynomial(ex)) continue;
         ex.collectVariables(tryVars);
     }
 
     //for each variable, try if we can eliminate every occurrence. Otherwise do nothing.
     bool changed = false;
     for (const ExprSymbol &var : tryVars) {
-        if (!allowFunc(var)) continue;
+        if (!allow(var)) continue;
 
         vector<Expression> varLessThan, varGreaterThan; //var <= expr and var >= expr
-        vector<int> guardTerms; //indices of guard terms that can be removed if succesfull
+        vector<int> guardTerms; //indices of guard terms that can be removed if successful
 
         for (int i=0; i < guard.size(); ++i) {
             //check if this guard must be used for var
             const Expression &ex = guard[i];
             if (!ex.has(var)) continue;
-            if (!isInequality(ex) || !(ex.lhs()-ex.rhs()).is_polynomial(vars)) goto abort;
+            if (!isInequality(ex) || !isPolynomial(ex)) goto abort; // contains var, but cannot be handled
 
             //make less equal
             Expression target = toLessEq(ex);
             target = target.lhs() - target.rhs();
-            if (!target.has(var)) continue; //might have changed, e.h. x <= x
+            if (!target.has(var)) continue; // might have changed, e.h. x <= x
 
             //check coefficient and direction
             Expression c = target.coeff(var);
@@ -150,6 +150,8 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::l
             }
             guardTerms.push_back(i);
         }
+
+        // abort if no eliminations can be performed
         if (guardTerms.empty()) goto abort;
         if (!removeHalfBounds && (varLessThan.empty() || varGreaterThan.empty())) goto abort;
 
@@ -158,10 +160,10 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, const GiNaC::l
             guard.erase(guard.begin() + guardTerms.back());
             guardTerms.pop_back();
         }
-        //add new transitive guard terms
+
+        //add new transitive guard terms lower <= upper
         for (const Expression &upper : varLessThan) {
             for (const Expression &lower : varGreaterThan) {
-                //lower <= var <= upper --> lower <= upper
                 guard.push_back(lower <= upper);
             }
         }
@@ -173,10 +175,11 @@ abort:  ; //this symbol could not be eliminated, try the next one
 }
 
 
-bool GuardToolbox::findEqualities(GuardList &guard) {
+bool GuardToolbox::makeEqualities(GuardList &guard) {
     vector<pair<int,Expression>> terms; //inequalities from the guard, with the associated index in guard
     map<int,pair<int,Expression>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
 
+    // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
     for (int i=0; i < guard.size(); ++i) {
         if (isEquality(guard[i])) continue;
         Expression term = toLessEq(guard[i]);
@@ -191,6 +194,9 @@ bool GuardToolbox::findEqualities(GuardList &guard) {
 
     if (matches.empty()) return false;
 
+    // Construct the new guard by keeping unmatched constraint
+    // and replacing matched pairs by an equality constraint.
+    // This code below mostly retains the order of the constraints.
     GuardList res;
     set<int> ignore;
     for (int i=0; i < guard.size(); ++i) {
