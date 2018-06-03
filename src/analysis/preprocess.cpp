@@ -42,12 +42,17 @@ bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
     bool changed;
     bool result = false;
 
-    //simplify with smt only once
+    // First try to find equalities (A <= B and B <= A become A == B).
+    // We do this before simplifying by smt, as this might remove one of the two constraints
+    // (if it is semantically implied) so we don't recognize the equality later on.
+    result |= GuardToolbox::makeEqualities(rule.getGuardMut());
+
+    // Simplify with smt only once
     result |= simplifyGuard(rule.getGuardMut());
     result |= removeWeakerGuards(rule.getGuardMut());
     //result |= simplifyGuardBySmt(rule.getGuardMut()); // this is probably better
 
-    //all other steps are repeated
+    // The other steps are repeated (might not help very often, but is probably cheap enough)
     do {
         changed = eliminateTempVars(varMan,rule);
 
