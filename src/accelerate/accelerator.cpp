@@ -175,7 +175,7 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
                 Forward::MeteredRule accelRule = optAccel.get();
 
                 // TODO: Do we want >= minCpx or rather > minCpx here?!
-                if (accelRule.rule.getCost().getComplexity() >= oldCpx) {
+                if (accelRule.rule.getCost().getComplexity() > oldCpx) {
                     // Add the accelerated rule.
                     // Also try to first execute outer once before the accelerated rule.
                     // FIXME: Is this ("outer once before") really effective? Check on benchmark set! Appears to be quite ugly
