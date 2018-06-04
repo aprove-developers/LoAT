@@ -46,11 +46,11 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
     Result res;
     proofout.increaseIndention();
 
-    // For nonlinear rules, we approximate the costs by 1 in every step, so they must never be 0
-    // Note that we have to add this before searching for a metering function, since it has to hold in every step
-    if (!rule.isLinear()) {
-        rule.getGuardMut().push_back(rule.getCost() >= 1);
-    }
+    // We require that the cost is at least 1 in every single iteration of the loop.
+    // For linear rules, this is only required for non-termination.
+    // For nonlinear rules, we lower bound the costs by 1 for the iterated cost, so we always require this.
+    // Note that we have to add this before searching for a metering function, since it has to hold in every step.
+    rule.getGuardMut().push_back(rule.getCost() >= 1);
 
     // Searching for metering functions works the same for linear and nonlinear rules
     MeteringFinder::Result meter = MeteringFinder::generate(varMan, rule);
