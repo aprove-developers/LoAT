@@ -366,7 +366,12 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
 
                 auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
                 if (optRule) {
-                    TransIdx added = its.addRule(optRule.get());
+                    // Simplify the rule (can help to eliminate temporary variables of the metering function)
+                    Rule newRule = optRule.get();
+                    Preprocess::simplifyRule(its, newRule);
+
+                    // Add the chained rule
+                    TransIdx added = its.addRule(newRule);
                     debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
                     successfullyChained.insert(incoming);
                 }
