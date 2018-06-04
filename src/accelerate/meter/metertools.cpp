@@ -87,8 +87,6 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
         solver.add(ex.toZ3(context));
     }
 
-    // TODO: Set timeout for the Z3 solver (see backwardaccel branch)
-
     for (const Expression &ex : guard) {
         // only keep constraints that contain updated variables (otherwise they still hold after the update)
         bool add = ex.hasVariableWith(isUpdated);

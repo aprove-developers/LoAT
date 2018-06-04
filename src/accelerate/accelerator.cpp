@@ -108,13 +108,6 @@ bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) cons
         }
     }
 
-    // TODO: This check can be improved, e.g. by issuing a z3 query of the form
-    // TODO:  (not IG) and OG  ==>  outer_update(IG)  is valid.
-    // TODO: So if the inner guard does no longer hold (and the outer one does),
-    // TODO: Then applying the outer update will make the inner guard applicable again.
-
-    // TODO: Note that this check is actually a severe restriction of the current check!
-    // TODO: Need some statistics on this.
     return false;
 }
 
@@ -286,11 +279,6 @@ void Accelerator::run() {
     for (TransIdx loop : loops) {
         if (Timeout::soft()) return;
 
-        // rules with INF cost should never be self loops (they should always lead to sink states)
-        // this assertion is mostly relevant during refactoring.
-        // TODO: remove this later
-        assert(!its.getRule(loop).getCost().isInfSymbol());
-
         // Forward acceleration
         Forward::Result res = Forward::accelerate(its, its.getRule(loop), sinkLoc);
 
@@ -355,7 +343,6 @@ void Accelerator::run() {
 
                 // The original rule could still be an outer loop for nesting,
                 // unless it is non-terminating (so nesting will not improve the result).
-                // TODO: Check via benchmarks if this ever happens (or if we only waste time here)
                 if (its.getRule(loop).isLinear() && !isNonterm) {
                     outerCandidates.push_back({loop, "Ranked"});
                 }
