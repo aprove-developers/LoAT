@@ -101,12 +101,19 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             }
 
             if (newRule.isLinear()) {
-                // Compute iterated cost/update by recurrence solving (modifies newRule)
+                // Compute iterated cost/update by recurrence solving (modifies newRule).
+                // Note that we always assume that the maximal number of iterations is taken, so
+                // instead of adding 0 < tv < meter+1 as in the paper, we always instantiate tv by meter.
                 LinearRule linRule = newRule.toLinear();
                 if (!Recurrence::iterateRule(varMan, linRule, meter.metering)) {
                     res.result = TooComplicated;
                     return res;
                 }
+
+                // The iterated update/cost computation is only sound if we do >= 1 iterations.
+                // Hence we have to ensure that the metering function is >= 1 (corresponding to 0 < tv).
+                linRule.getGuardMut().push_back(meter.metering >= 1);
+
                 res.rules.emplace_back(meterStr, linRule);
 
             } else {
