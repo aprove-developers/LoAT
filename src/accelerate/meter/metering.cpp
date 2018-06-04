@@ -204,7 +204,9 @@ void MeteringFinder::buildLinearConstraints() {
 z3::expr MeteringFinder::genNotGuardImplication() const {
     debugMeter("Constructing not-guard implication");
     vector<z3::expr> res;
-    vector<Expression> lhs;
+
+    // We can add the irrelevant guard to the lhs ("conditional metering function")
+    vector<Expression> lhs = linearConstraints.irrelevantGuard;
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Expression &g : linearConstraints.reducedGuard) {
