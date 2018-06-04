@@ -373,7 +373,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     meter.dump("Initial");
 
-    // linearize and simplify the problem
+    // Linearize and simplify the problem
     if (!meter.preprocessAndLinearize()) {
         Timing::done(Timing::FarkasLogic);
         result.result = Nonlinear;
@@ -382,26 +382,26 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     meter.dump("After Preprocess");
 
-    // identify trivially unbounded loops (no guard constraint is limiting the loop's execution)
+    // Identify trivially unbounded loops (no guard constraint is limiting the loop's execution)
     if (meter.reducedGuard.empty()) {
         Timing::done(Timing::FarkasLogic);
         result.result = Unbounded;
         return result;
     }
 
-    // create constraints for the metering function template
+    // Create constraints for the metering function template
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
     Timing::done(Timing::FarkasLogic);
 
-    // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
+    // Solve constraints for the metering function (without the "GuardPositiveImplication" for now)
     Z3Solver solver(meter.context, Z3_METER_TIMEOUT);
     solver.add(meter.genNotGuardImplication());
     solver.add(meter.genUpdateImplications());
     solver.add(meter.genNonTrivial());
     z3::check_result z3res = solver.check();
 
-    // the problem is already unsat (even without "GuardPositiveImplication")
+    // The problem is already unsat (even without "GuardPositiveImplication")
     if (z3res == z3::unsat) {
         debugMeter("z3 pre unsat");
         debugProblem("Farkas pre unsat for: " << rule);
@@ -418,21 +418,11 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
         return result;
     }
 
-    // Add the "GuardPositiveImplication" to the party (first the strict version)
-    solver.push();
-    solver.add(meter.genGuardPositiveImplication(true));
+    // Add the "GuardPositiveImplication" to the party (only the non-strict version)
+    solver.add(meter.genGuardPositiveImplication(false));
     z3res = solver.check();
 
-    // If we fail, try the relaxed version instead (f(x) >= 0 instead of f(x) > 0)
-    if (z3res != z3::sat) {
-        debugMeter("z3 strict positive: " << z3res);
-        debugProblem("Farkas strict positive is " << z3res << " for: " << rule);
-        solver.pop();
-        solver.add(meter.genGuardPositiveImplication(false));
-        z3res = solver.check();
-    }
-
-    // If we still fail, we have to give up
+    // If this fails, we give up
     if (z3res != z3::sat) {
         debugMeter("z3 final res: " << z3res);
         debugProblem("Farkas final result " << z3res << " for: " << rule);
