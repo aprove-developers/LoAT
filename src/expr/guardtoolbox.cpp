@@ -80,13 +80,17 @@ bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, Solving
     Expression c = term.coeff(var);
     if (!c.isRationalConstant()) return false;
 
-    if (level == TrivialCoeffs) {
-        if (c.compare(1) != 0 && c.compare(-1) != 0) return false;
+    bool trivialCoeff = (c.compare(1) == 0 || c.compare(-1) == 0);
+    if (level == TrivialCoeffs && !trivialCoeff) {
+        return false;
     }
 
     term = (term - c*var) / (-c);
 
-    if (level == ResultMapsToInt) {
+    // If c is trivial, we don't have to check if the result maps to int,
+    // since we assume that all constraints in the guard map to int.
+    // So if c is trivial, we can also handle non-polynomial terms.
+    if (level == ResultMapsToInt && !trivialCoeff) {
         if (!term.isPolynomial() || !mapsToInt(term)) return false;
     }
 
