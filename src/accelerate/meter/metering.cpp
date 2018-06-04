@@ -481,6 +481,8 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     solver.add(meter.genNotGuardImplication());
     solver.add(meter.genUpdateImplications());
     solver.add(meter.genNonTrivial());
+    solver.add(meter.genGuardPositiveImplication(false));
+
     z3::check_result z3res = solver.check();
     assert(z3res == z3::unsat); // this method must only be called if generate() fails
 
@@ -514,6 +516,7 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
         solver.add(meter.genNotGuardImplication());
         solver.add(meter.genUpdateImplications());
         solver.add(meter.genNonTrivial());
+        solver.add(meter.genGuardPositiveImplication(false));
         z3res = solver.check();
 
         if (z3res == z3::sat) {
@@ -529,21 +532,8 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
         return false;
     }
 
-    // FIXME: We have to combine/check conflicts of successfulSubs with nonlinearSubs from linearization!
-    // FIXME: Example: x^2/z by linearization and then z/a by this heuristic
-    // FIXME: So we should just forbid to instantiate variables introduced by linearization
     // Apply the successful instantiation to the entire rule
-
-    // TODO: Use rule.applySubstitution
-    for (Expression &ex : rule.getGuardMut()) {
-        ex.applySubs(successfulSubs);
-    }
-    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        for (auto &it : rhs->getUpdateMut()) {
-            it.second.applySubs(successfulSubs);
-        }
-    }
-    rule.getCostMut().applySubs(successfulSubs);
+    rule.applySubstitution(successfulSubs);
 
     // Proof output
     proofout << "Instantiating temporary variables by " << successfulSubs << endl;
