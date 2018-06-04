@@ -239,7 +239,12 @@ bool Chaining::chainLinearPaths(ITSProblem &its) {
 // TODO: We could also try this non-repeatedly, so we first compute which nodes are applicable (tree-shaped),
 // TODO: and then eliminate these nodes by chaining. This would often perform fewer chaining steps (not sure if this is better)
 bool Chaining::chainTreePaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, LocationIdx node) {
+    bool hasSimpleLoop = false;
+
+    auto implementation = [&hasSimpleLoop](ITSProblem &its, LocationIdx node) {
+        // Abort as soon as we have created a new simple loop
+        if (hasSimpleLoop) return false;
+
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -254,9 +259,16 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
             }
 
             // Chain transitions from node to succ with all transitions from succ.
-            if (!its.getSuccessorLocations(succ).empty()) {
+            if (its.hasTransitionsFrom(succ)) {
                 eliminateLocationByChaining(its, succ, true);
                 changed = true;
+            }
+
+            // Check if we just created a simple loop.
+            // If so, we still continue with this iteration (to create more simple loops at node).
+            // After this iteration, we stop the entire process to first call acceleration
+            if (!its.getSimpleLoopsAt(node).empty()) {
+                hasSimpleLoop = true;
             }
 
             Stats::add(Stats::ContractBranch);
@@ -268,14 +280,6 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
     Timing::Scope timer(Timing::Branches);
     debugChain("Chaining tree paths");
     return callRepeatedlyOnEachNode(its, implementation);
-
-    // TODO: Restore this functionality, i.h., call removeConstLeafsAndUnreachable after calling chainTreePaths (wherever it is called)
-    // TODO: Since we now use eliminateLocationByChaining, this is probably not needed
-    // TODO: (but of course might still remove nodes that were unreachable even before calling this, so we have to check whether it makes a difference!)
-    //only for the main caller, reduce unreachable stuff
-    // if (node == initial) {
-    //     removeConstLeafsAndUnreachable();
-    // }
 }
 
 
