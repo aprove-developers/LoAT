@@ -448,7 +448,7 @@ RuntimeResult Analysis::getMaxRuntime() {
 
     RuntimeResult res;
     for (TransIdx ruleIdx : rules) {
-        const Rule &rule = its.getRule(ruleIdx);
+        Rule &rule = its.getRuleMut(ruleIdx);
         const Expression &cost = rule.getCost();
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
@@ -464,6 +464,15 @@ RuntimeResult Analysis::getMaxRuntime() {
         proofout.setLineStyle(ProofOutput::Headline);
         proofout << "Computing asymptotic complexity for rule " << ruleIdx << endl;
         proofout.increaseIndention();
+
+        // Simplify guard to speed up asymptotic check
+        bool simplified = false;
+        simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
+        simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
+        if (simplified) {
+            proofout << "Simplified the guard:" << endl;
+            ITSExport::printLabeledRule(ruleIdx, its, proofout);
+        }
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), cost, true);
@@ -556,7 +565,7 @@ RuntimeResult Analysis::getMaxPartialResult() {
 
         //get current max cost (with asymptotic bounds check)
         for (TransIdx trans : its.getTransitionsFrom(initial)) {
-            const Rule &rule = its.getLinearRule(trans);
+            Rule &rule = its.getRuleMut(trans);
 
             // check if we can skip this rule
             const Expression &cost = rule.getCost();
@@ -567,6 +576,15 @@ RuntimeResult Analysis::getMaxPartialResult() {
             proofout.setLineStyle(ProofOutput::Headline);
             proofout << "Computing asymptotic complexity for rule " << trans << endl;
             proofout.increaseIndention();
+
+            // Simplify guard to speed up asymptotic check
+            bool simplified = false;
+            simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
+            simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
+            if (simplified) {
+                proofout << "Simplified the guard:" << endl;
+                ITSExport::printLabeledRule(trans, its, proofout);
+            }
 
             auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
 
