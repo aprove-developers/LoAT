@@ -473,6 +473,7 @@ RuntimeResult Analysis::getMaxRuntime() {
             proofout << "Simplified the guard:" << endl;
             ITSExport::printLabeledRule(ruleIdx, its, proofout);
         }
+        if (Timeout::hard()) break;
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), cost, true);
@@ -585,7 +586,9 @@ RuntimeResult Analysis::getMaxPartialResult() {
                 proofout << "Simplified the guard:" << endl;
                 ITSExport::printLabeledRule(trans, its, proofout);
             }
+            if (Timeout::hard()) goto abort;
 
+            // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
             auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
 
             proofout.decreaseIndention();

@@ -37,8 +37,8 @@ void Timeout::setTimeouts(int seconds) {
     // TODO: We need more time after the soft timeout (since we easily miss the soft timeout by some seconds).
     if (seconds > 0) {
         timeout_preprocess = now + static_cast<std::chrono::seconds>((seconds < 30) ? 3 : 5);
-        timeout_soft = now + static_cast<std::chrono::seconds>(seconds-((seconds < 30) ? 4 : 8));
-        timeout_hard = now + static_cast<std::chrono::seconds>(seconds-1);
+        timeout_soft = now + static_cast<std::chrono::seconds>(seconds-((seconds < 30) ? 5 : 10));
+        timeout_hard = now + static_cast<std::chrono::seconds>(seconds-2);
         timeout_enable = true;
     }
 }
