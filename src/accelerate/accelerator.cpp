@@ -166,8 +166,8 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
     Complexity oldCpx = innerRule.getCost().getComplexity();
 
     // Lambda that performs the nesting/acceleration.
-    // If successful, also tries to chain the second rule in front of the accelerated rule.
-    // TODO: Remove this chaining step
+    // If successful, also tries to chain the second rule in front of the accelerated (nested) rule.
+    // This can improve results, since we do not know which loop is executed first.
     auto nestAndChain = [&](const LinearRule &first, const LinearRule &second) -> bool {
         auto optNested = Chaining::chainRules(its, first, second);
         if (optNested) {
@@ -182,11 +182,7 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
             if (optAccel) {
                 Forward::MeteredRule accelRule = optAccel.get();
 
-                // TODO: Do we want >= minCpx or rather > minCpx here?!
                 if (accelRule.rule.getCost().getComplexity() > oldCpx) {
-                    // Add the accelerated rule.
-                    // Also try to first execute outer once before the accelerated rule.
-                    // FIXME: Is this ("outer once before") really effective? Check on benchmark set! Appears to be quite ugly
                     addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
                     return true;
                 }
@@ -198,8 +194,12 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
     // Try to nest, executing inner loop first (and try to chain outerRule in front)
     res |= nestAndChain(innerRule, outerRule);
 
-    // Try to nest, executing outer loop first (and try to chain innerRule in front)
-    res |= nestAndChain(outerRule, innerRule);
+    // Try to nest, executing outer loop first (and try to chain innerRule in front).
+    // If the previous nesting was already successful, it probably covers most execution
+    // paths already, since "nestAndChain" also tries to chain the second rule in front.
+    if (!res) {
+        res |= nestAndChain(outerRule, innerRule);
+    }
 
     return res;
 }
