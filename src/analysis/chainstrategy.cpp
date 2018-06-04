@@ -18,6 +18,7 @@
 #include "chainstrategy.h"
 
 #include "chain.h"
+#include "preprocess.h"
 
 #include "debug.h"
 #include "util/stats.h"
@@ -75,7 +76,11 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                     assert(optRule); // this only happens for simple loops, which we disallow
                 }
 
-                TransIdx added = its.addRule(optRule.get());
+                // Simplify the guard (chaining often introduces trivial constraints)
+                Rule newRule = optRule.get();
+                Preprocess::simplifyGuard(newRule.getGuardMut());
+
+                TransIdx added = its.addRule(newRule);
                 debugChain("    chained " << in << " and " << out << " to new rule: " << added);
 
             } else {
