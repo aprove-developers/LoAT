@@ -458,6 +458,12 @@ bool MeteringFinder::strengthenGuard(VarMan &varMan, Rule &rule) {
 }
 
 bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
+    // Quick check whether there are any bounds on temp vars we can use to instantiate them.
+    auto hasTempVar = [&](const Expression &ex) { return GuardToolbox::containsTempVar(varMan, ex); };
+    if (std::none_of(rule.getGuard().begin(), rule.getGuard().end(), hasTempVar)) {
+        return false;
+    }
+
     // We first perform the same steps as in generate()
     MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
 
@@ -468,18 +474,12 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     meter.buildLinearConstraints();
 
     Z3Solver solver(meter.context, Z3_METER_TIMEOUT);
-    solver.add(meter.genNotGuardImplication());
-    solver.add(meter.genUpdateImplications());
-    solver.add(meter.genNonTrivial());
-    solver.add(meter.genGuardPositiveImplication(false));
-
-    z3::check_result z3res = solver.check();
-    assert(z3res == z3::unsat); // this method must only be called if generate() fails
-
-    // Now try all possible instantiations until the solver is satisfied
+    z3::check_result z3res = z3::unsat; // this method should only be called if generate() fails
 
     GuardList oldGuard = meter.guard;
     vector<UpdateMap> oldUpdates = meter.updates;
+
+    // Now try all possible instantiations until the solver is satisfied
 
     GiNaC::exmap successfulSubs;
     stack<GiNaC::exmap> freeSubs = MT::findInstantiationsForTempVars(varMan, meter.guard);
@@ -518,7 +518,7 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     }
 
     // If we found a successful instantiation, z3res is sat
-    if (z3res == z3::unsat) {
+    if (z3res != z3::sat) {
         return false;
     }
 
