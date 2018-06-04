@@ -35,21 +35,6 @@ using namespace std;
 static bool checkSatisfiability(const GuardList &newGuard, const Expression &newCost) {
     auto z3res = Z3Toolbox::checkAll(newGuard);
 
-    // FIXME: Only ask z3 for polynomials, since z3 cannot handle exponentials well
-    // FIXME: Just keep exponentials (hopefully there are not that many)
-    // FIXME: This is probably better than using CONTRACT_CHECK_EXP_OVER_UNKNOWN
-
-#ifdef CONTRACT_CHECK_SAT_APPROXIMATE
-    // TODO: Might be a good idea to remove non-polynomial guards here, or better in checkAllApproximate?!
-    // Try to solve an approximate problem instead, as we the check does not affect soundness.
-    if (z3res == z3::unknown) {
-        // TODO: use operator<< for newGuard when implemented
-        debugProblem("Contract unknown, try approximation for guard: ");
-        dumpList("guard", newGuard);
-        z3res = Z3Toolbox::checkAllApproximate(newGuard);
-    }
-#endif
-
 #ifdef DEBUG_PROBLEMS
     if (z3res == z3::unknown) {
         // TODO: use operator<< for newGuard when implemented
@@ -58,7 +43,8 @@ static bool checkSatisfiability(const GuardList &newGuard, const Expression &new
     }
 #endif
 
-    // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure
+    // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
+    // This is especially needed for exponentials, since z3 cannot handle them well.
     return z3res != z3::unsat;
 }
 
