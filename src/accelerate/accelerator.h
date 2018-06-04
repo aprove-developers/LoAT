@@ -90,20 +90,18 @@ private:
     bool canNest(const LinearRule &inner, const LinearRule &outer) const;
 
     /**
-     * Adds the given accelerated rule, which resulted from nesting the given inner and outer transitions.
-     * Also tries to chain the given rule `chain` in front of `accelerated` and adds the result (if it works).
-     * Also takes care of the proof output for nesting.
+     * Adds the given accelerated rule to the ITS.
+     * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
+     * Takes care of proof output (the arguments inner, outer are only used for the output).
      */
     void addNestedRule(const ForwardAcceleration::MeteredRule &accelerated, const LinearRule &chain,
-                       TransIdx inner, TransIdx outer, std::vector<InnerCandidate> &nested);
+                       TransIdx inner, TransIdx outer);
 
     /**
      * Tries to nest the given nesting candidates (i.e., rules).
-     * If successful, resulting accelerated rules are added and appended to the given vector.
-     *
-     * Returns true if nesting was successful.
+     * Returns true if nesting was successful (at least one new rule was added).
      */
-    bool nestRules(const InnerCandidate &inner, const OuterCandidate &outer, std::vector<InnerCandidate> &nested);
+    bool nestRules(const InnerCandidate &inner, const OuterCandidate &outer);
 
     /**
      * Main implementation of nesting

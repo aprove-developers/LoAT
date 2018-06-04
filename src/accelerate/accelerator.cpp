@@ -120,17 +120,10 @@ bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) cons
 
 
 void Accelerator::addNestedRule(const Forward::MeteredRule &metered, const LinearRule &chain,
-                                TransIdx inner, TransIdx outer,
-                                vector<InnerCandidate> &nested)
+                                TransIdx inner, TransIdx outer)
 {
     // Add the new rule
     TransIdx added = addResultingRule(metered.rule);
-
-    // Try to use the resulting rule as inner rule again later on (in case there are actually 3 nested loops).
-    // We can only do this if the rule is still a simple loop (which is not the case we proved NONTERM).
-    if (metered.rule.isSimpleLoop()) {
-        nested.push_back(InnerCandidate{.oldRule=inner, .newRule=added});
-    }
 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
@@ -144,16 +137,12 @@ void Accelerator::addNestedRule(const Forward::MeteredRule &metered, const Linea
     if (chained) {
         TransIdx added = addResultingRule(chained.get());
         proofout << ", " << added;
-
-        if (chained->isSimpleLoop()) {
-            nested.push_back(InnerCandidate{.oldRule=inner, .newRule=added});
-        }
     }
     proofout << "." << endl;
 }
 
 
-bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &outer, vector<InnerCandidate> &nested) {
+bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &outer) {
     bool res = false;
     const LinearRule innerRule = its.getLinearRule(inner.newRule);
     const LinearRule outerRule = its.getLinearRule(outer.oldRule);
@@ -173,82 +162,60 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
         return false;
     }
 
-    // Try to nest, executing inner loop first
-    auto innerFirst = Chaining::chainRules(its, innerRule, outerRule);
-    if (innerFirst) {
-        Rule nestedRule = innerFirst.get();
+    // We only consider nesting successful if it increases the complexity
+    Complexity oldCpx = innerRule.getCost().getComplexity();
 
-        // Simplify the rule again (chaining can introduce many useless constraints)
-        Preprocess::simplifyRule(its, nestedRule);
+    // Lambda that performs the nesting/acceleration.
+    // If successful, also tries to chain the second rule in front of the accelerated rule.
+    // TODO: Remove this chaining step
+    auto nestAndChain = [&](const LinearRule &first, const LinearRule &second) -> bool {
+        auto optNested = Chaining::chainRules(its, first, second);
+        if (optNested) {
+            Rule nestedRule = optNested.get();
 
-        // TODO: Use full accelerate with heuristics (and backward acceleration)?
-        auto accelerated = Forward::accelerateFast(its, nestedRule, sinkLoc);
-        if (accelerated) {
-            Forward::MeteredRule meteredRule = accelerated.get();
-            if (meteredRule.rule.getCost().getComplexity() >= innerRule.getCost().getComplexity()) {
-                res = true;
+            // Simplify the rule again (chaining can introduce many useless constraints)
+            Preprocess::simplifyRule(its, nestedRule);
 
-                // Add the accelerated rule.
-                // Also try to first execute outer once before the accelerated rule.
-                // FIXME: Is this ("outer once before") really effective? Check on benchmark set! Appears to be quite ugly
-                addNestedRule(meteredRule, outerRule, inner.oldRule, outer.oldRule, nested);
+            // TODO: Use full accelerate with heuristics (and backward acceleration)?
+            // TODO: We probably don't want to use backward accel here, as it often complicates the rule...
+            auto optAccel = Forward::accelerateFast(its, nestedRule, sinkLoc);
+            if (optAccel) {
+                Forward::MeteredRule accelRule = optAccel.get();
+
+                // TODO: Do we want >= minCpx or rather > minCpx here?!
+                if (accelRule.rule.getCost().getComplexity() >= oldCpx) {
+                    // Add the accelerated rule.
+                    // Also try to first execute outer once before the accelerated rule.
+                    // FIXME: Is this ("outer once before") really effective? Check on benchmark set! Appears to be quite ugly
+                    addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
+                    return true;
+                }
             }
         }
-    }
+        return false;
+    };
 
-    // Try to nest, executing outer loop first
-    auto outerFirst = Chaining::chainRules(its, outerRule, innerRule);
-    if (outerFirst) {
-        Rule nestedRule = outerFirst.get();
+    // Try to nest, executing inner loop first (and try to chain outerRule in front)
+    res |= nestAndChain(innerRule, outerRule);
 
-        // Simplify the rule again (chaining can introduce many useless constraints)
-        Preprocess::simplifyRule(its, nestedRule);
-
-        auto accelerated = Forward::accelerateFast(its, nestedRule, sinkLoc);
-        if (accelerated) {
-            Forward::MeteredRule meteredRule = accelerated.get();
-            if (meteredRule.rule.getCost().getComplexity() >= innerRule.getCost().getComplexity()) {
-                res = true;
-
-                // Add the accelerated rule.
-                // Also try to first execute inner once before the accelerated rule.
-                // FIXME: Is this ("inner once before") really effective? Check on benchmark set! Appears to be quite ugly
-                addNestedRule(meteredRule, innerRule, inner.oldRule, outer.oldRule, nested);
-            }
-        }
-    }
+    // Try to nest, executing outer loop first (and try to chain innerRule in front)
+    res |= nestAndChain(outerRule, innerRule);
 
     return res;
 }
 
 
 void Accelerator::performNesting(vector<InnerCandidate> inner, vector<OuterCandidate> outer) {
-    // TODO: Multiple nesting iterations are very likely overkill, simplify the code to only do one iteration
-    for (int i=0; i < NESTING_MAX_ITERATIONS; ++i) {
-        debugAccel("Nesting iteration: " << i);
-        bool changed = false;
-        vector<InnerCandidate> newInner;
+    debugAccel("Nesting with " << inner.size() << " inner and " << outer.size() << " outer candidates");
+    bool changed = false;
 
-        // Try to combine previously identified inner and outer candidates via chaining,
-        // then try to accelerate the resulting rule
-        for (const InnerCandidate &in : inner) {
-            for (const OuterCandidate &out : outer) {
-                if (nestRules(in, out, newInner)) {
-                    changed = true;
-                }
-
-                if (Timeout::soft()) return;
-            }
+    // Try to combine previously identified inner and outer candidates via chaining,
+    // then try to accelerate the resulting rule
+    for (const InnerCandidate &in : inner) {
+        for (const OuterCandidate &out : outer) {
+            changed |= nestRules(in, out);
+            if (Timeout::soft()) return;
         }
-        debugAccel("Nested " << newInner.size() << " loops");
-
-        if (!changed || Timeout::soft()) {
-            break;
-        }
-
-        // For the next iteration, use the successfully nested loops as inner loops.
-        // This caputes examples where 3 or more loops are nested.
-        inner.swap(newInner);
     }
 }
 
