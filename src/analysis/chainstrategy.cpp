@@ -53,7 +53,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
-        bool wasChained = false;
+        bool wasChainedWithAll = true;
         const Rule &inRule = its.getRule(in);
 
         // We usually require that loc doesn't have any self-loops (since we would destroy the self-loop by chaining).
@@ -75,15 +75,16 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                     assert(optRule); // this only happens for simple loops, which we disallow
                 }
 
-                wasChained = true;
                 TransIdx added = its.addRule(optRule.get());
                 debugChain("    chained " << in << " and " << out << " to new rule: " << added);
+
             } else {
+                wasChainedWithAll = false;
                 debugChain("    failed to chain " << in << " and " << out);
             }
         }
 
-        if (keepUnchainable && !wasChained) {
+        if (keepUnchainable && !wasChainedWithAll) {
             // Only keep the rule if it might give non-trivial complexity
             if (inRule.getCost().getComplexity() > Complexity::Const) {
                 keepRules.insert(in);
