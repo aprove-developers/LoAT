@@ -130,15 +130,7 @@ void Accelerator::addNestedRule(const Forward::MeteredRule &metered, const Linea
 
     proofout << "Nested simple loops " << outer << " (outer loop) and " << inner;
     proofout << " (inner loop) with " << metered.info;
-    proofout << ", resulting in the new rules: " << added;
-
-    // Try to combine chain and the accelerated loop
-    auto chained = Chaining::chainRules(its, chain, metered.rule);
-    if (chained) {
-        TransIdx added = addResultingRule(chained.get());
-        proofout << ", " << added;
-    }
-    proofout << "." << endl;
+    proofout << ", resulting in the new rule: " << added << endl;
 }
 
 
