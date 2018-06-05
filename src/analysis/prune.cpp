@@ -138,9 +138,9 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 
     bool changed = false;
     for (LocationIdx node : its.getLocations()) {
-        if (Timeout::soft()) break;
-
         for (LocationIdx pre : its.getPredecessorLocations(node)) {
+            if (Timeout::soft()) return changed;
+
             // First remove duplicates (this is rather cheap)
             removeDuplicateRules(its, its.getTransitionsFromTo(pre, node));
 
@@ -160,6 +160,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
                     auto res = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), false);
                     queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
+                    if (Timeout::soft()) return changed;
                 }
 
                 // Keep only the top elements of the queue
