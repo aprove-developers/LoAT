@@ -165,21 +165,21 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         Rule newRule = rule;
         debugAccel("Trying MinMax heuristic with variables " << A << ", " << B << " for rule " << newRule);
 
-        // Add A > B to the guard, try to accelerate
-        newRule.getGuardMut().push_back(A > B);
+        // Add A >= B to the guard, try to accelerate
+        newRule.getGuardMut().push_back(A >= B);
         auto accelRule = accelerateFast(varMan, newRule, sink);
         if (accelRule) {
-            debugAccel("MinMax heuristic (A > B) successful with rule: " << newRule);
-            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A > B).toString() + ")"));
+            debugAccel("MinMax heuristic (A >= B) successful with rule: " << newRule);
+            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A >= B).toString() + ")"));
         }
 
-        // Add A < B to the guard, try to accelerate
+        // Add A <= B to the guard, try to accelerate
         newRule.getGuardMut().pop_back();
-        newRule.getGuardMut().push_back(A < B);
+        newRule.getGuardMut().push_back(A <= B);
         accelRule = accelerateFast(varMan, newRule, sink);
         if (accelRule) {
-            debugAccel("MinMax heuristic (A < B) successful with rule: " << newRule);
-            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A < B).toString() + ")"));
+            debugAccel("MinMax heuristic (A <= B) successful with rule: " << newRule);
+            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A <= B).toString() + ")"));
         }
 
         // Check if at least one attempt was successful.
