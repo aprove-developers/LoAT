@@ -268,6 +268,7 @@ void Accelerator::run() {
     for (TransIdx loop : loops) {
         ITSExport::printLabeledRule(loop, its, proofout);
     }
+    proofout << endl;
 
     // While accelerating, collect rules that might be feasible for nesting
     // Inner candidates are accelerated rules, since they correspond to a loop within another loop.
@@ -365,17 +366,8 @@ void Accelerator::run() {
         Preprocess::simplifyGuard(its.getRuleMut(rule).getGuardMut());
     }
 
-    // If we failed for any rule, we add a dummy rule to simulate the effect of not executing any loop.
-    // The reason is that we later chain the accelerated rules with incoming rules. So we only allow
-    // execution paths that take one of the accelerated (or kept) rules, but we do not allow an execution
-    // path which does not execute any loop. By adding a dummy loop, we allow such execution paths.
-    // Since this quickly leads to rule explosion, we only do this if we failed to accelerate some rules.
-    if (!keepRules.empty()) {
-        TransIdx added = addResultingRule(Rule::dummyRule(targetLoc, targetLoc));
-        proofout << "Adding an empty simple loop: " << added << "." << endl;
-    }
-
-    // Keep rules for which acceleration failed (maybe these rules are in fact not loops)
+    // Keep rules for which acceleration failed (maybe these rules are in fact not loops).
+    // We add them to resultingRules so they are chained just like accelerated rules.
     for (TransIdx rule : keepRules) {
         resultingRules.insert(rule);
     }
