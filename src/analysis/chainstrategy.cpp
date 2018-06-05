@@ -128,7 +128,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
  * Implementation of callRepeatedlyOnEachNode
  */
 template <typename F>
-static bool callRepeatedlyImpl(ITSProblem &its, F function, LocationIdx node, set<LocationIdx> &visited) {
+static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -145,11 +145,11 @@ static bool callRepeatedlyImpl(ITSProblem &its, F function, LocationIdx node, se
             return changedOverall;
         }
 
-    } while (changed);
+    } while (repeat && changed);
 
     // Continue with the successors of the current node (DFS traversal)
     for (LocationIdx next : its.getSuccessorLocations(node)) {
-        bool changed = callRepeatedlyImpl(its, function, next, visited);
+        bool changed = callOnEachNodeImpl(its, function, next, repeat, visited);
         changedOverall = changedOverall || changed;
 
         if (Timeout::soft()) {
@@ -162,20 +162,23 @@ static bool callRepeatedlyImpl(ITSProblem &its, F function, LocationIdx node, se
 
 
 /**
- * A dfs traversal through the its's graph, starting in the initial location, calling function for each node.
+ * A dfs traversal through the its's graph, starting in the initial location,
+ * calling the given function for each node.
  *
- * The given function must return a boolean value (a "changed" flag). It is called several times on every
- * visited node, as long as it returns true. If it returns false, the DFS continues with the next node.
+ * The given function must return a boolean value (a "changed" flag).
+ * If repeat is true, the function is called several times on every
+ * visited node, as long as it returns true. If it returns false
+ * (or if repeat is false), the DFS continues with the next node.
  * The function is allowed to modify the ITS (and thus the graph).
  *
  * The given set `visited` should be empty.
  *
- * The return value is true iff at least one call of the given function returned true.
+ * @returns true iff at least one call of the given function returned true.
  */
 template <typename F>
-static bool callRepeatedlyOnEachNode(ITSProblem &its, F function) {
+static bool callOnEachNode(ITSProblem &its, F function, bool repeat) {
     set<LocationIdx> visited;
-    return callRepeatedlyImpl(its, function, its.getInitialLocation(), visited);
+    return callOnEachNodeImpl(its, function, its.getInitialLocation(), repeat, visited);
 }
 
 
@@ -233,18 +236,13 @@ bool Chaining::chainLinearPaths(ITSProblem &its) {
 
     Timing::Scope timer(Timing::Contract);
     debugChain("Chaining linear paths");
-    return callRepeatedlyOnEachNode(its, implementation);
+    return callOnEachNode(its, implementation, true);
 }
 
 // TODO: We could also try this non-repeatedly, so we first compute which nodes are applicable (tree-shaped),
 // TODO: and then eliminate these nodes by chaining. This would often perform fewer chaining steps (not sure if this is better)
 bool Chaining::chainTreePaths(ITSProblem &its) {
-    bool hasSimpleLoop = false;
-
-    auto implementation = [&hasSimpleLoop](ITSProblem &its, LocationIdx node) {
-        // Abort as soon as we have created a new simple loop
-        if (hasSimpleLoop) return false;
-
+    auto implementation = [](ITSProblem &its, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -264,13 +262,6 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
                 changed = true;
             }
 
-            // Check if we just created a simple loop.
-            // If so, we still continue with this iteration (to create more simple loops at node).
-            // After this iteration, we stop the entire process to first call acceleration
-            if (!its.getSimpleLoopsAt(node).empty()) {
-                hasSimpleLoop = true;
-            }
-
             Stats::add(Stats::ContractBranch);
             if (Timeout::soft()) break;
         }
@@ -279,7 +270,13 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
 
     Timing::Scope timer(Timing::Branches);
     debugChain("Chaining tree paths");
-    return callRepeatedlyOnEachNode(its, implementation);
+
+    // To avoid rule explosion, the implementation is only called once per node.
+    // Example: path f -> g -> h -> u -> ... When called on f, g is eliminated.
+    // We then call the implementation on h (f's new child), which may eliminate u.
+    // This avoids the exponential blowup, so we can first accelerate rules or
+    // prune rules before calling this method again.
+    return callOnEachNode(its, implementation, false);
 }
 
 
