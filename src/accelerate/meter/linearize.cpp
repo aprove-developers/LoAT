@@ -134,6 +134,13 @@ bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
                 return false;
             }
 
+            // Avoid replacing temporary variables, as the replacement would be non-temporary.
+            // It would probably be sound to do the replacement, but since this case is probably
+            // rare, we disallow it for now. We also have backward accel (works without linearization).
+            if (!term.isLinear() && varMan.isTempVar(var)) {
+                return false;
+            }
+
             // Otherwise the replacement is safe
             vars.insert(var);
         }
