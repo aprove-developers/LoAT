@@ -21,6 +21,7 @@
 #include "global.h"
 #include "expression.h"
 #include "its/variablemanager.h"
+#include "util/option.h"
 
 #include <vector>
 #include <map>
@@ -38,7 +39,7 @@ namespace GuardToolbox {
     enum SolvingLevel {
         TrivialCoeffs = 0, // only c=1 and c=-1 is allowed
         ResultMapsToInt = 1, // c can be any rational constant, as long as x = t/c maps to int
-        ConstantCoeffs = 2, // c can be any rational constant
+        ConstantCoeffs = 2, // c can be any rational constant (the result may not map to int, use with caution!)
     };
 
     // Shorthand for lambdas that check if a given symbol is accepted/allowed (depending on the context)
@@ -87,11 +88,9 @@ namespace GuardToolbox {
 
     /**
      * Tries to solve the equation term == 0 for the given variable, using the given level of restrictiveness
-     * @note term must be polynomial. It must _not_ be a relational expression
-     * @param term both input and output
-     * @return true if successful and term contains the result. False otherwise (term is left unchanged!)
+     * @return if possible, the term t such that "var == t" is equivalent to "term == 0"
      */
-    bool solveTermFor(Expression &term, const ExprSymbol &var, SolvingLevel level);
+    option<Expression> solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level);
 
 
     /**

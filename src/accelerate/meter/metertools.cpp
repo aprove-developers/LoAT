@@ -285,10 +285,10 @@ stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan 
             if (!ex.has(free)) continue;
 
             Expression term = Relation::toLessEq(ex);
-            term = term.lhs()-term.rhs();
-            if (!GuardToolbox::solveTermFor(term,free,GuardToolbox::ResultMapsToInt)) continue;
+            auto optSolved = GuardToolbox::solveTermFor(term.lhs()-term.rhs(), free, GuardToolbox::ResultMapsToInt);
+            if (!optSolved) continue;
 
-            freeBounds[freeIdx].insert(term);
+            freeBounds[freeIdx].insert(optSolved.get());
         }
     }
 

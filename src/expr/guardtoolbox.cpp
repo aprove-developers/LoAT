@@ -69,20 +69,21 @@ bool GuardToolbox::isTrivialImplication(const Expression &a, const Expression &b
 }
 
 
-bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, SolvingLevel level) {
+option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level) {
     assert(!GiNaC::is_a<GiNaC::relational>(term));
 
     // we can only solve linear expressions...
-    if (term.degree(var) != 1) return false;
+    if (term.degree(var) != 1) return {};
 
     // ...with rational coefficients
     term = term.expand();
     Expression c = term.coeff(var);
-    if (!c.isRationalConstant()) return false;
+    if (!c.isRationalConstant()) return {};
 
     bool trivialCoeff = (c.compare(1) == 0 || c.compare(-1) == 0);
+
     if (level == TrivialCoeffs && !trivialCoeff) {
-        return false;
+        return {};
     }
 
     term = (term - c*var) / (-c);
@@ -91,10 +92,15 @@ bool GuardToolbox::solveTermFor(Expression &term, const ExprSymbol &var, Solving
     // since we assume that all constraints in the guard map to int.
     // So if c is trivial, we can also handle non-polynomial terms.
     if (level == ResultMapsToInt && !trivialCoeff) {
-        if (!term.isPolynomial() || !mapsToInt(term)) return false;
+        if (!term.isPolynomial() || !mapsToInt(term)) return {};
     }
 
-    return true;
+    // we assume that terms in the guard map to int, make sure this is the case
+    if (trivialCoeff) {
+        assert(!term.isPolynomial() || mapsToInt(term));
+    }
+
+    return term;
 }
 
 
@@ -117,18 +123,20 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
                 if (!allow(var)) continue;
 
                 //solve target for var (result is in target)
-                if (!solveTermFor(target,var,(SolvingLevel)level)) continue;
+                auto optSolved = solveTermFor(target,var,(SolvingLevel)level);
+                if (!optSolved) continue;
+                Expression solved = optSolved.get();
 
                 //disallow replacing non-free vars by a term containing free vars
                 //could be unsound, as free vars can lead to unbounded complexity
-                if (!varMan.isTempVar(var) && containsTempVar(varMan, target)) continue;
+                if (!varMan.isTempVar(var) && containsTempVar(varMan, solved)) continue;
 
                 //remove current equality (ok while iterating by index)
                 guard.erase(guard.begin() + i);
                 i--;
 
                 //extend the substitution, use compose in case var occurs on some rhs of varSubs
-                varSubs[var] = target;
+                varSubs[var] = solved;
                 varSubs = composeSubs(varSubs, varSubs);
                 goto next;
             }

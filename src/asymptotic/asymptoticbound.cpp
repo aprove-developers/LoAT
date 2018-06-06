@@ -126,15 +126,19 @@ void AsymptoticBound::propagateBounds() {
                 }
             }
 
+            // TODO: the comment below says "program variables first",
+            // TODO: but here tempVars is inserted in front of vars?
             vars.insert(vars.begin(), tempVars.begin(), tempVars.end());
 
             // check if equation can be solved for a single variable
             // check program variables first
             for (const ExprSymbol &var : vars) {
                 //solve target for var (result is in target)
-                if (GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs)) {
+                // TODO: Check if we can use ResultMapsToInt here (we most probably can)
+                auto optSolved = GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs);
+                if (optSolved) {
                     exmap sub;
-                    sub.insert(std::make_pair(var, target));
+                    sub.insert(std::make_pair(var, optSolved.get()));
 
                     debugAsymptoticBound("substitution (equation): " << sub);
                     substitutions.push_back(std::move(sub));

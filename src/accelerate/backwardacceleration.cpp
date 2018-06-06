@@ -166,13 +166,13 @@ optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const Expr
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
     for (const Expression &ex : guard) {
         if (Relation::isEquality(ex) && ex.has(N)) {
-            Expression term = ex.lhs() - ex.rhs();
-            if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt)) {
+            auto optSolved = GuardToolbox::solveTermFor(ex.lhs()-ex.rhs(), N, GuardToolbox::ResultMapsToInt);
+            if (!optSolved) {
                 debugBackwardAccel("unable to compute upperbound from equality " << ex);
                 return {};
             }
             // One equality is enough, as all other bounds must also satisfy this equality
-            return vector<Expression>({term});
+            return vector<Expression>({optSolved.get()});
         }
     }
 
@@ -191,11 +191,12 @@ optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const Expr
         }
 
         // compute the upper bound represented by N and check that it is integral
-        if (!GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt)) {
+        auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
+        if (!optSolved) {
             debugBackwardAccel("unable to compute upperbound from " << ex);
             return {};
         }
-        bounds.push_back(term);
+        bounds.push_back(optSolved.get());
     }
 
     if (bounds.empty()) {
