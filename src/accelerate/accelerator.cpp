@@ -246,6 +246,83 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 }
 
 
+// ###################
+// ## Acceleration  ##
+// ###################
+
+Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
+    // Forward acceleration
+    Forward::Result res = Forward::accelerate(its, rule, sinkLoc);
+
+    // Try backward acceleration only if forward acceleration failed,
+    // or if it only succeeded by restricting the guard. In this case,
+    // we keep the rules from forward and just add the ones from backward acceleration.
+    if (res.result != Forward::Success && rule.isLinear()) {
+        auto optRules = Backward::accelerate(its, rule.toLinear());
+        if (optRules) {
+            res.result = Forward::Success;
+            for (LinearRule rule : optRules.get()) {
+                res.rules.emplace_back("backward acceleration", rule);
+            }
+        }
+    }
+
+    return res;
+}
+
+
+Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
+    using namespace Forward;
+
+    // Try to accelerate the rule and stop if we are successful
+    auto res = tryAccelerate(rule);
+    if (rule.isLinear() || res.result == Success || res.result == SuccessWithRestriction) {
+        return res;
+    }
+
+    // Remember the original result (we return this in case shortening fails)
+    auto originalRes = res;
+
+    // Helper lambda that calls tryAccelerate and adds to the proof output.
+    // Returns true if accelerating was successful.
+    auto tryAccel = [&](const Rule &newRule) {
+        res = tryAccelerate(newRule);
+        if (res.result == Success || res.result == SuccessWithRestriction) {
+            for (Forward::MeteredRule &rule : res.rules) {
+                rule = rule.appendInfo(" (after partial deletion)");
+            }
+            return true;
+        }
+        return false;
+    };
+
+    // If metering failed, we remove rhss to ease metering.
+    // To keep the code efficient, we only try all pairs and each single rhs.
+    // We start with pairs of rhss, since this can still yield exponential complexity.
+    const vector<RuleRhs> &rhss = rule.getRhss();
+
+    for (int i=0; i < rhss.size(); ++i) {
+        for (int j=i+1; j < rhss.size(); ++j) {
+            vector<RuleRhs> newRhss{ rhss[i], rhss[j] };
+            Rule newRule(rule.getLhs(), newRhss);
+            if (tryAccel(newRule)) {
+                debugAccel("Success after shortening rule to 2 rhss");
+                return res;
+            }
+        }
+    }
+
+    for (RuleRhs rhs : rhss) {
+        if (tryAccel(Rule(rule.getLhs(), rhs))) {
+            debugAccel("Success after shortening rule to 1 rhs");
+            return res;
+        }
+    }
+
+    return originalRes;
+}
+
+
 // #####################
 // ## Main algorithm  ##
 // #####################
@@ -280,21 +357,8 @@ void Accelerator::run() {
     for (TransIdx loop : loops) {
         if (Timeout::soft()) return;
 
-        // Forward acceleration
-        Forward::Result res = Forward::accelerate(its, its.getRule(loop), sinkLoc);
-
-        // Try backward acceleration only if forward acceleration failed,
-        // or if it only succeeded by restricting the guard. In this case,
-        // we keep the rules from forward and just add the ones from backward acceleration.
-        if (res.result != Forward::Success && its.getRule(loop).isLinear()) {
-            auto optRules = Backward::accelerate(its, its.getLinearRule(loop));
-            if (optRules) {
-                res.result = Forward::Success;
-                for (LinearRule rule : optRules.get()) {
-                    res.rules.emplace_back("backward acceleration", rule);
-                }
-            }
-        }
+        // Forward and backward accelerate (and partial deletion for nonlinear rules)
+        Forward::Result res = accelerateOrShorten(its.getRule(loop));
 
         // Interpret the results, add new rules
         switch (res.result) {

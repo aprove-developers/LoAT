@@ -78,6 +78,33 @@ private:
     bool simplifySimpleLoops();
 
     /**
+     * Tries to accelerate the given rule by forward acceleration and,
+     * if this fails, by backward acceleration.
+     * @returns The acceleration result (including accelerated rules, if successful)
+     */
+    ForwardAcceleration::Result tryAccelerate(const Rule &rule) const;
+
+
+    /**
+     * Tries to accelerate the given rule by calling tryAccelerate.
+     * If this fails and the rule is nonlinear, we try to accelerate the rule again
+     * after removing some of the right-hand sides. This may simplify the rule,
+     * so acceleration might then be successful (maybe with a lower complexity).
+     * Since we don't known which right-hand sides are causing trouble,
+     * we try many combinations of removing right-hand sides, so this might be expensive.
+     *
+     * @note We also try to remove all but one right-hand side, so we reduce the nonlinear
+     * rule to a linear rule which may lose the exponential complexity. But since we cannot
+     * accelerate nonlinear rules by backward acceleration, this is still preferable to
+     * just giving up.
+     *
+     * @returns If successful, the resulting accelerated rule(s). Otherwise,
+     * the acceleration result from accelerating the original rule (before shortening).
+     */
+    ForwardAcceleration::Result accelerateOrShorten(const Rule &rule) const;
+
+
+    /**
      * Adds the given rule to the ITS problem and to resultingRules.
      * @return The index of the added rule.
      */
