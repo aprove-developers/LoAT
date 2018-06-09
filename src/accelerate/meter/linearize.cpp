@@ -217,8 +217,11 @@ GiNaC::exmap Linearize::reverseSubstitution(const GiNaC::exmap &subs) {
 
 
 optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+#ifdef DEBUG_METER_LINEARIZE
     debugLinearize("Trying to linearize the following guard/updates:");
     dumpGuardUpdates("linearize", guard, updates);
+#endif
+
     Linearize lin(guard, updates, varMan);
 
     // Collect all nonlinear terms that have to be replaced (if possible)

@@ -88,7 +88,7 @@ z3::expr GinacToZ3::convert_power(const GiNaC::ex &e) {
     //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
     if (is_a<numeric>(e.op(1))) {
         numeric num = ex_to<numeric>(e.op(1));
-        if (num.is_integer() && num.is_positive() && num.to_int() <= Z3_MAX_EXPONENT) {
+        if (num.is_integer() && num.is_positive() && num.to_int() <= Config::Z3::MaxExponentWithoutPow) {
             int exp = num.to_int();
             z3::expr base = convert_ex(e.op(0));
 

@@ -26,18 +26,6 @@
 using namespace std;
 
 
-// FIXME: Remove this! Instead provide method to add the "cost >= 0" constraint, and check if it is implied there
-bool Preprocess::tryToRemoveCost(GuardList &guard) {
-    if (guard.empty()) return false;
-    GuardList realGuard(guard.begin(),guard.end()-1);
-    if (Z3Toolbox::isValidImplication(realGuard, guard.back())) {
-        guard.pop_back();
-        return true;
-    }
-    return false;
-}
-
-
 bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
     bool changed;
     bool result = false;

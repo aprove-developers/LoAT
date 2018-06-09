@@ -14,24 +14,12 @@ namespace parser {
 
 class ITSParser {
 public:
-    struct Settings {
-        // Whether to allow division in arithmetic expressions.
-        // Note: This is only sound if the result is guaranteed to be an integer value!
-        bool allowDivison = false;
-
-        // Whether to add the term "cost >= 0" to the guard.
-        // This ensures that transitions can only be taken when the cost evaluates to a non-negative value.
-        // Note: The current implementation relies on this property! Disabling may be unsound.
-        bool ensureNonnegativeCosts = true;
-    };
-
     /**
      * Tries to load the given file and convert it into an ITSProblem
      * @param path The file to load
-     * @param cfg Settings to control certain restrictions during parsing
      * @return The resulting ITSProblem (a FileError is thrown if parsing fails)
      */
-    static ITSProblem loadFromFile(const std::string &path, Settings cfg);
+    static ITSProblem loadFromFile(const std::string &path);
     EXCEPTION(FileError,CustomException);
 
 private:
@@ -50,7 +38,7 @@ private:
     };
 
 
-    explicit ITSParser(Settings cfg) : settings(cfg) {}
+    // Main function
     ITSProblem load(const std::string &path);
 
     // High-level parsing steps
@@ -90,9 +78,6 @@ private:
     // Step 2: Converting ParsedRules to ITSProblem
     std::map<std::string, LocationData> knownLocations;
     ITSProblem itsProblem;
-
-    // Settings for the parser
-    Settings settings;
 };
 
 }

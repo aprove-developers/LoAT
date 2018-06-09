@@ -115,11 +115,7 @@ void MeteringFinder::buildMeteringVariables() {
     meterVars.coeffs.clear();
     meterVars.primedSymbols.clear();
 
-#ifdef FARKAS_ALLOW_REAL_COEFFS
-    Z3Context::VariableType coeffType = Z3Context::Real;
-#else
-    Z3Context::VariableType coeffType = Z3Context::Integer;
-#endif
+    auto coeffType = (Config::ForwardAccel::AllowRealCoeffs) ? Z3Context::Real : Z3Context::Integer;
 
     for (VariableIdx var : relevantVars) {
         meterVars.symbols.push_back(varMan.getGinacSymbol(var));
@@ -204,9 +200,12 @@ void MeteringFinder::buildLinearConstraints() {
 z3::expr MeteringFinder::genNotGuardImplication() const {
     debugMeter("Constructing not-guard implication");
     vector<z3::expr> res;
+    vector<Expression> lhs;
 
     // We can add the irrelevant guard to the lhs ("conditional metering function")
-    vector<Expression> lhs = linearConstraints.irrelevantGuard;
+    if (Config::ForwardAccel::ConditionalMetering) {
+        lhs = linearConstraints.irrelevantGuard;
+    }
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Expression &g : linearConstraints.reducedGuard) {
@@ -395,7 +394,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     Timing::done(Timing::FarkasLogic);
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    Z3Solver solver(meter.context, Z3_METER_TIMEOUT);
+    Z3Solver solver(meter.context, Config::Z3::MeterTimeout);
     solver.add(meter.genNotGuardImplication());
     solver.add(meter.genUpdateImplications());
     solver.add(meter.genNonTrivial());
@@ -406,14 +405,15 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
         debugMeter("z3 pre unsat");
         debugProblem("Farkas pre unsat for: " << rule);
 
-#ifdef METER_HEURISTIC_CONFLICTVAR
-        auto conflictVar = meter.findConflictVars();
-        if (conflictVar) {
-            result.conflictVar = conflictVar.get();
-            result.result = ConflictVar;
-            return result;
+        if (Config::ForwardAccel::ConflictVarHeuristic) {
+            auto conflictVar = meter.findConflictVars();
+            if (conflictVar) {
+                result.conflictVar = conflictVar.get();
+                result.result = ConflictVar;
+                return result;
+            }
         }
-#endif
+
         result.result = Unsat;
         return result;
     }
@@ -446,10 +446,10 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     result.metering = meter.buildResult(model);
     result.result = Success;
 
-#ifdef FARKAS_ALLOW_REAL_COEFFS
     // If we allow real coefficients, we have to be careful that the metering function evaluates to an integer.
-    meter.ensureIntegralMetering(result, model);
-#endif
+    if (Config::ForwardAccel::AllowRealCoeffs) {
+        meter.ensureIntegralMetering(result, model);
+    }
 
     // Proof output for linearization (since this is an addition to the paper)
     if (!meter.nonlinearSubs.empty()) {
@@ -483,7 +483,7 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    Z3Solver solver(meter.context, Z3_METER_TIMEOUT);
+    Z3Solver solver(meter.context, Config::Z3::MeterTimeout);
     z3::check_result z3res = z3::unsat; // this method should only be called if generate() fails
 
     GuardList oldGuard = meter.guard;

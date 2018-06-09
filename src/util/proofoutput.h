@@ -22,11 +22,15 @@
 #include <ostream>
 #include <string>
 
-#include "util/timeout.h"
 #include <sstream>
 #include <iomanip>
 
+#include "config.h"
+#include "util/timeout.h" // for timestamps
 
+
+// Intermediate buffer between the proofout stream and cout (or any other ostream).
+// Inserts indention (and timestamps) after each newline.
 class StreambufIndenter : public std::streambuf {
 public:
     explicit StreambufIndenter(std::ostream &os)
@@ -55,12 +59,8 @@ public:
         }
     }
 
-    void enableTimestamps(bool enable) {
-        printTimestamps = enable;
-    }
-
     // print the given string before the next \n
-    void printBeforeNewline(std::string s) {
+    void printBeforeNewline(const std::string &s) {
         beforeNewline = s;
     }
 
@@ -69,12 +69,12 @@ protected:
     int overflow(int ch) override {
         if (atStartOfLine && ch != '\n') {
             // possibly print timestamp
-            if (printTimestamps) {
+            if (Config::Output::Timestamps) {
                 std::string timeStr = formatTimestamp();
                 dst->sputn(timeStr.data(), timeStr.size());
             }
 
-            // print indention ("put characters")
+            // print indention
             dst->sputn(indention.data(), indention.size());
         }
 
@@ -108,9 +108,6 @@ private:
     bool atStartOfLine = true;
     std::string indention;
     std::string beforeNewline;
-
-    // Options
-    bool printTimestamps = false;
 };
 
 
@@ -125,13 +122,7 @@ public:
         Result
     };
 
-    ProofOutput(std::ostream &s, bool allowAnsiCodes, bool printTimestamps = true)
-            : std::ostream(s.rdbuf()),
-              allowAnsi(allowAnsiCodes),
-              indenter(*this)
-    {
-        indenter.enableTimestamps(printTimestamps);
-    }
+    explicit ProofOutput(std::ostream &s) : std::ostream(s.rdbuf()), indenter(*this) {}
 
     void increaseIndention() {
         indenter.increaseIndention();
@@ -144,14 +135,14 @@ public:
     // sets the current style, which is reset at the end of line
     // (just writes the corresponding ANSI code to the stream)
     void setLineStyle(Style style) {
-        if (allowAnsi) {
+        if (Config::Output::Colors) {
             switch (style) {
-                case Section: *this << "\033[1;33m"; break; // bold yellow
-                case Headline: *this << "\033[1;34m"; break; // bold blue
-                case Result: *this << "\033[1;32m"; break; // bold green
-                case Warning: *this << "\033[1;31m"; break; // bold red
+                case Section: *this << Config::Color::Section; break; // bold yellow
+                case Headline: *this << Config::Color::Headline; break; // bold blue
+                case Result: *this << Config::Color::Result; break; // bold green
+                case Warning: *this << Config::Color::Warning; break; // bold red
             }
-            indenter.printBeforeNewline("\033[0m");
+            indenter.printBeforeNewline(Config::Color::None);
         }
     }
 
@@ -169,13 +160,16 @@ public:
         *this << "### " << s << " ###" << std::endl;
     }
 
+    // print given string in warning style with spacing
+    void warning(const std::string &s) {
+        *this << std::endl;
+        setLineStyle(Style::Warning);
+        *this << s << std::endl << std::endl;
+    }
+
 private:
-    bool allowAnsi;
     StreambufIndenter indenter;
 };
-
-
-
 
 
 #endif // PROOFOUTPUT_H

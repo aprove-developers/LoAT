@@ -330,7 +330,7 @@ bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
 // ##  Chaining after Acceleration  ##
 // ###################################
 
-bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules, bool removeIncoming) {
+bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
     Timing::Scope timer(Timing::Contract);
     Stats::addStep("ChainingNL::chainSimpleLoops");
     set<TransIdx> successfullyChained;
@@ -385,7 +385,7 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
 
     // Removing chained incoming rules may help to avoid too many rules.
     // However, we also lose execution paths (especially if there are more loops, which are not simple).
-    if (removeIncoming) {
+    if (!Config::Chain::KeepIncomingInChainAccelerated) {
         for (TransIdx toRemove : successfullyChained) {
             debugChain("  removing chained incoming rule " << its.getRule(toRemove));
             its.removeRule(toRemove);

@@ -268,7 +268,8 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
 
 
 stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
-    if (FREEVAR_INSTANTIATE_MAXBOUNDS == 0) return stack<GiNaC::exmap>();
+    namespace Config = Config::ForwardAccel;
+    assert(Config::TempVarInstantiationMaxBounds > 0);
 
     //find free variables
     const set<VariableIdx> &freeVar = varMan.getTempVars();
@@ -279,7 +280,7 @@ stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan 
     for (const Expression &ex : guard) {
         for (VariableIdx freeIdx : freeVar) {
             auto it = freeBounds.find(freeIdx);
-            if (it != freeBounds.end() && it->second.size() >= FREEVAR_INSTANTIATE_MAXBOUNDS) continue;
+            if (it != freeBounds.end() && it->second.size() >= Config::TempVarInstantiationMaxBounds) continue;
 
             ExprSymbol free = varMan.getGinacSymbol(freeIdx);
             if (!ex.has(free)) continue;

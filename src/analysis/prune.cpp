@@ -147,7 +147,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
             // Then prune rules by only keeping the "best" ones (heuristically)
             const vector<TransIdx> &parallel = its.getTransitionsFromTo(pre, node);
 
-            if (parallel.size() > PRUNE_MAX_PARALLEL_TRANSITIONS) {
+            if (parallel.size() > Config::Prune::MaxParallelRules) {
                 PriorityQueue queue(comp);
 
                 for (int i=0; i < parallel.size(); ++i) {
@@ -165,7 +165,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 
                 // Keep only the top elements of the queue
                 set<TransIdx> keep;
-                for (int i=0; i < PRUNE_MAX_PARALLEL_TRANSITIONS; ++i) {
+                for (int i=0; i < Config::Prune::MaxParallelRules; ++i) {
                     keep.insert(get<0>(queue.top()));
                     queue.pop();
                 }

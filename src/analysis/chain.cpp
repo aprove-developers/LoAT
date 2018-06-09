@@ -30,9 +30,8 @@ using namespace std;
 
 /**
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
- * If z3 returns unknown, applies some heuristic (which involves the (chained) cost).
  */
-static bool checkSatisfiability(const GuardList &newGuard, const Expression &newCost) {
+static bool checkSatisfiability(const GuardList &newGuard) {
     auto z3res = Z3Toolbox::checkAll(newGuard);
 
 #ifdef DEBUG_PROBLEMS
@@ -79,20 +78,19 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
         newCost = Expression::InfSymbol;
     }
 
-#ifdef CONTRACT_CHECK_SAT
+    if (Config::Chain::CheckSat) {
+        // FIXME: If z3 says unsat, it makes no sense to keep both transitions (and try to chain them again and again later on)
+        // FIXME: Instead, the second one should be deleted, at least in chainLinearPaths (where we can be sure that the second transition is only reachable by the first one).
 
-    // FIXME: If z3 says unsat, it makes no sense to keep both transitions (and try to chain them again and again later on)
-    // FIXME: Instead, the second one should be deleted, at least in chainLinearPaths (where we can be sure that the second transition is only reachable by the first one).
+        // FIXME: We have to think about the z3::unknown case. Since z3 often takes long on unknowns, calling z3 again and again is pretty bad.
+        // FIXME: So either we remove the second transition (might lose complexity if the guard was actually sat) or chain them (lose complexity if it was unsat) => BENCHMARKS
 
-    // FIXME: We have to think about the z3::unknown case. Since z3 often takes long on unknowns, calling z3 again and again is pretty bad.
-    // FIXME: So either we remove the second transition (might lose complexity if the guard was actually sat) or chain them (lose complexity if it was unsat) => BENCHMARKS
-
-    // Avoid chaining if the resulting rule can never be taken
-    if (checkSat && !checkSatisfiability(newGuard, newCost)) {
-        Stats::add(Stats::ContractUnsat);
-        return {};
+        // Avoid chaining if the resulting rule can never be taken
+        if (checkSat && !checkSatisfiability(newGuard)) {
+            Stats::add(Stats::ContractUnsat);
+            return {};
+        }
     }
-#endif
 
     return RuleLhs(firstLhs.getLoc(), newGuard, newCost);
 }

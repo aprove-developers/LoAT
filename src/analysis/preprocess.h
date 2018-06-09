@@ -27,15 +27,6 @@
  */
 namespace Preprocess
 {
-    // FIXME: Remove this, add "cost >= 0" in LinearITSAnalysis (where we can directly check if it is implied)
-    /**
-     * Removes the last constraint from the guard if it is already implied by the other constraints.
-     * The last constraint is usually "cost >= 0" (to ensure user-given costs are nonnegative).
-     * @note This relies on the parsed adding "cost >= 0" as last constraint to the guard.
-     * @return true iff "cost >= 0" is implied by the guard and was removed
-     */
-    bool tryToRemoveCost(GuardList &guard);
-
     /**
      * Main preprocessing function which combines the methods below in a suitable way.
      * Calls simplifyGuardBySmt, so this method involves many smt queries!

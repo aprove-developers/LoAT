@@ -21,3 +21,12 @@ src/koatToT2
 benchlog
 benchscores
 koat-examples
+
+#IDEs and build dirs
+loat-qtcreator*
+qtcreator-build
+.idea
+cmake-build-debug
+
+#txt files used for dumping output etc
+*.txt

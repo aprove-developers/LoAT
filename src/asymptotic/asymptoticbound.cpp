@@ -398,7 +398,7 @@ void AsymptoticBound::removeUnsatProblems() {
             limitProblems.erase(limitProblems.begin() + i);
         } else if (result == z3::unknown
                    && !finalCheck
-                   && limitProblems[i].getSize() >= LIMIT_PROBLEM_DISCARD_SIZE) {
+                   && limitProblems[i].getSize() >= Config::Limit::ProblemDiscardSize) {
             debugAsymptoticBound("removing a limit problem since this is not the final check"
                                  << " and it is very large (" << limitProblems[i].getSize()
                                  << " InftyExpressions)");
@@ -415,7 +415,7 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    bool smtApplicable = GlobalFlags::limitSmt && isSmtApplicable();
+    bool smtApplicable = Config::Limit::UseSmtEncoding && isSmtApplicable();
 
     currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
@@ -924,7 +924,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
             } else {
                 debugAsymptoticBound("Z3: limit problem is unknown");
 
-                if (!finalCheck && currentLP.getSize() >= LIMIT_PROBLEM_DISCARD_SIZE) {
+                if (!finalCheck && currentLP.getSize() >= Config::Limit::ProblemDiscardSize) {
                     debugAsymptoticBound("marking the current limit problem as unsolvable"
                                          << " since this is not the final check"
                                          << " and it is very large (" << currentLP.getSize()
@@ -1094,7 +1094,7 @@ bool AsymptoticBound::trySmtEncoding() {
     InftyExpressionSet::const_iterator it;
 
     // initialize z3
-    Z3Solver solver(context, Z3_LIMITSMT_TIMEOUT);
+    Z3Solver solver(context, Config::Z3::LimitTimeout);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();
@@ -1247,6 +1247,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
         return InfiniteInstances::Result(Complexity::Unknown, "The cost contains infinity");
     }
 
+    // TODO: Use expandedCost here?!
     AsymptoticBound asymptoticBound(varMan, guard, cost, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();

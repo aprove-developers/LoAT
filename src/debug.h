@@ -46,12 +46,15 @@
 
 /* ### Colored debugging output */
 
+#define COLORS_DEBUG
+
 #ifdef COLORS_DEBUG
-    #define COLOR_WARN "\033[1;31m" // bold red
-    #define COLOR_PROBLEM "\033[1;33m" // bold yellow
-    #define COLOR_DEBUG "\033[0;90m" // gray/bright black (avoid distraction from proof output)
-    #define COLOR_HIGHLIGHT "\033[0;36m" // cyan (to be quickly visible)
-    #define COLOR_NONE "\033[0m" // reset color to default
+    #include "config.h"
+    #define COLOR_WARN (Config::Color::DebugWarning)
+    #define COLOR_PROBLEM (Config::Color::DebugProblem)
+    #define COLOR_DEBUG (Config::Color::Debug)
+    #define COLOR_HIGHLIGHT (Config::Color::DebugHighlight)
+    #define COLOR_NONE (Config::Color::None)
 #else
     #define COLOR_WARN ""
     #define COLOR_PROBLEM ""

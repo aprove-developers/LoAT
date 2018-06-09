@@ -20,7 +20,7 @@
 
 #include "z3context.h"
 #include "util/timing.h"
-#include "global.h"
+#include "config.h"
 
 #include <z3++.h>
 
@@ -31,7 +31,7 @@
 class Z3Solver : public z3::solver {
 public:
     // Constructs a new solver with the given timeout, pass 0 to disable timeout
-    explicit Z3Solver(Z3Context &context, unsigned int timeout = Z3_DEFAULT_TIMEOUT) : z3::solver(context) {
+    explicit Z3Solver(Z3Context &context, unsigned int timeout = Config::Z3::DefaultTimeout) : z3::solver(context) {
         if (timeout > 0) {
             z3::params params(context);
             params.set(":timeout", timeout);
