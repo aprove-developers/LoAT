@@ -56,11 +56,12 @@ void printHelp(char *arg0) {
     cout << "  --limit-smt        Solve limit problems by SMT queries when applicable" << endl;
 }
 
+bool allowRecursion = false;
 
 void setupConfig(bool conditionalMeter, bool backAccel, bool recursion, bool limitSmt) {
     Config::ForwardAccel::ConditionalMetering = conditionalMeter;
     Config::Accel::UseBackwardAccel = backAccel;
-    Config::Accel::AllowNonlinearRules = recursion;
+    allowRecursion = recursion;
     Config::Limit::UseSmtEncoding = limitSmt;
 }
 
@@ -141,7 +142,24 @@ int main(int argc, char *argv[]) {
         its.print(cout);
         cout << "=== new ITSProblem ===" << endl;
 
-        auto runtime = Analysis::analyze(its);
+        RuntimeResult runtime;
+
+        // Skip ITS problems with nonlinear (i.e., recursive) rules.
+        if (allowRecursion || its.isLinear()) {
+            runtime = Analysis::analyze(its);
+        }
+
+        // Alternative: Remove nonlinear (recursive) rules.
+/*        if (!allowRecursion) {
+            for (TransIdx trans : its.getAllTransitions()) {
+                if (!its.getRule(trans).isLinear()) {
+                    its.removeRule(trans);
+                }
+            }
+        }
+        runtime = Analysis::analyze(its);
+        */
+
         proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
         proofout << "  Complexity class: " << runtime.cpx << endl;
         proofout << "  Complexity value: ";

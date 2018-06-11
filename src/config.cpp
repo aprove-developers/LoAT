@@ -157,12 +157,8 @@ namespace Config {
         // Even if enabled, backward acceleration is only used if forward acceleration fails.
         bool UseBackwardAccel = true;
 
-        // Whether to accelerate nonlinear rules (i.e., recursive rules).
-        // This flag is only interesting for benchmarking, should otherwise always be true.
-        bool AllowNonlinearRules = true;
-
         // TODO: Not yet implemented
-        const bool ChainAcceleratedRulesAmongThemselves = false;
+        // const bool ChainAcceleratedRulesAmongThemselves = false;
     }
 
     // Chaining and chaining strategies

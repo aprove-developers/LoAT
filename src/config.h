@@ -94,7 +94,6 @@ namespace Config {
         extern const bool SimplifyRulesBefore;
         extern bool PartialDeletionHeuristic;
         extern bool UseBackwardAccel;
-        extern bool AllowNonlinearRules;
 
         // TODO: Not yet implemented
         // extern const bool ChainAcceleratedRulesAmongThemselves;

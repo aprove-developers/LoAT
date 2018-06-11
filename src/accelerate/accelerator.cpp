@@ -278,13 +278,6 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
 Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     using namespace Forward;
 
-    // TODO: Just for benchmarking, delete this later
-    if (!Config::Accel::AllowNonlinearRules && !rule.isLinear()) {
-        Forward::Result res;
-        res.result = Forward::TooComplicated;
-        return res;
-    }
-
     // Accelerate the original rule
     auto res = tryAccelerate(rule);
 
