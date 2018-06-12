@@ -107,7 +107,7 @@ namespace Config {
 
     // Pruning in case of too many rules
     namespace Prune {
-        extern const bool MaxParallelRules;
+        extern const unsigned MaxParallelRules;
     }
 
     // Asymptotic complexity computation using limit problems

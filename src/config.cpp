@@ -187,7 +187,7 @@ namespace Config {
     namespace Prune {
         // Prune parallel rules if there are more than this number.
         // We consider two rules parallel if they have an edge in common, e.g. f -> f,g and f -> g are parallel.
-        const bool MaxParallelRules = 5;
+        const unsigned MaxParallelRules = 5;
     }
 
     namespace Parser {
