@@ -421,7 +421,7 @@ bool AsymptoticBound::solveLimitProblem() {
     limitProblems.pop_back();
 
     start:
-    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !Timeout::hard()) {
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !isTimeout()) {
         debugAsymptoticBound("Currently handling:");
         debugAsymptoticBound(currentLP);
         debugAsymptoticBound("");
@@ -511,7 +511,7 @@ bool AsymptoticBound::solveLimitProblem() {
         debugAsymptoticBound("I don't know how to continue, throwing away");
     }
 
-    if (limitProblems.empty() || Timeout::hard()) {
+    if (limitProblems.empty() || isTimeout()) {
         return !solvedLimitProblems.empty();
 
     } else {
@@ -1179,6 +1179,7 @@ bool AsymptoticBound::trySmtEncoding() {
         // try to find a witness for polynomial complexity with degree maxDeg,...,1
         map<int, Expression> coefficients = getCoefficients(templateCost, n);
         for (int i = maxDeg; i > 0; i--) {
+            if (isTimeout()) return false;
             Expression c = coefficients.find(i)->second;
             // remember the current state for backtracking
             solver.push();
@@ -1212,6 +1213,10 @@ bool AsymptoticBound::trySmtEncoding() {
     return true;
 }
 
+
+bool AsymptoticBound::isTimeout() const {
+    return finalCheck ? Timeout::hard() : Timeout::soft();
+}
 
 
 InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
