@@ -74,6 +74,7 @@ namespace Config {
     // Acceleration with metering functions
     namespace ForwardAccel {
         extern bool AllowRealCoeffs;
+        extern bool AllowLinearization;
         extern bool ConditionalMetering;
         extern bool TempVarInstantiation;
         extern bool ConflictVarHeuristic;

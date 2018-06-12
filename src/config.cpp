@@ -97,6 +97,11 @@ namespace Config {
         // care of rational coefficients since we want that all guard constraints map to int.
         bool AllowRealCoeffs = true;
 
+        // Whether to perform linearization if the guard/update has nonlinear arithmetic.
+        // This can help to still infer a linear metering function (linear in the substituted variables).
+        // Disabling is mostly relevant for benchmarking (this is not described in the paper) and for debugging.
+        bool AllowLinearization = true;
+
         // Whether to allow conditional metering functions.
         // Note that we always allow to reduce the guard (drop constraints irrelevant for termination).
         // The only difference if this is enabled is that we add the irrelevent guard to the lhs

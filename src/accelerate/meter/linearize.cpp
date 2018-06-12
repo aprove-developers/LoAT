@@ -244,6 +244,12 @@ optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardLis
         return GiNaC::exmap(); // empty substitution
     }
 
+    // Check if we are allowed to perform substitutions
+    if (!Config::ForwardAccel::AllowLinearization) {
+        debugLinearize("Linearization is needed but disabled");
+        return {};
+    }
+
     // Check if it is safe to replace all nonlinear terms
     if (!lin.checkForConflicts(monomials)) {
         debugLinearize("Cannot linearize due to conflicts");

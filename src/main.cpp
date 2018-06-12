@@ -67,12 +67,13 @@ void setupConfig(bool conditionalMeter, bool backAccel, bool recursion, bool lim
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        cout << "Usage: " << argv[0] << " --bench a/b/c/d/e/f --timeout N <file>";
+        cout << "Usage: " << argv[0] << " --bench a/b/c/d/e/f --timeout N [--paper] <file>";
         return 1;
     }
 
     int timeout;
     char benchmode;
+    bool disableHeuristics = false;
     string filename;
 
     // ### Parse command line flags ###
@@ -81,6 +82,8 @@ int main(int argc, char *argv[]) {
         if (strcmp("--timeout",argv[arg]) == 0) {
             assert(arg < argc-1);
             timeout = atoi(argv[++arg]);
+        } else if (strcmp("--paper",argv[arg]) == 0) {
+            disableHeuristics = true;
         } else if (strcmp("--bench",argv[arg]) == 0) {
             assert(arg < argc-1);
             assert(strlen(argv[arg+1]) == 1);
@@ -117,6 +120,12 @@ int main(int argc, char *argv[]) {
         case 'e': setupConfig(false, false, false, true); break;
         case 'f': setupConfig(true,  true,  true,  true); break;
         default: cout << "Unknown benchmark setting" << endl; return 1;
+    }
+
+    if (disableHeuristics) {
+        Config::ForwardAccel::AllowLinearization = false;
+        Config::ForwardAccel::ConflictVarHeuristic = false;
+        Config::ForwardAccel::ConstantUpdateHeuristic = false;
     }
 
     Timeout::setTimeouts(timeout);
