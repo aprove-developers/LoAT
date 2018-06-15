@@ -265,7 +265,7 @@ bool Analysis::ensureNonnegativeCosts() {
 
     for (TransIdx trans : its.getAllTransitions()) {
         Rule &rule = its.getRuleMut(trans);
-        Expression costConstraint = rule.getCost() > 0;
+        Expression costConstraint = rule.getCost() >= 0;
 
         // Only add the constraint if it not implied
         if (Relation::isTriviallyTrue(costConstraint)) continue;
