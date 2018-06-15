@@ -61,9 +61,8 @@ private:
     bool isSmtApplicable();
     bool trySmtEncoding();
 
-    //if the guard is linear, transforms the LP into a SMT query and runs Z3
-    //if a solution is found, the complexity is set, otherwise z3::unknown or z3::unsat is returned.
-    z3::check_result solveByInitialSmtEncoding();
+    //check Timeout::soft or Timeout::hard, depending on finalCheck
+    bool isTimeout() const;
 
 private:
     const VariableManager &varMan;
@@ -90,11 +89,12 @@ public:
     /**
      * Analyzes the given guard and cost.
      * @param varMan the VariableManager instance is needed to get information about free variables
-     * @param finalCheck enables more sophisticated backtracking
+     * @param finalCheck enables more sophisticated backtracking and uses Timeout::hard
      */
     static InfiniteInstances::Result determineComplexity(const VarMan &varMan,
                                                          const GuardList &guard,
-                                                         const Expression &cost, bool finalCheck);
+                                                         const Expression &cost,
+                                                         bool finalCheck);
 };
 
 #endif //ASYMPTOTICBOUND_H
