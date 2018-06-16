@@ -157,9 +157,8 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         return res; // either successful or there is no point in applying heuristics
     }
 
-#ifdef METER_HEURISTIC_CONFLICTVAR
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
-    if (conflictVar) {
+    if (Config::ForwardAccel::ConflictVarHeuristic && conflictVar) {
         ExprSymbol A = varMan.getGinacSymbol(conflictVar->first);
         ExprSymbol B = varMan.getGinacSymbol(conflictVar->second);
         Rule newRule = rule;
@@ -189,11 +188,9 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
             return res;
         }
     }
-#endif
 
-#ifdef METER_HEURISTIC_CONSTANT_UPDATE
     // Guard strengthening heuristic (helps in the presence of constant updates like x := 5 or x := free).
-    {
+    if (Config::ForwardAccel::ConstantUpdateHeuristic) {
         Rule newRule = rule;
         debugAccel("Trying guard strengthening for rule: " << newRule);
 
@@ -207,7 +204,6 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
             }
         }
     }
-#endif
 
     assert(res.result == NoMetering && res.rules.empty());
     return res;

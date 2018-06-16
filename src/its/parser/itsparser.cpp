@@ -31,8 +31,8 @@ using namespace boost::algorithm;
 using boost::optional;
 
 
-ITSProblem ITSParser::loadFromFile(const string &filename, Settings cfg) {
-    ITSParser parser(cfg);
+ITSProblem ITSParser::loadFromFile(const string &filename) {
+    ITSParser parser;
     return parser.load(filename);
 }
 
@@ -110,7 +110,7 @@ void ITSParser::parseFile(ifstream &file) {
                 }
 
                 // At this point, we know all variables and can thus initialize the term parser
-                termParser = std::unique_ptr<TermParser>(new TermParser(knownVariables, settings.allowDivison));
+                termParser = std::unique_ptr<TermParser>(new TermParser(knownVariables, Config::Parser::AllowDivision));
                 in_rules = true;
 
             } else if (line.back() != ')') {
@@ -429,12 +429,6 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
 
     for (const Relation &rel : rule.guard) {
         lhs.getGuardMut().push_back(rel.toGinacExpression(itsProblem));
-    }
-
-    // Ensure user given costs are non-negative
-    // TODO: Don't do this here!
-    if (settings.ensureNonnegativeCosts && rule.cost) {
-        lhs.getGuardMut().push_back(lhs.getCost() >= 0);
     }
 
     // Convert rhs, compute update

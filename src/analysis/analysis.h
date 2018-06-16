@@ -53,31 +53,10 @@ struct RuntimeResult {
  */
 class Analysis {
 public:
-    struct AnalysisSettings {
-        // Perform expensive preprocessing before the analysis?
-        bool doPreprocessing = true;
-
-        // Try to remove "cost >= 0" terms from the guard during preprocessing?
-        bool eliminateCostConstraints = true;
-
-        // Print the fully simplified ITS in KoAT syntax (i.e., LoAT's input syntax)?
-        bool printSimplifiedAsKoAT = false;
-
-        // Whether to print the ITS grap as dot output after each step
-        bool dotOutput = false;
-
-        // The stream to print dot output to (only used if dotOutput is true)
-        std::ostream &dotStream;
-
-        // FIXME: dummy constructor to make it compile
-        AnalysisSettings(std::ostream &dotStream) : dotStream(dotStream) {}
-    };
-
-    static RuntimeResult analyze(ITSProblem &its, AnalysisSettings cfg);
-
+    static RuntimeResult analyze(ITSProblem &its);
 
 private:
-    Analysis(ITSProblem &its, AnalysisSettings cfg);
+    explicit Analysis(ITSProblem &its);
 
     /**
      * Main analysis algorithm.
@@ -85,6 +64,13 @@ private:
      */
     RuntimeResult run();
 
+    /**
+     * Makes sure that the cost of a rule is always nonnegative when the rule is applicable
+     * by adding "cost >= 0" to each rule's guard (unless this is trivially true).
+     * @note Does not check if "cost >= 0" is implied by the guard (should be covered by preprocessing)
+     * @return true iff any rule was modified.
+     */
+    bool ensureNonnegativeCosts();
 
     /**
      * Makes sure the initial location has no incoming rules (by adding a new one, if required).
@@ -149,7 +135,6 @@ private:
 
 private:
     ITSProblem &its;
-    AnalysisSettings cfg;
 
     // Counts how many graphs have already been written to the dot export (they have to be numbered)
     uint dotCounter = 0;

@@ -72,9 +72,11 @@ bool Accelerator::simplifySimpleLoops() {
 
     // Simplify all all simple loops.
     // This is especially useful to eliminate temporary variables before metering.
-    for (TransIdx loop : loops) {
-        res |= Preprocess::simplifyRule(its, its.getRuleMut(loop));
-        if (Timeout::soft()) return res;
+    if (Config::Accel::SimplifyRulesBefore) {
+        for (TransIdx loop : loops) {
+            res |= Preprocess::simplifyRule(its, its.getRuleMut(loop));
+            if (Timeout::soft()) return res;
+        }
     }
 
     // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
@@ -257,12 +259,14 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Try backward acceleration only if forward acceleration failed,
     // or if it only succeeded by restricting the guard. In this case,
     // we keep the rules from forward and just add the ones from backward acceleration.
-    if (res.result != Forward::Success && rule.isLinear()) {
-        auto optRules = Backward::accelerate(its, rule.toLinear());
-        if (optRules) {
-            res.result = Forward::Success;
-            for (LinearRule rule : optRules.get()) {
-                res.rules.emplace_back("backward acceleration", rule);
+    if (Config::Accel::UseBackwardAccel) {
+        if (res.result != Forward::Success && rule.isLinear()) {
+            auto optRules = Backward::accelerate(its, rule.toLinear());
+            if (optRules) {
+                res.result = Forward::Success;
+                for (LinearRule rule : optRules.get()) {
+                    res.rules.emplace_back("backward acceleration", rule);
+                }
             }
         }
     }
@@ -274,9 +278,14 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
 Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     using namespace Forward;
 
-    // Try to accelerate the rule and stop if we are successful
+    // Accelerate the original rule
     auto res = tryAccelerate(rule);
-    if (rule.isLinear() || res.result == Success || res.result == SuccessWithRestriction) {
+
+    // Stop if heuristic is not applicable or acceleration was already successful
+    if (!Config::Accel::PartialDeletionHeuristic || rule.isLinear()) {
+        return res;
+    }
+    if (res.result == Success || res.result == SuccessWithRestriction) {
         return res;
     }
 
@@ -417,8 +426,10 @@ void Accelerator::run() {
     }
 
     // Nesting
-    performNesting(std::move(innerCandidates), std::move(outerCandidates));
-    if (Timeout::soft()) return;
+    if (Config::Accel::TryNesting) {
+        performNesting(std::move(innerCandidates), std::move(outerCandidates));
+        if (Timeout::soft()) return;
+    }
 
     // TODO: Do we also want to chain accelerated rules with themselves?
     // TODO: We could do this if the number of accelerated rules is below a certain threshold

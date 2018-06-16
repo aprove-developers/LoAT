@@ -1,21 +1,7 @@
 #include "export.h"
 
 using namespace std;
-
-
-#ifdef COLORS_ITS_EXPORT
-    #define COLOR_LOCATION "\033[0;34m" // bold blue
-    #define COLOR_UPDATE "\033[0;36m" // cyan
-    #define COLOR_GUARD "\033[0;32m" // green
-    #define COLOR_COST "\033[0;33m" // yellow
-    #define COLOR_NONE "\033[0m" // reset color to default
-#else
-    #define COLOR_LOCATION ""
-    #define COLOR_UPDATE ""
-    #define COLOR_GUARD ""
-    #define COLOR_COST ""
-    #define COLOR_NONE ""
-#endif
+namespace Color = Config::Color;
 
 
 // collects all variables appearing in the given rule
@@ -44,12 +30,21 @@ static void collectBoundVariables(const Rule &rule, const VarMan &varMan, ExprSy
 
 
 /**
+ * Helper to display colors only if colored export is enabled.
+ */
+static void printColor(ostream &os, const std::string &s) {
+    if (Config::Output::ColorsInITS) {
+        os << s;
+    }
+}
+
+/**
  * Helper that prints the location's name or (if it has no name) its index to the given stream
  */
 static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &s) {
-    s << COLOR_LOCATION;
+    printColor(s, Color::Location);
     s << its.getPrintableLocationName(loc);
-    s << COLOR_NONE;
+    printColor(s, Color::None);
 }
 
 /**
@@ -64,10 +59,10 @@ static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, 
         s << " : ";
 
         for (auto upit : it->getUpdate()) {
-            if (colors) s << COLOR_UPDATE;
+            if (colors) printColor(s, Color::Update);
             s << its.getVarName(upit.first) << "'";
             s << "=" << upit.second;
-            if (colors) s << COLOR_NONE;
+            if (colors) printColor(s, Color::None);
             s << ", ";
         }
     }
@@ -78,16 +73,16 @@ static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, 
         s << "[ ";
         for (int i=0; i < rule.getGuard().size(); ++i) {
             if (i > 0) s << " && ";
-            if (colors) s << COLOR_GUARD;
+            if (colors) printColor(s, Color::Guard);
             s << rule.getGuard().at(i);
-            if (colors) s << COLOR_NONE;
+            if (colors) printColor(s, Color::None);
         }
         s << " ]";
     }
     s << ", cost: ";
-    if (colors) s << COLOR_COST;
+    if (colors) printColor(s, Color::Cost);
     s << rule.getCost();
-    if (colors) s << COLOR_NONE;
+    if (colors) printColor(s, Color::None);
     s << endl;
 }
 

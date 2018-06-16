@@ -76,14 +76,14 @@ namespace Chaining {
      * with their predecessors (if possible), unless the predecessor is itself an accelerated rule or self-loop.
      * All rules of the given vector are removed afterwards.
      *
-     * The incoming rules (predecessors) which are successfully chained are
-     * removed if removeIncoming is true, otherwise they are kept.
+     * The incoming rules (predecessors) which are successfully chained may be removed,
+     * depending on the KeepIncomingInChainAccelerated configuration.
      *
      * Should be called directly after acceleration.
      *
      * @return true iff the ITS was modified, which is the case iff acceleratedRules was non-empty.
      */
-    bool chainAcceleratedRules(ITSProblem &its, const std::set<TransIdx> &acceleratedRules, bool removeIncoming);
+    bool chainAcceleratedRules(ITSProblem &its, const std::set<TransIdx> &acceleratedRules);
 
 };
 

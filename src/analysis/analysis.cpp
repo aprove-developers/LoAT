@@ -17,6 +17,7 @@
 
 #include "analysis.h"
 
+#include "expr/relation.h"
 #include "z3/z3toolbox.h"
 #include "asymptotic/asymptoticbound.h"
 
@@ -41,14 +42,14 @@ using namespace std;
 
 
 
-RuntimeResult Analysis::analyze(ITSProblem &its, AnalysisSettings cfg) {
-    Analysis analysis(its, cfg);
+RuntimeResult Analysis::analyze(ITSProblem &its) {
+    Analysis analysis(its);
     return analysis.run();
 }
 
 
-Analysis::Analysis(ITSProblem &its, AnalysisSettings cfg)
-        : its(its), cfg(cfg) {}
+Analysis::Analysis(ITSProblem &its)
+        : its(its) {}
 
 
 // ##############################
@@ -56,16 +57,19 @@ Analysis::Analysis(ITSProblem &its, AnalysisSettings cfg)
 // ##############################
 
 RuntimeResult Analysis::run() {
-    if (cfg.dotOutput) {
-        cfg.dotStream << "digraph {" << endl;
-    }
+    // TODO: Re-implement dot configuration
+    // dotStream << "digraph {" << endl;
+    assert(!Config::Output::DotFile);
+
 
     proofout.section("Pre-processing the ITS problem");
     proofout.headline("Initial linear ITS problem");
     printForProof("Initial");
 
-    // TODO: Add the "cost >= 0" terms here, this is not something the parser should do!
-    // TODO: But only add if it is not already implied (this is much better than the hacky removeal of the last guard element)
+    if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
+        proofout.headline("Added constraints to the guards to ensure costs are nonnegative:");
+        printForProof("Costs >= 0");
+    }
 
     if (ensureProperInitialLocation()) {
         proofout.headline("Added a fresh start location (such that it has no incoming rules):");
@@ -77,8 +81,8 @@ RuntimeResult Analysis::run() {
     bool acceleratedOnce = false; // whether we did at least one acceleration step
     bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
-    if (cfg.doPreprocessing) {
-        Timing::Scope _timer(Timing::Preprocess);
+    if (Config::Analysis::Preprocessing) {
+        Timing::Scope timer(Timing::Preprocess);
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
             proofout.headline("Removed unreachable and leaf rules:");
@@ -187,9 +191,7 @@ RuntimeResult Analysis::run() {
     }
 
     if (Timeout::soft()) {
-        proofout << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "Aborted due to lack of remaining time" << endl << endl;
+        proofout.warning("Aborted due to lack of remaining time");
     }
 
     if (isFullySimplified()) {
@@ -197,7 +199,7 @@ RuntimeResult Analysis::run() {
         Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false);
     }
 
-    if (cfg.printSimplifiedAsKoAT) {
+    if (Config::Output::ExportSimplified) {
         proofout.headline("Fully simplified program in input format:");
         ITSExport::printKoAT(its, proofout);
         proofout << endl;
@@ -210,8 +212,7 @@ RuntimeResult Analysis::run() {
     if (!isFullySimplified()) {
         // A timeout occurred before we managed to complete the analysis.
         // We try to quickly extract at least some complexity results.
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "This is only a partial result (probably due to a timeout)." << endl;
+        proofout.warning("This is only a partial result (probably due to a timeout).");
         proofout << "Trying to find the maximal complexity that has already been derived." << endl;
 
         // Reduce the number of rules to avoid z3 invocations
@@ -234,10 +235,11 @@ RuntimeResult Analysis::run() {
         runtime.guard.clear();
     }
 
-    if (cfg.dotOutput) {
-        LinearITSExport::printDotText(++dotCounter, runtime.cpx.toString(), cfg.dotStream);
-        cfg.dotStream << "}" << endl;
-    }
+    // TODO: re-implement dot output
+//    if (cfg.dotOutput) {
+//        LinearITSExport::printDotText(++dotCounter, runtime.cpx.toString(), cfg.dotStream);
+//        cfg.dotStream << "}" << endl;
+//    }
 
     return runtime;
 }
@@ -255,6 +257,23 @@ bool Analysis::ensureProperInitialLocation() {
         return true;
     }
     return false;
+}
+
+
+bool Analysis::ensureNonnegativeCosts() {
+    bool changed = false;
+
+    for (TransIdx trans : its.getAllTransitions()) {
+        Rule &rule = its.getRuleMut(trans);
+
+        // Add the constraint unless it is trivial (e.g. if the cost is 1).
+        Expression costConstraint = rule.getCost() >= 0;
+        if (Relation::isTriviallyTrue(costConstraint)) continue;
+
+        rule.getGuardMut().push_back(costConstraint);
+        changed = true;
+    }
+    return changed;
 }
 
 
@@ -282,9 +301,6 @@ bool Analysis::preprocessRules() {
         if (Timeout::preprocessing()) return changed;
 
         Rule &rule = its.getRuleMut(idx);
-        if (cfg.eliminateCostConstraints) {
-            changed = Preprocess::tryToRemoveCost(rule.getGuardMut()) || changed;
-        }
         changed = Preprocess::preprocessRule(its, rule) || changed;
     }
 
@@ -316,10 +332,10 @@ void Analysis::printForProof(const std::string &dotDescription) {
     ITSExport::printForProof(its, proofout);
     proofout.decreaseIndention();
 
-    // dot output
-    if (its.isLinear()) { // TODO: Replace this check by a proper configuration upon construction
-        LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, cfg.dotStream);
-    }
+    // TODO: re-implement dot output
+//    if (Config::Output::DotOutput) {
+//        LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, cfg.dotStream);
+//    }
 }
 
 
@@ -347,8 +363,7 @@ bool Analysis::eliminateALocation(string &eliminatedLocation) {
 
 bool Analysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
     Stats::addStep("Linear::chainAcceleratedLoops");
-    // TODO: Check if we can pass false (so we keep incoming edges)
-    return Chaining::chainAcceleratedRules(its, acceleratedRules, false);
+    return Chaining::chainAcceleratedRules(its, acceleratedRules);
 }
 
 
@@ -403,10 +418,10 @@ bool Analysis::pruneRules() {
     bool changed = Pruning::removeLeafsAndUnreachable(its);
 
     // Prune parallel transitions if enabled
-#ifdef PRUNING_ENABLE
-    Stats::addStep("Linear::pruneRules");
-    changed = Pruning::pruneParallelRules(its) || changed;
-#endif
+    if (Config::Analysis::Pruning) {
+        Stats::addStep("Linear::pruneRules");
+        changed = Pruning::pruneParallelRules(its) || changed;
+    }
 
     return changed;
 }
@@ -440,11 +455,10 @@ RuntimeResult Analysis::getMaxRuntime() {
     auto rules = its.getTransitionsFrom(its.getInitialLocation());
     auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); };
 
-#ifndef FINAL_INFINITY_CHECK
-    proofout.setLineStyle(ProofOutput::Warning);
-    proofout << "WARNING: The asymptotic check is disabled, the result might be unsound!" << endl << endl;
-    return getMaxComplexity(its, rules);
-#endif
+    if (!Config::Analysis::AsymptoticCheck) {
+        proofout.warning("WARNING: The asymptotic check is disabled, the result might be unsound!");
+        return getMaxComplexity(its, rules);
+    }
 
     RuntimeResult res;
     for (TransIdx ruleIdx : rules) {

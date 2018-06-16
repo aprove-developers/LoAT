@@ -213,7 +213,7 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
     auto bounds = computeUpperbounds(N, rule.getGuard());
 
     // avoid rule explosion (by not instantiating N if there are too many bounds)
-    if (!bounds || bounds.get().size() > BACKWARD_ACCEL_MAXBOUNDS) {
+    if (!bounds || bounds.get().size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
         return {rule};
     }
 
@@ -266,9 +266,14 @@ optional<vector<LinearRule>> BackwardAcceleration::run() {
         return {};
     }
 
-    // compute the resulting rule and try to simplify it by instantiating N
+    // compute the resulting rule and try to simplify it by instantiating N (if enabled)
     LinearRule accelerated = buildAcceleratedRule(iteratedUpdate, iteratedCost, N);
-    return replaceByUpperbounds(N, accelerated);
+    if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
+        return replaceByUpperbounds(N, accelerated);
+    } else {
+        vector<LinearRule> res = {accelerated};
+        return res;
+    }
 }
 
 
