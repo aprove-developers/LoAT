@@ -1,17 +1,7 @@
 #include "global.h"
 
-bool GlobalFlags::limitSmt = false;
+#include <iostream>
 
-#ifndef PROOF_OUTPUT_ENABLE
-    std::ostream DummyStream::dummy(0);
-    ProofOutput GlobalVariables::proofOutput(DummyStream::dummy, false);
-#else
-    #ifdef COLORS_PROOF
-        ProofOutput GlobalVariables::proofOutput(std::cout, true);
-    #else
-        ProofOutput GlobalVariables::proofOutput(std::cout, false);
-    #endif
-#endif
-
+ProofOutput GlobalVariables::proofOutput(std::cout);
 
 
