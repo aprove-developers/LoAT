@@ -72,6 +72,12 @@ private:
     bool collectMonomialsInUpdates(ExpressionSet &monomials) const;
 
     /**
+     * Checks if any substitutions need to be performed,
+     * i.e., if there is any nonlinear monomial in the given set.
+     */
+    bool needsLinearization(const ExpressionSet &monomials) const;
+
+    /**
      * Checks if it is safe to replace all nonlinear monomials of the given set.
      * This is the case if each variable occurs in at most one monomial,
      * and if no term contains an updated variable.

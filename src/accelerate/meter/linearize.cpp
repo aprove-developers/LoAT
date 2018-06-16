@@ -118,12 +118,19 @@ bool Linearize::collectMonomialsInUpdates(ExpressionSet &monomials) const {
 }
 
 
+bool Linearize::needsLinearization(const ExpressionSet &monomials) const {
+    auto isNonlinear = [](const Expression &term) { return !term.isLinear(); };
+    return std::any_of(monomials.begin(), monomials.end(), isNonlinear);
+}
+
+
 bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
     ExprSymbolSet vars;
     for (const Expression &term : monomials) {
         for (ExprSymbol var : term.getVariables()) {
             // If we already know this variable, we have a conflict,
-            // since we cannot replace a variable in two different ways.
+            // since we cannot replace a variable in two different ways
+            // (or replace a variable which also occurs linearly).
             if (vars.count(var) > 0) {
                 return false;
             }
@@ -233,7 +240,7 @@ optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardLis
     }
 
     // If everything is linear, there is nothing to do
-    if (monomials.empty()) {
+    if (!lin.needsLinearization(monomials)) {
         debugLinearize("Everything is linear, nothing to do");
         return GiNaC::exmap(); // empty substitution
     }
