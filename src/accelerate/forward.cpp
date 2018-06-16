@@ -33,7 +33,31 @@ using ForwardAcceleration::MeteredRule;
 
 
 /**
- * Helper function that searches for a metering function and, if successful,
+ * Helper function that searches for a metering function and,
+ * if not successful, tries to instantiate temporary variables.
+ */
+static MeteringFinder::Result meterWithInstantiation(VarMan &varMan, Rule &rule) {
+    // Searching for metering functions works the same for linear and nonlinear rules
+    MeteringFinder::Result meter = MeteringFinder::generate(varMan, rule);
+
+    // If we fail, try again after instantiating temporary variables
+    // (we always want to try this heuristic, since it is often applicable)
+    if (Config::ForwardAccel::TempVarInstantiation) {
+        if (meter.result == MeteringFinder::Unsat || meter.result == MeteringFinder::ConflictVar) {
+            Rule instantiatedRule = rule;
+            if (MeteringFinder::instantiateTempVarsHeuristic(varMan, instantiatedRule)) {
+                meter = MeteringFinder::generate(varMan, instantiatedRule);
+                rule = instantiatedRule;
+            }
+        }
+    }
+
+    return meter;
+}
+
+
+/**
+ * Helper function that calls meterWithInstantiation and, if successful,
  * tries to compute the iterated cost and update (for linear rules) or tries
  * to approximate the iterated cost (for nonlinear rules).
  *
@@ -46,23 +70,24 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
     Result res;
     proofout.increaseIndention();
 
-    // We require that the cost is at least 1 in every single iteration of the loop.
-    // For linear rules, this is only required for non-termination.
+    // We may require that the cost is at least 1 in every single iteration of the loop.
+    // For linear rules, this is only required for non-termination (see special case below).
     // For nonlinear rules, we lower bound the costs by 1 for the iterated cost, so we always require this.
     // Note that we have to add this before searching for a metering function, since it has to hold in every step.
-    rule.getGuardMut().push_back(rule.getCost() >= 1);
+    if (!rule.isLinear()) {
+        rule.getGuardMut().push_back(rule.getCost() >= 1);
+    }
 
-    // Searching for metering functions works the same for linear and nonlinear rules
-    MeteringFinder::Result meter = MeteringFinder::generate(varMan, rule);
+    // Try to find a metering function
+    MeteringFinder::Result meter = meterWithInstantiation(varMan, rule);
 
-    // If we fail, try again after instantiating temporary variables
-    // (we always want to try this heuristic, since it is often applicable)
-    if (meter.result == MeteringFinder::Unsat || meter.result == MeteringFinder::ConflictVar) {
-        Rule instantiatedRule = rule;
-        if (MeteringFinder::instantiateTempVarsHeuristic(varMan, instantiatedRule)) {
-            meter = MeteringFinder::generate(varMan, instantiatedRule);
-            rule = instantiatedRule;
-        }
+    // In case of nontermination, we have to ensure that the costs are at least 1 in every step.
+    // The reason is that an infinite iteration of a rule with cost 0 is not considered nontermination.
+    // Since always adding "cost >= 1" may complicate the rule (if cost is nonlinear), we instead meter again.
+    // (Note that instantiation has already been performed, but this is probably not a big issue at this point)
+    if (meter.result == MeteringFinder::Unbounded && rule.isLinear()) {
+        rule.getGuardMut().push_back(rule.getCost() >= 1);
+        meter = meterWithInstantiation(varMan, rule);
     }
     proofout.decreaseIndention();
 
