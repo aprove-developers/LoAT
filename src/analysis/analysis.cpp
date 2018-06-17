@@ -527,7 +527,7 @@ RuntimeResult Analysis::getMaxRuntime() {
         if (checkRes.cpx > res.cpx) {
             proofout << endl;
             proofout.setLineStyle(ProofOutput::Result);
-            proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl;
+            proofout << "Found new complexity " << checkRes.cpx << " (" << checkRes.reason << ")." << endl;
 
             res.cpx = checkRes.cpx;
             res.bound = checkRes.cost;
@@ -539,7 +539,6 @@ RuntimeResult Analysis::getMaxRuntime() {
             }
         }
 
-        proofout << endl;
         if (Timeout::hard()) break;
     }
 
@@ -638,7 +637,7 @@ RuntimeResult Analysis::getMaxPartialResult() {
             if (checkRes.cpx > res.cpx) {
                 proofout << endl;
                 proofout.setLineStyle(ProofOutput::Result);
-                proofout << "Found new complexity " << checkRes.cpx << ", because: " << checkRes.reason << "." << endl;
+                proofout << "Found new complexity " << checkRes.cpx << " (" << checkRes.reason << ")." << endl;
 
                 res.cpx = checkRes.cpx;
                 res.bound = checkRes.cost;

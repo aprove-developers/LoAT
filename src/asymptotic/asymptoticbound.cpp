@@ -1235,22 +1235,14 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
 
     Expression expandedCost = cost.expand();
 
-    // TODO: Simplify this check by only using isInfSymbol (and otherwise asserting that InfSymbol does not occur),
-    // TODO: See Expression::isInfSymbol for the explanation.
-    //if cost contains infty, check if coefficient > 0 is SAT, otherwise remove infty symbol
-    if (expandedCost.has(Expression::InfSymbol)) {
-        Expression inftyCoeff = expandedCost.coeff(Expression::InfSymbol);
-
-        GuardList query = guard;
-        query.push_back(inftyCoeff > 0);
-
-        if (Z3Toolbox::checkAll(query) == z3::sat) {
-            return InfiniteInstances::Result(Complexity::Nonterm, false,
-                                             Expression::InfSymbol, 0, "NONTERM (INF coeff > 0 by SMT)");
-        }
-
-        return InfiniteInstances::Result(Complexity::Unknown, "The cost contains infinity");
+    if (cost.isInfSymbol()) {
+        return InfiniteInstances::Result(Complexity::Nonterm, false,
+                                         Expression::InfSymbol, 0, "cost is INF");
     }
+    assert(!expandedCost.has(Expression::InfSymbol));
+
+    // Only enable proof output for the final check (we don't want proof output when pruning)
+    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
 
     // TODO: Use expandedCost here?!
     AsymptoticBound asymptoticBound(varMan, guard, cost, finalCheck);
@@ -1272,20 +1264,24 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
             proofout << pair.first << " / " << pair.second << std::endl;
         }
         proofout.decreaseIndention();
+        proofout.setEnabled(wasProofEnabled);
 
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
                 asymptoticBound.bestComplexity.upperBound > 1,
                 solvedCost.expand(),
                 asymptoticBound.bestComplexity.inftyVars,
-                "Solved the initial limit problem");
+                "solved the initial limit problem");
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem");
+
+        proofout << "Could not solve the limit problem." << endl;
+        proofout.setEnabled(wasProofEnabled);
 
         return InfiniteInstances::Result(Complexity::Unknown,
                 false,
                 numeric(0),
                 cost.getVariables().size(),
-                "Could not solve the initial limit problem");
+                "could not solve the initial limit problem");
     }
 }
