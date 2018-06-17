@@ -33,10 +33,10 @@ namespace Config {
 
     namespace Output {
         // Whether to enable colors in the proof output
-        bool Colors = false;
+        bool Colors = true;
 
         // Whether to use colors in ITSExport (to distinguish guard/update/cost)
-        bool ColorsInITS = false;
+        bool ColorsInITS = true;
 
         // Whether to include timestamps in every line of the proof output
         bool Timestamps = false; // TODO: set to false when done
@@ -224,13 +224,17 @@ namespace Config {
     }
 }
 
+#define GetColor(a) ((Config::Output::Colors) ? (Config::Color::a) : "")
+
 #define PrintCfg(a,b) \
     os << #a << " = " << a; \
-    if (withDescription) os << "  // " << b; \
+    if (withDescription) os << GetColor(Debug) << "  // " << b << GetColor(None); \
     os << endl
 
 void Config::printConfig(ostream &os, bool withDescription) {
-    auto startSection = [&](const string &s) { os << endl << "## " << s << " ##" << endl; };
+    auto startSection = [&](const string &s) {
+        os << endl << GetColor(Headline) << "## " << s << " ##" << GetColor(None) << endl;
+    };
 
     os << "LoAT Configuration" << endl;
 
