@@ -41,21 +41,21 @@ static void printColor(ostream &os, const std::string &s) {
 /**
  * Helper that prints the location's name or (if it has no name) its index to the given stream
  */
-static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &s) {
-    printColor(s, Color::Location);
+static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &s, bool colors) {
+    if (colors) printColor(s, Color::Location);
     s << its.getPrintableLocationName(loc);
-    printColor(s, Color::None);
+    if (colors) printColor(s, Color::None);
 }
 
 /**
  * Helper that prints an entire rule in a human-readable format
  */
 static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, bool colors) {
-    printLocation(rule.getLhsLoc(), its, s);
+    printLocation(rule.getLhsLoc(), its, s, colors);
     s << " -> ";
 
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
-        printLocation(it->getLoc(), its, s);
+        printLocation(it->getLoc(), its, s, colors);
         s << " : ";
 
         for (auto upit : it->getUpdate()) {
@@ -127,7 +127,7 @@ void ITSExport::printDebug(const ITSProblem &its, std::ostream &s) {
 
 void ITSExport::printForProof(const ITSProblem &its, std::ostream &s) {
     s << "Start location: ";
-    printLocation(its.getInitialLocation(), its, s);
+    printLocation(its.getInitialLocation(), its, s, true);
     s << endl;
 
     if (its.isEmpty()) {
@@ -240,7 +240,7 @@ void LinearITSExport::printDotSubgraph(const ITSProblem &its, int step, const st
     s << "sortv=" << step << ";" << endl;
     s << "label=\"" << step << ": " << desc << "\";" << endl;
     for (LocationIdx n : its.getLocations()) {
-        printNode(n); s << " [label=\""; printLocation(n, its, s); s << "\"];" << endl;
+        printNode(n); s << " [label=\""; printLocation(n, its, s, false); s << "\"];" << endl;
     }
     for (LocationIdx n : its.getLocations()) {
         for (LocationIdx succ : its.getSuccessorLocations(n)) {

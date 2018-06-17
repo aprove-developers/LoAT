@@ -57,10 +57,7 @@ Analysis::Analysis(ITSProblem &its)
 // ##############################
 
 RuntimeResult Analysis::run() {
-    // TODO: Re-implement dot configuration
-    // dotStream << "digraph {" << endl;
-    assert(!Config::Output::DotFile);
-
+    setupDotOutput();
 
     proofout.section("Pre-processing the ITS problem");
     proofout.headline("Initial linear ITS problem");
@@ -235,11 +232,7 @@ RuntimeResult Analysis::run() {
         runtime.guard.clear();
     }
 
-    // TODO: re-implement dot output
-//    if (cfg.dotOutput) {
-//        LinearITSExport::printDotText(++dotCounter, runtime.cpx.toString(), cfg.dotStream);
-//        cfg.dotStream << "}" << endl;
-//    }
+    finalizeDotOutput(runtime);
 
     return runtime;
 }
@@ -332,10 +325,45 @@ void Analysis::printForProof(const std::string &dotDescription) {
     ITSExport::printForProof(its, proofout);
     proofout.decreaseIndention();
 
-    // TODO: re-implement dot output
-//    if (Config::Output::DotOutput) {
-//        LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, cfg.dotStream);
-//    }
+    if (dotStream.is_open()) {
+        LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, dotStream);
+    }
+}
+
+
+void Analysis::setupDotOutput() {
+    if (!Config::Output::DotFile) {
+        return;
+    }
+
+    if (!its.isLinear()) {
+        bool proofWasEnabled = proofout.setEnabled(true);
+        proofout.warning("Dot output is only applicable to non-recursive ITS problems, disabling.");
+        proofout.setEnabled(proofWasEnabled);
+        return;
+    }
+
+    string file = Config::Output::DotFile.get();
+    debugLinear("Trying to open dot output file: " << file);
+    dotStream.open(file);
+
+    if (!dotStream.is_open()) {
+        bool proofWasEnabled = proofout.setEnabled(true);
+        proofout.warning("Could not open file " + file + " for dot output, disabling.");
+        proofout.setEnabled(proofWasEnabled);
+        return;
+    }
+
+    dotStream << "digraph {" << endl;
+}
+
+
+void Analysis::finalizeDotOutput(const RuntimeResult &runtime) {
+    if (dotStream.is_open()) {
+        LinearITSExport::printDotText(++dotCounter, runtime.cpx.toString(), dotStream);
+        dotStream << "}" << endl;
+        dotStream.close();
+    }
 }
 
 

@@ -23,6 +23,8 @@
 #include "its/itsproblem.h"
 #include "expr/expression.h"
 
+#include <fstream>
+
 
 /**
  * Represents the final runtime complexity result,
@@ -133,11 +135,16 @@ private:
      */
     void printForProof(const std::string &dotDescription);
 
+    // Handling of dot export
+    void setupDotOutput();
+    void finalizeDotOutput(const RuntimeResult &runtime);
+
 private:
     ITSProblem &its;
 
     // Counts how many graphs have already been written to the dot export (they have to be numbered)
     uint dotCounter = 0;
+    std::ofstream dotStream;
 };
 
 #endif // LINEAR_H
