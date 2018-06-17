@@ -59,6 +59,11 @@ public:
         }
     }
 
+    bool setEnabled(bool on) {
+        std::swap(enabled, on);
+        return on;
+    }
+
     // print the given string before the next \n
     void printBeforeNewline(const std::string &s) {
         beforeNewline = s;
@@ -67,6 +72,10 @@ public:
 protected:
     // override printing to insert indention
     int overflow(int ch) override {
+        if (!enabled) {
+            return ch; // return "success"
+        }
+
         if (atStartOfLine && ch != '\n') {
             // possibly print timestamp
             if (Config::Output::Timestamps) {
@@ -105,6 +114,7 @@ private:
     std::ostream &src;
 
     // Internal state
+    bool enabled = true;
     bool atStartOfLine = true;
     std::string indention;
     std::string beforeNewline;
@@ -130,6 +140,10 @@ public:
 
     void decreaseIndention() {
         indenter.decreaseIndention();
+    }
+
+    bool setEnabled(bool on) {
+        return indenter.setEnabled(on);
     }
 
     // sets the current style, which is reset at the end of line
