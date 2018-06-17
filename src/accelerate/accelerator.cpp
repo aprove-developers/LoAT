@@ -449,6 +449,11 @@ void Accelerator::run() {
 
     // Remove old rules
     removeOldLoops(loops);
+
+    // Remove sink location if we did not need it
+    if (!its.hasTransitionsTo(sinkLoc)) {
+        its.removeOnlyLocation(sinkLoc);
+    }
 }
 
 
