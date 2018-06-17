@@ -40,7 +40,7 @@ namespace Config {
         extern bool Timestamps;
         extern option<std::string> DotFile;
         extern bool ExportSimplified;
-        extern bool ProofMeter;
+        extern bool ProofAccel;
         extern bool ProofChain;
         extern bool ProofLimit;
     }

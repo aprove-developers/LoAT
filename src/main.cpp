@@ -151,10 +151,9 @@ int main(int argc, char *argv[]) {
     parseFlags(argc, argv);
 
     // Proof output
-    Config::Output::ProofLimit = (proofLevel >= 1);
-    Config::Output::ProofMeter = (proofLevel >= 2);
+    Config::Output::ProofAccel = (proofLevel >= 1);
+    Config::Output::ProofLimit = (proofLevel >= 2);
     Config::Output::ProofChain = (proofLevel >= 3);
-    // TODO: Disable proof output on proof level 0
 
     // Benchmark and heuristic settings
     switch (benchmarkMode) {
@@ -180,22 +179,13 @@ int main(int argc, char *argv[]) {
         cout << endl;
     }
 
-    // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
-    if (Config::Parser::AllowDivision) {
-        cout << endl << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
-        cout << "Division is only sound if the result of a term is always an integer" << endl << endl;
-    }
-    if (!Config::Analysis::EnsureNonnegativeCosts) {
-        cout << endl << "WARNING: Not checking the costs can yield unsound results!" << endl;
-        cout << "This is only safe if costs in the input program are guaranteed to be nonnegative" << endl << endl;
-    }
-
     // Timeout
     if (timeout < 0 || (timeout > 0 && timeout < 10)) {
         cout << "Error: timeout must be at least 10 seconds" << endl;
         return 1;
     }
     Timeout::setTimeouts(timeout);
+    Timing::start(Timing::Total);
 
     // Start parsing
     if (filename.empty()) {
@@ -203,15 +193,33 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    Timing::start(Timing::Total);
-    cout << "Trying to load file: " << filename << endl;
-
     ITSProblem its;
     try {
         its = parser::ITSParser::loadFromFile(filename);
     } catch (const parser::ITSParser::FileError &err) {
-        cout << "Error: " << err.what() << endl;
+        cout << "Error loading file " << filename << ": " << err.what() << endl;
         return 1;
+    }
+
+    // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
+    if (Config::Parser::AllowDivision) {
+        proofout << endl;
+        proofout.setLineStyle(ProofOutput::Warning);
+        proofout << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
+        proofout.setLineStyle(ProofOutput::Warning);
+        proofout << "Division is only sound if the result of a term is always an integer." << endl;
+    }
+    if (!Config::Analysis::EnsureNonnegativeCosts) {
+        proofout << endl;
+        proofout.setLineStyle(ProofOutput::Warning);
+        proofout << "WARNING: Not checking the costs can yield unsound results!" << endl;
+        proofout.setLineStyle(ProofOutput::Warning);
+        proofout << "This is only safe if costs in the input program are guaranteed to be nonnegative." << endl;
+    }
+
+    // Disable proof output if requested (after issuing the warnings for unsound configuration)
+    if (proofLevel == 0) {
+        proofout.setEnabled(false);
     }
 
     // Start the analysis of the parsed ITS problem.
@@ -220,6 +228,7 @@ int main(int argc, char *argv[]) {
     if (allowRecursion || its.isLinear()) {
         runtime = Analysis::analyze(its);
     }
+    Timing::done(Timing::Total);
 
     // Final proof output (TODO: Move this to analysis)
     proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
@@ -245,6 +254,7 @@ int main(int argc, char *argv[]) {
     }
 
     // WST style proof output
+    proofout.setEnabled(true);
     if (runtime.cpx == Complexity::Nonterm) {
         proofout << endl << "NO" << endl;
     } else {

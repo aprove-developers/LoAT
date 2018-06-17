@@ -465,11 +465,13 @@ bool Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::s
     proofout.setLineStyle(ProofOutput::Headline);
     proofout << "Accelerating simple loops of location " << loc << "." << endl;
     proofout.increaseIndention();
+    bool wasEnabled = proofout.setEnabled(Config::Output::ProofAccel);
 
     // Accelerate all loops (includes optimizations like nesting)
     Accelerator accel(its, loc, resultingRules);
     accel.run();
 
+    proofout.setEnabled(wasEnabled);
     proofout.decreaseIndention();
     return true;
 }

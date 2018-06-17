@@ -49,8 +49,8 @@ namespace Config {
         // This is only applicable to linear ITS problems and often gets very large.
         option<string> DotFile = {};
 
-        // Include metering functions in the proof output?
-        bool ProofMeter = true;
+        // Include acceleration details (metering functions, nesting, ...) in the proof output?
+        bool ProofAccel = true;
 
         // Include all chaining steps in the proof output?
         bool ProofChain = false;
@@ -246,7 +246,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
         PrintCfg(Timestamps, "Include timestamps in the proof output");
         PrintCfg(ExportSimplified, "Print simplified ITS problem in input format");
         PrintCfg(DotFile, "Path for dot export (for linear ITS problems only)");
-        PrintCfg(ProofMeter, "Print inferred metering functions");
+        PrintCfg(ProofAccel, "Print acceleration steps and metering functions");
         PrintCfg(ProofChain, "Print all chaining steps");
         PrintCfg(ProofLimit, "Print steps when solving limit problems");
     }
