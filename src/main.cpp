@@ -39,91 +39,105 @@ using namespace std;
 #include "analysis/analysis.h"
 
 
-/**
- * Print the compile flags chosen in global.h
- */
-void printConfig() {
-    cout << "Compiled with configuration:" << endl;
-
-    cout << " Contract check SAT:                 ";
-#ifdef CONTRACT_CHECK_SAT
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Contract approximate SAT:           ";
-#ifdef CONTRACT_CHECK_SAT_APPROXIMATE
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Z3 treat power as mult up to:       " << Z3_MAX_EXPONENT << endl;
-
-    cout << " Simplify before every loop ranking: ";
-#ifdef SELFLOOPS_ALWAYS_SIMPLIFY
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Instantiation max number of bounds: " << FREEVAR_INSTANTIATE_MAXBOUNDS << endl;
-
-    cout << " Farkas retry with extended guard:   ";
-#ifdef FARKAS_TRY_ADDITIONAL_GUARD
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Always try nonexecution of loops:   ";
-#ifdef SELFLOOP_ALLOW_ZEROEXEC
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Max loop nesting iterations:        " << NESTING_MAX_ITERATIONS << endl;
-
-    cout << " Try chaining parallel selfloops:    ";
-#ifdef NESTING_CHAIN_RANKED
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Enable pruning to reduce runtime:   ";
-#ifdef PRUNING_ENABLE
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-
-    cout << " Pruning max # of parallel edges:    " << PRUNE_MAX_PARALLEL_TRANSITIONS << endl;
-
-    cout << " Final infinity check:               ";
-#ifdef FINAL_INFINITY_CHECK
-    cout << "YES" << endl;
-#else
-    cout << "NO" << endl;
-#endif
-}
+// Variables for command line flags
+string filename;
+char benchmarkMode = 'n'; // no benchmark
+int timeout = 0; // no timeout
+int proofLevel = 2;
+bool paperMode = false;
+bool printStats = false;
+bool printTiming = false;
+bool printConfig = false;
+bool allowRecursion = true;
 
 
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
     cout << "  --timeout <sec>    Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --dot <file>       Dump dot output to given file" << endl;
+    cout << "  --benchmark <a-f>  Set configuration for the benchmarks in the paper" << endl;
+    cout << "  --proof-level <n>  Detail level for proof output (0-3, default 2)" << endl;
+    cout << endl;
+    cout << "  --plain            Disable colored output" << endl;
+    cout << "  --dot <file>       Dump dot output to given file (only for non-recursive problems)" << endl;
     cout << "  --stats            Print some statistics about the performed steps" << endl;
     cout << "  --timing           Print information about time usage" << endl;
-    cout << "  --print-simplified Print simplfied program in the input format" << endl;
-    cout << "  --allow-division   Allows division to occur in the input program" << endl;
-    cout << "                     Note: LoAT is not sound for division in general" << endl;
+    cout << "  --config           Show configuration after handling command line flags" << endl;
+    cout << "  --timestamps       Include time stamps in proof output" << endl;
+    cout << "  --print-simplified Print simplified program in the input format" << endl;
+    cout << endl;
+    cout << "  --allow-division   Allow division in the input program (potentially unsound)" << endl;
     cout << "  --no-cost-check    Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing Don't try to simplify the program first (involves SMT)" << endl;
-    cout << "  --limit-smt        Solve limit problems by SMT queries when applicable" << endl;
+    cout << "  --no-preprocessing Don't try to simplify the program first (which involves SMT)" << endl;
+    cout << "  --no-limit-smt     Don't use the SMT encoding for limit problems" << endl;
+    cout << "  --paper            Disable heuristics not described in the paper" << endl;
+}
+
+
+void parseFlags(int argc, char *argv[]) {
+    int arg=0;
+
+    auto getNext = [&]() {
+        if (arg < argc-1) {
+            return argv[++arg];
+        } else {
+            cout << "Error: Argument missing for " << argv[arg] << endl;
+            exit(1);
+        }
+    };
+
+    while (++arg < argc) {
+        if (strcmp("--help",argv[arg]) == 0) {
+            printHelp(argv[0]);
+            exit(1);
+        }
+        else if (strcmp("--dot",argv[arg]) == 0) {
+            Config::Output::DotFile = getNext();
+        } else if (strcmp("--timeout",argv[arg]) == 0) {
+            timeout = atoi(getNext());
+        } else if (strcmp("--benchmark",argv[arg]) == 0) {
+            benchmarkMode = getNext()[0];
+        } else if (strcmp("--proof-level",argv[arg]) == 0) {
+            proofLevel = atoi(getNext());
+        } else if (strcmp("--plain",argv[arg]) == 0) {
+            Config::Output::Colors = false;
+            Config::Output::ColorsInITS = false;
+        } else if (strcmp("--config",argv[arg]) == 0) {
+            printConfig = true;
+        } else if (strcmp("--stats",argv[arg]) == 0) {
+            printStats = true;
+        } else if (strcmp("--timing",argv[arg]) == 0) {
+            printTiming = true;
+        } else if (strcmp("--timestamps",argv[arg]) == 0) {
+            Config::Output::Timestamps = true;
+        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
+            Config::Output::ExportSimplified = true;
+        } else if (strcmp("--allow-division",argv[arg]) == 0) {
+            Config::Parser::AllowDivision = true;
+        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
+            Config::Analysis::Preprocessing = false;
+        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
+            Config::Analysis::EnsureNonnegativeCosts = false;
+        } else if (strcmp("--no-limit-smt",argv[arg]) == 0) {
+            Config::Limit::UseSmtEncoding = false;
+        } else if (strcmp("--paper",argv[arg]) == 0) {
+            paperMode = true;
+        } else {
+            if (!filename.empty()) {
+                cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
+                exit(1);
+            }
+            filename = argv[arg];
+        }
+    }
+}
+
+
+void setBenchmarkConfig(bool conditionalMeter, bool backAccel, bool recursion, bool limitSmt) {
+    Config::ForwardAccel::ConditionalMetering = conditionalMeter;
+    Config::Accel::UseBackwardAccel = backAccel;
+    Config::Limit::UseSmtEncoding = limitSmt;
+    allowRecursion = recursion;
 }
 
 
@@ -133,265 +147,81 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    //cmd options
-    bool dotOutput = false;
-    string dotFile;
-    bool printStats = false;
-    bool printTiming = false;
-    bool printSimplified = false;
-    bool allowDivision = false;
-    bool checkCosts = true;
-    bool doPreprocessing = true;
-    bool limitSmtSolving = true;
-    string filename;
-    int timeout = 0;
+    // Parse and interpret command line flags
+    parseFlags(argc, argv);
 
-    // ### Parse command line flags ###
-    int arg=0;
-    while (++arg < argc) {
-        if (strcmp("--help",argv[arg]) == 0) {
-            printHelp(argv[0]);
-            return 1;
-        }
-        else if (strcmp("--dot",argv[arg]) == 0) {
-            assert(arg < argc-1);
-            dotOutput = true;
-            dotFile = argv[++arg];
-        }
-        else if (strcmp("--timeout",argv[arg]) == 0) {
-            assert(arg < argc-1);
-            timeout = atoi(argv[++arg]);
-        } else if (strcmp("--cfg",argv[arg]) == 0) {
-            printConfig();
-            return 1;
-        } else if (strcmp("--stats",argv[arg]) == 0) {
-            printStats = true;
-        } else if (strcmp("--timing",argv[arg]) == 0) {
-            printTiming = true;
-        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
-            printSimplified = true;
-        } else if (strcmp("--allow-division",argv[arg]) == 0) {
-            allowDivision = true;
-        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
-            doPreprocessing = false;
-        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
-            checkCosts = false;
-        } else if (strcmp("--limit-smt",argv[arg]) == 0) {
-            limitSmtSolving = true;
-        } else {
-            if (!filename.empty()) {
-                cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
-                return 1;
-            }
-            filename = argv[arg];
-        }
+    // Proof output
+    Config::Output::ProofLimit = (proofLevel >= 1);
+    Config::Output::ProofMeter = (proofLevel >= 2);
+    Config::Output::ProofChain = (proofLevel >= 3);
+    // TODO: Disable proof output on proof level 0
+
+    // Benchmark and heuristic settings
+    switch (benchmarkMode) {
+        case 'a': setBenchmarkConfig(false, false, false, false); break;
+        case 'b': setBenchmarkConfig(true,  false, false, false); break;
+        case 'c': setBenchmarkConfig(false, true,  false, false); break;
+        case 'd': setBenchmarkConfig(false, false, true,  false); break;
+        case 'e': setBenchmarkConfig(false, false, false, true ); break;
+        case 'f': setBenchmarkConfig(true,  true,  true,  true ); break;
+        case 'n': break; // benchmark flag not used
+        default: cout << "Unknown benchmark setting" << endl; return 1;
     }
-    if (filename.empty()) {
-        cout << "Error: missing filename" << endl;
-        return 1;
-    }
-    if (timeout > 0 && timeout < 10) {
-        cout << "Error: timeout must be at least 10 seconds" << endl;
-        return 1;
-    }
-    if (timeout > 0) {
-        Timeout::setTimeouts(timeout);
-    } else {
-        Timeout::setTimeouts(0);
+    if (paperMode) {
+        Config::ForwardAccel::AllowLinearization = false;
+        Config::ForwardAccel::ConflictVarHeuristic = false;
+        Config::ForwardAccel::ConstantUpdateHeuristic = false;
+        Config::Accel::TryNesting = false;
     }
 
-    if (allowDivision) {
+    // Print current configuration (if requested)
+    if (printConfig) {
+        Config::printConfig(cout, true);
+        cout << endl;
+    }
+
+    // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
+    if (Config::Parser::AllowDivision) {
         cout << endl << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
         cout << "Division is only sound if the result of a term is always an integer" << endl << endl;
     }
-
-    if (!checkCosts) {
+    if (!Config::Analysis::EnsureNonnegativeCosts) {
         cout << endl << "WARNING: Not checking the costs can yield unsound results!" << endl;
         cout << "This is only safe if costs in the input program are guaranteed to be nonnegative" << endl << endl;
     }
 
-    GlobalFlags::limitSmt = limitSmtSolving;
+    // Timeout
+    if (timeout < 0 || (timeout > 0 && timeout < 10)) {
+        cout << "Error: timeout must be at least 10 seconds" << endl;
+        return 1;
+    }
+    Timeout::setTimeouts(timeout);
 
-    // ### Start analyzing ###
-
-    int dotStep=0;
-    ofstream dotStream;
-    if (dotOutput) {
-        cout << "Trying to open dot output file: " << dotFile << endl;
-        dotStream.open(dotFile);
-        if (!dotStream.is_open()) {
-            cout << "Error: Unable to open file: " << dotFile << endl;
-            return 1;
-        }
+    // Start parsing
+    if (filename.empty()) {
+        cout << "Error: missing filename" << endl;
+        return 1;
     }
 
     Timing::start(Timing::Total);
     cout << "Trying to load file: " << filename << endl;
 
-
-    {
-        ITSProblem its;
-        using namespace parser;
-
-        cout << "=== new ITSProblem ===" << endl;
-        try {
-            its = ITSParser::loadFromFile(filename, ITSParser::Settings());
-        } catch (ITSParser::FileError err) {
-            cerr << "Error: " << err.what() << endl;
-            return 1;
-        }
-
-        cout << "SUCCESS" << endl << endl;
-        its.print(cout);
-        cout << "=== new ITSProblem ===" << endl;
-
-        Analysis::AnalysisSettings cfg(dotStream);
-        auto runtime = Analysis::analyze(its, cfg);
-        proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
-        proofout << "  Complexity class: " << runtime.cpx << endl;
-        proofout << "  Complexity value: ";
-        {
-            if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
-                proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
-            } else {
-                proofout << runtime.cpx << endl;
-            }
-        }
+    ITSProblem its;
+    try {
+        its = parser::ITSParser::loadFromFile(filename);
+    } catch (const parser::ITSParser::FileError &err) {
+        cout << "Error: " << err.what() << endl;
+        return 1;
     }
 
-    return 42;
-
-
-    /*
-    ITRSProblem res = ITRSProblem::loadFromFile(filename,allowDivision,checkCosts);
-    FlowGraph g(res);
-
-    proofout << endl << "Initial Control flow graph problem:" << endl;
-    g.printForProof();
-    if (dotOutput) g.printDot(dotStream,dotStep++,"Initial");
-
-    if (g.reduceInitialTransitions()) {
-        proofout << endl << "Removed unsatisfiable initial transitions:" << endl;
-        g.printForProof();
-        if (dotOutput) g.printDot(dotStream,dotStep++,"Reduced initial");
-    }
-
+    // Start the analysis of the parsed ITS problem.
+    // Skip ITS problems with nonlinear (i.e., recursive) rules.
     RuntimeResult runtime;
-    if (!g.isEmpty()) {
-        //do some preprocessing
-        if (doPreprocessing) {
-            if (g.preprocessTransitions(checkCosts)) {
-                proofout << endl <<  "Simplified the transitions:" << endl;
-                g.printForProof();
-                if (dotOutput) g.printDot(dotStream,dotStep++,"Simplify");
-            }
-        }
-
-        while (!g.isFullyChained()) {
-
-            bool changed;
-            do {
-                changed = false;
-
-                if (g.accelerateSimpleLoops()) {
-                    changed = true;
-                    proofout << endl <<  "Accelerated all simple loops using metering functions"
-                             << " (where possible):" << endl;
-                    g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Accelerate simple loops");
-                }
-                if (Timeout::soft()) break;
-
-                if (g.chainSimpleLoops()) {
-                    changed = true;
-                    proofout << endl <<  "Chained simpled loops:" << endl;
-                    g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Chain simple loops");
-                }
-                if (Timeout::soft()) break;
-
-                if (g.chainLinear()) {
-                    changed = true;
-                    proofout << endl <<  "Eliminated locations (linear):" << endl;
-                    g.printForProof();
-                    if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (linear)");
-                }
-                if (Timeout::soft()) break;
-
-            } while (changed);
-
-
-            if (g.chainBranches()) {
-                proofout << endl <<  "Eliminated locations (branches):" << endl;
-                g.printForProof();
-                if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations (branches)");
-
-            } else if (g.eliminateALocation()) {
-                proofout << endl <<  "Eliminated locations:" << endl;
-                g.printForProof();
-                if (dotOutput) g.printDot(dotStream,dotStep++,"Eliminate Locations");
-            }
-            if (Timeout::soft()) break;
-
-            if (g.pruneTransitions()) {
-                proofout << endl <<  "Pruned:" << endl;
-                g.printForProof();
-                if (dotOutput) { g.printDot(dotStream,dotStep++,"Prune"); }
-            }
-            if (Timeout::soft()) break;
-        }
-
-        if (Timeout::soft()) proofout << "Aborted due to lack of remaining time" << endl << endl;
-
-        //simplify the simplified program
-        if (g.isFullyChained()) {
-            g.removeDuplicateInitialTransitions();
-        }
-
-        proofout << endl << "Final control flow graph problem, now checking costs for infinitely many models:" << endl;
-        g.printForProof();
-        if (dotOutput) g.printDot(dotStream,dotStep++,"Final");
-
-        if (printSimplified) {
-            proofout << endl << "Simplified program in input format:" << endl;
-            g.printKoAT();
-            proofout << endl;
-        }
-
-        if (!g.isFullyChained()) {
-            //handling for timeouts
-            proofout << "This is only a partial result (probably due to a timeout), trying to find max complexity" << endl << endl;
-            runtime = g.getMaxPartialResult();
-        } else {
-            //no timeout, fully contracted, find maximum runtime
-            proofout << endl;
-            runtime = g.getMaxRuntime();
-        }
-
-        //if we failed to prove a bound, we can still output O(1) with bound 1, as the graph was non-empty
-        if (runtime.cpx == Complexity::Unknown) {
-            runtime.cpx = Complexity::Const;
-            runtime.bound = Expression(1);
-            runtime.guard.clear();
-        }
-    }
-    Timing::done(Timing::Total);
-
-    // ### Some nice proof output ###
-
-    proofout << endl;
-    proofout << "The final runtime is determined by this resulting transition:" << endl;
-    proofout << "  Final Guard: ";
-    for (int i=0; i < runtime.guard.size(); ++i) { if (i > 0) proofout << " && "; proofout << runtime.guard.at(i); }
-    proofout << endl;
-    proofout << "  Final Cost:  " << runtime.bound << endl;
-    proofout << endl;
-
-    if (runtime.reducedCpx) {
-        proofout << "Note that the variables in this cost term are only a sublinear fraction" << endl;
-        proofout << "of the input length n, so the complexity had to be reduced." << endl << endl;
+    if (allowRecursion || its.isLinear()) {
+        runtime = Analysis::analyze(its);
     }
 
+    // Final proof output (TODO: Move this to analysis)
     proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
     proofout << "  Complexity class: " << runtime.cpx << endl;
     proofout << "  Complexity value: ";
@@ -402,35 +232,19 @@ int main(int argc, char *argv[]) {
             proofout << runtime.cpx << endl;
         }
     }
+    proofout << endl;
 
-#ifndef DEBUG_DISABLE_ALL
-    cout << "DEBUG Bound: " << runtime.bound << endl;
-    cout << "DEBUG Complexity value: ";
-    {
-        if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
-            cout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
-        } else {
-            cout << runtime.cpx << endl;
-        }
-    }
-#endif
-
-    if (dotOutput) {
-        g.printDotText(dotStream,dotStep++,runtime.cpx.toString());
-        dotStream << "}" << endl;
-        dotStream.close();
-    }
-
+    // Statistics
     if (printStats) {
         cout << endl;
         Stats::print(cout);
     }
-
     if (printTiming) {
         cout << endl;
         Timing::print(cout);
     }
 
+    // WST style proof output
     if (runtime.cpx == Complexity::Nonterm) {
         proofout << endl << "NO" << endl;
     } else {
@@ -444,6 +258,4 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-    */
 }
-
