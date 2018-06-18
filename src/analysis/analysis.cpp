@@ -333,10 +333,10 @@ void Analysis::printResult(const RuntimeResult &runtime) {
 
     proofout << "Complexity:  " << runtime.cpx << endl;
     proofout << "Cpx degree:  ";
-    if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
-        proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
-    } else {
-        proofout << runtime.cpx << endl;
+    switch (runtime.cpx.getType()) {
+        case Complexity::CpxPolynomial: proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl; break;
+        case Complexity::CpxUnknown: proofout << "?" << endl; break;
+        default: proofout << runtime.cpx << endl;
     }
     proofout << "Solved cost: " << runtime.solvedCost;
     proofout << endl << "Rule cost:   ";
