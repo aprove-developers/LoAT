@@ -994,10 +994,11 @@ bool AsymptoticBound::isTimeout() const {
 }
 
 
-InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
-                                                               const GuardList &guard,
-                                                               const Expression &cost,
-                                                               bool finalCheck) {
+AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
+                                                             const GuardList &guard,
+                                                             const Expression &cost,
+                                                             bool finalCheck)
+{
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     debugAsymptoticBound("guard:");
@@ -1010,9 +1011,9 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
 
     Expression expandedCost = cost.expand();
 
+    // Handle nontermination
     if (cost.isInfSymbol()) {
-        return InfiniteInstances::Result(Complexity::Nonterm, false,
-                                         Expression::InfSymbol, 0, "cost is INF");
+        return Result(Complexity::Nonterm, Expression::InfSymbol, false, 0);
     }
     assert(!expandedCost.has(Expression::InfSymbol));
 
@@ -1024,7 +1025,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
-    //otherwise perform limit calculus
+    // Otherwise perform limit calculus
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
     asymptoticBound.removeUnsatProblems();
@@ -1033,6 +1034,7 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
                 << asymptoticBound.solvedLimitProblems.size()
                 << " solved problem(s))");
 
+        // Print solution
         proofout << "Solution:" << std::endl;
         proofout.increaseIndention();
         for (const auto &pair : asymptoticBound.bestComplexity.solution) {
@@ -1041,22 +1043,18 @@ InfiniteInstances::Result AsymptoticBound::determineComplexity(const VarMan &var
         proofout.decreaseIndention();
         proofout.setEnabled(wasProofEnabled);
 
+        // Gather all relevant information
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
-        return InfiniteInstances::Result(asymptoticBound.bestComplexity.complexity,
-                asymptoticBound.bestComplexity.upperBound > 1,
-                solvedCost.expand(),
-                asymptoticBound.bestComplexity.inftyVars,
-                "solved the initial limit problem");
+        return Result(asymptoticBound.bestComplexity.complexity,
+                      solvedCost.expand(),
+                      asymptoticBound.bestComplexity.upperBound > 1,
+                      asymptoticBound.bestComplexity.inftyVars);
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem");
 
         proofout << "Could not solve the limit problem." << endl;
         proofout.setEnabled(wasProofEnabled);
 
-        return InfiniteInstances::Result(Complexity::Unknown,
-                false,
-                numeric(0),
-                cost.getVariables().size(),
-                "could not solve the initial limit problem");
+        return Result(Complexity::Unknown);
     }
 }

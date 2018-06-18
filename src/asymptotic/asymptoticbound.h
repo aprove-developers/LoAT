@@ -10,9 +10,6 @@
 #include "inftyexpression.h"
 #include "limitproblem.h"
 
-// TODO: Avoid this include by moving the required datastrutures here (and clean them up)
-#include "deprecated/infinity.h"
-
 
 class AsymptoticBound {
 private:
@@ -81,16 +78,36 @@ private:
     std::vector<LimitVector> toApply;
 
 public:
-    // FIXME: Avoid the old InfiniteInstances::Result, maybe prefer the private ComplexityResult?
+    /**
+     * Result of the asymptotic complexity computation
+     */
+    struct Result {
+        // The resulting complexity of the given rule.
+        Complexity cpx;
+
+        // The resulting cost, after expressing variables in terms of n.
+        Expression solvedCost;
+
+        // Whether the complexity of the cost had to be reduced due to the size of other variables.
+        // E.g. "cost x, guard x^2 == y" only has complexity sqrt(n), as y is also part of the input!
+        bool reducedCpx;
+
+        // The number of non-constant variables (i.e., which grow with n).
+        int inftyVars;
+
+        explicit Result(Complexity c) : cpx(c), solvedCost(0), reducedCpx(false), inftyVars(0) {}
+        Result(Complexity c, Expression x, bool r, int v) : cpx(c), solvedCost(x), reducedCpx(r), inftyVars(v) {}
+    };
+
     /**
      * Analyzes the given guard and cost.
      * @param varMan the VariableManager instance is needed to get information about free variables
      * @param finalCheck enables more sophisticated backtracking and uses Timeout::hard
      */
-    static InfiniteInstances::Result determineComplexity(const VarMan &varMan,
-                                                         const GuardList &guard,
-                                                         const Expression &cost,
-                                                         bool finalCheck);
+    static Result determineComplexity(const VarMan &varMan,
+                                      const GuardList &guard,
+                                      const Expression &cost,
+                                      bool finalCheck);
 };
 
 #endif //ASYMPTOTICBOUND_H

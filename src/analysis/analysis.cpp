@@ -533,16 +533,16 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
 
-        proofout << "Resulting cost " << checkRes.cost << " has complexity: " << checkRes.cpx << endl;
+        proofout << "Resulting cost " << checkRes.solvedCost << " has complexity: " << checkRes.cpx << endl;
         proofout.decreaseIndention();
 
         if (checkRes.cpx > res.cpx) {
             proofout << endl;
             proofout.setLineStyle(ProofOutput::Result);
-            proofout << "Found new complexity " << checkRes.cpx << " (" << checkRes.reason << ")." << endl;
+            proofout << "Found new complexity " << checkRes.cpx << "." << endl;
 
             res.cpx = checkRes.cpx;
-            res.solvedCost = checkRes.cost;
+            res.solvedCost = checkRes.solvedCost;
             res.reducedCpx = checkRes.reducedCpx;
             res.guard = rule.getGuard();
             res.cost = rule.getCost();
