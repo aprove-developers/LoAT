@@ -178,16 +178,14 @@ public:
 
 
     /**
-     * Returns true if all expressions of this limit problem are linear in
-     * the given set of variables.
+     * Returns true if all expressions of this limit problem are linear.
      */
-    bool isLinear(const GiNaC::lst &vars) const;
+    bool isLinear() const;
 
     /**
-     * Returns true if all expressions of this limit problem are polynomial in
-     * the given set of variables.
+     * Returns true if all expressions of this limit problem are polynomial.
      */
-    bool isPolynomial(const GiNaC::lst &vars) const;
+    bool isPolynomial() const;
 
 
     /**

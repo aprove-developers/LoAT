@@ -423,7 +423,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     Expression cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : Expression(1);
     RuleLhs lhs(lhsLoc, {}, cost);
 
-    if (!cost.is_polynomial(itsProblem.getGinacVarList())) {
+    if (!cost.isPolynomial()) {
         throw FileError("Non-polynomial cost in the input");
     }
 

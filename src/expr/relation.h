@@ -54,10 +54,10 @@ namespace Relation {
     bool isInequality(const Expression &ex);
 
     /**
-     * Checks if ex is an inequality and if rhs and lhs are linear in the given variables
+     * Checks if ex is an inequality and if rhs and lhs are linear expressions
      * (convenience function for isLinear and isInequality)
      */
-    bool isLinearInequality(const Expression &ex, const GiNaC::lst &vars);
+    bool isLinearInequality(const Expression &ex);
 
     /**
      * Checks whether ex is of the form "term > 0"

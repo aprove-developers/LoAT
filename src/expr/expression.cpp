@@ -99,11 +99,6 @@ bool Expression::isInfSymbol() const {
 }
 
 
-bool Expression::isLinear(const GiNaC::lst &_vars) const {
-    return isLinear();
-}
-
-
 bool Expression::isLinear() const {
     // linear expressions are always polynomials
     if (!isPolynomial()) return false;
@@ -124,11 +119,6 @@ bool Expression::isLinear() const {
         }
     }
     return true;
-}
-
-
-bool Expression::isPolynomialWithin(const ExprSymbolSet &vars) const {
-    return std::all_of(vars.begin(), vars.end(), [&](const ExprSymbol &var){ return is_polynomial(var); });
 }
 
 
@@ -176,37 +166,10 @@ int Expression::getMaxDegree() const {
     assert(isPolynomial());
 
     int res = 0;
-    for (auto var : getVariables()) {
+    for (const auto &var : getVariables()) {
         res = std::max(res, degree(var));
     }
     return res;
-}
-
-
-int Expression::getMaxDegree(const GiNaC::lst &vars) const {
-    assert(this->is_polynomial(vars));
-
-    int res = 0;
-    for (auto var : vars) {
-        int deg = degree(var);
-        if (deg > res) res = deg;
-    }
-    return res;
-}
-
-
-void Expression::collectVariableNames(set<string> &res) const {
-    struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(set<string> &t) : target(t) {}
-        void visit(const GiNaC::symbol &sym) {
-            if (sym != InfSymbol) target.insert(sym.get_name());
-        }
-    private:
-        set<string> &target;
-    };
-
-    SymbolVisitor v(res);
-    traverse(v);
 }
 
 
@@ -222,14 +185,6 @@ void Expression::collectVariables(ExprSymbolSet &res) const {
 
     SymbolVisitor v(res);
     traverse(v);
-}
-
-
-
-set<string> Expression::getVariableNames() const {
-    set<string> res;
-    collectVariableNames(res);
-    return res;
 }
 
 

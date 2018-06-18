@@ -124,13 +124,6 @@ public:
 
     bool isLinear() const;
 
-    // TODO: Remove this method, it is never used (all usages actually use isPolynomial())
-    /**
-     * Returns true iff this expression is polynomial in the given variables.
-     * Example: x^2 * 2^y is polynomial in {x} and {x,z}, but not in {y} or {x,y}.
-     */
-    bool isPolynomialWithin(const ExprSymbolSet &vars) const;
-
     /**
      * Returns true iff this expression is polynomial, e.g. 1/2 * y * x^2 + y^3.
      */
@@ -167,25 +160,6 @@ public:
      * Returns the highest degree of any variable in this polynomial expression
      */
     int getMaxDegree() const;
-
-    // TODO: deprecate this
-    /**
-     * Returns the highest degree of any of the given variables in this polynomial expression
-     * @note this must be polynomial in vars!
-     */
-    int getMaxDegree(const GiNaC::lst &vars) const;
-
-    // TODO: Deprecate collectVariableNames. Different symbols with same name should be treated differently
-    // TODO: (and they are treated differently when we use GiNaC::symbol and ExprSymbolSet instead of their names).
-    /**
-     * Adds all variable names that occur in this expression to the given set
-     */
-    void collectVariableNames(std::set<std::string> &res) const;
-
-    /**
-     * Convenience method for collectVariableNames
-     */
-    std::set<std::string> getVariableNames() const;
 
     /**
      * Returns a set of all ginac symbols that occur in this expression

@@ -56,10 +56,6 @@ ExprSymbol VariableManager::getGinacSymbol(VariableIdx idx) const {
     return variables[idx].symbol;
 }
 
-ExprList VariableManager::getGinacVarList() const {
-    return variableSymbolList;
-}
-
 VariableIdx VariableManager::addFreshVariable(string basename) {
     return addVariable(getFreshName(basename));
 }
@@ -80,7 +76,6 @@ VariableIdx VariableManager::addVariable(string name) {
 
     //convert to ginac
     auto sym = GiNaC::symbol(name);
-    variableSymbolList.append(sym);
 
     // remember variable
     variables.push_back({name, sym});

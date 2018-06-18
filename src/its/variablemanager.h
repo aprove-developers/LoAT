@@ -32,7 +32,6 @@ public:
     // Mapping between indices and ginac symbols
     VariableIdx getVarIdx(const ExprSymbol &var) const; // TODO: Use this instead of getVarIdx(symbol.get_name())
     ExprSymbol getGinacSymbol(VariableIdx idx) const; // TODO: Shorten this to getSymbol()?
-    ExprList getGinacVarList() const; // TODO: Rename to getSymbolList() ?
 
     // Handling of temporary variables
     const std::set<VariableIdx>& getTempVars() const;
@@ -83,9 +82,6 @@ private:
 
     // Reverse mapping for efficiency
     std::map<std::string,VariableIdx> variableNameLookup;
-
-    // List of all variable symbols. Useful as argument to GiNaC::ex::is_polynomial.
-    ExprList variableSymbolList;
 };
 
 

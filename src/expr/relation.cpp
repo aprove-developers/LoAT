@@ -39,9 +39,9 @@ namespace Relation {
         return isRelation(ex) && !isEquality(ex);
     }
 
-    bool isLinearInequality(const Expression &ex, const GiNaC::lst &vars) {
+    bool isLinearInequality(const Expression &ex) {
         if (!isInequality(ex)) return false;
-        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
+        return Expression(ex.lhs()).isLinear() && Expression(ex.rhs()).isLinear();
     }
 
     bool isGreaterThanZero(const Expression &ex) {

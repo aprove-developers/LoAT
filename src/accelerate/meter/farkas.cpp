@@ -47,7 +47,7 @@ z3::expr FarkasLemma::apply(
     // Create lambda variables, add the constraint "lambda >= 0"
     vector<z3::expr> lambda;
     for (const Expression &ex : constraints) {
-        // assert(Relation::isLinearInequality(ex)); FIXME: Add this as soon as it does not require varMan.getGinacVarList anymore
+        assert(Relation::isLinearInequality(ex));
         assert(Relation::isLessOrEqual(ex));
 
         z3::expr var = context.addFreshVariable("l", Z3Context::Real);

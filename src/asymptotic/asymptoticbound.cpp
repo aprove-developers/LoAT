@@ -436,7 +436,7 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         //if the problem is polynomial, try a (max)SMT encoding
-        if (smtApplicable && currentLP.isPolynomial(varMan.getGinacVarList())) {
+        if (smtApplicable && currentLP.isPolynomial()) {
             if (trySmtEncoding()) {
                 goto start;
             }

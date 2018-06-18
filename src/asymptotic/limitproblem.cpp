@@ -455,18 +455,18 @@ bool LimitProblem::isUnsat() const {
 }
 
 
-bool LimitProblem::isLinear(const GiNaC::lst &vars) const {
+bool LimitProblem::isLinear() const {
     for (const InftyExpression &ex : set) {
-        if (!ex.isLinear(vars)) {
+        if (!ex.isLinear()) {
             return false;
         }
     }
     return true;
 }
 
-bool LimitProblem::isPolynomial(const GiNaC::lst &vars) const {
+bool LimitProblem::isPolynomial() const {
     for (const InftyExpression &ex : set) {
-        if (!ex.is_polynomial(vars)) {
+        if (!ex.isPolynomial()) {
             return false;
         }
     }
