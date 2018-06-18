@@ -225,14 +225,6 @@ RuntimeResult Analysis::run() {
         runtime = getMaxRuntime();
     }
 
-    // if we failed to prove a bound, we can still output O(1) with bound 1, as the graph was non-empty
-    if (runtime.cpx == Complexity::Unknown) {
-        runtime.cpx = Complexity::Const;
-        runtime.solvedCost = Expression(1);
-        runtime.cost = Expression(1);
-        runtime.guard.clear();
-    }
-
     printResult(runtime);
     finalizeDotOutput(runtime);
 
@@ -576,7 +568,6 @@ RuntimeResult Analysis::getMaxRuntime() {
     }
 
     RuntimeResult res = getMaxRuntimeOf(rules, RuntimeResult());
-
 
 #ifdef DEBUG_PROBLEMS
     // Check if we lost complexity due to asymptotic bounds check (compared to getComplexity())
