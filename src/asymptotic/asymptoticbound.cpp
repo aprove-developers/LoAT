@@ -1001,18 +1001,19 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
 {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
+    // Expand the cost to make it easier to analyze
+    Expression expandedCost = cost.expand();
+
     debugAsymptoticBound("guard:");
     for (const Expression &ex : guard) {
         debugAsymptoticBound(ex);
     }
     debugAsymptoticBound("");
-    debugAsymptoticBound("cost:" << cost.expand());
+    debugAsymptoticBound("cost:" << expandedCost);
     debugAsymptoticBound("");
 
-    Expression expandedCost = cost.expand();
-
     // Handle nontermination
-    if (cost.isInfSymbol()) {
+    if (expandedCost.isInfSymbol()) {
         return Result(Complexity::Nonterm, Expression::InfSymbol, false, 0);
     }
     assert(!expandedCost.has(Expression::InfSymbol));
@@ -1021,7 +1022,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
 
     // TODO: Use expandedCost here?!
-    AsymptoticBound asymptoticBound(varMan, guard, cost, finalCheck);
+    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
