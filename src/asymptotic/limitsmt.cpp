@@ -106,11 +106,8 @@ static z3::expr posInfConstraint(const map<int, Expression>& coefficients, Z3Con
 /**
  * @return the (abstract) coefficients of 'n' in 'ex', where the key is the degree of the respective monomial
  */
-static map<int, Expression> getCoefficients(Expression ex, ExprSymbol n) {
-    // TODO: This seems overly complicated
-    GiNaC::lst nList;
-    nList.append(n);
-    int maxDegree = ex.getMaxDegree(nList);
+static map<int, Expression> getCoefficients(const Expression &ex, const ExprSymbol &n) {
+    int maxDegree = ex.degree(n);
     map<int, Expression> coefficients;
     for (int i = 0; i <= maxDegree; i++) {
         coefficients.emplace(i, ex.coeff(n, i));
@@ -159,10 +156,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     Expression templateCost = cost.subs(templateSubs).expand();
 
     // if the cost function is a constant, then we are bound to fail
-    // TODO: This seems overly complicated
-    GiNaC::lst nList;
-    nList.append(n);
-    int maxDeg = templateCost.getMaxDegree(nList);
+    int maxDeg = templateCost.degree(n);
     if (maxDeg == 0) {
         return {};
     }
@@ -170,7 +164,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     // encode every entry of the limit problem
     for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
         // replace variables with their linear templates
-        Expression ex = (*it).subs(templateSubs).expand();
+        Expression ex = it->subs(templateSubs).expand();
         map<int, Expression> coefficients = getCoefficients(ex, n);
         Direction direction = it->getDirection();
         // add the required constraints (depending on the direction-label from the limit problem)
@@ -193,11 +187,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
         debugAsymptoticBound("SMT Query: " << solver);
         z3::check_result res = solver.check();
         debugAsymptoticBound("SMT Result: " << res);
-        if (res == z3::sat) {
-            return true;
-        } else {
-            return false;
-        }
+        return res == z3::sat;
     };
 
     // all constraints that we have so far are mandatory, so fail if we can't even solve these
