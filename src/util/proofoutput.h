@@ -76,17 +76,18 @@ protected:
             return ch; // return "success"
         }
 
-        if (atStartOfLine && ch != '\n') {
-            // possibly print timestamp
-            if (Config::Output::Timestamps) {
-                std::string timeStr = formatTimestamp();
-                dst->sputn(timeStr.data(), timeStr.size());
-            }
+        // print timestamp (if enabled)
+        if (atStartOfLine && Config::Output::Timestamps) {
+            std::string timeStr = formatTimestamp();
+            dst->sputn(timeStr.data(), timeStr.size());
+        }
 
-            // print indention
+        // print indention
+        if (atStartOfLine && ch != '\n') {
             dst->sputn(indention.data(), indention.size());
         }
 
+        // print given text at end of line (used to reset color codes)
         if (!beforeNewline.empty() && ch == '\n') {
             dst->sputn(beforeNewline.data(), beforeNewline.size());
             beforeNewline.clear();
