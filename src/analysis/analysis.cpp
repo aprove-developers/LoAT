@@ -489,7 +489,7 @@ bool Analysis::pruneRules() {
  * Helper for getMaxRuntime that searches for the maximal cost.getComplexity().
  * Note that this does not involve the asymptotic bounds check and thus not give sound results!
  */
-static RuntimeResult getMaxComplexity(const ITSProblem &its, set<TransIdx> rules) {
+static RuntimeResult getMaxComplexityApproximation(const ITSProblem &its, set<TransIdx> rules) {
     RuntimeResult res;
 
     for (TransIdx rule : rules) {
@@ -505,26 +505,21 @@ static RuntimeResult getMaxComplexity(const ITSProblem &its, set<TransIdx> rules
 }
 
 
-RuntimeResult Analysis::getMaxRuntime() {
-    auto rules = its.getTransitionsFrom(its.getInitialLocation());
+RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult currResult) {
     auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); };
 
-    if (!Config::Analysis::AsymptoticCheck) {
-        proofout.warning("WARNING: The asymptotic check is disabled, the result might be unsound!");
-        return getMaxComplexity(its, rules);
-    }
+    // Only search for runtimes that improve upon the current runtime
+    RuntimeResult res = currResult;
 
-    RuntimeResult res;
     for (TransIdx ruleIdx : rules) {
         Rule &rule = its.getRuleMut(ruleIdx);
-        const Expression &cost = rule.getCost();
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
         // We have to be careful with temp variables, since they can lead to unbounded cost.
-        Complexity cpxUpperbound = cost.getComplexity();
+        const Expression &cost = rule.getCost();
         bool hasTempVar = !cost.isInfSymbol() && cost.hasVariableWith(isTempVar);
-        if (cpxUpperbound <= res.cpx && !hasTempVar) {
-            proofout << "Skipping rule " << ruleIdx << " since it cannot improve the complexity" << endl;
+        if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) {
+            debugLinear("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
             continue;
         }
 
@@ -544,9 +539,8 @@ RuntimeResult Analysis::getMaxRuntime() {
         if (Timeout::hard()) break;
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-        auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), cost, true);
+        auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
 
-        debugLinear("Asymptotic result: " << checkRes.cpx << " because: " << checkRes.reason);
         proofout << "Resulting cost " << checkRes.cost << " has complexity: " << checkRes.cpx << endl;
         proofout.decreaseIndention();
 
@@ -569,13 +563,28 @@ RuntimeResult Analysis::getMaxRuntime() {
         if (Timeout::hard()) break;
     }
 
+    return res;
+}
+
+
+RuntimeResult Analysis::getMaxRuntime() {
+    auto rules = its.getTransitionsFrom(its.getInitialLocation());
+
+    if (!Config::Analysis::AsymptoticCheck) {
+        proofout.warning("WARNING: The asymptotic check is disabled, the result might be unsound!");
+        return getMaxComplexityApproximation(its, rules);
+    }
+
+    RuntimeResult res = getMaxRuntimeOf(rules, RuntimeResult());
+
+
 #ifdef DEBUG_PROBLEMS
     // Check if we lost complexity due to asymptotic bounds check (compared to getComplexity())
     // This may be fine, but it could also indicate a weakness in the asymptotic check.
-    RuntimeResult unsoundRes = getMaxComplexity(its, rules);
+    RuntimeResult unsoundRes = getMaxComplexityApproximation(its, rules);
     if (unsoundRes.cpx > res.cpx) {
-        debugProblem("Asymptotic bounds lost complexity: " << unsoundRes.cpx << " [" << unsoundRes.bound << "]"
-                << "--> " << res.cpx << " [" << res.bound << "]");
+        debugProblem("Asymptotic bounds lost complexity: " << unsoundRes.cpx << " [" << unsoundRes.cost << "]"
+                << "--> " << res.cpx << " [" << res.solvedCost << "]");
     }
 #endif
 
@@ -623,61 +632,21 @@ void Analysis::removeConstantPathsAfterTimeout() {
 
 
 RuntimeResult Analysis::getMaxPartialResult() {
-    //contract and always compute the maximum complexity to allow abortion at any time
     RuntimeResult res;
     LocationIdx initial = its.getInitialLocation(); // just a shorthand
-    auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); }; // just a shorthand
 
+    // contract and always compute the maximum complexity to allow abortion at any time
     while (true) {
-        //always check for timeouts
         if (Timeout::hard()) goto abort;
 
-        //get current max cost (with asymptotic bounds check)
-        for (TransIdx trans : its.getTransitionsFrom(initial)) {
-            Rule &rule = its.getRuleMut(trans);
+        // check runtime of all rules from the start state
+        res = getMaxRuntimeOf(its.getTransitionsFrom(initial), res);
 
-            // check if we can skip this rule
-            const Expression &cost = rule.getCost();
-            bool hasTempVar = !cost.isInfSymbol() && cost.hasVariableWith(isTempVar);
-            if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) continue;
+        // handle special cases to ensure termination in time
+        if (res.cpx >= Complexity::Infty) goto done;
+        if (Timeout::hard()) goto abort;
 
-            proofout << endl;
-            proofout.setLineStyle(ProofOutput::Headline);
-            proofout << "Computing asymptotic complexity for rule " << trans << endl;
-            proofout.increaseIndention();
-
-            // Simplify guard to speed up asymptotic check
-            bool simplified = false;
-            simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
-            simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
-            if (simplified) {
-                proofout << "Simplified the guard:" << endl;
-                ITSExport::printLabeledRule(trans, its, proofout);
-            }
-            if (Timeout::hard()) goto abort;
-
-            // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-            auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
-
-            proofout.decreaseIndention();
-
-            if (checkRes.cpx > res.cpx) {
-                proofout << endl;
-                proofout.setLineStyle(ProofOutput::Result);
-                proofout << "Found new complexity " << checkRes.cpx << " (" << checkRes.reason << ")." << endl;
-
-                res.cpx = checkRes.cpx;
-                res.solvedCost = checkRes.cost;
-                res.reducedCpx = checkRes.reducedCpx;
-                res.guard = rule.getGuard();
-                res.cost = rule.getCost();
-
-                if (res.cpx >= Complexity::Infty) goto done;
-            }
-            if (Timeout::hard()) goto abort;
-        }
-
-        //contract next level (if there is one)
+        // contract next level (if there is one), so we get new rules from the start state
         auto succs = its.getSuccessorLocations(initial);
         if (succs.empty()) goto done;
 
@@ -693,7 +662,7 @@ RuntimeResult Analysis::getMaxPartialResult() {
                     if (Timeout::hard()) goto abort;
                 }
 
-                // We already computed the complexity above, and tried to change it just now, that's enough.
+                // We already computed the complexity and tried to chain, so we can drop this rule
                 its.removeRule(first);
             }
         }

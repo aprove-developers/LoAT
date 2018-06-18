@@ -127,6 +127,14 @@ private:
     RuntimeResult getMaxPartialResult();
 
     /**
+     * Used by getMaxRuntime and getMaxPartialResult.
+     * Computes the runtime of the given rules (using asymptotic bounds) and returns the maximum
+     * computed runtime or currResult, whichever is larger. If currResult is given, rules whose
+     * complexity cannot be larger than currResult are skipped to make the computation faster.
+     */
+    RuntimeResult getMaxRuntimeOf(const std::set<TransIdx> &rules, RuntimeResult currResult);
+
+    /**
      * This removes all subgraphs where all rules only have constant/unknown cost (this includes simple loops!).
      * This is meant to be called if a (soft) timeout occurrs, to focus on rules with higher complexity.
      */
@@ -150,7 +158,7 @@ private:
 private:
     ITSProblem &its;
 
-    // Counts how many graphs have already been written to the dot export (they have to be numbered)
+    // State for dot export (file stream and number of written subgraphs, since they have to be numbered)
     uint dotCounter = 0;
     std::ofstream dotStream;
 };
