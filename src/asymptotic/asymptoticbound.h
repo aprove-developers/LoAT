@@ -14,7 +14,6 @@
 #include "deprecated/infinity.h"
 
 
-
 class AsymptoticBound {
 private:
     // internal struct for the return value of getComplexity()
@@ -56,9 +55,6 @@ private:
                                         const std::vector<LimitVector> &limitVectors);
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
-
-    //smt encoding of limit problems
-    bool isSmtApplicable();
     bool trySmtEncoding();
 
     //check Timeout::soft or Timeout::hard, depending on finalCheck
