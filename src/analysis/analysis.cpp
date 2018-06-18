@@ -228,10 +228,12 @@ RuntimeResult Analysis::run() {
     // if we failed to prove a bound, we can still output O(1) with bound 1, as the graph was non-empty
     if (runtime.cpx == Complexity::Unknown) {
         runtime.cpx = Complexity::Const;
-        runtime.bound = Expression(1);
+        runtime.solvedCost = Expression(1);
+        runtime.cost = Expression(1);
         runtime.guard.clear();
     }
 
+    printResult(runtime);
     finalizeDotOutput(runtime);
 
     return runtime;
@@ -328,6 +330,30 @@ void Analysis::printForProof(const std::string &dotDescription) {
     if (dotStream.is_open()) {
         LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, dotStream);
     }
+}
+
+
+void Analysis::printResult(const RuntimeResult &runtime) {
+    proofout << endl;
+    proofout.setLineStyle(ProofOutput::Result);
+    proofout << "Obtained the following overall complexity (w.r.t. the length of the input n):" << endl;
+    proofout.increaseIndention();
+
+    proofout << "Complexity:  " << runtime.cpx << endl;
+    proofout << "Cpx degree:  ";
+    if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
+        proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
+    } else {
+        proofout << runtime.cpx << endl;
+    }
+    proofout << "Solved cost: " << runtime.solvedCost;
+    proofout << endl << "Rule cost:   ";
+    ITSExport::printCost(runtime.cost, proofout);
+    proofout << endl << "Rule guard:  ";
+    ITSExport::printGuard(runtime.guard, proofout);
+    proofout << endl;
+
+    proofout.decreaseIndention();
 }
 
 
@@ -471,7 +497,7 @@ static RuntimeResult getMaxComplexity(const ITSProblem &its, set<TransIdx> rules
         if (cpxRule > res.cpx) {
             res.cpx = cpxRule;
             res.guard = its.getRule(rule).getGuard();
-            res.bound = its.getRule(rule).getCost();
+            res.cost = its.getRule(rule).getCost();
         }
     }
 
@@ -530,9 +556,10 @@ RuntimeResult Analysis::getMaxRuntime() {
             proofout << "Found new complexity " << checkRes.cpx << " (" << checkRes.reason << ")." << endl;
 
             res.cpx = checkRes.cpx;
-            res.bound = checkRes.cost;
+            res.solvedCost = checkRes.cost;
             res.reducedCpx = checkRes.reducedCpx;
             res.guard = rule.getGuard();
+            res.cost = rule.getCost();
 
             if (res.cpx >= Complexity::Infty) {
                 break;
@@ -640,9 +667,10 @@ RuntimeResult Analysis::getMaxPartialResult() {
                 proofout << "Found new complexity " << checkRes.cpx << " (" << checkRes.reason << ")." << endl;
 
                 res.cpx = checkRes.cpx;
-                res.bound = checkRes.cost;
+                res.solvedCost = checkRes.cost;
                 res.reducedCpx = checkRes.reducedCpx;
                 res.guard = rule.getGuard();
+                res.cost = rule.getCost();
 
                 if (res.cpx >= Complexity::Infty) goto done;
             }

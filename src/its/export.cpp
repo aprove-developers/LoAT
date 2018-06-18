@@ -16,6 +16,7 @@ static void collectAllVariables(const Rule &rule, const VarMan &varMan, ExprSymb
     rule.getCost().collectVariables(vars);
 }
 
+
 // collects all non-temporary variables of the given rule
 static void collectBoundVariables(const Rule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
     ExprSymbolSet allVars;
@@ -38,6 +39,7 @@ static void printColor(ostream &os, const std::string &s) {
     }
 }
 
+
 /**
  * Helper that prints the location's name or (if it has no name) its index to the given stream
  */
@@ -47,10 +49,32 @@ static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &
     if (colors) printColor(s, Color::None);
 }
 
-/**
- * Helper that prints an entire rule in a human-readable format
- */
-static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, bool colors) {
+
+void ITSExport::printGuard(const GuardList &guard, std::ostream &s, bool colors) {
+    if (guard.empty()) {
+        s << "[]";
+    } else {
+        s << "[ ";
+        for (int i=0; i < guard.size(); ++i) {
+            if (i > 0) s << " && ";
+            if (colors) printColor(s, Color::Guard);
+            s << guard.at(i);
+            if (colors) printColor(s, Color::None);
+        }
+        s << " ]";
+    }
+}
+
+
+void ITSExport::printCost(const Expression &cost, std::ostream &s, bool colors) {
+    if (colors) printColor(s, Color::Cost);
+    s << cost;
+    if (colors) printColor(s, Color::None);
+
+}
+
+
+void ITSExport::printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, bool colors) {
     printLocation(rule.getLhsLoc(), its, s, colors);
     s << " -> ";
 
@@ -67,22 +91,9 @@ static void printRule(const Rule &rule, const ITSProblem &its, std::ostream &s, 
         }
     }
 
-    if (rule.getGuard().empty()) {
-        s << "[]";
-    } else {
-        s << "[ ";
-        for (int i=0; i < rule.getGuard().size(); ++i) {
-            if (i > 0) s << " && ";
-            if (colors) printColor(s, Color::Guard);
-            s << rule.getGuard().at(i);
-            if (colors) printColor(s, Color::None);
-        }
-        s << " ]";
-    }
+    printGuard(rule.getGuard(), s, colors);
     s << ", cost: ";
-    if (colors) printColor(s, Color::Cost);
-    s << rule.getCost();
-    if (colors) printColor(s, Color::None);
+    printCost(rule.getCost(), s, colors);
     s << endl;
 }
 

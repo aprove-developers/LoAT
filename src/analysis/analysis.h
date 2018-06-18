@@ -34,8 +34,11 @@ struct RuntimeResult {
     // The final complexity (computed from bound and guard)
     Complexity cpx;
 
-    // The final cost expression
-    Expression bound;
+    // The final cost expression, after solving by asymptotic check
+    Expression solvedCost;
+
+    // The final cost, before solving
+    Expression cost;
 
     // The final guard
     GuardList guard;
@@ -45,7 +48,7 @@ struct RuntimeResult {
     bool reducedCpx;
 
     // Default constructor yields unknown complexity
-    RuntimeResult() : cpx(Complexity::Unknown), bound(0), reducedCpx(false) {}
+    RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0), reducedCpx(false) {}
 };
 
 
@@ -134,6 +137,11 @@ private:
      * to the dot output stream using the given descriptive text.
      */
     void printForProof(const std::string &dotDescription);
+
+    /**
+     * Prints the final complexity result with all relevant information to the proof output
+     */
+    void printResult(const RuntimeResult &runtime);
 
     // Handling of dot export
     void setupDotOutput();

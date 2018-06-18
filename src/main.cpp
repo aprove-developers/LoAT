@@ -225,23 +225,12 @@ int main(int argc, char *argv[]) {
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
     RuntimeResult runtime;
-    if (allowRecursion || its.isLinear()) {
+    if (!allowRecursion && !its.isLinear()) {
+        proofout.warning("Cannot analyze recursive ITS problem (recursion is disabled).");
+    } else {
         runtime = Analysis::analyze(its);
     }
     Timing::done(Timing::Total);
-
-    // Final proof output (TODO: Move this to analysis)
-    proofout << "Obtained the following complexity w.r.t. the length of the input n:" << endl;
-    proofout << "  Complexity class: " << runtime.cpx << endl;
-    proofout << "  Complexity value: ";
-    {
-        if (runtime.cpx.getType() == Complexity::CpxPolynomial) {
-            proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl;
-        } else {
-            proofout << runtime.cpx << endl;
-        }
-    }
-    proofout << endl;
 
     // Statistics
     if (printStats) {
