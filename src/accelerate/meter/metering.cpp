@@ -467,11 +467,11 @@ bool MeteringFinder::strengthenGuard(VarMan &varMan, Rule &rule) {
     return MT::strengthenGuard(varMan, rule.getGuardMut(), getUpdateList(rule));
 }
 
-bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
+option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const Rule &rule) {
     // Quick check whether there are any bounds on temp vars we can use to instantiate them.
     auto hasTempVar = [&](const Expression &ex) { return GuardToolbox::containsTempVar(varMan, ex); };
     if (std::none_of(rule.getGuard().begin(), rule.getGuard().end(), hasTempVar)) {
-        return false;
+        return {};
     }
 
     // We first perform the same steps as in generate()
@@ -529,14 +529,15 @@ bool MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule) {
 
     // If we found a successful instantiation, z3res is sat
     if (z3res != z3::sat) {
-        return false;
+        return {};
     }
 
     // Apply the successful instantiation to the entire rule
-    rule.applySubstitution(successfulSubs);
+    Rule instantiatedRule = rule;
+    instantiatedRule.applySubstitution(successfulSubs);
 
     // Proof output
     proofout << "During metering: Instantiating temporary variables by " << successfulSubs << endl;
 
-    return true;
+    return instantiatedRule;
 }

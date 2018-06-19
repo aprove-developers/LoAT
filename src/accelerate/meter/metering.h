@@ -51,9 +51,6 @@ public:
      */
     enum ResultKind { Success, Unbounded, Nonlinear, ConflictVar, Unsat };
 
-    // TODO: integrate free var instantiation back into generate(), include (but not apply) the substitution here?
-    // TODO: Alternateively, add a field "modifiedRule" (with applied substitution and added integralConstraint)
-    // TODO: Or, even better, add a field "tempVarSubstitution" since we need this anyway (when using eliminateTempVars)
     struct Result {
         // Flag indicating whether a metering function was successfully found
         ResultKind result;
@@ -78,7 +75,6 @@ public:
      */
     static Result generate(VarMan &varMan, const Rule &rule);
 
-    // TODO: This should rather return option<Rule>
     /**
      * Heuristic to instantiate temporary variables by their bounds (e.g. for "x <= 4", instantiate x by 4).
      * This might help to find a metering function, but of course makes the rule less general.
@@ -87,11 +83,15 @@ public:
      * for the metering function (so calling generate with the resulting rule is likely successful).
      * This is very expensive!
      *
-     * @return true iff instantiation was successful (and rule has been modified accordingly)
+     * @return the rule resulting from instantiation, if a successful instantiaton was found
      */
-    static bool instantiateTempVarsHeuristic(VarMan &varMan, Rule &rule);
+    static option<Rule> instantiateTempVarsHeuristic(VarMan &varMan, const Rule &rule);
 
-    // see MeteringToolbox::strengthenGuard
+    /**
+     * Guard strengthening heuristic for constant updates, see MeteringToolbox::strengthenGuard.
+     * @note modifies the given rule
+     * @return true iff successful (i.e., iff rule was modified)
+     */
     static bool strengthenGuard(VarMan &varMan, Rule &rule);
 
 private:

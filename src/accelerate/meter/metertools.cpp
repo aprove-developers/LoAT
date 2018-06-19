@@ -230,14 +230,8 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             // (this makes the guard stronger and might thus help to find a metering function)
             ExprSymbol lhsVar = varMan.getGinacSymbol(it.first);
 
-            // TODO: It might be better to apply the entire update!
-            // TODO: Consider FibonacciNew: loop(B,C) -> Com_2(loop(B-1,1), loop(B-2,1)) :|: B >= 2 && B >= C
-            // TODO: Adding B >= 1 makes no sense, but adding B-2 >= 1 would help!
-            // TODO: So for every term containing C, we should just apply the update!
-            // TODO: This is *much* better, since then the constraint is trivially true after the update and thus not part of the reducedGuard!
-
             GiNaC::exmap subs;
-            subs[varMan.getGinacSymbol(it.first)] = it.second; // TODO: Use Substitution::singleton;
+            subs[varMan.getGinacSymbol(it.first)] = it.second;
 
             for (const Expression &ex : reducedGuard) {
                 if (ex.has(lhsVar)) {
@@ -250,13 +244,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
                     // Adding trivial constraints does not make sense (no matter if they are true/false).
                     bool isTrivial = Relation::checkTrivial(add).is_initialized();
                     if (!isTrivial) {
-                        // TODO: This is the implementation corresponding to the above comment
-                        // TODO: This helps for the FibonacciNew example!
                         guard.push_back(add);
-
-                        // TODO: This is the old implementation, which is probably just stupid :P
-                        //guard.push_back(ex.subs(subs));
-
                         changed = true;
                     }
                 }

@@ -45,9 +45,10 @@ static MeteringFinder::Result meterWithInstantiation(VarMan &varMan, Rule &rule)
     if (Config::ForwardAccel::TempVarInstantiation) {
         if (meter.result == MeteringFinder::Unsat || meter.result == MeteringFinder::ConflictVar) {
             Rule instantiatedRule = rule;
-            if (MeteringFinder::instantiateTempVarsHeuristic(varMan, instantiatedRule)) {
-                meter = MeteringFinder::generate(varMan, instantiatedRule);
-                rule = instantiatedRule;
+            auto optRule = MeteringFinder::instantiateTempVarsHeuristic(varMan, rule);
+            if (optRule) {
+                rule = optRule.get();
+                meter = MeteringFinder::generate(varMan, rule);
             }
         }
     }

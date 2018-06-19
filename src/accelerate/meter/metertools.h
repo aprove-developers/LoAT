@@ -99,7 +99,8 @@ namespace MeteringToolbox {
      *
      * If a variable x is updated by a constant expression (e.g. x := 4 or x := y if y is not updated itself),
      * and there is a constraint on x (e.g. x > 0), a metering function might be difficult to find.
-     * This method propagates such constant updates to the guard by adding 4 > 0 or y > 0 to the guard.
+     * This method propagates such constant updates to the guard by applying the update to constraints with x,
+     * e.g. x > 0 becomes 4 > 0 or y > 0.
      *
      * This is performed individually for every update, so each update may lead to adding some constraints.
      *

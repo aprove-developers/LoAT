@@ -59,7 +59,6 @@ private:
     // Outer loops are always un-accelerated rules, so we just store an original rule here.
     struct OuterCandidate {
         TransIdx oldRule;
-        std::string reason; // TODO: Remove this, just to collect some statistics from benchmarks
     };
 
 private:

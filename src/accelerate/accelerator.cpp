@@ -25,7 +25,6 @@
 #include "its/rule.h"
 #include "its/export.h"
 
-// TODO: Move these to proper folders after refactoring
 #include "analysis/chain.h"
 #include "analysis/prune.h"
 
@@ -171,8 +170,7 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
             // Simplify the rule again (chaining can introduce many useless constraints)
             Preprocess::simplifyRule(its, nestedRule);
 
-            // TODO: Use full accelerate with heuristics (and backward acceleration)?
-            // TODO: We probably don't want to use backward accel here, as it often complicates the rule...
+            // Note that we do not try all heuristics or backward accel to keep nesting efficient
             auto optAccel = Forward::accelerateFast(its, nestedRule, sinkLoc);
             if (optAccel) {
                 Forward::MeteredRule accelRule = optAccel.get();
@@ -379,7 +377,7 @@ void Accelerator::run() {
 
             case Forward::NoMetering:
                 if (its.getRule(loop).isLinear()) {
-                    outerCandidates.push_back({loop, "NoMetering"});
+                    outerCandidates.push_back({loop});
                 }
                 keepRules.insert(loop);
                 proofout << "Found no metering function for rule " << loop << "." << endl;
@@ -418,7 +416,7 @@ void Accelerator::run() {
                 // The original rule could still be an outer loop for nesting,
                 // unless it is non-terminating (so nesting will not improve the result).
                 if (its.getRule(loop).isLinear() && !isNonterm) {
-                    outerCandidates.push_back({loop, "Ranked"});
+                    outerCandidates.push_back({loop});
                 }
                 break;
             }
@@ -431,9 +429,10 @@ void Accelerator::run() {
         if (Timeout::soft()) return;
     }
 
-    // TODO: Do we also want to chain accelerated rules with themselves?
-    // TODO: We could do this if the number of accelerated rules is below a certain threshold
-    // TODO: (e.g. similar to PRUNE_MAX_PARALLEL_RULES)
+    // Chaining accelerated rules amongst themselves would be another heuristic.
+    // Although it helps in certain examples, it is currently not implemented
+    // as it would most probably result in too many rules (and would thus be expensive).
+    // It can easily be added in this place in the future, if desired.
 
     // Simplify the guards of accelerated rules.
     // Especially backward acceleration and nesting can introduce superfluous constraints.

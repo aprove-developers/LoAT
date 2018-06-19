@@ -159,10 +159,6 @@ bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
 GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &monomials) {
     using namespace GiNaC;
 
-    // FIXME: If we substitute a free variable, the result should be free as well?!
-    // FIXME: This *might* be soundness critical!
-    // FIXME: Alternative: Never substitute fresh variables (and check if this affects the benchmarks)
-
     GiNaC::exmap res;
     for (const Expression &term: monomials) {
         if (is_a<symbol>(term)) {
@@ -224,8 +220,11 @@ GiNaC::exmap Linearize::reverseSubstitution(const GiNaC::exmap &subs) {
 
 
 optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+#ifdef DEBUG_METER_LINEARIZE
     debugLinearize("Trying to linearize the following guard/updates:");
     dumpGuardUpdates("linearize", guard, updates);
+#endif
+
     Linearize lin(guard, updates, varMan);
 
     // Collect all nonlinear terms that have to be replaced (if possible)
@@ -261,18 +260,6 @@ optional<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardLis
     GiNaC::exmap subs = lin.buildSubstitution(monomials);
     lin.applySubstitution(subs);
     debugLinearize("Applied linearization: " << subs);
-
-    // Check that everything is now indeed linear (can be removed, just to check the current implementation)
-    // FIXME: Remove this if it is never hit
-    for (const Expression &ex : guard) {
-        assert(Expression(ex.lhs()).isLinear());
-        assert(Expression(ex.rhs()).isLinear());
-    }
-    for (const UpdateMap &update : updates) {
-        for (const auto &it : update) {
-            assert(it.second.isLinear());
-        }
-    }
 
     // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)
     for (Expression ex : lin.additionalGuard) {
