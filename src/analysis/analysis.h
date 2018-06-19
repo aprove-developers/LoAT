@@ -109,7 +109,6 @@ private:
     bool eliminateALocation(std::string &eliminatedLocation);
     bool chainAcceleratedLoops(const std::set<TransIdx> &acceleratedRules);
     bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules);
-    //bool backwardAccelerateSimpleLoops();
     bool pruneRules();
 
     /**

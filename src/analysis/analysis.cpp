@@ -34,9 +34,6 @@
 
 #include "its/export.h"
 
-// TODO: Remove after testing
-#include "accelerate/backward.h"
-
 
 using namespace std;
 
@@ -430,39 +427,6 @@ bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
     return res;
 }
 
-/*
-bool Analysis::backwardAccelerateSimpleLoops() {
-    Stats::addStep("Pure Backward Accel");
-    bool res = false;
-
-    for (LocationIdx node : its.getLocations()) {
-        vector<TransIdx> loops = its.getTransitionsFromTo(node, node);
-        vector<TransIdx> toRemove;
-        vector<LinearRule> toAdd;
-
-        debugBackwardAccel("trying to backward-accelerate " << loops.size() << " loops at location " << node);
-        for (TransIdx loop : loops) {
-            if (Timeout::soft()) break;
-
-            auto optRules = BackwardAcceleration::accelerate(its, its.getLinearRule(loop));
-            if (optRules) {
-                vector<LinearRule> rules = optRules.get();
-                toAdd.insert(toAdd.end(), rules.begin(), rules.end());
-                toRemove.push_back(loop);
-            }
-        }
-
-        for (TransIdx rule : toRemove) {
-            its.removeRule(rule);
-        }
-        for (LinearRule rule : toAdd) {
-            its.addRule(rule);
-        }
-        res = res || !toRemove.empty();
-    }
-    return res;
-}
-*/
 
 bool Analysis::pruneRules() {
     // Always remove unreachable rules
