@@ -132,10 +132,16 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
             if (newRule.isLinear()) {
                 // Compute iterated cost/update by recurrence solving (modifies newRule).
-                // Note that we always assume that the maximal number of iterations is taken, so
-                // instead of adding 0 < tv < meter+1 as in the paper, we always instantiate tv by meter.
+                // Note that we usually assume that the maximal number of iterations is taken, so
+                // instead of adding 0 < tv < meter+1 as in the paper, we instantiate tv by meter.
+                Expression iterationCount = meter.metering;
+                if (Config::ForwardAccel::UseTempVarForIterationCount) {
+                    iterationCount = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("tv"));
+                }
+
+                // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
-                if (!Recurrence::iterateRule(varMan, linRule, meter.metering)) {
+                if (!Recurrence::iterateRule(varMan, linRule, iterationCount)) {
                     res.result = TooComplicated;
                     Stats::add(Stats::MeterCannotIterate);
                     return res;
@@ -143,7 +149,13 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
                 // The iterated update/cost computation is only sound if we do >= 1 iterations.
                 // Hence we have to ensure that the metering function is >= 1 (corresponding to 0 < tv).
-                linRule.getGuardMut().push_back(meter.metering >= 1);
+                linRule.getGuardMut().push_back(iterationCount >= 1);
+
+                // If we use a temporary variable instead of the metering function, add the upper bound.
+                // Note that meter always maps to int, so we can use <= here.
+                if (Config::ForwardAccel::UseTempVarForIterationCount) {
+                    linRule.getGuardMut().push_back(iterationCount <= meter.metering);
+                }
 
                 res.rules.emplace_back(meterStr, linRule);
 

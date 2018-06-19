@@ -132,13 +132,11 @@ namespace Config {
         bool ConstantUpdateHeuristic = true;
 
         // If true, iterated update/cost are computed for a fresh variable "tv"
-        // and the constraint "0 < tv < meter+1" is added to the guard (as in the paper).
+        // and the constraint "0 < tv <= meter" is added to the guard (as in the paper).
         // If false, iterated update/cost are directly computed with "meter"
         // (this means that we assume loops are always fully executed).
         // The second option produces much simpler rules and is thus the current default.
-
-        // TODO: not yet implemented!
-        //const bool UseTempVarForIterationCount = false;
+        const bool UseTempVarForIterationCount = false;
     }
 
     // Backward acceleration technique
@@ -273,9 +271,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
         PrintCfg(TempVarInstantiationMaxBounds, "Max bounds to try when instantiating temp vars");
         PrintCfg(ConflictVarHeuristic, "Workaround for cases with metering function min(A,B)");
         PrintCfg(ConstantUpdateHeuristic, "Heuristic for updates with constant right-hand side");
-
-        // TODO: Print if this is implemented
-        // PrintCfg(UseTempVarForIterationCount, "Use 0 < tv <= meter or instantiate tv by meter");
+        PrintCfg(UseTempVarForIterationCount, "Use 1 <= tv <= meter or instantiate tv by meter");
     }
     {
         using namespace Config::BackwardAccel;
