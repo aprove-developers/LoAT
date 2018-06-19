@@ -12,6 +12,7 @@
 #include "expr/ginactoz3.h"
 
 #include <purrs.hh>
+#include <util/stats.h>
 
 namespace Purrs = Parma_Recurrence_Relation_Solver;
 using namespace std;
@@ -247,11 +248,13 @@ optional<vector<LinearRule>> BackwardAcceleration::run() {
     auto inverseUpdate = computeInverseUpdate(order.get());
     if (!inverseUpdate) {
         debugBackwardAccel("Failed to compute inverse update");
+        Stats::add(Stats::BackwardNoInverseUpdate);
         return {};
     }
 
     if (!checkGuardImplication(inverseUpdate.get())) {
         debugBackwardAccel("Failed to check guard implication");
+        Stats::add(Stats::BackwardNonMonotonic);
         return {};
     }
 
@@ -262,8 +265,10 @@ optional<vector<LinearRule>> BackwardAcceleration::run() {
     Expression iteratedCost = rule.getCost();
     if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N)) {
         debugBackwardAccel("Failed to compute iterated cost/update");
+        Stats::add(Stats::BackwardCannotIterate);
         return {};
     }
+    Stats::add(Stats::BackwardSuccess);
 
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
     LinearRule accelerated = buildAcceleratedRule(iteratedUpdate, iteratedCost, N);

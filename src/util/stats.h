@@ -27,8 +27,13 @@
  */
 namespace Stats
 {
-    enum StatAction { ContractLinear=0, ContractBranch, ContractUnsat, PruneRemove,
-                      SelfloopRanked, SelfloopNoRank, SelfloopNoUpdate, SelfloopInfinite };
+    enum StatAction {
+        ChainSuccess=0, ChainFail,
+        PruneRemove,
+        MeterSuccess, MeterUnsat, MeterTooComplicated, MeterCannotIterate, MeterNonterm,
+        BackwardSuccess, BackwardNoInverseUpdate, BackwardNonMonotonic, BackwardCannotIterate
+    };
+
     void clear();
     void add(StatAction action);
     void addStep(const std::string &name);

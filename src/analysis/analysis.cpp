@@ -390,31 +390,36 @@ void Analysis::finalizeDotOutput(const RuntimeResult &runtime) {
 // ##############################
 
 bool Analysis::chainLinearPaths() {
-    Stats::addStep("Linear::chainLinearPaths");
+    Stats::addStep("Chain Linear Paths");
+    Timing::Scope timer(Timing::Chain);
     return Chaining::chainLinearPaths(its);
 }
 
 
 bool Analysis::chainTreePaths() {
-    Stats::addStep("Linear::chainTreePaths");
+    Stats::addStep("Chain Tree Paths");
+    Timing::Scope timer(Timing::Chain);
     return Chaining::chainTreePaths(its);
 }
 
 
 bool Analysis::eliminateALocation(string &eliminatedLocation) {
-    Stats::addStep("Linear::eliminateALocation");
+    Stats::addStep("Eliminate Location");
+    Timing::Scope timer(Timing::Chain);
     return Chaining::eliminateALocation(its, eliminatedLocation);
 }
 
 
 bool Analysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
-    Stats::addStep("Linear::chainAcceleratedLoops");
+    Stats::addStep("Chain Accelerated");
+    Timing::Scope timer(Timing::Chain);
     return Chaining::chainAcceleratedRules(its, acceleratedRules);
 }
 
 
 bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
-    Stats::addStep("FlowGraph::accelerateSimpleLoops");
+    Stats::addStep("Accelerate");
+    Timing::Scope timer(Timing::Accelerate);
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
@@ -427,7 +432,7 @@ bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
 
 /*
 bool Analysis::backwardAccelerateSimpleLoops() {
-    Stats::addStep("FlowGraph::backwardAccelerateSimpleLoops");
+    Stats::addStep("Pure Backward Accel");
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
@@ -465,7 +470,8 @@ bool Analysis::pruneRules() {
 
     // Prune parallel transitions if enabled
     if (Config::Analysis::Pruning) {
-        Stats::addStep("Linear::pruneRules");
+        Stats::addStep("Prune Rules");
+        Timing::Scope timer(Timing::Prune);
         changed = Pruning::pruneParallelRules(its) || changed;
     }
 

@@ -364,8 +364,7 @@ optional<VariablePair> MeteringFinder::findConflictVars() const {
 /* ### Main function ### */
 
 MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule) {
-    Timing::Scope timer(Timing::FarkasTotal);
-    Timing::start(Timing::FarkasLogic);
+    Timing::Scope timer(Timing::Meter);
 
     Result result;
     MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
@@ -374,7 +373,6 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // linearize and simplify the problem
     if (!meter.preprocessAndLinearize()) {
-        Timing::done(Timing::FarkasLogic);
         result.result = Nonlinear;
         return result;
     }
@@ -383,7 +381,6 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // identify trivially unbounded loops (no guard constraint is limiting the loop's execution)
     if (meter.reducedGuard.empty()) {
-        Timing::done(Timing::FarkasLogic);
         result.result = Unbounded;
         return result;
     }
@@ -391,7 +388,6 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     // create constraints for the metering function template
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
-    Timing::done(Timing::FarkasLogic);
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
     Z3Solver solver(meter.context, Config::Z3::MeterTimeout);

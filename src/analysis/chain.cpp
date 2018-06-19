@@ -80,11 +80,12 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
     if (Config::Chain::CheckSat) {
         // Avoid chaining if the resulting rule can never be taken
         if (checkSat && !checkSatisfiability(newGuard)) {
-            Stats::add(Stats::ContractUnsat);
+            Stats::add(Stats::ChainFail);
             return {};
         }
     }
 
+    Stats::add(Stats::ChainSuccess);
     return RuleLhs(firstLhs.getLoc(), newGuard, newCost);
 }
 

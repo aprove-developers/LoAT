@@ -95,11 +95,13 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
     switch (meter.result) {
         case MeteringFinder::Nonlinear:
             res.result = TooComplicated;
+            Stats::add(Stats::MeterTooComplicated);
             return res;
 
         case MeteringFinder::ConflictVar:
             res.result = NoMetering;
             conflictVar = meter.conflictVar;
+            Stats::add(Stats::MeterUnsat);
             return res;
 
         case MeteringFinder::Unbounded:
@@ -108,11 +110,13 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             rule.getCostMut() = Expression::InfSymbol;
             res.rules.emplace_back("NONTERM", rule.replaceRhssBySink(sink));
             res.result = Success;
+            Stats::add(Stats::MeterNonterm);
             return res;
         }
 
         case MeteringFinder::Unsat:
             res.result = NoMetering;
+            Stats::add(Stats::MeterUnsat);
             return res;
 
         case MeteringFinder::Success:
@@ -133,6 +137,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 LinearRule linRule = newRule.toLinear();
                 if (!Recurrence::iterateRule(varMan, linRule, meter.metering)) {
                     res.result = TooComplicated;
+                    Stats::add(Stats::MeterCannotIterate);
                     return res;
                 }
 
@@ -154,6 +159,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             }
 
             res.result = Success;
+            Stats::add(Stats::MeterSuccess);
             return res;
         }
     }

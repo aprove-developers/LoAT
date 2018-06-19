@@ -997,6 +997,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
                                                              const Expression &cost,
                                                              bool finalCheck)
 {
+    Timing::Scope timer(Timing::Asymptotic);
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     // Expand the cost to make it easier to analyze

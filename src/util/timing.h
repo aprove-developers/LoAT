@@ -27,8 +27,7 @@
  */
 namespace Timing
 {
-    // FIXME: Revise this list, e.g. "Branches" vs "Contract" does not make much sense if we also have chainSimpleLoops
-    enum TimingAction { Total=0, FarkasTotal, FarkasLogic, Contract, Branches, Selfloops, Infinity, Z3, Purrs, Preprocess, Other };
+    enum TimingAction { Total=0, Z3, Purrs, Preprocess, Prune, Chain, Accelerate, Meter, BackwardAccel, Asymptotic, Other };
 
     void clear();
     void print(std::ostream &os);
@@ -42,7 +41,7 @@ namespace Timing
     // Starts the given action upon construction, stops it upon destruction
     class Scope {
     public:
-        Scope(TimingAction ac) : action(ac) { Timing::start(action); }
+        explicit Scope(TimingAction ac) : action(ac) { Timing::start(action); }
         ~Scope() { Timing::done(action); }
     private:
         TimingAction action;

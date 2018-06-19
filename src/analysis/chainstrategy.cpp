@@ -237,15 +237,12 @@ bool Chaining::chainLinearPaths(ITSProblem &its) {
             // Only apply chaining if succ has exactly one in- and one outgoing transition
             if (isOnLinearPath(its, succ)) {
                 eliminateLocationByChaining(its, succ, true);
-
                 changed = true;
-                Stats::add(Stats::ContractLinear);
             }
         }
         return changed;
     };
 
-    Timing::Scope timer(Timing::Contract);
     debugChain("Chaining linear paths");
     return callOnEachNode(its, implementation, true);
 }
@@ -272,13 +269,11 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
                 changed = true;
             }
 
-            Stats::add(Stats::ContractBranch);
             if (Timeout::soft()) break;
         }
         return changed;
     };
 
-    Timing::Scope timer(Timing::Branches);
     debugChain("Chaining tree paths");
 
     // To avoid rule explosion, the implementation is only called once per node.
@@ -327,8 +322,6 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
 
 
 bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
-    Timing::Scope timer(Timing::Contract);
-    Stats::addStep("Chaining::eliminateALocation");
     debugChain("Trying to eliminate a location");
 
     set<LocationIdx> visited;
@@ -342,9 +335,6 @@ bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
 
 bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
     if (acceleratedRules.empty()) return false;
-
-    Timing::Scope timer(Timing::Contract);
-    Stats::addStep("ChainingNL::chainSimpleLoops");
     set<TransIdx> successfullyChained;
 
     bool wasProofEnabled = proofout.setEnabled(Config::Output::ProofChain);

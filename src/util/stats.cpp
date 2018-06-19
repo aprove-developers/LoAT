@@ -49,29 +49,24 @@ void Stats::addStep(const string &name) {
 void Stats::print(ostream &os, bool printZero) {
     auto printVal = [&](int val, string name) {
         if (val == 0 && !printZero) return;
-        os << name << ": " << val << endl;
+        os << left << setw(20) << (name + ": ") << val << right << endl;
     };
-
-    int unsat = 0;
-    int fail = 0;
 
     os << " ======== STATS =========" << endl;
     for (int i=0; i <= step; ++i) {
         os << " ---- " << names[i] << " ----" << endl;
-        printVal(data[i][ContractLinear],"Contract[Linear]");
-        printVal(data[i][ContractBranch],"Contract[Branched]");
-        printVal(data[i][ContractUnsat], "Contract[Unsat]");
-        printVal(data[i][SelfloopRanked],"Loop[Ranked]");
-        printVal(data[i][SelfloopNoRank],"Loop[NoRank]");
-        printVal(data[i][SelfloopNoUpdate],"Loop[NoUpdate]");
-        printVal(data[i][SelfloopInfinite],"Loop[Infinite]");
-        printVal(data[i][PruneRemove], "Pruned[Removed]");
-
-        unsat += data[i][ContractUnsat];
-        fail += data[i][SelfloopNoRank] + data[i][SelfloopNoUpdate];
+        printVal(data[i][ChainSuccess],"Chain[success]");
+        printVal(data[i][ChainFail],"Chain[fail]");
+        printVal(data[i][PruneRemove], "Pruned");
+        printVal(data[i][MeterSuccess],"Meter[success]");
+        printVal(data[i][MeterUnsat],"Meter[unsat]");
+        printVal(data[i][MeterTooComplicated],"Meter[too complicated]");
+        printVal(data[i][MeterCannotIterate],"Meter[cannot iterate]");
+        printVal(data[i][MeterNonterm], "Meter[nonterm]");
+        printVal(data[i][BackwardSuccess], "Backward[success]");
+        printVal(data[i][BackwardNoInverseUpdate], "Backward[no inverse]");
+        printVal(data[i][BackwardNonMonotonic], "Backward[not monotonic]");
+        printVal(data[i][BackwardCannotIterate], "Backward[cannot iterate]");
     }
-
-    if (unsat > 0) os << "NOTE: Contract UNSATs: " << unsat << endl;
-    if (fail > 0) os << "CRITICAL: Loop failures: " << fail << endl;
     os << " ======== STATS =========" << endl;
 }

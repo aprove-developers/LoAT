@@ -57,18 +57,19 @@ void Timing::print(ostream &s) {
         if (TimingLast.find(ac) != TimingLast.end()) s << "[active] ";
         s << name << endl;
     };
+
     s << " ========== TIMING ==========" << endl;
     s << setw(10) << "Time [ms]" << " | " << "Description" << endl;
     printLine(Total,"Total");
-    printLine(Preprocess,"Preprocessing");
-    printLine(Contract,"Contract (linear)");
-    printLine(Branches,"Contract (branches)");
-    printLine(Selfloops,"Selfloops");
-    printLine(FarkasTotal,"Metering (total)");
-    printLine(FarkasLogic,"Metering (logic)");
-    printLine(Infinity,"Infinity check");
-    printLine(Z3,"Z3 Total");
-    printLine(Purrs,"Purrs Total");
+    printLine(Z3,"Z3 (total time)");
+    printLine(Purrs,"PURRS (total time)");
+    printLine(Preprocess,"Pre-processing");
+    printLine(Prune,"Pruning (parallel rules)");
+    printLine(Chain,"Chaining");
+    printLine(Accelerate,"Acceleration (total)");
+    printLine(Meter, "Metering (no heuristics)");
+    printLine(BackwardAccel,"Backward Accel (total)");
+    printLine(Asymptotic,"Asymptotic Computation");
     if (TimingSum.count(Timing::Other) > 0) printLine(Other,"Other");
     s << " ========== TIMING ==========" << endl;
 }
