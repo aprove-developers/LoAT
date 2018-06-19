@@ -30,7 +30,7 @@
 
 #include "rule.h"
 #include "variablemanager.h"
-#include "data/hypergraph.h"
+#include "hypergraph.h"
 
 
 class ITSProblem : public VariableManager {

@@ -26,8 +26,6 @@
 #include "meter/metering.h"
 #include "forward.h"
 
-#include <boost/optional.hpp>
-
 
 class Accelerator {
 public:

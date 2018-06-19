@@ -35,7 +35,7 @@
 #include "its/export.h"
 
 // TODO: Remove after testing
-#include "accelerate/backwardacceleration.h"
+#include "accelerate/backward.h"
 
 
 using namespace std;

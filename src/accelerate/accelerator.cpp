@@ -33,14 +33,12 @@
 #include "util/timing.h"
 #include "util/timeout.h"
 #include "forward.h"
-#include "backwardacceleration.h"
+#include "backward.h"
 
 #include <queue>
 
 
 using namespace std;
-using boost::optional;
-
 namespace Forward = ForwardAcceleration;
 using Backward = BackwardAcceleration;
 
