@@ -24,7 +24,6 @@
 #include "z3/z3toolbox.h"
 
 using namespace std;
-using boost::optional;
 
 
 /* ### Helpers ### */

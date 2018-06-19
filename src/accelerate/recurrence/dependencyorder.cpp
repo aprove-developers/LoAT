@@ -18,7 +18,6 @@
 #include "dependencyorder.h"
 
 using namespace std;
-using boost::optional;
 
 struct PartialResult {
     std::vector<VariableIdx> ordering; // might not contain all variables (hence partial)
@@ -60,7 +59,7 @@ static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &upd
     }
 }
 
-optional<vector<VariableIdx>> DependencyOrder::findOrder(const VarMan &varMan, const UpdateMap &update) {
+option<vector<VariableIdx>> DependencyOrder::findOrder(const VarMan &varMan, const UpdateMap &update) {
     PartialResult res;
     findOrderUntilConflicting(varMan, update, res);
 
@@ -73,7 +72,7 @@ optional<vector<VariableIdx>> DependencyOrder::findOrder(const VarMan &varMan, c
 }
 
 
-optional<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan &varMan, UpdateMap &update,
+option<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan &varMan, UpdateMap &update,
                                                                       GuardList &guard)
 {
     // order variables until a conflict is reached

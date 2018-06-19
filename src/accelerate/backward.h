@@ -3,11 +3,11 @@
 
 #include "its/itsproblem.h"
 #include "its/rule.h"
-#include <boost/optional.hpp>
+#include "util/option.h"
 
 class BackwardAcceleration {
 public:
-    static boost::optional<std::vector<LinearRule>> accelerate(VarMan &varMan, const LinearRule &rule);
+    static option<std::vector<LinearRule>> accelerate(VarMan &varMan, const LinearRule &rule);
 
 private:
     BackwardAcceleration(VarMan &varMan, const LinearRule &rule);
@@ -15,7 +15,7 @@ private:
     /**
      * Main function, just calls the methods below in the correct order
      */
-    boost::optional<std::vector<LinearRule>> run();
+    option<std::vector<LinearRule>> run();
 
     /**
      * Checks whether the backward acceleration technique might be applicable.
@@ -26,7 +26,7 @@ private:
      * Given a dependency order for the rule's update, computes the inverse update (as substitution).
      * This may fail if the update contains nonlinear expressions.
      */
-    boost::optional<GiNaC::exmap> computeInverseUpdate(const std::vector<VariableIdx> &order) const;
+    option<GiNaC::exmap> computeInverseUpdate(const std::vector<VariableIdx> &order) const;
 
     /**
      * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
@@ -55,7 +55,7 @@ private:
      * Helper for replaceByUpperbounds, returns all upperbounds of N in rule's guard,
      * or fails if not all of them can be computed.
      */
-    static boost::optional<std::vector<Expression>> computeUpperbounds(const ExprSymbol &N, const GuardList &guard);
+    static option<std::vector<Expression>> computeUpperbounds(const ExprSymbol &N, const GuardList &guard);
 
 private:
     VariableManager &varMan;

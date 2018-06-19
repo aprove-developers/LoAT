@@ -23,7 +23,6 @@
 #include <purrs.hh>
 
 using namespace std;
-using boost::optional;
 namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 
@@ -35,7 +34,7 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 {}
 
 
-optional<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs) {
+option<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs) {
     Timing::Scope timer(Timing::Purrs);
 
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
@@ -62,7 +61,7 @@ optional<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRh
 }
 
 
-optional<Expression> Recurrence::findCostRecurrence(Expression cost) {
+option<Expression> Recurrence::findCostRecurrence(Expression cost) {
     Timing::Scope timer(Timing::Purrs);
     cost = cost.subs(updatePreRecurrences); //replace variables by their recurrence equations
 
@@ -100,7 +99,7 @@ optional<Expression> Recurrence::findCostRecurrence(Expression cost) {
 }
 
 
-optional<UpdateMap> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
+option<UpdateMap> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
     assert(dependencyOrder.size() == update.size());
     UpdateMap newUpdate;
 
@@ -127,7 +126,7 @@ optional<UpdateMap> Recurrence::iterateUpdate(const UpdateMap &update, const Exp
 }
 
 
-optional<Expression> Recurrence::iterateCost(const Expression &cost, const Expression &meterfunc) {
+option<Expression> Recurrence::iterateCost(const Expression &cost, const Expression &meterfunc) {
     //calculate the new cost sum
     auto costRec = findCostRecurrence(cost);
     if (costRec) {

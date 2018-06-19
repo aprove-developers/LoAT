@@ -14,9 +14,7 @@
 #include <purrs.hh>
 #include <util/stats.h>
 
-namespace Purrs = Parma_Recurrence_Relation_Solver;
 using namespace std;
-using boost::optional;
 
 BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule)
         : varMan(varMan), rule(rule)
@@ -28,7 +26,7 @@ bool BackwardAcceleration::shouldAccelerate() const {
 }
 
 
-optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<VariableIdx> &order) const {
+option<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<VariableIdx> &order) const {
     // Gather guard variables
     set<VariableIdx> relevantVars;
     for (const Expression &ex : rule.getGuard()) {
@@ -162,7 +160,7 @@ LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedU
 }
 
 
-optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
+option<vector<Expression>> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
     for (const Expression &ex : guard) {
         if (Relation::isEquality(ex) && ex.has(N)) {
@@ -232,7 +230,7 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
 }
 
 
-optional<vector<LinearRule>> BackwardAcceleration::run() {
+option<vector<LinearRule>> BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
         return {};
@@ -281,7 +279,7 @@ optional<vector<LinearRule>> BackwardAcceleration::run() {
 }
 
 
-optional<vector<LinearRule>> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
+option<vector<LinearRule>> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
     BackwardAcceleration ba(varMan, rule);
     return ba.run();
 }

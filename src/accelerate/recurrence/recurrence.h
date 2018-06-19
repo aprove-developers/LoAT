@@ -20,7 +20,7 @@
 
 #include "its/rule.h"
 #include "its/variablemanager.h"
-
+#include "util/option.h"
 
 
 /**
@@ -59,26 +59,26 @@ private:
      * @note dependencyOrder must be set before
      * @note sets updatePreRecurrences
      */
-    boost::optional<UpdateMap> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
+    option<UpdateMap> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
 
     /**
      * Computes the iterated cost, with meterfunc as iteration step (if possible).
      * @note updatePreRecurrences must be set before (so iterateUpdate() needs to be called before)
      */
-    boost::optional<Expression> iterateCost(const Expression &cost, const Expression &meterfunc);
+    option<Expression> iterateCost(const Expression &cost, const Expression &meterfunc);
 
     /**
      * Helper for iterateUpdate.
      * Tries to find a recurrence for the given single update.
      * Note that all variables occurring in update must have been solved before (and added to updatePreRecurrences).
      */
-    boost::optional<Expression> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs);
+    option<Expression> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs);
 
     /**
      * Tries to find a recurrence for the given cost term.
      * Note that all variables occuring in update must have been solved before (and added to updatePreRecurrences).
      */
-    boost::optional<Expression> findCostRecurrence(Expression cost);
+    option<Expression> findCostRecurrence(Expression cost);
 
 private:
     /**

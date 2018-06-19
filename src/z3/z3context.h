@@ -19,11 +19,11 @@
 #define Z3CONTEXT_H
 
 #include "util/timing.h"
+#include "util/option.h"
 #include "expr/expression.h"
 
 #include <z3++.h>
 #include <map>
-#include <boost/optional.hpp>
 
 
 /**
@@ -43,7 +43,7 @@ public:
     /**
      * Returns the variable associated with the given symbol, if present
      */
-    boost::optional<z3::expr> getVariable(const ExprSymbol &symbol) const;
+    option<z3::expr> getVariable(const ExprSymbol &symbol) const;
 
     /**
      * Adds a new z3 variable (with the given symbol's name, if possible, otherwise a number is appended)

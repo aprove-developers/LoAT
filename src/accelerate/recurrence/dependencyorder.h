@@ -20,6 +20,7 @@
 
 #include "its/rule.h"
 #include "its/variablemanager.h"
+#include "util/option.h"
 
 
 /**
@@ -38,7 +39,7 @@ namespace DependencyOrder {
      * Fails if there is a nontrivial set of variables whose updates depend on each other.
      * @return list indicating the order (if successful)
      */
-    boost::optional<std::vector<VariableIdx>> findOrder(const VarMan &varMan, const UpdateMap &update);
+    option<std::vector<VariableIdx>> findOrder(const VarMan &varMan, const UpdateMap &update);
 
     /**
      * Tries to find an order to calculate recurrence equations.
@@ -51,7 +52,7 @@ namespace DependencyOrder {
      *
      * @return list indicating the order (if successful), both arguments may be modified
      */
-    boost::optional<std::vector<VariableIdx>> findOrderWithHeuristic(const VarMan &varMan, UpdateMap &update, GuardList &guard);
+    option<std::vector<VariableIdx>> findOrderWithHeuristic(const VarMan &varMan, UpdateMap &update, GuardList &guard);
 };
 
 #endif // DEPENDENCYORDER_H

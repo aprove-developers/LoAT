@@ -22,6 +22,7 @@
 #include "z3/z3context.h"
 #include "its/variablemanager.h"
 #include "its/rule.h"
+#include "util/option.h"
 
 #include <vector>
 #include <map>
@@ -63,7 +64,7 @@ public:
 
         // Additional constraint that has to be added to the rule's guard to ensure correctness.
         // Only relevant if result is Success (and real coefficients are used).
-        boost::optional<Expression> integralConstraint;
+        option<Expression> integralConstraint;
     };
 
     /**
@@ -165,7 +166,7 @@ private:
      * (which we can currently not express). Example: A++, B++ [ A < X, B < Y ].
      * Note that this is just a heuristic that only handles simple cases.
      */
-    boost::optional<VariablePair> findConflictVars() const;
+    option<VariablePair> findConflictVars() const;
 
     /**
      * Modifies the current result to ensure that the metering function evaluates to an integer.

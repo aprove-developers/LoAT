@@ -32,7 +32,6 @@
 #include <boost/math/common_factor.hpp> // for gcd/lcdm
 
 using namespace std;
-using boost::optional;
 namespace MT = MeteringToolbox;
 
 
@@ -308,7 +307,7 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const z3::model &mod
     }
 }
 
-optional<VariablePair> MeteringFinder::findConflictVars() const {
+option<VariablePair> MeteringFinder::findConflictVars() const {
     set<VariableIdx> conflictingVars;
 
     // find variables on which the loop's runtime might depend (simple heuristic)

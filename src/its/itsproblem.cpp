@@ -18,10 +18,7 @@
 #include "itsproblem.h"
 #include "export.h"
 
-//using namespace ITSProblemInternal;
 using namespace std;
-using boost::optional;
-
 
 
 bool ITSProblem::isEmpty() const {
@@ -148,7 +145,7 @@ set<LocationIdx> ITSProblem::getLocations() const {
     return locations;
 }
 
-optional<string> ITSProblem::getLocationName(LocationIdx idx) const {
+option<string> ITSProblem::getLocationName(LocationIdx idx) const {
     auto it = locationNames.find(idx);
     if (it != locationNames.end()) {
         return it->second;

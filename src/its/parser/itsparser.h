@@ -4,11 +4,10 @@
 #include <string>
 #include <vector>
 
-#include <boost/optional.hpp>
-
 #include "term.h"
 #include "termparser.h"
 #include "its/itsproblem.h"
+#include "util/option.h"
 
 namespace parser {
 
@@ -27,7 +26,7 @@ private:
     struct ParsedRule {
         TermPtr lhs;
         std::vector<TermPtr> rhss;
-        boost::optional<TermPtr> cost;
+        option<TermPtr> cost;
         std::vector<Relation> guard;
     };
 
@@ -48,7 +47,7 @@ private:
     // Step 1: Parsing into ParsedRule
     ParsedRule parseRule(const std::string &line) const;
     TermPtr parseTerm(const std::string &s) const;
-    boost::optional<TermPtr> parseCost(const std::string &cost) const;
+    option<TermPtr> parseCost(const std::string &cost) const;
     TermPtr parseLeftHandSide(const std::string &rhs) const;
     std::vector<TermPtr> parseRightHandSide(const std::string &rhs) const;
     std::vector<Relation> parseGuard(const std::string &guard) const;

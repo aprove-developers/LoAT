@@ -20,6 +20,7 @@
 
 #include "expr/expression.h"
 #include "its/variablemanager.h"
+#include "util/option.h"
 
 
 /**
@@ -44,7 +45,7 @@ public:
      * Requires guard to only contain inequalities.
      * Returns the reverse substitution, if linearization was successful.
      */
-    static boost::optional<GiNaC::exmap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
+    static option<GiNaC::exmap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
 
 private:
     Linearize(GuardList &guard, std::vector<UpdateMap> &updates, VarMan &varMan)

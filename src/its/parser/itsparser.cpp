@@ -28,7 +28,6 @@ using namespace parser;
 
 using namespace std;
 using namespace boost::algorithm;
-using boost::optional;
 
 
 ITSProblem ITSParser::loadFromFile(const string &filename) {
@@ -305,11 +304,11 @@ vector<TermPtr> ITSParser::parseRightHandSide(const std::string &rhs) const {
 }
 
 
-optional<TermPtr> ITSParser::parseCost(const std::string &cost) const {
+option<TermPtr> ITSParser::parseCost(const std::string &cost) const {
     if (cost.empty()) {
-        return optional<TermPtr>();
+        return option<TermPtr>();
     } else {
-        return optional<TermPtr>(parseTerm(cost));
+        return option<TermPtr>(parseTerm(cost));
     }
 }
 
