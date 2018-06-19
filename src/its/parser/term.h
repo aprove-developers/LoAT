@@ -119,7 +119,7 @@ public:
     bool isFunappOnArithmeticExpressions() const override { return false; }
 
     void collectVariables(std::set<VariableIdx> &set) const override { set.insert(var); }
-    Expression toGinacExpression(const ITSProblem &its) const override { return its.getGinacSymbol(var); }
+    Expression toGinacExpression(const ITSProblem &its) const override { return its.getVarSymbol(var); }
 
 private:
     VariableIdx var;

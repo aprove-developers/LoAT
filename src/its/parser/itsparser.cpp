@@ -550,8 +550,8 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
     for (int i=0; i < loc.arity; ++i) {
         if (lhsVars[i] != loc.lhsVars[i]) {
             // Add substitution
-            ExprSymbol oldSym = itsProblem.getGinacSymbol(lhsVars[i]);
-            ExprSymbol newSym = itsProblem.getGinacSymbol(loc.lhsVars[i]);
+            ExprSymbol oldSym = itsProblem.getVarSymbol(lhsVars[i]);
+            ExprSymbol newSym = itsProblem.getVarSymbol(loc.lhsVars[i]);
             subs[oldSym] = newSym;
         }
     }
@@ -569,7 +569,7 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
         VariableIdx newVar = itsProblem.getVarIdx(newSym);
         if (ruleVars.count(newVar) > 0) {
             VariableIdx freshVar = itsProblem.addFreshVariable(newSym.get_name());
-            ExprSymbol freshSym = itsProblem.getGinacSymbol(freshVar);
+            ExprSymbol freshSym = itsProblem.getVarSymbol(freshVar);
             subsMore[newSym] = freshSym;
         }
     }
@@ -590,7 +590,7 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
 
     ExprSymbolSet lhsVars;
     for (VariableIdx var : lhsData.lhsVars) {
-        lhsVars.insert(itsProblem.getGinacSymbol(var));
+        lhsVars.insert(itsProblem.getVarSymbol(var));
     }
 
     // Substitute all variables that do not occur on the lhs by temporary ones
@@ -599,7 +599,7 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
         if (lhsVars.count(var) == 0) {
             // Create a fresh temporary variable
             VariableIdx tv = itsProblem.addFreshTemporaryVariable("free");
-            subs[var] = itsProblem.getGinacSymbol(tv);
+            subs[var] = itsProblem.getVarSymbol(tv);
         }
     }
 
@@ -632,7 +632,7 @@ void ITSParser::stripTrivialUpdates(UpdateMap &update) const {
     set<VariableIdx> toRemove;
 
     for (const auto &it : update) {
-        ExprSymbol lhs = itsProblem.getGinacSymbol(it.first);
+        ExprSymbol lhs = itsProblem.getVarSymbol(it.first);
         const Expression &rhs = it.second;
 
         if (rhs.equalsVariable(lhs)) {

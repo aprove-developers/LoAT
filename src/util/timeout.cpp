@@ -24,17 +24,16 @@
 using namespace std;
 
 static bool timeout_enable = false;
-static timeoutpoint timeout_start;
-static timeoutpoint timeout_preprocess;
-static timeoutpoint timeout_soft;
-static timeoutpoint timeout_hard;
+static TimePoint timeout_start;
+static TimePoint timeout_preprocess;
+static TimePoint timeout_soft;
+static TimePoint timeout_hard;
 
 void Timeout::setTimeouts(int seconds) {
     assert(seconds == 0 || seconds >= 10);
-    timeoutpoint now = chrono::steady_clock::now();
+    TimePoint now = chrono::steady_clock::now();
     timeout_start = now;
 
-    // TODO: We need more time after the soft timeout (since we easily miss the soft timeout by some seconds).
     if (seconds > 0) {
         timeout_preprocess = now + static_cast<std::chrono::seconds>((seconds < 30) ? 3 : 5);
         timeout_soft = now + static_cast<std::chrono::seconds>(seconds-((seconds < 30) ? 5 : 10));
@@ -43,35 +42,34 @@ void Timeout::setTimeouts(int seconds) {
     }
 }
 
-// TODO: Rename? getStartTime()
-timeoutpoint Timeout::start() {
+TimePoint Timeout::start() {
     return timeout_start;
 }
 
 bool Timeout::preprocessing() {
     if (!timeout_enable) return false;
-    timeoutpoint now = chrono::steady_clock::now();
+    TimePoint now = chrono::steady_clock::now();
     return now >= timeout_preprocess;
 }
 
 bool Timeout::soft() {
     if (!timeout_enable) return false;
-    timeoutpoint now = chrono::steady_clock::now();
+    TimePoint now = chrono::steady_clock::now();
     return now >= timeout_soft;
 }
 
 bool Timeout::hard() {
     if (!timeout_enable) return false;
-    timeoutpoint now = chrono::steady_clock::now();
+    TimePoint now = chrono::steady_clock::now();
     return now >= timeout_hard;
 }
 
-timeoutpoint Timeout::create(int seconds) {
-    timeoutpoint now = chrono::steady_clock::now();
+TimePoint Timeout::create(int seconds) {
+    TimePoint now = chrono::steady_clock::now();
     return now + static_cast<std::chrono::seconds>(seconds);
 }
 
-bool Timeout::over(const timeoutpoint &point) {
-    timeoutpoint now = chrono::steady_clock::now();
+bool Timeout::over(const TimePoint &point) {
+    TimePoint now = chrono::steady_clock::now();
     return now >= point;
 }

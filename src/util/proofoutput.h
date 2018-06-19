@@ -100,7 +100,7 @@ protected:
     // helper to display timestamps
     static std::string formatTimestamp() {
         using namespace std;
-        timeoutpoint now = chrono::steady_clock::now();
+        TimePoint now = chrono::steady_clock::now();
         chrono::duration<float> elapsed = now - Timeout::start();
 
         stringstream ss;

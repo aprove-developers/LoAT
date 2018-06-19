@@ -169,7 +169,7 @@ GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &monomials) {
             int exponent = ex_to<numeric>(term.op(1)).to_int();
 
             VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent));
-            ExprSymbol fresh = varMan.getGinacSymbol(freshIdx);
+            ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
             res[term] = fresh;
 
             // Remember that e.g. x^2 is always nonnegative
@@ -183,7 +183,7 @@ GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &monomials) {
             symbol y = ex_to<symbol>(term.op(1));
 
             VariableIdx freshIdx = varMan.addFreshVariable(x.get_name() + y.get_name());
-            ExprSymbol fresh = varMan.getGinacSymbol(freshIdx);
+            ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
             res[term] = fresh;
         }
     }

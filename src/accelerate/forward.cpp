@@ -185,8 +185,8 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
 
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
     if (Config::ForwardAccel::ConflictVarHeuristic && conflictVar) {
-        ExprSymbol A = varMan.getGinacSymbol(conflictVar->first);
-        ExprSymbol B = varMan.getGinacSymbol(conflictVar->second);
+        ExprSymbol A = varMan.getVarSymbol(conflictVar->first);
+        ExprSymbol B = varMan.getVarSymbol(conflictVar->second);
         Rule newRule = rule;
         debugAccel("Trying MinMax heuristic with variables " << A << ", " << B << " for rule " << newRule);
 

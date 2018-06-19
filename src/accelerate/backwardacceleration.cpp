@@ -64,7 +64,7 @@ optional<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<V
         }
         assert(update.count(var) > 0); // order only contains updated variables
 
-        ExprSymbol x = varMan.getGinacSymbol(var);
+        ExprSymbol x = varMan.getVarSymbol(var);
         Expression rhs = update.at(var);
         Expression inverseRhs;
 
@@ -258,7 +258,7 @@ optional<vector<LinearRule>> BackwardAcceleration::run() {
     }
 
     // compute the iterated update and cost, with a fresh variable N as iteration step
-    ExprSymbol N = varMan.getGinacSymbol(varMan.addFreshTemporaryVariable("k"));
+    ExprSymbol N = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("k"));
 
     UpdateMap iteratedUpdate = rule.getUpdate();
     Expression iteratedCost = rule.getCost();

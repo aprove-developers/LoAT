@@ -39,7 +39,7 @@ Expression UpdateMap::getUpdate(VariableIdx var) const {
 GiNaC::exmap UpdateMap::toSubstitution(const VariableManager &varMan) const {
     GiNaC::exmap subs;
     for (const auto &it : *this) {
-        subs[varMan.getGinacSymbol(it.first)] = it.second;
+        subs[varMan.getVarSymbol(it.first)] = it.second;
     }
     return subs;
 }

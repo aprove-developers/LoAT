@@ -103,7 +103,7 @@ bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) cons
     // then applying the outer loop can affect the inner loop's condition,
     // so it might be possible to execute the inner loop again (and thus nesting might work).
     for (const auto &it : outer.getUpdate()) {
-        ExprSymbol updated = its.getGinacSymbol(it.first);
+        ExprSymbol updated = its.getVarSymbol(it.first);
         if (innerGuardSyms.count(updated) > 0) {
             return true;
         }

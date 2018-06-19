@@ -27,11 +27,10 @@ public:
     // Mapping between indices and names
     bool hasVarIdx(VariableIdx idx) const;
     std::string getVarName(VariableIdx idx) const;
-    VariableIdx getVarIdx(std::string name) const; // TODO: is this even used?
 
     // Mapping between indices and ginac symbols
-    VariableIdx getVarIdx(const ExprSymbol &var) const; // TODO: Use this instead of getVarIdx(symbol.get_name())
-    ExprSymbol getGinacSymbol(VariableIdx idx) const; // TODO: Shorten this to getSymbol()?
+    VariableIdx getVarIdx(const ExprSymbol &var) const;
+    ExprSymbol getVarSymbol(VariableIdx idx) const;
 
     // Handling of temporary variables
     const std::set<VariableIdx>& getTempVars() const;

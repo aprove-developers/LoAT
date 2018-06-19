@@ -52,7 +52,7 @@ void MeteringFinder::dump(const string &msg) const {
 
     stringstream ss;
     for (VariableIdx var : relevantVars) {
-        ss << " " << var << "/" << varMan.getGinacSymbol(var);
+        ss << " " << var << "/" << varMan.getVarSymbol(var);
     }
     debugMeter("Relevant variables: " << ss.str());
 
@@ -118,7 +118,7 @@ void MeteringFinder::buildMeteringVariables() {
     auto coeffType = (Config::ForwardAccel::AllowRealCoeffs) ? Z3Context::Real : Z3Context::Integer;
 
     for (VariableIdx var : relevantVars) {
-        meterVars.symbols.push_back(varMan.getGinacSymbol(var));
+        meterVars.symbols.push_back(varMan.getVarSymbol(var));
         meterVars.coeffs.push_back(context.addFreshVariable("c", coeffType));
     }
 
@@ -313,7 +313,7 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const z3::model &mod
     // then add a fresh variable that corresponds to the original value of the metering function
     if (has_reals) {
         VariableIdx tempIdx = varMan.addFreshTemporaryVariable("meter");
-        ExprSymbol tempVar = varMan.getGinacSymbol(tempIdx);
+        ExprSymbol tempVar = varMan.getVarSymbol(tempIdx);
 
         // create a new guard constraint relating tempVar and the metering function
         result.integralConstraint = (tempVar*mult == result.metering*mult);
@@ -331,7 +331,7 @@ optional<VariablePair> MeteringFinder::findConflictVars() const {
     // find variables on which the loop's runtime might depend (simple heuristic)
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
-            ExprSymbol lhsVar = varMan.getGinacSymbol(it.first);
+            ExprSymbol lhsVar = varMan.getVarSymbol(it.first);
             ExprSymbolSet rhsVars = it.second.getVariables();
 
             // the update must be some sort of simple counting, e.g. A = A+2
@@ -353,7 +353,7 @@ optional<VariablePair> MeteringFinder::findConflictVars() const {
         VariableIdx a = *(it++);
         VariableIdx b = *it;
 
-        debugProblem("Metering found conflicting variables: " << varMan.getGinacSymbol(a) << " and " << varMan.getGinacSymbol(b));
+        debugProblem("Metering found conflicting variables: " << varMan.getVarSymbol(a) << " and " << varMan.getVarSymbol(b));
         return make_pair(a, b);
     }
 

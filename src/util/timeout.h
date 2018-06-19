@@ -19,7 +19,7 @@
 #include <iostream>
 
 #include <chrono>
-typedef std::chrono::time_point<std::chrono::steady_clock> timeoutpoint; // TODO: Rename to TimePoint
+typedef std::chrono::time_point<std::chrono::steady_clock> TimePoint;
 
 
 /**
@@ -38,7 +38,7 @@ namespace Timeout {
     void setTimeouts(int seconds);
 
     //returns the point in time when "setTimeouts" was called (should be the start of the application)
-    timeoutpoint start();
+    TimePoint start();
 
     //return true if the timeout has already occurred
     bool preprocessing();
@@ -46,6 +46,6 @@ namespace Timeout {
     bool hard();
 
     //custom timeouts
-    timeoutpoint create(int seconds);
-    bool over(const timeoutpoint &point);
+    TimePoint create(int seconds);
+    bool over(const TimePoint &point);
 }

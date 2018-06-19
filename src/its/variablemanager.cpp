@@ -31,10 +31,6 @@ string VariableManager::getVarName(VariableIdx idx) const {
     return variables[idx].name;
 }
 
-VariableIdx VariableManager::getVarIdx(string name) const {
-    return variableNameLookup.at(name);
-}
-
 VariableIdx VariableManager::getVarIdx(const ExprSymbol &var) const {
     return variableNameLookup.at(var.get_name());
 }
@@ -48,11 +44,11 @@ bool VariableManager::isTempVar(VariableIdx idx) const {
 }
 
 bool VariableManager::isTempVar(const ExprSymbol &var) const {
-    VariableIdx idx = getVarIdx(var.get_name());
-    return temporaryVariables.count(idx);
+    VariableIdx idx = getVarIdx(var);
+    return temporaryVariables.count(idx) > 0;
 }
 
-ExprSymbol VariableManager::getGinacSymbol(VariableIdx idx) const {
+ExprSymbol VariableManager::getVarSymbol(VariableIdx idx) const {
     return variables[idx].symbol;
 }
 

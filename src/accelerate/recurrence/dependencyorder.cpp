@@ -101,7 +101,7 @@ optional<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarM
     auto it = std::find_if(update.begin(), update.end(), notOrdered);
     assert(it != update.end());
 
-    ExprSymbol targetSym = varMan.getGinacSymbol(it->first);
+    ExprSymbol targetSym = varMan.getVarSymbol(it->first);
     Expression targetRhs = it->second;
 
     // Build a substitution that replaces all remaining variables x by var.
@@ -109,8 +109,8 @@ optional<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarM
     GiNaC::exmap subs;
     for (const auto &up : update) {
         if (res.ordered.count(up.first) > 0) continue;
-        subs[varMan.getGinacSymbol(up.first)] = targetSym;
-        guard.push_back(varMan.getGinacSymbol(up.first) == targetSym);
+        subs[varMan.getVarSymbol(up.first)] = targetSym;
+        guard.push_back(varMan.getVarSymbol(up.first) == targetSym);
     }
 
     // Apply the substitution to all remaining updates.

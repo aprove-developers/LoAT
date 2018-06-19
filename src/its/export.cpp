@@ -8,7 +8,7 @@ namespace Color = Config::Color;
 static void collectAllVariables(const Rule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
-            vars.insert(varMan.getGinacSymbol(it.first));
+            vars.insert(varMan.getVarSymbol(it.first));
             it.second.collectVariables(vars);
         }
     }
@@ -320,7 +320,7 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             }
 
             for (auto it : rule.getUpdate()) {
-                s << "v" << its.getGinacSymbol(it.first) << " := ";
+                s << "v" << its.getVarSymbol(it.first) << " := ";
                 s << it.second.subs(t2subs) << ";" << endl;
             }
 

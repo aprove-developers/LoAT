@@ -76,7 +76,7 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
     ExprSymbolSet updatedVars;
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
-            updatedVars.insert(varMan.getGinacSymbol(it.first));
+            updatedVars.insert(varMan.getVarSymbol(it.first));
         }
     }
     auto isUpdated = [&](const ExprSymbol &var){ return updatedVars.count(var) > 0; };
@@ -229,10 +229,10 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             // add a new constraint with it.first replaced by the update's rhs
             // (e.g. if x := 4 and the guard is x > 0, we also add 4 > 0)
             // (this makes the guard stronger and might thus help to find a metering function)
-            ExprSymbol lhsVar = varMan.getGinacSymbol(it.first);
+            ExprSymbol lhsVar = varMan.getVarSymbol(it.first);
 
             GiNaC::exmap subs;
-            subs[varMan.getGinacSymbol(it.first)] = it.second;
+            subs[varMan.getVarSymbol(it.first)] = it.second;
 
             for (const Expression &ex : reducedGuard) {
                 if (ex.has(lhsVar)) {
@@ -271,7 +271,7 @@ stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan 
             auto it = freeBounds.find(freeIdx);
             if (it != freeBounds.end() && it->second.size() >= Config::TempVarInstantiationMaxBounds) continue;
 
-            ExprSymbol free = varMan.getGinacSymbol(freeIdx);
+            ExprSymbol free = varMan.getVarSymbol(freeIdx);
             if (!ex.has(free)) continue;
 
             Expression term = Relation::toLessEq(ex);
@@ -289,7 +289,7 @@ stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan 
     stack<GiNaC::exmap> allSubs;
     allSubs.push(GiNaC::exmap());
     for (auto const &it : freeBounds) {
-        ExprSymbol sym = varMan.getGinacSymbol(it.first);
+        ExprSymbol sym = varMan.getVarSymbol(it.first);
         for (const Expression &bound : it.second) {
             stack<GiNaC::exmap> next;
             while (!allSubs.empty()) {

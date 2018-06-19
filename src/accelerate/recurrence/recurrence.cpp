@@ -106,7 +106,7 @@ optional<UpdateMap> Recurrence::iterateUpdate(const UpdateMap &update, const Exp
 
     //in the given order try to solve the recurrence for every updated variable
     for (VariableIdx vi : dependencyOrder) {
-        ExprSymbol target = varMan.getGinacSymbol(vi);
+        ExprSymbol target = varMan.getVarSymbol(vi);
 
         //use update rhs, but replace already processed variables with their recurrences
         Expression todo = update.at(vi).subs(updatePreRecurrences);

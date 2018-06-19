@@ -179,7 +179,7 @@ timeout:
 bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
     stack<VariableIdx> remove;
     for (auto it : update) {
-        if (it.second.equalsVariable(varMan.getGinacSymbol(it.first))) {
+        if (it.second.equalsVariable(varMan.getVarSymbol(it.first))) {
             remove.push(it.first);
         }
     }
