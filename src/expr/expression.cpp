@@ -99,17 +99,20 @@ bool Expression::isLinear() const {
     // linear expressions are always polynomials
     if (!isPolynomial()) return false;
 
+    // degree only works reliable on expanded expressions (despite the tutorial stating otherwise)
+    Expression expanded = expand();
+
     // GiNaC does not provide an info flag for this, so we check the degree of every variable.
     // We also have to check if the coefficient contains variables,
     // e.g. y has degree 1 in x*y, but we don't consider x*y to be linear.
     for (const ExprSymbol &var : getVariables()) {
-        int deg = degree(var);
+        int deg = expanded.degree(var);
         if (deg > 1 || deg < 0) {
             return false;
         }
 
         if (deg == 1) {
-            if (!coeff(var,deg).info(GiNaC::info_flags::numeric)) {
+            if (!expanded.coeff(var,deg).info(GiNaC::info_flags::numeric)) {
                 return false;
             }
         }
@@ -160,10 +163,11 @@ bool Expression::isProperNaturalPower() const {
 
 int Expression::getMaxDegree() const {
     assert(isPolynomial());
+    Expression expanded = expand();
 
     int res = 0;
     for (const auto &var : getVariables()) {
-        res = std::max(res, degree(var));
+        res = std::max(res, expanded.degree(var));
     }
     return res;
 }

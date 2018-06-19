@@ -64,7 +64,7 @@ option<GiNaC::exmap> BackwardAcceleration::computeInverseUpdate(const vector<Var
         assert(update.count(var) > 0); // order only contains updated variables
 
         ExprSymbol x = varMan.getVarSymbol(var);
-        Expression rhs = update.at(var);
+        Expression rhs = update.at(var).expand();
         Expression inverseRhs;
 
         if (rhs.degree(x) > 1) {
@@ -180,7 +180,7 @@ option<vector<Expression>> BackwardAcceleration::computeUpperbounds(const ExprSy
         if (Relation::isEquality(ex) || !ex.has(N)) continue;
 
         Expression term = Relation::toLessEq(ex);
-        term = term.lhs() - term.rhs();
+        term = (term.lhs() - term.rhs()).expand();
         if (term.degree(N) != 1) continue;
 
         // ignore lower bounds (terms of the form -N <= 0)

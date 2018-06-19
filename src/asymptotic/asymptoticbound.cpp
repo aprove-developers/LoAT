@@ -589,7 +589,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
         return false;
     }
 
-    Expression solvedCost = cost.subs(result.solution);
+    Expression solvedCost = cost.subs(result.solution).expand();
     ExprSymbol n = limitProblem.getN();
     debugAsymptoticBound("solved cost: " << solvedCost);
     debugAsymptoticBound("cost: " << cost);

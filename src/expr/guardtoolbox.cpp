@@ -72,11 +72,13 @@ bool GuardToolbox::isTrivialImplication(const Expression &a, const Expression &b
 option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level) {
     assert(!GiNaC::is_a<GiNaC::relational>(term));
 
+    // expand is needed before using degree/coeff
+    term = term.expand();
+
     // we can only solve linear expressions...
     if (term.degree(var) != 1) return {};
 
     // ...with rational coefficients
-    term = term.expand();
     Expression c = term.coeff(var);
     if (!c.isRationalConstant()) return {};
 
@@ -178,7 +180,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
             if (!target.has(var)) continue; // might have changed, e.h. x <= x
 
             //check coefficient and direction
-            Expression c = target.coeff(var);
+            Expression c = target.expand().coeff(var);
             if (c.compare(1) != 0 && c.compare(-1) != 0) goto abort;
             if (c.compare(1) == 0) {
                 varLessThan.push_back( -(target-var) );
@@ -271,8 +273,9 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
     // degrees, subs share indices with vars
     vector<int> degrees;
     vector<int> subs;
+    Expression expanded = e.expand();
     for (const ExprSymbol &x: vars) {
-        degrees.push_back(e.degree(x));
+        degrees.push_back(expanded.degree(x));
         subs.push_back(0);
     }
 
@@ -282,7 +285,7 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
         for (int i = 0; i < degrees.size(); i++) {
             currSubs.emplace(vars[i], subs[i]);
         }
-        Expression res = e.subs(currSubs);
+        Expression res = e.subs(currSubs).expand();
         if (!res.isIntegerConstant()) {
             debugOther("mapsToInt: " << e << " does not map to an integer for " << currSubs << " where it yields " << res);
             return false;

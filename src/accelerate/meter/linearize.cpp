@@ -93,11 +93,11 @@ bool Linearize::collectMonomialsInGuard(ExpressionSet &monomials) const {
     for (const Expression &ex : guard) {
         assert(Relation::isInequality(ex));
 
-        if (!collectMonomials(ex.lhs(), monomials)) {
+        if (!collectMonomials(ex.lhs().expand(), monomials)) {
             return false;
         }
 
-        if (!collectMonomials(ex.rhs(), monomials)) {
+        if (!collectMonomials(ex.rhs().expand(), monomials)) {
             return false;
         }
     }
@@ -108,7 +108,7 @@ bool Linearize::collectMonomialsInGuard(ExpressionSet &monomials) const {
 bool Linearize::collectMonomialsInUpdates(ExpressionSet &monomials) const {
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
-            if (!collectMonomials(it.second, monomials)) {
+            if (!collectMonomials(it.second.expand(), monomials)) {
                 return false;
             }
         }

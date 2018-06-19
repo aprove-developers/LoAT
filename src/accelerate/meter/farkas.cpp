@@ -80,7 +80,8 @@ z3::expr FarkasLemma::apply(
     for (auto varIt : varToCoeff) {
         z3::expr lambdaA = context.int_val(0);
         for (int j=0; j < constraints.size(); ++j) {
-            z3::expr add = lambda[j] * GinacToZ3::convert(constraints[j].lhs().coeff(varIt.first), context);
+            Expression a = constraints[j].lhs().expand().coeff(varIt.first);
+            z3::expr add = lambda[j] * GinacToZ3::convert(a, context);
             lambdaA = (j==0) ? add : lambdaA+add; // avoid superflous +0
         }
         res.push_back(lambdaA == varIt.second);
