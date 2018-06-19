@@ -17,6 +17,7 @@
 
 #include "expression.h"
 
+#include "expr/ginactoz3.h"
 #include "z3/z3context.h"
 #include "complexity.h"
 

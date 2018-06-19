@@ -19,6 +19,7 @@
 
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
+#include "expr/ginactoz3.h"
 #include "z3/z3solver.h"
 #include "z3/z3toolbox.h"
 

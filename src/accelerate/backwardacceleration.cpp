@@ -9,6 +9,7 @@
 #include "meter/metertools.h"
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
+#include "expr/ginactoz3.h"
 
 #include <purrs.hh>
 

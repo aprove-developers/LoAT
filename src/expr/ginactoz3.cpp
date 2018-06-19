@@ -128,12 +128,12 @@ z3::expr GinacToZ3::convert_numeric(const GiNaC::numeric &num) {
 
 z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
     // if the symbol is already known, we re-use it (regardless of its type!)
-    auto optVar = context.getVariable(e.get_name());
+    auto optVar = context.getVariable(e);
     if (optVar) {
         // Warn if the re-used variable does not have the correct type.
         // This feature might be useful if useReals = true, but we want some variables to be integers.
         // However, in most cases it is probably not intended, so we issue the warning.
-        if (!Z3Context::isSymbolOfType(optVar.get(), variableType())) {
+        if (!Z3Context::isVariableOfType(optVar.get(), variableType())) {
             debugWarn("GinacToZ3: Re-using existing symbol of type: " << e << " (but it should have type: " << variableType() << ")");
         }
 
@@ -141,7 +141,7 @@ z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
     }
 
     // otherwise we add a fresh z3 variable and associate it with this symbol
-    return context.addFreshVariable(e.get_name(), variableType());
+    return context.addNewVariable(e, variableType());
 }
 
 z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {

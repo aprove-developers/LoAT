@@ -19,6 +19,7 @@
 #define Z3CONTEXT_H
 
 #include "util/timing.h"
+#include "expr/expression.h"
 
 #include <z3++.h>
 #include <map>
@@ -26,7 +27,13 @@
 
 
 /**
- * Wrapper around z3 context to allow convenient variable handling
+ * Wrapper around z3 context to allow convenient variable handling.
+ *
+ * Note that z3 identifies symbols with the same name, whereas GiNaC considers two symbols with the same name
+ * as different. This context does thus map GiNaC symbols to z3 symbols (instead of mapping names to z3 symbols).
+ *
+ * For convenience, it is also possible to create z3 symbols not associated to any GiNaC symbol,
+ * but these symbols cannot be looked up later (as they are not associated to any GiNaC symbol).
  */
 class Z3Context : public z3::context {
 public:
@@ -34,38 +41,45 @@ public:
 
 public:
     /**
-     * Returns the variable of the given name (and any type), if present
+     * Returns the variable associated with the given symbol, if present
      */
-    boost::optional<z3::expr> getVariable(const std::string &name) const;
+    boost::optional<z3::expr> getVariable(const ExprSymbol &symbol) const;
 
     /**
-     * Like getVariable, but only returns the variable if it has the given type
+     * Adds a new z3 variable (with the given symbol's name, if possible, otherwise a number is appended)
+     * and associates it to the given GiNaC symbol.
+     *
+     * @note This method must not be called twice for the same GiNaC symbol
+     * (i.e., each GiNaC symbol can only be associated to a single z3 variable).
      */
-    boost::optional<z3::expr> getVariable(const std::string &name, VariableType type) const;
+    z3::expr addNewVariable(const ExprSymbol &symbol, VariableType type = Integer);
 
     /**
-     * Adds a fresh variable to this context and returns it.
-     * If possible, the given name is used. If the name is already taken, it is modified by appending a number.
-     * The context maps the given name (before modification) to the generated variable.
+     * Adds a new z3 variable (with the given name, if possible, otherwise a number is appended).
+     * The new variable is not associated to any GiNaC symbol, hence lookup via getVariable is not possible!
+     * This is provided for convenience, one could also use addNewVariable with a newly created GiNaC symbol.
      */
-    z3::expr addFreshVariable(std::string basename, VariableType type = Integer);
+    z3::expr addFreshVariable(const std::string &basename, VariableType type = Integer);
 
     /**
      * Static wrapper around z3::expr::sort that checks if the given symbol is of the given type.
-     * @note symbol must be a symbol, not an arbitrary z3::expr!
+     * @note symbol must be a z3::symbol, not an arbitrary z3::expr!
      */
-    static bool isSymbolOfType(const z3::expr &symbol, VariableType type);
+    static bool isVariableOfType(const z3::expr &symbol, VariableType type);
 
 private:
-    std::string generateFreshName(const std::string &basename);
+    // Generates a z3 variable of the given type with a fresh name based on the given name
+    z3::expr generateFreshVar(const std::string &basename, VariableType type);
 
 private:
-    // Mapping between numbers and generated variables
-    std::map<std::string,z3::expr> variables;
+    // Maps GiNaC symbols to their associated z3 symbols/variables.
+    // Only used for lookup via getVariable.
+    ExprSymbolMap<z3::expr> symbolMap;
 
-    // Only for efficiency: count how often a name was already given to addFreshVariable.
-    // This speeds up generating a fresh name if the same name is requested several times.
-    std::map<std::string,int> basenameCount;
+    // The set of names used by the generated z3 variables (used to find fresh names).
+    // Only for efficiency: Count how often a name was already given to generateFreshName.
+    // (this speeds up generating a fresh name if the same name is requested several times).
+    std::map<std::string,int> usedNames;
 };
 
 

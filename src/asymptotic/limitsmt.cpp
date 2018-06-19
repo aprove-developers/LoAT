@@ -1,5 +1,6 @@
 #include "limitsmt.h"
 
+#include "expr/ginactoz3.h"
 #include "z3/z3solver.h"
 #include "z3/z3context.h"
 #include "z3/z3toolbox.h"
@@ -144,10 +145,10 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     GiNaC::exmap templateSubs;
     map<ExprSymbol,z3::expr,GiNaC::ex_is_less> varCoeff, varCoeff0;
     for (const ExprSymbol &var : vars) {
-        ExprSymbol c0 = varMan.getFreshUntrackedSymbol(var.get_name()+"_0");
-        ExprSymbol c = varMan.getFreshUntrackedSymbol(var.get_name()+"_c");
-        varCoeff.emplace(var,GinacToZ3::convert(c,context)); //HACKy HACK  // FIXME: HACKy HACK sounds dangerous...
-        varCoeff0.emplace(var,GinacToZ3::convert(c0,context));
+        ExprSymbol c0 = varMan.getFreshUntrackedSymbol(var.get_name() + "_0");
+        ExprSymbol c = varMan.getFreshUntrackedSymbol(var.get_name() + "_c");
+        varCoeff.emplace(var, GinacToZ3::convert(c,context));
+        varCoeff0.emplace(var, GinacToZ3::convert(c0,context));
         templateSubs[var] = c0 + (n * c);
     }
 

@@ -8,6 +8,7 @@
 #include "expr/expression.h"
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
+#include "expr/ginactoz3.h"
 #include "util/timeout.h"
 
 #include "z3/z3solver.h"

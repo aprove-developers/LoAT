@@ -23,47 +23,42 @@ using namespace std;
 using boost::optional;
 
 
-optional<z3::expr> Z3Context::getVariable(const std::string &name) const {
-    auto it = variables.find(name);
-    if (it != variables.end()) {
+optional<z3::expr> Z3Context::getVariable(const ExprSymbol &symbol) const {
+    auto it = symbolMap.find(symbol);
+    if (it != symbolMap.end()) {
         return it->second;
     }
     return {};
 }
 
-optional<z3::expr> Z3Context::getVariable(const std::string &name, Z3Context::VariableType type) const {
-    auto it = variables.find(name);
-    if (it != variables.end()) {
-        if (isSymbolOfType(it->second, type)) {
-            return it->second;
-        }
-    }
-    return {};
-}
+z3::expr Z3Context::addNewVariable(const ExprSymbol &symbol, Z3Context::VariableType type) {
+    // This symbol must not have been mapped to a z3 variable before (can be checked via getVariable)
+    assert(symbolMap.count(symbol) == 0);
 
-z3::expr Z3Context::addFreshVariable(std::string basename, Z3Context::VariableType type) {
-    // Generate a fresh variable
-    string name = generateFreshName(basename);
-    z3::expr res = (type == Integer) ? int_const(name.c_str()) : real_const(name.c_str());
-
-    // Map the original user-supplied name to the resulting variable
-    variables.emplace(basename, res);
-
+    // Associated the GiNaC symbol with the resulting variable
+    z3::expr res = generateFreshVar(symbol.get_name(), type);
+    symbolMap.emplace(symbol, res);
     return res;
 }
 
-std::string Z3Context::generateFreshName(const std::string &basename) {
+z3::expr Z3Context::addFreshVariable(const std::string &basename, Z3Context::VariableType type) {
+    // Generate a fresh variable, but do not associate it to anything
+    return generateFreshVar(basename, type);
+}
+
+z3::expr Z3Context::generateFreshVar(const std::string &basename, Z3Context::VariableType type) {
     string newname = basename;
 
-    while (variables.find(newname) != variables.end()) {
-        int cnt = basenameCount[basename]++;
+    while (usedNames.find(newname) != usedNames.end()) {
+        int cnt = usedNames[basename]++;
         newname = basename + "_" + to_string(cnt);
     }
 
-    return newname;
+    usedNames.emplace(newname, 1); // newname is now used once
+    return (type == Integer) ? int_const(newname.c_str()) : real_const(newname.c_str());
 }
 
-bool Z3Context::isSymbolOfType(const z3::expr &symbol, VariableType type) {
+bool Z3Context::isVariableOfType(const z3::expr &symbol, VariableType type) {
     const z3::sort sort = symbol.get_sort();
     return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
 }
