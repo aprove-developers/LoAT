@@ -53,10 +53,6 @@ bool Rule::isSimpleLoop() const {
     return std::all_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.getLoc(); });
 }
 
-bool Rule::hasSelfLoop() const {
-    return std::any_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.getLoc(); });
-}
-
 void Rule::applySubstitution(const GiNaC::exmap &subs) {
     getCostMut().applySubs(subs);
     for (Expression &ex : getGuardMut()) {

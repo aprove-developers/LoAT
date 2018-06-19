@@ -39,7 +39,7 @@ namespace Config {
         bool ColorsInITS = true;
 
         // Whether to include timestamps in every line of the proof output
-        bool Timestamps = false; // TODO: set to false when done
+        bool Timestamps = false;
 
         // Whether to print the fully simplified ITS problem in the input format (KoAT's format).
         // Mostly useful for debugging the asymptotic check.

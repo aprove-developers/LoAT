@@ -26,7 +26,6 @@
 
 
 
-// TODO: turn into a class
 class RuleLhs {
     LocationIdx loc;
     GuardList guard;
@@ -112,9 +111,6 @@ public:
 
     // checks if lhs location coincides with _all_ rhs locations
     bool isSimpleLoop() const;
-
-    // checks if lhs location coincides with at least _one_ rhs location
-    bool hasSelfLoop() const; // TODO: is this ever used?
 
     // applies the given substitution to guard, cost, and the update's rhss (not to the update's lhss!)
     // Note: Result may be incorrect if an updated variable is updated (which is not checked!)

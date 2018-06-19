@@ -64,14 +64,6 @@ namespace Preprocess
     bool simplifyGuardBySmt(GuardList &guard);
 
     /**
-     * NOTE: Use simplifyGuardBySmt instead, unless this removes too many constraints!
-     * Removes terms for which stronger variants appear in the guard, i.e. x >= 0, x > 0 --> x > 0
-     * @note this _does_ involve many SMT queries (though only for every pair, transitivity is not checked)
-     * @return true iff guard was modified
-     */
-    bool removeWeakerGuards(GuardList &guard);
-
-    /**
      * Removes trivial updates of the form x <- x.
      * @return true iff update was modified
      */

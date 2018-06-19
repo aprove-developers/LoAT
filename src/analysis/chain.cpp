@@ -36,7 +36,6 @@ static bool checkSatisfiability(const GuardList &newGuard) {
 
 #ifdef DEBUG_PROBLEMS
     if (z3res == z3::unknown) {
-        // TODO: use operator<< for newGuard when implemented
         debugProblem("Chaining: got z3::unknown for: ");
         dumpList("guard", newGuard);
     }
@@ -79,12 +78,6 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
     }
 
     if (Config::Chain::CheckSat) {
-        // FIXME: If z3 says unsat, it makes no sense to keep both transitions (and try to chain them again and again later on)
-        // FIXME: Instead, the second one should be deleted, at least in chainLinearPaths (where we can be sure that the second transition is only reachable by the first one).
-
-        // FIXME: We have to think about the z3::unknown case. Since z3 often takes long on unknowns, calling z3 again and again is pretty bad.
-        // FIXME: So either we remove the second transition (might lose complexity if the guard was actually sat) or chain them (lose complexity if it was unsat) => BENCHMARKS
-
         // Avoid chaining if the resulting rule can never be taken
         if (checkSat && !checkSatisfiability(newGuard)) {
             Stats::add(Stats::ContractUnsat);
@@ -143,7 +136,6 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
 // ##########################
 
 
-// FIXME: Rename free variables!
 /**
  * Chains the specified right-hand side of the first rule (specified by firstRhsIdx)
  * with the second rule (the locations must match).

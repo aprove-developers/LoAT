@@ -161,8 +161,6 @@ LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedU
 }
 
 
-// TODO: Refactor this to be more general, can then also be used for free var instantiation (see metertools)
-// TODO: A general method can return a list of <Expression,BoundType> with BoundType = { Lower, Upper, Equality }.
 optional<vector<Expression>> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
     for (const Expression &ex : guard) {

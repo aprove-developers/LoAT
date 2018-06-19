@@ -128,15 +128,12 @@ void AsymptoticBound::propagateBounds() {
                 }
             }
 
-            // TODO: the comment below says "program variables first",
-            // TODO: but here tempVars is inserted in front of vars?
             vars.insert(vars.begin(), tempVars.begin(), tempVars.end());
 
             // check if equation can be solved for a single variable
             // check program variables first
             for (const ExprSymbol &var : vars) {
                 //solve target for var (result is in target)
-                // TODO: Check if we can use ResultMapsToInt here (we most probably can)
                 auto optSolved = GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs);
                 if (optSolved) {
                     exmap sub;
@@ -1022,7 +1019,6 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
 
-    // TODO: Use expandedCost here?!
     AsymptoticBound asymptoticBound(varMan, guard, expandedCost, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();

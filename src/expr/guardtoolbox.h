@@ -138,7 +138,6 @@ namespace GuardToolbox {
     bool mapsToInt(const Expression &e);
 
 
-    // TODO: Move this to new Substitution class, when it has been written
     /**
      * Compose two substitutions, i.e. compute f ∘ g ("f after g")
      */

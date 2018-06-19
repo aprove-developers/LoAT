@@ -67,8 +67,6 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     for (int i=0; i < guardA.size(); ++i) {
         if (!guardA[i].is_equal(guardB[i])) return false;
     }
-    // TODO: Replace the guard check by a ExprSymbolSet to ignore ordering?
-
     return true;
 }
 

@@ -250,8 +250,7 @@ bool Chaining::chainLinearPaths(ITSProblem &its) {
     return callOnEachNode(its, implementation, true);
 }
 
-// TODO: We could also try this non-repeatedly, so we first compute which nodes are applicable (tree-shaped),
-// TODO: and then eliminate these nodes by chaining. This would often perform fewer chaining steps (not sure if this is better)
+
 bool Chaining::chainTreePaths(ITSProblem &its) {
     auto implementation = [](ITSProblem &its, LocationIdx node) {
         bool changed = false;

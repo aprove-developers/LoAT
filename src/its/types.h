@@ -24,7 +24,6 @@
 class VariableManager;
 
 
-// FIXME: better switch to unsigned long?
 // some typedefs for clarity
 using TransIdx = int;
 using LocationIdx = int;
@@ -32,40 +31,23 @@ using VariableIdx = int;
 using VariablePair = std::pair<VariableIdx, VariableIdx>;
 
 
-//typedef std::vector<Expression> GuardList;
-//typedef std::map<VariableIdx,Expression> UpdateMap;
-
-
-// TODO: GuardList should probably be an ExpressionSet instead of a vector
-// TODO: Unless the performance penalty is too high.
-// TODO: Might try to normalize terms before adding them to the guard (e.g. all variables left, only <, <=, ==)
-// TODO: To do this, avoid inheriting from ExpressionSet, re-implement the required methods
-
 // GuardList is a list of expressions with some additional methods for convenience
-// TODO: rename to Guard
 class GuardList : public std::vector<Expression> {
 public:
     // inherit constructors of base class
     using std::vector<Expression>::vector;
-
     void collectVariables(ExprSymbolSet &res) const;
 };
 
 
 // UpdateMap is a map from variables (as indices) to an expression (with which the variable is updated),
 // with some additional methods for convenience
-// TODO: rename to Update
 class UpdateMap : public std::map<VariableIdx,Expression> {
 public:
     bool isUpdated(VariableIdx var) const;
-
     Expression getUpdate(VariableIdx var) const;
-
     GiNaC::exmap toSubstitution(const VariableManager &varMan) const;
 };
-
-
-// TODO: Add operator<< for GuardList, especially for UpdateMap
 
 
 #endif // TYPES_H

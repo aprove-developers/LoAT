@@ -57,7 +57,7 @@ public:
     Rule& getRuleMut(TransIdx transition); // Note: the locations of the returned rule must not be changed!
 
     // the rule associated with the given index must be linear!
-    LinearRule getLinearRule(TransIdx transition) const; // TODO: Is this useful at all?
+    LinearRule getLinearRule(TransIdx transition) const;
 
     // returns the destinations of the given transition
     const std::set<LocationIdx> &getTransitionTargets(TransIdx idx) const;

@@ -151,31 +151,6 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard) {
 }
 
 
-// TODO: This method is extremely expensive (it does O(n^2) SMT queries), even though its not very effective!
-bool Preprocess::removeWeakerGuards(GuardList &guard) {
-    auto tout = Timeout::create(3); //this function is very expensive, limit the time spent here
-    set<int> remove;
-    //check for every pair of expressions if one implies the other
-    for (int i=0; i < guard.size(); ++i) {
-        if (Timeout::over(tout)) goto timeout;
-        if (remove.count(i) > 0) continue;
-        for (int j=0; j < guard.size(); ++j) {
-            if (i == j || remove.count(j) > 0) continue;
-            if (Z3Toolbox::isValidImplication({guard[i]}, guard[j])) {
-                remove.insert(j);
-            }
-        }
-    }
-timeout:
-    if (remove.empty()) return false;
-    //remove in reverse order to keep indices valid until they are removed
-    for (auto it = remove.rbegin(); it != remove.rend(); ++it) {
-        guard.erase(guard.begin() + *it);
-    }
-    return true;
-}
-
-
 bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
     stack<VariableIdx> remove;
     for (auto it : update) {

@@ -9,17 +9,6 @@ const int DirectionSize = 5;
 const char* DirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
 
-InftyExpression::InftyExpression(Direction dir)
-    : direction(dir) {
-}
-
-
-InftyExpression::InftyExpression(const GiNaC::basic &other, Direction dir)
-    : Expression(other) {
-    setDirection(dir);
-}
-
-
 InftyExpression::InftyExpression(const GiNaC::ex &other, Direction dir)
     : Expression(other) {
     setDirection(dir);

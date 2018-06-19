@@ -613,9 +613,6 @@ static bool removeConstantPathsImpl(ITSProblem &its, LocationIdx curr, set<Locat
 }
 
 
-// TODO: generalize this to remove all rules below a certain complexity
-// TODO: this can then be called again whenever a new complexity has been derived
-// TODO: This should help quite a bit, since we can get rid of expensive chaining costs
 void Analysis::removeConstantPathsAfterTimeout() {
     set<LocationIdx> visited;
     removeConstantPathsImpl(its, its.getInitialLocation(), visited);
