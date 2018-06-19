@@ -46,23 +46,6 @@ MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vec
 
 /* ### Helpers ### */
 
-void MeteringFinder::dump(const string &msg) const {
-#ifdef DEBUG_METERING
-    debugMeter("### Metering: " << msg << " ###");
-
-    stringstream ss;
-    for (VariableIdx var : relevantVars) {
-        ss << " " << var << "/" << varMan.getVarSymbol(var);
-    }
-    debugMeter("Relevant variables: " << ss.str());
-
-    dumpList("guard           ", guard);
-    dumpList("reduced guard   ", reducedGuard);
-    dumpList("irrelevant guard", irrelevantGuard);
-    dumpMaps("updates", updates);
-#endif
-}
-
 vector<UpdateMap> MeteringFinder::getUpdateList(const Rule &rule) {
     vector<UpdateMap> res;
     res.reserve(rule.rhsCount());
@@ -369,15 +352,11 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     Result result;
     MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
 
-    meter.dump("Initial");
-
     // linearize and simplify the problem
     if (!meter.preprocessAndLinearize()) {
         result.result = Nonlinear;
         return result;
     }
-
-    meter.dump("After Preprocess");
 
     // identify trivially unbounded loops (no guard constraint is limiting the loop's execution)
     if (meter.reducedGuard.empty()) {

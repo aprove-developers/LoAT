@@ -290,6 +290,7 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
     auto optRule = rule.stripRhsLocation(loc);
     if (optRule) {
         TransIdx newIdx = its.addRule(optRule.get());
+        (void)newIdx; // suppress compiler warning if debugging is disabled
         debugPrune("Partial deletion: Added stripped rule " << newIdx << " (for rule " << ruleIdx << ")");
     }
 
@@ -300,6 +301,7 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
             // This should be the case when partialDeletion is called, at least for the current implementation.
             assert(!its.hasTransitionsFrom(loc));
             TransIdx newIdx = its.addRule(rule.replaceRhssBySink(loc));
+            (void)newIdx; // suppress compiler warning if debugging is disabled
             debugPrune("Partial deletion: Added dummy rule " << newIdx << " (for rule " << ruleIdx << ")");
         }
     }

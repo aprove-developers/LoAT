@@ -362,7 +362,7 @@ void Analysis::setupDotOutput() {
     }
 
     string file = Config::Output::DotFile.get();
-    debugLinear("Trying to open dot output file: " << file);
+    debugAnalysis("Trying to open dot output file: " << file);
     dotStream.open(file);
 
     if (!dotStream.is_open()) {
@@ -517,7 +517,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         const Expression &cost = rule.getCost();
         bool hasTempVar = !cost.isInfSymbol() && cost.hasVariableWith(isTempVar);
         if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) {
-            debugLinear("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
+            debugAnalysis("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
             continue;
         }
 

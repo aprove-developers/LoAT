@@ -68,61 +68,40 @@
 
 #ifndef DEBUG_DISABLE_ALL
 
-//print an overview of the problem after every relevant simplification step (similar to proof output)
-//#define DEBUG_PRINTSTEPS
-
 //print problematic results that (might) have a strong impact on the result
 #define DEBUG_PROBLEMS
 
 //print warnings which might indicate bugs
 #define DEBUG_WARN
 
-//dump z3 solvers and results
-//#define DEBUG_Z3
+//debugging for tool interfaces
+#define DEBUG_Z3
+#define DEBUG_PURRS
+#define DEBUG_GINACTOZ3
 
-//debugging for the conversion from GiNaC expressions to z3 expressions
-//#define DEBUG_GINACTOZ3
-
-//debugging for the graph datastructure
+//debugging for data structures
+#define DEBUG_EXPRESSION
 #define DEBUG_GRAPH
 
 //debugging for the analysis of linear ITS problems
-#define DEBUG_LINEAR
+#define DEBUG_ANALYSIS
 #define DEBUG_CHAINING
-#define DEBUG_ACCELERATE
 #define DEBUG_PRUNING
 
-// debugging for metering
+// debugging for acceleration techniques
+#define DEBUG_ACCELERATE
 #define DEBUG_METERING
 #define DEBUG_METER_LINEARIZE
-
-// TODO: refine FARKAS debugging to refactored code (Farkas, Metering, Linearize etc.)
-//debugging for Farkas processor
-//#define DEBUG_FARKAS
-
-//debugging for the backward acceleration technique
+#define DEBUG_FARKAS
 #define DEBUG_BACKWARD_ACCELERATION
 
-//debugging for final infinity check
-#define DEBUG_INFINITY
-
-//debugging for limit problems
-//#define DEBUG_LIMIT_PROBLEMS
-
-//debugging for asymptotic bounds
-//#define DEBUG_ASYMPTOTIC_BOUNDS
-
-//debugging for the Expression class
-#define DEBUG_EXPRESSION
+//debugging for asymptotic complexity computation
+#define DEBUG_LIMIT_PROBLEMS
+#define DEBUG_ASYMPTOTIC_BOUNDS
 
 //debugging for the ITS problem parser
-//#define DEBUG_PARSER
-
-//debugging for the term parser (part of the ITS problem parser)
-//#define DEBUG_TERM_PARSER
-
-//debugging for PURRS
-#define DEBUG_PURRS
+#define DEBUG_PARSER
+#define DEBUG_TERM_PARSER
 
 //debugging for all other parts
 #define DEBUG_OTHER
@@ -141,12 +120,6 @@
     std::cout << COLOR_NONE << std::endl; \
 } while(0)
 
-#define dumpMap(desc,update) do {\
-    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":"; \
-    for (auto const &it : (update)) std::cout << " " << it.first << "=" << it.second; \
-    std::cout << COLOR_NONE << std::endl; \
-} while(0)
-
 #define dumpMaps(desc,updates) do {\
     std::cout << COLOR_DEBUG << "  [dump] " << desc << ":"; \
     for (int i=0; i < (updates).size(); ++i) { \
@@ -154,12 +127,6 @@
         for (auto const &it : (updates)[i]) std::cout << " " << it.first << "=" << it.second; \
     } \
     std::cout << COLOR_NONE << std::endl; \
-} while(0)
-
-#define dumpGuardUpdate(desc,guard,update) do {\
-    std::cout << COLOR_DEBUG << "  [dump] " << desc << ":" << std::endl; \
-    dumpList("   guard",guard); \
-    dumpMap("  update",update); \
 } while(0)
 
 #define dumpGuardUpdates(desc,guard,updates) do {\
@@ -196,10 +163,10 @@
 #define debugGraph(output) (void(0))
 #endif
 
-#ifdef DEBUG_LINEAR
-#define debugLinear(output) do { std::cout << COLOR_HIGHLIGHT << "[linear] " << output << COLOR_NONE << std::endl; } while(0)
+#ifdef DEBUG_ANALYSIS
+#define debugAnalysis(output) do { std::cout << COLOR_DEBUG << "[analysis] " << output << COLOR_NONE << std::endl; } while(0)
 #else
-#define debugLinear(output) (void(0))
+#define debugAnalysis(output) (void(0))
 #endif
 
 #ifdef DEBUG_CHAINING
@@ -215,19 +182,19 @@
 #endif
 
 #ifdef DEBUG_ACCELERATE
-#define debugAccel(output) do { std::cout << COLOR_HIGHLIGHT << "[accelerate] " << output << COLOR_NONE << std::endl; } while(0)
+#define debugAccel(output) do { std::cout << COLOR_DEBUG << "[accelerate] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugAccel(output) (void(0))
 #endif
 
 #ifdef DEBUG_METERING
-#define debugMeter(output) do { std::cout << COLOR_HIGHLIGHT << "[meter] " << output << COLOR_NONE << std::endl; } while(0)
+#define debugMeter(output) do { std::cout << COLOR_DEBUG << "[meter] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugMeter(output) (void(0))
 #endif
 
 #ifdef DEBUG_METER_LINEARIZE
-#define debugLinearize(output) do { std::cout << COLOR_HIGHLIGHT << "[linearize] " << output << COLOR_NONE << std::endl; } while(0)
+#define debugLinearize(output) do { std::cout << COLOR_DEBUG << "[linearize] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugLinearize(output) (void(0))
 #endif
@@ -239,16 +206,9 @@
 #endif
 
 #ifdef DEBUG_BACKWARD_ACCELERATION
-#define debugBackwardAccel(output) do { std::cout << COLOR_HIGHLIGHT << "[backward accel] " << output << COLOR_NONE << std::endl; } while(0)
+#define debugBackwardAccel(output) do { std::cout << COLOR_DEBUG << "[backward accel] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugBackwardAccel(output) (void(0))
-#endif
-
-
-#ifdef DEBUG_INFINITY
-#define debugInfinity(output) do { std::cout << COLOR_DEBUG << "[infinity] " << output << COLOR_NONE << std::endl; } while(0)
-#else
-#define debugInfinity(output) (void(0))
 #endif
 
 #ifdef DEBUG_LIMIT_PROBLEMS
@@ -261,12 +221,6 @@
 #define debugAsymptoticBound(output) do { std::cout << COLOR_DEBUG << "[asymptotic] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugAsymptoticBound(output) (void(0))
-#endif
-
-#ifdef DEBUG_PROBLEMS
-#define debugProblem(output) do { std::cout << COLOR_PROBLEM << "[PROBLEM] " << output << COLOR_NONE << std::endl; } while(0)
-#else
-#define debugProblem(output) (void(0))
 #endif
 
 #ifdef DEBUG_PARSER
@@ -293,5 +247,10 @@
 #define debugWarn(output) (void(0))
 #endif
 
+#ifdef DEBUG_PROBLEMS
+#define debugProblem(output) do { std::cout << COLOR_PROBLEM << "[PROBLEM] " << output << COLOR_NONE << std::endl; } while(0)
+#else
+#define debugProblem(output) (void(0))
+#endif
 
 #endif

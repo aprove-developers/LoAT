@@ -1003,13 +1003,13 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     // Expand the cost to make it easier to analyze
     Expression expandedCost = cost.expand();
 
+#ifdef DEBUG_ASYMPTOTIC_BOUNDS
     debugAsymptoticBound("guard:");
     for (const Expression &ex : guard) {
         debugAsymptoticBound(ex);
     }
-    debugAsymptoticBound("");
-    debugAsymptoticBound("cost:" << expandedCost);
-    debugAsymptoticBound("");
+    debugAsymptoticBound(endl << "cost:" << expandedCost << endl);
+#endif
 
     // Handle nontermination
     if (expandedCost.isInfSymbol()) {

@@ -263,6 +263,7 @@ public:
         if (res != 0) debugGraph("Graph ERROR: " << res);
         return res;
 #else
+        (void)nodes; // suppress compiler warning
         return Valid;
 #endif
     }
