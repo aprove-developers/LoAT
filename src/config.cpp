@@ -148,8 +148,7 @@ namespace Config {
         // If KeepTempVarForIterationCount is false, then "k" is instantiated by its upper bounds.
         // If there are several upperbounds, several rules are created.
         // To avoid rule explosion, the propagation is only performed up to this number of upperbounds.
-        // TODO: Change this to something smaller, e.g., 3
-        const unsigned MaxUpperboundsForPropagation = 5;
+        const unsigned MaxUpperboundsForPropagation = 3;
     }
 
     namespace Accel {
