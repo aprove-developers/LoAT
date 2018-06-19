@@ -78,14 +78,13 @@ z3::check_result Z3Toolbox::checkAll(const vector<Expression> &list, Z3Context &
 
 z3::check_result Z3Toolbox::checkAllApproximate(const std::vector<Expression> &list) {
     Z3Context context;
-    GinacToZ3::Settings cfg;
-    cfg.useReals = true;
+    bool useReals = true;
 
     vector<z3::expr> exprvec;
     for (const Expression &expr : list) {
         // Skip exponentials, z3 cannot handle them well (ok as this is only an approximate check)
         if (expr.isPolynomial()) {
-            exprvec.push_back(expr.toZ3(context, cfg));
+            exprvec.push_back(expr.toZ3(context, useReals));
         }
     }
     z3::expr target = concat(context, exprvec, ConcatAnd);

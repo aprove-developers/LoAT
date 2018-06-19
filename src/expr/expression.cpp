@@ -291,8 +291,8 @@ bool Expression::hasAtLeastTwoVariables() const {
 }
 
 
-z3::expr Expression::toZ3(Z3Context &context, GinacToZ3::Settings cfg) const {
-    return GinacToZ3::convert(*this, context, cfg);
+z3::expr Expression::toZ3(Z3Context &context, bool useReals) const {
+    return GinacToZ3::convert(*this, context, useReals);
 }
 
 

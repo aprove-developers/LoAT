@@ -231,7 +231,7 @@ public:
      * Converts this term from a GiNaC::ex to a Z3 expression, see GinacToZ3
      * @return newly created z3 expression
      */
-    z3::expr toZ3(Z3Context &context, GinacToZ3::Settings cfg = {}) const;
+    z3::expr toZ3(Z3Context &context, bool useReals = false) const;
 
     /**
      * Return new expression without any powers of symbols, e.g. x^2 * y^x --> x * y ("5^x" is kept)

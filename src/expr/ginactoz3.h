@@ -32,38 +32,18 @@ public:
     EXCEPTION(GinacZ3ConversionError,CustomException);
     EXCEPTION(GinacZ3LargeConstantError,CustomException);
 
-    struct Settings {
-        /**
-         * Whether to re-use variables from the context or use a fresh set of variables.
-         * If false, existing variables from the context are re-used.
-         * If true, one fresh variable is added to the context for each symbol occurring in this expression
-         * (multiple occurrences of a symbol all use the same fresh variable).
-         *
-         * @note: if a variable is re-used from the context, its type is kept (regardless of useReals)
-         */
-        bool freshVars = false;
-
-        /**
-         * Whether variables and constants should be of type real.
-         * If true, all NEWLY created variables and constants are encoded as reals.
-         * If false, all variables and constants are integers, except for real constants like 1/2.
-         *
-         * @note: if a variable is re-used from the context, its type is kept (regardless of this setting)
-         */
-        bool useReals = false;
-
-        // Does not compile without explicitly specifying this ctor (yay C++)
-        Settings() {}
-    };
-
     /**
      * Converts this expression from a GiNaC::ex (or Expression) to a Z3 expression, using the given z3 context.
      * May throw GinacZ3ConversionError (unknown type of GiNaC::ex) or GinacZ3LargeConstantError (constant too large).
+     *
+     * @param useReals If true, all NEWLY created variables and constants are encoded as reals.
+     * Variables already present in the Z3Context are re-used (even if they are integer variables).
+     * If false, all newly created variables and constants are integers, except for real constants like 1/2.
      */
-    static z3::expr convert(const GiNaC::ex &expr, Z3Context &context, Settings cfg = {});
+    static z3::expr convert(const GiNaC::ex &expr, Z3Context &context, bool useReals = false);
 
 private:
-    GinacToZ3(Z3Context &context, Settings cfg);
+    GinacToZ3(Z3Context &context, bool useReals);
 
     z3::expr convert_ex(const GiNaC::ex &e);
     z3::expr convert_add(const GiNaC::ex &e);
@@ -73,16 +53,12 @@ private:
     z3::expr convert_symbol(const GiNaC::symbol &sym);
     z3::expr convert_relational(const GiNaC::ex &e);
 
-    // lookup in freshVariables or create a fresh variable via the context
-    z3::expr getFreshVar(const std::string &name);
-
     // returns the variable type for fresh variables according to settings
     Z3Context::VariableType variableType() const;
 
 private:
-    std::map<std::string, z3::expr> freshVariables;
     Z3Context &context;
-    Settings settings;
+    bool useReals;
 };
 
 #endif // GINACTOZ3_H
