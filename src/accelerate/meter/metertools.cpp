@@ -203,7 +203,6 @@ void MeteringToolbox::restrictGuardToVariables(const VarMan &varMan, GuardList &
 /* ### Heuristics to improve metering results ### */
 
 bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, const MultiUpdate &updates) {
-    // TODO: timing (was FarkasLogic and FarkasTotal before)?
     bool changed = false;
 
     // first remove irrelevant constraints from the guard

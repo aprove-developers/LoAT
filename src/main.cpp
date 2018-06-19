@@ -17,26 +17,14 @@
 
 #include <iostream>
 
-#include <ginac/ginac.h>
-#include <purrs.hh>
-#include <z3++.h>
+#include "its/parser/itsparser.h"
+#include "analysis/analysis.h"
 
-#include "util/exceptions.h"
-
-#include <sstream>
-#include <fstream>
-
-using namespace std;
-
-
-#include "analysis/preprocess.h"
 #include "util/stats.h"
 #include "util/timing.h"
 #include "util/timeout.h"
 
-
-#include "its/parser/itsparser.h"
-#include "analysis/analysis.h"
+using namespace std;
 
 
 // Variables for command line flags

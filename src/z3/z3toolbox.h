@@ -45,17 +45,15 @@ namespace Z3Toolbox {
     Expression getRealFromModel(const z3::model &model, const z3::expr &symbol);
 
     /**
-     * Returns the z3 result (sat/unsat/unknown) for the check if all expressions are satisfiable
+     * Calls z3 for the conjunction of all given expressions, returns the result (sat/unsat/unknown).
      */
     z3::check_result checkAll(const std::vector<Expression> &list);
 
-    // TODO: Rename to checkConjunection or something better, adapt documentation
     /**
-     * Extended version of checkExpressionsSAT that works on a given context and can be used to obtain the model
+     * Extended version of checkAll that works on a given context and can be used to obtain the model
      * @note the model must have been created with the given context
      */
-    z3::check_result checkAll(const std::vector<Expression> &list, Z3Context &context,
-                              z3::model *model = nullptr);
+    z3::check_result checkAll(const std::vector<Expression> &list, Z3Context &context, z3::model *model = nullptr);
 
     /**
      * Returns an approximation of the z3 result (sat/unsat/unknown) for the check if all expressions are satisfiable

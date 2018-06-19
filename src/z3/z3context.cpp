@@ -20,10 +20,9 @@
 #include "expr/expression.h"
 
 using namespace std;
-using boost::optional;
 
 
-optional<z3::expr> Z3Context::getVariable(const ExprSymbol &symbol) const {
+option<z3::expr> Z3Context::getVariable(const ExprSymbol &symbol) const {
     auto it = symbolMap.find(symbol);
     if (it != symbolMap.end()) {
         return it->second;

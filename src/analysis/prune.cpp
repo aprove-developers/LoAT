@@ -124,8 +124,6 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
 bool Pruning::pruneParallelRules(ITSProblem &its) {
     debugPrune("Pruning parallel rules");
 
-    // FIXME: Remember to check PRUNING_ENABLE and do Stats::addStep("Flowgraph::pruneTransitions");
-
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
     // (see ComplexityResult for the latter). We first compare the complexity, then the number of inftyVars.
     typedef tuple<TransIdx,Complexity,int> TransCpx;
