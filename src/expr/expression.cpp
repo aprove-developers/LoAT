@@ -91,12 +91,7 @@ bool Expression::equalsVariable(const GiNaC::symbol &var) const {
 
 
 bool Expression::isInfSymbol() const {
-    bool res = equalsVariable(InfSymbol);
-
-    // TODO: Remove this assertion if it is never hit.
-    // TODO: Since chaining handles the case where one of the costs is INF, there should never be an INF within an arithmetic expression
-    assert(degree(InfSymbol) == 0 || res);
-    return res;
+    return equalsVariable(InfSymbol);
 }
 
 
@@ -297,18 +292,6 @@ z3::expr Expression::toZ3(Z3Context &context, bool useReals) const {
 }
 
 
-Expression Expression::removedExponents() const {
-    GiNaC::exmap subsMap;
-    auto vars = getVariables();
-
-    int label=0;
-    for (ExprSymbol var : vars) {
-        subsMap[GiNaC::pow(var,GiNaC::wild(label++))] = var;
-    }
-    return subs(subsMap);
-}
-
-
 Complexity Expression::getComplexity(const GiNaC::ex &term) {
     using namespace GiNaC;
 
@@ -378,53 +361,6 @@ Complexity Expression::getComplexity() const {
 
     Expression simple = expand(); // multiply out
     return getComplexity(simple);
-}
-
-
-GiNaC::ex Expression::simplifyForComplexity(GiNaC::ex term) {
-    if (GiNaC::is_a<GiNaC::power>(term)) {
-        assert(term.nops() == 2);
-        if (GiNaC::is_a<GiNaC::numeric>(term.op(0))) {
-            GiNaC::numeric num = GiNaC::ex_to<GiNaC::numeric>(term.op(0));
-            if (num.compare(1) == 1) {
-                term = GiNaC::power(2,term.op(1));
-           }
-            if (!GiNaC::is_a<GiNaC::numeric>(term.op(1))) {
-                term = GiNaC::power(term.op(0),simplifyForComplexity(term.op(1))); //simplify non-numeric exponent
-            }
-        }
-        else {
-            term = GiNaC::power(simplifyForComplexity(term.op(0)),term.op(1));
-        }
-    } else if (GiNaC::is_a<GiNaC::numeric>(term)) {
-        GiNaC::numeric num = GiNaC::ex_to<GiNaC::numeric>(term);
-        if (num.is_positive()) {
-            term = 1;
-        }
-    } else if (GiNaC::is_a<GiNaC::mul>(term)) {
-        GiNaC::ex res = 1;
-        for (int i=0; i < term.nops(); ++i) {
-            res = res * simplifyForComplexity(term.op(i));
-        }
-        term = res;
-    } else if (GiNaC::is_a<GiNaC::add>(term)) {
-        GiNaC::ex res = 0;
-        for (int i=0; i < term.nops(); ++i) {
-            if (!GiNaC::is_a<GiNaC::numeric>(term.op(i))) {
-                res = res + simplifyForComplexity(term.op(i));
-            }
-        }
-        term = res;
-    } else if (!GiNaC::is_a<GiNaC::symbol>(term)){
-        throw UnknownComplexityClassException("Unknown GiNaC type");
-    }
-    return term;
-}
-
-
-Expression Expression::calcComplexityClass() const {
-    GiNaC::ex term = this->expand();
-    return simplifyForComplexity(term);
 }
 
 

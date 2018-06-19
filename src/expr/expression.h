@@ -33,27 +33,11 @@ class Z3Context;
 class Expression;
 
 //Useful typedefs for readability
-
-using ExprSymbol = GiNaC::symbol; // TODO: rename to just Symbol (and SymbolSet, SymbolMap)?
-using ExprList = GiNaC::lst;
-
-// TODO: Provide an own Substitution type, since exmap also allows to substitute expressions!
-// TODO: Whereas we (usually) only want to allow variable substitutions!
-// using Substitution = GiNaC::exmap; // TODO: use this everywhere
-
+using ExprSymbol = GiNaC::symbol;
 using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
 using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>;
-
 template <typename T>
 using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
-
-// TODO: Add alias for GiNaC::exmap (Substitution / Subs), or even a class?
-
-//typedef GiNaC::symbol ExprSymbol;
-//typedef GiNaC::lst ExprList;
-//typedef std::set<ExprSymbol, GiNaC::ex_is_less> ExprSymbolSet;
-//typedef std::set<Expression, GiNaC::ex_is_less> ExpressionSet;
-
 
 
 
@@ -107,20 +91,15 @@ public:
     bool equalsVariable(const GiNaC::symbol &var) const;
 
     /**
-     * Checks if this expression represents infinity, i.e. if it is (equivalent to) the INF-symbol.
-     * @note Only a heuristic check, returns false if unsure.
-     * TODO: Update documentation
+     * Checks if this expression is the INF-symbol (used to represent nontermination).
+     * This is only a syntactic check.
      */
     bool isInfSymbol() const;
 
-    // TODO: replace by isLinear and isLinearWithin(ExprSymbolSet)
-    // TODO: This is probably cleaner than the getGinacVarList() everywhere...
     /**
      * Returns true iff this expression is linear
      * (e.g. 1/2*x+y is linear, but x^2 or x*y are not considered linear)
      */
-    bool isLinear(const GiNaC::lst &vars) const;
-
     bool isLinear() const;
 
     /**
@@ -233,11 +212,6 @@ public:
     z3::expr toZ3(Z3Context &context, bool useReals = false) const;
 
     /**
-     * Return new expression without any powers of symbols, e.g. x^2 * y^x --> x * y ("5^x" is kept)
-     */
-    Expression removedExponents() const;
-
-    /**
      * Returns an estimate of the exponent of the complexity class, e.g. "x^3" is 3, "x*y" is 2, "42" is 0 (constant)
      * @note this should be an OVER-approximation, but there are no guarantees as this is just a simple syntactic check!
      * @return the complexity, or ComplexExp for exponential, or ComplexNone for unknown complexity
@@ -245,23 +219,11 @@ public:
     Complexity getComplexity() const;
 
     /**
-     * Tries to calculate the complexity class of this expression, returns i.e. y^2 for (2*y*y+y)
-     * @note this does currently only handle simple cases and is thus not reliable!
-     */
-    Expression calcComplexityClass() const;
-    EXCEPTION(UnknownComplexityClassException,CustomException);
-
-    /**
      * Converts this expression to a string by using GiNaC's operator<<
      */
     std::string toString() const;
 
 private:
-    /**
-     * Helper to remove coefficients for complexity class
-     */
-    static GiNaC::ex simplifyForComplexity(GiNaC::ex term);
-
     /**
      * Helper for getComplexity that operates recursively on the given term
      */
