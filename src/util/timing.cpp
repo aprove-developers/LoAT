@@ -61,15 +61,18 @@ void Timing::print(ostream &s) {
     s << " ========== TIMING ==========" << endl;
     s << setw(10) << "Time [ms]" << " | " << "Description" << endl;
     printLine(Total,"Total");
-    printLine(Z3,"Z3 (total time)");
+    s << " ----------------------------" << endl;
+    printLine(Z3,"Z3 (total time in add/check)");
     printLine(Purrs,"PURRS (total time)");
+    s << " ----------------------------" << endl;
     printLine(Preprocess,"Pre-processing");
     printLine(Prune,"Pruning (parallel rules)");
     printLine(Chain,"Chaining");
-    printLine(Accelerate,"Acceleration (total)");
-    printLine(Meter, "Metering (no heuristics)");
-    printLine(BackwardAccel,"Backward Accel (total)");
-    printLine(Asymptotic,"Asymptotic Computation");
+    printLine(Accelerate,"Acceleration (meter + backward)");
+    printLine(Asymptotic,"Asymptotic Computation (only final computation)");
+    s << " ----------------------------" << endl;
+    printLine(Meter, "Metering (without heuristics)");
+    printLine(BackwardAccel,"Backward Accel");
     if (TimingSum.count(Timing::Other) > 0) printLine(Other,"Other");
     s << " ========== TIMING ==========" << endl;
 }

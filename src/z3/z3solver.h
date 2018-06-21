@@ -45,6 +45,12 @@ public:
         Timing::done(Timing::Z3);
         return res;
     }
+
+    inline void add(const z3::expr &e) {
+        Timing::start(Timing::Z3);
+        z3::solver::add(e);
+        Timing::done(Timing::Z3);
+    }
 };
 
 

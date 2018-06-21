@@ -997,7 +997,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
                                                              const Expression &cost,
                                                              bool finalCheck)
 {
-    Timing::Scope timer(Timing::Asymptotic);
+    if (finalCheck) Timing::start(Timing::Asymptotic);
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     // Expand the cost to make it easier to analyze
@@ -1028,7 +1028,10 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     asymptoticBound.createInitialLimitProblem();
     asymptoticBound.propagateBounds();
     asymptoticBound.removeUnsatProblems();
-    if (asymptoticBound.solveLimitProblem()) {
+    bool result = asymptoticBound.solveLimitProblem();
+    if (finalCheck) Timing::done(Timing::Asymptotic);
+
+    if (result) {
         debugAsymptoticBound("Solved the initial limit problem. ("
                 << asymptoticBound.solvedLimitProblems.size()
                 << " solved problem(s))");
