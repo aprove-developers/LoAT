@@ -16,6 +16,9 @@ LOATBIN=./src/loat
 #temporary copy of the executable (to allow recompiling during benchmark)
 LOATBENCHBIN=./loat_bench
 
+#command line flags for LoAT (e.g. --no-limit-smt)
+LOATOPTIONS=
+
 #dump stdout,stderr (for debugging only)
 DUMP=0
 DUMPDIR="./benchlog"
@@ -40,10 +43,10 @@ exec_tool() {
 		return $?
 	else
 		if [ $DUMP -eq 1 ]; then
-			$(timeout $TIMEOUT $LOATBENCHBIN --timeout $TIMEOUT --dot "$DUMPDIR/$dotfile" "$1" > "$TMPFILE" 2> "$ERRFILE")
+			$(timeout $TIMEOUT $LOATBENCHBIN $LOATOPTIONS --timeout $TIMEOUT --dot "$DUMPDIR/$dotfile" "$1" > "$TMPFILE" 2> "$ERRFILE")
 			return $?
 		else
-			$(timeout $TIMEOUT $LOATBENCHBIN --timeout $TIMEOUT "$1" > "$TMPFILE" 2> "$ERRFILE")
+			$(timeout $TIMEOUT $LOATBENCHBIN $LOATOPTIONS --timeout $TIMEOUT "$1" > "$TMPFILE" 2> "$ERRFILE")
 			return $?
 		fi
 	fi
@@ -56,7 +59,7 @@ parse_result() {
 			$KOATTOCPX --simple "$runtime" 2>/dev/null | grep -E "^Complexity:" | cut -d' ' -f2
 		fi
 	else
-		cat $TMPFILE | grep -E "^\s*Complexity value:" | cut -d':' -f2 | sed -e 's/\s//g'
+		cat $TMPFILE | grep -E "^\s*Cpx degree:" | cut -d':' -f2 | sed -e 's/\s//g'
 	fi
 }
 
@@ -199,7 +202,7 @@ if [ $KOAT -eq 0 ]; then
 		exit 1
 	fi
 	cp $LOATBIN $LOATBENCHBIN
-	$LOATBENCHBIN --cfg >> $LOGFILE
+	$LOATBENCHBIN $LOATOPTIONS --plain --config >> $LOGFILE
 fi
 
 echo "test" > $TMPFILE && echo "test" > $ERRFILE
@@ -249,11 +252,12 @@ for d in $SAMPLEDIRS; do
 		val=`parse_result`
 		count=$((count+1))
 
-		re='^(-?[0-9]+|EXP|INF|NONTERM)$'
+		re='^(-?[0-9]+|EXP|INF|NONTERM|Exp|Unbounded|Nonterm|\?)$'
 		if [[ $val =~ $re ]]; then
-			if [ "$val" == "NONTERM" ]; then val=10000; fi #treat as INF for now
-			if [ "$val" == "INF" ]; then val=10000; fi
-			if [ "$val" == "EXP" ]; then val=1000; fi
+			if [ "$val" == "NONTERM" -o "$val" == "Nonterm" ]; then val=10000; fi #treat as INF for now
+			if [ "$val" == "INF" -o "$val" == "Unbounded" ]; then val=10000; fi
+			if [ "$val" == "EXP" -o "$val" == "Exp" ]; then val=1000; fi
+			if [ "$val" == "?" ]; then val=0; fi #treat unknown as constant
 			if [ $val -eq -1 ]; then val=1000000; fi #see when complexity fails
 			score=$((score+val))
 			echolog -e "$file\t$val"
