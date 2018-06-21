@@ -7,8 +7,9 @@ To compile LoAT, you will need the following libraries (and all their dependenci
  * GiNaC (<http://www.ginac.de>)
  * a slightly patched version of PURRS (<https://github.com/mttnff/LoAT-purrs>)
  * Z3 (<https://github.com/Z3Prover/z3>)
+ * boost (optional, math, algorithm, <https://www.boost.org>)
 
-(the dependencies include: CLN, NTL, giac, gf2x, cgicc)
+(the dependencies include: CLN, NTL, giac)
 
 
 ## Static Binary
