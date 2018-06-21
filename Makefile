@@ -1,6 +1,5 @@
 # Aadditional compiler flags (add include flags for purrs/ginac/z3 etc. if neccessary).
-# This is the default for debugging, override using e.g. make COMPILE_FLAGS=-O2 or change this line.
-COMPILE_FLAGS = -O0 -g
+COMPILE_FLAGS = -O2 -g
 
 # Additioanl linker flags (add corresponding library paths here)
 LINK_FLAGS =
