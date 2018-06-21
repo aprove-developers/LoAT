@@ -1,14 +1,16 @@
-#additional compiler flags (add include flags for purrs/ginac/z3 etc. if neccessary)
-#this is the default for debugging, override using e.g. make COMPILE_FLAGS=-O2
+# Aadditional compiler flags (add include flags for purrs/ginac/z3 etc. if neccessary).
+# This is the default for debugging, override using e.g. make COMPILE_FLAGS=-O2 or change this line.
 COMPILE_FLAGS = -O0 -g
 
-#additioanl linker flags (add corresponding library paths here)
+# Additioanl linker flags (add corresponding library paths here)
 LINK_FLAGS =
 
-#all flags used for compiling/linking
+# All flags used for compiling/linking
 CXXFLAGS = -std=c++11 $(COMPILE_FLAGS)
-CXXFLAGS_STATIC = $(CXXFLAGS) -static
 LDFLAGS = -lpurrs -lginac -lcln -lntl -lz3 $(LINK_FLAGS)
+
+# Alternative flags used to produce a static binary
+CXXFLAGS_STATIC = $(CXXFLAGS) -static
 LDFLAGS_STATIC = -lpurrs -lginac -lcln -lntl -lz3 -lgmp -lgomp -lpthread $(LINK_FLAGS)
 
 SRCDIR = src
@@ -27,9 +29,11 @@ static:
 
 koatToT2:
 	$(MAKE) -C $(SRCDIR) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" koatToT2
+	ln -f -s $(SRCDIR)/koatToT2 koatToT2
 
 koatToComplexity:
 	$(MAKE) -C $(SRCDIR) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" koatToComplexity
+	ln -f -s $(SRCDIR)/koatToComplexity koatToComplexity
 
 clean:
 	$(MAKE) -C $(SRCDIR) clean
