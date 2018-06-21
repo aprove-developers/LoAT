@@ -18,8 +18,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "itrs.h"
-#include "flowgraph.h"
+#include "its/itsproblem.h"
+#include "its/parser/itsparser.h"
+#include "its/export.h"
 
 using namespace std;
 
@@ -31,17 +32,21 @@ int main(int argc, char *argv[]) {
     assert(argc == 3);
 
     string filename(argv[1]);
-    ITRSProblem res = ITRSProblem::loadFromFile(filename);
+    ITSProblem res = parser::ITSParser::loadFromFile(filename);
+
+    if (!res.isLinear()) {
+        cout << "Error: T2 conversion only supported for linear (non-recursive) ITS problems" << endl;
+        return 1;
+    }
 
     string outname(argv[2]);
     ofstream outfile(outname);
     if (!outfile.is_open()) {
-        cout << "Error: Unable to open file: " << outname << endl;
-        return 2;
+        cout << "Error: Unable to open output file: " << outname << endl;
+        return 1;
     }
 
-    FlowGraph g(res);
-    g.printT2(outfile);
+    LinearITSExport::printT2(res, outfile);
     outfile.close();
     return 0;
 }
