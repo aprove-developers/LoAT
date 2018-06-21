@@ -232,17 +232,7 @@ int main(int argc, char *argv[]) {
 
     // WST style proof output
     proofout.setEnabled(true);
-    if (runtime.cpx == Complexity::Nonterm) {
-        proofout << endl << "NO" << endl;
-    } else {
-        proofout << endl << "WORST_CASE(";
-        if (runtime.cpx == Complexity::Exp || runtime.cpx == Complexity::NestedExp) proofout << "EXP";
-        else if (runtime.cpx == Complexity::Infty) proofout << "INF";
-        else if (runtime.cpx == Complexity::Unknown) proofout << "Omega(0)";
-        else if (runtime.cpx == Complexity::Const) proofout << "Omega(1)";
-        else proofout << "Omega(n^" << runtime.cpx.getPolynomialDegree().toString() << ")";
-        proofout << ",?)" << endl;
-    }
+    proofout << runtime.cpx.toWstString() << endl;
 
     return 0;
 }

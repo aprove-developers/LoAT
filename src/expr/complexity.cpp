@@ -95,6 +95,30 @@ std::string Complexity::toString() const {
     unreachable();
 }
 
+std::string Complexity::toWstString() const {
+    if (type == CpxNonterm) {
+        return "NO";
+    }
+
+    std::string res = "WORST_CASE(";
+    switch (type) {
+        case CpxExponential: res += "EXP"; break;
+        case CpxNestedExponential: res += "EXP"; break;
+        case CpxUnbounded: res += "INF"; break;
+        case CpxUnknown: res += "Omega(0)"; break;
+        case CpxPolynomial:
+            if (polyDegree.isZero()) {
+                res += "Omega(1)";
+            } else {
+                res += "Omega(n^" + polyDegree.toString() + ")";
+            }
+            break;
+        default: unreachable();
+    }
+    res += ",?)";
+    return res;
+}
+
 std::ostream& operator<<(std::ostream &s, const Complexity &cpx) {
     s << cpx.toString();
     return s;

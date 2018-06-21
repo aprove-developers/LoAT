@@ -110,7 +110,8 @@ public:
     Complexity operator^(const SimpleFraction &exponent);
     Complexity operator^(int exponent);
 
-    std::string toString() const;
+    std::string toString() const; // readable format
+    std::string toWstString() const; // WORST_CASE(cpx,?) format
 
 private:
     explicit Complexity(ComplexityType type) : type(type), polyDegree(1) {}
