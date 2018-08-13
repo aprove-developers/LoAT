@@ -114,7 +114,7 @@ void TermParser::nextSymbol() {
             symbol = COMMA;
 
         } else {
-            throw UnknownSymbolException("Unknown symbol: " + nextChar);
+            throw UnknownSymbolException("Unknown symbol: " + string(1, nextChar));
         }
 
         toParseReversed.pop_back();
