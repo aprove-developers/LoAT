@@ -32,7 +32,6 @@ string filename;
 char benchmarkMode = 'n'; // no benchmark
 int timeout = 0; // no timeout
 int proofLevel = 2;
-bool paperMode = false;
 bool printStats = false;
 bool printTiming = false;
 bool printConfig = false;
@@ -58,7 +57,6 @@ void printHelp(char *arg0) {
     cout << "  --no-cost-check    Don't check if costs are nonnegative (potentially unsound)" << endl;
     cout << "  --no-preprocessing Don't try to simplify the program first (which involves SMT)" << endl;
     cout << "  --no-limit-smt     Don't use the SMT encoding for limit problems" << endl;
-    cout << "  --paper            Disable heuristics not described in the paper" << endl;
 }
 
 
@@ -108,8 +106,6 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::EnsureNonnegativeCosts = false;
         } else if (strcmp("--no-limit-smt",argv[arg]) == 0) {
             Config::Limit::UseSmtEncoding = false;
-        } else if (strcmp("--paper",argv[arg]) == 0) {
-            paperMode = true;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -153,12 +149,6 @@ int main(int argc, char *argv[]) {
         case 'f': setBenchmarkConfig(true,  true,  true,  true ); break;
         case 'n': break; // benchmark flag not used
         default: cout << "Unknown benchmark setting" << endl; return 1;
-    }
-    if (paperMode) {
-        Config::ForwardAccel::AllowLinearization = false;
-        Config::ForwardAccel::ConflictVarHeuristic = false;
-        Config::ForwardAccel::ConstantUpdateHeuristic = false;
-        Config::Accel::TryNesting = false;
     }
 
     // Print current configuration (if requested)
