@@ -7,7 +7,7 @@ To compile LoAT, you will need the following libraries (and all their dependenci
  * GiNaC (<http://www.ginac.de>)
  * a slightly patched version of PURRS (<https://github.com/mttnff/LoAT-purrs>)
  * Z3 (<https://github.com/Z3Prover/z3>)
- * boost (optional, math, algorithm, <https://www.boost.org>)
+ * boost (optional, integer, algorithm, <https://www.boost.org>)
 
 (the dependencies include: CLN, NTL, giac)
 
@@ -37,7 +37,7 @@ LoAT can then be run with
 ```
 
 You might want to run LoAT on the included examples (see `example` directory) to see if
-it works as expected. There are some options to play around with in `src/global.h`.
+it works as expected. There are some options to play around with in `src/config.h`.
 
 
 ## Useful Scripts
