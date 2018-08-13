@@ -29,7 +29,7 @@
 #include "z3/z3toolbox.h"
 #include "util/timeout.h"
 
-#include <boost/math/common_factor.hpp> // for gcd/lcdm
+#include <boost/integer/common_factor.hpp> // for lcm
 
 using namespace std;
 namespace MT = MeteringToolbox;
@@ -287,7 +287,7 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const z3::model &mod
         GiNaC::numeric coeff = GiNaC::ex_to<GiNaC::numeric>(Z3Toolbox::getRealFromModel(model, z3coeff));
         if (coeff.denom().to_int() != 1) {
             has_reals = true;
-            mult = boost::math::lcm(mult, coeff.denom().to_int());
+            mult = boost::integer::lcm(mult, coeff.denom().to_int());
         }
     }
 
