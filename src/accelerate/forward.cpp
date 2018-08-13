@@ -107,7 +107,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
         case MeteringFinder::Nonterm:
         {
             // Since the loop is non-terminating, the right-hand sides are of no interest.
-            rule.getCostMut() = Expression::InfSymbol;
+            rule.getCostMut() = Expression::NontermSymbol;
             res.rules.emplace_back("NONTERM", rule.replaceRhssBySink(sink));
             res.result = Success;
             Stats::add(Stats::MeterNonterm);

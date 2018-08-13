@@ -1012,10 +1012,10 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
 #endif
 
     // Handle nontermination
-    if (expandedCost.isInfSymbol()) {
-        return Result(Complexity::Nonterm, Expression::InfSymbol, false, 0);
+    if (expandedCost.isNontermSymbol()) {
+        return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
     }
-    assert(!expandedCost.has(Expression::InfSymbol));
+    assert(!expandedCost.has(Expression::NontermSymbol));
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);

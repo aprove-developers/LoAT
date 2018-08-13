@@ -47,7 +47,7 @@ using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
  */
 class Expression : public GiNaC::ex {
 public:
-    static const ExprSymbol InfSymbol; // special symbol "INF" to be used within cost expressions
+    static const ExprSymbol NontermSymbol; // special symbol "INF" to be used within cost expressions
 
 public:
     /**
@@ -91,10 +91,10 @@ public:
     bool equalsVariable(const GiNaC::symbol &var) const;
 
     /**
-     * Checks if this expression is the INF-symbol (used to represent nontermination).
+     * Checks if this expression is the NONTERM-symbol (used to represent nontermination).
      * This is only a syntactic check.
      */
-    bool isInfSymbol() const;
+    bool isNontermSymbol() const;
 
     /**
      * Returns true iff this expression is linear

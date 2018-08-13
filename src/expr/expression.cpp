@@ -24,7 +24,7 @@
 using namespace std;
 
 
-const ExprSymbol Expression::InfSymbol = GiNaC::symbol("INF");
+const ExprSymbol Expression::NontermSymbol = GiNaC::symbol("NONTERM");
 
 
 Expression Expression::fromString(const string &s, const GiNaC::lst &variables) {
@@ -90,8 +90,8 @@ bool Expression::equalsVariable(const GiNaC::symbol &var) const {
 }
 
 
-bool Expression::isInfSymbol() const {
-    return equalsVariable(InfSymbol);
+bool Expression::isNontermSymbol() const {
+    return equalsVariable(NontermSymbol);
 }
 
 
@@ -177,7 +177,7 @@ void Expression::collectVariables(ExprSymbolSet &res) const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         SymbolVisitor(ExprSymbolSet &t) : target(t) {}
         void visit(const GiNaC::symbol &sym) {
-            if (sym != InfSymbol) target.insert(sym);
+            if (sym != NontermSymbol) target.insert(sym);
         }
     private:
         ExprSymbolSet &target;
@@ -349,7 +349,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
         return cpx;
 
     } else if (is_a<symbol>(term)) {
-        return (term.compare(Expression::InfSymbol) == 0) ? Complexity::Nonterm : Complexity::Poly(1);
+        return (term.compare(Expression::NontermSymbol) == 0) ? Complexity::Nonterm : Complexity::Poly(1);
     }
 
     //unknown expression type (e.g. relational)
@@ -359,7 +359,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
 
 
 Complexity Expression::getComplexity() const {
-    if (isInfSymbol()) {
+    if (isNontermSymbol()) {
         return Complexity::Nonterm;
     }
 

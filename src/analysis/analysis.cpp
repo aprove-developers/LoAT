@@ -479,7 +479,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
         // We have to be careful with temp variables, since they can lead to unbounded cost.
         const Expression &cost = rule.getCost();
-        bool hasTempVar = !cost.isInfSymbol() && cost.hasVariableWith(isTempVar);
+        bool hasTempVar = !cost.isNontermSymbol() && cost.hasVariableWith(isTempVar);
         if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) {
             debugAnalysis("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
             continue;

@@ -403,7 +403,7 @@ void Accelerator::run() {
                         innerCandidates.push_back(InnerCandidate{.oldRule=loop,.newRule=added});
                     }
 
-                    isNonterm = isNonterm || accel.rule.getCost().isInfSymbol();
+                    isNonterm = isNonterm || accel.rule.getCost().isNontermSymbol();
                 }
 
                 // If the guard was modified, the original rule might not be non-terminating
