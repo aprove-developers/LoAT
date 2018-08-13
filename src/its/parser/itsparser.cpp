@@ -239,7 +239,7 @@ ITSParser::ParsedRule ITSParser::parseRule(const string &line) const {
 TermPtr ITSParser::parseTerm(const std::string &s) const {
     try {
         return termParser->parseTerm(s);
-    } catch (TermParser::TermParserException e) {
+    } catch (const TermParser::TermParserException &e) {
         throw FileError("Error while parsing term '" + s + "': " + e.what());
     }
 }
