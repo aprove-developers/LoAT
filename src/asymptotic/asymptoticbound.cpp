@@ -541,7 +541,7 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
         res.complexity = Complexity::Unknown;
     } else if (res.upperBound == 0) {
         debugAsymptoticBound("Complexity: INF (unbounded runtime)");
-        res.complexity = Complexity::Infty;
+        res.complexity = Complexity::Unbounded;
     } else {
         res.lowerBound = findLowerBoundforSolvedCost(limitProblem, res.solution);
 
@@ -581,7 +581,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
 
     ComplexityResult result = getComplexity(limitProblem);
 
-    if (result.complexity == Complexity::Infty) {
+    if (result.complexity == Complexity::Unbounded) {
         return true;
     }
 

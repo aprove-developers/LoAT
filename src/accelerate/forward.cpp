@@ -86,7 +86,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
     // The reason is that an infinite iteration of a rule with cost 0 is not considered nontermination.
     // Since always adding "cost >= 1" may complicate the rule (if cost is nonlinear), we instead meter again.
     // (Note that instantiation has already been performed, but this is probably not a big issue at this point)
-    if (meter.result == MeteringFinder::Unbounded && rule.isLinear()) {
+    if (meter.result == MeteringFinder::Nonterm && rule.isLinear()) {
         rule.getGuardMut().push_back(rule.getCost() >= 1);
         meter = meterWithInstantiation(varMan, rule);
     }
@@ -104,7 +104,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             Stats::add(Stats::MeterUnsat);
             return res;
 
-        case MeteringFinder::Unbounded:
+        case MeteringFinder::Nonterm:
         {
             // Since the loop is non-terminating, the right-hand sides are of no interest.
             rule.getCostMut() = Expression::InfSymbol;

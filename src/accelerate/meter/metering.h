@@ -45,12 +45,12 @@ class MeteringFinder {
 public:
     /**
      * Success: metering function was found
-     * Unbounded: the loop can be executed unbounded (there is no limiting guard)
+     * Nonterm: if the guard is satisfied, the loop does not terminate (whole guard is irrelevant for termination)
      * Nonlinear: the problem is nonlinear and could not be substituted to a linear problem
      * ConflictVar: two variables are limiting the execution of the loop, we would need min(A,B) or max(A,B) to resolve
      * Unsat: no metering function was found (z3 unknown/unsat)
      */
-    enum ResultKind { Success, Unbounded, Nonlinear, ConflictVar, Unsat };
+    enum ResultKind { Success, Nonterm, Nonlinear, ConflictVar, Unsat };
 
     struct Result {
         // Flag indicating whether a metering function was successfully found

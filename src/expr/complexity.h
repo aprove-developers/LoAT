@@ -84,12 +84,12 @@ public:
     };
 
     static const Complexity Unknown;
-    static const Complexity Const; // equivalent to polynomial(0)
+    static const Complexity Const; // equivalent to Poly(0)
     static Complexity Poly(int degree);
     static Complexity Poly(int numer, int denom);
     static const Complexity Exp;
     static const Complexity NestedExp;
-    static const Complexity Infty; // unbounded
+    static const Complexity Unbounded;
     static const Complexity Nonterm;
 
     // defaults to unknown

@@ -517,7 +517,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
             res.guard = rule.getGuard();
             res.cost = rule.getCost();
 
-            if (res.cpx >= Complexity::Infty) {
+            if (res.cpx >= Complexity::Unbounded) {
                 break;
             }
         }
@@ -601,7 +601,7 @@ RuntimeResult Analysis::getMaxPartialResult() {
         res = getMaxRuntimeOf(its.getTransitionsFrom(initial), res);
 
         // handle special cases to ensure termination in time
-        if (res.cpx >= Complexity::Infty) goto done;
+        if (res.cpx >= Complexity::Unbounded) goto done;
         if (Timeout::hard()) goto abort;
 
         // contract next level (if there is one), so we get new rules from the start state

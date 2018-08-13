@@ -21,7 +21,7 @@ const Complexity Complexity::Unknown = Complexity(CpxUnknown);
 const Complexity Complexity::Const = Complexity::Poly(0);
 const Complexity Complexity::Exp = Complexity(CpxExponential);
 const Complexity Complexity::NestedExp = Complexity(CpxNestedExponential);
-const Complexity Complexity::Infty = Complexity(CpxUnbounded);
+const Complexity Complexity::Unbounded = Complexity(CpxUnbounded);
 const Complexity Complexity::Nonterm = Complexity(CpxNonterm);
 
 Complexity Complexity::Poly(int degree) {

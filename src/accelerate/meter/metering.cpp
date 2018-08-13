@@ -357,9 +357,9 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
         return result;
     }
 
-    // identify trivially unbounded loops (no guard constraint is limiting the loop's execution)
+    // identify trivially non-terminating loops (no guard constraint is limiting the loop's execution)
     if (meter.reducedGuard.empty()) {
-        result.result = Unbounded;
+        result.result = Nonterm;
         return result;
     }
 
