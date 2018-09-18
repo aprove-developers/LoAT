@@ -29,7 +29,7 @@ using namespace std;
 
 // Variables for command line flags
 string filename;
-char benchmarkMode = 'n'; // no benchmark
+string benchmarkMode = "none"; // no benchmark
 int timeout = 0; // no timeout
 int proofLevel = 2;
 bool printStats = false;
@@ -41,22 +41,22 @@ bool allowRecursion = true;
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --timeout <sec>    Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --benchmark <a-f>  Set configuration for the benchmarks in the paper" << endl;
-    cout << "  --proof-level <n>  Detail level for proof output (0-3, default 2)" << endl;
+    cout << "  --timeout <sec>                        Timeout (in seconds), minimum: 10" << endl;
+    cout << "  --benchmark <basic|cond|bkwd|rec|smt>  Set configuration for the benchmarks in the paper" << endl;
+    cout << "  --proof-level <n>                      Detail level for proof output (0-3, default 2)" << endl;
     cout << endl;
-    cout << "  --plain            Disable colored output" << endl;
-    cout << "  --dot <file>       Dump dot output to given file (only for non-recursive problems)" << endl;
-    cout << "  --stats            Print some statistics about the performed steps" << endl;
-    cout << "  --timing           Print information about time usage" << endl;
-    cout << "  --config           Show configuration after handling command line flags" << endl;
-    cout << "  --timestamps       Include time stamps in proof output" << endl;
-    cout << "  --print-simplified Print simplified program in the input format" << endl;
+    cout << "  --plain                                Disable colored output" << endl;
+    cout << "  --dot <file>                           Dump dot output to given file (only for non-recursive problems)" << endl;
+    cout << "  --stats                                Print some statistics about the performed steps" << endl;
+    cout << "  --timing                               Print information about time usage" << endl;
+    cout << "  --config                               Show configuration after handling command line flags" << endl;
+    cout << "  --timestamps                           Include time stamps in proof output" << endl;
+    cout << "  --print-simplified                     Print simplified program in the input format" << endl;
     cout << endl;
-    cout << "  --allow-division   Allow division in the input program (potentially unsound)" << endl;
-    cout << "  --no-cost-check    Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing Don't try to simplify the program first (which involves SMT)" << endl;
-    cout << "  --no-limit-smt     Don't use the SMT encoding for limit problems" << endl;
+    cout << "  --allow-division                       Allow division in the input program (potentially unsound)" << endl;
+    cout << "  --no-cost-check                        Don't check if costs are nonnegative (potentially unsound)" << endl;
+    cout << "  --no-preprocessing                     Don't try to simplify the program first (which involves SMT)" << endl;
+    cout << "  --no-limit-smt                         Don't use the SMT encoding for limit problems" << endl;
 }
 
 
@@ -82,7 +82,7 @@ void parseFlags(int argc, char *argv[]) {
         } else if (strcmp("--timeout",argv[arg]) == 0) {
             timeout = atoi(getNext());
         } else if (strcmp("--benchmark",argv[arg]) == 0) {
-            benchmarkMode = getNext()[0];
+            benchmarkMode = getNext();
         } else if (strcmp("--proof-level",argv[arg]) == 0) {
             proofLevel = atoi(getNext());
         } else if (strcmp("--plain",argv[arg]) == 0) {
@@ -140,15 +140,14 @@ int main(int argc, char *argv[]) {
     Config::Output::ProofChain = (proofLevel >= 3);
 
     // Benchmark and heuristic settings
-    switch (benchmarkMode) {
-        case 'a': setBenchmarkConfig(false, false, false, false); break;
-        case 'b': setBenchmarkConfig(true,  false, false, false); break;
-        case 'c': setBenchmarkConfig(false, true,  false, false); break;
-        case 'd': setBenchmarkConfig(false, false, true,  false); break;
-        case 'e': setBenchmarkConfig(false, false, false, true ); break;
-        case 'f': setBenchmarkConfig(true,  true,  true,  true ); break;
-        case 'n': break; // benchmark flag not used
-        default: cout << "Unknown benchmark setting" << endl; return 1;
+         if (benchmarkMode.compare("basic") == 0) setBenchmarkConfig(false, false, false, false);
+    else if (benchmarkMode.compare("cond")  == 0) setBenchmarkConfig(true,  false, false, false);
+    else if (benchmarkMode.compare("bkwd")  == 0) setBenchmarkConfig(false, true,  false, false);
+    else if (benchmarkMode.compare("rec")   == 0) setBenchmarkConfig(false, false, true,  false);
+    else if (benchmarkMode.compare("smt")   == 0) setBenchmarkConfig(false, false, false, true );
+    else if (benchmarkMode.compare("none")  != 0) {
+        cout << "Unknown benchmark setting" << endl;
+        return 1;
     }
 
     // Print current configuration (if requested)
