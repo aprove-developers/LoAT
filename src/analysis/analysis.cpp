@@ -88,6 +88,11 @@ RuntimeResult Analysis::run() {
             printForProof("Removed unsat");
         }
 
+        if (Pruning::removeLeafsAndUnreachable(its)) {
+            proofout.headline("Removed unreachable and leaf rules:");
+            printForProof("Removed unreachable");
+        }
+
         if (preprocessRules()) {
             proofout.headline("Simplified all rules, resulting in:");
             printForProof("Simplify");
