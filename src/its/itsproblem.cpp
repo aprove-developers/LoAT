@@ -114,6 +114,7 @@ std::set<LocationIdx> ITSProblem::getPredecessorLocations(LocationIdx loc) const
 
 void ITSProblem::removeRule(TransIdx transition) {
     graph.removeTrans(transition);
+    rules.erase(transition);
 }
 
 TransIdx ITSProblem::addRule(Rule rule) {
