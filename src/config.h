@@ -125,6 +125,7 @@ namespace Config {
         extern bool Preprocessing;
         extern bool Pruning;
         extern bool EnsureNonnegativeCosts;
+        extern bool ConstantCpxCheck;
         extern bool AsymptoticCheck; // must be enabled for soundness!
     }
 

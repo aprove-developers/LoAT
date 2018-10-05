@@ -57,6 +57,7 @@ void printHelp(char *arg0) {
     cout << "  --no-cost-check                        Don't check if costs are nonnegative (potentially unsound)" << endl;
     cout << "  --no-preprocessing                     Don't try to simplify the program first (which involves SMT)" << endl;
     cout << "  --no-limit-smt                         Don't use the SMT encoding for limit problems" << endl;
+    cout << "  --no-const-cpx                         Don't check for constant complexity (might improve performance)" << endl;
 }
 
 
@@ -106,6 +107,8 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::EnsureNonnegativeCosts = false;
         } else if (strcmp("--no-limit-smt",argv[arg]) == 0) {
             Config::Limit::UseSmtEncoding = false;
+        } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
+            Config::Analysis::ConstantCpxCheck = false;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;

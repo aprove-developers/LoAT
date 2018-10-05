@@ -112,6 +112,14 @@ private:
     bool pruneRules();
 
     /**
+     * Checks if there is a satisfiable initial rule with cost >= 1.
+     * This ensures Omega(1), but is not a complete check (one could have an initial rule with cost 0).
+     *
+     * @return If a satisfiable rule is found, returns the corresponding runtime result.
+     */
+    option<RuntimeResult> checkConstantComplexity() const;
+
+    /**
      * For a fully chained ITS problem, this calculates the maximum runtime complexity (using asymptotic bounds)
      */
     RuntimeResult getMaxRuntime();

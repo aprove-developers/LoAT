@@ -214,6 +214,12 @@ namespace Config {
         // This influences the semantics: If false, rules can be taken even if the cost is negative.
         bool EnsureNonnegativeCosts = true;
 
+        // Whether to check for constant complexity (reachable satisfiable rule with cost >= 1).
+        // If disabled, Omega(0) is reported if no non-constant complexity can be inferred.
+        // If enabled, a heuristic is used that only checks initial rules to prove Omega(1).
+        // Involves SMT queries and can impact performance (even if a higher complexity is inferred).
+        bool ConstantCpxCheck = true;
+
         // Whether to enable the asymptotic complexity computation at all.
         // NOTE: It is not sound to disable this (only intended for testing!)
         // NOTE: If disabled, the complexity is only approximated by a syntactic check.

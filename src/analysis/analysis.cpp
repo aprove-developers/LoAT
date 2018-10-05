@@ -75,6 +75,14 @@ RuntimeResult Analysis::run() {
     bool acceleratedOnce = false; // whether we did at least one acceleration step
     bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
+    // Check if we have at least constant complexity (i.e., at least one rule can be taken with cost >= 1)
+    if (Config::Analysis::ConstantCpxCheck) {
+        auto optRuntime = checkConstantComplexity();
+        if (optRuntime) {
+            runtime = optRuntime.get();
+        }
+    }
+
     if (Config::Analysis::Preprocessing) {
         Timing::Scope timer(Timing::Preprocess);
 
@@ -105,7 +113,8 @@ RuntimeResult Analysis::run() {
 
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
-        return runtime;
+        proofout.headline("Empty problem, aborting");
+        goto done;
     }
 
     proofout.section("Simplification by acceleration and chaining");
@@ -220,13 +229,20 @@ RuntimeResult Analysis::run() {
         printForProof("Removed constant");
 
         // Try to find a high complexity in the remaining problem (with chaining, but without acceleration)
-        runtime = getMaxPartialResult();
+        RuntimeResult res = getMaxPartialResult();
+        if (res.cpx != Complexity::Unknown) {
+            runtime = res;
+        }
 
     } else {
         // No timeout, fully simplified, find the maximum runtime
-        runtime = getMaxRuntime();
+        RuntimeResult res = getMaxRuntime();
+        if (res.cpx != Complexity::Unknown) {
+            runtime = res;
+        }
     }
 
+done:
     printResult(runtime);
     finalizeDotOutput(runtime);
 
@@ -451,6 +467,37 @@ bool Analysis::pruneRules() {
 // #############################
 // ## Complexity Computation  ##
 // #############################
+
+
+option<RuntimeResult> Analysis::checkConstantComplexity() const {
+    proofout.headline("Checking for constant complexity:");
+    proofout.increaseIndention();
+
+    for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
+        const Rule &rule = its.getRule(idx);
+        GuardList guard = rule.getGuard();
+        guard.push_back(rule.getCost() >= 1);
+
+        if (Z3Toolbox::checkAll(guard) == z3::sat) {
+            proofout.setLineStyle(ProofOutput::Result);
+            proofout << "The following rule is satisfiable with cost >= 1, yielding constant complexity:" << endl;
+            ITSExport::printLabeledRule(idx, its, proofout);
+            proofout.decreaseIndention();
+
+            RuntimeResult res;
+            res.guard = rule.getGuard();
+            res.cost = rule.getCost();
+            res.solvedCost = rule.getCost();
+            res.cpx = Complexity::Const;
+            return res;
+        }
+    }
+
+    proofout << "Could not prove constant complexity." << endl;
+    proofout.decreaseIndention();
+    return {};
+}
+
 
 /**
  * Helper for getMaxRuntime that searches for the maximal cost.getComplexity().
