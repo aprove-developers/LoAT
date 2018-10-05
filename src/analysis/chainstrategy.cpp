@@ -362,14 +362,13 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
             debugChain("Chaining accelerated rule " << accel);
 
             for (TransIdx incoming : incomingTransitions) {
-                const Rule &incomingRule = its.getRule(incoming);
+                // Do not chain with another accelerated rule
+                if (acceleratedRules.count(incoming) > 0) continue;
 
                 // Do not chain with incoming loops that are themselves self-loops at node
                 // (no matter if they are simple or not)
+                const Rule &incomingRule = its.getRule(incoming);
                 if (incomingRule.getLhsLoc() == node) continue;
-
-                // Do not chain with another accelerated rule (already covered by the previous check)
-                assert(acceleratedRules.count(incoming) == 0);
 
                 auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
                 if (optRule) {
