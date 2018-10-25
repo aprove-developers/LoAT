@@ -19,6 +19,7 @@
 
 #include "recurrence/recurrence.h"
 #include "meter/metering.h"
+#include "z3/z3toolbox.h"
 
 #include "global.h"
 #include "debug.h"
@@ -208,21 +209,25 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         Rule newRule = rule;
         debugAccel("Trying MinMax heuristic with variables " << A << ", " << B << " for rule " << newRule);
 
-        // Add A >= B to the guard, try to accelerate
+        // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().push_back(A >= B);
-        auto accelRule = accelerateFast(varMan, newRule, sink);
-        if (accelRule) {
-            debugAccel("MinMax heuristic (A >= B) successful with rule: " << newRule);
-            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A >= B).toString() + ")"));
+        if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
+            auto accelRule = accelerateFast(varMan, newRule, sink);
+            if (accelRule) {
+                debugAccel("MinMax heuristic (A >= B) successful with rule: " << newRule);
+                res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A >= B).toString() + ")"));
+            }
         }
 
-        // Add A <= B to the guard, try to accelerate
+        // Add A <= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().pop_back();
         newRule.getGuardMut().push_back(A <= B);
-        accelRule = accelerateFast(varMan, newRule, sink);
-        if (accelRule) {
-            debugAccel("MinMax heuristic (A <= B) successful with rule: " << newRule);
-            res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A <= B).toString() + ")"));
+        if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
+            auto accelRule = accelerateFast(varMan, newRule, sink);
+            if (accelRule) {
+                debugAccel("MinMax heuristic (A <= B) successful with rule: " << newRule);
+                res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A <= B).toString() + ")"));
+            }
         }
 
         // Check if at least one attempt was successful.

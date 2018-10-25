@@ -175,6 +175,7 @@ namespace Config {
         // Whether to check if the chained rule's guard is still satisfiable.
         // This is expensive if many rules are chained, but should nevertheless be enabled.
         // If disabled, a rule with high complexity can become unsatisfiable if chained with an incompatible rule.
+        // If disabled, many unsatisfiable rules could be created, leading to rule explosion.
         const bool CheckSat = true;
 
         // Whether to keep incoming rules after chaining them with accelerated rules.
