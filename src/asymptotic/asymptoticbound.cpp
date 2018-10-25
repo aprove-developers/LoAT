@@ -997,7 +997,6 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
                                                              const Expression &cost,
                                                              bool finalCheck)
 {
-    if (finalCheck) Timing::start(Timing::Asymptotic);
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     // Expand the cost to make it easier to analyze
@@ -1011,14 +1010,22 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     debugAsymptoticBound(endl << "cost:" << expandedCost << endl);
 #endif
 
-    // Handle nontermination
+    // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        auto z3res = Z3Toolbox::checkAll(guard);
+        if (z3res == z3::sat) {
+            proofout << "Guard is satisfiable, yielding nontermination" << endl;
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        } else {
+            proofout << "Could not show satisfiability of the guard (z3 result: " << z3res << ")." << endl;
+            return Result(Complexity::Unknown);
+        }
     }
     assert(!expandedCost.has(Expression::NontermSymbol));
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
+    if (finalCheck) Timing::start(Timing::Asymptotic);
 
     AsymptoticBound asymptoticBound(varMan, guard, expandedCost, finalCheck);
     asymptoticBound.initLimitVectors();
