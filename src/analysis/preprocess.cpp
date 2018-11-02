@@ -167,16 +167,26 @@ bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
 }
 
 
-bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
-    bool changed = false;
-
-    //collect all variables that appear in the rhs of any update
+/**
+ * Returns the set of all variables that appear in the rhs of some update.
+ * For an update x := a and x := x+a, this is {a} and {x,a}, respectively.
+ */
+static ExprSymbolSet collectVarsInUpdateRhs(const Rule &rule) {
     ExprSymbolSet varsInUpdate;
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
             it.second.collectVariables(varsInUpdate);
         }
     }
+    return varsInUpdate;
+}
+
+
+bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
+    bool changed = false;
+
+    //collect all variables that appear in the rhs of any update
+    ExprSymbolSet varsInUpdate = collectVarsInUpdateRhs(rule);
 
     //declare helper lambdas to filter variables, to be passed as arguments
     auto isTemp = [&](const ExprSymbol &sym) {
@@ -197,6 +207,10 @@ bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
 
     //try to remove all remaining temp variables (we do 2 steps to priorizie removing vars from the update)
     changed |= GuardToolbox::propagateEqualities(varMan, rule, GuardToolbox::ResultMapsToInt, isTemp);
+
+    //note that propagation can alter the update, so we have to recompute
+    //the variables that appear in the rhs of an update:
+    varsInUpdate = collectVarsInUpdateRhs(rule);
 
     //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
     //(not sound if x appears in update or cost, since we then need the value of x)
