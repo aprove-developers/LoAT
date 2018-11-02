@@ -1014,10 +1014,10 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     if (expandedCost.isNontermSymbol()) {
         auto z3res = Z3Toolbox::checkAll(guard);
         if (z3res == z3::sat) {
-            proofout << "Guard is satisfiable, yielding nontermination" << endl;
+            if (finalCheck) proofout << "Guard is satisfiable, yielding nontermination" << endl;
             return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
         } else {
-            proofout << "Could not show satisfiability of the guard (z3 result: " << z3res << ")." << endl;
+            if (finalCheck) proofout << "Could not show satisfiability of the guard (z3 result: " << z3res << ")." << endl;
             return Result(Complexity::Unknown);
         }
     }
