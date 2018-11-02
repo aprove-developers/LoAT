@@ -88,7 +88,7 @@ z3::expr GinacToZ3::convert_power(const GiNaC::ex &e) {
     //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
     if (is_a<numeric>(e.op(1))) {
         numeric num = ex_to<numeric>(e.op(1));
-        if (num.is_integer() && num.is_positive() && num.to_int() <= Config::Z3::MaxExponentWithoutPow) {
+        if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Z3::MaxExponentWithoutPow) {
             int exp = num.to_int();
             z3::expr base = convert_ex(e.op(0));
 
@@ -112,14 +112,14 @@ z3::expr GinacToZ3::convert_numeric(const GiNaC::numeric &num) {
         // convert integer either as integer or as reals (depending on settings)
         if (num.is_integer()) {
             if (useReals) {
-                return context.real_val(num.to_int(),1);
+                return context.real_val(num.to_long(),1);
             } else {
-                return context.int_val(num.to_int());
+                return context.int_val(num.to_long());
             }
         }
 
         // always convert real numbers as reals
-        return context.real_val(num.numer().to_int(),num.denom().to_int());
+        return context.real_val(num.numer().to_long(),num.denom().to_long());
 
     } catch (...) {
         throw GinacZ3LargeConstantError("Numeric constant too large, cannot convert to z3");
