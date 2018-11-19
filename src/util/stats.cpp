@@ -64,7 +64,6 @@ void Stats::print(ostream &os, bool printZero) {
         printVal(data[i][MeterCannotIterate],"Meter[cannot iterate]");
         printVal(data[i][MeterNonterm], "Meter[nonterm]");
         printVal(data[i][BackwardSuccess], "Backward[success]");
-        printVal(data[i][BackwardNoInverseUpdate], "Backward[no inverse]");
         printVal(data[i][BackwardNonMonotonic], "Backward[not monotonic]");
         printVal(data[i][BackwardCannotIterate], "Backward[cannot iterate]");
     }

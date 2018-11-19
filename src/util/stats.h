@@ -31,7 +31,7 @@ namespace Stats
         ChainSuccess=0, ChainFail,
         PruneRemove,
         MeterSuccess, MeterUnsat, MeterTooComplicated, MeterCannotIterate, MeterNonterm,
-        BackwardSuccess, BackwardNoInverseUpdate, BackwardNonMonotonic, BackwardCannotIterate
+        BackwardSuccess, BackwardNonMonotonic, BackwardCannotIterate
     };
 
     void clear();

@@ -23,15 +23,9 @@ private:
     bool shouldAccelerate() const;
 
     /**
-     * Given a dependency order for the rule's update, computes the inverse update (as substitution).
-     * This may fail if the update contains nonlinear expressions.
-     */
-    option<GiNaC::exmap> computeInverseUpdate(const std::vector<VariableIdx> &order) const;
-
-    /**
      * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
      */
-    bool checkGuardImplication(const GiNaC::exmap &inverseUpdate) const;
+    bool checkGuardImplication() const;
 
     /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
