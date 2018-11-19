@@ -407,6 +407,29 @@ void AsymptoticBound::removeUnsatProblems() {
 }
 
 
+bool AsymptoticBound::solveViaSMT() {
+    debugAsymptoticBound("Trying to solve the initial limit problem via SMT.");
+
+    bool smtApplicable = Config::Limit::UseSmtEncoding && LimitSmtEncoding::isApplicable(cost);
+
+    if (!smtApplicable || !currentLP.isPolynomial() || !trySmtEncoding()) {
+        return false;
+    }
+
+    solvedLimitProblems.push_back(currentLP);
+
+    proofout << "Solved the limit problem by the following transformations:" << endl;
+    proofout.increaseIndention();
+    proofout << currentLP.getProof();
+    proofout.decreaseIndention();
+
+    isAdequateSolution(currentLP);
+    debugAsymptoticBound("Found solution.");
+    debugAsymptoticBound("Proof:" << std::endl << currentLP.getProof());
+    return true;
+}
+
+
 bool AsymptoticBound::solveLimitProblem() {
     debugAsymptoticBound("Trying to solve the initial limit problem.");
 
@@ -995,8 +1018,7 @@ bool AsymptoticBound::isTimeout() const {
 AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
                                                              const GuardList &guard,
                                                              const Expression &cost,
-                                                             bool finalCheck)
-{
+                                                             bool finalCheck) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     // Expand the cost to make it easier to analyze
@@ -1031,11 +1053,15 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
-    // Otherwise perform limit calculus
     asymptoticBound.createInitialLimitProblem();
-    asymptoticBound.propagateBounds();
-    asymptoticBound.removeUnsatProblems();
-    bool result = asymptoticBound.solveLimitProblem();
+    // first try the SMT encoding
+    bool result = asymptoticBound.solveViaSMT();
+    if (!result) {
+        // Otherwise perform limit calculus
+        asymptoticBound.propagateBounds();
+        asymptoticBound.removeUnsatProblems();
+        result = asymptoticBound.solveLimitProblem();
+    }
     if (finalCheck) Timing::done(Timing::Asymptotic);
 
     if (result) {

@@ -36,6 +36,7 @@ private:
     int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     void removeUnsatProblems();
+    bool solveViaSMT();
     bool solveLimitProblem();
     ComplexityResult getComplexity(const LimitProblem &limitProblem);
     bool isAdequateSolution(const LimitProblem &limitProblem);
