@@ -38,7 +38,7 @@ option<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRhs,
     Timing::Scope timer(Timing::Purrs);
 
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
-    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updateLhs == last));
+    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last));
     Purrs::Expr exact;
 
     try {
@@ -107,9 +107,7 @@ option<UpdateMap> Recurrence::iterateUpdate(const UpdateMap &update, const Expre
     for (VariableIdx vi : dependencyOrder) {
         ExprSymbol target = varMan.getVarSymbol(vi);
 
-        //use update rhs, but replace already processed variables with their recurrences
-        Expression todo = update.at(vi).subs(updatePreRecurrences);
-        auto updateRec = findUpdateRecurrence(todo,target);
+        auto updateRec = findUpdateRecurrence(update.at(vi),target);
         if (!updateRec) {
             return {};
         }
