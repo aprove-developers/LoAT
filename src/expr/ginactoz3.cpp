@@ -114,7 +114,7 @@ z3::expr GinacToZ3::convert_numeric(const GiNaC::numeric &num) {
             if (useReals) {
                 return context.real_val(num.to_long(),1);
             } else {
-                return context.int_val(static_cast<long long int>(num.to_long()));
+                return context.int_val(num.to_long());
             }
         }
 
