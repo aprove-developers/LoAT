@@ -31,7 +31,7 @@ private:
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
     LinearRule buildAcceleratedRule(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                                    const ExprSymbol &N) const;
+                                    const GuardList &guard, const ExprSymbol &N) const;
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.

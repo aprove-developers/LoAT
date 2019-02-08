@@ -4,7 +4,6 @@
 #include "z3/z3solver.h"
 #include "z3/z3toolbox.h"
 
-#include "recurrence/dependencyorder.h"
 #include "recurrence/recurrence.h"
 #include "meter/metertools.h"
 #include "expr/guardtoolbox.h"
@@ -62,13 +61,14 @@ bool BackwardAcceleration::checkGuardImplication() const {
 
 LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedUpdate,
                                                       const Expression &iteratedCost,
+                                                      const GuardList &guard,
                                                       const ExprSymbol &N) const
 {
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
 
     // Extend the old guard by the updated constraints
     // and require that the number of iterations N is positive
-    GuardList newGuard = rule.getGuard();
+    GuardList newGuard = guard;
     newGuard.push_back(N > 0);
     for (const Expression &ex : rule.getGuard()) {
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
@@ -168,7 +168,8 @@ option<vector<LinearRule>> BackwardAcceleration::run() {
 
     UpdateMap iteratedUpdate = rule.getUpdate();
     Expression iteratedCost = rule.getCost();
-    if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N)) {
+    GuardList strengthenedGuard = rule.getGuard();
+    if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, strengthenedGuard, N)) {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
         return {};
@@ -176,7 +177,7 @@ option<vector<LinearRule>> BackwardAcceleration::run() {
     Stats::add(Stats::BackwardSuccess);
 
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-    LinearRule accelerated = buildAcceleratedRule(iteratedUpdate, iteratedCost, N);
+    LinearRule accelerated = buildAcceleratedRule(iteratedUpdate, iteratedCost, strengthenedGuard, N);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
         return replaceByUpperbounds(N, accelerated);
     } else {

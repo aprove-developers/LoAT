@@ -167,8 +167,8 @@ bool Recurrence::iterateRule(const VarMan &varMan, LinearRule &rule, const Expre
 }
 
 
-bool Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, const Expression &N) {
-    auto order = DependencyOrder::findOrder(varMan, update);
+bool Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N) {
+    auto order = DependencyOrder::findOrderWithHeuristic(varMan, update, guard);
     if (!order) {
         debugPurrs("iterateUpdateAndCost: failed to find a dependency order");
         return false;
