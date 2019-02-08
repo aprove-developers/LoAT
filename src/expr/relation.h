@@ -103,7 +103,7 @@ namespace Relation {
     /**
      * Given a relation, moves all variables to lhs and constants to rhs
      */
-    Expression splitVariablesAndConstants(const Expression &rel);
+    Expression splitVariablesAndConstants(const Expression &rel, const std::vector<ExprSymbol> &params = std::vector<ExprSymbol>());
 
     /**
      * Given a <= inequality, returns a <= inequality that represents the negated expression

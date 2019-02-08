@@ -31,7 +31,8 @@ z3::expr FarkasLemma::apply(
         const vector<z3::expr> &coeffs,
         z3::expr c0,
         int delta,
-        Z3Context &context)
+        Z3Context &context,
+        const std::vector<ExprSymbol> &params)
 {
     assert(vars.size() == coeffs.size());
 
@@ -48,10 +49,10 @@ z3::expr FarkasLemma::apply(
     // Create lambda variables, add the constraint "lambda >= 0"
     vector<z3::expr> lambda;
     for (const Expression &ex : constraints) {
-        assert(Relation::isLinearInequality(ex));
+        // assert(Relation::isLinearInequality(ex));
         assert(Relation::isLessOrEqual(ex));
 
-        z3::expr var = context.addFreshVariable("l", Z3Context::Real);
+        z3::expr var = context.addFreshVariable("l", Z3Context::Integer);
         lambda.push_back(var);
         res.push_back(var >= 0);
     }
@@ -70,7 +71,7 @@ z3::expr FarkasLemma::apply(
         ex.collectVariables(constraintSymbols);
     }
     for (const ExprSymbol &sym : constraintSymbols) {
-        if (varToCoeff.find(sym) == varToCoeff.end()) {
+        if (varToCoeff.find(sym) == varToCoeff.end() && std::find(params.begin(), params.end(), sym) == params.end()) {
             debugFarkas("FARKAS NOTE: Adding additional variable with 0 coefficient: " << sym);
             varToCoeff.emplace(sym, context.real_val(0));
         }

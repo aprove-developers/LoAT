@@ -125,7 +125,7 @@ namespace Relation {
         return rel;
     }
 
-    Expression splitVariablesAndConstants(const Expression &rel) {
+    Expression splitVariablesAndConstants(const Expression &rel, const std::vector<ExprSymbol> &params) {
         assert(isInequality(rel));
 
         //move everything to lhs
@@ -135,8 +135,16 @@ namespace Relation {
         //move all numerical constants back to rhs
         newLhs = newLhs.expand();
         if (GiNaC::is_a<GiNaC::add>(newLhs)) {
-            for (int i=0; i < newLhs.nops(); ++i) {
-                if (GiNaC::is_a<GiNaC::numeric>(newLhs.op(i))) {
+            for (size_t i=0; i < newLhs.nops(); ++i) {
+                bool isConstant = true;
+                ExprSymbolSet vars = Expression(newLhs.op(i)).getVariables();
+                for (const ExprSymbol &var: vars) {
+                    if (std::find(params.begin(), params.end(), var) == params.end()) {
+                        isConstant = false;
+                        break;
+                    }
+                }
+                if (isConstant) {
                     newRhs -= newLhs.op(i);
                 }
             }

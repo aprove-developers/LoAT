@@ -36,6 +36,7 @@
 #include "backward.h"
 
 #include <queue>
+#include <strengthening/strengthening.h>
 
 
 using namespace std;
@@ -263,7 +264,21 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
-            auto optRules = Backward::accelerate(its, rule.toLinear());
+            Rule currentRule = rule;
+            option<vector<LinearRule>> optRules;
+            bool changed;
+            do {
+                changed = false;
+                optRules = Backward::accelerate(its, currentRule.toLinear());
+                if (!optRules) {
+                    boost::optional<Rule> optRule = Strengthening::apply(currentRule, its);
+                    if (optRule) {
+                        changed = true;
+                        currentRule = optRule.get();
+                        debugBackwardAccel("invariant inference yields " << currentRule);
+                    }
+                }
+            } while (changed);
             if (optRules) {
                 res.result = Forward::Success;
                 for (LinearRule rule : optRules.get()) {

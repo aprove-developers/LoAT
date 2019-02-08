@@ -67,7 +67,8 @@ namespace FarkasLemma {
                    const std::vector<z3::expr> &coeffs,
                    z3::expr c0,
                    int delta,
-                   Z3Context &context);
+                   Z3Context &context,
+                   const std::vector<ExprSymbol> &params = std::vector<ExprSymbol>());
 };
 
 #endif // FARKAS_H
