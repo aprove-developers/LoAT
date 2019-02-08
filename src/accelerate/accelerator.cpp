@@ -250,7 +250,13 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
-    Forward::Result res = Forward::accelerate(its, rule, sinkLoc);
+    Forward::Result res;
+    if (Config::Accel::UseForwardAccel) {
+        res = Forward::accelerate(its, rule, sinkLoc);
+    } else {
+        res = Forward::Result();
+        res.result = Forward::NoMetering;
+    }
 
     // Try backward acceleration only if forward acceleration failed,
     // or if it only succeeded by restricting the guard. In this case,
