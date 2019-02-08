@@ -157,12 +157,6 @@ option<vector<LinearRule>> BackwardAcceleration::run() {
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
-    auto order = DependencyOrder::findOrder(varMan, rule.getUpdate());
-    if (!order) {
-        debugBackwardAccel("failed to compute dependency order for rule " << rule);
-        return {};
-    }
-
     if (!checkGuardImplication()) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
