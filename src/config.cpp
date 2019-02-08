@@ -228,6 +228,10 @@ namespace Config {
         // NOTE: If disabled, the complexity is only approximated by a syntactic check.
         bool AsymptoticCheck = true;
     }
+
+    namespace Invariants {
+        int NumTemplates = 1;
+    }
 }
 
 #define GetColor(a) ((Config::Output::Colors) ? (Config::Color::a) : "")
