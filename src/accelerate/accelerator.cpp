@@ -267,18 +267,20 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
             Rule currentRule = rule;
             option<vector<LinearRule>> optRules;
             bool changed;
-            do {
-                changed = false;
-                optRules = Backward::accelerate(its, currentRule.toLinear());
-                if (!optRules) {
-                    boost::optional<Rule> optRule = Strengthening::apply(currentRule, its);
-                    if (optRule) {
-                        changed = true;
-                        currentRule = optRule.get();
-                        debugBackwardAccel("invariant inference yields " << currentRule);
+            for (int i = 1; !optRules && i <= Config::Invariants::NumTemplates; i++) {
+                do {
+                    changed = false;
+                    if (!optRules) {
+                        boost::optional<Rule> optRule = Strengthening::apply(currentRule, its, i);
+                        if (optRule) {
+                            changed = true;
+                            currentRule = optRule.get();
+                            debugBackwardAccel("invariant inference yields " << currentRule);
+                        }
                     }
-                }
-            } while (changed);
+                } while (changed);
+                optRules = Backward::accelerate(its, currentRule.toLinear());
+            }
             if (optRules) {
                 res.result = Forward::Success;
                 for (LinearRule rule : optRules.get()) {

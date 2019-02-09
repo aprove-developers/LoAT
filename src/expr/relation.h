@@ -59,6 +59,8 @@ namespace Relation {
      */
     bool isLinearInequality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>());
 
+    bool isLinearEquality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>());
+
     /**
      * Checks whether ex is of the form "term > 0"
      */

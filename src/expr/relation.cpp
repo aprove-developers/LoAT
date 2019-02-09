@@ -44,6 +44,11 @@ namespace Relation {
         return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
     }
 
+    bool isLinearEquality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars) {
+        if (!isEquality(ex)) return false;
+        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
+    }
+
     bool isGreaterThanZero(const Expression &ex) {
         return isInequality(ex)
                && ex.info(GiNaC::info_flags::relation_greater)

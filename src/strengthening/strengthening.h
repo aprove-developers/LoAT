@@ -10,7 +10,7 @@
 
 namespace Strengthening {
 
-    boost::optional<Rule> apply(const Rule &r, VariableManager &varMan);
+    boost::optional<Rule> apply(const Rule &r, VariableManager &varMan, int numTemplates);
 
 }
 

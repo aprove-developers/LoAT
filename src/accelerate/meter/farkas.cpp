@@ -105,15 +105,6 @@ z3::expr FarkasLemma::apply(
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
-static bool isLinear(const vector<Expression> &constraints, const ExprSymbolSet &vars) {
-    for (const Expression &c: constraints) {
-        if (!Relation::isLinearInequality(c, vars)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 z3::expr FarkasLemma::apply(
         const vector<Expression> &premise,
         const vector<Expression> &conclusion,
@@ -121,12 +112,14 @@ z3::expr FarkasLemma::apply(
         const ExprSymbolSet &params,
         Z3Context &context,
         const Z3Context::VariableType &lambdaType) {
-    assert(isLinear(conclusion, vars));
     z3::expr_vector res(context);
     vector<Expression> normalizedPremise;
     for (const Expression &p: premise) {
         if (Relation::isLinearInequality(p, vars)) {
             normalizedPremise.push_back(Relation::splitVariablesAndConstants(Relation::toLessEq(p), params));
+        } else if (Relation::isLinearEquality(p, vars)) {
+            normalizedPremise.push_back(Relation::splitVariablesAndConstants(p.lhs() <= p.rhs(), params));
+            normalizedPremise.push_back(Relation::splitVariablesAndConstants(p.rhs() <= p.lhs(), params));
         }
     }
     vector<ExprSymbol> varList(vars.begin(), vars.end());
@@ -135,7 +128,18 @@ z3::expr FarkasLemma::apply(
             res.push_back(p.toZ3(context));
         }
     }
+    vector<Expression> splitConclusion;
     for (const Expression &c: conclusion) {
+        if (Relation::isLinearInequality(c, vars)) {
+            splitConclusion.push_back(c);
+        } else if (Relation::isLinearEquality(c, vars)) {
+            splitConclusion.emplace_back(c.lhs() <= c.rhs());
+            splitConclusion.emplace_back(c.rhs() <= c.lhs());
+        } else {
+            assert(false);
+        }
+    }
+    for (const Expression &c: splitConclusion) {
         Expression normalized = Relation::splitVariablesAndConstants(Relation::toLessEq(c), params);
         vector<z3::expr> coefficients;
         for (ExprSymbol &x : varList) {

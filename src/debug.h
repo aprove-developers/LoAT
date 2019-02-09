@@ -237,6 +237,12 @@
 #define debugTermParser(output) (void(0))
 #endif
 
+#ifdef DEBUG_INVARIANTS
+#define debugInvariants(output) do { std::cout << COLOR_DEBUG << "[invariants] " << output << COLOR_NONE << std::endl; } while(0)
+#else
+#define debugInvariants(output) (void(0))
+#endif
+
 #ifdef DEBUG_OTHER
 #define debugOther(output) do { std::cout << COLOR_DEBUG << "[other] " << output << COLOR_NONE << std::endl; } while(0)
 #else
@@ -253,12 +259,6 @@
 #define debugProblem(output) do { std::cout << COLOR_PROBLEM << "[PROBLEM] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugProblem(output) (void(0))
-#endif
-
-#ifdef DEBUG_INVARIANTS
-#define debugInvariants(output) do { std::cout << COLOR_DEBUG << "[INVARIANTS] " << output << COLOR_NONE << std::endl; } while(0)
-#else
-#define debugInvariants(output) (void(0))
 #endif
 
 #endif

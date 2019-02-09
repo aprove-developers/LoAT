@@ -128,7 +128,8 @@ static optional<vector<Expression>> tryToForceInvariance(
         const GuardList &guard,
         const vector<GiNaC::exmap> &updates,
         const ExprSymbolSet &vars,
-        VariableManager &varMan) {
+        VariableManager &varMan,
+        int numTemplates) {
     Z3Context context;
     Z3Solver solver(context);
     GuardList premise;
@@ -139,14 +140,15 @@ static optional<vector<Expression>> tryToForceInvariance(
     for (const GiNaC::exmap &up: updates) {
         Expression updated = g;
         updated.applySubs(up);
-        if (!Relation::isLinearInequality(updated, vars)) {
+        if (Relation::isLinearEquality(updated, vars) || Relation::isLinearInequality(updated, vars)) {
+            conclusion.push_back(updated);
+        } else {
             return optional<vector<Expression>>{};
         }
-        conclusion.push_back(updated);
     }
     vector<Expression> templates;
     ExprSymbolSet templateParams;
-    for (int i = 0; i < Config::Invariants::NumTemplates; i++) {
+    for (int i = 0; i < numTemplates; i++) {
         pair<Expression, ExprSymbolSet> p = buildTemplate(vars, varMan);
         Expression invTemplate = p.first;
         for (const ExprSymbol &param: p.second) {
@@ -157,10 +159,11 @@ static optional<vector<Expression>> tryToForceInvariance(
         for (const GiNaC::exmap &up: updates) {
             Expression updated = invTemplate;
             updated.applySubs(up);
-            if (!Relation::isLinearInequality(updated, vars)) {
+            if (Relation::isLinearInequality(updated, vars)) {
+                conclusion.push_back(updated);
+            } else {
                 return optional<vector<Expression>>{};
             }
-            conclusion.push_back(updated);
         }
     }
     solver.add(FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Integer));
@@ -234,6 +237,7 @@ static GuardList findRelevantConstraints(const GuardList &guard, ExprSymbolSet v
         for (const ExprSymbol &var: vars) {
             if (e.getVariables().count(var) > 0) {
                 relevantConstraints.push_back(e);
+                break;
             }
         }
     }
@@ -243,7 +247,8 @@ static GuardList findRelevantConstraints(const GuardList &guard, ExprSymbolSet v
 static pair<GuardList, GuardList> tryToForceInvariance(
         const Rule &r,
         const GuardList &todo,
-        VariableManager &varMan) {
+        VariableManager &varMan,
+        int numTemplates) {
     GuardList succeeded;
     GuardList failed;
     vector<UpdateMap> multiUpdate;
@@ -252,19 +257,25 @@ static pair<GuardList, GuardList> tryToForceInvariance(
         multiUpdate.push_back(u.getUpdate());
         updates.push_back(u.getUpdate().toSubstitution(varMan));
     }
+    GuardList currentKnowledge;
+    for (const Expression &e: r.getGuard()) {
+        currentKnowledge.push_back(e);
+    }
     for (const Expression &g: todo) {
         ExprSymbolSet varSymbols = findRelevantVariables(varMan, g, r);
-        GuardList relevantConstraints = findRelevantConstraints(r.getGuard(), varSymbols);
+        GuardList relevantConstraints = findRelevantConstraints(currentKnowledge, varSymbols);
         optional<vector<Expression>> newInvariants = tryToForceInvariance(
                 g,
                 relevantConstraints,
                 updates,
                 varSymbols,
-                varMan);
+                varMan,
+                numTemplates);
         if (newInvariants) {
             succeeded.push_back(g);
             for (const Expression &c: newInvariants.get()) {
                 succeeded.push_back(c);
+                currentKnowledge.push_back(c);
             }
         } else {
             failed.push_back(g);
@@ -273,7 +284,7 @@ static pair<GuardList, GuardList> tryToForceInvariance(
     return pair<GuardList, GuardList>(succeeded, failed);
 }
 
-optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan) {
+optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan, int numTemplates) {
     if (!r.isSimpleLoop()) {
         return optional<Rule>{};
     }
@@ -283,7 +294,7 @@ optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan) {
     p = splitMonotonicConstraints(r, invariants, nonInvariants, varMan);
     GuardList monotonic = p.first;
     GuardList nonMonotonic = p.second;
-    p = tryToForceInvariance(r, nonMonotonic, varMan);
+    p = tryToForceInvariance(r, nonMonotonic, varMan, numTemplates);
     GuardList newInvariants = p.first;
     GuardList failed = p.second;
     if (newInvariants.empty()) {

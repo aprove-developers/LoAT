@@ -230,7 +230,7 @@ namespace Config {
     }
 
     namespace Invariants {
-        int NumTemplates = 1;
+        int NumTemplates = 2;
     }
 }
 
