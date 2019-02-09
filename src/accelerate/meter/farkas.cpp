@@ -130,11 +130,16 @@ z3::expr FarkasLemma::apply(
         }
     }
     vector<ExprSymbol> varList(vars.begin(), vars.end());
+    if (!params.empty()) {
+        for (const Expression &p: premise) {
+            res.push_back(p.toZ3(context));
+        }
+    }
     for (const Expression &c: conclusion) {
         Expression normalized = Relation::splitVariablesAndConstants(Relation::toLessEq(c), params);
         vector<z3::expr> coefficients;
-        for (auto x = varList.rbegin(); x != varList.rend(); x++) {
-            coefficients.push_back(Expression(normalized.lhs().coeff(*x, 1)).toZ3(context));
+        for (ExprSymbol &x : varList) {
+            coefficients.push_back(Expression(normalized.lhs().coeff(x, 1)).toZ3(context));
         }
         z3::expr c0 = -Expression(normalized.rhs()).toZ3(context);
         res.push_back(FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, context, params, lambdaType));

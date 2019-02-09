@@ -139,7 +139,7 @@ static optional<vector<Expression>> tryToForceInvariance(
     for (const GiNaC::exmap &up: updates) {
         Expression updated = g;
         updated.applySubs(up);
-        if (!Expression(updated.lhs() - updated.rhs()).isLinear(vars)) {
+        if (!Relation::isLinearInequality(updated, vars)) {
             return optional<vector<Expression>>{};
         }
         conclusion.push_back(updated);
@@ -157,6 +157,9 @@ static optional<vector<Expression>> tryToForceInvariance(
         for (const GiNaC::exmap &up: updates) {
             Expression updated = invTemplate;
             updated.applySubs(up);
+            if (!Relation::isLinearInequality(updated, vars)) {
+                return optional<vector<Expression>>{};
+            }
             conclusion.push_back(updated);
         }
     }
@@ -164,7 +167,7 @@ static optional<vector<Expression>> tryToForceInvariance(
     z3::check_result res = solver.check();
     if (res != z3::check_result::sat) {
         solver.reset();
-        solver.add(FarkasLemma::apply(premise, conclusion, vars, templateParams, context));
+        solver.add(FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Real));
         res = solver.check();
     }
     if (res == z3::check_result::sat) {
@@ -180,6 +183,63 @@ static optional<vector<Expression>> tryToForceInvariance(
     }
 }
 
+static ExprSymbolSet findRelevantVariables(const VarMan &varMan, const Expression &c, const Rule &r) {
+    set<VariableIdx> res;
+    // Add all variables appearing in the guard
+    ExprSymbolSet guardVariables = c.getVariables();
+    for (const ExprSymbol &sym : guardVariables) {
+        res.insert(varMan.getVarIdx(sym));
+    }
+    // Compute the closure of res under all updates and the guard
+    set<VariableIdx> todo = res;
+    while (!todo.empty()) {
+        ExprSymbolSet next;
+
+        for (VariableIdx var : todo) {
+            for (const RuleRhs &rhs: r.getRhss()) {
+                UpdateMap update = rhs.getUpdate();
+                auto it = update.find(var);
+                if (it != update.end()) {
+                    ExprSymbolSet rhsVars = it->second.getVariables();
+                    next.insert(rhsVars.begin(), rhsVars.end());
+                }
+            }
+            for (const Expression &g: r.getGuard()) {
+                ExprSymbolSet gVars = g.getVariables();
+                if (gVars.find(varMan.getVarSymbol(var)) != gVars.end()) {
+                    next.insert(gVars.begin(), gVars.end());
+                }
+            }
+        }
+        todo.clear();
+        for (const ExprSymbol &sym : next) {
+            VariableIdx var = varMan.getVarIdx(sym);
+            if (res.count(var) == 0) {
+                todo.insert(var);
+            }
+        }
+        // collect all variables from every iteration
+        res.insert(todo.begin(), todo.end());
+    }
+    ExprSymbolSet symbols;
+    for (const VariableIdx &x: res) {
+        symbols.insert(varMan.getVarSymbol(x));
+    }
+    return symbols;
+}
+
+static GuardList findRelevantConstraints(const GuardList &guard, ExprSymbolSet vars) {
+    GuardList relevantConstraints;
+    for (const Expression &e: guard) {
+        for (const ExprSymbol &var: vars) {
+            if (e.getVariables().count(var) > 0) {
+                relevantConstraints.push_back(e);
+            }
+        }
+    }
+    return relevantConstraints;
+}
+
 static pair<GuardList, GuardList> tryToForceInvariance(
         const Rule &r,
         const GuardList &todo,
@@ -192,15 +252,12 @@ static pair<GuardList, GuardList> tryToForceInvariance(
         multiUpdate.push_back(u.getUpdate());
         updates.push_back(u.getUpdate().toSubstitution(varMan));
     }
-    set<VariableIdx> vars = MeteringToolbox::findRelevantVariables(varMan, r.getGuard(), multiUpdate);
-    ExprSymbolSet varSymbols;
-    for (const VariableIdx &x: vars) {
-        varSymbols.insert(varMan.getVarSymbol(x));
-    }
     for (const Expression &g: todo) {
+        ExprSymbolSet varSymbols = findRelevantVariables(varMan, g, r);
+        GuardList relevantConstraints = findRelevantConstraints(r.getGuard(), varSymbols);
         optional<vector<Expression>> newInvariants = tryToForceInvariance(
                 g,
-                r.getGuard(),
+                relevantConstraints,
                 updates,
                 varSymbols,
                 varMan);
@@ -236,7 +293,11 @@ optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan) {
         for (const Expression &g: invariants) {
             newGuard.push_back(g);
         }
+        for (const Expression &g: monotonic) {
+            newGuard.push_back(g);
+        }
         for (const Expression &g: newInvariants) {
+            debugInvariants("new invariant: " << g);
             newGuard.push_back(g);
         }
         for (const Expression &g: failed) {

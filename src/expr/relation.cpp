@@ -139,7 +139,7 @@ namespace Relation {
                 bool isConstant = true;
                 ExprSymbolSet vars = Expression(newLhs.op(i)).getVariables();
                 for (const ExprSymbol &var: vars) {
-                    if (std::find(params.begin(), params.end(), var) == params.end()) {
+                    if (params.find(var) == params.end()) {
                         isConstant = false;
                         break;
                     }
@@ -148,8 +148,18 @@ namespace Relation {
                     newRhs -= newLhs.op(i);
                 }
             }
-        } else if (GiNaC::is_a<GiNaC::numeric>(newLhs)) {
-            newRhs -= newLhs;
+        } else {
+            ExprSymbolSet vars = Expression(newLhs).getVariables();
+            bool isConstant = true;
+            for (const ExprSymbol &var: vars) {
+                if (params.find(var) == params.end()) {
+                    isConstant = false;
+                    break;
+                }
+            }
+            if (isConstant) {
+                newRhs -= newLhs;
+            }
         }
         //other cases (mul, pow, sym) should not include numerical constants (only numerical coefficients)
 
