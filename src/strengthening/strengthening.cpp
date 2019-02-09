@@ -87,25 +87,25 @@ static pair<GuardList, GuardList> splitMonotonicConstraints(
     return pair<GuardList, GuardList>(monotonic, nonMonotonic);
 }
 
-static pair<Expression, vector<ExprSymbol>> buildTemplate(
-        const vector<ExprSymbol > &vars,
+static pair<Expression, ExprSymbolSet> buildTemplate(
+        const ExprSymbolSet &vars,
         VariableManager &varMan) {
-    vector<ExprSymbol> params;
+    ExprSymbolSet params;
     ExprSymbol c0 = varMan.getVarSymbol(varMan.addFreshVariable("c0"));
-    params.push_back(c0);
+    params.insert(c0);
     Expression lhs = Expression(0);
     for (const ExprSymbol &x: vars) {
         ExprSymbol param = varMan.getVarSymbol(varMan.addFreshVariable("c"));
-        params.push_back(param);
+        params.insert(param);
         lhs = lhs + (x * param);
     }
     Expression res = lhs <= c0;
-    return pair<Expression, vector<ExprSymbol>>(res, params);
+    return pair<Expression, ExprSymbolSet>(res, params);
 }
 
 static vector<Expression> instantiateTemplates(
         const vector<Expression> &templates,
-        const vector<ExprSymbol> &params,
+        const ExprSymbolSet &params,
         const VariableManager &varMan,
         const z3::model &model,
         const Z3Context &context) {
@@ -123,33 +123,35 @@ static vector<Expression> instantiateTemplates(
     return res;
 }
 
-static pair<vector<Expression>, vector<Expression>> tryToForceInvariance(
+static optional<vector<Expression>> tryToForceInvariance(
         const Expression &g,
         const GuardList &guard,
         const vector<GiNaC::exmap> &updates,
-        const vector<ExprSymbol> &vars,
+        const ExprSymbolSet &vars,
         VariableManager &varMan) {
     Z3Context context;
     Z3Solver solver(context);
     GuardList premise;
     GuardList conclusion;
-    vector<Expression> succeeded;
-    vector<Expression> failed;
     for (const Expression &e: guard) {
         premise.push_back(e);
     }
     for (const GiNaC::exmap &up: updates) {
         Expression updated = g;
         updated.applySubs(up);
+        debugBackwardAccel("updated " << updated);
+        if (!Expression(updated.lhs() - updated.rhs()).isLinear(vars)) {
+            return optional<vector<Expression>>{};
+        }
         conclusion.push_back(updated);
     }
     vector<Expression> templates;
-    vector<ExprSymbol> templateParams;
+    ExprSymbolSet templateParams;
     for (int i = 0; i < Config::Invariants::NumTemplates; i++) {
-        pair<Expression, vector<ExprSymbol>> p = buildTemplate(vars, varMan);
+        pair<Expression, ExprSymbolSet> p = buildTemplate(vars, varMan);
         Expression invTemplate = p.first;
         for (const ExprSymbol &param: p.second) {
-            templateParams.push_back(param);
+            templateParams.insert(param);
         }
         templates.push_back(invTemplate);
         premise.push_back(invTemplate);
@@ -173,13 +175,10 @@ static pair<vector<Expression>, vector<Expression>> tryToForceInvariance(
                 varMan,
                 solver.get_model(),
                 context);
-        for (const Expression &e: newInvariants) {
-            succeeded.push_back(e);
-        }
+        return newInvariants;
     } else {
-        failed.push_back(g);
+        return optional<vector<Expression>>{};
     }
-    return pair<vector<Expression>, vector<Expression>>(succeeded, failed);
 }
 
 static pair<GuardList, GuardList> tryToForceInvariance(
@@ -195,22 +194,24 @@ static pair<GuardList, GuardList> tryToForceInvariance(
         updates.push_back(u.getUpdate().toSubstitution(varMan));
     }
     set<VariableIdx> vars = MeteringToolbox::findRelevantVariables(varMan, r.getGuard(), multiUpdate);
-    vector<ExprSymbol> varSymbols;
+    ExprSymbolSet varSymbols;
     for (const VariableIdx &x: vars) {
-        varSymbols.push_back(varMan.getVarSymbol(x));
+        varSymbols.insert(varMan.getVarSymbol(x));
     }
     for (const Expression &g: todo) {
-        pair<vector<Expression>, vector<Expression>> p = tryToForceInvariance(
+        optional<vector<Expression>> newInvariants = tryToForceInvariance(
                 g,
                 r.getGuard(),
                 updates,
                 varSymbols,
                 varMan);
-        for (const Expression &e: p.first) {
-            succeeded.push_back(e);
-        }
-        for (const Expression &e: p.second) {
-            failed.push_back(e);
+        if (newInvariants) {
+            succeeded.push_back(g);
+            for (const Expression &c: newInvariants.get()) {
+                succeeded.push_back(c);
+            }
+        } else {
+            failed.push_back(g);
         }
     }
     return pair<GuardList, GuardList>(succeeded, failed);

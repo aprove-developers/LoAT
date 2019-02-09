@@ -95,7 +95,8 @@ bool Expression::isNontermSymbol() const {
 }
 
 
-bool Expression::isLinear() const {
+bool Expression::isLinear(const boost::optional<ExprSymbolSet> &vars) const {
+    ExprSymbolSet theVars = vars ? vars.get() : getVariables();
     // linear expressions are always polynomials
     if (!isPolynomial()) return false;
 
@@ -105,15 +106,18 @@ bool Expression::isLinear() const {
     // GiNaC does not provide an info flag for this, so we check the degree of every variable.
     // We also have to check if the coefficient contains variables,
     // e.g. y has degree 1 in x*y, but we don't consider x*y to be linear.
-    for (const ExprSymbol &var : getVariables()) {
+    for (const ExprSymbol &var : theVars) {
         int deg = expanded.degree(var);
         if (deg > 1 || deg < 0) {
             return false;
         }
 
         if (deg == 1) {
-            if (!expanded.coeff(var,deg).info(GiNaC::info_flags::numeric)) {
-                return false;
+            ExprSymbolSet coefficientVars = Expression(expanded.coeff(var,deg)).getVariables();
+            for (const ExprSymbol &e: coefficientVars) {
+                if (theVars.find(e) != theVars.end()) {
+                    return false;
+                }
             }
         }
     }

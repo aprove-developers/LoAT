@@ -57,7 +57,7 @@ namespace Relation {
      * Checks if ex is an inequality and if rhs and lhs are linear expressions
      * (convenience function for isLinear and isInequality)
      */
-    bool isLinearInequality(const Expression &ex);
+    bool isLinearInequality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>());
 
     /**
      * Checks whether ex is of the form "term > 0"
@@ -103,7 +103,7 @@ namespace Relation {
     /**
      * Given a relation, moves all variables to lhs and constants to rhs
      */
-    Expression splitVariablesAndConstants(const Expression &rel, const std::vector<ExprSymbol> &params = std::vector<ExprSymbol>());
+    Expression splitVariablesAndConstants(const Expression &rel, const ExprSymbolSet &params = ExprSymbolSet());
 
     /**
      * Given a <= inequality, returns a <= inequality that represents the negated expression

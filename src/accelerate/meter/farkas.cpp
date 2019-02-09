@@ -32,7 +32,7 @@ z3::expr FarkasLemma::apply(
         z3::expr c0,
         int delta,
         Z3Context &context,
-        const std::vector<ExprSymbol> &params,
+        const ExprSymbolSet &params,
         const Z3Context::VariableType &lambdaType)
 {
     assert(vars.size() == coeffs.size());
@@ -49,8 +49,9 @@ z3::expr FarkasLemma::apply(
 
     // Create lambda variables, add the constraint "lambda >= 0"
     vector<z3::expr> lambda;
+    ExprSymbolSet varSet(vars.begin(), vars.end());
     for (const Expression &ex : constraints) {
-        // assert(Relation::isLinearInequality(ex));
+        assert(Relation::isLinearInequality(ex, varSet));
         assert(Relation::isLessOrEqual(ex));
 
         z3::expr var = context.addFreshVariable("l", lambdaType);
@@ -104,26 +105,39 @@ z3::expr FarkasLemma::apply(
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
+static bool isLinear(const vector<Expression> &constraints, const ExprSymbolSet &vars) {
+    for (const Expression &c: constraints) {
+        if (!Relation::isLinearInequality(c, vars)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 z3::expr FarkasLemma::apply(
         const vector<Expression> &premise,
         const vector<Expression> &conclusion,
-        const vector<ExprSymbol> &vars,
-        const vector<ExprSymbol> &params,
+        const ExprSymbolSet &vars,
+        const ExprSymbolSet &params,
         Z3Context &context,
         const Z3Context::VariableType &lambdaType) {
+    assert(isLinear(conclusion, vars));
     z3::expr_vector res(context);
     vector<Expression> normalizedPremise;
-    for (const Expression &e: premise) {
-        normalizedPremise.push_back(Relation::splitVariablesAndConstants(Relation::toLessEq(e), params));
+    for (const Expression &p: premise) {
+        if (Relation::isLinearInequality(p, vars)) {
+            normalizedPremise.push_back(Relation::splitVariablesAndConstants(Relation::toLessEq(p), params));
+        }
     }
+    vector<ExprSymbol> varList(vars.begin(), vars.end());
     for (const Expression &c: conclusion) {
         Expression normalized = Relation::splitVariablesAndConstants(Relation::toLessEq(c), params);
         vector<z3::expr> coefficients;
-        for (auto x = vars.rbegin(); x != vars.rend(); x++) {
+        for (auto x = varList.rbegin(); x != varList.rend(); x++) {
             coefficients.push_back(Expression(normalized.lhs().coeff(*x, 1)).toZ3(context));
         }
         z3::expr c0 = -Expression(normalized.rhs()).toZ3(context);
-        res.push_back(FarkasLemma::apply(normalizedPremise, vars, coefficients, c0, 0, context, params, lambdaType));
+        res.push_back(FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, context, params, lambdaType));
     }
     return z3::mk_and(res);
 }

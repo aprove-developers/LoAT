@@ -39,9 +39,9 @@ namespace Relation {
         return isRelation(ex) && !isEquality(ex);
     }
 
-    bool isLinearInequality(const Expression &ex) {
+    bool isLinearInequality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars) {
         if (!isInequality(ex)) return false;
-        return Expression(ex.lhs()).isLinear() && Expression(ex.rhs()).isLinear();
+        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
     }
 
     bool isGreaterThanZero(const Expression &ex) {
@@ -125,7 +125,7 @@ namespace Relation {
         return rel;
     }
 
-    Expression splitVariablesAndConstants(const Expression &rel, const std::vector<ExprSymbol> &params) {
+    Expression splitVariablesAndConstants(const Expression &rel, const ExprSymbolSet &params) {
         assert(isInequality(rel));
 
         //move everything to lhs
