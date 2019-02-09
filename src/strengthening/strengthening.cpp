@@ -7,7 +7,7 @@
 #include "strengthening.h"
 #include "z3/z3solver.h"
 #include "z3/z3toolbox.h"
-#include "metertools.h"
+#include "accelerate/meter/metertools.h"
 
 using boost::optional;
 using namespace std;
@@ -139,7 +139,6 @@ static optional<vector<Expression>> tryToForceInvariance(
     for (const GiNaC::exmap &up: updates) {
         Expression updated = g;
         updated.applySubs(up);
-        debugBackwardAccel("updated " << updated);
         if (!Expression(updated.lhs() - updated.rhs()).isLinear(vars)) {
             return optional<vector<Expression>>{};
         }
