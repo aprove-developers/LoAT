@@ -264,7 +264,7 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
-            option<vector<LinearRule>> optRules;
+            option<vector<LinearRule>> optRules = Backward::accelerate(its, rule.toLinear());
             if (!optRules) {
                 boost::optional<Rule> optRule = Strengthening::apply(rule, its);
                 if (optRule) {
