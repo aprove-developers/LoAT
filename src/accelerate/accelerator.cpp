@@ -112,21 +112,21 @@ bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) cons
 }
 
 
-void Accelerator::addNestedRule(const Forward::MeteredRule &metered, const LinearRule &chain,
+void Accelerator::addNestedRule(const LinearRule &metered, const LinearRule &chain,
                                 TransIdx inner, TransIdx outer)
 {
     // Add the new rule
-    TransIdx added = addResultingRule(metered.rule);
+    TransIdx added = addResultingRule(metered);
 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
 
     proofout << "Nested simple loops " << outer << " (outer loop) and " << inner;
-    proofout << " (inner loop) with " << metered.info;
+    proofout << " (inner loop) with " << metered;
     proofout << ", resulting in the new rules: " << added;
 
     // Try to combine chain and the accelerated loop
-    auto chained = Chaining::chainRules(its, chain, metered.rule);
+    auto chained = Chaining::chainRules(its, chain, metered);
     if (chained) {
         TransIdx added = addResultingRule(chained.get());
         proofout << ", " << added;
@@ -164,20 +164,23 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
     auto nestAndChain = [&](const LinearRule &first, const LinearRule &second) -> bool {
         auto optNested = Chaining::chainRules(its, first, second);
         if (optNested) {
-            Rule nestedRule = optNested.get();
+            LinearRule nestedRule = optNested.get();
 
             // Simplify the rule again (chaining can introduce many useless constraints)
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            auto optAccel = Forward::accelerateFast(its, nestedRule, sinkLoc);
+            auto optAccel = BackwardAcceleration::accelerate(its, nestedRule);
             if (optAccel) {
-                Forward::MeteredRule accelRule = optAccel.get();
-
-                if (accelRule.rule.getCost().getComplexity() > oldCpx) {
-                    addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
-                    return true;
+                vector<LinearRule> accelRules = optAccel.get();
+                bool success = false;
+                for (const LinearRule &accelRule: accelRules) {
+                    if (accelRule.getCost().getComplexity() > oldCpx) {
+                        addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
+                        success = true;
+                    }
                 }
+                return success;
             }
         }
         return false;
