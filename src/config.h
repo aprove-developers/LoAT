@@ -130,10 +130,6 @@ namespace Config {
         extern bool AsymptoticCheck; // must be enabled for soundness!
     }
 
-    namespace Invariants {
-        extern int NumTemplates;
-    }
-
     /**
      * Prints all of the above config values to the given stream.
      * Useful to test command line flags and to include configuration benchmarks.

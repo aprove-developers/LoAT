@@ -88,7 +88,7 @@ namespace Config {
 
     namespace Z3 {
         // Timeouts (default / for metering / for limit smt encoding)
-        const unsigned DefaultTimeout = 100u;
+        const unsigned DefaultTimeout = 500u;
         const unsigned MeterTimeout = 500u;
         const unsigned LimitTimeout = 500u;
 
@@ -229,9 +229,6 @@ namespace Config {
         bool AsymptoticCheck = true;
     }
 
-    namespace Invariants {
-        int NumTemplates = 2;
-    }
 }
 
 #define GetColor(a) ((Config::Output::Colors) ? (Config::Color::a) : "")

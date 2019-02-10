@@ -103,86 +103,90 @@ static pair<Expression, ExprSymbolSet> buildTemplate(
     return pair<Expression, ExprSymbolSet>(res, params);
 }
 
-static vector<Expression> instantiateTemplates(
+static GuardList instantiateTemplates(
         const vector<Expression> &templates,
         const ExprSymbolSet &params,
         const VariableManager &varMan,
         const z3::model &model,
         const Z3Context &context) {
-    vector<Expression> res;
+    GuardList res;
     UpdateMap parameterInstantiation;
     for (const ExprSymbol &p: params) {
-        Expression pi = Z3Toolbox::getRealFromModel(model, context.getVariable(p).get());
-        parameterInstantiation.emplace(varMan.getVarIdx(p), pi);
+        optional<z3::expr> var = context.getVariable(p);
+        if (var) {
+            Expression pi = Z3Toolbox::getRealFromModel(model, var.get());
+            parameterInstantiation.emplace(varMan.getVarIdx(p), pi);
+        }
     }
     GiNaC::exmap subs = parameterInstantiation.toSubstitution(varMan);
     for (Expression t: templates) {
         t.applySubs(subs);
-        res.push_back(t);
+        ExprSymbolSet vars = t.getVariables();
+        bool isInstantiated = true;
+        for (const ExprSymbol &var: vars) {
+            if (params.find(var) != params.end()) {
+                isInstantiated = false;
+                break;
+            }
+        }
+        if (isInstantiated) {
+            res.push_back(t);
+        }
     }
     return res;
 }
 
-static optional<vector<Expression>> tryToForceInvariance(
-        const Expression &g,
+static optional<z3::expr> buildSMTQuery(
+        const GuardList &todo,
         const GuardList &guard,
         const vector<GiNaC::exmap> &updates,
         const ExprSymbolSet &vars,
         VariableManager &varMan,
-        int numTemplates) {
-    Z3Context context;
-    Z3Solver solver(context);
+        Z3Context &context,
+        const vector<Expression> &templates,
+        const ExprSymbolSet &templateParams) {
     GuardList premise;
     GuardList conclusion;
+    bool linearConclusion = false;
+    bool linearTemplate = false;
     for (const Expression &e: guard) {
         premise.push_back(e);
     }
-    for (const GiNaC::exmap &up: updates) {
-        Expression updated = g;
-        updated.applySubs(up);
-        if (Relation::isLinearEquality(updated, vars) || Relation::isLinearInequality(updated, vars)) {
-            conclusion.push_back(updated);
-        } else {
-            return optional<vector<Expression>>{};
+    for (const Expression &g: todo) {
+        for (const GiNaC::exmap &up: updates) {
+            Expression updated = g;
+            updated.applySubs(up);
+            if (Relation::isLinearInequality(updated, vars)) {
+                conclusion.push_back(updated);
+                linearConclusion = true;
+            }
         }
     }
-    vector<Expression> templates;
-    ExprSymbolSet templateParams;
-    for (int i = 0; i < numTemplates; i++) {
-        pair<Expression, ExprSymbolSet> p = buildTemplate(vars, varMan);
-        Expression invTemplate = p.first;
-        for (const ExprSymbol &param: p.second) {
-            templateParams.insert(param);
-        }
-        templates.push_back(invTemplate);
-        premise.push_back(invTemplate);
+    for (const Expression &invTemplate: templates) {
+        bool linear = true;
+        GuardList updatedTemplates;
         for (const GiNaC::exmap &up: updates) {
             Expression updated = invTemplate;
             updated.applySubs(up);
             if (Relation::isLinearInequality(updated, vars)) {
-                conclusion.push_back(updated);
+                updatedTemplates.push_back(updated);
             } else {
-                return optional<vector<Expression>>{};
+                linear = false;
+                break;
+            }
+        }
+        if (linear) {
+            linearTemplate = true;
+            premise.push_back(invTemplate);
+            for (const Expression &t: updatedTemplates) {
+                conclusion.push_back(t);
             }
         }
     }
-    solver.add(FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Integer));
-    z3::check_result res = solver.check();
-    if (res != z3::check_result::sat) {
-        solver.reset();
-        solver.add(FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Real));
-        res = solver.check();
-    }
-    if (res == z3::check_result::sat) {
-        vector<Expression> newInvariants = instantiateTemplates(
-                templates,
-                templateParams,
-                varMan,
-                solver.get_model(),
-                context);
-        return newInvariants;
+    if (linearConclusion && linearTemplate) {
+        return FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Integer);
     } else {
-        return optional<vector<Expression>>{};
+        return option<z3::expr>();
     }
 }
 
@@ -231,7 +235,7 @@ static ExprSymbolSet findRelevantVariables(const VarMan &varMan, const Expressio
     return symbols;
 }
 
-static GuardList findRelevantConstraints(const GuardList &guard, ExprSymbolSet vars) {
+static GuardList findRelevantConstraints(const GuardList &guard, const ExprSymbolSet &vars) {
     GuardList relevantConstraints;
     for (const Expression &e: guard) {
         for (const ExprSymbol &var: vars) {
@@ -244,11 +248,12 @@ static GuardList findRelevantConstraints(const GuardList &guard, ExprSymbolSet v
     return relevantConstraints;
 }
 
-static pair<GuardList, GuardList> tryToForceInvariance(
+static GuardList tryToForceInvariance(
         const Rule &r,
         const GuardList &todo,
-        VariableManager &varMan,
-        int numTemplates) {
+        VariableManager &varMan) {
+    Z3Context context;
+    Z3Solver solver(context);
     GuardList succeeded;
     GuardList failed;
     vector<UpdateMap> multiUpdate;
@@ -257,34 +262,48 @@ static pair<GuardList, GuardList> tryToForceInvariance(
         multiUpdate.push_back(u.getUpdate());
         updates.push_back(u.getUpdate().toSubstitution(varMan));
     }
-    GuardList currentKnowledge;
-    for (const Expression &e: r.getGuard()) {
-        currentKnowledge.push_back(e);
-    }
+    ExprSymbolSet allRelevantVariables;
+    vector<Expression> templates;
+    ExprSymbolSet templateParams;
     for (const Expression &g: todo) {
         ExprSymbolSet varSymbols = findRelevantVariables(varMan, g, r);
-        GuardList relevantConstraints = findRelevantConstraints(currentKnowledge, varSymbols);
-        optional<vector<Expression>> newInvariants = tryToForceInvariance(
-                g,
-                relevantConstraints,
-                updates,
-                varSymbols,
-                varMan,
-                numTemplates);
-        if (newInvariants) {
-            succeeded.push_back(g);
-            for (const Expression &c: newInvariants.get()) {
-                succeeded.push_back(c);
-                currentKnowledge.push_back(c);
-            }
-        } else {
-            failed.push_back(g);
-        }
+        allRelevantVariables.insert(varSymbols.begin(), varSymbols.end());
+        pair<Expression, ExprSymbolSet> p = buildTemplate(varSymbols, varMan);
+        templates.push_back(p.first);
+        templateParams.insert(p.second.begin(), p.second.end());
     }
-    return pair<GuardList, GuardList>(succeeded, failed);
+    GuardList relevantConstraints = findRelevantConstraints(r.getGuard(), allRelevantVariables);
+    optional<z3::expr> smtQuery = buildSMTQuery(
+            todo,
+            relevantConstraints,
+            updates,
+            allRelevantVariables,
+            varMan,
+            context,
+            templates,
+            templateParams);
+    if (smtQuery) {
+        solver.add(smtQuery.get());
+    }
+    // debugTest("solver: " << solver);
+    z3::check_result res = solver.check();
+    if (res == z3::check_result::sat) {
+        GuardList newInvariants = instantiateTemplates(
+                templates,
+                templateParams,
+                varMan,
+                solver.get_model(),
+                context);
+        for (const Expression &e: newInvariants) {
+            debugTest("new invariant " << e);
+        }
+        return newInvariants;
+    } else {
+        return GuardList();
+    }
 }
 
-optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan, int numTemplates) {
+optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan) {
     if (!r.isSimpleLoop()) {
         return optional<Rule>{};
     }
@@ -294,24 +313,21 @@ optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan, int 
     p = splitMonotonicConstraints(r, invariants, nonInvariants, varMan);
     GuardList monotonic = p.first;
     GuardList nonMonotonic = p.second;
-    p = tryToForceInvariance(r, nonMonotonic, varMan, numTemplates);
-    GuardList newInvariants = p.first;
-    GuardList failed = p.second;
+    GuardList todo;
+    for (const Expression &e: nonMonotonic) {
+        if (Relation::isLinearEquality(e)) {
+            todo.emplace_back(e.lhs() <= e.rhs());
+            todo.emplace_back(e.rhs() <= e.lhs());
+        } else if (Relation::isLinearInequality(e)) {
+            todo.push_back(e);
+        }
+    }
+    GuardList newInvariants = tryToForceInvariance(r, todo, varMan);
     if (newInvariants.empty()) {
         return optional<Rule>{};
     } else {
-        GuardList newGuard;
-        for (const Expression &g: invariants) {
-            newGuard.push_back(g);
-        }
-        for (const Expression &g: monotonic) {
-            newGuard.push_back(g);
-        }
+        GuardList newGuard(r.getGuard());
         for (const Expression &g: newInvariants) {
-            debugInvariants("new invariant: " << g);
-            newGuard.push_back(g);
-        }
-        for (const Expression &g: failed) {
             newGuard.push_back(g);
         }
         return Rule(RuleLhs(r.getLhsLoc(), newGuard, r.getCost()), r.getRhss());

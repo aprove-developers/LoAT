@@ -264,27 +264,18 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
-            Rule currentRule = rule;
             option<vector<LinearRule>> optRules;
-            bool changed;
-            for (int i = 1; !optRules && i <= Config::Invariants::NumTemplates; i++) {
-                do {
-                    changed = false;
-                    if (!optRules) {
-                        boost::optional<Rule> optRule = Strengthening::apply(currentRule, its, i);
-                        if (optRule) {
-                            changed = true;
-                            currentRule = optRule.get();
-                            debugBackwardAccel("invariant inference yields " << currentRule);
-                        }
-                    }
-                } while (changed);
-                optRules = Backward::accelerate(its, currentRule.toLinear());
+            if (!optRules) {
+                boost::optional<Rule> optRule = Strengthening::apply(rule, its);
+                if (optRule) {
+                    debugBackwardAccel("invariant inference yields " << currentRule);
+                    optRules = Backward::accelerate(its, optRule.get().toLinear());
+                }
             }
             if (optRules) {
                 res.result = Forward::Success;
-                for (LinearRule rule : optRules.get()) {
-                    res.rules.emplace_back("backward acceleration", rule);
+                for (const LinearRule &r: optRules.get()) {
+                    res.rules.emplace_back("backward acceleration", r);
                 }
             }
         }
