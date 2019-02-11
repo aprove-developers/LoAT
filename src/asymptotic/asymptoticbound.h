@@ -109,6 +109,11 @@ public:
                                       const GuardList &guard,
                                       const Expression &cost,
                                       bool finalCheck);
+
+    static Result determineComplexityViaSMT(const VarMan &varMan,
+                                            const GuardList &guard,
+                                            const Expression &cost);
+
 };
 
 #endif //ASYMPTOTICBOUND_H

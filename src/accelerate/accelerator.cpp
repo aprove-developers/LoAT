@@ -37,6 +37,7 @@
 
 #include <queue>
 #include <strengthening/strengthening.h>
+#include <asymptotic/asymptoticbound.h>
 
 
 using namespace std;
@@ -156,7 +157,7 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
     }
 
     // We only consider nesting successful if it increases the complexity
-    Complexity oldCpx = innerRule.getCost().getComplexity();
+    Complexity oldCpx = AsymptoticBound::determineComplexityViaSMT(its, innerRule.getGuard(), innerRule.getCost()).cpx;
 
     // Lambda that performs the nesting/acceleration.
     // If successful, also tries to chain the second rule in front of the accelerated (nested) rule.
@@ -175,7 +176,8 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
                 vector<LinearRule> accelRules = optAccel.get();
                 bool success = false;
                 for (const LinearRule &accelRule: accelRules) {
-                    if (accelRule.getCost().getComplexity() > oldCpx) {
+                    Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost()).cpx;
+                    if (newCpx > oldCpx) {
                         addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
                         success = true;
                     }

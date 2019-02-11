@@ -1092,4 +1092,35 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
 
         return Result(Complexity::Unknown);
     }
+
+}
+
+AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan &varMan,
+                                                                    const GuardList &guard,
+                                                                    const Expression &cost) {
+    Expression expandedCost = cost.expand();
+    // Handle nontermination. It suffices to check that the guard is satisfiable
+    if (expandedCost.isNontermSymbol()) {
+        auto z3res = Z3Toolbox::checkAll(guard);
+        if (z3res == z3::sat) {
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        } else {
+            return Result(Complexity::Unknown);
+        }
+    }
+    assert(!expandedCost.has(Expression::NontermSymbol));
+    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
+    asymptoticBound.initLimitVectors();
+    asymptoticBound.normalizeGuard();
+    asymptoticBound.createInitialLimitProblem();
+    if (asymptoticBound.solveViaSMT()) {
+        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+        return Result(asymptoticBound.bestComplexity.complexity,
+                      solvedCost.expand(),
+                      asymptoticBound.bestComplexity.upperBound > 1,
+                      asymptoticBound.bestComplexity.inftyVars);
+    } else {
+
+        return Result(Complexity::Unknown);
+    }
 }

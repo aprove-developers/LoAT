@@ -138,7 +138,85 @@ namespace {
         return res;
     }
 
-    option<pair<z3::expr, vector<z3::expr>>> buildSMTQuery(
+    pair<z3::expr, vector<z3::expr>> constructSMTExpressions(
+            const ExprSymbolSet &vars,
+            Z3Context &context,
+            const vector<Expression> &templates,
+            const ExprSymbolSet &templateParams,
+            const vector<GuardList> &preconditions,
+            const GuardList &premise,
+            const GuardList &conclusion) {
+        z3::expr intExpr = FarkasLemma::apply(
+                premise,
+                conclusion,
+                vars,
+                templateParams,
+                context,
+                Z3Context::Integer);
+        z3::expr_vector initiationValidVec(context);
+        z3::expr_vector initiationSatVec(context);
+        for (const GuardList &g: preconditions) {
+            z3::expr_vector gVec(context);
+            for (const Expression &e: g) {
+                gVec.push_back(e.toZ3(context));
+            }
+            for (const Expression &t: templates) {
+                vector<Expression> singleton(1, t);
+                initiationValidVec.push_back(FarkasLemma::apply(
+                        g,
+                        singleton,
+                        vars,
+                        templateParams,
+                        context,
+                        Z3Context::Integer));
+                initiationSatVec.push_back(t.toZ3(context) && mk_and(gVec));
+            }
+        }
+        z3::expr initiationAllValid = mk_and(initiationValidVec);
+        z3::expr initiationSomeValid = mk_or(initiationValidVec);
+        z3::expr initiationAllSat = mk_and(initiationSatVec);
+        z3::expr initiationSomeSat = mk_or(initiationSatVec);
+        vector<z3::expr> res;
+        res.push_back(initiationAllValid);
+        res.push_back(initiationSomeValid && initiationAllSat);
+        res.push_back(initiationSomeValid);
+        res.push_back(initiationAllSat);
+        res.push_back(initiationSomeSat);
+        return pair<z3::expr, vector<z3::expr>>(intExpr, res);
+    }
+
+    bool addTemplateConstraints(
+            const vector<GiNaC::exmap> &updates,
+            const ExprSymbolSet &vars,
+            const vector<Expression> &templates,
+            GuardList &premise,
+            GuardList &conclusion) {
+        bool linearTemplate = false;
+        for (const Expression &invTemplate: templates) {
+                bool linear = true;
+                GuardList updatedTemplates;
+                for (const GiNaC::exmap &up: updates) {
+                    Expression updated = invTemplate;
+                    updated.applySubs(up);
+                    if (Relation::isLinearInequality(updated, vars)) {
+                        updatedTemplates.push_back(updated);
+                    } else {
+                        linear = false;
+                        break;
+                    }
+                }
+                if (linear) {
+                    linearTemplate = true;
+                    premise.push_back(invTemplate);
+                    for (const Expression &t: updatedTemplates) {
+                        conclusion.push_back(t);
+                    }
+                }
+            }
+        return linearTemplate;
+    }
+
+    option<pair<z3::expr, vector<z3::expr>>> buildHardAndSoftConstraints(
             const GuardList &todo,
             const GuardList &guard,
             const vector<GiNaC::exmap> &updates,
@@ -147,12 +225,9 @@ namespace {
             Z3Context &context,
             const vector<Expression> &templates,
             const ExprSymbolSet &templateParams,
-            const vector<GuardList> preconditions) {
+            const vector<GuardList> &preconditions) {
         GuardList premise;
         GuardList conclusion;
-        vector<z3::expr> res;
-        bool linearConclusion = false;
-        bool linearTemplate = false;
         for (const Expression &e: guard) {
             premise.push_back(e);
         }
@@ -162,56 +237,20 @@ namespace {
                 updated.applySubs(up);
                 if (Relation::isLinearInequality(updated, vars)) {
                     conclusion.push_back(updated);
-                    linearConclusion = true;
                 }
             }
         }
-        for (const Expression &invTemplate: templates) {
-            bool linear = true;
-            GuardList updatedTemplates;
-            for (const GiNaC::exmap &up: updates) {
-                Expression updated = invTemplate;
-                updated.applySubs(up);
-                if (Relation::isLinearInequality(updated, vars)) {
-                    updatedTemplates.push_back(updated);
-                } else {
-                    linear = false;
-                    break;
-                }
+        if (!conclusion.empty()) {
+            if (addTemplateConstraints(updates, vars, templates, premise, conclusion)) {
+                return constructSMTExpressions(
+                        vars,
+                        context,
+                        templates,
+                        templateParams,
+                        preconditions,
+                        premise,
+                        conclusion);
             }
-            if (linear) {
-                linearTemplate = true;
-                premise.push_back(invTemplate);
-                for (const Expression &t: updatedTemplates) {
-                    conclusion.push_back(t);
-                }
-            }
-        }
-        if (linearConclusion && linearTemplate) {
-            z3::expr intExpr = FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Integer);
-            z3::expr_vector initiationValidVec(context);
-            z3::expr_vector initiationSatVec(context);
-            for (const GuardList &g: preconditions) {
-                z3::expr_vector gVec(context);
-                for (const Expression &e: g) {
-                    gVec.push_back(e.toZ3(context));
-                }
-                for (const Expression &t: templates) {
-                    vector<Expression> singleton(1, t);
-                    initiationValidVec.push_back(FarkasLemma::apply(g, singleton, vars, templateParams, context, Z3Context::Integer));
-                    initiationSatVec.push_back(t.toZ3(context) && z3::mk_and(gVec));
-                }
-            }
-            z3::expr initiationAllValid = z3::mk_and(initiationValidVec);
-            z3::expr initiationSomeValid = z3::mk_or(initiationValidVec);
-            z3::expr initiationAllSat = z3::mk_and(initiationSatVec);
-            z3::expr initiationSomeSat = z3::mk_or(initiationSatVec);
-            res.push_back(initiationAllValid);
-            res.push_back(initiationSomeValid && initiationAllSat);
-            res.push_back(initiationSomeValid);
-            res.push_back(initiationAllSat);
-            res.push_back(initiationSomeSat);
-            return pair<z3::expr, vector<z3::expr>>(intExpr, res);
         }
         return option<pair<z3::expr, vector<z3::expr>>>();
     }
@@ -300,7 +339,7 @@ namespace {
             templateParams.insert(p.second.begin(), p.second.end());
         }
         GuardList relevantConstraints = findRelevantConstraints(r.getGuard(), allRelevantVariables);
-        optional<pair<z3::expr, vector<z3::expr>>> smtExpressions = buildSMTQuery(
+        optional<pair<z3::expr, vector<z3::expr>>> smtExpressions = buildHardAndSoftConstraints(
                 todo,
                 relevantConstraints,
                 updates,
@@ -314,8 +353,8 @@ namespace {
             z3::expr hard = smtExpressions.get().first;
             vector<z3::expr> soft = smtExpressions.get().second;
             solver.add(hard);
-            solver.push();
             z3::check_result res = solver.check();
+            debugInvariants("hard:" << res);
             if (res == z3::check_result::sat) {
                 for (const z3::expr &s: soft) {
                     solver.push();
@@ -376,7 +415,9 @@ namespace {
 
 }
 
-optional<Rule> Strengthening::apply(const vector<Rule> &predecessors, const Rule &r, VariableManager &varMan) {
+optional<Rule> Strengthening::apply(
+        const vector<Rule> &predecessors,
+        const Rule &r, VariableManager &varMan) {
     if (!r.isSimpleLoop()) {
         return optional<Rule>();
     }
