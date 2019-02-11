@@ -138,7 +138,7 @@ namespace {
         return res;
     }
 
-    optional<pair<z3::expr, z3::expr>> buildSMTQuery(
+    option<pair<z3::expr, vector<z3::expr>>> buildSMTQuery(
             const GuardList &todo,
             const GuardList &guard,
             const vector<GiNaC::exmap> &updates,
@@ -146,9 +146,11 @@ namespace {
             VariableManager &varMan,
             Z3Context &context,
             const vector<Expression> &templates,
-            const ExprSymbolSet &templateParams) {
+            const ExprSymbolSet &templateParams,
+            const vector<GuardList> preconditions) {
         GuardList premise;
         GuardList conclusion;
+        vector<z3::expr> res;
         bool linearConclusion = false;
         bool linearTemplate = false;
         for (const Expression &e: guard) {
@@ -186,13 +188,32 @@ namespace {
             }
         }
         if (linearConclusion && linearTemplate) {
-            return pair<z3::expr, z3::expr>(
-                    FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Integer),
-                    FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Real)
-            );
-        } else {
-            return option<pair<z3::expr, z3::expr>>();
+            z3::expr intExpr = FarkasLemma::apply(premise, conclusion, vars, templateParams, context, Z3Context::Integer);
+            z3::expr_vector initiationValidVec(context);
+            z3::expr_vector initiationSatVec(context);
+            for (const GuardList &g: preconditions) {
+                z3::expr_vector gVec(context);
+                for (const Expression &e: g) {
+                    gVec.push_back(e.toZ3(context));
+                }
+                for (const Expression &t: templates) {
+                    vector<Expression> singleton(1, t);
+                    initiationValidVec.push_back(FarkasLemma::apply(g, singleton, vars, templateParams, context, Z3Context::Integer));
+                    initiationSatVec.push_back(t.toZ3(context) && z3::mk_and(gVec));
+                }
+            }
+            z3::expr initiationAllValid = z3::mk_and(initiationValidVec);
+            z3::expr initiationSomeValid = z3::mk_or(initiationValidVec);
+            z3::expr initiationAllSat = z3::mk_and(initiationSatVec);
+            z3::expr initiationSomeSat = z3::mk_or(initiationSatVec);
+            res.push_back(initiationAllValid);
+            res.push_back(initiationSomeValid && initiationAllSat);
+            res.push_back(initiationSomeValid);
+            res.push_back(initiationAllSat);
+            res.push_back(initiationSomeSat);
+            return pair<z3::expr, vector<z3::expr>>(intExpr, res);
         }
+        return option<pair<z3::expr, vector<z3::expr>>>();
     }
 
     ExprSymbolSet findRelevantVariables(const VarMan &varMan, const Expression &c, const Rule &r) {
@@ -256,6 +277,7 @@ namespace {
     GuardList tryToForceInvariance(
             const Rule &r,
             const GuardList &todo,
+            const vector<GuardList> &preconditions,
             VariableManager &varMan) {
         Z3Context context;
         Z3Solver solver(context);
@@ -278,7 +300,7 @@ namespace {
             templateParams.insert(p.second.begin(), p.second.end());
         }
         GuardList relevantConstraints = findRelevantConstraints(r.getGuard(), allRelevantVariables);
-        optional<pair<z3::expr, z3::expr>> queries = buildSMTQuery(
+        optional<pair<z3::expr, vector<z3::expr>>> smtExpressions = buildSMTQuery(
                 todo,
                 relevantConstraints,
                 updates,
@@ -286,36 +308,75 @@ namespace {
                 varMan,
                 context,
                 templates,
-                templateParams);
-        if (queries) {
-            z3::expr intQuery = queries.get().first;
-            z3::expr realQuery = queries.get().second;
-            solver.add(intQuery);
+                templateParams,
+                preconditions);
+        if (smtExpressions) {
+            z3::expr hard = smtExpressions.get().first;
+            vector<z3::expr> soft = smtExpressions.get().second;
+            solver.add(hard);
+            solver.push();
             z3::check_result res = solver.check();
-            if (res != z3::check_result::sat) {
-                solver.reset();
-                solver.add(realQuery);
-                res = solver.check();
-            }
             if (res == z3::check_result::sat) {
-                GuardList newInvariants = instantiateTemplates(
-                        templates,
-                        templateParams,
-                        varMan,
-                        solver.get_model(),
-                        context);
-                for (const Expression &e: newInvariants) {
-                    debugTest("new invariant " << e);
+                for (const z3::expr &s: soft) {
+                    solver.push();
+                    solver.add(s);
+                    res = solver.check();
+                    if (res == z3::check_result::sat) {
+                        GuardList newInvariants = instantiateTemplates(
+                                templates,
+                                templateParams,
+                                varMan,
+                                solver.get_model(),
+                                context);
+                        for (const Expression &e: newInvariants) {
+                            debugInvariants("new invariant " << e);
+                        }
+                        return newInvariants;
+                    } else {
+                        solver.pop();
+                    }
                 }
-                return newInvariants;
             }
         }
         return GuardList();
     }
 
+    vector<GuardList> buildPreconditions(
+            const vector<Rule> &predecessors,
+            const Rule &r,
+            const VariableManager &varMan) {
+        vector<GuardList> res;
+        for (const Rule &pred: predecessors) {
+            if (pred.getGuard() == r.getGuard()) {
+                continue;
+            }
+            for (const RuleRhs &rhs: pred.getRhss()) {
+                if (rhs.getLoc() == r.getLhsLoc()) {
+                    GiNaC::exmap up = rhs.getUpdate().toSubstitution(varMan);
+                    GuardList pre;
+                    for (Expression g: r.getGuard()) {
+                        g.applySubs(up);
+                        pre.push_back(g);
+                    }
+                    for (const auto &p: rhs.getUpdate()) {
+                        ExprSymbol var = varMan.getVarSymbol(p.first);
+                        Expression varUpdate = p.second;
+                        Expression updatedVarUpdate = varUpdate;
+                        updatedVarUpdate.applySubs(up);
+                        if (varUpdate == updatedVarUpdate) {
+                            pre.push_back(var == varUpdate);
+                        }
+                    }
+                    res.push_back(pre);
+                }
+            }
+        }
+        return res;
+    }
+
 }
 
-optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan) {
+optional<Rule> Strengthening::apply(const vector<Rule> &predecessors, const Rule &r, VariableManager &varMan) {
     if (!r.isSimpleLoop()) {
         return optional<Rule>();
     }
@@ -325,23 +386,25 @@ optional<Rule> Strengthening::apply(const Rule &r, VariableManager &varMan) {
     p = splitMonotonicConstraints(r, invariants, nonInvariants, varMan);
     GuardList monotonic = p.first;
     GuardList nonMonotonic = p.second;
-    GuardList todo;
-    for (const Expression &e: nonMonotonic) {
-        if (Relation::isLinearEquality(e)) {
-            todo.emplace_back(e.lhs() <= e.rhs());
-            todo.emplace_back(e.rhs() <= e.lhs());
-        } else if (Relation::isLinearInequality(e)) {
-            todo.push_back(e);
+    if (!nonMonotonic.empty()) {
+        vector<GuardList> preconditions = buildPreconditions(predecessors, r, varMan);
+        GuardList todo;
+        for (const Expression &e: nonMonotonic) {
+            if (Relation::isLinearEquality(e)) {
+                todo.emplace_back(e.lhs() <= e.rhs());
+                todo.emplace_back(e.rhs() <= e.lhs());
+            } else if (Relation::isLinearInequality(e)) {
+                todo.push_back(e);
+            }
+        }
+        GuardList newInvariants = tryToForceInvariance(r, todo, preconditions, varMan);
+        if (!newInvariants.empty()) {
+            GuardList newGuard(r.getGuard());
+            for (const Expression &g: newInvariants) {
+                newGuard.push_back(g);
+            }
+            return Rule(RuleLhs(r.getLhsLoc(), newGuard, r.getCost()), r.getRhss());
         }
     }
-    GuardList newInvariants = tryToForceInvariance(r, todo, varMan);
-    if (newInvariants.empty()) {
-        return optional<Rule>();
-    } else {
-        GuardList newGuard(r.getGuard());
-        for (const Expression &g: newInvariants) {
-            newGuard.push_back(g);
-        }
-        return Rule(RuleLhs(r.getLhsLoc(), newGuard, r.getCost()), r.getRhss());
-    }
+    return optional<Rule>();
 }

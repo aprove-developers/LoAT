@@ -269,7 +269,12 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
         if (res.result != Forward::Success && rule.isLinear()) {
             option<vector<LinearRule>> optRules = Backward::accelerate(its, rule.toLinear());
             if (!optRules) {
-                boost::optional<Rule> optRule = Strengthening::apply(rule, its);
+                set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
+                vector<Rule> predecessors;
+                for (const TransIdx &i: predecessorIndices) {
+                    predecessors.push_back(its.getRule(i));
+                }
+                boost::optional<Rule> optRule = Strengthening::apply(predecessors, rule, its);
                 if (optRule) {
                     debugBackwardAccel("invariant inference yields " << currentRule);
                     optRules = Backward::accelerate(its, optRule.get().toLinear());
