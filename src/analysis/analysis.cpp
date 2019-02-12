@@ -561,14 +561,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         // We have to be careful with temp variables, since they can lead to unbounded cost.
         const Expression &cost = rule.getCost();
         bool hasTempVar = !cost.isNontermSymbol() && cost.hasVariableWith(isTempVar);
-        // Check if we can still hope for an improvement.
-        // Note that the rules have been ordered (see above).
-        // So once we see polynomial costs without temporary variables, we won't see costs with temporary variables or
-        // non-polynomial costs again.
-        // Thus, in this case, cost.getComplexity() is the best we can hope for.
-        if (!hasTempVar && currResult.cpx >= cost.getComplexity() && cost.isPolynomial()) {
-            break;
-        }
+
         if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) {
             debugAnalysis("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
             continue;
