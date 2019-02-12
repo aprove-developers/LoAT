@@ -25,13 +25,9 @@ bool BackwardAcceleration::shouldAccelerate() const {
 }
 
 
-bool BackwardAcceleration::checkGuardImplication() const {
+bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, const GuardList &irrelevantGuard) const {
     Z3Context context;
     Z3Solver solver(context);
-
-    // Remove constraints that are irrelevant for the loop's execution
-    GuardList irrelevantGuard;
-    GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {rule.getUpdate()}, &irrelevantGuard);
 
     // Build the implication by applying the inverse update to every guard constraint.
     // For the left-hand side, we use the full guard (might be stronger than the reduced guard).
@@ -162,7 +158,11 @@ vector<LinearRule> BackwardAcceleration::run() {
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
-    if (!checkGuardImplication()) {
+    // Remove constraints that are irrelevant for the loop's execution
+    GuardList irrelevantGuard;
+    GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {rule.getUpdate()}, &irrelevantGuard);
+
+    if (!checkGuardImplication(reducedGuard, irrelevantGuard)) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
         return {};
@@ -178,6 +178,9 @@ vector<LinearRule> BackwardAcceleration::run() {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
         return {};
+    }
+    if (reducedGuard.empty()) {
+        iteratedCost = Expression::NontermSymbol;
     }
     Stats::add(Stats::BackwardSuccess);
 
