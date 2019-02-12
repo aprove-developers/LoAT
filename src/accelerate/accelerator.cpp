@@ -136,7 +136,7 @@ void Accelerator::addNestedRule(const LinearRule &metered, const LinearRule &cha
 }
 
 
-bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &outer) {
+bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &inner, const OuterCandidate &outer) {
     bool res = false;
     const LinearRule innerRule = its.getLinearRule(inner.newRule);
     const LinearRule outerRule = its.getLinearRule(outer.oldRule);
@@ -156,9 +156,6 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
         return false;
     }
 
-    // We only consider nesting successful if it increases the complexity
-    Complexity oldCpx = AsymptoticBound::determineComplexityViaSMT(its, innerRule.getGuard(), innerRule.getCost()).cpx;
-
     // Lambda that performs the nesting/acceleration.
     // If successful, also tries to chain the second rule in front of the accelerated (nested) rule.
     // This can improve results, since we do not know which loop is executed first.
@@ -177,7 +174,7 @@ bool Accelerator::nestRules(const InnerCandidate &inner, const OuterCandidate &o
                 bool success = false;
                 for (const LinearRule &accelRule: accelRules) {
                     Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost()).cpx;
-                    if (newCpx > oldCpx) {
+                    if (newCpx > currentCpx) {
                         addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
                         success = true;
                     }
@@ -209,8 +206,10 @@ void Accelerator::performNesting(vector<InnerCandidate> inner, vector<OuterCandi
     // Try to combine previously identified inner and outer candidates via chaining,
     // then try to accelerate the resulting rule
     for (const InnerCandidate &in : inner) {
+        Rule r = its.getLinearRule(in.newRule);
+        Complexity cpx = AsymptoticBound::determineComplexityViaSMT(its, r.getGuard(), r.getCost()).cpx;
         for (const OuterCandidate &out : outer) {
-            changed |= nestRules(in, out);
+            changed |= nestRules(cpx, in, out);
             if (Timeout::soft()) return;
         }
     }
@@ -278,7 +277,7 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
                 }
                 boost::optional<Rule> optRule = Strengthening::apply(predecessors, rule, its);
                 if (optRule) {
-                    debugBackwardAccel("invariant inference yields " << currentRule);
+                    debugBackwardAccel("invariant inference yields " << optRule.get());
                     optRules = Backward::accelerate(its, optRule.get().toLinear());
                 }
             }

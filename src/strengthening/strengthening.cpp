@@ -354,7 +354,6 @@ namespace {
             vector<z3::expr> soft = smtExpressions.get().second;
             solver.add(hard);
             z3::check_result res = solver.check();
-            debugInvariants("hard:" << res);
             if (res == z3::check_result::sat) {
                 for (const z3::expr &s: soft) {
                     solver.push();
@@ -393,7 +392,7 @@ namespace {
                 if (rhs.getLoc() == r.getLhsLoc()) {
                     GiNaC::exmap up = rhs.getUpdate().toSubstitution(varMan);
                     GuardList pre;
-                    for (Expression g: r.getGuard()) {
+                    for (Expression g: pred.getGuard()) {
                         g.applySubs(up);
                         pre.push_back(g);
                     }

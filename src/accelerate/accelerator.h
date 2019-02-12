@@ -125,7 +125,7 @@ private:
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */
-    bool nestRules(const InnerCandidate &inner, const OuterCandidate &outer);
+    bool nestRules(const Complexity &currentCpx, const InnerCandidate &inner, const OuterCandidate &outer);
 
     /**
      * Main implementation of nesting

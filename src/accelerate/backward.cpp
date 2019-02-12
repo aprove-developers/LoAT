@@ -54,6 +54,11 @@ bool BackwardAcceleration::checkGuardImplication() const {
 
     // call z3
     debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
+    solver.add(lhs);
+    if (solver.check() != z3::sat) {
+        return false;
+    }
+    solver.reset();
     solver.add(!rhs && lhs);
     return (solver.check() == z3::unsat);
 }
