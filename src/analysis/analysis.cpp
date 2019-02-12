@@ -531,25 +531,25 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
     // non-polynomial (i.e., most likely exponential) rules second (preferring rules with temporary variables)
     // rules with temporary variables (sorted by their degree) third
     // rules without temporary variables (sorted by their degree) last
-    auto comp = [this, isTempVar](TransIdx fst, TransIdx snd) {
-        Expression fstCpxExp = its.getRule(fst).getCost();
-        Expression sndCpxExp = its.getRule(snd).getCost();
-        if (fstCpxExp == sndCpxExp) return 0;
-        if (fstCpxExp.isNontermSymbol()) return 1;
-        if (sndCpxExp.isNontermSymbol()) return -1;
+    auto comp = [this, isTempVar](const TransIdx &fst, const TransIdx &snd) {
+        Expression fstCpxExp = its.getRule(fst).getCost().expand();
+        Expression sndCpxExp = its.getRule(snd).getCost().expand();
+        if (fstCpxExp == sndCpxExp) return false;
+        if (fstCpxExp.isNontermSymbol()) return true;
+        if (sndCpxExp.isNontermSymbol()) return false;
         bool fstIsNonPoly = !fstCpxExp.isPolynomial();
         bool sndIsNonPoly = !sndCpxExp.isPolynomial();
-        if (fstIsNonPoly > sndIsNonPoly) return 1;
-        if (fstIsNonPoly < sndIsNonPoly) return -1;
+        if (fstIsNonPoly > sndIsNonPoly) return true;
+        if (fstIsNonPoly < sndIsNonPoly) return false;
         bool fstHasTmpVar = fstCpxExp.hasVariableWith(isTempVar);
         bool sndHasTmpVar = sndCpxExp.hasVariableWith(isTempVar);
-        if (fstHasTmpVar > sndHasTmpVar) return 1;
-        if (fstHasTmpVar < sndHasTmpVar) return -1;
+        if (fstHasTmpVar > sndHasTmpVar) return true;
+        if (fstHasTmpVar < sndHasTmpVar) return false;
         Complexity fstCpx = fstCpxExp.getComplexity();
         Complexity sndCpx = sndCpxExp.getComplexity();
-        if (fstCpx > sndCpx) return 1;
-        if (fstCpx < sndCpx) return -1;
-        return 0;
+        if (fstCpx > sndCpx) return true;
+        if (fstCpx < sndCpx) return false;
+        return false;
     };
 
     sort(todo.begin(), todo.end(), comp);
