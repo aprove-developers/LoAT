@@ -1015,7 +1015,7 @@ bool AsymptoticBound::isTimeout() const {
 }
 
 
-AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
+AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
                                                              const GuardList &guard,
                                                              const Expression &cost,
                                                              bool finalCheck) {
@@ -1023,6 +1023,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
 
     // Expand the cost to make it easier to analyze
     Expression expandedCost = cost.expand();
+    Expression costToCheck = expandedCost;
 
 #ifdef DEBUG_ASYMPTOTIC_BOUNDS
     debugAsymptoticBound("guard:");
@@ -1039,17 +1040,17 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
             if (finalCheck) proofout << "Guard is satisfiable, yielding nontermination" << endl;
             return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
         } else {
-            if (finalCheck) proofout << "Could not show satisfiability of the guard (z3 result: " << z3res << ")." << endl;
-            return Result(Complexity::Unknown);
+            // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
+            costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
         }
     }
-    assert(!expandedCost.has(Expression::NontermSymbol));
+    assert(!costToCheck.has(Expression::NontermSymbol));
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
     if (finalCheck) Timing::start(Timing::Asymptotic);
 
-    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, finalCheck);
+    AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
@@ -1079,11 +1080,15 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMa
         proofout.setEnabled(wasProofEnabled);
 
         // Gather all relevant information
-        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
-        return Result(asymptoticBound.bestComplexity.complexity,
-                      solvedCost.expand(),
-                      asymptoticBound.bestComplexity.upperBound > 1,
-                      asymptoticBound.bestComplexity.inftyVars);
+        if (expandedCost.isNontermSymbol()) {
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        } else {
+            Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+            return Result(asymptoticBound.bestComplexity.complexity,
+                          solvedCost.expand(),
+                          asymptoticBound.bestComplexity.upperBound > 1,
+                          asymptoticBound.bestComplexity.inftyVars);
+        }
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem");
 

@@ -105,7 +105,7 @@ public:
      * @param varMan the VariableManager instance is needed to get information about free variables
      * @param finalCheck enables more sophisticated backtracking and uses Timeout::hard
      */
-    static Result determineComplexity(const VarMan &varMan,
+    static Result determineComplexity(VarMan &varMan,
                                       const GuardList &guard,
                                       const Expression &cost,
                                       bool finalCheck);
