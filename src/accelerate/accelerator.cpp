@@ -147,7 +147,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
     }
 
     // Skip inner loops with constant costs
-    if (innerRule.getCost().getComplexity() == Complexity::Const) {
+    if (currentCpx == Complexity::Const || currentCpx.getType() != Complexity::ComplexityType::CpxPolynomial) {
         return false;
     }
 
