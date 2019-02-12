@@ -21,7 +21,7 @@ BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rul
 
 
 bool BackwardAcceleration::shouldAccelerate() const {
-    return rule.getCost().isPolynomial();
+    return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
 }
 
 
