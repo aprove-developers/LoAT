@@ -313,7 +313,34 @@ namespace {
         return relevantConstraints;
     }
 
-    GuardList tryToForceInvariance(
+    pair<GuardList, GuardList> splitInitiallyValid(const vector<GuardList> precondition, const GuardList &invariants) {
+        Z3Context context;
+        Z3Solver solver(context);
+        GuardList initiallyValid;
+        GuardList notInitiallyValid;
+        z3::expr_vector preconditionVec(context);
+        for (const GuardList &pre: precondition) {
+            z3::expr_vector preVec(context);
+            for (const Expression &e: pre) {
+                preVec.push_back(e.toZ3(context));
+            }
+            preconditionVec.push_back(z3::mk_and(preVec));
+        }
+        solver.add(z3::mk_or(preconditionVec));
+        for (const Expression &i: invariants) {
+            solver.push();
+            solver.add(!i.toZ3(context));
+            if (solver.check() == z3::unsat) {
+                initiallyValid.push_back(i);
+            } else {
+                notInitiallyValid.push_back(i);
+            }
+            solver.pop();
+        }
+        return pair<GuardList, GuardList>(initiallyValid, notInitiallyValid);
+    }
+
+    pair<GuardList, GuardList> tryToForceInvariance(
             const Rule &r,
             const GuardList &todo,
             const vector<GuardList> &preconditions,
@@ -366,17 +393,18 @@ namespace {
                                 varMan,
                                 solver.get_model(),
                                 context);
+
                         for (const Expression &e: newInvariants) {
                             debugInvariants("new invariant " << e);
                         }
-                        return newInvariants;
+                        return splitInitiallyValid(preconditions, newInvariants);
                     } else {
                         solver.pop();
                     }
                 }
             }
         }
-        return GuardList();
+        return pair<GuardList, GuardList>(GuardList(), GuardList());
     }
 
     vector<GuardList> buildPreconditions(
@@ -414,11 +442,13 @@ namespace {
 
 }
 
-optional<Rule> Strengthening::apply(
+vector<Rule> Strengthening::apply(
         const vector<Rule> &predecessors,
-        const Rule &r, VariableManager &varMan) {
+        const Rule &r,
+        VariableManager &varMan) {
+    vector<Rule> res;
     if (!r.isSimpleLoop()) {
-        return optional<Rule>();
+        return res;
     }
     pair<GuardList, GuardList> p = splitInvariants(r, varMan);
     GuardList invariants = p.first;
@@ -437,14 +467,28 @@ optional<Rule> Strengthening::apply(
                 todo.push_back(e);
             }
         }
-        GuardList newInvariants = tryToForceInvariance(r, todo, preconditions, varMan);
+        p = tryToForceInvariance(r, todo, preconditions, varMan);
+        GuardList newInvariants = p.first;
+        GuardList newPseudoInvariants = p.second;
+        GuardList newGuard(r.getGuard());
+        for (const Expression &g: newInvariants) {
+            newGuard.push_back(g);
+        }
         if (!newInvariants.empty()) {
-            GuardList newGuard(r.getGuard());
-            for (const Expression &g: newInvariants) {
-                newGuard.push_back(g);
+            GuardList pseudoInvariantsValid(newGuard);
+            for (const Expression &g: newPseudoInvariants) {
+                pseudoInvariantsValid.push_back(g);
             }
-            return Rule(RuleLhs(r.getLhsLoc(), newGuard, r.getCost()), r.getRhss());
+            res.emplace_back(Rule(RuleLhs(r.getLhsLoc(), pseudoInvariantsValid, r.getCost()), r.getRhss()));
+        }
+        for (const Expression &e: newPseudoInvariants) {
+            GuardList pseudoInvariantInvalid(newGuard);
+            assert(Relation::isInequality(e));
+            Expression negated = Relation::negateLessEqInequality(Relation::toLessEq(e));
+            debugTest("deduced pseudo-invariant " << e << ", also trying " << negated);
+            pseudoInvariantInvalid.push_back(negated);
+            res.emplace_back(Rule(RuleLhs(r.getLhsLoc(), pseudoInvariantInvalid, r.getCost()), r.getRhss()));
         }
     }
-    return optional<Rule>();
+    return res;
 }

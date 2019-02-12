@@ -85,7 +85,7 @@ LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedU
 }
 
 
-option<vector<Expression>> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
+vector<Expression> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
     for (const Expression &ex : guard) {
         if (Relation::isEquality(ex) && ex.has(N)) {
@@ -136,13 +136,13 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
     auto bounds = computeUpperbounds(N, rule.getGuard());
 
     // avoid rule explosion (by not instantiating N if there are too many bounds)
-    if (!bounds || bounds.get().size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
+    if (bounds.empty() || bounds.size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
         return {rule};
     }
 
     // create one rule for each upper bound, by instantiating N with this bound
     vector<LinearRule> res;
-    for (const Expression &bound : bounds.get()) {
+    for (const Expression &bound : bounds) {
         GiNaC::exmap subs;
         subs[N] = bound;
 
@@ -155,7 +155,7 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
 }
 
 
-option<vector<LinearRule>> BackwardAcceleration::run() {
+vector<LinearRule> BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
         return {};
@@ -192,7 +192,7 @@ option<vector<LinearRule>> BackwardAcceleration::run() {
 }
 
 
-option<vector<LinearRule>> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
+vector<LinearRule> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
     BackwardAcceleration ba(varMan, rule);
     return ba.run();
 }

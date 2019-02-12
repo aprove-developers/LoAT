@@ -10,7 +10,7 @@
 
 namespace Strengthening {
 
-    boost::optional<Rule> apply(const std::vector<Rule> &predecessors, const Rule &r, VariableManager &varMan);
+    std::vector<Rule> apply(const std::vector<Rule> &predecessors, const Rule &r, VariableManager &varMan);
 
 }
 

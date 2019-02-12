@@ -168,19 +168,16 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            auto optAccel = BackwardAcceleration::accelerate(its, nestedRule);
-            if (optAccel) {
-                vector<LinearRule> accelRules = optAccel.get();
-                bool success = false;
-                for (const LinearRule &accelRule: accelRules) {
-                    Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost()).cpx;
-                    if (newCpx > currentCpx) {
-                        addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
-                        success = true;
-                    }
+            vector<LinearRule> accelRules = BackwardAcceleration::accelerate(its, nestedRule);
+            bool success = false;
+            for (const LinearRule &accelRule: accelRules) {
+                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost()).cpx;
+                if (newCpx > currentCpx) {
+                    addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
+                    success = true;
                 }
-                return success;
             }
+            return success;
         }
         return false;
     };
@@ -268,25 +265,30 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
-            option<vector<LinearRule>> optRules = Backward::accelerate(its, rule.toLinear());
-            if (!optRules) {
-                set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
-                vector<Rule> predecessors;
-                for (const TransIdx &i: predecessorIndices) {
-                    predecessors.push_back(its.getRule(i));
-                }
-                boost::optional<Rule> optRule = Strengthening::apply(predecessors, rule, its);
-                if (optRule) {
-                    debugBackwardAccel("invariant inference yields " << optRule.get());
-                    optRules = Backward::accelerate(its, optRule.get().toLinear());
-                }
+            set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
+            vector<Rule> predecessors;
+            for (const TransIdx &i: predecessorIndices) {
+                predecessors.push_back(its.getRule(i));
             }
-            if (optRules) {
-                res.result = Forward::Success;
-                for (const LinearRule &r: optRules.get()) {
-                    res.rules.emplace_back("backward acceleration", r);
+            stack<LinearRule> todo;
+            todo.push(rule.toLinear());
+            do {
+                LinearRule r = todo.top();
+                todo.pop();
+                vector<LinearRule> accelerated = Backward::accelerate(its, r);
+                if (accelerated.empty()) {
+                    vector<Rule> strengthened = Strengthening::apply(predecessors, r, its);
+                    for (const Rule &sr: strengthened) {
+                        debugBackwardAccel("invariant inference yields " << sr);
+                        todo.push(sr.toLinear());
+                    }
+                } else {
+                    res.result = Forward::Success;
+                    for (const LinearRule &ar: accelerated) {
+                        res.rules.emplace_back("backward acceleration", ar);
+                    }
                 }
-            }
+            } while (!todo.empty());
         }
     }
 
