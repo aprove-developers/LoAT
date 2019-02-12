@@ -474,7 +474,7 @@ vector<Rule> Strengthening::apply(
         for (const Expression &g: newInvariants) {
             newGuard.push_back(g);
         }
-        if (!newInvariants.empty()) {
+        if (!newInvariants.empty() || !newPseudoInvariants.empty()) {
             GuardList pseudoInvariantsValid(newGuard);
             for (const Expression &g: newPseudoInvariants) {
                 pseudoInvariantsValid.push_back(g);
