@@ -531,10 +531,9 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
     // non-polynomial (i.e., most likely exponential) rules second (preferring rules with temporary variables)
     // rules with temporary variables (sorted by their degree) third
     // rules without temporary variables (sorted by their degree) last
-    ITSProblem theIts = its;
-    auto comp = [theIts, isTempVar](TransIdx fst, TransIdx snd) {
-        Expression fstCpxExp = theIts.getRule(fst).getCost();
-        Expression sndCpxExp = theIts.getRule(snd).getCost();
+    auto comp = [this, isTempVar](TransIdx fst, TransIdx snd) {
+        Expression fstCpxExp = its.getRule(fst).getCost();
+        Expression sndCpxExp = its.getRule(snd).getCost();
         if (fstCpxExp == sndCpxExp) return 0;
         if (fstCpxExp.isNontermSymbol()) return 1;
         if (sndCpxExp.isNontermSymbol()) return -1;
