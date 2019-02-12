@@ -524,8 +524,38 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
 
     // Only search for runtimes that improve upon the current runtime
     RuntimeResult res = currResult;
+    vector<TransIdx> todo(rules.begin(), rules.end());
 
-    for (TransIdx ruleIdx : rules) {
+    // sort the rules before analyzing them
+    // non-terminating rules first
+    // non-polynomial (i.e., most likely exponential) rules second
+    // rules with temporary variables (sorted by their degree) third
+    // rules without temporary variables (sorted by their degree) last
+    ITSProblem theIts = its;
+    auto comp = [theIts, isTempVar](TransIdx fst, TransIdx snd) {
+        Expression fstCpxExp = theIts.getRule(fst).getCost();
+        Expression sndCpxExp = theIts.getRule(snd).getCost();
+        if (fstCpxExp == sndCpxExp) return 0;
+        if (fstCpxExp.isNontermSymbol()) return 1;
+        if (sndCpxExp.isNontermSymbol()) return -1;
+        bool fstIsPoly = fstCpxExp.isPolynomial();
+        bool sndIsPoly = sndCpxExp.isPolynomial();
+        if (fstIsPoly && !sndIsPoly) return 1;
+        if (!fstIsPoly && sndIsPoly) return -1;
+        bool fstHasTmpVar = fstCpxExp.hasVariableWith(isTempVar);
+        bool sndHasTmpVar = sndCpxExp.hasVariableWith(isTempVar);
+        if (fstHasTmpVar && !sndHasTmpVar) return 1;
+        if (!fstHasTmpVar && sndHasTmpVar) return -1;
+        Complexity fstCpx = fstCpxExp.getComplexity();
+        Complexity sndCpx = sndCpxExp.getComplexity();
+        if (fstCpx > sndCpx) return 1;
+        if (fstCpx < sndCpx) return -1;
+        return 0;
+    };
+
+    sort(todo.begin(), todo.end(), comp);
+
+    for (TransIdx ruleIdx : todo) {
         Rule &rule = its.getRuleMut(ruleIdx);
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
