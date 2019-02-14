@@ -531,25 +531,31 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
     // non-polynomial (i.e., most likely exponential) rules second (preferring rules with temporary variables)
     // rules with temporary variables (sorted by their degree) third
     // rules without temporary variables (sorted by their degree) last
+    // if rules are equal wrt. the criteria above, prefer those with less constraints in the guard
     auto comp = [this, isTempVar](const TransIdx &fst, const TransIdx &snd) {
-        Expression fstCpxExp = its.getRule(fst).getCost().expand();
-        Expression sndCpxExp = its.getRule(snd).getCost().expand();
-        if (fstCpxExp == sndCpxExp) return false;
-        if (fstCpxExp.isNontermSymbol()) return true;
-        if (sndCpxExp.isNontermSymbol()) return false;
-        bool fstIsNonPoly = !fstCpxExp.isPolynomial();
-        bool sndIsNonPoly = !sndCpxExp.isPolynomial();
-        if (fstIsNonPoly > sndIsNonPoly) return true;
-        if (fstIsNonPoly < sndIsNonPoly) return false;
-        bool fstHasTmpVar = fstCpxExp.hasVariableWith(isTempVar);
-        bool sndHasTmpVar = sndCpxExp.hasVariableWith(isTempVar);
-        if (fstHasTmpVar > sndHasTmpVar) return true;
-        if (fstHasTmpVar < sndHasTmpVar) return false;
-        Complexity fstCpx = fstCpxExp.getComplexity();
-        Complexity sndCpx = sndCpxExp.getComplexity();
-        if (fstCpx > sndCpx) return true;
-        if (fstCpx < sndCpx) return false;
-        return false;
+        Rule fstRule = its.getRule(fst);
+        Rule sndRule = its.getRule(snd);
+        Expression fstCpxExp = fstRule.getCost().expand();
+        Expression sndCpxExp = sndRule.getCost().expand();
+        if (fstCpxExp != sndCpxExp) {
+            if (fstCpxExp.isNontermSymbol()) return true;
+            if (sndCpxExp.isNontermSymbol()) return false;
+            bool fstIsNonPoly = !fstCpxExp.isPolynomial();
+            bool sndIsNonPoly = !sndCpxExp.isPolynomial();
+            if (fstIsNonPoly > sndIsNonPoly) return true;
+            if (fstIsNonPoly < sndIsNonPoly) return false;
+            bool fstHasTmpVar = fstCpxExp.hasVariableWith(isTempVar);
+            bool sndHasTmpVar = sndCpxExp.hasVariableWith(isTempVar);
+            if (fstHasTmpVar > sndHasTmpVar) return true;
+            if (fstHasTmpVar < sndHasTmpVar) return false;
+            Complexity fstCpx = fstCpxExp.getComplexity();
+            Complexity sndCpx = sndCpxExp.getComplexity();
+            if (fstCpx > sndCpx) return true;
+            if (fstCpx < sndCpx) return false;
+        }
+        long fstGuardSize = fstRule.getGuard().size();
+        long sndGuardSize = sndRule.getGuard().size();
+        return fstGuardSize < sndGuardSize;
     };
 
     sort(todo.begin(), todo.end(), comp);
