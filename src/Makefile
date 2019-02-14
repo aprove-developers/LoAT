@@ -38,6 +38,7 @@ OBJECTS = \
   expr/complexity.o \
   z3/z3context.o \
   z3/z3toolbox.o \
+  z3/z3solver.o \
   strengthening/strengthening.o
 
 
