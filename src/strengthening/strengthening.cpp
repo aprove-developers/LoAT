@@ -138,23 +138,24 @@ namespace {
         return res;
     }
 
-    pair<z3::expr, vector<z3::expr>> constructSMTExpressions(
+    pair<vector<z3::expr>, vector<z3::expr>> constructSMTExpressions(
             const ExprSymbolSet &vars,
             Z3Context &context,
             const vector<Expression> &templates,
             const ExprSymbolSet &templateParams,
             const vector<GuardList> &preconditions,
             const GuardList &premise,
-            const GuardList &conclusion) {
-        z3::expr intExpr = FarkasLemma::apply(
+            const GuardList &conclusion,
+            const VariableManager &varMan) {
+        z3::expr validImplication = FarkasLemma::apply(
                 premise,
                 conclusion,
                 vars,
                 templateParams,
                 context,
                 Z3Context::Integer);
-        z3::expr_vector initiationValidVec(context);
-        z3::expr_vector initiationSatVec(context);
+        vector<z3::expr> soft;
+        z3::expr_vector someSat(context);
         for (const GuardList &g: preconditions) {
             z3::expr_vector gVec(context);
             for (const Expression &e: g) {
@@ -162,27 +163,37 @@ namespace {
             }
             for (const Expression &t: templates) {
                 vector<Expression> singleton(1, t);
-                initiationValidVec.push_back(FarkasLemma::apply(
+                soft.push_back(FarkasLemma::apply(
                         g,
                         singleton,
                         vars,
                         templateParams,
                         context,
                         Z3Context::Integer));
-                initiationSatVec.push_back(t.toZ3(context) && mk_and(gVec));
+            }
+            ExprSymbolSet gVars;
+            g.collectVariables(gVars);
+            for (Expression t: templates) {
+                ExprSymbolSet allVars(gVars);
+                t.collectVariables(allVars);
+                GiNaC::exmap varRenaming;
+                for (const ExprSymbol &x: allVars) {
+                    if (templateParams.count(x) == 0) {
+                        varRenaming[x] = varMan.getFreshUntrackedSymbol(x.get_name());
+                    }
+                }
+                z3::expr_vector gVecRenamed(context);
+                for (Expression e: g) {
+                    e.applySubs(varRenaming);
+                    gVecRenamed.push_back(e.toZ3(context));
+                }
+                t.applySubs(varRenaming);
+                z3::expr expr = t.toZ3(context) && mk_and(gVecRenamed);
+                soft.push_back(expr);
+                someSat.push_back(expr);
             }
         }
-        z3::expr initiationAllValid = mk_and(initiationValidVec);
-        z3::expr initiationSomeValid = mk_or(initiationValidVec);
-        z3::expr initiationAllSat = mk_and(initiationSatVec);
-        z3::expr initiationSomeSat = mk_or(initiationSatVec);
-        vector<z3::expr> res;
-        res.push_back(initiationAllValid);
-        res.push_back(initiationSomeValid && initiationAllSat);
-        res.push_back(initiationSomeValid);
-        res.push_back(initiationAllSat);
-        res.push_back(initiationSomeSat);
-        return pair<z3::expr, vector<z3::expr>>(intExpr, res);
+        return {{validImplication, z3::mk_or(someSat)}, soft};
     }
 
     bool addTemplateConstraints(
@@ -216,7 +227,7 @@ namespace {
         return linearTemplate;
     }
 
-    option<pair<z3::expr, vector<z3::expr>>> buildHardAndSoftConstraints(
+    option<pair<vector<z3::expr>, vector<z3::expr>>> buildHardAndSoftConstraints(
             const GuardList &todo,
             const GuardList &guard,
             const vector<GiNaC::exmap> &updates,
@@ -249,10 +260,11 @@ namespace {
                         templateParams,
                         preconditions,
                         premise,
-                        conclusion);
+                        conclusion,
+                        varMan);
             }
         }
-        return option<pair<z3::expr, vector<z3::expr>>>();
+        return {};
     }
 
     ExprSymbolSet findRelevantVariables(const VarMan &varMan, const Expression &c, const Rule &r) {
@@ -366,7 +378,7 @@ namespace {
             templateParams.insert(p.second.begin(), p.second.end());
         }
         GuardList relevantConstraints = findRelevantConstraints(r.getGuard(), allRelevantVariables);
-        optional<pair<z3::expr, vector<z3::expr>>> smtExpressions = buildHardAndSoftConstraints(
+        optional<pair<vector<z3::expr>, vector<z3::expr>>> smtExpressions = buildHardAndSoftConstraints(
                 todo,
                 relevantConstraints,
                 updates,
@@ -377,31 +389,20 @@ namespace {
                 templateParams,
                 preconditions);
         if (smtExpressions) {
-            z3::expr hard = smtExpressions.get().first;
+            vector<z3::expr> hard = smtExpressions.get().first;
             vector<z3::expr> soft = smtExpressions.get().second;
-            solver.add(hard);
-            z3::check_result res = solver.check();
-            if (res == z3::check_result::sat) {
-                for (const z3::expr &s: soft) {
-                    solver.push();
-                    solver.add(s);
-                    res = solver.check();
-                    if (res == z3::check_result::sat) {
-                        GuardList newInvariants = instantiateTemplates(
-                                templates,
-                                templateParams,
-                                varMan,
-                                solver.get_model(),
-                                context);
-
-                        for (const Expression &e: newInvariants) {
-                            debugInvariants("new invariant " << e);
-                        }
-                        return splitInitiallyValid(preconditions, newInvariants);
-                    } else {
-                        solver.pop();
-                    }
+            option<z3::model> model = solver.maxSMT(hard, soft);
+            if (model) {
+                GuardList newInvariants = instantiateTemplates(
+                        templates,
+                        templateParams,
+                        varMan,
+                        model.get(),
+                        context);
+                for (const Expression &e: newInvariants) {
+                    debugInvariants("new invariant " << e);
                 }
+                return splitInitiallyValid(preconditions, newInvariants);
             }
         }
         return pair<GuardList, GuardList>(GuardList(), GuardList());
