@@ -411,27 +411,34 @@ namespace {
     vector<GuardList> buildPreconditions(
             const vector<Rule> &predecessors,
             const Rule &r,
-            const VariableManager &varMan) {
+            VariableManager &varMan) {
         vector<GuardList> res;
+        GiNaC::exmap tmpVarRenaming;
+        for (const VariableIdx &i: varMan.getTempVars()) {
+            const ExprSymbol &x = varMan.getVarSymbol(i);
+            tmpVarRenaming[x] = varMan.getVarSymbol(varMan.addFreshVariable(x.get_name()));
+        }
         for (const Rule &pred: predecessors) {
             if (pred.getGuard() == r.getGuard()) {
                 continue;
             }
             for (const RuleRhs &rhs: pred.getRhss()) {
                 if (rhs.getLoc() == r.getLhsLoc()) {
-                    GiNaC::exmap up = rhs.getUpdate().toSubstitution(varMan);
+                    const GiNaC::exmap &up = rhs.getUpdate().toSubstitution(varMan);
                     GuardList pre;
                     for (Expression g: pred.getGuard()) {
                         g.applySubs(up);
+                        g.applySubs(tmpVarRenaming);
                         pre.push_back(g);
                     }
                     for (const auto &p: rhs.getUpdate()) {
-                        ExprSymbol var = varMan.getVarSymbol(p.first);
-                        Expression varUpdate = p.second;
+                        const ExprSymbol &var = varMan.getVarSymbol(p.first);
+                        const Expression &varUpdate = p.second;
                         Expression updatedVarUpdate = varUpdate;
                         updatedVarUpdate.applySubs(up);
                         if (varUpdate == updatedVarUpdate) {
-                            pre.push_back(var == varUpdate);
+                            updatedVarUpdate.applySubs(tmpVarRenaming);
+                            pre.push_back(var == updatedVarUpdate);
                         }
                     }
                     res.push_back(pre);
