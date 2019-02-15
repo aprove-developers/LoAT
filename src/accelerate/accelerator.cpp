@@ -266,9 +266,12 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
             set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
+            set<TransIdx> successorIndices = its.getTransitionsFrom(rule.getLhsLoc());
             vector<Rule> predecessors;
             for (const TransIdx &i: predecessorIndices) {
-                predecessors.push_back(its.getRule(i));
+                if (successorIndices.count(i) == 0) {
+                    predecessors.push_back(its.getRule(i));
+                }
             }
             stack<LinearRule> todo;
             todo.push(rule.toLinear());
