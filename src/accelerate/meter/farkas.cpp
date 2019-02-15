@@ -123,11 +123,6 @@ z3::expr FarkasLemma::apply(
         }
     }
     vector<ExprSymbol> varList(vars.begin(), vars.end());
-    if (!params.empty()) {
-        for (const Expression &p: premise) {
-            res.push_back(p.toZ3(context));
-        }
-    }
     vector<Expression> splitConclusion;
     for (const Expression &c: conclusion) {
         if (Relation::isLinearInequality(c, vars)) {

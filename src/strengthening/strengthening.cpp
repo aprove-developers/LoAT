@@ -377,9 +377,9 @@ namespace {
             const ExprSymbolSet &varSymbols = findRelevantVariables(varMan, g, r);
             allRelevantVariables.insert(varSymbols.begin(), varSymbols.end());
             const pair<Expression, ExprSymbolSet> &p = buildTemplate(varSymbols, varMan);
-            templates.push_back(p.first);
-                templateParams.insert(p.second.begin(), p.second.end());
-            }
+            templates.emplace_back(p.first <= 0);
+            templateParams.insert(p.second.begin(), p.second.end());
+        }
         const GuardList &relevantConstraints = findRelevantConstraints(r.getGuard(), allRelevantVariables);
         const optional<pair<vector<z3::expr>, vector<z3::expr>>> &smtExpressions = buildHardAndSoftConstraints(
                 todo,
