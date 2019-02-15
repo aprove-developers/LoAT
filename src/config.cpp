@@ -169,7 +169,7 @@ namespace Config {
         // Even if enabled, backward acceleration is only used if forward acceleration fails.
         bool UseBackwardAccel = true;
 
-        bool UseForwardAccel = true;
+        bool UseForwardAccel = false;
     }
 
     // Chaining and chaining strategies
