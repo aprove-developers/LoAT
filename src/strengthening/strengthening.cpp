@@ -146,7 +146,7 @@ namespace {
             const vector<GuardList> &preconditions,
             const GuardList &premise,
             const GuardList &conclusion,
-            const VariableManager &varMan) {
+            VariableManager &varMan) {
         z3::expr validImplication = FarkasLemma::apply(
                 premise,
                 conclusion,
@@ -179,7 +179,7 @@ namespace {
                 GiNaC::exmap varRenaming;
                 for (const ExprSymbol &x: allVars) {
                     if (templateParams.count(x) == 0) {
-                        varRenaming[x] = varMan.getFreshUntrackedSymbol(x.get_name());
+                        varRenaming[x] = varMan.getVarSymbol(varMan.addFreshVariable(x.get_name()));
                     }
                 }
                 z3::expr_vector gVecRenamed(context);
