@@ -10,7 +10,7 @@
 
 namespace Strengthening {
 
-    std::vector<Rule> apply(const std::vector<Rule> &predecessors, const Rule &r, VariableManager &varMan);
+    const std::vector<Rule> apply(const std::vector<Rule> &predecessors, const Rule &r, VariableManager &varMan);
 
 }
 
