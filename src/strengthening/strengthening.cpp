@@ -95,13 +95,12 @@ namespace {
         ExprSymbolSet params;
         const ExprSymbol &c0 = varMan.getVarSymbol(varMan.addFreshVariable("c0"));
         params.insert(c0);
-        Expression lhs = Expression(0);
+        Expression res = c0;
         for (const ExprSymbol &x: vars) {
             const ExprSymbol &param = varMan.getVarSymbol(varMan.addFreshVariable("c"));
             params.insert(param);
-            lhs = lhs + (x * param);
+            res = res + (x * param);
         }
-        const Expression &res = lhs <= c0;
         return {res, params};
     }
 
@@ -170,27 +169,31 @@ namespace {
                         context,
                         Z3Context::Integer));
             }
-            ExprSymbolSet gVars;
-            g.collectVariables(gVars);
-            for (Expression t: templates) {
-                ExprSymbolSet allVars(gVars);
-                t.collectVariables(allVars);
-                GiNaC::exmap varRenaming;
-                for (const ExprSymbol &x: allVars) {
-                    if (templateParams.count(x) == 0) {
-                        varRenaming[x] = varMan.getVarSymbol(varMan.addFreshVariable(x.get_name()));
-                    }
-                }
-                z3::expr_vector gVecRenamed(context);
-                for (Expression e: g) {
-                    e.applySubs(varRenaming);
-                    gVecRenamed.push_back(e.toZ3(context));
-                }
-                t.applySubs(varRenaming);
-                const z3::expr &expr = t.toZ3(context) && mk_and(gVecRenamed);
-                soft.push_back(expr);
-                someSat.push_back(expr);
+            ExprSymbolSet allVars(vars);
+            g.collectVariables(allVars);
+            for (const Expression &e: premise) {
+                e.collectVariables(allVars);
             }
+            GiNaC::exmap varRenaming;
+            for (const ExprSymbol &x: allVars) {
+                varRenaming[x] = varMan.getVarSymbol(varMan.addFreshVariable(x.get_name()));
+            }
+            z3::expr_vector renamed(context);
+            for (Expression e: g) {
+                e.applySubs(varRenaming);
+                renamed.push_back(e.toZ3(context));
+            }
+            for (Expression t: templates) {
+                t.applySubs(varRenaming);
+                renamed.push_back(t.toZ3(context));
+            }
+            for (Expression e: premise) {
+                e.applySubs(varRenaming);
+                renamed.push_back(e.toZ3(context));
+            }
+            const z3::expr &expr = mk_and(renamed);
+            soft.push_back(expr);
+            someSat.push_back(expr);
         }
         return {{validImplication, z3::mk_or(someSat)}, soft};
     }
@@ -375,8 +378,8 @@ namespace {
             allRelevantVariables.insert(varSymbols.begin(), varSymbols.end());
             const pair<Expression, ExprSymbolSet> &p = buildTemplate(varSymbols, varMan);
             templates.push_back(p.first);
-            templateParams.insert(p.second.begin(), p.second.end());
-        }
+                templateParams.insert(p.second.begin(), p.second.end());
+            }
         const GuardList &relevantConstraints = findRelevantConstraints(r.getGuard(), allRelevantVariables);
         const optional<pair<vector<z3::expr>, vector<z3::expr>>> &smtExpressions = buildHardAndSoftConstraints(
                 todo,
@@ -478,24 +481,24 @@ const vector<Rule> Strengthening::apply(
         const pair<GuardList, GuardList> &p3 = tryToForceInvariance(r, todo, preconditions, varMan);
         const GuardList &newInvariants = p3.first;
         const GuardList &newPseudoInvariants = p3.second;
-        GuardList newGuard(r.getGuard());
-        for (const Expression &g: newInvariants) {
-            newGuard.push_back(g);
-        }
         if (!newInvariants.empty() || !newPseudoInvariants.empty()) {
+            GuardList newGuard(r.getGuard());
+            for (const Expression &g: newInvariants) {
+                newGuard.push_back(g);
+            }
             GuardList pseudoInvariantsValid(newGuard);
             for (const Expression &g: newPseudoInvariants) {
                 pseudoInvariantsValid.push_back(g);
             }
             res.emplace_back(Rule(RuleLhs(r.getLhsLoc(), pseudoInvariantsValid, r.getCost()), r.getRhss()));
-        }
-        for (const Expression &e: newPseudoInvariants) {
-            GuardList pseudoInvariantInvalid(newGuard);
-            assert(Relation::isInequality(e));
-            const Expression &negated = Relation::negateLessEqInequality(Relation::toLessEq(e));
-            debugTest("deduced pseudo-invariant " << e << ", also trying " << negated);
-            pseudoInvariantInvalid.push_back(negated);
-            res.emplace_back(Rule(RuleLhs(r.getLhsLoc(), pseudoInvariantInvalid, r.getCost()), r.getRhss()));
+            for (const Expression &e: newPseudoInvariants) {
+                GuardList pseudoInvariantInvalid(newGuard);
+                assert(Relation::isInequality(e));
+                const Expression &negated = Relation::negateLessEqInequality(Relation::toLessEq(e));
+                debugTest("deduced pseudo-invariant " << e << ", also trying " << negated);
+                pseudoInvariantInvalid.push_back(negated);
+                res.emplace_back(Rule(RuleLhs(r.getLhsLoc(), pseudoInvariantInvalid, r.getCost()), r.getRhss()));
+            }
         }
     }
     return res;

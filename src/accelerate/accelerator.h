@@ -155,6 +155,8 @@ private:
 
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
     std::set<TransIdx> keepRules;
+
+    const std::vector<LinearRule> strengthenAndAccelerate(const Rule &rule) const;
 };
 
 #endif // ACCELERATE_H

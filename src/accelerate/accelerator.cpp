@@ -168,7 +168,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            vector<LinearRule> accelRules = BackwardAcceleration::accelerate(its, nestedRule);
+            const vector<LinearRule> &accelRules = Backward::accelerate(its, nestedRule);
             bool success = false;
             for (const LinearRule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost()).cpx;
@@ -250,6 +250,37 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 // ## Acceleration  ##
 // ###################
 
+const vector<LinearRule> Accelerator::strengthenAndAccelerate(const Rule &rule) const {
+    vector<LinearRule> res;
+    stack<LinearRule> todo;
+    todo.push(rule.toLinear());
+    set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
+    set<TransIdx> successorIndices = its.getTransitionsFrom(rule.getLhsLoc());
+    vector<Rule> predecessors;
+    for (const TransIdx &i: predecessorIndices) {
+        if (successorIndices.count(i) == 0) {
+            predecessors.push_back(its.getRule(i));
+        }
+    }
+    do {
+        LinearRule r = todo.top();
+        todo.pop();
+        vector<LinearRule> accelerated = Backward::accelerate(its, r);
+        if (accelerated.empty()) {
+            vector<Rule> strengthened = Strengthening::apply(predecessors, r, its);
+            for (const Rule &sr: strengthened) {
+                debugBackwardAccel("invariant inference yields " << sr);
+                todo.push(sr.toLinear());
+            }
+        } else {
+            for (const LinearRule &ar: accelerated) {
+                res.emplace_back(ar);
+            }
+        }
+    } while (!todo.empty());
+    return res;
+}
+
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
     Forward::Result res;
@@ -265,33 +296,13 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
-            set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
-            set<TransIdx> successorIndices = its.getTransitionsFrom(rule.getLhsLoc());
-            vector<Rule> predecessors;
-            for (const TransIdx &i: predecessorIndices) {
-                if (successorIndices.count(i) == 0) {
-                    predecessors.push_back(its.getRule(i));
-                }
+            const vector<LinearRule> &accelRules = strengthenAndAccelerate(rule);
+            if (!accelRules.empty()) {
+                res.result = Forward::Success;
             }
-            stack<LinearRule> todo;
-            todo.push(rule.toLinear());
-            do {
-                LinearRule r = todo.top();
-                todo.pop();
-                vector<LinearRule> accelerated = Backward::accelerate(its, r);
-                if (accelerated.empty()) {
-                    vector<Rule> strengthened = Strengthening::apply(predecessors, r, its);
-                    for (const Rule &sr: strengthened) {
-                        debugBackwardAccel("invariant inference yields " << sr);
-                        todo.push(sr.toLinear());
-                    }
-                } else {
-                    res.result = Forward::Success;
-                    for (const LinearRule &ar: accelerated) {
-                        res.rules.emplace_back("backward acceleration", ar);
-                    }
-                }
-            } while (!todo.empty());
+            for (const LinearRule &r: accelRules) {
+                res.rules.emplace_back("backward acceleration", r);
+            }
         }
     }
 
