@@ -21,3 +21,10 @@ src/koatToT2
 benchlog
 benchscores
 koat-examples
+
+#hidden files
+.*
+
+#build stuff
+cmake-build-debug
+nbproject
