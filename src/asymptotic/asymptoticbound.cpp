@@ -1103,6 +1103,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan &varMan,
                                                                     const GuardList &guard,
                                                                     const Expression &cost) {
+    proofout.setEnabled(false);
     Expression expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {

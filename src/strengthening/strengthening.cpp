@@ -14,6 +14,8 @@ using namespace std;
 
 namespace {
 
+    typedef pair<GuardList, GuardList> Implication;
+
     const pair<GuardList, GuardList> splitInvariants(
             const Rule &r,
             const VariableManager &varMan) {
@@ -137,22 +139,31 @@ namespace {
         return res;
     }
 
-    const pair<vector<z3::expr>, vector<z3::expr>> constructSMTExpressions(
+    const vector<z3::expr> constructZ3Implication(
             const ExprSymbolSet &vars,
             Z3Context &context,
             const vector<Expression> &templates,
             const ExprSymbolSet &templateParams,
-            const vector<GuardList> &preconditions,
             const GuardList &premise,
             const GuardList &conclusion,
             VariableManager &varMan) {
-        const z3::expr &validImplication = FarkasLemma::apply(
+        return FarkasLemma::apply(
                 premise,
                 conclusion,
                 vars,
                 templateParams,
                 context,
                 Z3Context::Integer);
+    }
+
+    const pair<z3::expr, vector<z3::expr>> constructZ3Initiation(
+            const ExprSymbolSet &vars,
+            Z3Context &context,
+            const vector<Expression> &templates,
+            const ExprSymbolSet &templateParams,
+            const vector<GuardList> &preconditions,
+            const GuardList &premise,
+            VariableManager &varMan) {
         vector<z3::expr> soft;
         z3::expr_vector someSat(context);
         for (const GuardList &g: preconditions) {
@@ -163,7 +174,7 @@ namespace {
             for (const Expression &t: templates) {
                 soft.push_back(FarkasLemma::apply(
                         g,
-                        {t},
+                        t,
                         vars,
                         templateParams,
                         context,
@@ -195,16 +206,15 @@ namespace {
             soft.push_back(expr);
             someSat.push_back(expr);
         }
-        return {{validImplication, z3::mk_or(someSat)}, soft};
+        return {z3::mk_or(someSat), soft};
     }
 
-    bool addTemplateConstraints(
+    Implication buildTemplatesInvariantImplication(
             const vector<GiNaC::exmap> &updates,
             const ExprSymbolSet &vars,
-            const vector<Expression> &templates,
-            GuardList &premise,
-            GuardList &conclusion) {
-        bool linearTemplate = false;
+            const vector<Expression> &templates) {
+        GuardList premise;
+        GuardList conclusion;
         for (const Expression &invTemplate: templates) {
                 bool linear = true;
                 GuardList updatedTemplates;
@@ -219,14 +229,13 @@ namespace {
                     }
                 }
                 if (linear) {
-                    linearTemplate = true;
                     premise.push_back(invTemplate);
                     for (const Expression &t: updatedTemplates) {
                         conclusion.push_back(t);
                     }
                 }
             }
-        return linearTemplate;
+        return {premise, conclusion};
     }
 
     const option<pair<vector<z3::expr>, vector<z3::expr>>> buildHardAndSoftConstraints(
@@ -254,16 +263,53 @@ namespace {
             }
         }
         if (!conclusion.empty()) {
-            if (addTemplateConstraints(updates, vars, templates, premise, conclusion)) {
-                return constructSMTExpressions(
+            const pair<GuardList, GuardList> &p = buildTemplatesInvariantImplication(updates, vars, templates);
+            const GuardList &templatePremise = p.first;
+            if (!templatePremise.empty()) {
+                vector<z3::expr> hard;
+                vector<z3::expr> soft;
+                const pair<z3::expr, vector<z3::expr>> &initiation = constructZ3Initiation(
                         vars,
                         context,
                         templates,
                         templateParams,
                         preconditions,
                         premise,
+                        varMan);
+                for (const z3::expr &e: initiation.second) {
+                    soft.push_back(e);
+                }
+                hard.push_back(initiation.first);
+                for (const Expression &e: templatePremise) {
+                    premise.push_back(e);
+                }
+                const GuardList &templateConclusion = p.second;
+                const vector<z3::expr> templatesInvariant = constructZ3Implication(
+                        vars,
+                        context,
+                        templates,
+                        templateParams,
+                        premise,
+                        templateConclusion,
+                        varMan);
+                for (const z3::expr &e: templatesInvariant) {
+                    hard.push_back(e);
+                }
+                const vector<z3::expr> &conclusionInvariant = constructZ3Implication(
+                        vars,
+                        context,
+                        templates,
+                        templateParams,
+                        premise,
                         conclusion,
                         varMan);
+                z3::expr_vector v(context);
+                for (const z3::expr &e: conclusionInvariant) {
+                    v.push_back(e);
+                    // soft.push_back(e);
+                }
+                hard.push_back(z3::mk_and(v));
+                return {{hard, soft}};
             }
         }
         return {};

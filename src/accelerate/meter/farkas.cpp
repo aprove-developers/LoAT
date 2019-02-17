@@ -105,14 +105,14 @@ z3::expr FarkasLemma::apply(
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
-z3::expr FarkasLemma::apply(
+vector<z3::expr> FarkasLemma::apply(
         const vector<Expression> &premise,
         const vector<Expression> &conclusion,
         const ExprSymbolSet &vars,
         const ExprSymbolSet &params,
         Z3Context &context,
         const Z3Context::VariableType &lambdaType) {
-    z3::expr_vector res(context);
+    vector<z3::expr> res;
     vector<Expression> normalizedPremise;
     for (const Expression &p: premise) {
         if (Relation::isLinearInequality(p, vars)) {
@@ -143,5 +143,21 @@ z3::expr FarkasLemma::apply(
         z3::expr c0 = -Expression(normalized.rhs()).toZ3(context);
         res.push_back(FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, context, params, lambdaType));
     }
-    return z3::mk_and(res);
+    return res;
+}
+
+z3::expr FarkasLemma::apply(
+        const vector<Expression> &premise,
+        const Expression &conclusion,
+        const ExprSymbolSet &vars,
+        const ExprSymbolSet &params,
+        Z3Context &context,
+        const Z3Context::VariableType &lambdaType) {
+    const vector<Expression> &conclusions = {conclusion};
+    const vector<z3::expr> &v = apply(premise, conclusions, vars, params, context, lambdaType);
+    z3::expr_vector z3v(context);
+    for (const z3::expr &e: v) {
+        z3v.push_back(e);
+    }
+    return z3::mk_and(z3v);
 }
