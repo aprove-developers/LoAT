@@ -36,8 +36,8 @@
 #include "backward.h"
 
 #include <queue>
-#include <strengthening/strengthening.h>
 #include <asymptotic/asymptoticbound.h>
+#include <strengthening/strengthening.h>
 
 
 using namespace std;
@@ -254,20 +254,12 @@ const vector<LinearRule> Accelerator::strengthenAndAccelerate(const Rule &rule) 
     vector<LinearRule> res;
     stack<LinearRule> todo;
     todo.push(rule.toLinear());
-    set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
-    set<TransIdx> successorIndices = its.getTransitionsFrom(rule.getLhsLoc());
-    vector<Rule> predecessors;
-    for (const TransIdx &i: predecessorIndices) {
-        if (successorIndices.count(i) == 0) {
-            predecessors.push_back(its.getRule(i));
-        }
-    }
     do {
         LinearRule r = todo.top();
         todo.pop();
         vector<LinearRule> accelerated = Backward::accelerate(its, r);
         if (accelerated.empty()) {
-            vector<Rule> strengthened = Strengthening::apply(predecessors, r, its);
+            vector<Rule> strengthened = Strengthening::apply(r, its);
             for (const Rule &sr: strengthened) {
                 debugBackwardAccel("invariant inference yields " << sr);
                 todo.push(sr.toLinear());

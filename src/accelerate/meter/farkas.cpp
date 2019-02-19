@@ -105,7 +105,7 @@ z3::expr FarkasLemma::apply(
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }
 
-vector<z3::expr> FarkasLemma::apply(
+const vector<z3::expr> FarkasLemma::apply(
         const vector<Expression> &premise,
         const vector<Expression> &conclusion,
         const ExprSymbolSet &vars,
@@ -146,7 +146,7 @@ vector<z3::expr> FarkasLemma::apply(
     return res;
 }
 
-z3::expr FarkasLemma::apply(
+const z3::expr FarkasLemma::apply(
         const vector<Expression> &premise,
         const Expression &conclusion,
         const ExprSymbolSet &vars,
