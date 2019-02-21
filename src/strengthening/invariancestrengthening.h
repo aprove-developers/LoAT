@@ -7,7 +7,7 @@
 
 #include <its/rule.h>
 #include <its/variablemanager.h>
-#include "StrengtheningTypes.h"
+#include "strengtheningtypes.h"
 
 class InvarianceStrengthening {
 
@@ -38,13 +38,15 @@ private:
             VariableManager &varMan
     );
 
+    const z3::expr_vector toZ3(const std::vector<z3::expr> &v) const;
+
     const option<Types::Invariants> apply();
 
-    const option<Types::SMTConstraints> buildSMTConstraints() const;
+    const option<Types::AllSMTConstraints> buildSMTConstraints() const;
 
     const Types::Implication buildTemplatesInvariantImplication() const;
 
-    const Types::SMTConstraints constructZ3Initiation(const GuardList &premise) const;
+    const Types::Initiation constructZ3Initiation(const GuardList &premise) const;
 
     const std::vector<z3::expr> constructZ3Implication(const GuardList &premise, const GuardList &conclusion) const;
 

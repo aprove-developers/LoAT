@@ -27,4 +27,6 @@ koat-examples
 
 #build stuff
 cmake-build-debug
-nbproject
+build
+build-static
+bundle

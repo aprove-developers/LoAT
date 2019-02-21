@@ -109,6 +109,7 @@ add_executable(${EXECUTABLE}
         src/z3/z3context.cpp
         src/z3/z3context.h
         src/z3/z3solver.h
+        src/z3/z3solver.cpp
         src/z3/z3toolbox.cpp
         src/z3/z3toolbox.h
         src/config.cpp
@@ -116,12 +117,11 @@ add_executable(${EXECUTABLE}
         src/debug.h
         src/global.cpp
         src/global.h
-        src/main.cpp src/strengthening/invarianceStrengthening.cpp
-        src/strengthening/invarianceStrengthening.h
-        src/z3/z3solver.cpp
+        src/main.cpp src/strengthening/invariancestrengthening.cpp
+        src/strengthening/invariancestrengthening.h
         src/strengthening/strengthening.cpp
         src/strengthening/strengthening.h
-        src/strengthening/StrengtheningTypes.h)
+        src/strengthening/strengtheningtypes.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

@@ -10,8 +10,8 @@
 #include <its/rule.h>
 #include <its/variablemanager.h>
 #include <its/itsproblem.h>
-#include "StrengtheningTypes.h"
-#include "invarianceStrengthening.h"
+#include "strengtheningtypes.h"
+#include "invariancestrengthening.h"
 
 class Strengthening {
 

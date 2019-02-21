@@ -44,6 +44,27 @@ private:
         std::vector<z3::expr> soft;
     };
 
+    struct Initiation {
+        std::vector<z3::expr> valid;
+        std::vector<z3::expr> satisfiable;
+    };
+
+    struct AllSMTConstraints {
+
+        AllSMTConstraints(
+                Initiation initiation,
+                std::vector<z3::expr> templatesInvariant,
+                std::vector<z3::expr> conclusionsInvariant):
+                initiation(std::move(initiation)),
+                templatesInvariant(std::move(templatesInvariant)),
+                conclusionsInvariant(std::move(conclusionsInvariant)) { }
+
+        const Initiation initiation;
+        const std::vector<z3::expr> templatesInvariant;
+        const std::vector<z3::expr> conclusionsInvariant;
+
+    };
+
 };
 
 

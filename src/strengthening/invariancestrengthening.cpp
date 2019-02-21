@@ -4,7 +4,7 @@
 
 #include <expr/relation.h>
 #include <accelerate/meter/farkas.h>
-#include "invarianceStrengthening.h"
+#include "invariancestrengthening.h"
 #include <z3/z3solver.h>
 #include <z3/z3toolbox.h>
 
@@ -30,8 +30,16 @@ Self::InvarianceStrengthening(
    varMan(varMan),
    z3Context(new Z3Context()){ }
 
+const z3::expr_vector Self::toZ3(const std::vector<z3::expr> &v) const {
+    z3::expr_vector res(*z3Context);
+    for (const z3::expr &e: v) {
+        res.push_back(e);
+    }
+    return res;
+}
+
 const option<Types::Invariants> Self::apply() {
-    const option<Types::SMTConstraints> &smtConstraints = buildSMTConstraints();
+    const option<Types::AllSMTConstraints> &smtConstraints = buildSMTConstraints();
     if (smtConstraints) {
         return solve(smtConstraints.get());
     } else {
@@ -39,7 +47,7 @@ const option<Types::Invariants> Self::apply() {
     }
 }
 
-const option<Types::SMTConstraints> Self::buildSMTConstraints() const {
+const option<Types::AllSMTConstraints> Self::buildSMTConstraints() const {
     GuardList premise;
     GuardList conclusion;
     for (const Expression &e: relevantConstraints) {
@@ -57,31 +65,15 @@ const option<Types::SMTConstraints> Self::buildSMTConstraints() const {
     if (!conclusion.empty()) {
         const Types::Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
         if (!templatesInvariantImplication.premise.empty()) {
-            Types::SMTConstraints res;
-            const Types::SMTConstraints &initiation = constructZ3Initiation(premise);
-            for (const z3::expr &e: initiation.soft) {
-                res.soft.push_back(e);
-            }
-            for (const z3::expr &e: initiation.hard) {
-                res.hard.push_back(e);
-            }
+            const Types::Initiation &initiation = constructZ3Initiation(premise);
             for (const Expression &e: templatesInvariantImplication.premise) {
                 premise.push_back(e);
             }
             const std::vector<z3::expr> templatesInvariant = constructZ3Implication(
                     premise,
                     templatesInvariantImplication.conclusion);
-            for (const z3::expr &e: templatesInvariant) {
-                res.hard.push_back(e);
-            }
             const std::vector<z3::expr> &conclusionInvariant = constructZ3Implication(premise, conclusion);
-            z3::expr_vector v(*z3Context);
-            for (const z3::expr &e: conclusionInvariant) {
-                v.push_back(e);
-                res.soft.push_back(e);
-            }
-            res.hard.push_back(z3::mk_or(v));
-            return res;
+            return Types::AllSMTConstraints(initiation, templatesInvariant, conclusionInvariant);
         }
     }
     return {};
@@ -112,16 +104,15 @@ const Types::Implication Self::buildTemplatesInvariantImplication() const {
     return res;
 }
 
-const Types::SMTConstraints Self::constructZ3Initiation(const GuardList &premise) const {
-    Types::SMTConstraints res;
-    z3::expr_vector someSat(*z3Context);
+const Types::Initiation Self::constructZ3Initiation(const GuardList &premise) const {
+    Types::Initiation res;
     for (const GuardList &pre: preconditions) {
         z3::expr_vector gVec(*z3Context);
         for (const Expression &e: pre) {
             gVec.push_back(e.toZ3(*z3Context));
         }
         for (const Expression &t: templates) {
-            res.soft.push_back(FarkasLemma::apply(
+            res.valid.push_back(FarkasLemma::apply(
                     pre,
                     t,
                     relevantVars,
@@ -155,10 +146,8 @@ const Types::SMTConstraints Self::constructZ3Initiation(const GuardList &premise
             renamed.push_back(e.toZ3(*z3Context));
         }
         const z3::expr &expr = mk_and(renamed);
-        res.soft.push_back(expr);
-        someSat.push_back(expr);
+        res.satisfiable.push_back(expr);
     }
-    res.hard.push_back(z3::mk_or(someSat));
     return res;
 }
 
