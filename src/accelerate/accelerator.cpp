@@ -37,7 +37,7 @@
 
 #include <queue>
 #include <asymptotic/asymptoticbound.h>
-#include <strengthening/strengthening.h>
+#include <strengthening/strengthener.h>
 
 
 using namespace std;
@@ -259,7 +259,7 @@ const vector<LinearRule> Accelerator::strengthenAndAccelerate(const Rule &rule) 
         todo.pop();
         vector<LinearRule> accelerated = Backward::accelerate(its, r);
         if (accelerated.empty()) {
-            vector<Rule> strengthened = Strengthening::apply(r, its);
+            vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
             for (const Rule &sr: strengthened) {
                 debugBackwardAccel("invariant inference yields " << sr);
                 todo.push(sr.toLinear());

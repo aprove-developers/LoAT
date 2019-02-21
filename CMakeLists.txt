@@ -117,13 +117,13 @@ add_executable(${EXECUTABLE}
         src/debug.h
         src/global.cpp
         src/global.h
-        src/main.cpp src/strengthening/invariancestrengthening.cpp
-        src/strengthening/invariancestrengthening.h
-        src/strengthening/strengthening.cpp
-        src/strengthening/strengthening.h
-        src/strengthening/strengtheningtypes.h
-        src/strengthening/strengtheningmode.cpp
-        src/strengthening/strengtheningmode.h)
+        src/main.cpp src/strengthening/constraintbuilder.cpp
+        src/strengthening/constraintbuilder.h
+        src/strengthening/strengthener.cpp
+        src/strengthening/strengthener.h
+        src/strengthening/types.h
+        src/strengthening/modes.cpp
+        src/strengthening/modes.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
