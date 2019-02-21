@@ -18,7 +18,9 @@ Self::InvarianceStrengthening(
         const ExprSymbolSet &relevantVars,
         const std::vector<GiNaC::exmap> &updates,
         const std::vector<GuardList> &preconditions,
+        const GuardList &invariants,
         const GuardList &todo,
+        const StrengtheningMode::Mode &mode,
         VariableManager &varMan
 ): templates(templates),
    templateParams(templateParams),
@@ -26,57 +28,70 @@ Self::InvarianceStrengthening(
    relevantVars(relevantVars),
    updates(updates),
    preconditions(preconditions),
+   invariants(invariants),
    todo(todo),
+   mode(mode),
    varMan(varMan),
-   z3Context(new Z3Context()){ }
-
-const z3::expr_vector Self::toZ3(const std::vector<z3::expr> &v) const {
-    z3::expr_vector res(*z3Context);
-    for (const z3::expr &e: v) {
-        res.push_back(e);
-    }
-    return res;
+   z3Context(new Z3Context()){
 }
 
 const option<Types::Invariants> Self::apply() {
-    const option<Types::AllSMTConstraints> &smtConstraints = buildSMTConstraints();
-    if (smtConstraints) {
-        return solve(smtConstraints.get());
-    } else {
+    const Types::SmtConstraints &smtConstraints = buildSMTConstraints();
+    Types::MaxSmtConstraints maxSmtConstraints = mode(smtConstraints, *z3Context);
+    if (maxSmtConstraints.hard.empty()) {
         return {};
+    } else {
+        return solve(maxSmtConstraints);
     }
 }
 
-const option<Types::AllSMTConstraints> Self::buildSMTConstraints() const {
-    GuardList premise;
-    GuardList conclusion;
-    for (const Expression &e: relevantConstraints) {
-        premise.push_back(e);
-    }
-    for (const Expression &g: todo) {
+const Types::SmtConstraints Self::buildSMTConstraints() const {
+    GuardList invariancePremise;
+    GuardList invarianceConclusion;
+    GuardList monotonicityPremise;
+    GuardList monotonicityConclusion;
+    invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
+    for (const Expression &e: todo) {
         for (const GiNaC::exmap &up: updates) {
-            Expression updated = g;
+            Expression updated = e;
             updated.applySubs(up);
             if (Relation::isLinearInequality(updated, relevantVars)) {
-                conclusion.push_back(updated);
+                invarianceConclusion.push_back(updated);
             }
         }
     }
-    if (!conclusion.empty()) {
-        const Types::Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
-        if (!templatesInvariantImplication.premise.empty()) {
-            const Types::Initiation &initiation = constructZ3Initiation(premise);
-            for (const Expression &e: templatesInvariantImplication.premise) {
-                premise.push_back(e);
-            }
-            const std::vector<z3::expr> templatesInvariant = constructZ3Implication(
-                    premise,
-                    templatesInvariantImplication.conclusion);
-            const std::vector<z3::expr> &conclusionInvariant = constructZ3Implication(premise, conclusion);
-            return Types::AllSMTConstraints(initiation, templatesInvariant, conclusionInvariant);
+    for (const Expression &e: relevantConstraints) {
+        for (const GiNaC::exmap &up: updates) {
+            Expression updated = e;
+            updated.applySubs(up);
+            monotonicityPremise.push_back(updated);
         }
     }
-    return {};
+    for (const Expression &e: templates) {
+        for (const GiNaC::exmap &up: updates) {
+            Expression updated = e;
+            updated.applySubs(up);
+            monotonicityPremise.push_back(updated);
+        }
+    }
+    monotonicityPremise.insert(monotonicityPremise.begin(), templates.begin(), templates.end());
+    monotonicityPremise.insert(monotonicityPremise.begin(), invariants.begin(), invariants.end());
+    for (const Expression &e: todo) {
+        if (Relation::isLinearInequality(e, relevantVars)) {
+            monotonicityConclusion.push_back(e);
+        }
+    }
+    const Types::Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
+    // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication discards
+    // templates that become non-linear when applying the update.
+    invariancePremise.insert(invariancePremise.begin(), templatesInvariantImplication.premise.begin(), templatesInvariantImplication.premise.end());
+    const Types::Initiation &initiation = constructZ3Initiation(relevantConstraints);
+    const std::vector<z3::expr> templatesInvariant = constructZ3Implication(
+            invariancePremise,
+            templatesInvariantImplication.conclusion);
+    const std::vector<z3::expr> &conclusionInvariant = constructZ3Implication(invariancePremise, invarianceConclusion);
+    const std::vector<z3::expr> &conclusionMonotonic = constructZ3Implication(monotonicityPremise, monotonicityConclusion);
+    return Types::SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
 }
 
 const Types::Implication Self::buildTemplatesInvariantImplication() const {
@@ -163,9 +178,9 @@ const std::vector<z3::expr> Self::constructZ3Implication(
             Z3Context::Integer);
 }
 
-const option<Types::Invariants> Self::solve(const Types::SMTConstraints &smtConstraints) const {
+const option<Types::Invariants> Self::solve(const Types::MaxSmtConstraints &constraints) const {
     Z3Solver solver(*z3Context);
-    const option<z3::model> &model = solver.maxSMT(smtConstraints.hard, smtConstraints.soft);
+    const option<z3::model> &model = solver.maxSmt(constraints.hard, constraints.soft);
     if (model) {
         const GuardList &newInvariants = instantiateTemplates(model.get());
         if (!newInvariants.empty()) {

@@ -11,7 +11,25 @@ typedef StrengtheningTypes Types;
 typedef Strengthening Self;
 
 const std::vector<Rule> Self::apply(const Rule &r, ITSProblem &its) {
-    return Strengthening(r, its).apply();
+    std::stack<Rule> todo;
+    todo.push(r);
+    std::vector<Rule> res;
+    while (!todo.empty()) {
+        const Rule &current = todo.top();
+        const Strengthening &strengthener = Strengthening(current, its);
+        std::vector<Rule> strong(strengthener.apply(StrengtheningMode::invariance));
+        if (strong.empty()) {
+            strong = strengthener.apply(StrengtheningMode::pseudoInvariance);
+            if (strong.empty() && current.getGuard() != r.getGuard()) {
+                res.push_back(current);
+            }
+        }
+        todo.pop();
+        for (const Rule &s: strong) {
+            todo.push(s);
+        }
+    }
+    return res;
 }
 
 Self::Strengthening(const Rule &r, ITSProblem &its):
@@ -37,7 +55,7 @@ const std::vector<GiNaC::exmap> Self::computeUpdates(const Rule &r, VariableMana
     return res;
 }
 
-const std::vector<Rule> Self::apply() const {
+const std::vector<Rule> Self::apply(const StrengtheningMode::Mode &mode) const {
     std::vector<Rule> res;
     if (r.isSimpleLoop()) {
         GuardList constraints;
@@ -53,7 +71,7 @@ const std::vector<Rule> Self::apply() const {
         const Types::Result mon = splitMonotonicConstraints(inv.solved, inv.failed);
         if (!mon.failed.empty()) {
             const std::vector<GuardList> &preconditions = buildPreconditions();
-            const option<Types::Invariants> &newInv = tryToForceInvariance(mon.failed, preconditions);
+            const option<Types::Invariants> &newInv = tryToForceInvariance(inv.solved, mon.failed, preconditions, mode);
             if (newInv) {
                 GuardList newGuard(r.getGuard());
                 for (const Expression &g: newInv.get().invariants) {
@@ -119,7 +137,7 @@ const Types::Result Self::splitMonotonicConstraints(
     }
     Types::Result res;
     for (const Expression &e: nonInvariants) {
-        res.failed.push_back(e);
+        res.solved.push_back(e);
     }
     for (const GiNaC::exmap &up: updates) {
         solver.push();
@@ -253,8 +271,10 @@ const Types::Template Self::buildTemplate(const ExprSymbolSet &vars) const {
 }
 
 const option<Types::Invariants> Self::tryToForceInvariance(
+        const GuardList &invariants,
         const GuardList &todo,
-        const std::vector<GuardList> &preconditions) const {
+        const std::vector<GuardList> &preconditions,
+        const StrengtheningMode::Mode &mode) const {
     Z3Context context;
     ExprSymbolSet allRelevantVariables;
     std::vector<Expression> templates;
@@ -274,6 +294,8 @@ const option<Types::Invariants> Self::tryToForceInvariance(
             allRelevantVariables,
             updates,
             preconditions,
+            invariants,
             todo,
+            mode,
             varMan).apply();
 }

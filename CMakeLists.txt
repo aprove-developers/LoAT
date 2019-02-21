@@ -121,7 +121,9 @@ add_executable(${EXECUTABLE}
         src/strengthening/invariancestrengthening.h
         src/strengthening/strengthening.cpp
         src/strengthening/strengthening.h
-        src/strengthening/strengtheningtypes.h)
+        src/strengthening/strengtheningtypes.h
+        src/strengthening/strengtheningmode.cpp
+        src/strengthening/strengtheningmode.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

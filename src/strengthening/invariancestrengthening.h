@@ -8,6 +8,7 @@
 #include <its/rule.h>
 #include <its/variablemanager.h>
 #include "strengtheningtypes.h"
+#include "strengtheningmode.h"
 
 class InvarianceStrengthening {
 
@@ -23,7 +24,9 @@ private:
     const ExprSymbolSet &relevantVars;
     const std::vector<GiNaC::exmap> &updates;
     const std::vector<GuardList> &preconditions;
+    const GuardList &invariants;
     const GuardList todo;
+    const StrengtheningMode::Mode mode;
     VariableManager &varMan;
     std::unique_ptr<Z3Context> z3Context;
 
@@ -34,15 +37,15 @@ private:
             const ExprSymbolSet &relevantVars,
             const std::vector<GiNaC::exmap> &updates,
             const std::vector<GuardList> &preconditions,
+            const GuardList &invariants,
             const GuardList &todo,
+            const StrengtheningMode::Mode &mode,
             VariableManager &varMan
     );
 
-    const z3::expr_vector toZ3(const std::vector<z3::expr> &v) const;
-
     const option<Types::Invariants> apply();
 
-    const option<Types::AllSMTConstraints> buildSMTConstraints() const;
+    const Types::SmtConstraints buildSMTConstraints() const;
 
     const Types::Implication buildTemplatesInvariantImplication() const;
 
@@ -50,7 +53,7 @@ private:
 
     const std::vector<z3::expr> constructZ3Implication(const GuardList &premise, const GuardList &conclusion) const;
 
-    const option<Types::Invariants> solve(const Types::SMTConstraints &smtConstraints) const;
+    const option<Types::Invariants> solve(const Types::MaxSmtConstraints &constraints) const;
 
     const GuardList instantiateTemplates(const z3::model &model) const;
 

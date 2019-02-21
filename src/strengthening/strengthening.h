@@ -34,7 +34,7 @@ private:
 
     static const std::vector<GiNaC::exmap> computeUpdates(const Rule &r, VariableManager &varMan);
 
-    const std::vector<Rule> apply() const;
+    const std::vector<Rule> apply(const StrengtheningMode::Mode &mode) const;
 
     const Types::Result splitInvariants(const GuardList &constraints) const;
 
@@ -49,8 +49,10 @@ private:
     const Types::Template buildTemplate(const ExprSymbolSet &vars) const;
 
     const option<Types::Invariants> tryToForceInvariance(
+            const GuardList &invariants,
             const GuardList &todo,
-            const std::vector<GuardList> &preconditions) const;
+            const std::vector<GuardList> &preconditions,
+            const StrengtheningMode::Mode &mode) const;
 
 };
 

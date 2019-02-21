@@ -12,6 +12,7 @@ class StrengtheningTypes {
 
     friend class InvarianceStrengthening;
     friend class Strengthening;
+    friend class StrengtheningMode;
 
 private:
 
@@ -39,7 +40,7 @@ private:
 
     };
 
-    struct SMTConstraints {
+    struct MaxSmtConstraints {
         std::vector<z3::expr> hard;
         std::vector<z3::expr> soft;
     };
@@ -49,19 +50,22 @@ private:
         std::vector<z3::expr> satisfiable;
     };
 
-    struct AllSMTConstraints {
+    struct SmtConstraints {
 
-        AllSMTConstraints(
+        SmtConstraints(
                 Initiation initiation,
                 std::vector<z3::expr> templatesInvariant,
-                std::vector<z3::expr> conclusionsInvariant):
+                std::vector<z3::expr> conclusionsInvariant,
+                std::vector<z3::expr> conclusionsMonotonic):
                 initiation(std::move(initiation)),
                 templatesInvariant(std::move(templatesInvariant)),
-                conclusionsInvariant(std::move(conclusionsInvariant)) { }
+                conclusionsInvariant(std::move(conclusionsInvariant)),
+                conclusionsMonotonic(std::move(conclusionsMonotonic)){ }
 
         const Initiation initiation;
         const std::vector<z3::expr> templatesInvariant;
         const std::vector<z3::expr> conclusionsInvariant;
+        const std::vector<z3::expr> conclusionsMonotonic;
 
     };
 

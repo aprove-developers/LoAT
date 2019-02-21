@@ -52,7 +52,7 @@ public:
         Timing::done(Timing::Z3);
     }
 
-    option<z3::model> maxSMT(std::vector<z3::expr> hard, std::vector<z3::expr> soft);
+    option<z3::model> maxSmt(std::vector<z3::expr> hard, std::vector<z3::expr> soft);
 
 private:
     Z3Context &ctx;
