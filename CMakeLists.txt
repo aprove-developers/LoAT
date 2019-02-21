@@ -123,7 +123,15 @@ add_executable(${EXECUTABLE}
         src/strengthening/strengthener.h
         src/strengthening/types.h
         src/strengthening/modes.cpp
-        src/strengthening/modes.h)
+        src/strengthening/modes.h
+        src/strengthening/templatebuilder.cpp
+        src/strengthening/templatebuilder.h
+        src/strengthening/templates.cpp
+        src/strengthening/templates.h
+        src/strengthening/constraintsolver.cpp
+        src/strengthening/constraintsolver.h
+        src/strengthening/setup.cpp
+        src/strengthening/setup.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
