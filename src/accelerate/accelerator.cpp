@@ -272,7 +272,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         }
     } while (!todo.empty());
     if (res.rules.empty()) {
-        res.result = Forward::TooComplicated;
+        res.result = Forward::NoMetering;
     }
     return res;
 }
