@@ -9,13 +9,11 @@ namespace strengthening {
 
     typedef Modes Self;
 
-    const MaxSmtConstraints Self::invariance(const SmtConstraints &constraints, Z3Context &context) {
+    const MaxSmtConstraints Self::invariance(const SmtConstraints &constraints, Z3Context &z3Ctx) {
         MaxSmtConstraints res;
         res.hard.insert(res.hard.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
-        for (const z3::expr &e: constraints.initiation.satisfiable) {
-            res.hard.push_back(e);
-        }
-        z3::expr_vector someConclusionInvariant(context);
+        res.hard.insert(res.hard.end(), constraints.initiation.satisfiable.begin(), constraints.initiation.satisfiable.end());
+        z3::expr_vector someConclusionInvariant(z3Ctx);
         for (const z3::expr &e: constraints.conclusionsInvariant) {
             res.soft.push_back(e);
             someConclusionInvariant.push_back(e);
@@ -25,16 +23,15 @@ namespace strengthening {
         return res;
     }
 
-    const MaxSmtConstraints
-    Self::pseudoInvariance(const SmtConstraints &constraints, Z3Context &context) {
+    const MaxSmtConstraints Self::pseudoInvariance(const SmtConstraints &constraints, Z3Context &z3Ctx) {
         MaxSmtConstraints res;
-        z3::expr_vector satisfiableForSomePredecessor(context);
+        z3::expr_vector satisfiableForSomePredecessor(z3Ctx);
         for (const z3::expr &e: constraints.initiation.satisfiable) {
             satisfiableForSomePredecessor.push_back(e);
         }
         res.hard.push_back(z3::mk_or(satisfiableForSomePredecessor));
         res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
-        z3::expr_vector someConclusionInvariant(context);
+        z3::expr_vector someConclusionInvariant(z3Ctx);
         for (const z3::expr &e: constraints.conclusionsInvariant) {
             res.soft.push_back(e);
             someConclusionInvariant.push_back(e);
@@ -44,10 +41,10 @@ namespace strengthening {
         return res;
     }
 
-    const MaxSmtConstraints Self::monotonicity(const SmtConstraints &constraints, Z3Context &context) {
+    const MaxSmtConstraints Self::monotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx) {
         MaxSmtConstraints res;
         res.hard.insert(res.hard.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
-        z3::expr_vector someConclusionMonotonic(context);
+        z3::expr_vector someConclusionMonotonic(z3Ctx);
         for (const z3::expr &e: constraints.conclusionsMonotonic) {
             res.soft.push_back(e);
             someConclusionMonotonic.push_back(e);
@@ -57,8 +54,7 @@ namespace strengthening {
         return res;
     }
 
-    const MaxSmtConstraints
-    Self::pseudoMonotonicity(const SmtConstraints &constraints, Z3Context &context) {
+    const MaxSmtConstraints Self::pseudoMonotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx) {
         MaxSmtConstraints res;
         res.hard.insert(
                 res.hard.end(),
@@ -68,7 +64,7 @@ namespace strengthening {
                 res.soft.end(),
                 constraints.initiation.valid.begin(),
                 constraints.initiation.valid.end());
-        z3::expr_vector someConclusionMonotonic(context);
+        z3::expr_vector someConclusionMonotonic(z3Ctx);
         for (const z3::expr &e: constraints.conclusionsMonotonic) {
             res.soft.push_back(e);
             someConclusionMonotonic.push_back(e);

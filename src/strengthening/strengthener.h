@@ -23,17 +23,11 @@ namespace strengthening {
 
     private:
 
-        const Context &context;
+        const RuleContext &ruleCtx;
 
-        explicit Strengthener(const Context &context);
+        explicit Strengthener(const RuleContext &ruleCtx);
 
-        const std::vector<Rule> apply(const Mode &mode) const;
-
-        const SmtConstraints buildSmtConstraints(
-                const Templates &templates,
-                Z3Context &context) const;
-
-        const GuardList findRelevantConstraints(const GuardList &guard, const ExprSymbolSet &vars) const;
+        const std::vector<GuardList> apply(const Mode &mode, const GuardList &guard) const;
 
     };
 

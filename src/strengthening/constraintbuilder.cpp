@@ -5,32 +5,40 @@
 #include <expr/relation.h>
 #include <accelerate/meter/farkas.h>
 #include "constraintbuilder.h"
-#include <z3/z3solver.h>
 #include <z3/z3toolbox.h>
 
 namespace strengthening {
 
     typedef ConstraintBuilder Self;
 
-    Self::ConstraintBuilder(
+    const SmtConstraints Self::build(
             const Templates &templates,
-            const GuardList &relevantConstraints,
-            const Context &context,
-            Z3Context &z3Context
-    ) : templates(templates),
-        relevantConstraints(relevantConstraints),
-        context(context),
-        z3Context(z3Context) {
+            const RuleContext &ruleCtx,
+            const GuardContext &guardCtx,
+            Z3Context &z3Ctx) {
+        return ConstraintBuilder(templates, ruleCtx, guardCtx, z3Ctx).build();
     }
 
-    const SmtConstraints Self::buildSMTConstraints() const {
+    Self::ConstraintBuilder(
+            const Templates &templates,
+            const RuleContext &ruleCtx,
+            const GuardContext &guardCtx,
+            Z3Context &z3Ctx
+    ) : templates(templates),
+        ruleCtx(ruleCtx),
+        guardCtx(guardCtx),
+        z3Ctx(z3Ctx) {
+    }
+
+    const SmtConstraints Self::build() const {
         GuardList invariancePremise;
         GuardList invarianceConclusion;
         GuardList monotonicityPremise;
         GuardList monotonicityConclusion;
+        const GuardList &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
-        for (const Expression &e: context.todo) {
-            for (const GiNaC::exmap &up: context.updates) {
+        for (const Expression &e: guardCtx.todo) {
+            for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
                 if (Relation::isLinearInequality(updated, templates.vars())) {
@@ -39,19 +47,19 @@ namespace strengthening {
             }
         }
         for (const Expression &e: relevantConstraints) {
-            for (const GiNaC::exmap &up: context.updates) {
+            for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
                 monotonicityPremise.push_back(updated);
             }
         }
-        for (const GiNaC::exmap &up: context.updates) {
+        for (const GiNaC::exmap &up: ruleCtx.updates) {
             const std::vector<Expression> &updated = templates.subs(up);
             monotonicityPremise.insert(monotonicityPremise.end(), updated.begin(), updated.end());
         }
         monotonicityPremise.insert(monotonicityPremise.end(), templates.begin(), templates.end());
-        monotonicityPremise.insert(monotonicityPremise.end(), context.invariants.begin(), context.invariants.end());
-        for (const Expression &e: context.todo) {
+        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.invariants.begin(), guardCtx.invariants.end());
+        for (const Expression &e: guardCtx.todo) {
             if (Relation::isLinearInequality(e, templates.vars())) {
                 monotonicityConclusion.push_back(e);
             }
@@ -63,7 +71,7 @@ namespace strengthening {
                 invariancePremise.end(),
                 templatesInvariantImplication.premise.begin(),
                 templatesInvariantImplication.premise.end());
-        const Initiation &initiation = constructSmtInitiationConstraints(relevantConstraints);
+        const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
                 invariancePremise,
                 templatesInvariantImplication.conclusion);
@@ -76,12 +84,25 @@ namespace strengthening {
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
     }
 
+    const GuardList Self::findRelevantConstraints() const {
+        GuardList relevantConstraints;
+        for (const Expression &e: guardCtx.guard) {
+            for (const ExprSymbol &var: templates.vars()) {
+                if (e.getVariables().count(var) > 0) {
+                    relevantConstraints.push_back(e);
+                    break;
+                }
+            }
+        }
+        return relevantConstraints;
+    }
+
     const Implication Self::buildTemplatesInvariantImplication() const {
         Implication res;
         for (const Expression &invTemplate: templates) {
             bool linear = true;
             GuardList updatedTemplates;
-            for (const GiNaC::exmap &up: context.updates) {
+            for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = invTemplate;
                 updated.applySubs(up);
                 if (Relation::isLinearInequality(updated, templates.vars())) {
@@ -101,12 +122,12 @@ namespace strengthening {
         return res;
     }
 
-    const Initiation Self::constructSmtInitiationConstraints(const GuardList &premise) const {
+    const Initiation Self::constructInitiationConstraints(const GuardList &premise) const {
         Initiation res;
-        for (const GuardList &pre: context.preconditions) {
-            z3::expr_vector gVec(z3Context);
+        for (const GuardList &pre: ruleCtx.preconditions) {
+            z3::expr_vector gVec(z3Ctx);
             for (const Expression &e: pre) {
-                gVec.push_back(e.toZ3(z3Context));
+                gVec.push_back(e.toZ3(z3Ctx));
             }
             for (const Expression &t: templates) {
                 res.valid.push_back(constructImplicationConstraints(pre, t));
@@ -121,20 +142,20 @@ namespace strengthening {
             }
             GiNaC::exmap varRenaming;
             for (const ExprSymbol &x: allVars) {
-                varRenaming[x] = context.varMan.getVarSymbol(context.varMan.addFreshVariable(x.get_name()));
+                varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
             }
-            z3::expr_vector renamed(z3Context);
+            z3::expr_vector renamed(z3Ctx);
             for (Expression e: pre) {
                 e.applySubs(varRenaming);
-                renamed.push_back(e.toZ3(z3Context));
+                renamed.push_back(e.toZ3(z3Ctx));
             }
             const std::vector<Expression> &updatedTemplates = templates.subs(varRenaming);
             for (const Expression &e: updatedTemplates) {
-                renamed.push_back(e.toZ3(z3Context));
+                renamed.push_back(e.toZ3(z3Ctx));
             }
             for (Expression e: premise) {
                 e.applySubs(varRenaming);
-                renamed.push_back(e.toZ3(z3Context));
+                renamed.push_back(e.toZ3(z3Ctx));
             }
             const z3::expr &expr = mk_and(renamed);
             res.satisfiable.push_back(expr);
@@ -150,7 +171,7 @@ namespace strengthening {
                 conclusion,
                 templates.vars(),
                 templates.params(),
-                z3Context,
+                z3Ctx,
                 Z3Context::Integer);
     }
 
@@ -162,7 +183,7 @@ namespace strengthening {
                 conclusion,
                 templates.vars(),
                 templates.params(),
-                z3Context,
+                z3Ctx,
                 Z3Context::Integer);
     }
 

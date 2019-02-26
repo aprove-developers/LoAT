@@ -20,14 +20,14 @@ const ExprSymbolSet& Self::vars() const {
     return vars_;
 }
 
-bool Self::isGround(const Expression &e) const {
+bool Self::isParametric(const Expression &e) const {
     ExprSymbolSet eVars = e.getVariables();
-    for (const ExprSymbol &x: vars()) {
+    for (const ExprSymbol &x: params()) {
         if (eVars.count(x) > 0) {
-            return false;
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 const std::vector<Expression> Self::subs(const GiNaC::exmap &sigma) const {
@@ -44,5 +44,5 @@ Self::iterator Self::begin() const {
 }
 
 Self::iterator Self::end() const {
-    return templates.begin();
+    return templates.end();
 }

@@ -11,27 +11,36 @@
 
 namespace strengthening {
 
-    struct Context {
+    struct RuleContext {
 
-        Context(const Rule &rule,
+        RuleContext(
+                const Rule &rule,
                 std::vector<GiNaC::exmap> updates,
-                GuardList invariants,
-                GuardList todo,
                 std::vector<GuardList> preconditions,
                 VariableManager &varMan):
                 rule(rule),
                 updates(std::move(updates)),
-                invariants(std::move(invariants)),
-                todo(std::move(todo)),
                 preconditions(std::move(preconditions)),
                 varMan(varMan) { }
 
         const Rule &rule;
         const std::vector<GiNaC::exmap> updates;
-        const GuardList invariants;
-        const GuardList todo;
         const std::vector<GuardList> preconditions;
         VariableManager &varMan;
+    };
+
+    struct GuardContext {
+
+        GuardContext(const GuardList &guard,
+                GuardList invariants,
+                GuardList todo):
+                guard(guard),
+                invariants(std::move(invariants)),
+                todo(std::move(todo)) { }
+
+        const GuardList &guard;
+        const GuardList invariants;
+        const GuardList todo;
     };
 
     struct Implication {

@@ -130,8 +130,10 @@ add_executable(${EXECUTABLE}
         src/strengthening/templates.h
         src/strengthening/constraintsolver.cpp
         src/strengthening/constraintsolver.h
-        src/strengthening/setup.cpp
-        src/strengthening/setup.h)
+        src/strengthening/rulecontextbuilder.cpp
+        src/strengthening/rulecontextbuilder.h
+        src/strengthening/guardcontextbuilder.cpp
+        src/strengthening/guardcontextbuilder.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

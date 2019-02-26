@@ -16,17 +16,16 @@ namespace strengthening {
 
     public:
 
-        TemplateBuilder(const GuardList &constraints, const Rule &rule, VariableManager &varMan);
-
-        const Templates buildTemplates() const;
+        static const Templates build(const GuardContext &guardCtx, const RuleContext &ruleCtx);
 
     private:
 
-        const GuardList &constraints;
+        const GuardContext &guardCtx;
+        const RuleContext &ruleCtx;
 
-        const Rule &rule;
+        TemplateBuilder(const GuardContext &guardCtx, const RuleContext &ruleCtx);
 
-        VariableManager &varMan;
+        const Templates build() const;
 
         const ExprSymbolSet findRelevantVariables(const Expression &c) const;
 

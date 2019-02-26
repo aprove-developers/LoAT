@@ -33,7 +33,7 @@ public:
 
     const ExprSymbolSet& vars() const;
 
-    bool isGround(const Expression &e) const;
+    bool isParametric(const Expression &e) const;
 
     const std::vector<Expression> subs(const GiNaC::exmap &sigma) const;
 

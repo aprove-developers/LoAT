@@ -17,25 +17,30 @@ namespace strengthening {
 
     public:
 
-        ConstraintBuilder(
+        static const SmtConstraints build(
                 const Templates &templates,
-                const GuardList &relevantConstraints,
-                const Context &context,
-                Z3Context &z3Context
-        );
-
-        const SmtConstraints buildSMTConstraints() const;
+                const RuleContext &ruleCtx,
+                const GuardContext &guardCtx,
+                Z3Context &z3Ctx);
 
     private:
 
         const Templates &templates;
-        const GuardList &relevantConstraints;
-        const Context &context;
-        Z3Context &z3Context;
+        const RuleContext &ruleCtx;
+        const GuardContext &guardCtx;
+        Z3Context &z3Ctx;
+
+        ConstraintBuilder(
+                const Templates &templates,
+                const RuleContext &ruleCtx,
+                const GuardContext &guardCtx,
+                Z3Context &z3Ctx);
+
+        const SmtConstraints build() const;
 
         const Implication buildTemplatesInvariantImplication() const;
 
-        const Initiation constructSmtInitiationConstraints(const GuardList &premise) const;
+        const Initiation constructInitiationConstraints(const GuardList &premise) const;
 
         const std::vector<z3::expr> constructImplicationConstraints(
                 const GuardList &premise,
@@ -44,6 +49,8 @@ namespace strengthening {
         const z3::expr constructImplicationConstraints(
                 const GuardList &premise,
                 const Expression &conclusion) const;
+
+        const GuardList findRelevantConstraints() const;
 
     };
 

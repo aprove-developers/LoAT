@@ -8,54 +8,56 @@
 #include "strengthener.h"
 #include "templatebuilder.h"
 #include "constraintsolver.h"
-#include "setup.h"
+#include "rulecontextbuilder.h"
+#include "guardcontextbuilder.h"
 
 namespace strengthening {
 
     typedef Strengthener Self;
 
     const std::vector<Rule> Self::apply(const Rule &rule, ITSProblem &its) {
-        std::stack<Rule> todo;
-        todo.push(rule);
-        std::vector<Rule> res;
+        std::stack<GuardList> todo;
+        todo.push(rule.getGuard());
+        std::vector<GuardList> res;
+        const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
+        const Strengthener strengthener(ruleCtx);
         while (!todo.empty()) {
-            const Rule &current = todo.top();
-            if (current.isSimpleLoop()) {
-                const Context &context = Setup(current, its).setup();
-                const Strengthener &strengthener = Strengthener(context);
-                std::vector<Rule> strong(strengthener.apply(Modes::invariance));
-                if (strong.empty()) {
-                    strong = strengthener.apply(Modes::pseudoInvariance);
-                    if (strong.empty() && current.getGuard() != rule.getGuard()) {
-                        res.push_back(current);
-                    }
-                }
-                todo.pop();
-                for (const Rule &s: strong) {
-                    todo.push(s);
+            const GuardList &current = todo.top();
+            std::vector<GuardList> strong(strengthener.apply(Modes::invariance, current));
+            if (strong.empty()) {
+                strong = strengthener.apply(Modes::pseudoInvariance, current);
+                if (strong.empty() && current != rule.getGuard()) {
+                    res.push_back(current);
                 }
             }
+            todo.pop();
+            for (const GuardList &s: strong) {
+                todo.push(s);
+            }
         }
-        return res;
+        std::vector<Rule> rules;
+        for (const GuardList &g: res) {
+            const RuleLhs newLhs(rule.getLhsLoc(), g, rule.getCost());
+            rules.emplace_back(Rule(newLhs, rule.getRhss()));
+        }
+        return rules;
     }
 
-    Self::Strengthener(const Context &context): context(context) {}
+    Self::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
 
-    const std::vector<Rule> Self::apply(const Mode &mode) const {
-        std::vector<Rule> res;
-        const Templates &templates = TemplateBuilder(context.todo, context.rule, context.varMan).buildTemplates();
-        Z3Context z3Context;
-        const SmtConstraints &smtConstraints = buildSmtConstraints(
-                templates,
-                z3Context);
-        MaxSmtConstraints maxSmtConstraints = mode(smtConstraints, z3Context);
+    const std::vector<GuardList> Self::apply(const Mode &mode, const GuardList &guard) const {
+        std::vector<GuardList> res;
+        const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates);
+        const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);
+        Z3Context z3Ctx;
+        const SmtConstraints &smtConstraints = ConstraintBuilder::build(templates, ruleCtx, guardCtx, z3Ctx);
+        MaxSmtConstraints maxSmtConstraints = mode(smtConstraints, z3Ctx);
         if (maxSmtConstraints.hard.empty()) {
             return {};
         }
-        ConstraintSolver solver(context.preconditions, maxSmtConstraints, templates, z3Context, context.varMan);
-        const option<Invariants> &newInv = solver.solve();
+        const option<Invariants> &newInv = ConstraintSolver::solve(ruleCtx, maxSmtConstraints, templates, z3Ctx);
         if (newInv) {
-            GuardList newGuard(context.rule.getGuard());
+            GuardList newGuard(guardCtx.guard);
             newGuard.insert(
                     newGuard.end(),
                     newInv.get().invariants.begin(),
@@ -65,44 +67,17 @@ namespace strengthening {
                     pseudoInvariantsValid.end(),
                     newInv.get().pseudoInvariants.begin(),
                     newInv.get().pseudoInvariants.end());
-            const RuleLhs invLhs(context.rule.getLhsLoc(), pseudoInvariantsValid, context.rule.getCost());
-            res.emplace_back(Rule(invLhs, context.rule.getRhss()));
+            res.emplace_back(pseudoInvariantsValid);
             for (const Expression &e: newInv.get().pseudoInvariants) {
                 GuardList pseudoInvariantInvalid(newGuard);
                 assert(Relation::isInequality(e));
                 const Expression &negated = Relation::negateLessEqInequality(Relation::toLessEq(e));
                 debugTest("deduced pseudo-invariant " << e << ", also trying " << negated);
                 pseudoInvariantInvalid.push_back(negated);
-                RuleLhs pseudoInvLhs(context.rule.getLhsLoc(), pseudoInvariantInvalid, context.rule.getCost());
-                res.emplace_back(Rule(pseudoInvLhs, context.rule.getRhss()));
+                res.emplace_back(pseudoInvariantInvalid);
             }
         }
         return res;
-    }
-
-    const SmtConstraints Self::buildSmtConstraints(
-            const Templates &templates,
-            Z3Context &z3Context) const {
-
-        const GuardList &relevantConstraints = findRelevantConstraints(context.rule.getGuard(), templates.vars());
-        return ConstraintBuilder(
-                templates,
-                relevantConstraints,
-                context,
-                z3Context).buildSMTConstraints();
-    }
-
-    const GuardList Self::findRelevantConstraints(const GuardList &guard, const ExprSymbolSet &vars) const {
-        GuardList relevantConstraints;
-        for (const Expression &e: guard) {
-            for (const ExprSymbol &var: vars) {
-                if (e.getVariables().count(var) > 0) {
-                    relevantConstraints.push_back(e);
-                    break;
-                }
-            }
-        }
-        return relevantConstraints;
     }
 
 }
