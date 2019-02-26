@@ -11,7 +11,7 @@ namespace strengthening {
 
     class Modes {
 
-    public:
+    private:
 
         static const MaxSmtConstraints invariance(const SmtConstraints &constraints, Z3Context &z3Ctx);
 
@@ -20,6 +20,10 @@ namespace strengthening {
         static const MaxSmtConstraints monotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx);
 
         static const MaxSmtConstraints pseudoMonotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx);
+
+    public:
+
+        static const std::vector<Mode> modes();
 
     };
 

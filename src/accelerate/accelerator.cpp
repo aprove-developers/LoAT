@@ -250,8 +250,8 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 // ## Acceleration  ##
 // ###################
 
-const vector<LinearRule> Accelerator::strengthenAndAccelerate(const Rule &rule) const {
-    vector<LinearRule> res;
+const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) const {
+    Forward::Result res{.result=Forward::Success, .rules={}};
     stack<LinearRule> todo;
     todo.push(rule.toLinear());
     do {
@@ -259,6 +259,7 @@ const vector<LinearRule> Accelerator::strengthenAndAccelerate(const Rule &rule) 
         todo.pop();
         vector<LinearRule> accelerated = Backward::accelerate(its, r);
         if (accelerated.empty()) {
+            res.result = Forward::SuccessWithRestriction;
             vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
             for (const Rule &sr: strengthened) {
                 debugBackwardAccel("invariant inference yields " << sr);
@@ -266,10 +267,13 @@ const vector<LinearRule> Accelerator::strengthenAndAccelerate(const Rule &rule) 
             }
         } else {
             for (const LinearRule &ar: accelerated) {
-                res.emplace_back(ar);
+                res.rules.emplace_back("backward acceleration", ar);
             }
         }
     } while (!todo.empty());
+    if (res.rules.empty()) {
+        res.result = Forward::TooComplicated;
+    }
     return res;
 }
 
@@ -288,13 +292,7 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
         if (res.result != Forward::Success && rule.isLinear()) {
-            const vector<LinearRule> &accelRules = strengthenAndAccelerate(rule);
-            if (!accelRules.empty()) {
-                res.result = Forward::Success;
-            }
-            for (const LinearRule &r: accelRules) {
-                res.rules.emplace_back("backward acceleration", r);
-            }
+            return strengthenAndAccelerate(rule);
         }
     }
 

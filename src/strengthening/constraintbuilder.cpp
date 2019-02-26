@@ -37,6 +37,29 @@ namespace strengthening {
         GuardList monotonicityConclusion;
         const GuardList &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
+        for (const Expression &e: relevantConstraints) {
+            for (const GiNaC::exmap &up: ruleCtx.updates) {
+                Expression updated = e;
+                updated.applySubs(up);
+                monotonicityPremise.push_back(updated);
+            }
+        }
+        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.invariants.begin(), guardCtx.invariants.end());
+        const Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
+        // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication
+        // discards templates that become non-linear when applying the update.
+        invariancePremise.insert(
+                invariancePremise.end(),
+                templatesInvariantImplication.premise.begin(),
+                templatesInvariantImplication.premise.end());
+        monotonicityPremise.insert(
+                monotonicityPremise.end(),
+                templatesInvariantImplication.premise.begin(),
+                templatesInvariantImplication.premise.end());
+        monotonicityPremise.insert(
+                monotonicityPremise.end(),
+                templatesInvariantImplication.conclusion.begin(),
+                templatesInvariantImplication.conclusion.end());
         for (const Expression &e: guardCtx.todo) {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
@@ -45,32 +68,10 @@ namespace strengthening {
                     invarianceConclusion.push_back(updated);
                 }
             }
-        }
-        for (const Expression &e: relevantConstraints) {
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
-                Expression updated = e;
-                updated.applySubs(up);
-                monotonicityPremise.push_back(updated);
-            }
-        }
-        for (const GiNaC::exmap &up: ruleCtx.updates) {
-            const std::vector<Expression> &updated = templates.subs(up);
-            monotonicityPremise.insert(monotonicityPremise.end(), updated.begin(), updated.end());
-        }
-        monotonicityPremise.insert(monotonicityPremise.end(), templates.begin(), templates.end());
-        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.invariants.begin(), guardCtx.invariants.end());
-        for (const Expression &e: guardCtx.todo) {
             if (Relation::isLinearInequality(e, templates.vars())) {
                 monotonicityConclusion.push_back(e);
             }
         }
-        const Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
-        // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication
-        // discards templates that become non-linear when applying the update.
-        invariancePremise.insert(
-                invariancePremise.end(),
-                templatesInvariantImplication.premise.begin(),
-                templatesInvariantImplication.premise.end());
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
                 invariancePremise,

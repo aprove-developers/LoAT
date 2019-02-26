@@ -23,16 +23,23 @@ namespace strengthening {
         const Strengthener strengthener(ruleCtx);
         while (!todo.empty()) {
             const GuardList &current = todo.top();
-            std::vector<GuardList> strong(strengthener.apply(Modes::invariance, current));
-            if (strong.empty()) {
-                strong = strengthener.apply(Modes::pseudoInvariance, current);
-                if (strong.empty() && current != rule.getGuard()) {
-                    res.push_back(current);
+            bool failed = true;
+            for (const Mode &mode: Modes::modes()) {
+                const std::vector<GuardList> &strengthened = strengthener.apply(mode, current);
+                if (!strengthened.empty()) {
+                    failed = false;
+                    todo.pop();
+                    for (const GuardList &s: strengthened) {
+                        todo.push(s);
+                    }
+                    break;
                 }
             }
-            todo.pop();
-            for (const GuardList &s: strong) {
-                todo.push(s);
+            if (failed) {
+                if (current != rule.getGuard()) {
+                    res.push_back(current);
+                }
+                todo.pop();
             }
         }
         std::vector<Rule> rules;

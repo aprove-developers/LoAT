@@ -10,8 +10,7 @@ option<z3::model> Z3Solver::maxSmt(std::vector<z3::expr> hard, std::vector<z3::e
     for (const z3::expr &e: hard) {
         this->add(e);
     }
-    const z3::check_result &res = this->check();
-    if (res != z3::check_result::sat) {
+    if (this->check() != z3::check_result::sat) {
         return {};
     }
     z3::model model = this->get_model();
