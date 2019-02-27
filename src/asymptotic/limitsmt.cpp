@@ -192,7 +192,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     };
 
     // all constraints that we have so far are mandatory, so fail if we can't even solve these
-    if (!checkSolver()) {
+    if (!checkSolver() || isTimeout(finalCheck)) {
         return {};
     }
 
