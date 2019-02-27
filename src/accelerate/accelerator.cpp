@@ -171,7 +171,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             const vector<LinearRule> &accelRules = Backward::accelerate(its, nestedRule);
             bool success = false;
             for (const LinearRule &accelRule: accelRules) {
-                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost()).cpx;
+                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(its, accelRule.getGuard(), accelRule.getCost(), false).cpx;
                 if (newCpx > currentCpx) {
                     addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
                     success = true;
@@ -204,7 +204,7 @@ void Accelerator::performNesting(vector<InnerCandidate> inner, vector<OuterCandi
     // then try to accelerate the resulting rule
     for (const InnerCandidate &in : inner) {
         Rule r = its.getLinearRule(in.newRule);
-        Complexity cpx = AsymptoticBound::determineComplexityViaSMT(its, r.getGuard(), r.getCost()).cpx;
+        Complexity cpx = AsymptoticBound::determineComplexityViaSMT(its, r.getGuard(), r.getCost(), false).cpx;
         for (const OuterCandidate &out : outer) {
             changed |= nestRules(cpx, in, out);
             if (Timeout::soft()) return;

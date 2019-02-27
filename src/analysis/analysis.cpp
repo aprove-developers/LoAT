@@ -589,7 +589,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         if (Timeout::hard()) break;
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-        auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
+        auto checkRes = AsymptoticBound::determineComplexityViaSMT(its, rule.getGuard(), rule.getCost(), true);
 
         proofout << "Resulting cost " << checkRes.solvedCost << " has complexity: " << checkRes.cpx << endl;
         proofout.decreaseIndention();

@@ -154,7 +154,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     const Rule &rule = its.getRule(parallel[idx]);
 
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
-                    auto res = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), false);
+                    auto res = AsymptoticBound::determineComplexityViaSMT(its, rule.getGuard(), rule.getCost(), false);
                     queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
                     if (Timeout::soft()) return changed;
                 }

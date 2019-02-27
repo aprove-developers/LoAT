@@ -90,7 +90,7 @@ namespace Config {
         // Timeouts (default / for metering / for limit smt encoding)
         const unsigned DefaultTimeout = 500u;
         const unsigned MeterTimeout = 500u;
-        const unsigned LimitTimeout = 500u;
+        const unsigned LimitTimeout = 2000u;
 
         // The largest k for which x^k is rewritten to x*x*...*x (k times).
         // z3 does not like powers, so writing x*x*...*x can sometimes help.

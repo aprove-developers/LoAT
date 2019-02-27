@@ -1102,8 +1102,8 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
 AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan &varMan,
                                                                     const GuardList &guard,
-                                                                    const Expression &cost) {
-    proofout.setEnabled(false);
+                                                                    const Expression &cost,
+                                                                    bool finalCheck) {
     Expression expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
@@ -1115,18 +1115,25 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan
         }
     }
     assert(!expandedCost.has(Expression::NontermSymbol));
+
+    // Only enable proof output for the final check (we don't want proof output when pruning)
+    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
+    if (finalCheck) Timing::start(Timing::Asymptotic);
+
     AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem();
-    if (asymptoticBound.solveViaSMT()) {
+    bool success = asymptoticBound.solveViaSMT();
+    if (finalCheck) Timing::done(Timing::Asymptotic);
+    proofout.setEnabled(wasProofEnabled);
+    if (success) {
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return Result(asymptoticBound.bestComplexity.complexity,
                       solvedCost.expand(),
                       asymptoticBound.bestComplexity.upperBound > 1,
                       asymptoticBound.bestComplexity.inftyVars);
     } else {
-
         return Result(Complexity::Unknown);
     }
 }
