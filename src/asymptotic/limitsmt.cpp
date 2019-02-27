@@ -127,13 +127,13 @@ bool LimitSmtEncoding::isApplicable(const Expression &cost) {
 
 
 option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
-                                                     const VarMan &varMan, bool finalCheck)
+                                                     const VarMan &varMan, bool finalCheck, Complexity currentRes)
 {
     debugAsymptoticBound(endl << "SMT: " << currentLP << endl);
 
     // initialize z3
     Z3Context context;
-    Z3Solver solver(context, Config::Z3::LimitTimeout);
+    Z3Solver solver(context, finalCheck ? Config::Z3::LimitTimeoutFinal : Config::Z3::LimitTimeout);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();
@@ -208,11 +208,14 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     }
 
     if (!checkSolver()) {
+        if (Complexity::Poly(maxDeg) <= currentRes) {
+            return {};
+        }
         // we failed to find a model -- drop all non-mandatory constraints
         solver.pop();
         // try to find a witness for polynomial complexity with degree maxDeg,...,1
         map<int, Expression> coefficients = getCoefficients(templateCost, n);
-        for (int i = maxDeg; i > 0; i--) {
+        for (int i = maxDeg; Complexity::Poly(i) > currentRes; i--) {
             if (isTimeout(finalCheck)) return {};
             Expression c = coefficients.find(i)->second;
             // remember the current state for backtracking
@@ -220,8 +223,8 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
             solver.add(c.toZ3(context) > 0);
             if (checkSolver()) {
                 break;
-            } else if (i == 1) {
-                // we even failed to prove a linear bound -- give up
+            } else if (Complexity::Poly(i - 1) <= currentRes) {
+                // we even failed to prove the minimal requested bound -- give up
                 return {};
             } else {
                 // remove all non-mandatory constraints and retry with degree i-1

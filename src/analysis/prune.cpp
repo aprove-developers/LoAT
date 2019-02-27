@@ -129,9 +129,6 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
     typedef tuple<TransIdx,Complexity,int> TransCpx;
     auto comp = [](TransCpx a, TransCpx b) { return get<1>(a) < get<1>(b) || (get<1>(a) == get<1>(b) && get<2>(a) < get<2>(b)); };
 
-    // We use a priority queue with the aforementioned comparison of rules (and vector as underlying container).
-    typedef priority_queue<TransCpx, vector<TransCpx>, decltype(comp)> PriorityQueue;
-
     bool changed = false;
     for (LocationIdx node : its.getLocations()) {
         for (LocationIdx pre : its.getPredecessorLocations(node)) {
@@ -144,7 +141,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
             const vector<TransIdx> &parallel = its.getTransitionsFromTo(pre, node);
 
             if (parallel.size() > Config::Prune::MaxParallelRules) {
-                PriorityQueue queue(comp);
+                std::vector<std::tuple<TransIdx, Complexity, int>> queue;
 
                 for (int i=0; i < parallel.size(); ++i) {
                     // alternating iteration (idx=0,n-1,1,n-2,...) that might avoid choosing similar edges
@@ -153,17 +150,30 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     TransIdx ruleIdx = parallel[idx];
                     const Rule &rule = its.getRule(parallel[idx]);
 
+                    const Complexity &toBeat = queue.size() >= Config::Prune::MaxParallelRules ?
+                            std::get<1>(queue.at(Config::Prune::MaxParallelRules - 1)) :
+                            Complexity::Const;
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
-                    auto res = AsymptoticBound::determineComplexityViaSMT(its, rule.getGuard(), rule.getCost(), false);
-                    queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
+                    auto res = AsymptoticBound::determineComplexityViaSMT(
+                            its,
+                            rule.getGuard(),
+                            rule.getCost(),
+                            false,
+                            toBeat);
+                    queue.emplace_back(make_tuple(ruleIdx, res.cpx, res.inftyVars));
+                    std::sort(queue.rbegin(), queue.rend(), comp);
+                    if (queue.size() > Config::Prune::MaxParallelRules) {
+                        queue.pop_back();
+                    }
                     if (Timeout::soft()) return changed;
                 }
 
                 // Keep only the top elements of the queue
                 set<TransIdx> keep;
-                for (int i=0; i < Config::Prune::MaxParallelRules; ++i) {
-                    keep.insert(get<0>(queue.top()));
-                    queue.pop();
+                auto it = queue.begin();
+                for (int i=0; i < Config::Prune::MaxParallelRules && it < queue.end(); ++i) {
+                    keep.insert(get<0>(*it));
+                    it++;
                 }
 
                 // Check if there is an dummy rule (if there is, we want to keep an empty rule)

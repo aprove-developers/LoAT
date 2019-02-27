@@ -36,7 +36,7 @@ private:
     int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     void removeUnsatProblems();
-    bool solveViaSMT();
+    bool solveViaSMT(Complexity currentRes);
     bool solveLimitProblem();
     ComplexityResult getComplexity(const LimitProblem &limitProblem);
     bool isAdequateSolution(const LimitProblem &limitProblem);
@@ -53,7 +53,7 @@ private:
                                         const std::vector<LimitVector> &limitVectors);
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
-    bool trySmtEncoding();
+    bool trySmtEncoding(Complexity currentRes);
 
     //check Timeout::soft or Timeout::hard, depending on finalCheck
     bool isTimeout() const;
@@ -113,7 +113,8 @@ public:
     static Result determineComplexityViaSMT(const VarMan &varMan,
                                             const GuardList &guard,
                                             const Expression &cost,
-                                            bool finalCheck);
+                                            bool finalCheck,
+                                            Complexity currentRes);
 
 };
 

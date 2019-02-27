@@ -69,6 +69,7 @@ namespace Config {
         extern const unsigned DefaultTimeout;
         extern const unsigned MeterTimeout;
         extern const unsigned LimitTimeout;
+        extern const unsigned LimitTimeoutFinal;
         extern const unsigned MaxExponentWithoutPow;
     }
 

@@ -589,19 +589,42 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         if (Timeout::hard()) break;
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-        auto checkRes = AsymptoticBound::determineComplexityViaSMT(its, rule.getGuard(), rule.getCost(), true);
+        option<AsymptoticBound::Result> checkRes;
+        bool isPolynomial = rule.getCost().isPolynomial();
+        if (isPolynomial) {
+            for (const Expression &e: rule.getGuard()) {
+                if (!Expression(e.lhs()).isPolynomial() || !Expression(e.rhs()).isPolynomial()) {
+                    isPolynomial = false;
+                    break;
+                }
+            }
+        }
+        if (isPolynomial) {
+            checkRes = AsymptoticBound::determineComplexityViaSMT(
+                    its,
+                    rule.getGuard(),
+                    rule.getCost(),
+                    true,
+                    res.cpx);
+        } else {
+            checkRes = AsymptoticBound::determineComplexity(
+                    its,
+                    rule.getGuard(),
+                    rule.getCost(),
+                    true);
+        }
 
-        proofout << "Resulting cost " << checkRes.solvedCost << " has complexity: " << checkRes.cpx << endl;
+        proofout << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx << endl;
         proofout.decreaseIndention();
 
-        if (checkRes.cpx > res.cpx) {
+        if (checkRes.get().cpx > res.cpx) {
             proofout << endl;
             proofout.setLineStyle(ProofOutput::Result);
-            proofout << "Found new complexity " << checkRes.cpx << "." << endl;
+            proofout << "Found new complexity " << checkRes.get().cpx << "." << endl;
 
-            res.cpx = checkRes.cpx;
-            res.solvedCost = checkRes.solvedCost;
-            res.reducedCpx = checkRes.reducedCpx;
+            res.cpx = checkRes.get().cpx;
+            res.solvedCost = checkRes.get().solvedCost;
+            res.reducedCpx = checkRes.get().reducedCpx;
             res.guard = rule.getGuard();
             res.cost = rule.getCost();
 
