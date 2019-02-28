@@ -18,9 +18,6 @@
 #ifndef PRUNE_H
 #define PRUNE_H
 
-#include <vector>
-#include <its/types.h>
-
 class Rule;
 class ITSProblem;
 
@@ -77,8 +74,6 @@ namespace Pruning {
      * @return true iff the ITS was modified
      */
     bool removeSinkRhss(ITSProblem &its);
-
-    std::vector<std::vector<TransIdx>> groupByUpdate(const std::vector<TransIdx> &rules, const ITSProblem &its);
 }
 
 #endif // PRUNE_H
