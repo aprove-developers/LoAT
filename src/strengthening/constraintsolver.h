@@ -37,7 +37,7 @@ namespace strengthening {
 
         const GuardList instantiateTemplates(const z3::model &model) const;
 
-        const Invariants splitInitiallyValid(const GuardList &invariants) const;
+        const option<Invariants> splitInitiallyValid(const GuardList &invariants) const;
 
     };
 

@@ -39,7 +39,7 @@ namespace strengthening {
             res.soft.push_back(e);
             someConclusionInvariant.push_back(e);
         }
-        res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
+        // res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
         res.hard.push_back(z3::mk_or(someConclusionInvariant));
         res.hard.insert(res.hard.end(), constraints.templatesInvariant.begin(), constraints.templatesInvariant.end());
         return res;
@@ -71,7 +71,7 @@ namespace strengthening {
             res.soft.push_back(e);
             someConclusionMonotonic.push_back(e);
         }
-        res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
+        // res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
         res.hard.push_back(z3::mk_or(someConclusionMonotonic));
         res.hard.insert(res.hard.end(), constraints.templatesInvariant.begin(), constraints.templatesInvariant.end());
         return res;

@@ -15,6 +15,9 @@ option<z3::model> Z3Solver::maxSmt(std::vector<z3::expr> hard, std::vector<z3::e
     }
     z3::model model = this->get_model();
     for (const z3::expr &e: soft) {
+        if (Timeout::soft()) {
+            return {};
+        }
         this->push();
         this->add(e);
         if (this->check() == z3::check_result::sat) {

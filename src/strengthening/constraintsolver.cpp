@@ -31,7 +31,7 @@ namespace strengthening {
             z3Ctx(z3Ctx) { }
 
     const option<Invariants> Self::solve() const {
-        Z3Solver solver(z3Ctx);
+        Z3Solver solver(z3Ctx, Config::Z3::StrengtheningTimeout);
         const option<z3::model> &model = solver.maxSmt(constraints.hard, constraints.soft);
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
@@ -65,7 +65,7 @@ namespace strengthening {
         return res;
     }
 
-    const Invariants Self::splitInitiallyValid(const GuardList &invariants) const {
+    const option<Invariants> Self::splitInitiallyValid(const GuardList &invariants) const {
         Z3Solver solver(z3Ctx);
         Invariants res;
         z3::expr_vector preconditionVec(z3Ctx);
@@ -78,6 +78,9 @@ namespace strengthening {
         }
         solver.add(z3::mk_or(preconditionVec));
         for (const Expression &i: invariants) {
+            if (Timeout::soft()) {
+                return {};
+            }
             solver.push();
             solver.add(!i.toZ3(z3Ctx));
             if (solver.check() == z3::unsat) {

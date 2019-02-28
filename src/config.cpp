@@ -90,6 +90,7 @@ namespace Config {
         // Timeouts (default / for metering / for limit smt encoding)
         const unsigned DefaultTimeout = 500u;
         const unsigned MeterTimeout = 500u;
+        const unsigned StrengtheningTimeout = 750u;
         const unsigned LimitTimeout = 500u;
         const unsigned LimitTimeoutFinal = 3000u;
         const unsigned LimitTimeoutFinalFast = 500u;

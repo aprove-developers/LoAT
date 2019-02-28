@@ -25,6 +25,9 @@ namespace strengthening {
             const GuardList &current = todo.top();
             bool failed = true;
             for (const Mode &mode: Modes::modes()) {
+                if (Timeout::soft()) {
+                    return {};
+                }
                 const std::vector<GuardList> &strengthened = strengthener.apply(mode, current);
                 if (!strengthened.empty()) {
                     failed = false;
