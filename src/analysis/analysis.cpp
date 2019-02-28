@@ -590,7 +590,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         option<AsymptoticBound::Result> checkRes;
-        bool isPolynomial = rule.getCost().isPolynomial() && rule.getCost().isNontermSymbol();
+        bool isPolynomial = rule.getCost().isPolynomial() && !rule.getCost().isNontermSymbol();
         if (isPolynomial) {
             for (const Expression &e: rule.getGuard()) {
                 if (!Expression(e.lhs()).isPolynomial() || !Expression(e.rhs()).isPolynomial()) {
