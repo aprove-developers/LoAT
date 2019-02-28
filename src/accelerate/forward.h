@@ -34,6 +34,7 @@
 namespace ForwardAcceleration {
     enum ResultKind {
         NoMetering, // No metering function could be found
+        NonMonotonic, //
         TooComplicated, // Guard/update is too complicated (nonlinear or no dependency order)
         Success, // Rule was successfully accelerated or is non-terminating (then the cost is set to InftySymbol)
         SuccessWithRestriction // Success after a heuristic extended the guard (so it is now more restrictive)

@@ -229,14 +229,20 @@ void Accelerator::performNesting(vector<InnerCandidate> inner, vector<OuterCandi
 
 void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     // Remove all old loops, unless we have decided to keep them
-    proofout << "Removing the simple loops:";
+    bool foundOne = true;
     for (TransIdx loop : loops) {
         if (keepRules.count(loop) == 0) {
+            if (foundOne) {
+                proofout << "Removing the simple loops:";
+                foundOne = false;
+            }
             proofout << " " << loop;
             its.removeRule(loop);
         }
     }
-    proofout << "." << endl;
+    if (!foundOne) {
+        proofout << "." << endl;
+    }
 
     // In some cases, two loops can yield similar accelerated rules, so we prune duplicates
     // and have to remove rules that were removed from resultingRules.
@@ -282,7 +288,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         }
     } while (!todo.empty());
     if (res.rules.empty()) {
-        res.result = Forward::NoMetering;
+        res.result = Forward::NonMonotonic;
     }
     return res;
 }
@@ -419,6 +425,15 @@ void Accelerator::run() {
                 keepRules.insert(loop);
                 proofout << "Found no metering function for rule " << loop << "." << endl;
                 break;
+
+            case Forward::NonMonotonic:
+                if (its.getRule(loop).isLinear()) {
+                    outerCandidates.push_back({loop});
+                }
+                keepRules.insert(loop);
+                proofout << "Failed to prove monotonicity of the guard of rule " << loop << "." << endl;
+                break;
+
 
             case Forward::SuccessWithRestriction:
                 // If we only succeed by extending the rule's guard, we make the rule more restrictive
