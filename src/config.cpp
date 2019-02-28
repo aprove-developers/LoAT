@@ -91,6 +91,8 @@ namespace Config {
         const unsigned DefaultTimeout = 100u;
         const unsigned MeterTimeout = 500u;
         const unsigned LimitTimeout = 500u;
+        const unsigned LimitTimeoutFinal = 1000u;
+        const unsigned LimitTimeoutFinalFast = 500u;
 
         // The largest k for which x^k is rewritten to x*x*...*x (k times).
         // z3 does not like powers, so writing x*x*...*x can sometimes help.
@@ -193,8 +195,7 @@ namespace Config {
 
     // Asymptotic complexity computation using limit problems
     namespace Limit {
-        // Use an SMT encoding to solve limit problems?
-        bool UseSmtEncoding = true;
+        PolynomialLimitProblemStrategy* PolyStrategy = &SmtAndCalculus;
 
         // Discard a limit problem of size >= ProblemDiscardSize in a non-final check if z3 yields "unknown"
         const int ProblemDiscardSize = 10;
@@ -226,6 +227,7 @@ namespace Config {
         // NOTE: If disabled, the complexity is only approximated by a syntactic check.
         bool AsymptoticCheck = true;
     }
+
 }
 
 #define GetColor(a) ((Config::Output::Colors) ? (Config::Color::a) : "")
@@ -307,7 +309,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
     {
         using namespace Config::Limit;
         startSection("Limit Problems");
-        PrintCfg(UseSmtEncoding, "Make use of the SMT encoding to solve limit problems");
+        PrintCfg(PolyStrategy, "Strategy to solve limit problems");
         PrintCfg(ProblemDiscardSize, "Discard problems of this size if z3 says unknown");
     }
     {

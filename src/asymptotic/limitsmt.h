@@ -17,7 +17,7 @@ namespace LimitSmtEncoding {
      * @returns the found solution (if any), the limit problem is not modified.
      */
     option<GiNaC::exmap> applyEncoding(const LimitProblem &currentLP, const Expression &cost,
-                                       const VarMan &varMan, bool finalCheck);
+                                       const VarMan &varMan, bool finalCheck, Complexity currentRes);
 }
 
 #endif //LIMITSMT_H

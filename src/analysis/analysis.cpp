@@ -532,6 +532,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         // We have to be careful with temp variables, since they can lead to unbounded cost.
         const Expression &cost = rule.getCost();
         bool hasTempVar = !cost.isNontermSymbol() && cost.hasVariableWith(isTempVar);
+
         if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) {
             debugAnalysis("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
             continue;
@@ -553,7 +554,12 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         if (Timeout::hard()) break;
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-        auto checkRes = AsymptoticBound::determineComplexity(its, rule.getGuard(), rule.getCost(), true);
+        AsymptoticBound::Result checkRes = AsymptoticBound::determineComplexity(
+                its,
+                rule.getGuard(),
+                rule.getCost(),
+                true,
+                res.cpx);
 
         proofout << "Resulting cost " << checkRes.solvedCost << " has complexity: " << checkRes.cpx << endl;
         proofout.decreaseIndention();

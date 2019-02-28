@@ -37,7 +37,8 @@ OBJECTS = \
   expr/guardtoolbox.o \
   expr/complexity.o \
   z3/z3context.o \
-  z3/z3toolbox.o
+  z3/z3toolbox.o \
+  z3/z3solver.o
 
 
 .PHONY: clean all
