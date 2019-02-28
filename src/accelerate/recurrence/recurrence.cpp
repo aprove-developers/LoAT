@@ -178,4 +178,36 @@ bool Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, E
     return rec.iterateAll(update, cost, N);
 }
 
+const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdates(
+        const VariableManager &varMan,
+        const std::vector<UpdateMap> &updates,
+        const ExprSymbol &n) {
+    std::vector<UpdateMap> iteratedUpdates;
+    GuardList refinement;
+    for (const UpdateMap &up: updates) {
+        const option<IteratedUpdates> it = iterateUpdate(varMan, up, n);
+        if (it) {
+            iteratedUpdates.insert(iteratedUpdates.end(), it.get().updates.begin(), it.get().updates.end());
+            refinement.insert(refinement.end(), it.get().refinement.begin(), it.get().refinement.end());
+        } else {
+            return {};
+        }
+    }
+    return {{.updates=std::move(iteratedUpdates), .refinement=std::move(refinement)}};
+}
 
+const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdate(
+        const VariableManager &varMan,
+        const UpdateMap &update,
+        const ExprSymbol &n) {
+    GuardList refinement;
+    UpdateMap refinedUpdate = update;
+    auto order = DependencyOrder::findOrderWithHeuristic(varMan, refinedUpdate, refinement);
+    Recurrence rec(varMan, order.get());
+    const option<UpdateMap> &iteratedUpdate = rec.iterateUpdate(refinedUpdate, n);
+    if (iteratedUpdate) {
+        return {{.updates={iteratedUpdate.get()}, .refinement=std::move(refinement)}};
+    } else {
+        return {};
+    }
+}

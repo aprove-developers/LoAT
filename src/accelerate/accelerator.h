@@ -118,7 +118,7 @@ private:
      * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
      * Takes care of proof output (the arguments inner, outer are only used for the output).
      */
-    void addNestedRule(const LinearRule &accelerated, const LinearRule &chain,
+    void addNestedRule(const Rule &accelerated, const LinearRule &chain,
                        TransIdx inner, TransIdx outer);
 
     /**

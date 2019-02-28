@@ -113,7 +113,7 @@ bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) cons
 }
 
 
-void Accelerator::addNestedRule(const LinearRule &metered, const LinearRule &chain,
+void Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
                                 TransIdx inner, TransIdx outer)
 {
     // Add the new rule
@@ -168,9 +168,9 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const vector<LinearRule> &accelRules = Backward::accelerate(its, nestedRule);
+            const vector<Rule> &accelRules = Backward::accelerate(its, nestedRule);
             bool success = false;
-            for (const LinearRule &accelRule: accelRules) {
+            for (const Rule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
                         its,
                         accelRule.getGuard(),
@@ -267,7 +267,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     do {
         LinearRule r = todo.top();
         todo.pop();
-        vector<LinearRule> accelerated = Backward::accelerate(its, r);
+        vector<Rule> accelerated = Backward::accelerate(its, r);
         if (accelerated.empty()) {
             res.result = Forward::SuccessWithRestriction;
             vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
@@ -276,7 +276,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
                 todo.push(sr.toLinear());
             }
         } else {
-            for (const LinearRule &ar: accelerated) {
+            for (const Rule &ar: accelerated) {
                 res.rules.emplace_back("backward acceleration", ar);
             }
         }

@@ -41,8 +41,8 @@ namespace ForwardAcceleration {
 
     struct MeteredRule {
         std::string info; // printable version of the metering function
-        LinearRule rule;
-        MeteredRule(std::string s, LinearRule r) : info(s), rule(r) {}
+        Rule rule;
+        MeteredRule(std::string s, Rule r) : info(s), rule(r) {}
         MeteredRule appendInfo(const std::string &s) { return MeteredRule(info + s, rule); }
     };
 

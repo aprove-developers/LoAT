@@ -46,6 +46,13 @@ public:
      */
     static bool iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N);
 
+    struct IteratedUpdates {
+        const std::vector<UpdateMap> updates;
+        const GuardList refinement;
+    };
+
+    static const option<IteratedUpdates> iterateUpdates(const VariableManager&, const std::vector<UpdateMap>&, const ExprSymbol&);
+
 private:
     Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dependencyOrder);
 
@@ -79,6 +86,8 @@ private:
      * Note that all variables occuring in update must have been solved before (and added to updatePreRecurrences).
      */
     option<Expression> findCostRecurrence(Expression cost);
+
+    static const option<IteratedUpdates> iterateUpdate(const VariableManager&, const UpdateMap&, const ExprSymbol&);
 
 private:
     /**

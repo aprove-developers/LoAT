@@ -7,15 +7,15 @@
 
 class BackwardAcceleration {
 public:
-    static std::vector<LinearRule> accelerate(VarMan &varMan, const LinearRule &rule);
+    static std::vector<Rule> accelerate(VarMan &varMan, const Rule &rule);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const LinearRule &rule);
+    BackwardAcceleration(VarMan &varMan, const Rule &rule);
 
     /**
      * Main function, just calls the methods below in the correct order
      */
-    std::vector<LinearRule> run();
+    std::vector<Rule> run();
 
     /**
      * Checks whether the backward acceleration technique might be applicable.
@@ -30,8 +30,13 @@ private:
     /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
-    LinearRule buildAcceleratedRule(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                                    const GuardList &guard, const ExprSymbol &N) const;
+    Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
+                              const GuardList &guard, const ExprSymbol &N) const;
+
+    Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
+                                   const GuardList &guard, const ExprSymbol &N) const;
+
+    bool checkCommutation(const std::vector<UpdateMap> &updates);
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
@@ -43,7 +48,7 @@ private:
      *
      * @return A list of rules, either with N eliminated or only containing the given rule
      */
-    static std::vector<LinearRule> replaceByUpperbounds(const ExprSymbol &N, const LinearRule &rule);
+    static std::vector<Rule> replaceByUpperbounds(const ExprSymbol &N, const Rule &rule);
 
     /**
      * Helper for replaceByUpperbounds, returns all upperbounds of N in rule's guard,
@@ -53,7 +58,7 @@ private:
 
 private:
     VariableManager &varMan;
-    const LinearRule &rule;
+    const Rule &rule;
 };
 
 #endif /* BACKWARDACCELERATION_H */

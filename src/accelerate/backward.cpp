@@ -15,7 +15,7 @@
 
 using namespace std;
 
-BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule)
+BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const Rule &rule)
         : varMan(varMan), rule(rule)
 {}
 
@@ -34,36 +34,40 @@ bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, 
     // For the right-hand side, we only check the reduced guard, as we only care about relevant constraints.
     vector<z3::expr> lhss, rhss;
 
-    auto update = rule.getUpdate().toSubstitution(varMan);
-    for (const Expression &ex : rule.getGuard()) {
-        lhss.push_back(GinacToZ3::convert(ex.subs(update), context));
-    }
     for (const Expression &ex : irrelevantGuard) {
-        lhss.push_back(GinacToZ3::convert(ex, context));
+        solver.add(GinacToZ3::convert(ex, context));
     }
-    z3::expr lhs = Z3Toolbox::concat(context, lhss, Z3Toolbox::ConcatAnd);
+    solver.push();
 
-    for (const Expression &ex : reducedGuard) {
-        rhss.push_back(GinacToZ3::convert(ex, context));
-    }
-    z3::expr rhs = Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd);
+    for (const auto &ruleRhs: rule.getRhss()) {
+        auto update = ruleRhs.getUpdate().toSubstitution(varMan);
+        for (const Expression &ex : rule.getGuard()) {
+            solver.add(GinacToZ3::convert(ex.subs(update), context));
+        }
+        for (const Expression &ex : reducedGuard) {
+            rhss.push_back(GinacToZ3::convert(ex, context));
+        }
+        z3::expr rhs = Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd);
 
-    // call z3
-    debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
-    solver.add(lhs);
-    if (solver.check() != z3::sat) {
-        return false;
+        // call z3
+        debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
+        if (solver.check() != z3::sat) {
+            return false;
+        }
+        solver.add(!rhs);
+        if (solver.check() != z3::unsat) {
+            return false;
+        }
+        solver.pop();
     }
-    solver.reset();
-    solver.add(!rhs && lhs);
-    return (solver.check() == z3::unsat);
+    return true;
 }
 
 
-LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedUpdate,
-                                                      const Expression &iteratedCost,
-                                                      const GuardList &guard,
-                                                      const ExprSymbol &N) const
+Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
+                                                const Expression &iteratedCost,
+                                                const GuardList &guard,
+                                                const ExprSymbol &N) const
 {
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
 
@@ -75,7 +79,39 @@ LinearRule BackwardAcceleration::buildAcceleratedRule(const UpdateMap &iteratedU
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
 
-    LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(), iteratedUpdate);
+    LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(0), iteratedUpdate);
+    debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
+    return res;
+}
+
+Rule BackwardAcceleration::buildAcceleratedRecursion(
+        const std::vector<UpdateMap> &iteratedUpdates,
+        const Expression &iteratedCost,
+        const GuardList &guard,
+        const ExprSymbol &N) const
+{
+    GiNaC::exmap updateSubs = iteratedUpdates.begin()->toSubstitution(varMan);
+    for (auto it = iteratedUpdates.begin() + 1; it < iteratedUpdates.end(); it++) {
+        GiNaC::exmap subs = it->toSubstitution(varMan);
+        for (auto &p: updateSubs) {
+            updateSubs[p.first] = p.second.subs(subs);
+        }
+        for (auto &p: subs) {
+            if (updateSubs.count(p.first) == 0) {
+                updateSubs[p.first] = p.second;
+            }
+        }
+    }
+
+    // Extend the old guard by the updated constraints
+    // and require that the number of iterations N is positive
+    GuardList newGuard = guard;
+    newGuard.push_back(N > 0);
+    for (const Expression &ex : rule.getGuard()) {
+        newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
+    }
+
+    Rule res(RuleLhs(rule.getLhsLoc(), newGuard, iteratedCost), {});
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
     return res;
 }
@@ -127,7 +163,7 @@ vector<Expression> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N,
 }
 
 
-vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, const LinearRule &rule) {
+vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, const Rule &rule) {
     // gather all upper bounds (if possible)
     auto bounds = computeUpperbounds(N, rule.getGuard());
 
@@ -137,12 +173,12 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
     }
 
     // create one rule for each upper bound, by instantiating N with this bound
-    vector<LinearRule> res;
+    vector<Rule> res;
     for (const Expression &bound : bounds) {
         GiNaC::exmap subs;
         subs[N] = bound;
 
-        LinearRule instantiated = rule;
+        Rule instantiated = rule;
         instantiated.applySubstitution(subs);
         res.push_back(instantiated);
         debugBackwardAccel("instantiation " << subs << " yielded " << instantiated);
@@ -150,8 +186,32 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
     return res;
 }
 
+bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &updates) {
+    for (auto it1 = updates.begin(); it1 < updates.end() - 1; it1++) {
+        GiNaC::exmap subs1 = it1->toSubstitution(varMan);
+        for (auto it2 = it1 + 1; it2 < updates.end(); it2++) {
+            GiNaC::exmap subs2 = it2->toSubstitution(varMan);
+            if (it1 != it2) {
+                for (const auto &p: subs1) {
+                    const Expression &e1 = p.second.subs(subs2).expand();
+                    const Expression &e2 = p.first.subs(subs2).subs(subs1).expand();
+                    if (e1 != e2) {
+                        return false;
+                    }
+                }
+                for (const auto &p: subs2) {
+                    const Expression &e1 = p.second.subs(subs1).expand();
+                    const Expression &e2 = p.first.subs(subs1).subs(subs2).expand();
+                    if (e1 != e2) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+}
 
-vector<LinearRule> BackwardAcceleration::run() {
+vector<Rule> BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
         return {};
@@ -159,8 +219,12 @@ vector<LinearRule> BackwardAcceleration::run() {
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
     // Remove constraints that are irrelevant for the loop's execution
+    std::vector<UpdateMap> updates;
+    for (const auto &rhs: rule.getRhss()) {
+        updates.push_back(rhs.getUpdate());
+    }
     GuardList irrelevantGuard;
-    GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {rule.getUpdate()}, &irrelevantGuard);
+    GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &irrelevantGuard);
 
     if (!checkGuardImplication(reducedGuard, irrelevantGuard)) {
         debugBackwardAccel("Failed to check guard implication");
@@ -171,31 +235,58 @@ vector<LinearRule> BackwardAcceleration::run() {
     // compute the iterated update and cost, with a fresh variable N as iteration step
     ExprSymbol N = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("k"));
 
-    UpdateMap iteratedUpdate = rule.getUpdate();
-    Expression iteratedCost = rule.getCost();
-    GuardList strengthenedGuard = rule.getGuard();
-    if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, strengthenedGuard, N)) {
-        debugBackwardAccel("Failed to compute iterated cost/update");
-        Stats::add(Stats::BackwardCannotIterate);
-        return {};
-    }
-    if (reducedGuard.empty()) {
-        iteratedCost = Expression::NontermSymbol;
+    option<Rule> accelerated;
+    if (rule.isLinear()) {
+        UpdateMap iteratedUpdate = rule.getUpdate(0);
+        Expression iteratedCost = rule.getCost();
+        GuardList strengthenedGuard = rule.getGuard();
+        if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, strengthenedGuard, N)) {
+            debugBackwardAccel("Failed to compute iterated cost/update");
+            Stats::add(Stats::BackwardCannotIterate);
+            return {};
+        }
+        if (reducedGuard.empty()) {
+            iteratedCost = Expression::NontermSymbol;
+        }
+
+        // compute the resulting rule and try to simplify it by instantiating N (if enabled)
+        accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, strengthenedGuard, N);
+    } else {
+        if (!checkCommutation(updates)) {
+            debugBackwardAccel("Failed to accelerate recursive rule due to non-commutative udpates");
+            Stats::add(Stats::BackwardNonCommutative);
+            return {};
+        }
+        option<Recurrence::IteratedUpdates> iteratedUpdates = Recurrence::iterateUpdates(varMan, updates, N);
+        if (!iteratedUpdates) {
+            debugBackwardAccel("Failed to compute iterated updates");
+            Stats::add(Stats::BackwardCannotIterate);
+            return {};
+        }
+        GuardList strengthenedGuard = rule.getGuard();
+        strengthenedGuard.insert(
+                strengthenedGuard.end(),
+                iteratedUpdates.get().refinement.begin(),
+                iteratedUpdates.get().refinement.end());
+        unsigned long dimension = rule.getRhss().size();
+        const Expression &iteratedCost = reducedGuard.empty() ?
+                                         Expression::NontermSymbol :
+                                         (pow(dimension, N) - 1) / (dimension - 1);
+
+        // compute the resulting rule and try to simplify it by instantiating N (if enabled)
+        accelerated = buildAcceleratedRecursion(iteratedUpdates.get().updates, iteratedCost, strengthenedGuard, N);
     }
     Stats::add(Stats::BackwardSuccess);
-
-    // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-    LinearRule accelerated = buildAcceleratedRule(iteratedUpdate, iteratedCost, strengthenedGuard, N);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-        return replaceByUpperbounds(N, accelerated);
+        return replaceByUpperbounds(N, accelerated.get());
     } else {
-        vector<LinearRule> res = {accelerated};
+        vector<Rule> res = {accelerated.get()};
         return res;
     }
 }
 
 
-vector<LinearRule> BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
+vector<Rule> BackwardAcceleration::accelerate(VarMan &varMan, const Rule &rule) {
     BackwardAcceleration ba(varMan, rule);
     return ba.run();
 }
