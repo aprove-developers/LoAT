@@ -32,11 +32,7 @@ class Z3Solver : public z3::solver {
 public:
     // Constructs a new solver with the given timeout, pass 0 to disable timeout
     explicit Z3Solver(Z3Context &context, unsigned int timeout = Config::Z3::DefaultTimeout) : z3::solver(context), ctx(context) {
-        if (timeout > 0) {
-            z3::params params(context);
-            params.set(":timeout", timeout);
-            set(params);
-        }
+        setTimeout(context, timeout);
     }
 
     inline z3::check_result check() {
@@ -52,10 +48,13 @@ public:
         Timing::done(Timing::Z3);
     }
 
+    void setTimeout(Z3Context &context, unsigned int timeout);
+
     option<z3::model> maxSmt(std::vector<z3::expr> hard, std::vector<z3::expr> soft);
 
 private:
     Z3Context &ctx;
+    option<unsigned int> timeout;
 
 };
 

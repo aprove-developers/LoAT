@@ -29,6 +29,8 @@
 #include "asymptotic/asymptoticbound.h"
 
 #include <queue>
+#include <util/variablenormalization.h>
+#include <math.h>
 
 
 using namespace std;
@@ -120,6 +122,67 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
     return changed;
 }
 
+std::vector<std::vector<TransIdx>> Pruning::groupByUpdate(const std::vector<TransIdx> &rules, const ITSProblem &its) {
+    std::vector<std::vector<TransIdx>> res;
+    std::vector<TransIdx> nonLinear;
+    std::map<TransIdx, UpdateMap> normalizedUpdates;
+    VariableNormalization varNormalization(its);
+    GiNaC::exset tmpVars;
+    for (const VariableIdx &i: its.getTempVars()) {
+        tmpVars.insert(its.getVarSymbol(i));
+    }
+    for (const TransIdx &ti: rules) {
+        const Rule &r = its.getRule(ti);
+        if (!r.isLinear()) {
+            nonLinear.push_back(ti);
+        } else {
+            const UpdateMap &u = r.getUpdate(0);
+            std::vector<GiNaC::ex> toNormalize;
+            for (const auto &p: u) {
+                toNormalize.push_back(p.second);
+            }
+            const std::vector<GiNaC::ex> &normalized = varNormalization.normalize(toNormalize, tmpVars);
+            UpdateMap normalizedUpdate;
+            int i = 0;
+            for (auto it = u.begin(); it != u.end(); it++, i++) {
+                normalizedUpdate[it->first] = normalized[i];
+            }
+            normalizedUpdates[ti] = normalizedUpdate;
+        }
+    }
+    for (const auto &p: normalizedUpdates) {
+        bool found = false;
+        for (std::vector<TransIdx> &v: res) {
+            std::vector<UpdateMap>m1{p.second};
+            std::vector<UpdateMap>m2{normalizedUpdates[*v.begin()]};
+            if (p.second == normalizedUpdates[*v.begin()]) {
+                v.push_back(p.first);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            res.push_back({p.first});
+        }
+    }
+    std::vector<TransIdx> singletons;
+    auto it = res.begin();
+    while (it != res.end()) {
+        if (it->size() == 1) {
+            singletons.push_back(it->at(0));
+            it = res.erase(it);
+        } else {
+            it++;
+        }
+    }
+    if (!singletons.empty()) {
+        res.push_back(singletons);
+    }
+    if (!nonLinear.empty()) {
+        res.push_back(nonLinear);
+    }
+    return res;
+}
 
 bool Pruning::pruneParallelRules(ITSProblem &its) {
     debugPrune("Pruning parallel rules");
@@ -141,39 +204,41 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
             const vector<TransIdx> &parallel = its.getTransitionsFromTo(pre, node);
 
             if (parallel.size() > Config::Prune::MaxParallelRules) {
-                std::vector<std::tuple<TransIdx, Complexity, int>> queue;
-
-                for (int i=0; i < parallel.size(); ++i) {
-                    // alternating iteration (idx=0,n-1,1,n-2,...) that might avoid choosing similar edges
-                    int idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
-
-                    TransIdx ruleIdx = parallel[idx];
-                    const Rule &rule = its.getRule(parallel[idx]);
-
-                    const Complexity &toBeat = queue.size() >= Config::Prune::MaxParallelRules ?
-                            std::get<1>(queue.at(Config::Prune::MaxParallelRules - 1)) :
-                            Complexity::Const;
-                    // compute the complexity (real check using asymptotic bounds) and store in priority queue
-                    auto res = AsymptoticBound::determineComplexityViaSMT(
-                            its,
-                            rule.getGuard(),
-                            rule.getCost(),
-                            false,
-                            toBeat);
-                    queue.emplace_back(make_tuple(ruleIdx, res.cpx, res.inftyVars));
-                    std::sort(queue.rbegin(), queue.rend(), comp);
-                    if (queue.size() > Config::Prune::MaxParallelRules) {
-                        queue.pop_back();
-                    }
-                    if (Timeout::soft()) return changed;
-                }
-
-                // Keep only the top elements of the queue
+                const vector<vector<TransIdx>> &grouped = groupByUpdate(parallel, its);
                 set<TransIdx> keep;
-                auto it = queue.begin();
-                for (int i=0; i < Config::Prune::MaxParallelRules && it < queue.end(); ++i) {
-                    keep.insert(get<0>(*it));
-                    it++;
+
+                for (const vector<TransIdx> &group: grouped) {
+                    unsigned int toTake = ceil(((float) (Config::Prune::MaxParallelRules * group.size())) / ((float) parallel.size()));
+                    std::vector<std::tuple<TransIdx, Complexity, int>> queue;
+                    for (int i = 0; i < group.size(); ++i) {
+                        // alternating iteration (idx=0,n-1,1,n-2,...) that might avoid choosing similar edges
+                        int idx = (i % 2 == 0) ? i / 2 : group.size() - 1 - i / 2;
+
+                        TransIdx ruleIdx = group[idx];
+                        const Rule &rule = its.getRule(group[idx]);
+
+                        const Complexity &toBeat = queue.size() >= toTake ?
+                                                   std::get<1>(queue.at(toTake - 1)) :
+                                                   Complexity::Const;
+                        // compute the complexity (real check using asymptotic bounds) and store in priority queue
+                        auto res = AsymptoticBound::determineComplexityViaSMT(
+                                its,
+                                rule.getGuard(),
+                                rule.getCost(),
+                                false,
+                                toBeat);
+                        queue.emplace_back(make_tuple(ruleIdx, res.cpx, res.inftyVars));
+                        std::sort(queue.rbegin(), queue.rend(), comp);
+                        if (queue.size() > toTake) {
+                            queue.pop_back();
+                        }
+                        if (Timeout::soft()) return changed;
+                    }
+                    auto it = queue.begin();
+                    for (int i = 0; i < toTake && it < queue.end(); ++i) {
+                        keep.insert(get<0>(*it));
+                        it++;
+                    }
                 }
 
                 // Check if there is an dummy rule (if there is, we want to keep an empty rule)

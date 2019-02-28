@@ -25,3 +25,14 @@ option<z3::model> Z3Solver::maxSmt(std::vector<z3::expr> hard, std::vector<z3::e
     }
     return model;
 }
+
+void Z3Solver::setTimeout(Z3Context &context, unsigned int timeout) {
+    if (this->timeout && this->timeout.get() == timeout) {
+        return;
+    } else if (timeout > 0) {
+        z3::params params(context);
+        params.set(":timeout", timeout);
+        this->set(params);
+        this->timeout = {timeout};
+    }
+}

@@ -125,6 +125,17 @@ bool LimitSmtEncoding::isApplicable(const Expression &cost) {
     return cost.isPolynomial();
 }
 
+void updateTimeout(bool finalCheck, Z3Context &context, Z3Solver &solver) {
+    unsigned int timeout;
+    if (finalCheck && Timeout::soft()) {
+        timeout = Config::Z3::LimitTimeoutFinalFast;
+    } else if (finalCheck) {
+        timeout = Config::Z3::LimitTimeoutFinal;
+    } else {
+        timeout = Config::Z3::LimitTimeout;
+    }
+    solver.setTimeout(context, timeout);
+}
 
 option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
                                                      const VarMan &varMan, bool finalCheck, Complexity currentRes)
@@ -133,7 +144,8 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
 
     // initialize z3
     Z3Context context;
-    Z3Solver solver(context, finalCheck ? Config::Z3::LimitTimeoutFinal : Config::Z3::LimitTimeout);
+    Z3Solver solver(context);
+    updateTimeout(finalCheck, context, solver);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();
@@ -191,11 +203,6 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
         return res == z3::sat;
     };
 
-    // all constraints that we have so far are mandatory, so fail if we can't even solve these
-    if (!checkSolver() || isTimeout(finalCheck)) {
-        return {};
-    }
-
     // remember the current state for backtracking before trying several variations
     solver.push();
 
@@ -215,15 +222,16 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
         solver.pop();
         // try to find a witness for polynomial complexity with degree maxDeg,...,1
         map<int, Expression> coefficients = getCoefficients(templateCost, n);
-        for (int i = maxDeg; Complexity::Poly(i) > currentRes; i--) {
+        for (int i = maxDeg; i > 0 && Complexity::Poly(i) > currentRes; i--) {
             if (isTimeout(finalCheck)) return {};
+            updateTimeout(finalCheck, context, solver);
             Expression c = coefficients.find(i)->second;
             // remember the current state for backtracking
             solver.push();
             solver.add(c.toZ3(context) > 0);
             if (checkSolver()) {
                 break;
-            } else if (Complexity::Poly(i - 1) <= currentRes) {
+            } else if (i == 1 || Complexity::Poly(i - 1) <= currentRes) {
                 // we even failed to prove the minimal requested bound -- give up
                 return {};
             } else {

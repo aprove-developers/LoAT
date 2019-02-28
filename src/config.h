@@ -70,6 +70,7 @@ namespace Config {
         extern const unsigned MeterTimeout;
         extern const unsigned LimitTimeout;
         extern const unsigned LimitTimeoutFinal;
+        extern const unsigned LimitTimeoutFinalFast;
         extern const unsigned MaxExponentWithoutPow;
     }
 
