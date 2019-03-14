@@ -460,6 +460,8 @@ bool AsymptoticBound::solveLimitProblem() {
         if (smtApplicable && currentLP.isPolynomial()) {
             if (trySmtEncoding(Complexity::Const)) {
                 goto start;
+            } else if (!Config::Limit::PolyStrategy->calculusEnabled()) {
+                goto end;
             }
         }
 
@@ -508,6 +510,7 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
     }
+    end:
 
     if (currentLP.isUnsolvable()) {
         debugAsymptoticBound("Limit problem is unsolvable, throwing away");
