@@ -43,7 +43,7 @@ void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --benchmark <basic|cond|bkwd|rec|smt|smt-only>   Set configuration for the benchmarks in the paper" << endl;
+    cout << "  --benchmark <basic|cond|bkwd|rec|smt|just-smt>   Set configuration for the benchmarks in the paper" << endl;
     cout << "  --proof-level <n>                                Detail level for proof output (0-3, default 2)" << endl;
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
@@ -160,8 +160,8 @@ int main(int argc, char *argv[]) {
     else if (benchmarkMode.compare("bkwd")     == 0) setBenchmarkConfig(false, true,  false, &Config::Limit::Calculus);
     else if (benchmarkMode.compare("rec")      == 0) setBenchmarkConfig(false, false, true,  &Config::Limit::Calculus);
     else if (benchmarkMode.compare("smt")      == 0) setBenchmarkConfig(false, false, false, &Config::Limit::SmtAndCalculus);
-    else if (benchmarkMode.compare("smt-only") == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Smt);
-    else if (benchmarkMode.compare("none")  != 0) {
+    else if (benchmarkMode.compare("just-smt") == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Smt);
+    else if (benchmarkMode.compare("none")     != 0) {
         cout << "Unknown benchmark setting" << endl;
         return 1;
     }
