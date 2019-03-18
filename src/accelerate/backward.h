@@ -7,10 +7,10 @@
 
 class BackwardAcceleration {
 public:
-    static std::vector<Rule> accelerate(VarMan &varMan, const Rule &rule);
+    static std::vector<Rule> accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const Rule &rule);
+    BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
     /**
      * Main function, just calls the methods below in the correct order
@@ -59,6 +59,7 @@ private:
 private:
     VariableManager &varMan;
     const Rule &rule;
+    const LocationIdx &sink;
 };
 
 #endif /* BACKWARDACCELERATION_H */

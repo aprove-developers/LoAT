@@ -133,7 +133,12 @@ add_executable(${EXECUTABLE}
         src/strengthening/rulecontextbuilder.cpp
         src/strengthening/rulecontextbuilder.h
         src/strengthening/guardcontextbuilder.cpp
-        src/strengthening/guardcontextbuilder.h)
+        src/strengthening/guardcontextbuilder.h
+        src/util/relevantvariables.cpp
+        src/util/relevantvariables.h
+        src/util/ginacutils.cpp
+        src/util/ginacutils.h
+        src/util/collections.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

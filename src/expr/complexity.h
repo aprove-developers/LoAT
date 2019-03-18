@@ -29,6 +29,7 @@ public:
 
     bool isZero() const { return numer == 0; }
     bool isInteger() const { return denom == 1; }
+    int asInteger() const { assert(isInteger()); return numer; }
     double toFloat() const { return numer/(double)denom; }
     GiNaC::numeric toExpr() const { return GiNaC::numeric(numer,denom); }
 

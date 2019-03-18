@@ -12,12 +12,12 @@
 
 #include <purrs.hh>
 #include <util/stats.h>
+#include <util/relevantvariables.h>
 
 using namespace std;
 
-BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const Rule &rule)
-        : varMan(varMan), rule(rule)
-{}
+BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink)
+        : varMan(varMan), rule(rule), sink(sink) {}
 
 
 bool BackwardAcceleration::shouldAccelerate() const {
@@ -37,9 +37,9 @@ bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, 
     for (const Expression &ex : irrelevantGuard) {
         solver.add(GinacToZ3::convert(ex, context));
     }
-    solver.push();
 
     for (const auto &ruleRhs: rule.getRhss()) {
+        solver.push();
         auto update = ruleRhs.getUpdate().toSubstitution(varMan);
         for (const Expression &ex : rule.getGuard()) {
             solver.add(GinacToZ3::convert(ex.subs(update), context));
@@ -111,7 +111,7 @@ Rule BackwardAcceleration::buildAcceleratedRecursion(
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
 
-    Rule res(RuleLhs(rule.getLhsLoc(), newGuard, iteratedCost), {});
+    Rule res(RuleLhs(rule.getLhsLoc(), newGuard, iteratedCost), RuleRhs(sink, {}));
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
     return res;
 }
@@ -187,19 +187,26 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
 }
 
 bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &updates) {
+    const ExprSymbolSet &relevantVariables = util::RelevantVariables::find(
+            rule.getGuard(),
+            updates,
+            rule.getGuard(),
+            varMan);
     for (auto it1 = updates.begin(); it1 < updates.end() - 1; it1++) {
         GiNaC::exmap subs1 = it1->toSubstitution(varMan);
         for (auto it2 = it1 + 1; it2 < updates.end(); it2++) {
             GiNaC::exmap subs2 = it2->toSubstitution(varMan);
-            if (it1 != it2) {
-                for (const auto &p: subs1) {
+            for (const auto &p: subs1) {
+                if (relevantVariables.count(Expression(p.first).getAVariable()) > 0) {
                     const Expression &e1 = p.second.subs(subs2).expand();
                     const Expression &e2 = p.first.subs(subs2).subs(subs1).expand();
                     if (e1 != e2) {
                         return false;
                     }
                 }
-                for (const auto &p: subs2) {
+            }
+            for (const auto &p: subs2) {
+                if (relevantVariables.count(Expression(p.first).getAVariable()) > 0) {
                     const Expression &e1 = p.second.subs(subs1).expand();
                     const Expression &e2 = p.first.subs(subs1).subs(subs2).expand();
                     if (e1 != e2) {
@@ -209,6 +216,7 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
             }
         }
     }
+    return true;
 }
 
 vector<Rule> BackwardAcceleration::run() {
@@ -286,7 +294,7 @@ vector<Rule> BackwardAcceleration::run() {
 }
 
 
-vector<Rule> BackwardAcceleration::accelerate(VarMan &varMan, const Rule &rule) {
-    BackwardAcceleration ba(varMan, rule);
+vector<Rule> BackwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink) {
+    BackwardAcceleration ba(varMan, rule, sink);
     return ba.run();
 }

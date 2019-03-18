@@ -410,9 +410,7 @@ void AsymptoticBound::removeUnsatProblems() {
 bool AsymptoticBound::solveViaSMT(Complexity currentRes) {
     debugAsymptoticBound("Trying to solve the initial limit problem via SMT.");
 
-    bool smtApplicable = Config::Limit::UseSmtEncoding && LimitSmtEncoding::isApplicable(cost);
-
-    if (!smtApplicable || !currentLP.isPolynomial() || !trySmtEncoding(currentRes)) {
+    if (!Config::Limit::UseSmtEncoding || !currentLP.isPolynomial() || !trySmtEncoding(currentRes)) {
         return false;
     }
 
@@ -437,8 +435,6 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    bool smtApplicable = Config::Limit::UseSmtEncoding && LimitSmtEncoding::isApplicable(cost);
-
     currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
 
@@ -457,7 +453,7 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         //if the problem is polynomial, try a (max)SMT encoding
-        if (smtApplicable && currentLP.isPolynomial()) {
+        if (Config::Limit::UseSmtEncoding && currentLP.isPolynomial()) {
             if (trySmtEncoding(Complexity::Const)) {
                 goto start;
             }

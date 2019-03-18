@@ -168,7 +168,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const vector<Rule> &accelRules = Backward::accelerate(its, nestedRule);
+            const vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc);
             bool success = false;
             for (const Rule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
@@ -268,18 +268,18 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 
 const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) const {
     Forward::Result res{.result=Forward::Success, .rules={}};
-    stack<LinearRule> todo;
-    todo.push(rule.toLinear());
+    stack<Rule> todo;
+    todo.push(rule);
     do {
-        LinearRule r = todo.top();
+        Rule r = todo.top();
         todo.pop();
-        vector<Rule> accelerated = Backward::accelerate(its, r);
+        vector<Rule> accelerated = Backward::accelerate(its, r, sinkLoc);
         if (accelerated.empty()) {
             res.result = Forward::SuccessWithRestriction;
             vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
             for (const Rule &sr: strengthened) {
                 debugBackwardAccel("invariant inference yields " << sr);
-                todo.push(sr.toLinear());
+                todo.push(sr);
             }
         } else {
             for (const Rule &ar: accelerated) {
@@ -307,7 +307,7 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // or if it only succeeded by restricting the guard. In this case,
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
-        if (res.result != Forward::Success && rule.isLinear()) {
+        if (res.result != Forward::Success) {
             return strengthenAndAccelerate(rule);
         }
     }
