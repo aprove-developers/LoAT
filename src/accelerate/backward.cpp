@@ -9,6 +9,7 @@
 #include "expr/guardtoolbox.h"
 #include "expr/relation.h"
 #include "expr/ginactoz3.h"
+#include "accelerate/forward.h"
 
 #include <purrs.hh>
 #include <util/stats.h>
@@ -219,7 +220,7 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
     return true;
 }
 
-vector<Rule> BackwardAcceleration::run() {
+std::pair<vector<Rule>, ForwardAcceleration::ResultKind> BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
         return {};
@@ -237,7 +238,7 @@ vector<Rule> BackwardAcceleration::run() {
     if (!checkGuardImplication(reducedGuard, irrelevantGuard)) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
-        return {};
+        return {{}, ForwardAcceleration::NonMonotonic};
     }
 
     // compute the iterated update and cost, with a fresh variable N as iteration step
@@ -251,7 +252,7 @@ vector<Rule> BackwardAcceleration::run() {
         if (!Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, strengthenedGuard, N)) {
             debugBackwardAccel("Failed to compute iterated cost/update");
             Stats::add(Stats::BackwardCannotIterate);
-            return {};
+            return {{}, ForwardAcceleration::NoClosedFrom};
         }
         if (reducedGuard.empty()) {
             iteratedCost = Expression::NontermSymbol;
@@ -263,13 +264,13 @@ vector<Rule> BackwardAcceleration::run() {
         if (!checkCommutation(updates)) {
             debugBackwardAccel("Failed to accelerate recursive rule due to non-commutative udpates");
             Stats::add(Stats::BackwardNonCommutative);
-            return {};
+            return {{}, ForwardAcceleration::NonCommutative};
         }
         option<Recurrence::IteratedUpdates> iteratedUpdates = Recurrence::iterateUpdates(varMan, updates, N);
         if (!iteratedUpdates) {
             debugBackwardAccel("Failed to compute iterated updates");
             Stats::add(Stats::BackwardCannotIterate);
-            return {};
+            return {{}, ForwardAcceleration::NoClosedFrom};
         }
         GuardList strengthenedGuard = rule.getGuard();
         strengthenedGuard.insert(
@@ -286,15 +287,15 @@ vector<Rule> BackwardAcceleration::run() {
     }
     Stats::add(Stats::BackwardSuccess);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-        return replaceByUpperbounds(N, accelerated.get());
+        return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};
     } else {
         vector<Rule> res = {accelerated.get()};
-        return res;
+        return {res, ForwardAcceleration::Success};
     }
 }
 
 
-vector<Rule> BackwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink) {
+std::pair<vector<Rule>, ForwardAcceleration::ResultKind> BackwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink) {
     BackwardAcceleration ba(varMan, rule, sink);
     return ba.run();
 }

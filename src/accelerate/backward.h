@@ -4,10 +4,11 @@
 #include "its/itsproblem.h"
 #include "its/rule.h"
 #include "util/option.h"
+#include "accelerate/forward.h"
 
 class BackwardAcceleration {
 public:
-    static std::vector<Rule> accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
+    static std::pair<std::vector<Rule>, ForwardAcceleration::ResultKind> accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
 private:
     BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
@@ -15,7 +16,7 @@ private:
     /**
      * Main function, just calls the methods below in the correct order
      */
-    std::vector<Rule> run();
+    std::pair<std::vector<Rule>, ForwardAcceleration::ResultKind> run();
 
     /**
      * Checks whether the backward acceleration technique might be applicable.

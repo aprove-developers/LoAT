@@ -38,6 +38,7 @@
 #include <queue>
 #include <asymptotic/asymptoticbound.h>
 #include <strengthening/strengthener.h>
+#include <stdexcept>
 
 
 using namespace std;
@@ -168,7 +169,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc);
+            const vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).first;
             bool success = false;
             for (const Rule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
@@ -273,23 +274,20 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     do {
         Rule r = todo.top();
         todo.pop();
-        vector<Rule> accelerated = Backward::accelerate(its, r, sinkLoc);
-        if (accelerated.empty()) {
-            res.result = Forward::SuccessWithRestriction;
+        pair<vector<Rule>, Forward::ResultKind> p = Backward::accelerate(its, r, sinkLoc);
+        if (p.first.empty()) {
+            res.result = p.second;
             vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
             for (const Rule &sr: strengthened) {
                 debugBackwardAccel("invariant inference yields " << sr);
                 todo.push(sr);
             }
         } else {
-            for (const Rule &ar: accelerated) {
+            for (const Rule &ar: p.first) {
                 res.rules.emplace_back("backward acceleration", ar);
             }
         }
     } while (!todo.empty());
-    if (res.rules.empty()) {
-        res.result = Forward::NonMonotonic;
-    }
     return res;
 }
 
@@ -425,6 +423,17 @@ void Accelerator::run() {
                 keepRules.insert(loop);
                 proofout << "Found no metering function for rule " << loop << "." << endl;
                 break;
+
+            case Forward::NoClosedFrom:
+                if (its.getRule(loop).isLinear()) {
+                    outerCandidates.push_back({loop});
+                }
+                keepRules.insert(loop);
+                proofout << "Found no closed form for " << loop << "." << endl;
+                break;
+
+            case Forward::NonCommutative:
+                throw std::logic_error("Acceleration failed due to non-commutative updates, but rule should have been shortened.");
 
             case Forward::NonMonotonic:
                 if (its.getRule(loop).isLinear()) {
