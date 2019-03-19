@@ -145,6 +145,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 
             if (parallel.size() > Config::Prune::MaxParallelRules) {
                 PriorityQueue queue(comp);
+                set<TransIdx> keep;
 
                 for (unsigned int i=0; i < parallel.size(); ++i) {
                     // alternating iteration (idx=0,n-1,1,n-2,...) that might avoid choosing similar edges
@@ -152,21 +153,24 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 
                     TransIdx ruleIdx = parallel[idx];
                     const Rule &rule = its.getRule(parallel[idx]);
+                    if (rule.getCost().isNontermSymbol()) {
+                        keep.insert(ruleIdx);
+                    } else {
 
-                    // compute the complexity (real check using asymptotic bounds) and store in priority queue
-                    auto res = AsymptoticBound::determineComplexityViaSMT(
-                            its,
-                            rule.getGuard(),
-                            rule.getCost(),
-                            false,
-                            Complexity::Const);
-                    queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
-                    if (Timeout::soft()) return changed;
+                        // compute the complexity (real check using asymptotic bounds) and store in priority queue
+                        auto res = AsymptoticBound::determineComplexityViaSMT(
+                                its,
+                                rule.getGuard(),
+                                rule.getCost(),
+                                false,
+                                Complexity::Const);
+                        queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
+                        if (Timeout::soft()) return changed;
+                    }
                 }
 
                 // Keep only the top elements of the queue
-                set<TransIdx> keep;
-                for (unsigned int i=0; i < Config::Prune::MaxParallelRules; ++i) {
+                for (unsigned int i=0; i < Config::Prune::MaxParallelRules && !queue.empty(); ++i) {
                     keep.insert(get<0>(queue.top()));
                     queue.pop();
                 }
