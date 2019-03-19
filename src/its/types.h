@@ -37,6 +37,7 @@ public:
     // inherit constructors of base class
     using std::vector<Expression>::vector;
     void collectVariables(ExprSymbolSet &res) const;
+    GuardList subs(const GiNaC::exmap &sigma) const;
 };
 
 

@@ -19,6 +19,13 @@ else()
     set(EXECUTABLE loat)
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 include_directories(src)
 include_directories(src/accelerate)
 include_directories(src/accelerate/meter)
@@ -138,7 +145,10 @@ add_executable(${EXECUTABLE}
         src/util/relevantvariables.h
         src/util/ginacutils.cpp
         src/util/ginacutils.h
-        src/util/collections.h)
+        src/util/collections.h src/sexpresso/sexpresso.cpp
+        src/sexpresso/sexpresso.h
+        src/its/sexpressionparser/parser.cpp
+        src/its/sexpressionparser/parser.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

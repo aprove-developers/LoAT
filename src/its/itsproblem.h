@@ -50,6 +50,7 @@ public:
     LocationIdx getInitialLocation() const;
     bool isInitialLocation(LocationIdx loc) const;
     void setInitialLocation(LocationIdx loc);
+    LocationIdx getLocationIdx(const std::string &name) const;
 
     // query the rule associated with a given transition
     bool hasRule(TransIdx transition) const;

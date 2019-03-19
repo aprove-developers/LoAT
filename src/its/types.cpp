@@ -25,6 +25,13 @@ void GuardList::collectVariables(ExprSymbolSet &res) const {
     }
 }
 
+GuardList GuardList::subs(const GiNaC::exmap &sigma) const {
+    GuardList res;
+    for (const Expression &e: *this) {
+        res.push_back(e.subs(sigma));
+    }
+    return res;
+}
 
 bool UpdateMap::isUpdated(VariableIdx var) const {
     return find(var) != end();

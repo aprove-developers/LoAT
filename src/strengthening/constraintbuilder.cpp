@@ -73,6 +73,7 @@ namespace strengthening {
             }
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
+        const Continuation &continuation = constructContinuationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
                 invariancePremise,
                 templatesInvariantImplication.conclusion);
@@ -82,7 +83,7 @@ namespace strengthening {
         const std::vector<z3::expr> &conclusionMonotonic = constructImplicationConstraints(
                 monotonicityPremise,
                 monotonicityConclusion);
-        return SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
+        return SmtConstraints(initiation, continuation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
     }
 
     const GuardList Self::findRelevantConstraints() const {
@@ -123,7 +124,7 @@ namespace strengthening {
         return res;
     }
 
-    const Initiation Self::constructInitiationConstraints(const GuardList &premise) const {
+    const Initiation Self::constructInitiationConstraints(const GuardList &relevantConstraints) const {
         Initiation res;
         for (const GuardList &pre: ruleCtx.preconditions) {
             z3::expr_vector gVec(z3Ctx);
@@ -135,7 +136,7 @@ namespace strengthening {
             }
             ExprSymbolSet allVars;
             pre.collectVariables(allVars);
-            for (const Expression &e: premise) {
+            for (const Expression &e: relevantConstraints) {
                 e.collectVariables(allVars);
             }
             for (const Expression &e: pre) {
@@ -154,12 +155,53 @@ namespace strengthening {
             for (const Expression &e: updatedTemplates) {
                 renamed.push_back(e.toZ3(z3Ctx));
             }
-            for (Expression e: premise) {
+            for (Expression e: relevantConstraints) {
                 e.applySubs(varRenaming);
                 renamed.push_back(e.toZ3(z3Ctx));
             }
             const z3::expr &expr = mk_and(renamed);
             res.satisfiable.push_back(expr);
+        }
+        return res;
+    }
+
+    const Continuation Self::constructContinuationConstraints(const GuardList &relevantConstraints) const {
+        Continuation res;
+        for (const GiNaC::exmap &up: ruleCtx.updates) {
+            const GuardList &constraints = relevantConstraints.subs(up);
+            for (const GuardList &post: ruleCtx.postconditions) {
+                z3::expr_vector gVec(z3Ctx);
+                for (const Expression &e: post) {
+                    gVec.push_back(e.toZ3(z3Ctx));
+                }
+                ExprSymbolSet allVars;
+                post.collectVariables(allVars);
+                for (const Expression &e: constraints) {
+                    e.collectVariables(allVars);
+                }
+                for (const Expression &e: post) {
+                    e.collectVariables(allVars);
+                }
+                GiNaC::exmap varRenaming;
+                for (const ExprSymbol &x: allVars) {
+                    varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
+                }
+                z3::expr_vector renamed(z3Ctx);
+                for (Expression e: post) {
+                    e.applySubs(varRenaming);
+                    renamed.push_back(e.toZ3(z3Ctx));
+                }
+                const std::vector<Expression> &updatedTemplates = templates.subs(varRenaming);
+                for (const Expression &e: updatedTemplates) {
+                    renamed.push_back(e.toZ3(z3Ctx));
+                }
+                for (Expression e: constraints) {
+                    e.applySubs(varRenaming);
+                    renamed.push_back(e.toZ3(z3Ctx));
+                }
+                const z3::expr &expr = mk_and(renamed);
+                res.satisfiable.push_back(expr);
+            }
         }
         return res;
     }

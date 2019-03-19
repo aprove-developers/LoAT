@@ -8,7 +8,6 @@
 #include <expr/expression.h>
 #include <its/types.h>
 #include <its/rule.h>
-#include "types.h"
 
 namespace util {
 

@@ -6,7 +6,7 @@
 #include <z3/z3solver.h>
 #include <z3/z3toolbox.h>
 #include "constraintsolver.h"
-#include <variablemanager.h>
+#include <its/variablemanager.h>
 
 namespace strengthening {
 

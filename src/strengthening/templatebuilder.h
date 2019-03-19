@@ -27,8 +27,6 @@ namespace strengthening {
 
         const Templates build() const;
 
-        const ExprSymbolSet findRelevantVariables(const Expression &c) const;
-
         const Templates::Template buildTemplate(const ExprSymbolSet &vars) const;
 
     };

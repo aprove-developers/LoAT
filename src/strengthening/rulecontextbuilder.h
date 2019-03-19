@@ -28,9 +28,13 @@ namespace strengthening {
 
         const std::vector<Rule> computePredecessors() const;
 
+        const std::vector<Rule> computeSuccessors() const;
+
         const std::vector<GiNaC::exmap> computeUpdates() const;
 
         const std::vector<GuardList> buildPreconditions(const std::vector<Rule> &predecessors) const;
+
+        const std::vector<GuardList> buildPostconditions(const std::vector<Rule> &successors) const;
 
     };
 

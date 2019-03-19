@@ -40,7 +40,9 @@ namespace strengthening {
 
         const Implication buildTemplatesInvariantImplication() const;
 
-        const Initiation constructInitiationConstraints(const GuardList &premise) const;
+        const Initiation constructInitiationConstraints(const GuardList &relevantConstraints) const;
+
+        const Continuation constructContinuationConstraints(const GuardList &relevantConstraints) const;
 
         const std::vector<z3::expr> constructImplicationConstraints(
                 const GuardList &premise,

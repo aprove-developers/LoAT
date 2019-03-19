@@ -16,6 +16,8 @@
  */
 
 #include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <its/sexpressionparser/parser.h>
 
 #include "its/parser/itsparser.h"
 #include "analysis/analysis.h"
@@ -175,7 +177,11 @@ int main(int argc, char *argv[]) {
 
     ITSProblem its;
     try {
-        its = parser::ITSParser::loadFromFile(filename);
+        if (boost::algorithm::ends_with(filename, ".koat")) {
+            its = parser::ITSParser::loadFromFile(filename);
+        } else if (boost::algorithm::ends_with(filename, ".smt2")) {
+            its = sexpressionparser::Parser::loadFromFile(filename);
+        }
     } catch (const parser::ITSParser::FileError &err) {
         cout << "Error loading file " << filename << ": " << err.what() << endl;
         return 1;
