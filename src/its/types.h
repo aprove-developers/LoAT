@@ -25,9 +25,9 @@ class VariableManager;
 
 
 // some typedefs for clarity
-using TransIdx = int;
-using LocationIdx = int;
-using VariableIdx = int;
+using TransIdx = unsigned int;
+using LocationIdx = unsigned int;
+using VariableIdx = unsigned int;
 using VariablePair = std::pair<VariableIdx, VariableIdx>;
 
 

@@ -202,7 +202,7 @@ namespace Config {
         bool UseSmtEncoding = true;
 
         // Discard a limit problem of size >= ProblemDiscardSize in a non-final check if z3 yields "unknown"
-        const int ProblemDiscardSize = 10;
+        const unsigned int ProblemDiscardSize = 10;
     }
 
     namespace Analysis {

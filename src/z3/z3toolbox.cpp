@@ -27,7 +27,7 @@ using namespace std;
 
 z3::expr Z3Toolbox::concat(Z3Context &context, const std::vector<z3::expr> &list, ConcatOperator op) {
     z3::expr res = context.bool_val(op == ConcatAnd);
-    for (int i=0; i < list.size(); ++i) {
+    for (unsigned int i=0; i < list.size(); ++i) {
         if (i == 0) {
             res = list[i];
         } else {

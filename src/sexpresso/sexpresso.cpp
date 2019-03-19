@@ -72,7 +72,7 @@ namespace sexpresso {
             }
         }
         paths.emplace_back(std::string{start, path.end()});
-        return std::move(paths);
+        return paths;
     }
 
     auto Sexp::getChildByPath(std::string const& path) -> Sexp* {
@@ -135,7 +135,7 @@ namespace sexpresso {
 
     auto Sexp::createPath(std::vector<std::string> const& path) -> Sexp& {
         auto el = this;
-        auto nxt = el;
+        Sexp *nxt;
         auto pc = path.begin();
         for(; pc != path.end(); ++pc) {
             nxt = findChild(*el, *pc);
@@ -172,12 +172,12 @@ namespace sexpresso {
         return std::find(escape_vals.begin(), escape_vals.end(), c) != escape_vals.end();
     }
 
-    static auto countEscapeValues(std::string const& str) -> size_t {
+    static auto countEscapeValues(std::string const& str) -> long {
         return std::count_if(str.begin(), str.end(), isEscapeValue);
     }
 
     static auto stringValToString(std::string const& s) -> std::string {
-        if(s.size() == 0) return std::string{"\"\""};
+        if(s.empty()) return std::string{"\"\""};
         if((std::find(s.begin(), s.end(), ' ') == s.end()) && countEscapeValues(s) == 0) return s;
         return ('"' + escape(s) + '"');
     }
@@ -239,7 +239,7 @@ namespace sexpresso {
     static auto childrenEqual(std::vector<Sexp> const& a, std::vector<Sexp> const& b) -> bool {
         if(a.size() != b.size()) return false;
 
-        for(auto i = 0; i < a.size(); ++i) {
+        for(unsigned int i = 0; i < a.size(); ++i) {
             if(!a[i].equal(b[i])) return false;
         }
         return true;
@@ -250,7 +250,6 @@ namespace sexpresso {
         switch(this->kind) {
             case SexpValueKind::SEXP:
                 return childrenEqual(this->value.sexp, other.value.sexp);
-                break;
             case SexpValueKind::STRING:
                 return this->value.str == other.value.str;
         }
@@ -264,7 +263,7 @@ namespace sexpresso {
         auto s = Sexp{};
         s.kind = SexpValueKind::STRING;
         s.value.str = std::move(strval);
-        return std::move(s);
+        return s;
     }
 
     auto parse(std::string const& str, std::string& err) -> Sexp {
@@ -274,7 +273,6 @@ namespace sexpresso {
         for(auto iter = nextiter; iter != str.end(); iter = nextiter) {
             nextiter = iter + 1;
             if(std::isspace(*iter)) continue;
-            auto& cursexp = sexprstack.top();
             switch(*iter) {
                 case '(':
                     sexprstack.push(Sexp{});
@@ -367,7 +365,7 @@ namespace sexpresso {
                 result_str.push_back(escape_chars[loc - escape_vals.begin()]);
             }
         }
-        return std::move(result_str);
+        return result_str;
     }
 
     SexpArgumentIterator::SexpArgumentIterator(Sexp& sexp) : sexp(sexp) {}

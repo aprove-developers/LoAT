@@ -89,7 +89,7 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
         // Check if the constraint is syntactically implied by one of the other constraints.
         // Also check if one of the others is implied by the new constraint.
         bool implied = false;
-        for (int i=0; i < newGuard.size(); ++i) {
+        for (unsigned int i=0; i < newGuard.size(); ++i) {
             if (GuardToolbox::isTrivialImplication(newGuard.at(i), ex)) {
                 implied = true;
 

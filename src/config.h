@@ -116,7 +116,7 @@ namespace Config {
     // Asymptotic complexity computation using limit problems
     namespace Limit {
         extern bool UseSmtEncoding;
-        extern const int ProblemDiscardSize;
+        extern const unsigned int ProblemDiscardSize;
     }
 
     // Parser for ITS problems

@@ -61,7 +61,7 @@ z3::expr FarkasLemma::apply(
 
     // Create mapping from every variable to its coefficient
     ExprSymbolMap<z3::expr> varToCoeff;
-    for (int i=0; i < vars.size(); ++i) {
+    for (unsigned int i=0; i < vars.size(); ++i) {
         varToCoeff.emplace(vars[i], coeffs[i]);
     }
 
@@ -82,7 +82,7 @@ z3::expr FarkasLemma::apply(
     // Build the constraints "lambda^T * A = c^T"
     for (auto varIt : varToCoeff) {
         z3::expr lambdaA = context.int_val(0);
-        for (int j=0; j < constraints.size(); ++j) {
+        for (unsigned int j=0; j < constraints.size(); ++j) {
             Expression a = constraints[j].lhs().expand().coeff(varIt.first);
             z3::expr add = lambda[j] * GinacToZ3::convert(a, context);
             lambdaA = (j==0) ? add : lambdaA+add; // avoid superflous +0
@@ -92,7 +92,7 @@ z3::expr FarkasLemma::apply(
 
     // Build the constraints "lambda^T * b + c0 <= delta"
     z3::expr sum = c0;
-    for (int i=0; i < constraints.size(); ++i) {
+    for (unsigned int i=0; i < constraints.size(); ++i) {
         sum = sum + lambda[i] * GinacToZ3::convert(constraints[i].rhs(), context);
     }
     res.push_back(sum <= delta);

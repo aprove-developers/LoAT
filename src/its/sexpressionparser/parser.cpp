@@ -53,6 +53,10 @@ namespace sexpressionparser {
                     }
                     assert(preVars.size() == postVars.size());
                     sexpresso::Sexp ruleExps = ex[4];
+                    ExprSymbolSet tmpVars;
+                    for (const std::string &str: postVars) {
+                        tmpVars.insert(res.getVarSymbol(vars[str]));
+                    }
                     for (auto &ruleExp: ruleExps.arguments()) {
                         if (ruleExp[0].str() == "cfg_trans2") {
                             LocationIdx from = locations[ruleExp[2].str()];
@@ -60,10 +64,19 @@ namespace sexpressionparser {
                             UpdateMap update;
                             GuardList guard;
                             parseCond(ruleExp[5], guard);
-                            for (int i = 0; i < preVars.size(); i++) {
+                            for (unsigned int i = 0; i < preVars.size(); i++) {
                                 update[vars[preVars[i]]] = res.getVarSymbol(vars[postVars[i]]);
                             }
-                            res.addRule(Rule(from, guard, Expression(1), to, update));
+                            Rule rule(from, guard, Expression(1), to, update);
+                            // make sure that the temporary variables are unique
+                            ExprSymbolSet currTmpVars(tmpVars);
+                            guard.collectVariables(currTmpVars);
+                            GiNaC::exmap subs;
+                            for (const ExprSymbol &var: currTmpVars) {
+                                subs[var] = res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name()));
+                            }
+                            rule.applySubstitution(subs);
+                            res.addRule(rule);
                         }
                     }
                 }
@@ -72,9 +85,17 @@ namespace sexpressionparser {
     }
 
     void Self::parseCond(sexpresso::Sexp &sexp, GuardList &guard) {
+        if (sexp.isString()) {
+            if (sexp.str() == "false") {
+                guard.push_back(Expression(0 < 0));
+            } else {
+                assert(sexp.str() == "true");
+                return;
+            }
+        }
         const std::string op = sexp[0].str();
         if (op == "and") {
-            for (int i = 1; i < sexp.childCount(); i++) {
+            for (unsigned int i = 1; i < sexp.childCount(); i++) {
                 parseCond(sexp[i], guard);
             }
         } else if (op == "exists") {

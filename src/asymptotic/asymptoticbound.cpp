@@ -148,7 +148,7 @@ void AsymptoticBound::propagateBounds() {
     }
 
     // apply all substitutions resulting from equations
-    for (int i = 0; i < substitutions.size(); ++i) {
+    for (unsigned int i = 0; i < substitutions.size(); ++i) {
         currentLP.substitute(substitutions[i], i);
     }
 
@@ -246,11 +246,11 @@ void AsymptoticBound::propagateBounds() {
     LimitProblem &limitProblem = limitProblems.back();
 
     debugAsymptoticBound("combination of substitutions:");
-    for (int i = numOfEquations; i < substitutions.size(); ++i) {
+    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
         debugAsymptoticBound(substitutions[i]);
     }
 
-    for (int i = numOfEquations; i < substitutions.size(); ++i) {
+    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
         limitProblem.substitute(substitutions[i], i);
     }
 
@@ -725,7 +725,7 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         for (int i = 0; i <= pos; ++i) {
             l += it->op(i);
         }
-        for (int i = pos + 1; i < it->nops(); ++i) {
+        for (unsigned int i = pos + 1; i < it->nops(); ++i) {
             r += it->op(i);
         }
 
@@ -740,7 +740,7 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         for (int i = 0; i <= pos; ++i) {
             l *= it->op(i);
         }
-        for (int i = pos + 1; i < it->nops(); ++i) {
+        for (unsigned int i = pos + 1; i < it->nops(); ++i) {
             r *= it->op(i);
         }
 
@@ -779,7 +779,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 
         bool foundOneVar = false;
         ExprSymbol oneVar;
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression ex(it->op(i));
 
             if (ex.hasNoVariables()) {
@@ -815,7 +815,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 
         bool foundOneVar = false;
         ExprSymbol oneVar;
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression ex(it->op(i));
 
             if (ex.hasNoVariables()) {
@@ -888,7 +888,7 @@ bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::c
     }
 
     if (!toApply.empty()) {
-        for (int i = 0; i < toApply.size() - 1; ++i) {
+        for (unsigned int i = 0; i < toApply.size() - 1; ++i) {
             limitProblems.push_back(currentLP);
             LimitProblem &copy = limitProblems.back();
             auto copyIt = copy.find(*it);

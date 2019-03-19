@@ -339,7 +339,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
     } else if (is_a<mul>(term)) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
-        for (int i=1; i < term.nops(); ++i) {
+        for (unsigned int i=1; i < term.nops(); ++i) {
             cpx = cpx * getComplexity(term.op(i));
         }
         return cpx;
@@ -347,7 +347,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
     } else if (is_a<add>(term)) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
-        for (int i=1; i < term.nops(); ++i) {
+        for (unsigned int i=1; i < term.nops(); ++i) {
             cpx = cpx + getComplexity(term.op(i));
         }
         return cpx;

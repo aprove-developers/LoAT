@@ -351,8 +351,8 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     // We start with pairs of rhss, since this can still yield exponential complexity.
     const vector<RuleRhs> &rhss = rule.getRhss();
 
-    for (int i=0; i < rhss.size(); ++i) {
-        for (int j=i+1; j < rhss.size(); ++j) {
+    for (unsigned int i=0; i < rhss.size(); ++i) {
+        for (unsigned int j=i+1; j < rhss.size(); ++j) {
             vector<RuleRhs> newRhss{ rhss[i], rhss[j] };
             Rule newRule(rule.getLhs(), newRhss);
             if (tryAccel(newRule)) {
