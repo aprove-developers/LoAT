@@ -93,6 +93,10 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     }
 }
 
+bool operator ==(const RuleRhs &fst, const RuleRhs &snd) {
+    return fst.getLoc() == snd.getLoc() && fst.getUpdate() == snd.getUpdate();
+}
+
 ostream& operator<<(ostream &s, const Rule &rule) {
     s << "Rule(";
 

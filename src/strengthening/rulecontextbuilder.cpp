@@ -30,18 +30,6 @@ namespace strengthening {
         return predecessors;
     }
 
-    const std::vector<Rule> Self::computeSuccessors() const {
-        std::set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
-        std::set<TransIdx> successorIndices = its.getTransitionsFrom(rule.getLhsLoc());
-        std::vector<Rule> successors;
-        for (const TransIdx &i: successorIndices) {
-            if (predecessorIndices.count(i) == 0) {
-                successors.push_back(its.getRule(i));
-            }
-        }
-        return successors;
-    }
-
     const std::vector<GiNaC::exmap> Self::computeUpdates() const {
         std::vector<GiNaC::exmap> res;
         for (const RuleRhs &rhs: rule.getRhss()) {
@@ -87,35 +75,11 @@ namespace strengthening {
         return res;
     }
 
-    const std::vector<GuardList> Self::buildPostconditions(const std::vector<Rule> &successors) const {
-        std::vector<GuardList> res;
-        GiNaC::exmap tmpVarRenaming;
-        for (const VariableIdx &i: its.getTempVars()) {
-            const ExprSymbol &x = its.getVarSymbol(i);
-            tmpVarRenaming[x] = its.getVarSymbol(its.addFreshVariable(x.get_name()));
-        }
-        for (const Rule &succ: successors) {
-            if (succ.getGuard() == rule.getGuard()) {
-                continue;
-            }
-            GuardList post;
-            for (const Expression &g: succ.getGuard()) {
-                if (!GuardToolbox::containsTempVar(its, g)) {
-                    post.push_back(g);
-                }
-            }
-            res.push_back(post);
-        }
-        return res;
-    }
-
     const RuleContext Self::build() const {
         const std::vector<GiNaC::exmap> &updates = computeUpdates();
         const std::vector<Rule> &predecessors = computePredecessors();
         const std::vector<GuardList> preconditions = buildPreconditions(predecessors);
-        const std::vector<Rule> &successors = computeSuccessors();
-        const std::vector<GuardList> postconditions = buildPostconditions(predecessors);
-        return RuleContext(rule, updates, preconditions, postconditions, its);
+        return RuleContext(rule, updates, preconditions, its);
     }
 
 }

@@ -145,7 +145,9 @@ add_executable(${EXECUTABLE}
         src/util/collections.h src/sexpresso/sexpresso.cpp
         src/sexpresso/sexpresso.h
         src/its/sexpressionparser/parser.cpp
-        src/its/sexpressionparser/parser.h)
+        src/its/sexpressionparser/parser.h
+        src/merging/rulemerger.cpp
+        src/merging/rulemerger.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

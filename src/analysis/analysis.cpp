@@ -34,6 +34,8 @@
 
 #include "its/export.h"
 
+#include "merging/rulemerger.h"
+
 
 using namespace std;
 
@@ -189,12 +191,22 @@ RuntimeResult Analysis::run() {
         }
         if (Timeout::soft()) break;
 
+        if (isFullySimplified()) {
+            break;
+        }
+
+        if (merging::RuleMerger::mergeRules(its)) {
+            proofout.headline("Merged rules:");
+            printForProof("Merging");
+        }
+
         // Try to avoid rule explosion (often caused by chainTreePaths).
         // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
         if (acceleratedOnce && pruneRules()) {
             proofout.headline("Applied pruning (of leafs and parallel rules):");
             printForProof("Prune");
         }
+
         if (Timeout::soft()) break;
     }
 

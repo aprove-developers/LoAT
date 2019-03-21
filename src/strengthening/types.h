@@ -17,18 +17,15 @@ namespace strengthening {
                 const Rule &rule,
                 std::vector<GiNaC::exmap> updates,
                 std::vector<GuardList> preconditions,
-                std::vector<GuardList> postconditions,
                 VariableManager &varMan):
                 rule(rule),
                 updates(std::move(updates)),
                 preconditions(std::move(preconditions)),
-                postconditions(std::move(postconditions)),
                 varMan(varMan) { }
 
         const Rule &rule;
         const std::vector<GiNaC::exmap> updates;
         const std::vector<GuardList> preconditions;
-        const std::vector<GuardList> postconditions;
         VariableManager &varMan;
     };
 
@@ -71,26 +68,19 @@ namespace strengthening {
         std::vector<z3::expr> satisfiable;
     };
 
-    struct Continuation {
-        std::vector<z3::expr> satisfiable;
-    };
-
     struct SmtConstraints {
 
         SmtConstraints(
                 Initiation initiation,
-                Continuation continuation,
                 std::vector<z3::expr> templatesInvariant,
                 std::vector<z3::expr> conclusionsInvariant,
                 std::vector<z3::expr> conclusionsMonotonic) :
                 initiation(std::move(initiation)),
-                continuation(std::move(continuation)),
                 templatesInvariant(std::move(templatesInvariant)),
                 conclusionsInvariant(std::move(conclusionsInvariant)),
                 conclusionsMonotonic(std::move(conclusionsMonotonic)) {}
 
         const Initiation initiation;
-        const Continuation continuation;
         const std::vector<z3::expr> templatesInvariant;
         const std::vector<z3::expr> conclusionsInvariant;
         const std::vector<z3::expr> conclusionsMonotonic;

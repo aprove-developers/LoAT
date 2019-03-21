@@ -42,8 +42,6 @@ namespace strengthening {
 
         const Initiation constructInitiationConstraints(const GuardList &relevantConstraints) const;
 
-        const Continuation constructContinuationConstraints(const GuardList &relevantConstraints) const;
-
         const std::vector<z3::expr> constructImplicationConstraints(
                 const GuardList &premise,
                 const GuardList &conclusion) const;
