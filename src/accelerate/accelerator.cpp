@@ -268,15 +268,18 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 // ###################
 
 const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) const {
-    Forward::Result res{.result=Forward::Success, .rules={}};
+    option<Forward::ResultKind> res;
+    std::vector<Forward::MeteredRule> rules;
     stack<Rule> todo;
     todo.push(rule);
     do {
         Rule r = todo.top();
         todo.pop();
         pair<vector<Rule>, Forward::ResultKind> p = Backward::accelerate(its, r, sinkLoc);
+        if (!res) {
+            res = p.second;
+        }
         if (p.first.empty()) {
-            res.result = p.second;
             vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
             for (const Rule &sr: strengthened) {
                 debugBackwardAccel("invariant inference yields " << sr);
@@ -284,11 +287,14 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
             }
         } else {
             for (const Rule &ar: p.first) {
-                res.rules.emplace_back("backward acceleration", ar);
+                rules.emplace_back("backward acceleration", ar);
             }
         }
     } while (!todo.empty());
-    return res;
+    if (!rules.empty()) {
+        res = Forward::Success;
+    }
+    return {.result=res.get(), .rules=rules};
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
