@@ -64,6 +64,11 @@ bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, 
     return true;
 }
 
+Rule BackwardAcceleration::buildNontermRule() const {
+    LinearRule res(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
+    debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
+    return std::move(res);
+}
 
 Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
                                                 const Expression &iteratedCost,
@@ -82,7 +87,7 @@ Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
 
     LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(0), iteratedUpdate);
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
-    return res;
+    return std::move(res);
 }
 
 Rule BackwardAcceleration::buildAcceleratedRecursion(
@@ -241,6 +246,10 @@ std::pair<vector<Rule>, ForwardAcceleration::ResultKind> BackwardAcceleration::r
         return {{}, ForwardAcceleration::NonMonotonic};
     }
 
+    if (reducedGuard.empty()) {
+        return {{buildNontermRule()}, ForwardAcceleration::Success};
+    }
+
     // compute the iterated update and cost, with a fresh variable N as iteration step
     ExprSymbol N = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("k"));
 
@@ -253,9 +262,6 @@ std::pair<vector<Rule>, ForwardAcceleration::ResultKind> BackwardAcceleration::r
             debugBackwardAccel("Failed to compute iterated cost/update");
             Stats::add(Stats::BackwardCannotIterate);
             return {{}, ForwardAcceleration::NoClosedFrom};
-        }
-        if (reducedGuard.empty()) {
-            iteratedCost = Expression::NontermSymbol;
         }
 
         // compute the resulting rule and try to simplify it by instantiating N (if enabled)

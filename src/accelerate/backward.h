@@ -34,6 +34,8 @@ private:
     Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
                               const GuardList &guard, const ExprSymbol &N) const;
 
+    Rule buildNontermRule() const;
+
     Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
                                    const GuardList &guard, const ExprSymbol &N) const;
 
