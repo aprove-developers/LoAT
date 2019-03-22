@@ -223,7 +223,7 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
 std::pair<vector<Rule>, ForwardAcceleration::ResultKind> BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
-        return {};
+        return {{}, ForwardAcceleration::NotSupported};
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 

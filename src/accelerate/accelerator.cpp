@@ -278,6 +278,9 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         pair<vector<Rule>, Forward::ResultKind> p = Backward::accelerate(its, r, sinkLoc);
         if (!res) {
             res = p.second;
+            if (res == Forward::NotSupported) {
+                return {.result=Forward::NotSupported, .rules={}};
+            }
         }
         if (p.first.empty()) {
             vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
@@ -299,24 +302,19 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
+    assert(Config::Accel::UseForwardAccel || Config::Accel::UseBackwardAccel);
     Forward::Result res;
     if (Config::Accel::UseForwardAccel) {
-        res = Forward::accelerate(its, rule, sinkLoc);
-    } else {
-        res = Forward::Result();
-        res.result = Forward::NoMetering;
+        return Forward::accelerate(its, rule, sinkLoc);
     }
 
     // Try backward acceleration only if forward acceleration failed,
     // or if it only succeeded by restricting the guard. In this case,
     // we keep the rules from forward and just add the ones from backward acceleration.
     if (Config::Accel::UseBackwardAccel) {
-        if (res.result != Forward::Success) {
-            return strengthenAndAccelerate(rule);
-        }
+        return strengthenAndAccelerate(rule);
     }
 
-    return res;
 }
 
 
@@ -416,6 +414,11 @@ void Accelerator::run() {
 
         // Interpret the results, add new rules
         switch (res.result) {
+            case Forward::NotSupported:
+                keepRules.insert(loop);
+                proofout << "Acceleration of " << loop << " is not supported." << endl;
+                break;
+
             case Forward::TooComplicated:
                 // rules is probably not relevant for nesting
                 keepRules.insert(loop);
