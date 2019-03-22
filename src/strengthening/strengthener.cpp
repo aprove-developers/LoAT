@@ -78,6 +78,9 @@ namespace strengthening {
                     newInv.get().pseudoInvariants.begin(),
                     newInv.get().pseudoInvariants.end());
             res.emplace_back(pseudoInvariantsValid);
+            for (const Expression &e: newInv.get().invariants) {
+                debugTest("deduced invariant " << e);
+            }
             for (const Expression &e: newInv.get().pseudoInvariants) {
                 GuardList pseudoInvariantInvalid(newGuard);
                 assert(Relation::isInequality(e));
