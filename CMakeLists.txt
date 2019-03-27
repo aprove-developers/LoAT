@@ -147,7 +147,9 @@ add_executable(${EXECUTABLE}
         src/its/sexpressionparser/parser.cpp
         src/its/sexpressionparser/parser.h
         src/merging/rulemerger.cpp
-        src/merging/rulemerger.h)
+        src/merging/rulemerger.h
+        src/constantpropagation/constantpropagation.cpp
+        src/constantpropagation/constantpropagation.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

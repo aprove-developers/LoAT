@@ -34,6 +34,7 @@
 #include "util/timeout.h"
 #include "forward.h"
 #include "backward.h"
+#include <constantpropagation/constantpropagation.h>
 
 #include <queue>
 #include <asymptotic/asymptoticbound.h>
@@ -274,6 +275,10 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     todo.push(rule);
     do {
         Rule r = todo.top();
+        option<Rule> rr = constantpropagation::ConstantPropagation::apply(r, its);
+        if (rr) {
+            r = rr.get();
+        }
         todo.pop();
         pair<vector<Rule>, Forward::ResultKind> p = Backward::accelerate(its, r, sinkLoc);
         if (!res) {

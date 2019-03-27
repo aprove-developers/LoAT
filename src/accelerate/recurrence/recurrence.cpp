@@ -43,7 +43,7 @@ option<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRhs,
 
     try {
         Purrs::Recurrence rec(rhs);
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(updateRhs)} });
+        rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(updateLhs)} });
 
         auto res = rec.compute_exact_solution();
         if (res != Purrs::Recurrence::SUCCESS) {
