@@ -15,13 +15,13 @@ namespace constantpropagation {
 
     public:
 
-        static option<Rule> apply(const Rule &r, const ITSProblem &its);
+        static option<std::pair<Rule, Rule>> apply(const Rule &r, const ITSProblem &its);
 
     private:
 
         ConstantPropagation(const Rule &r, const ITSProblem &its);
 
-        option<Rule> apply();
+        option<std::pair<Rule, Rule>> apply();
 
         const Rule &r;
 

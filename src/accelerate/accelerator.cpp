@@ -272,11 +272,12 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) const {
     option<Forward::ResultKind> res;
     std::vector<Forward::MeteredRule> rules;
-    stack<Rule> todo;
-    todo.push(rule);
+    stack<std::pair<option<Rule>, Rule>> todo;
+    todo.push({{}, rule});
     bool restricted = false;
     do {
-        Rule r = todo.top();
+        option<Rule> init = todo.top().first;
+        Rule r = todo.top().second;
         if (r.getCost().isNontermSymbol()) {
             todo.pop();
             continue;
@@ -284,12 +285,13 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         // first try to prove non-termination
         option<Rule> nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
         if (!nonterm) {
-            if (r.isSimpleLoop()) {
+            if (r.isSimpleLoop() && !init) {
                 // propagate constants before accelerating the loop
-                const option<Rule> &simplified = constantpropagation::ConstantPropagation::apply(r, its);
-                if (simplified) {
+                const option<std::pair<Rule, Rule>> &p = constantpropagation::ConstantPropagation::apply(r, its);
+                if (p) {
+                    init = p.get().first;
                     restricted = true;
-                    r = simplified.get();
+                    r = p.get().second;
                     // try to prove non-termination of the simplified loop
                     nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
                 }
@@ -297,7 +299,11 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         }
         todo.pop();
         if (nonterm) {
-            rules.emplace_back("non-termination", nonterm.get());
+            if (init) {
+                rules.emplace_back("non-termination", Chaining::chainRules(its, init.get(), nonterm.get(), false).get());
+            } else {
+                rules.emplace_back("non-termination", nonterm.get());
+            }
         } else {
             pair<vector<Rule>, Forward::ResultKind> p;
             std::vector<strengthening::Mode> strengtheningModes;
@@ -320,11 +326,15 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
                 vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
                 for (const Rule &sr: strengthened) {
                     debugBackwardAccel("invariant inference yields " << sr);
-                    todo.push(sr);
+                    todo.push({init, sr});
                 }
             } else {
                 for (const Rule &ar: p.first) {
-                    rules.emplace_back("backward acceleration", ar);
+                    if (init) {
+                        rules.emplace_back("backward acceleration", Chaining::chainRules(its, init.get(), ar, false).get());
+                    } else {
+                        rules.emplace_back("backward acceleration", ar);
+                    }
                 }
             }
         }
