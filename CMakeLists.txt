@@ -149,7 +149,9 @@ add_executable(${EXECUTABLE}
         src/merging/rulemerger.cpp
         src/merging/rulemerger.h
         src/constantpropagation/constantpropagation.cpp
-        src/constantpropagation/constantpropagation.h)
+        src/constantpropagation/constantpropagation.h
+        src/nonterm/nonterm.cpp
+        src/nonterm/nonterm.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

@@ -80,7 +80,7 @@ Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
     // Extend the old guard by the updated constraints
     // and require that the number of iterations N is positive
     GuardList newGuard = guard;
-    newGuard.push_back(N > 0);
+    newGuard.push_back(N >= 0);
     for (const Expression &ex : rule.getGuard()) {
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
@@ -240,14 +240,14 @@ std::pair<vector<Rule>, ForwardAcceleration::ResultKind> BackwardAcceleration::r
     GuardList irrelevantGuard;
     GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &irrelevantGuard);
 
+    if (reducedGuard.empty()) {
+        return {{buildNontermRule()}, ForwardAcceleration::Success};
+    }
+
     if (!checkGuardImplication(reducedGuard, irrelevantGuard)) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
         return {{}, ForwardAcceleration::NonMonotonic};
-    }
-
-    if (reducedGuard.empty()) {
-        return {{buildNontermRule()}, ForwardAcceleration::Success};
     }
 
     // compute the iterated update and cost, with a fresh variable N as iteration step

@@ -25,6 +25,8 @@ namespace strengthening {
 
         static const std::vector<Mode> modes();
 
+        static const std::vector<Mode> invarianceModes();
+
     };
 
 }

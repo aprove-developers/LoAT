@@ -9,6 +9,10 @@ namespace strengthening {
 
     typedef Modes Self;
 
+    const std::vector<Mode> Self::invarianceModes() {
+        return {invariance, pseudoInvariance};
+    }
+
     const std::vector<Mode> Self::modes() {
         return {invariance, monotonicity, pseudoInvariance, pseudoMonotonicity};
     }

@@ -15,7 +15,7 @@ namespace strengthening {
 
     typedef Strengthener Self;
 
-    const std::vector<Rule> Self::apply(const Rule &rule, ITSProblem &its) {
+    const std::vector<Rule> Self::apply(const Rule &rule, ITSProblem &its, const std::vector<Mode> &modes) {
         std::stack<GuardList> todo;
         todo.push(rule.getGuard());
         std::vector<GuardList> res;
@@ -24,7 +24,7 @@ namespace strengthening {
         while (!todo.empty()) {
             const GuardList &current = todo.top();
             bool failed = true;
-            for (const Mode &mode: Modes::modes()) {
+            for (const Mode &mode: modes) {
                 if (Timeout::soft()) {
                     return {};
                 }

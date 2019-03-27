@@ -19,7 +19,7 @@ namespace strengthening {
 
     public:
 
-        static const std::vector<Rule> apply(const Rule &r, ITSProblem &its);
+        static const std::vector<Rule> apply(const Rule &r, ITSProblem &its, const std::vector<Mode> &modes);
 
     private:
 

@@ -40,6 +40,7 @@
 #include <asymptotic/asymptoticbound.h>
 #include <strengthening/strengthener.h>
 #include <stdexcept>
+#include <nonterm/nonterm.h>
 
 
 using namespace std;
@@ -273,34 +274,63 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     std::vector<Forward::MeteredRule> rules;
     stack<Rule> todo;
     todo.push(rule);
+    bool restricted = false;
     do {
         Rule r = todo.top();
-        option<Rule> rr = constantpropagation::ConstantPropagation::apply(r, its);
-        if (rr) {
-            r = rr.get();
+        if (r.getCost().isNontermSymbol()) {
+            todo.pop();
+            continue;
+        }
+        // first try to prove non-termination
+        option<Rule> nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
+        if (!nonterm) {
+            if (r.isSimpleLoop()) {
+                // propagate constants before accelerating the loop
+                const option<Rule> &simplified = constantpropagation::ConstantPropagation::apply(r, its);
+                if (simplified) {
+                    restricted = true;
+                    r = simplified.get();
+                    // try to prove non-termination of the simplified loop
+                    nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
+                }
+            }
         }
         todo.pop();
-        pair<vector<Rule>, Forward::ResultKind> p = Backward::accelerate(its, r, sinkLoc);
-        if (!res) {
-            res = p.second;
-            if (res == Forward::NotSupported) {
-                return {.result=Forward::NotSupported, .rules={}};
-            }
-        }
-        if (p.first.empty()) {
-            vector<Rule> strengthened = strengthening::Strengthener::apply(r, its);
-            for (const Rule &sr: strengthened) {
-                debugBackwardAccel("invariant inference yields " << sr);
-                todo.push(sr);
-            }
+        if (nonterm) {
+            rules.emplace_back("non-termination", nonterm.get());
         } else {
-            for (const Rule &ar: p.first) {
-                rules.emplace_back("backward acceleration", ar);
+            pair<vector<Rule>, Forward::ResultKind> p;
+            std::vector<strengthening::Mode> strengtheningModes;
+            // we only accelerate rules with polynomial costs
+            if (r.getCost().getComplexity().getType() <= Complexity::CpxPolynomial) {
+                p = Backward::accelerate(its, r, sinkLoc);
+                strengtheningModes = strengthening::Modes::modes();
+            } else {
+                p = {{}, Forward::NotSupported};
+                // for super-polynomial costs, we're only interested in invariants that make the whole guard invariant
+                // and hence lead to non-termination
+                strengtheningModes = strengthening::Modes::invarianceModes();
+            }
+            // store the result for the original rule so that we can return it if we fail
+            if (!res) {
+                res = p.second;
+            }
+            if (p.first.empty()) {
+                restricted = true;
+                vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
+                for (const Rule &sr: strengthened) {
+                    debugBackwardAccel("invariant inference yields " << sr);
+                    todo.push(sr);
+                }
+            } else {
+                for (const Rule &ar: p.first) {
+                    rules.emplace_back("backward acceleration", ar);
+                }
             }
         }
     } while (!todo.empty());
     if (!rules.empty()) {
-        res = Forward::Success;
+        res = restricted ? Forward::SuccessWithRestriction : Forward::Success;
     }
     return {.result=res.get(), .rules=rules};
 }

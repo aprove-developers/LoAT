@@ -22,11 +22,12 @@ namespace constantpropagation {
         bool changed;
         do {
             changed = false;
+            GiNaC::exmap update = current.getUpdate(0).toSubstitution(its);
             for (const auto &p: current.getUpdate(0)) {
                 const VariableIdx &vi = p.first;
+                const ExprSymbol &lhs = its.getVarSymbol(vi);
                 const Expression &rhs = p.second;
-                if (rhs.isIntegerConstant()) {
-                    const ExprSymbol &lhs = its.getVarSymbol(vi);
+                if (lhs != rhs && rhs == rhs.subs(update)) {
                     if (!res) {
                         res = r;
                     }
