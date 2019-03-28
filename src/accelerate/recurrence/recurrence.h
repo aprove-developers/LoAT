@@ -37,36 +37,43 @@ public:
      * In addition to iterateUpdateCost, an additional heuristic is used if no dependency order is found.
      * This heuristic adds new constraints to the rule's guard and is thus only used in this method.
      */
-    static bool iterateRule(const VarMan &varMan, LinearRule &rule, const Expression &metering);
+    static option<unsigned int> iterateRule(const VarMan &varMan, LinearRule &rule, const Expression &metering);
 
     /**
      * Tries to solve recurrences to compute the iterated update and cost.
      * If successful, returns true and modifies update and cost to represent update/cost after N iterations.
      * @return true iff both computations were successful
      */
-    static bool iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N);
+    static option<unsigned int> iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N);
 
     struct IteratedUpdates {
         const std::vector<UpdateMap> updates;
         const GuardList refinement;
+        const unsigned int validityBound;
     };
 
     static const option<IteratedUpdates> iterateUpdates(const VariableManager&, const std::vector<UpdateMap>&, const ExprSymbol&);
 
 private:
+
+    struct RecurrenceSolution {
+        UpdateMap update;
+        const unsigned int validityBound;
+    };
+
     Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dependencyOrder);
 
     /**
      * Main implementation
      */
-    bool iterateAll(UpdateMap &update, Expression &cost, const Expression &metering);
+    option<unsigned int> iterateAll(UpdateMap &update, Expression &cost, const Expression &metering);
 
     /**
      * Computes the iterated update, with meterfunc as iteration step (if possible).
      * @note dependencyOrder must be set before
      * @note sets updatePreRecurrences
      */
-    option<UpdateMap> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
+    option<RecurrenceSolution> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
 
     /**
      * Computes the iterated cost, with meterfunc as iteration step (if possible).

@@ -171,18 +171,26 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).first;
+            const option<Backward::AcceleratedRules> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
             bool success = false;
-            for (const Rule &accelRule: accelRules) {
-                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
-                        its,
-                        accelRule.getGuard(),
-                        accelRule.getCost(),
-                        false,
-                        currentCpx).cpx;
-                if (newCpx > currentCpx) {
-                    addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
-                    success = true;
+            if (accelRules) {
+                unsigned int validityBound = accelRules.get().validityBound;
+                const option<Rule> &init = buildInit(validityBound, nestedRule);
+                for (const Rule &accelRule: accelRules.get().rules) {
+                    Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
+                            its,
+                            accelRule.getGuard(),
+                            accelRule.getCost(),
+                            false,
+                            currentCpx).cpx;
+                    if (newCpx > currentCpx) {
+                        if (init) {
+                            addNestedRule(Chaining::chainRules(its, init.get(), accelRule, false).get(), second, inner.newRule, outer.oldRule);
+                        } else {
+                            addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
+                        }
+                        success = true;
+                    }
                 }
             }
             return success;
@@ -270,79 +278,97 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 // ###################
 
 const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) const {
-    option<Forward::ResultKind> res;
+    option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
-    stack<std::pair<option<Rule>, Rule>> todo;
-    todo.push({{}, rule});
+    stack<Rule> todo;
+    todo.push(rule);
     bool restricted = false;
     do {
-        option<Rule> init = todo.top().first;
-        Rule r = todo.top().second;
+        Rule r = todo.top();
         if (r.getCost().isNontermSymbol()) {
             todo.pop();
             continue;
         }
         // first try to prove non-termination
         option<Rule> nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
-        if (!nonterm) {
-            if (r.isSimpleLoop() && !init) {
-                // propagate constants before accelerating the loop
-                const option<std::pair<Rule, Rule>> &p = constantpropagation::ConstantPropagation::apply(r, its);
-                if (p) {
-                    init = p.get().first;
-                    restricted = true;
-                    r = p.get().second;
-                    // try to prove non-termination of the simplified loop
-                    nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
-                }
-            }
+        if (nonterm) {
+            rules.emplace_back("non-termination", nonterm.get());
+        } else {
+//            if (r.isSimpleLoop()) {
+//                // propagate constants before accelerating the loop
+//                const option<std::pair<Rule, Rule>> &p = constantpropagation::ConstantPropagation::apply(r, its);
+//                if (p) {
+//                    debugTest("propagated constants");
+//                    debugTest(p.get().second);
+//                    // try to prove non-termination of the simplified loop
+//                    nonterm = nonterm::NonTerm::apply(p.get().second, its, sinkLoc);
+//                    if (nonterm) {
+//                        rules.emplace_back("non-termination", Chaining::chainRules(its, p.get().first, nonterm.get(), false).get());
+//                    }
+//                }
+//            }
         }
         todo.pop();
-        if (nonterm) {
-            if (init) {
-                rules.emplace_back("non-termination", Chaining::chainRules(its, init.get(), nonterm.get(), false).get());
-            } else {
-                rules.emplace_back("non-termination", nonterm.get());
-            }
-        } else {
-            pair<vector<Rule>, Forward::ResultKind> p;
-            std::vector<strengthening::Mode> strengtheningModes;
-            // we only accelerate rules with polynomial costs
-            if (r.getCost().getComplexity().getType() <= Complexity::CpxPolynomial) {
-                p = Backward::accelerate(its, r, sinkLoc);
-                strengtheningModes = strengthening::Modes::modes();
-            } else {
-                p = {{}, Forward::NotSupported};
-                // for super-polynomial costs, we're only interested in invariants that make the whole guard invariant
-                // and hence lead to non-termination
-                strengtheningModes = strengthening::Modes::invarianceModes();
-            }
-            // store the result for the original rule so that we can return it if we fail
-            if (!res) {
-                res = p.second;
-            }
-            if (p.first.empty()) {
-                restricted = true;
-                vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
-                for (const Rule &sr: strengthened) {
-                    debugBackwardAccel("invariant inference yields " << sr);
-                    todo.push({init, sr});
-                }
-            } else {
-                for (const Rule &ar: p.first) {
-                    if (init) {
-                        rules.emplace_back("backward acceleration", Chaining::chainRules(its, init.get(), ar, false).get());
-                    } else {
-                        rules.emplace_back("backward acceleration", ar);
-                    }
-                }
-            }
-        }
+         if (!nonterm) {
+             BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
+             // if backwards acceleration is not supported, we can only hope to prove non-termination
+             // for proving non-termination, only invariance is of interest
+             std::vector<strengthening::Mode> strengtheningModes = res.status == ForwardAcceleration::NotSupported ?
+                                                                   strengthening::Modes::invarianceModes() :
+                                                                   strengthening::Modes::modes();
+             // store the result for the original rule so that we can return it if we fail
+             if (!status) {
+                 status = res.status;
+             }
+             if (!res.res) {
+                 restricted = true;
+                 vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
+                 for (const Rule &sr: strengthened) {
+                     debugBackwardAccel("invariant inference yields " << sr);
+                     todo.push(sr);
+                 }
+             } else {
+                 unsigned int validityBound = res.res.get().validityBound;
+                 const option<Rule> &init = buildInit(validityBound, r);
+                 for (const Rule &ar: res.res.get().rules) {
+                     if (init) {
+                         rules.emplace_back("backward acceleration", Chaining::chainRules(its, init.get(), ar, false).get());
+                     } else {
+                         rules.emplace_back("backward acceleration", ar);
+                     }
+                 }
+             }
+         }
     } while (!todo.empty());
     if (!rules.empty()) {
-        res = restricted ? Forward::SuccessWithRestriction : Forward::Success;
+        status = restricted ? Forward::SuccessWithRestriction : Forward::Success;
     }
-    return {.result=res.get(), .rules=rules};
+    return {.result=status.get(), .rules=rules};
+}
+
+option<Rule> Accelerator::buildInit(unsigned int iterations, const Rule &r) const {
+    if (iterations <= 1) {
+        return {};
+    } else {
+        GuardList initGuard;
+        const GiNaC::exmap &up = r.getUpdate(0).toSubstitution(its);
+        GuardList updatedGuard = r.getGuard();
+        Expression updatedCost = r.getCost();
+        Expression initCost = Expression(0);
+        for (unsigned int i = 0; i < iterations - 1; i++) {
+            initGuard.insert(initGuard.end(), updatedGuard.begin(), updatedGuard.end());
+            updatedGuard = updatedGuard.subs(up);
+            initCost = initCost + updatedCost;
+            updatedCost.applySubs(up);
+        }
+        UpdateMap initUpdate = r.getUpdate(0);
+        for (unsigned int i = 1; i < iterations; i++) {
+            for (auto &p: initUpdate) {
+                p.second.applySubs(up);
+            }
+        }
+        return Rule(r.getLhsLoc(), initGuard, initCost, r.getRhsLoc(0), initUpdate);
+    }
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {

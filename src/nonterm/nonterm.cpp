@@ -12,8 +12,12 @@ namespace nonterm {
 
     option<Rule> Self::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
-            if (Z3Toolbox::isValidImplication(r.getGuard(), r.getGuard().subs(r.getUpdate(i).toSubstitution(its)))) {
-                return Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {});
+            const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
+            const GuardList &updatedGuard = r.getGuard().subs(up);
+            if (Z3Toolbox::isValidImplication(updatedGuard, updatedGuard.subs(up))) {
+                GuardList newGuard = r.getGuard();
+                newGuard.insert(newGuard.end(), updatedGuard.begin(), updatedGuard.end());
+                return Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {});
             }
         }
         return {};

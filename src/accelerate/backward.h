@@ -8,7 +8,18 @@
 
 class BackwardAcceleration {
 public:
-    static std::pair<std::vector<Rule>, ForwardAcceleration::ResultKind> accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
+
+    struct AcceleratedRules {
+        const std::vector<Rule> rules;
+        const unsigned int validityBound;
+    };
+
+    struct AccelerationResult {
+        const option<AcceleratedRules> res;
+        const ForwardAcceleration::ResultKind status;
+    };
+
+    static AccelerationResult accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
 private:
     BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
@@ -16,7 +27,7 @@ private:
     /**
      * Main function, just calls the methods below in the correct order
      */
-    std::pair<std::vector<Rule>, ForwardAcceleration::ResultKind> run();
+    AccelerationResult run();
 
     /**
      * Checks whether the backward acceleration technique might be applicable.
@@ -32,12 +43,12 @@ private:
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
     Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                              const GuardList &guard, const ExprSymbol &N) const;
+                              const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
 
     Rule buildNontermRule() const;
 
     Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
-                                   const GuardList &guard, const ExprSymbol &N) const;
+                                   const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
 
     bool checkCommutation(const std::vector<UpdateMap> &updates);
 
