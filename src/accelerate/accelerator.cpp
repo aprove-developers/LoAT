@@ -282,7 +282,8 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     std::vector<Forward::MeteredRule> rules;
     stack<Rule> todo;
     todo.push(rule);
-    bool restricted = false;
+    bool unrestricted = true;
+    bool unrestrictedNonTerm = false;
     do {
         Rule r = todo.top();
         if (r.getCost().isNontermSymbol()) {
@@ -290,62 +291,54 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
             continue;
         }
         // first try to prove non-termination
-        option<Rule> nonterm = nonterm::NonTerm::apply(r, its, sinkLoc);
-        if (nonterm) {
-            rules.emplace_back("non-termination", nonterm.get());
-        } else {
-//            if (r.isSimpleLoop()) {
-//                // propagate constants before accelerating the loop
-//                const option<std::pair<Rule, Rule>> &p = constantpropagation::ConstantPropagation::apply(r, its);
-//                if (p) {
-//                    debugTest("propagated constants");
-//                    debugTest(p.get().second);
-//                    // try to prove non-termination of the simplified loop
-//                    nonterm = nonterm::NonTerm::apply(p.get().second, its, sinkLoc);
-//                    if (nonterm) {
-//                        rules.emplace_back("non-termination", Chaining::chainRules(its, p.get().first, nonterm.get(), false).get());
-//                    }
-//                }
-//            }
+        option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
+        if (p) {
+            rules.emplace_back("non-termination", p.get().first);
+            if (unrestricted && p.get().second == Forward::Success) {
+                unrestrictedNonTerm = true;
+            }
         }
         todo.pop();
-         if (!nonterm) {
-             BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
-             // if backwards acceleration is not supported, we can only hope to prove non-termination
-             // for proving non-termination, only invariance is of interest
-             std::vector<strengthening::Mode> strengtheningModes = res.status == ForwardAcceleration::NotSupported ?
-                                                                   strengthening::Modes::invarianceModes() :
-                                                                   strengthening::Modes::modes();
-             // store the result for the original rule so that we can return it if we fail
-             if (!status) {
-                 status = res.status;
-             }
-             if (!res.res) {
-                 restricted = true;
-                 vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
-                 for (const Rule &sr: strengthened) {
-                     debugBackwardAccel("invariant inference yields " << sr);
-                     todo.push(sr);
-                 }
-             } else {
-                 unsigned int validityBound = res.res.get().validityBound;
-                 const option<Rule> &init = buildInit(validityBound, r);
-                 for (const Rule &ar: res.res.get().rules) {
-                     if (init) {
-                         rules.emplace_back("backward acceleration", Chaining::chainRules(its, init.get(), ar, false).get());
-                     } else {
-                         rules.emplace_back("backward acceleration", ar);
-                     }
-                 }
-             }
-         }
+        if (!unrestrictedNonTerm) {
+            BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
+            // if backwards acceleration is not supported, we can only hope to prove non-termination
+            // for proving non-termination, only invariance is of interest
+            std::vector<strengthening::Mode> strengtheningModes = res.status == ForwardAcceleration::NotSupported ?
+                                                                  strengthening::Modes::invarianceModes() :
+                                                                  strengthening::Modes::modes();
+            // store the result for the original rule so that we can return it if we fail
+            if (!status) {
+                status = res.status;
+                if (status.get() != Forward::Success) {
+                    unrestricted = false;
+                }
+            }
+            if (!res.res) {
+                vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
+                for (const Rule &sr: strengthened) {
+                    debugBackwardAccel("invariant inference yields " << sr);
+                    todo.push(sr);
+                }
+            } else {
+                unsigned int validityBound = res.res.get().validityBound;
+                const option<Rule> &init = buildInit(validityBound, r);
+                for (const Rule &ar: res.res.get().rules) {
+                    if (init) {
+                        rules.emplace_back("backward acceleration", Chaining::chainRules(its, init.get(), ar, false).get());
+                    } else {
+                        rules.emplace_back("backward acceleration", ar);
+                    }
+                }
+            }
+        }
     } while (!todo.empty());
     if (!rules.empty()) {
-        status = restricted ? Forward::SuccessWithRestriction : Forward::Success;
+        status = unrestrictedNonTerm || unrestricted ? Forward::Success : Forward::SuccessWithRestriction;
     }
     return {.result=status.get(), .rules=rules};
 }
 
+// TODO do that in backward.cpp
 option<Rule> Accelerator::buildInit(unsigned int iterations, const Rule &r) const {
     if (iterations <= 1) {
         return {};

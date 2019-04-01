@@ -14,7 +14,7 @@ namespace nonterm {
 
     public:
 
-        static option<Rule> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+        static option<std::pair<Rule, ForwardAcceleration::ResultKind>> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
 
     };
 
