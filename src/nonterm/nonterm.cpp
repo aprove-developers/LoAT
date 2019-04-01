@@ -26,8 +26,8 @@ namespace nonterm {
             unsigned int depth = depthMap[i];
             for (unsigned int j = 1; j <= depth; j++) {
                 const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
-                GuardList updatedGuard;
-                GuardList newGuard(r.getGuard());
+                GuardList updatedGuard(r.getGuard());
+                GuardList newGuard;
                 for (unsigned int k = 0; k <= j; k++) {
                     newGuard.insert(newGuard.end(), updatedGuard.begin(), updatedGuard.end());
                     updatedGuard.applySubstitution(up);
