@@ -158,7 +158,6 @@ private:
 
     const ForwardAcceleration::Result strengthenAndAccelerate(const Rule &rule) const;
 
-    option<Rule> buildInit(unsigned int iterations, const Rule &r) const;
 };
 
 #endif // ACCELERATE_H

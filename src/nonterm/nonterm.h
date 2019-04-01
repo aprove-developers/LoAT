@@ -7,6 +7,7 @@
 
 #include <its/rule.h>
 #include <its/itsproblem.h>
+#include <accelerate/forward.h>
 
 namespace nonterm {
 
@@ -15,6 +16,10 @@ namespace nonterm {
     public:
 
         static option<std::pair<Rule, ForwardAcceleration::ResultKind>> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+
+    private:
+
+        static unsigned int maxDepth(const UpdateMap &up, const VariableManager &varMan);
 
     };
 

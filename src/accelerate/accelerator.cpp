@@ -171,26 +171,18 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const option<Backward::AcceleratedRules> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+            const std::vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
             bool success = false;
-            if (accelRules) {
-                unsigned int validityBound = accelRules.get().validityBound;
-                const option<Rule> &init = buildInit(validityBound, nestedRule);
-                for (const Rule &accelRule: accelRules.get().rules) {
-                    Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
-                            its,
-                            accelRule.getGuard(),
-                            accelRule.getCost(),
-                            false,
-                            currentCpx).cpx;
-                    if (newCpx > currentCpx) {
-                        if (init) {
-                            addNestedRule(Chaining::chainRules(its, init.get(), accelRule, false).get(), second, inner.newRule, outer.oldRule);
-                        } else {
-                            addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
-                        }
-                        success = true;
-                    }
+            for (const Rule &accelRule: accelRules) {
+                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
+                        its,
+                        accelRule.getGuard(),
+                        accelRule.getCost(),
+                        false,
+                        currentCpx).cpx;
+                if (newCpx > currentCpx) {
+                    addNestedRule(accelRule, second, inner.newRule, outer.oldRule);
+                    success = true;
                 }
             }
             return success;
@@ -313,21 +305,15 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
                     unrestricted = false;
                 }
             }
-            if (!res.res) {
+            if (res.res.empty()) {
                 vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
                 for (const Rule &sr: strengthened) {
                     debugBackwardAccel("invariant inference yields " << sr);
                     todo.push(sr);
                 }
             } else {
-                unsigned int validityBound = res.res.get().validityBound;
-                const option<Rule> &init = buildInit(validityBound, r);
-                for (const Rule &ar: res.res.get().rules) {
-                    if (init) {
-                        rules.emplace_back("backward acceleration", Chaining::chainRules(its, init.get(), ar, false).get());
-                    } else {
-                        rules.emplace_back("backward acceleration", ar);
-                    }
+                for (const Rule &ar: res.res) {
+                    rules.emplace_back("backward acceleration", ar);
                 }
             }
         }
@@ -336,32 +322,6 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         status = unrestrictedNonTerm || unrestricted ? Forward::Success : Forward::SuccessWithRestriction;
     }
     return {.result=status.get(), .rules=rules};
-}
-
-// TODO do that in backward.cpp
-option<Rule> Accelerator::buildInit(unsigned int iterations, const Rule &r) const {
-    if (iterations <= 1) {
-        return {};
-    } else {
-        GuardList initGuard;
-        const GiNaC::exmap &up = r.getUpdate(0).toSubstitution(its);
-        GuardList updatedGuard = r.getGuard();
-        Expression updatedCost = r.getCost();
-        Expression initCost = Expression(0);
-        for (unsigned int i = 0; i < iterations - 1; i++) {
-            initGuard.insert(initGuard.end(), updatedGuard.begin(), updatedGuard.end());
-            updatedGuard = updatedGuard.subs(up);
-            initCost = initCost + updatedCost;
-            updatedCost.applySubs(up);
-        }
-        UpdateMap initUpdate = r.getUpdate(0);
-        for (unsigned int i = 1; i < iterations; i++) {
-            for (auto &p: initUpdate) {
-                p.second.applySubs(up);
-            }
-        }
-        return Rule(r.getLhsLoc(), initGuard, initCost, r.getRhsLoc(0), initUpdate);
-    }
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {

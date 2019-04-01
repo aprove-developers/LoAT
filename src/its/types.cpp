@@ -33,6 +33,12 @@ GuardList GuardList::subs(const GiNaC::exmap &sigma) const {
     return res;
 }
 
+void GuardList::applySubstitution(const GiNaC::exmap &sigma) {
+    for (Expression &e: *this) {
+        e.applySubs(sigma);
+    }
+}
+
 bool UpdateMap::isUpdated(VariableIdx var) const {
     return find(var) != end();
 }

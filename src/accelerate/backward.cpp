@@ -14,6 +14,7 @@
 #include <purrs.hh>
 #include <util/stats.h>
 #include <util/relevantvariables.h>
+#include <analysis/chain.h>
 
 using namespace std;
 
@@ -237,6 +238,31 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
     return true;
 }
 
+option<Rule> Self::buildInit(unsigned int iterations) const {
+    if (iterations <= 1) {
+        return {};
+    } else {
+        GuardList initGuard;
+        const GiNaC::exmap &up = rule.getUpdate(0).toSubstitution(varMan);
+        GuardList updatedGuard = rule.getGuard();
+        Expression updatedCost = rule.getCost();
+        Expression initCost = Expression(0);
+        for (unsigned int i = 0; i < iterations - 1; i++) {
+            initGuard.insert(initGuard.end(), updatedGuard.begin(), updatedGuard.end());
+            updatedGuard = updatedGuard.subs(up);
+            initCost = initCost + updatedCost;
+            updatedCost.applySubs(up);
+        }
+        UpdateMap initUpdate = rule.getUpdate(0);
+        for (unsigned int i = 1; i < iterations; i++) {
+            for (auto &p: initUpdate) {
+                p.second.applySubs(up);
+            }
+        }
+        return Rule(rule.getLhsLoc(), initGuard, initCost, rule.getRhsLoc(0), initUpdate);
+    }
+}
+
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
@@ -253,7 +279,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &irrelevantGuard);
 
     if (reducedGuard.empty()) {
-        return {.res={{.rules={buildNontermRule()}, .validityBound=0}}, .status=ForwardAcceleration::Success};
+        return {.res={buildNontermRule()}, .status=ForwardAcceleration::Success};
     }
 
     if (!checkGuardImplication(reducedGuard, irrelevantGuard)) {
@@ -307,14 +333,12 @@ Self::AccelerationResult BackwardAcceleration::run() {
         accelerated = buildAcceleratedRecursion(iteratedUpdates.get().updates, iteratedCost, strengthenedGuard, N, validityBound.get());
     }
     Stats::add(Stats::BackwardSuccess);
+    const option<Rule> &init = buildInit(validityBound.get());
+    const Rule &r = init ? Chaining::chainRules(varMan, init.get(), accelerated.get(), false).get() : accelerated.get();
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-        return {
-            .res={{.rules=replaceByUpperbounds(N, accelerated.get()), .validityBound=validityBound.get()}},
-            .status=ForwardAcceleration::Success
-        };
+        return {.res=replaceByUpperbounds(N, r), .status=ForwardAcceleration::Success};
     } else {
-        vector<Rule> res = {accelerated.get()};
-        return {.res={{.rules=res, .validityBound=validityBound.get()}}, .status=ForwardAcceleration::Success};
+        return {{r}, .status=ForwardAcceleration::Success};
     }
 }
 

@@ -38,6 +38,7 @@ public:
     using std::vector<Expression>::vector;
     void collectVariables(ExprSymbolSet &res) const;
     GuardList subs(const GiNaC::exmap &sigma) const;
+    void applySubstitution(const GiNaC::exmap &sigma);
 };
 
 

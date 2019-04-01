@@ -15,7 +15,7 @@ public:
     };
 
     struct AccelerationResult {
-        const option<AcceleratedRules> res;
+        const std::vector<Rule> res;
         const ForwardAcceleration::ResultKind status;
     };
 
@@ -28,6 +28,8 @@ private:
      * Main function, just calls the methods below in the correct order
      */
     AccelerationResult run();
+
+    option<Rule> buildInit(unsigned int iterations) const;
 
     /**
      * Checks whether the backward acceleration technique might be applicable.
