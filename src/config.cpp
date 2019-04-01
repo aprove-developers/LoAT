@@ -230,6 +230,8 @@ namespace Config {
         // NOTE: It is not sound to disable this (only intended for testing!)
         // NOTE: If disabled, the complexity is only approximated by a syntactic check.
         bool AsymptoticCheck = true;
+
+        bool NonTermMode = false;
     }
 
 }

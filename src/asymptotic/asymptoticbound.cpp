@@ -1040,6 +1040,9 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
             costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
         }
     }
+    if (finalCheck && Config::Analysis::NonTermMode) {
+        return Result(Complexity::Unknown);
+    }
     assert(!costToCheck.has(Expression::NontermSymbol));
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
@@ -1110,6 +1113,8 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan
         } else {
             return Result(Complexity::Unknown);
         }
+    } else if (finalCheck && Config::Analysis::NonTermMode) {
+        return Result(Complexity::Unknown);
     }
     assert(!expandedCost.has(Expression::NontermSymbol));
 

@@ -131,6 +131,7 @@ namespace Config {
         extern bool EnsureNonnegativeCosts;
         extern bool ConstantCpxCheck;
         extern bool AsymptoticCheck; // must be enabled for soundness!
+        extern bool NonTermMode;
     }
 
     /**
