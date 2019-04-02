@@ -333,8 +333,8 @@ Self::AccelerationResult BackwardAcceleration::run() {
         accelerated = buildAcceleratedRecursion(iteratedUpdates.get().updates, iteratedCost, strengthenedGuard, N, validityBound.get());
     }
     Stats::add(Stats::BackwardSuccess);
-    const option<Rule> &init = buildInit(validityBound.get());
-    const Rule &r = init ? Chaining::chainRules(varMan, init.get(), accelerated.get(), false).get() : accelerated.get();
+    const option<Rule> init = buildInit(validityBound.get());
+    const Rule r = init ? Chaining::chainRules(varMan, init.get(), accelerated.get(), false).get() : accelerated.get();
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
         return {.res=replaceByUpperbounds(N, r), .status=ForwardAcceleration::Success};
     } else {
