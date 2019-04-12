@@ -2,17 +2,15 @@
 // Created by ffrohn on 3/27/19.
 //
 
-#include <accelerate/meter/metertools.h>
-#include <z3/z3toolbox.h>
-#include <accelerate/forward.h>
-#include <accelerate/recurrence/dependencyorder.h>
-#include "nonterm.h"
+#include "nonterm.hpp"
+#include "../accelerate/meter/metertools.hpp"
+#include "../z3/z3toolbox.hpp"
+#include "../accelerate/forward.hpp"
+#include "../accelerate/recurrence/dependencyorder.hpp"
 
 namespace nonterm {
 
-    typedef NonTerm Self;
-
-    option<std::pair<Rule, ForwardAcceleration::ResultKind>> Self::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<Rule, ForwardAcceleration::ResultKind>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         std::map<unsigned int, unsigned int> depthMap;
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
@@ -40,7 +38,7 @@ namespace nonterm {
         return {};
     }
 
-    unsigned int Self::maxDepth(const UpdateMap &up, const VariableManager &varMan) {
+    unsigned int NonTerm::maxDepth(const UpdateMap &up, const VariableManager &varMan) {
         if (!DependencyOrder::findOrder(varMan, up)) {
             return 1;
         }

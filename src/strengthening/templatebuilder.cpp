@@ -2,22 +2,20 @@
 // Created by ffrohn on 2/21/19.
 //
 
-#include <its/variablemanager.h>
-#include <util/relevantvariables.h>
-#include "templatebuilder.h"
+#include "../its/variablemanager.hpp"
+#include "../util/relevantvariables.hpp"
+#include "templatebuilder.hpp"
 
 namespace strengthening {
 
-    typedef TemplateBuilder Self;
-
-    const Templates Self::build(const GuardContext &guardCtx, const RuleContext &ruleCtx) {
+    const Templates TemplateBuilder::build(const GuardContext &guardCtx, const RuleContext &ruleCtx) {
         return TemplateBuilder(guardCtx, ruleCtx).build();
     }
 
-    Self::TemplateBuilder(const GuardContext &guardCtx, const RuleContext &ruleCtx):
+    TemplateBuilder::TemplateBuilder(const GuardContext &guardCtx, const RuleContext &ruleCtx):
             guardCtx(guardCtx), ruleCtx(ruleCtx) { }
 
-    const Templates Self::build() const {
+    const Templates TemplateBuilder::build() const {
         Templates res = Templates();
         for (const Expression &g: guardCtx.todo) {
             const ExprSymbolSet &varSymbols = util::RelevantVariables::find(
@@ -31,7 +29,7 @@ namespace strengthening {
         return res;
     }
 
-    const Templates::Template Self::buildTemplate(const ExprSymbolSet &vars) const {
+    const Templates::Template TemplateBuilder::buildTemplate(const ExprSymbolSet &vars) const {
         ExprSymbolSet params;
         const ExprSymbol &c0 = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c0"));
         params.insert(c0);

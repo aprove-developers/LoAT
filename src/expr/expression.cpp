@@ -15,11 +15,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "expression.h"
+#include "expression.hpp"
 
-#include "expr/ginactoz3.h"
-#include "z3/z3context.h"
-#include "complexity.h"
+#include "../expr/ginactoz3.hpp"
+#include "../z3/z3context.hpp"
+#include "complexity.hpp"
 
 using namespace std;
 

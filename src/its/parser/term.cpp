@@ -1,4 +1,4 @@
-#include "term.h"
+#include "term.hpp"
 
 using namespace parser;
 
@@ -56,4 +56,3 @@ Expression Relation::toGinacExpression(const ITSProblem &its) const {
     }
     unreachable();
 }
-

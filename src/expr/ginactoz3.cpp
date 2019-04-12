@@ -15,10 +15,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "ginactoz3.h"
+#include "ginactoz3.hpp"
 
-#include "global.h"
-#include "z3/z3context.h"
+#include "../global.hpp"
+#include "../z3/z3context.hpp"
 
 using namespace std;
 using namespace GiNaC;

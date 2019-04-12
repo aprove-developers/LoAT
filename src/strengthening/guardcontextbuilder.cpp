@@ -2,9 +2,9 @@
 // Created by ffrohn on 2/25/19.
 //
 
-#include <expr/relation.h>
-#include <z3/z3solver.h>
-#include "guardcontextbuilder.h"
+#include "../expr/relation.hpp"
+#include "../z3/z3solver.hpp"
+#include "guardcontextbuilder.hpp"
 
 namespace strengthening {
 

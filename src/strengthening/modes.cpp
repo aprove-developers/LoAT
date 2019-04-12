@@ -2,8 +2,8 @@
 // Created by ffrohn on 2/21/19.
 //
 
-#include "modes.h"
-#include "z3/z3context.h"
+#include "modes.hpp"
+#include "../z3/z3context.hpp"
 
 namespace strengthening {
 

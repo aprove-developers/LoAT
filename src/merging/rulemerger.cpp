@@ -2,10 +2,10 @@
 // Created by ffrohn on 3/21/19.
 //
 
-#include "rulemerger.h"
-#include <its/itsproblem.h>
-#include <z3context.h>
-#include <z3solver.h>
+#include "rulemerger.hpp"
+#include "../its/itsproblem.hpp"
+#include "../z3/z3context.hpp"
+#include "../z3/z3solver.hpp"
 
 namespace merging {
 

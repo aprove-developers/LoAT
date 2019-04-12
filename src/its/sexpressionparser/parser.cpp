@@ -2,8 +2,8 @@
 // Created by ffrohn on 3/18/19.
 //
 
-#include "parser.h"
-#include <sexpresso/sexpresso.h>
+#include "parser.hpp"
+#include "../../sexpresso/sexpresso.hpp"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 

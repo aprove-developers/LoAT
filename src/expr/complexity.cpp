@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "complexity.h"
+#include "complexity.hpp"
 
 const Complexity Complexity::Unknown = Complexity(CpxUnknown);
 const Complexity Complexity::Const = Complexity::Poly(0);

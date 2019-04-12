@@ -2,14 +2,13 @@
 // Created by ffrohn on 3/18/19.
 //
 
-#include "sexpresso.h"
+#include "sexpresso.hpp"
 
 // Author: Isak Andersson 2016 bitpuffin dot com
 
 #include <vector>
 #include <string>
 #include <cstdint>
-#include "sexpresso.h"
 #include <cctype>
 #include <stack>
 #include <algorithm>

@@ -2,11 +2,11 @@
 // Created by ffrohn on 2/21/19.
 //
 
-#include <its/rule.h>
-#include <its/itsproblem.h>
-#include <expr/guardtoolbox.h>
-#include "rulecontextbuilder.h"
-#include "strengthener.h"
+#include "../its/rule.hpp"
+#include "../its/itsproblem.hpp"
+#include "../expr/guardtoolbox.hpp"
+#include "rulecontextbuilder.hpp"
+#include "strengthener.hpp"
 
 namespace strengthening {
 

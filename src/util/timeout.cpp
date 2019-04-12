@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "timeout.h"
-#include "debug.h"
+#include "timeout.hpp"
+#include "../debug.hpp"
 
 #include <algorithm>
 #include <iostream>

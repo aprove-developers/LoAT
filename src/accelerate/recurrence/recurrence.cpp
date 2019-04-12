@@ -15,10 +15,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "recurrence.h"
-#include "dependencyorder.h"
+#include "recurrence.hpp"
+#include "dependencyorder.hpp"
 
-#include "util/timing.h"
+#include "../../util/timing.hpp"
 
 #include <purrs.hh>
 

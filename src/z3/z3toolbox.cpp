@@ -15,12 +15,12 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "z3toolbox.h"
+#include "z3toolbox.hpp"
 
-#include "z3solver.h"
-#include "z3context.h"
-#include "expr/expression.h"
-#include "debug.h"
+#include "z3solver.hpp"
+#include "z3context.hpp"
+#include "../expr/expression.hpp"
+#include "../debug.hpp"
 
 using namespace std;
 

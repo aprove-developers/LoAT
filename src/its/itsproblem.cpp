@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "itsproblem.h"
-#include "export.h"
+#include "itsproblem.hpp"
+#include "export.hpp"
 
 using namespace std;
 

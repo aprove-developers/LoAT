@@ -15,15 +15,15 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "chainstrategy.h"
+#include "chainstrategy.hpp"
 
-#include "chain.h"
-#include "preprocess.h"
+#include "chain.hpp"
+#include "preprocess.hpp"
 
-#include "debug.h"
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
+#include "../debug.hpp"
+#include "../util/stats.hpp"
+#include "../util/timing.hpp"
+#include "../util/timeout.hpp"
 
 
 using namespace std;

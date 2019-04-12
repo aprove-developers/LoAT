@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "timing.h"
-#include "debug.h"
+#include "timing.hpp"
+#include "../debug.hpp"
 
 #include <chrono>
 #include <map>

@@ -15,9 +15,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "guardtoolbox.h"
-#include "relation.h"
-#include "its/rule.h"
+#include "guardtoolbox.hpp"
+#include "relation.hpp"
+#include "../its/rule.hpp"
 
 using namespace std;
 using namespace Relation;

@@ -15,32 +15,31 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "accelerator.h"
+#include "accelerator.hpp"
 
-#include "analysis/preprocess.h"
-#include "recurrence/recurrence.h"
-#include "meter/metering.h"
-#include "z3/z3toolbox.h"
+#include "../analysis/preprocess.hpp"
+#include "recurrence/recurrence.hpp"
+#include "meter/metering.hpp"
+#include "../z3/z3toolbox.hpp"
 
-#include "its/rule.h"
-#include "its/export.h"
+#include "../its/rule.hpp"
+#include "../its/export.hpp"
 
-#include "analysis/chain.h"
-#include "analysis/prune.h"
+#include "../analysis/chain.hpp"
+#include "../analysis/prune.hpp"
 
-#include "debug.h"
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
-#include "forward.h"
-#include "backward.h"
-#include <constantpropagation/constantpropagation.h>
+#include "../debug.hpp"
+#include "../util/stats.hpp"
+#include "../util/timing.hpp"
+#include "../util/timeout.hpp"
+#include "forward.hpp"
+#include "backward.hpp"
 
 #include <queue>
-#include <asymptotic/asymptoticbound.h>
-#include <strengthening/strengthener.h>
+#include "../asymptotic/asymptoticbound.hpp"
+#include "../strengthening/strengthener.hpp"
 #include <stdexcept>
-#include <nonterm/nonterm.h>
+#include "../nonterm/nonterm.hpp"
 
 
 using namespace std;

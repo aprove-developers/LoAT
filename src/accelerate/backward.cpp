@@ -1,20 +1,20 @@
-#include "backward.h"
+#include "backward.hpp"
 
-#include "debug.h"
-#include "z3/z3solver.h"
-#include "z3/z3toolbox.h"
+#include "../debug.hpp"
+#include "../z3/z3solver.hpp"
+#include "../z3/z3toolbox.hpp"
 
-#include "recurrence/recurrence.h"
-#include "meter/metertools.h"
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "expr/ginactoz3.h"
-#include "accelerate/forward.h"
+#include "recurrence/recurrence.hpp"
+#include "meter/metertools.hpp"
+#include "../expr/guardtoolbox.hpp"
+#include "../expr/relation.hpp"
+#include "../expr/ginactoz3.hpp"
+#include "forward.hpp"
 
 #include <purrs.hh>
-#include <util/stats.h>
-#include <util/relevantvariables.h>
-#include <analysis/chain.h>
+#include "../util/stats.hpp"
+#include "../util/relevantvariables.hpp"
+#include "../analysis/chain.hpp"
 
 using namespace std;
 

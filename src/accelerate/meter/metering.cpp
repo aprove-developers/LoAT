@@ -15,19 +15,19 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "metering.h"
+#include "metering.hpp"
 
-#include "farkas.h"
-#include "linearize.h"
-#include "metertools.h"
+#include "farkas.hpp"
+#include "linearize.hpp"
+#include "metertools.hpp"
 
-#include "util/timing.h"
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "expr/expression.h"
-#include "z3/z3solver.h"
-#include "z3/z3toolbox.h"
-#include "util/timeout.h"
+#include "../../util/timing.hpp"
+#include "../../expr/guardtoolbox.hpp"
+#include "../../expr/relation.hpp"
+#include "../../expr/expression.hpp"
+#include "../../z3/z3solver.hpp"
+#include "../../z3/z3toolbox.hpp"
+#include "../../util/timeout.hpp"
 
 #include <boost/integer/common_factor.hpp> // for lcm
 

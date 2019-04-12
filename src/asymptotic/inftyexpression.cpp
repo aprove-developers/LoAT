@@ -1,4 +1,4 @@
-#include "inftyexpression.h"
+#include "inftyexpression.hpp"
 
 #include <iostream>
 #include <ginac/ginac.h>

@@ -1,4 +1,4 @@
-#include "export.h"
+#include "export.hpp"
 
 using namespace std;
 namespace Color = Config::Color;
@@ -328,4 +328,3 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
         }
     }
 }
-
