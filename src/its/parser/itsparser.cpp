@@ -15,13 +15,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "itsparser.h"
+#include "itsparser.hpp"
 
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
-#include "termparser.h"
-#include "its/itsproblem.h"
+#include "termparser.hpp"
+#include "../itsproblem.hpp"
 
 
 using namespace parser;
@@ -643,23 +643,3 @@ void ITSParser::stripTrivialUpdates(UpdateMap &update) const {
         update.erase(var);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

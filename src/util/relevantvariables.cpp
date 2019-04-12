@@ -2,14 +2,12 @@
 // Created by ffrohn on 3/14/19.
 //
 
-#include "relevantvariables.h"
-#include <its/variablemanager.h>
+#include "relevantvariables.hpp"
+#include "../its/variablemanager.hpp"
 
 namespace util {
 
-    typedef RelevantVariables Self;
-
-    const ExprSymbolSet Self::find(
+    const ExprSymbolSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<GiNaC::exmap> &updates,
             const GuardList &guard,
@@ -61,7 +59,7 @@ namespace util {
         return symbols;
     }
 
-    const ExprSymbolSet Self::find(
+    const ExprSymbolSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<UpdateMap> &updateMaps,
             const GuardList &guard,
@@ -70,10 +68,10 @@ namespace util {
         for (const UpdateMap &up: updateMaps) {
             updates.push_back(up.toSubstitution(varMan));
         }
-        return Self::find(constraints, updates, guard, varMan);
+        return RelevantVariables::find(constraints, updates, guard, varMan);
     }
 
-    const ExprSymbolSet Self::find(
+    const ExprSymbolSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<RuleRhs> &rhss,
             const GuardList &guard,
@@ -82,7 +80,7 @@ namespace util {
         for (const RuleRhs &rhs: rhss) {
             updates.push_back(rhs.getUpdate().toSubstitution(varMan));
         }
-        return Self::find(constraints, updates, guard, varMan);
+        return RelevantVariables::find(constraints, updates, guard, varMan);
     }
 
 }

@@ -15,19 +15,18 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
+#include "analysis/analysis.hpp"
+#include "its/parser/itsparser.hpp"
+#include "its/sexpressionparser/parser.hpp"
+
+#include "util/stats.hpp"
+#include "util/timing.hpp"
+#include "util/timeout.hpp"
+
 #include <iostream>
 #include <boost/algorithm/string.hpp>
-#include <its/sexpressionparser/parser.h>
-
-#include "its/parser/itsparser.h"
-#include "analysis/analysis.h"
-
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
 
 using namespace std;
-
 
 // Variables for command line flags
 string filename;

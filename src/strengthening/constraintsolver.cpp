@@ -2,11 +2,11 @@
 // Created by ffrohn on 2/21/19.
 //
 
-#include <util/option.h>
-#include <z3/z3solver.h>
-#include <z3/z3toolbox.h>
-#include "constraintsolver.h"
-#include <its/variablemanager.h>
+#include "../util/option.hpp"
+#include "../z3/z3solver.hpp"
+#include "../z3/z3toolbox.hpp"
+#include "constraintsolver.hpp"
+#include "../its/variablemanager.hpp"
 
 namespace strengthening {
 

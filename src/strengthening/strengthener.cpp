@@ -2,20 +2,19 @@
 // Created by ffrohn on 2/18/19.
 //
 
-#include <expr/relation.h>
-#include <z3/z3context.h>
-#include <z3/z3solver.h>
-#include "strengthener.h"
-#include "templatebuilder.h"
-#include "constraintsolver.h"
-#include "rulecontextbuilder.h"
-#include "guardcontextbuilder.h"
+#include "../expr/relation.hpp"
+#include "../z3/z3context.hpp"
+#include "../z3/z3solver.hpp"
+#include "strengthener.hpp"
+#include "templatebuilder.hpp"
+#include "constraintsolver.hpp"
+#include "rulecontextbuilder.hpp"
+#include "guardcontextbuilder.hpp"
 
 namespace strengthening {
 
-    typedef Strengthener Self;
 
-    const std::vector<Rule> Self::apply(const Rule &rule, ITSProblem &its, const std::vector<Mode> &modes) {
+    const std::vector<Rule> Strengthener::apply(const Rule &rule, ITSProblem &its, const std::vector<Mode> &modes) {
         std::stack<GuardList> todo;
         todo.push(rule.getGuard());
         std::vector<GuardList> res;
@@ -53,9 +52,9 @@ namespace strengthening {
         return rules;
     }
 
-    Self::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
+    Strengthener::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
 
-    const std::vector<GuardList> Self::apply(const Mode &mode, const GuardList &guard) const {
+    const std::vector<GuardList> Strengthener::apply(const Mode &mode, const GuardList &guard) const {
         std::vector<GuardList> res;
         const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates);
         const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);

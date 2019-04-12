@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "types.h"
-#include "variablemanager.h"
+#include "types.hpp"
+#include "variablemanager.hpp"
 
 
 void GuardList::collectVariables(ExprSymbolSet &res) const {
@@ -56,4 +56,3 @@ GiNaC::exmap UpdateMap::toSubstitution(const VariableManager &varMan) const {
     }
     return subs;
 }
-

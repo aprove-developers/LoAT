@@ -2,20 +2,18 @@
 // Created by ffrohn on 3/27/19.
 //
 
-#include "constantpropagation.h"
-#include <its/itsproblem.h>
+#include "constantpropagation.hpp"
+#include "../its/itsproblem.hpp"
 
 namespace constantpropagation {
 
-    typedef ConstantPropagation Self;
-
-    option<std::pair<Rule, Rule>> Self::apply(const Rule &r, const ITSProblem &its) {
+    option<std::pair<Rule, Rule>> ConstantPropagation::apply(const Rule &r, const ITSProblem &its) {
         return ConstantPropagation(r, its).apply();
     }
 
-    Self::ConstantPropagation(const Rule &r, const ITSProblem &its): r(r), its(its) { }
+    ConstantPropagation::ConstantPropagation(const Rule &r, const ITSProblem &its): r(r), its(its) { }
 
-    option<std::pair<Rule, Rule>> Self::apply() {
+    option<std::pair<Rule, Rule>> ConstantPropagation::apply() {
         assert(r.isSimpleLoop());
         option<Rule> current;
         Rule next = r;

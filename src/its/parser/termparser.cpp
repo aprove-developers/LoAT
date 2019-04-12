@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "termparser.h"
+#include "termparser.hpp"
 
 #include <fstream>
 #include <boost/algorithm/string.hpp>

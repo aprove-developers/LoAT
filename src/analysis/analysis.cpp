@@ -15,26 +15,26 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "analysis.h"
+#include "analysis.hpp"
 
-#include "expr/relation.h"
-#include "z3/z3toolbox.h"
-#include "asymptotic/asymptoticbound.h"
+#include "../expr/relation.hpp"
+#include "../z3/z3toolbox.hpp"
+#include "../asymptotic/asymptoticbound.hpp"
 
-#include "debug.h"
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
+#include "../debug.hpp"
+#include "../util/stats.hpp"
+#include "../util/timing.hpp"
+#include "../util/timeout.hpp"
 
-#include "prune.h"
-#include "preprocess.h"
-#include "chain.h"
-#include "chainstrategy.h"
-#include "accelerate/accelerator.h"
+#include "prune.hpp"
+#include "preprocess.hpp"
+#include "chain.hpp"
+#include "chainstrategy.hpp"
+#include "../accelerate/accelerator.hpp"
 
-#include "its/export.h"
+#include "../its/export.hpp"
 
-#include "merging/rulemerger.h"
+#include "../merging/rulemerger.hpp"
 
 
 using namespace std;
@@ -756,4 +756,3 @@ abort:
 done:
     return res;
 }
-

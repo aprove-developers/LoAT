@@ -2,16 +2,15 @@
 // Created by ffrohn on 2/8/19.
 //
 
-#include <expr/relation.h>
-#include <accelerate/meter/farkas.h>
-#include "constraintbuilder.h"
-#include <z3/z3toolbox.h>
+#include "../expr/relation.hpp"
+#include "../accelerate/meter/farkas.hpp"
+#include "constraintbuilder.hpp"
+#include "../z3/z3toolbox.hpp"
 
 namespace strengthening {
 
-    typedef ConstraintBuilder Self;
 
-    const SmtConstraints Self::build(
+    const SmtConstraints ConstraintBuilder::build(
             const Templates &templates,
             const RuleContext &ruleCtx,
             const GuardContext &guardCtx,
@@ -19,7 +18,7 @@ namespace strengthening {
         return ConstraintBuilder(templates, ruleCtx, guardCtx, z3Ctx).build();
     }
 
-    Self::ConstraintBuilder(
+    ConstraintBuilder::ConstraintBuilder(
             const Templates &templates,
             const RuleContext &ruleCtx,
             const GuardContext &guardCtx,
@@ -30,7 +29,7 @@ namespace strengthening {
         z3Ctx(z3Ctx) {
     }
 
-    const SmtConstraints Self::build() const {
+    const SmtConstraints ConstraintBuilder::build() const {
         GuardList invariancePremise;
         GuardList invarianceConclusion;
         GuardList monotonicityPremise;
@@ -85,7 +84,7 @@ namespace strengthening {
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
     }
 
-    const GuardList Self::findRelevantConstraints() const {
+    const GuardList ConstraintBuilder::findRelevantConstraints() const {
         GuardList relevantConstraints;
         for (const Expression &e: guardCtx.guard) {
             for (const ExprSymbol &var: templates.vars()) {
@@ -98,7 +97,7 @@ namespace strengthening {
         return relevantConstraints;
     }
 
-    const Implication Self::buildTemplatesInvariantImplication() const {
+    const Implication ConstraintBuilder::buildTemplatesInvariantImplication() const {
         Implication res;
         for (const Expression &invTemplate: templates) {
             bool linear = true;
@@ -123,7 +122,7 @@ namespace strengthening {
         return res;
     }
 
-    const Initiation Self::constructInitiationConstraints(const GuardList &relevantConstraints) const {
+    const Initiation ConstraintBuilder::constructInitiationConstraints(const GuardList &relevantConstraints) const {
         Initiation res;
         for (const GuardList &pre: ruleCtx.preconditions) {
             z3::expr_vector gVec(z3Ctx);
@@ -164,7 +163,7 @@ namespace strengthening {
         return res;
     }
 
-    const std::vector<z3::expr> Self::constructImplicationConstraints(
+    const std::vector<z3::expr> ConstraintBuilder::constructImplicationConstraints(
             const GuardList &premise,
             const GuardList &conclusion) const {
         return FarkasLemma::apply(
@@ -176,7 +175,7 @@ namespace strengthening {
                 Z3Context::Integer);
     }
 
-    const z3::expr Self::constructImplicationConstraints(
+    const z3::expr ConstraintBuilder::constructImplicationConstraints(
             const GuardList &premise,
             const Expression &conclusion) const {
         return FarkasLemma::apply(

@@ -15,13 +15,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "preprocess.h"
+#include "preprocess.hpp"
 
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "z3/z3toolbox.h"
-#include "z3/z3solver.h"
-#include "util/timeout.h"
+#include "../expr/guardtoolbox.hpp"
+#include "../expr/relation.hpp"
+#include "../z3/z3toolbox.hpp"
+#include "../z3/z3solver.hpp"
+#include "../util/timeout.hpp"
 
 using namespace std;
 

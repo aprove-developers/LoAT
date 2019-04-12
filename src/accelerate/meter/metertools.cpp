@@ -15,13 +15,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "metertools.h"
+#include "metertools.hpp"
 
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "expr/ginactoz3.h"
-#include "z3/z3solver.h"
-#include "z3/z3toolbox.h"
+#include "../../expr/guardtoolbox.hpp"
+#include "../../expr/relation.hpp"
+#include "../../expr/ginactoz3.hpp"
+#include "../../z3/z3solver.hpp"
+#include "../../z3/z3toolbox.hpp"
 
 using namespace std;
 

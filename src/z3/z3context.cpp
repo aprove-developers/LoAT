@@ -15,9 +15,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "z3context.h"
+#include "z3context.hpp"
 
-#include "expr/expression.h"
+#include "../expr/expression.hpp"
 
 using namespace std;
 

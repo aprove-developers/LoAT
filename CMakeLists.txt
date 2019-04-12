@@ -23,135 +23,123 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-include_directories(src)
-include_directories(src/accelerate)
-include_directories(src/accelerate/meter)
-include_directories(src/accelerate/recurrence)
-include_directories(src/analysis)
-include_directories(src/asymptotic)
-include_directories(src/expr)
-include_directories(src/its)
-include_directories(src/its/parser)
-include_directories(src/util)
-include_directories(src/z3)
-
 add_executable(${EXECUTABLE}
         src/accelerate/meter/farkas.cpp
-        src/accelerate/meter/farkas.h
+        src/accelerate/meter/farkas.hpp
         src/accelerate/meter/linearize.cpp
-        src/accelerate/meter/linearize.h
+        src/accelerate/meter/linearize.hpp
         src/accelerate/meter/metering.cpp
-        src/accelerate/meter/metering.h
+        src/accelerate/meter/metering.hpp
         src/accelerate/meter/metertools.cpp
-        src/accelerate/meter/metertools.h
+        src/accelerate/meter/metertools.hpp
         src/accelerate/recurrence/dependencyorder.cpp
-        src/accelerate/recurrence/dependencyorder.h
+        src/accelerate/recurrence/dependencyorder.hpp
         src/accelerate/recurrence/recurrence.cpp
-        src/accelerate/recurrence/recurrence.h
+        src/accelerate/recurrence/recurrence.hpp
         src/accelerate/accelerator.cpp
-        src/accelerate/accelerator.h
+        src/accelerate/accelerator.hpp
         src/accelerate/backward.cpp
-        src/accelerate/backward.h
+        src/accelerate/backward.hpp
         src/accelerate/forward.cpp
-        src/accelerate/forward.h
+        src/accelerate/forward.hpp
         src/analysis/analysis.cpp
-        src/analysis/analysis.h
+        src/analysis/analysis.hpp
         src/analysis/chain.cpp
-        src/analysis/chain.h
+        src/analysis/chain.hpp
         src/analysis/chainstrategy.cpp
-        src/analysis/chainstrategy.h
+        src/analysis/chainstrategy.hpp
         src/analysis/preprocess.cpp
-        src/analysis/preprocess.h
+        src/analysis/preprocess.hpp
         src/analysis/prune.cpp
-        src/analysis/prune.h
+        src/analysis/prune.hpp
         src/asymptotic/asymptoticbound.cpp
-        src/asymptotic/asymptoticbound.h
+        src/asymptotic/asymptoticbound.hpp
         src/asymptotic/inftyexpression.cpp
-        src/asymptotic/inftyexpression.h
+        src/asymptotic/inftyexpression.hpp
         src/asymptotic/limitproblem.cpp
-        src/asymptotic/limitproblem.h
+        src/asymptotic/limitproblem.hpp
         src/asymptotic/limitsmt.cpp
-        src/asymptotic/limitsmt.h
+        src/asymptotic/limitsmt.hpp
         src/asymptotic/limitvector.cpp
-        src/asymptotic/limitvector.h
+        src/asymptotic/limitvector.hpp
         src/expr/complexity.cpp
-        src/expr/complexity.h
+        src/expr/complexity.hpp
         src/expr/expression.cpp
-        src/expr/expression.h
+        src/expr/expression.hpp
         src/expr/ginactoz3.cpp
-        src/expr/ginactoz3.h
+        src/expr/ginactoz3.hpp
         src/expr/guardtoolbox.cpp
-        src/expr/guardtoolbox.h
+        src/expr/guardtoolbox.hpp
         src/expr/relation.cpp
-        src/expr/relation.h
+        src/expr/relation.hpp
         src/its/parser/itsparser.cpp
-        src/its/parser/itsparser.h
+        src/its/parser/itsparser.hpp
         src/its/parser/term.cpp
-        src/its/parser/term.h
+        src/its/parser/term.hpp
         src/its/parser/termparser.cpp
-        src/its/parser/termparser.h
+        src/its/parser/termparser.hpp
         src/its/export.cpp
-        src/its/export.h
-        src/its/hypergraph.h
+        src/its/export.hpp
+        src/its/hypergraph.hpp
         src/its/itsproblem.cpp
-        src/its/itsproblem.h
+        src/its/itsproblem.hpp
         src/its/rule.cpp
-        src/its/rule.h
+        src/its/rule.hpp
         src/its/types.cpp
-        src/its/types.h
+        src/its/types.hpp
         src/its/variablemanager.cpp
-        src/its/variablemanager.h
-        src/util/exceptions.h
-        src/util/option.h
-        src/util/proofoutput.h
+        src/its/variablemanager.hpp
+        src/util/exceptions.hpp
+        src/util/option.hpp
+        src/util/proofoutput.hpp
         src/util/stats.cpp
-        src/util/stats.h
+        src/util/stats.hpp
         src/util/timeout.cpp
-        src/util/timeout.h
+        src/util/timeout.hpp
         src/util/timing.cpp
-        src/util/timing.h
+        src/util/timing.hpp
         src/z3/z3context.cpp
-        src/z3/z3context.h
-        src/z3/z3solver.h
+        src/z3/z3context.hpp
+        src/z3/z3solver.hpp
         src/z3/z3solver.cpp
         src/z3/z3toolbox.cpp
-        src/z3/z3toolbox.h
+        src/z3/z3toolbox.hpp
         src/config.cpp
-        src/config.h
-        src/debug.h
+        src/config.hpp
+        src/debug.hpp
         src/global.cpp
-        src/global.h
+        src/global.hpp
         src/main.cpp src/strengthening/constraintbuilder.cpp
-        src/strengthening/constraintbuilder.h
+        src/strengthening/constraintbuilder.hpp
         src/strengthening/strengthener.cpp
-        src/strengthening/strengthener.h
-        src/strengthening/types.h
+        src/strengthening/strengthener.hpp
+        src/strengthening/types.hpp
         src/strengthening/modes.cpp
-        src/strengthening/modes.h
+        src/strengthening/modes.hpp
         src/strengthening/templatebuilder.cpp
-        src/strengthening/templatebuilder.h
+        src/strengthening/templatebuilder.hpp
         src/strengthening/templates.cpp
-        src/strengthening/templates.h
+        src/strengthening/templates.hpp
         src/strengthening/constraintsolver.cpp
-        src/strengthening/constraintsolver.h
+        src/strengthening/constraintsolver.hpp
         src/strengthening/rulecontextbuilder.cpp
-        src/strengthening/rulecontextbuilder.h
+        src/strengthening/rulecontextbuilder.hpp
         src/strengthening/guardcontextbuilder.cpp
-        src/strengthening/guardcontextbuilder.h
+        src/strengthening/guardcontextbuilder.hpp
         src/util/relevantvariables.cpp
-        src/util/relevantvariables.h
+        src/util/relevantvariables.hpp
         src/util/ginacutils.cpp
-        src/util/ginacutils.h
-        src/util/collections.h src/sexpresso/sexpresso.cpp
-        src/sexpresso/sexpresso.h
+        src/util/ginacutils.hpp
+        src/util/collections.hpp src/sexpresso/sexpresso.cpp
+        src/sexpresso/sexpresso.hpp
         src/its/sexpressionparser/parser.cpp
-        src/its/sexpressionparser/parser.h
+        src/its/sexpressionparser/parser.hpp
         src/merging/rulemerger.cpp
-        src/merging/rulemerger.h
+        src/merging/rulemerger.hpp
         src/constantpropagation/constantpropagation.cpp
-        src/constantpropagation/constantpropagation.h
+        src/constantpropagation/constantpropagation.hpp
         src/nonterm/nonterm.cpp
-        src/nonterm/nonterm.h)
+        src/nonterm/nonterm.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

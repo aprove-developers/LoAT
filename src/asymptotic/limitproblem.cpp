@@ -1,12 +1,12 @@
-#include "limitproblem.h"
+#include "limitproblem.hpp"
 
 #include <z3++.h>
 #include <sstream>
 #include <utility>
 
-#include "debug.h"
-#include "expr/relation.h"
-#include "z3/z3toolbox.h"
+#include "../debug.hpp"
+#include "../expr/relation.hpp"
+#include "../z3/z3toolbox.hpp"
 
 using namespace GiNaC;
 

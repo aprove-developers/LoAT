@@ -2,7 +2,7 @@
 // Created by ffrohn on 2/14/19.
 //
 
-#include "z3solver.h"
+#include "z3solver.hpp"
 
 using namespace std;
 

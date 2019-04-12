@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "dependencyorder.h"
+#include "dependencyorder.hpp"
 
 using namespace std;
 
@@ -131,4 +131,3 @@ option<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan
     debugPurrs("Heuristic successful, dependency order found.");
     return res.ordering;
 }
-

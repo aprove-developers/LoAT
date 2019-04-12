@@ -1,23 +1,23 @@
-#include "asymptoticbound.h"
+#include "asymptoticbound.hpp"
 
 #include <iterator>
 #include <vector>
 #include <ginac/ginac.h>
 #include <z3++.h>
 
-#include "expr/expression.h"
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "expr/ginactoz3.h"
-#include "util/timeout.h"
+#include "../expr/expression.hpp"
+#include "../expr/guardtoolbox.hpp"
+#include "../expr/relation.hpp"
+#include "../expr/ginactoz3.hpp"
+#include "../util/timeout.hpp"
 
-#include "z3/z3solver.h"
-#include "z3/z3context.h"
-#include "z3/z3toolbox.h"
+#include "../z3/z3solver.hpp"
+#include "../z3/z3context.hpp"
+#include "../z3/z3toolbox.hpp"
 
-#include "limitsmt.h"
-#include "inftyexpression.h"
-#include "global.h"
+#include "limitsmt.hpp"
+#include "inftyexpression.hpp"
+#include "../global.hpp"
 
 using namespace GiNaC;
 using namespace std;

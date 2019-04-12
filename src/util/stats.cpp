@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "stats.h"
-#include "global.h"
+#include "stats.hpp"
+#include "../global.hpp"
 
 #include <map>
 #include <vector>

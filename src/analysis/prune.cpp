@@ -15,18 +15,18 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "prune.h"
+#include "prune.hpp"
 
-#include "global.h"
-#include "debug.h"
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
+#include "../global.hpp"
+#include "../debug.hpp"
+#include "../util/stats.hpp"
+#include "../util/timing.hpp"
+#include "../util/timeout.hpp"
 
-#include "its/itsproblem.h"
+#include "../its/itsproblem.hpp"
 
-#include "z3/z3toolbox.h"
-#include "asymptotic/asymptoticbound.h"
+#include "../z3/z3toolbox.hpp"
+#include "../asymptotic/asymptoticbound.hpp"
 
 #include <queue>
 

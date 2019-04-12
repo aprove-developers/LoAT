@@ -15,11 +15,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "chain.h"
+#include "chain.hpp"
 
-#include "z3/z3toolbox.h"
-#include "util/stats.h"
-#include "debug.h"
+#include "../z3/z3toolbox.hpp"
+#include "../util/stats.hpp"
+#include "../debug.hpp"
 
 using namespace std;
 

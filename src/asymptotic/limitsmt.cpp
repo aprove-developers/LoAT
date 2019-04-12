@@ -1,13 +1,13 @@
-#include "limitsmt.h"
+#include "limitsmt.hpp"
 
-#include "expr/ginactoz3.h"
-#include "z3/z3solver.h"
-#include "z3/z3context.h"
-#include "z3/z3toolbox.h"
+#include "../expr/ginactoz3.hpp"
+#include "../z3/z3solver.hpp"
+#include "../z3/z3context.hpp"
+#include "../z3/z3toolbox.hpp"
 
-#include "inftyexpression.h"
-#include "config.h"
-#include "util/timeout.h"
+#include "inftyexpression.hpp"
+#include "../config.hpp"
+#include "../util/timeout.hpp"
 
 using namespace std;
 
@@ -256,4 +256,3 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
 
     return smtSubs;
 }
-

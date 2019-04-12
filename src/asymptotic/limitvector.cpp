@@ -1,4 +1,4 @@
-#include "limitvector.h"
+#include "limitvector.hpp"
 
 #include <cassert>
 #include <ginac/ginac.h>

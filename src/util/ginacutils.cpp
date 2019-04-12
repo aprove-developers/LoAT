@@ -2,7 +2,7 @@
 // Created by ffrohn on 3/14/19.
 //
 
-#include "ginacutils.h"
+#include "ginacutils.hpp"
 #include <ginac/ginac.h>
 
 namespace util {
