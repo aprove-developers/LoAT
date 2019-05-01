@@ -136,8 +136,6 @@ add_executable(${EXECUTABLE}
         src/its/sexpressionparser/parser.hpp
         src/merging/rulemerger.cpp
         src/merging/rulemerger.hpp
-        src/constantpropagation/constantpropagation.cpp
-        src/constantpropagation/constantpropagation.hpp
         src/nonterm/nonterm.cpp
         src/nonterm/nonterm.hpp)
 

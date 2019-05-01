@@ -30,3 +30,5 @@ cmake-build-debug
 build
 build-static
 bundle
+CMakeFiles
+compile_commands.json
