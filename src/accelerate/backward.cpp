@@ -237,24 +237,11 @@ option<Rule> Self::buildInit(unsigned int iterations) const {
     if (iterations == 0) {
         return {};
     } else {
-        GuardList initGuard;
-        const GiNaC::exmap &up = rule.getUpdate(0).toSubstitution(varMan);
-        GuardList updatedGuard = rule.getGuard();
-        Expression updatedCost = rule.getCost();
-        Expression initCost = Expression(0);
+        Rule res = rule;
         for (unsigned int i = 0; i < iterations - 1; i++) {
-            initGuard.insert(initGuard.end(), updatedGuard.begin(), updatedGuard.end());
-            updatedGuard = updatedGuard.subs(up);
-            initCost = initCost + updatedCost;
-            updatedCost.applySubs(up);
+            Chaining::chainRules(varMan, res, rule, false);
         }
-        UpdateMap initUpdate = rule.getUpdate(0);
-        for (unsigned int i = 1; i < iterations; i++) {
-            for (auto &p: initUpdate) {
-                p.second.applySubs(up);
-            }
-        }
-        return Rule(rule.getLhsLoc(), initGuard, initCost, rule.getRhsLoc(0), initUpdate);
+        return res;
     }
 }
 
