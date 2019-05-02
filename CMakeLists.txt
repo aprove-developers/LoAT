@@ -32,6 +32,10 @@ include_directories(src/util)
 include_directories(src/z3)
 
 add_executable(${EXECUTABLE}
+        src/sexpresso/sexpresso.cpp
+        src/sexpresso/sexpresso.hpp
+        src/its/sexpressionparser/parser.cpp
+        src/its/sexpressionparser/parser.hpp
         src/accelerate/meter/farkas.cpp
         src/accelerate/meter/farkas.h
         src/accelerate/meter/linearize.cpp
