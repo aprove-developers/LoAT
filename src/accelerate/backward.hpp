@@ -45,7 +45,7 @@ private:
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
     Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                              const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
+                              const GuardList &guard, const ExprSymbol &N) const;
 
     Rule buildNontermRule() const;
 

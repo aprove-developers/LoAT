@@ -76,19 +76,14 @@ Rule BackwardAcceleration::buildNontermRule() const {
 Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
                                                 const Expression &iteratedCost,
                                                 const GuardList &guard,
-                                                const ExprSymbol &N,
-                                                const unsigned int validityBound) const
+                                                const ExprSymbol &N) const
 {
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
 
     // Extend the old guard by the updated constraints
     // and require that the number of iterations N is positive
     GuardList newGuard = guard;
-    if (validityBound == 0) {
-        newGuard.push_back(N >= 0);
-    } else {
-        newGuard.push_back(N > 0);
-    }
+    newGuard.push_back(N >= 0);
     for (const Expression &ex : rule.getGuard()) {
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
@@ -239,7 +234,7 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
 }
 
 option<Rule> Self::buildInit(unsigned int iterations) const {
-    if (iterations <= 1) {
+    if (iterations == 0) {
         return {};
     } else {
         GuardList initGuard;
@@ -305,7 +300,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
         }
 
         // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-        accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, strengthenedGuard, N, validityBound.get());
+        accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, strengthenedGuard, N);
     } else {
         if (!checkCommutation(updates)) {
             debugBackwardAccel("Failed to accelerate recursive rule due to non-commutative udpates");

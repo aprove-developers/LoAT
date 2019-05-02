@@ -263,6 +263,23 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     }
 }
 
+const option<Rule> Accelerator::chainNonNegative(const Rule &rule) const {
+    if (!rule.isLinear()) return rule;
+    for (const auto &p: rule.getUpdate(0)) {
+        const ExprSymbol &var = its.getVarSymbol(p.first);
+        const Expression &up = p.second.expand();
+        const ExprSymbolSet &upVars = up.getVariables();
+        if (upVars.find(var) != upVars.end()) {
+            if (up.isPolynomial() && up.degree(var) == 1) {
+                const Expression &coeff = up.coeff(var);
+                if (coeff.isRationalConstant() && coeff < 0) {
+                    return Chaining::chainRules(its, rule, rule, false);
+                }
+            }
+        }
+    }
+    return {};
+}
 
 // ###################
 // ## Acceleration  ##
@@ -280,6 +297,11 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         if (r.getCost().isNontermSymbol()) {
             todo.pop();
             continue;
+        }
+        option<Rule> nn = chainNonNegative(rule);
+        if (nn) {
+            debugTest("eliminated negative numbers from diagonal");
+            r = nn.get();
         }
         // first try to prove non-termination
         option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);

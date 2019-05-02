@@ -38,6 +38,7 @@ namespace nonterm {
         return {};
     }
 
+    /** TODO should be equivalent to what's described in the paper, but could be simplified */
     unsigned int NonTerm::maxDepth(const UpdateMap &up, const VariableManager &varMan) {
         if (!DependencyOrder::findOrder(varMan, up)) {
             return 1;
