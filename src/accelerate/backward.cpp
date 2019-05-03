@@ -38,17 +38,16 @@ bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, 
     // For the right-hand side, we only check the reduced guard, as we only care about relevant constraints.
     vector<z3::expr> lhss, rhss;
 
-    for (const Expression &ex : irrelevantGuard) {
+    const GuardList &toAdd = selfContainedGuard(irrelevantGuard);
+    for (const Expression &ex : toAdd) {
         solver.add(GinacToZ3::convert(ex, context));
     }
 
     for (const auto &ruleRhs: rule.getRhss()) {
         solver.push();
         auto update = ruleRhs.getUpdate().toSubstitution(varMan);
-        for (const Expression &ex : rule.getGuard()) {
-            solver.add(GinacToZ3::convert(ex.subs(update), context));
-        }
         for (const Expression &ex : reducedGuard) {
+            solver.add(GinacToZ3::convert(ex.subs(update), context));
             rhss.push_back(GinacToZ3::convert(ex, context));
         }
         z3::expr rhs = Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd);
@@ -65,6 +64,33 @@ bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, 
         solver.pop();
     }
     return true;
+}
+
+GuardList BackwardAcceleration::selfContainedGuard(const GuardList &irrelevantGuard) const {
+    GuardList res(irrelevantGuard);
+    std::vector<GiNaC::exmap> updates;
+    for (const RuleRhs &r: rule.getRhss()) {
+        updates.push_back(r.getUpdate().toSubstitution(varMan));
+    }
+    bool done;
+    do {
+        done = true;
+        auto it = res.begin();
+        while (it != res.end()) {
+            GuardList updated;
+            for (const GiNaC::exmap &up: updates) {
+                updated.push_back((*it).subs(up));
+            }
+            if (Z3Toolbox::isValidImplication(res, updated)) {
+                it++;
+            } else {
+                res.erase(it);
+                done = false;
+                break;
+            }
+        }
+    } while (!done);
+    return res;
 }
 
 Rule BackwardAcceleration::buildNontermRule() const {

@@ -54,6 +54,8 @@ private:
 
     bool checkCommutation(const std::vector<UpdateMap> &updates);
 
+    GuardList selfContainedGuard(const GuardList &irrelevantGuard) const;
+
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
      * For every upper bound, a separate rule is created.
