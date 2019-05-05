@@ -266,7 +266,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
-    if (nonInvariants.empty()) {
+    if (nonInvariants.empty() && Z3Toolbox::isValidImplication(rule.getGuard(), {rule.getCost() > 0})) {
         return {.res={buildNontermRule()}, .status=ForwardAcceleration::Success};
     }
 
