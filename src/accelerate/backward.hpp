@@ -39,13 +39,13 @@ private:
     /**
      * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
      */
-    bool checkGuardImplication(const GuardList &reducedGuard, const GuardList &irrelevantGuard) const;
+    bool checkGuardImplication() const;
 
     /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
     Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                              const GuardList &guard, const ExprSymbol &N) const;
+                              const GuardList &strengthenedGuard, const ExprSymbol &N) const;
 
     Rule buildNontermRule() const;
 
@@ -54,7 +54,7 @@ private:
 
     bool checkCommutation(const std::vector<UpdateMap> &updates);
 
-    GuardList selfContainedGuard(const GuardList &irrelevantGuard) const;
+    void splitSimpleInvariants();
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
@@ -78,6 +78,11 @@ private:
     VariableManager &varMan;
     const Rule &rule;
     const LocationIdx &sink;
+    GuardList simpleInvariants;
+    GuardList conditionalInvariants;
+    GuardList nonInvariants;
+    std::vector<UpdateMap> updates;
+    std::vector<GiNaC::exmap> updateSubs;
 };
 
 #endif /* BACKWARDACCELERATION_H */

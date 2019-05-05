@@ -21,76 +21,67 @@ using namespace std;
 typedef BackwardAcceleration Self;
 
 BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink)
-        : varMan(varMan), rule(rule), sink(sink) {}
+        : varMan(varMan), rule(rule), sink(sink) {
+    for (const auto &rhs: rule.getRhss()) {
+        updates.push_back(rhs.getUpdate());
+        updateSubs.push_back(rhs.getUpdate().toSubstitution(varMan));
+    }
+    nonInvariants = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &simpleInvariants);
+    splitSimpleInvariants();
+}
 
+void BackwardAcceleration::splitSimpleInvariants() {
+    bool done;
+    do {
+        done = true;
+        auto it = simpleInvariants.begin();
+        while (it != simpleInvariants.end()) {
+            GuardList updated;
+            for (const GiNaC::exmap &up: updateSubs) {
+                updated.push_back((*it).subs(up));
+            }
+            if (Z3Toolbox::isValidImplication(simpleInvariants, updated)) {
+                it++;
+            } else {
+                simpleInvariants.erase(it);
+                conditionalInvariants.push_back(*it);
+                done = false;
+                break;
+            }
+        }
+    } while (!done);
+}
 
 bool BackwardAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
 }
 
-
-bool BackwardAcceleration::checkGuardImplication(const GuardList &reducedGuard, const GuardList &irrelevantGuard) const {
+bool BackwardAcceleration::checkGuardImplication() const {
     Z3Context context;
     Z3Solver solver(context);
-
-    // Build the implication by applying the inverse update to every guard constraint.
-    // For the left-hand side, we use the full guard (might be stronger than the reduced guard).
-    // For the right-hand side, we only check the reduced guard, as we only care about relevant constraints.
     vector<z3::expr> lhss, rhss;
 
-    const GuardList &toAdd = selfContainedGuard(irrelevantGuard);
-    for (const Expression &ex : toAdd) {
+    for (const Expression &ex : simpleInvariants) {
         solver.add(GinacToZ3::convert(ex, context));
     }
 
-    for (const auto &ruleRhs: rule.getRhss()) {
+    for (const auto &update: updateSubs) {
         solver.push();
-        auto update = ruleRhs.getUpdate().toSubstitution(varMan);
-        for (const Expression &ex : reducedGuard) {
+        for (const Expression &ex : nonInvariants) {
             solver.add(GinacToZ3::convert(ex.subs(update), context));
             rhss.push_back(GinacToZ3::convert(ex, context));
         }
-        z3::expr rhs = Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd);
-
-        // call z3
         debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
         if (solver.check() != z3::sat) {
             return false;
         }
-        solver.add(!rhs);
+        solver.add(!Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd));
         if (solver.check() != z3::unsat) {
             return false;
         }
         solver.pop();
     }
     return true;
-}
-
-GuardList BackwardAcceleration::selfContainedGuard(const GuardList &irrelevantGuard) const {
-    GuardList res(irrelevantGuard);
-    std::vector<GiNaC::exmap> updates;
-    for (const RuleRhs &r: rule.getRhss()) {
-        updates.push_back(r.getUpdate().toSubstitution(varMan));
-    }
-    bool done;
-    do {
-        done = true;
-        auto it = res.begin();
-        while (it != res.end()) {
-            GuardList updated;
-            for (const GiNaC::exmap &up: updates) {
-                updated.push_back((*it).subs(up));
-            }
-            if (Z3Toolbox::isValidImplication(res, updated)) {
-                it++;
-            } else {
-                res.erase(it);
-                done = false;
-                break;
-            }
-        }
-    } while (!done);
-    return res;
 }
 
 Rule BackwardAcceleration::buildNontermRule() const {
@@ -101,19 +92,16 @@ Rule BackwardAcceleration::buildNontermRule() const {
 
 Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
                                                 const Expression &iteratedCost,
-                                                const GuardList &guard,
+                                                const GuardList &strengthenedGuard,
                                                 const ExprSymbol &N) const
 {
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
-
-    // Extend the old guard by the updated constraints
-    // and require that the number of iterations N is positive
-    GuardList newGuard = guard;
+    GuardList newGuard = strengthenedGuard;
     newGuard.push_back(N >= 0);
-    for (const Expression &ex : rule.getGuard()) {
+    for (const Expression &ex : nonInvariants) {
+        newGuard.erase(std::find(newGuard.begin(), newGuard.end(), ex));
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
-
     LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(0), iteratedUpdate);
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
     return std::move(res);
@@ -278,19 +266,11 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
-    // Remove constraints that are irrelevant for the loop's execution
-    std::vector<UpdateMap> updates;
-    for (const auto &rhs: rule.getRhss()) {
-        updates.push_back(rhs.getUpdate());
-    }
-    GuardList irrelevantGuard;
-    GuardList reducedGuard = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &irrelevantGuard);
-
-    if (reducedGuard.empty()) {
+    if (nonInvariants.empty()) {
         return {.res={buildNontermRule()}, .status=ForwardAcceleration::Success};
     }
 
-    if (!checkGuardImplication(reducedGuard, irrelevantGuard)) {
+    if (!checkGuardImplication()) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
         return {.res={}, .status=ForwardAcceleration::NonMonotonic};
@@ -333,7 +313,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
                 iteratedUpdates.get().refinement.begin(),
                 iteratedUpdates.get().refinement.end());
         unsigned long dimension = rule.getRhss().size();
-        const Expression &iteratedCost = reducedGuard.empty() ?
+        const Expression &iteratedCost = nonInvariants.empty() ?
                                          Expression::NontermSymbol :
                                          (pow(dimension, N) - 1) / (dimension - 1);
 
