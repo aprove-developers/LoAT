@@ -70,6 +70,7 @@ namespace strengthening {
                 if (Relation::isLinearInequality(e, templates.vars())) {
                     monotonicityPremise.push_back(e.subs(up));
                     conclusionMonotonic.push_back(constructImplicationConstraints(monotonicityPremise, e));
+                    monotonicityPremise.pop_back();
                 }
             }
         }
