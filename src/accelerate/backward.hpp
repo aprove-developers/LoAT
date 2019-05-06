@@ -24,6 +24,8 @@ public:
 private:
     BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
+    void computeInvarianceSplit();
+
     /**
      * Main function, just calls the methods below in the correct order
      */
@@ -53,8 +55,6 @@ private:
                                    const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
 
     bool checkCommutation(const std::vector<UpdateMap> &updates);
-
-    void splitSimpleInvariants();
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.

@@ -33,18 +33,17 @@ namespace strengthening {
         GuardList invariancePremise;
         GuardList invarianceConclusion;
         GuardList monotonicityPremise;
-        GuardList monotonicityConclusion;
         const GuardList &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
-        for (const Expression &e: relevantConstraints) {
+        for (const Expression &e: guardCtx.decreasing) {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
                 monotonicityPremise.push_back(updated);
             }
         }
-        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.invariants.begin(), guardCtx.invariants.end());
-        const Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
+        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.simpleInvariants.begin(), guardCtx.simpleInvariants.end());
+        Implication templatesInvariantImplication = buildTemplatesInvariantImplication();
         // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication
         // discards templates that become non-linear when applying the update.
         invariancePremise.insert(
@@ -55,10 +54,11 @@ namespace strengthening {
                 monotonicityPremise.end(),
                 templatesInvariantImplication.premise.begin(),
                 templatesInvariantImplication.premise.end());
-        monotonicityPremise.insert(
-                monotonicityPremise.end(),
-                templatesInvariantImplication.conclusion.begin(),
-                templatesInvariantImplication.conclusion.end());
+        templatesInvariantImplication.premise.insert(
+                templatesInvariantImplication.premise.end(),
+                guardCtx.simpleInvariants.begin(),
+                guardCtx.simpleInvariants.end());
+        std::vector<z3::expr> conclusionMonotonic;
         for (const Expression &e: guardCtx.todo) {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
@@ -66,21 +66,20 @@ namespace strengthening {
                 if (Relation::isLinearInequality(updated, templates.vars())) {
                     invarianceConclusion.push_back(updated);
                 }
-            }
-            if (Relation::isLinearInequality(e, templates.vars())) {
-                monotonicityConclusion.push_back(e);
+                // TODO most likely, this does not make much sense for complexity (should be an *and* wrt the different updates) -- check
+                if (Relation::isLinearInequality(e, templates.vars())) {
+                    monotonicityPremise.push_back(e.subs(up));
+                    conclusionMonotonic.push_back(constructImplicationConstraints(monotonicityPremise, e));
+                }
             }
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
-                invariancePremise,
+                templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
         const std::vector<z3::expr> &conclusionInvariant = constructImplicationConstraints(
                 invariancePremise,
                 invarianceConclusion);
-        const std::vector<z3::expr> &conclusionMonotonic = constructImplicationConstraints(
-                monotonicityPremise,
-                monotonicityConclusion);
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
     }
 
@@ -128,12 +127,34 @@ namespace strengthening {
             for (const Expression &t: templates) {
                 res.valid.push_back(constructImplicationConstraints(pre, t));
             }
-        }
-        for (const Expression &e: relevantConstraints) {
-            res.satisfiable.push_back(e.toZ3(z3Ctx));
-        }
-        for (const Expression &e: templates) {
-            res.satisfiable.push_back(e.toZ3(z3Ctx));
+            ExprSymbolSet allVars;
+            pre.collectVariables(allVars);
+            for (const Expression &e: relevantConstraints) {
+                e.collectVariables(allVars);
+            }
+            for (const Expression &e: pre) {
+                e.collectVariables(allVars);
+            }
+            // TODO Why is this variable renaming needed?
+            GiNaC::exmap varRenaming;
+            for (const ExprSymbol &x: allVars) {
+                varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
+            }
+            z3::expr_vector renamed(z3Ctx);
+            for (Expression e: pre) {
+                e.applySubs(varRenaming);
+                renamed.push_back(e.toZ3(z3Ctx));
+            }
+            const std::vector<Expression> &updatedTemplates = templates.subs(varRenaming);
+            for (const Expression &e: updatedTemplates) {
+                renamed.push_back(e.toZ3(z3Ctx));
+            }
+            for (Expression e: relevantConstraints) {
+                e.applySubs(varRenaming);
+                renamed.push_back(e.toZ3(z3Ctx));
+            }
+            const z3::expr &expr = mk_and(renamed);
+            res.satisfiable.push_back(expr);
         }
         return res;
     }

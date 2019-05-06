@@ -4,6 +4,7 @@
 
 #include "../expr/relation.hpp"
 #include "../z3/z3solver.hpp"
+#include "../z3/z3toolbox.hpp"
 #include "guardcontextbuilder.hpp"
 
 namespace strengthening {
@@ -97,11 +98,37 @@ namespace strengthening {
         return res;
     }
 
+    const Result Self::splitSimpleInvariants(const GuardList &invariants) const {
+        Result res;
+        res.solved.insert(res.solved.end(), invariants.begin(), invariants.end());
+        bool done;
+        do {
+            done = true;
+            auto it = res.solved.begin();
+            while (it != res.solved.end()) {
+                GuardList updated;
+                for (const GiNaC::exmap &up: updates) {
+                    updated.push_back((*it).subs(up));
+                }
+                if (Z3Toolbox::isValidImplication(res.solved, updated)) {
+                    it++;
+                } else {
+                    res.solved.erase(it);
+                    res.failed.push_back(*it);
+                    done = false;
+                    break;
+                }
+            }
+        } while (!done);
+        return res;
+    }
+
     const GuardContext Self::build() const {
         const GuardList &constraints = computeConstraints();
         const Result inv = splitInvariants(constraints);
-        const Result mon = splitMonotonicConstraints(inv.solved, inv.failed);
-        return GuardContext(guard, mon.solved, mon.failed);
+        const Result simpleInv = splitSimpleInvariants(inv.solved);
+        const Result mon = splitMonotonicConstraints(simpleInv.solved, inv.failed);
+        return GuardContext(guard, inv.solved, simpleInv.solved, mon.solved, mon.failed);
     }
 
 }

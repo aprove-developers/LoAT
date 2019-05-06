@@ -26,11 +26,11 @@ BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const Rule &rule, con
         updates.push_back(rhs.getUpdate());
         updateSubs.push_back(rhs.getUpdate().toSubstitution(varMan));
     }
-    nonInvariants = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &simpleInvariants);
-    splitSimpleInvariants();
+    computeInvarianceSplit();
 }
 
-void BackwardAcceleration::splitSimpleInvariants() {
+void BackwardAcceleration::computeInvarianceSplit() {
+    nonInvariants = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), updates, &simpleInvariants);
     bool done;
     do {
         done = true;

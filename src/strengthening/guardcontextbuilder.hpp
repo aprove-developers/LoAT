@@ -34,6 +34,8 @@ namespace strengthening {
                 const GuardList &invariants,
                 const GuardList &nonInvariants) const;
 
+        const Result splitSimpleInvariants(const GuardList &invariants) const;
+
     };
 
 }

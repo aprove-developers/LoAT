@@ -15,8 +15,8 @@ namespace strengthening {
 
         RuleContext(
                 const Rule &rule,
-                std::vector<GiNaC::exmap> updates,
-                std::vector<GuardList> preconditions,
+                const std::vector<GiNaC::exmap> &updates,
+                const std::vector<GuardList> &preconditions,
                 VariableManager &varMan):
                 rule(rule),
                 updates(std::move(updates)),
@@ -33,13 +33,19 @@ namespace strengthening {
 
         GuardContext(const GuardList &guard,
                 GuardList invariants,
+                GuardList simpleInvariants,
+                GuardList decreasing,
                 GuardList todo):
                 guard(guard),
                 invariants(std::move(invariants)),
+                simpleInvariants(std::move(simpleInvariants)),
+                decreasing(std::move(decreasing)),
                 todo(std::move(todo)) { }
 
         const GuardList &guard;
         const GuardList invariants;
+        const GuardList simpleInvariants;
+        const GuardList decreasing;
         const GuardList todo;
     };
 
