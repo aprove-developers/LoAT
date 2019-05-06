@@ -20,7 +20,9 @@ namespace strengthening {
         std::vector<GuardList> res;
         const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
         const Strengthener strengthener(ruleCtx);
-        while (!todo.empty()) {
+        unsigned int i = 0;
+        while (!todo.empty() && i < 20) {
+            i++;
             const GuardList &current = todo.top();
             bool failed = true;
             for (const Mode &mode: modes) {

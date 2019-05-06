@@ -63,6 +63,7 @@ namespace strengthening {
         for (const z3::expr &e: constraints.initiation.satisfiable) {
             satisfiableForSomePredecessor.push_back(e);
         }
+        res.hard.push_back(z3::mk_or(satisfiableForSomePredecessor));
         z3::expr_vector someConclusionMonotonic(z3Ctx);
         for (const z3::expr &e: constraints.conclusionsMonotonic) {
             res.soft.push_back(e);

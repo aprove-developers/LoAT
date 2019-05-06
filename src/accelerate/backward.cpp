@@ -59,7 +59,6 @@ bool BackwardAcceleration::shouldAccelerate() const {
 bool BackwardAcceleration::checkGuardImplication() const {
     Z3Context context;
     Z3Solver solver(context);
-    vector<z3::expr> lhss, rhss;
 
     for (const Expression &ex : simpleInvariants) {
         solver.add(GinacToZ3::convert(ex, context));
@@ -69,13 +68,14 @@ bool BackwardAcceleration::checkGuardImplication() const {
         solver.push();
         for (const Expression &ex : nonInvariants) {
             solver.add(GinacToZ3::convert(ex.subs(update), context));
-            rhss.push_back(GinacToZ3::convert(ex, context));
         }
         debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
         if (solver.check() != z3::sat) {
             return false;
         }
-        solver.add(!Z3Toolbox::concat(context, rhss, Z3Toolbox::ConcatAnd));
+        for (const Expression &ex : nonInvariants) {
+            solver.add(GinacToZ3::convert(ex, context));
+        }
         if (solver.check() != z3::unsat) {
             return false;
         }
