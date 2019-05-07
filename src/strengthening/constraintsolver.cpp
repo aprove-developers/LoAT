@@ -36,9 +36,6 @@ namespace strengthening {
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
             if (!newInvariants.empty()) {
-                for (const Expression &e: newInvariants) {
-                    debugInvariants("new invariant " << e);
-                }
                 return splitInitiallyValid(newInvariants);
             }
         }
@@ -46,6 +43,7 @@ namespace strengthening {
     }
 
     const GuardList Self::instantiateTemplates(const z3::model &model) const {
+        Z3Solver solver(z3Ctx);
         GuardList res;
         UpdateMap parameterInstantiation;
         for (const ExprSymbol &p: templates.params()) {
@@ -59,7 +57,11 @@ namespace strengthening {
         const std::vector<Expression> instantiatedTemplates = templates.subs(subs);
         for (const Expression &e: instantiatedTemplates) {
             if (!templates.isParametric(e)) {
-                res.push_back(e);
+                solver.add(!e.toZ3(z3Ctx));
+                if (solver.check() != z3::unsat) {
+                    res.push_back(e);
+                }
+                solver.reset();
             }
         }
         return res;

@@ -64,7 +64,7 @@ namespace strengthening {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
-                if (Relation::isLinearInequality(e, templates.vars())) {
+                if (Relation::isLinearInequality(e, templates.vars()) && Relation::isLinearInequality(updated, templates.vars())) {
                     monotonicityPremise.push_back(e.subs(up));
                     const z3::expr &decreasing = constructImplicationConstraints(monotonicityPremise, e);
                     monotonicityPremise.pop_back();
