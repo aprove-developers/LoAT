@@ -21,7 +21,7 @@ namespace strengthening {
         const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
         const Strengthener strengthener(ruleCtx);
         unsigned int i = 0;
-        while (!todo.empty() && i < 20) {
+        while (!todo.empty() && i < 10) {
             i++;
             const GuardList &current = todo.top();
             bool failed = true;
@@ -62,7 +62,7 @@ namespace strengthening {
         const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);
         Z3Context z3Ctx;
         const SmtConstraints &smtConstraints = ConstraintBuilder::build(templates, ruleCtx, guardCtx, z3Ctx);
-        MaxSmtConstraints maxSmtConstraints = mode(smtConstraints, z3Ctx);
+        MaxSmtConstraints maxSmtConstraints = mode(smtConstraints, guardCtx.decreasing.empty(), z3Ctx);
         if (maxSmtConstraints.hard.empty()) {
             return {};
         }

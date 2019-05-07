@@ -77,10 +77,10 @@ namespace strengthening {
     struct SmtConstraints {
 
         SmtConstraints(
-                Initiation initiation,
-                std::vector<z3::expr> templatesInvariant,
-                std::vector<z3::expr> conclusionsInvariant,
-                std::vector<z3::expr> conclusionsMonotonic) :
+                const Initiation &initiation,
+                const std::vector<z3::expr> &templatesInvariant,
+                const std::vector<z3::expr> &conclusionsInvariant,
+                const std::vector<z3::expr> &conclusionsMonotonic) :
                 initiation(std::move(initiation)),
                 templatesInvariant(std::move(templatesInvariant)),
                 conclusionsInvariant(std::move(conclusionsInvariant)),
@@ -93,7 +93,7 @@ namespace strengthening {
 
     };
 
-    typedef std::function<const MaxSmtConstraints(const SmtConstraints &, Z3Context &)> Mode;
+    typedef std::function<const MaxSmtConstraints(const SmtConstraints &, bool, Z3Context &)> Mode;
 
 }
 

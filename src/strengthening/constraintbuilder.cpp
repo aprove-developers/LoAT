@@ -31,7 +31,6 @@ namespace strengthening {
 
     const SmtConstraints ConstraintBuilder::build() const {
         GuardList invariancePremise;
-        GuardList invarianceConclusion;
         GuardList monotonicityPremise;
         const GuardList &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
@@ -59,28 +58,27 @@ namespace strengthening {
                 guardCtx.simpleInvariants.begin(),
                 guardCtx.simpleInvariants.end());
         std::vector<z3::expr> conclusionMonotonic;
+        std::vector<z3::expr> conclusionInvariant;
         for (const Expression &e: guardCtx.todo) {
+            z3::expr_vector eMonotonic(z3Ctx);
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
-                if (Relation::isLinearInequality(updated, templates.vars())) {
-                    invarianceConclusion.push_back(updated);
-                }
-                // TODO most likely, this does not make much sense for complexity (should be an *and* wrt the different updates) -- check
                 if (Relation::isLinearInequality(e, templates.vars())) {
                     monotonicityPremise.push_back(e.subs(up));
-                    conclusionMonotonic.push_back(constructImplicationConstraints(monotonicityPremise, e));
+                    const z3::expr &decreasing = constructImplicationConstraints(monotonicityPremise, e);
                     monotonicityPremise.pop_back();
+                    const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
+                    conclusionInvariant.push_back(invariant);
+                    eMonotonic.push_back(decreasing || invariant);
                 }
+                conclusionMonotonic.push_back(z3::mk_and(eMonotonic));
             }
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
-        const std::vector<z3::expr> &conclusionInvariant = constructImplicationConstraints(
-                invariancePremise,
-                invarianceConclusion);
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
     }
 

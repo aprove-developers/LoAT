@@ -13,19 +13,13 @@ namespace strengthening {
 
     private:
 
-        static const MaxSmtConstraints invariance(const SmtConstraints &constraints, Z3Context &z3Ctx);
+        static const MaxSmtConstraints invariance(const SmtConstraints &constraints, bool preferInvariance, Z3Context &z3Ctx);
 
-        static const MaxSmtConstraints pseudoInvariance(const SmtConstraints &constraints, Z3Context &z3Ctx);
-
-        static const MaxSmtConstraints monotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx);
-
-        static const MaxSmtConstraints pseudoMonotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx);
+        //        static const MaxSmtConstraints monotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx);
 
     public:
 
         static const std::vector<Mode> modes();
-
-        static const std::vector<Mode> invarianceModes();
 
     };
 

@@ -316,9 +316,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
             BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
             // if backwards acceleration is not supported, we can only hope to prove non-termination
             // for proving non-termination, only invariance is of interest
-            std::vector<strengthening::Mode> strengtheningModes = res.status == ForwardAcceleration::NotSupported ?
-                                                                  strengthening::Modes::invarianceModes() :
-                                                                  strengthening::Modes::modes();
+            std::vector<strengthening::Mode> strengtheningModes = strengthening::Modes::modes();
             // store the result for the original rule so that we can return it if we fail
             if (!status) {
                 status = res.status;
