@@ -138,7 +138,9 @@ private:
      */
     void removeOldLoops(const std::vector<TransIdx> &loops);
 
-    const option<Rule> chainNonNegative(const Rule &rule) const;
+    const Rule chain(const Rule &rule) const;
+
+    unsigned int numNotInUpdate(const UpdateMap &up) const;
 
 private:
     // The ITS problem. Accelerated rules are added to the ITS immediately,

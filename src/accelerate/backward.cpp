@@ -71,7 +71,6 @@ bool BackwardAcceleration::checkGuardImplication() const {
             solver.add(GinacToZ3::convert(ex.subs(update), context));
             rhss.push_back(GinacToZ3::convert(ex, context));
         }
-        debugBackwardAccel("Checking guard implication:  " << lhs << "  ==>  " << rhs);
         if (solver.check() != z3::sat) {
             return false;
         }
@@ -111,8 +110,7 @@ Rule BackwardAcceleration::buildAcceleratedRecursion(
         const std::vector<UpdateMap> &iteratedUpdates,
         const Expression &iteratedCost,
         const GuardList &guard,
-        const ExprSymbol &N,
-        const unsigned int validityBound) const
+        const ExprSymbol &N) const
 {
     GiNaC::exmap updateSubs = iteratedUpdates.begin()->toSubstitution(varMan);
     for (auto it = iteratedUpdates.begin() + 1; it < iteratedUpdates.end(); it++) {
@@ -130,11 +128,7 @@ Rule BackwardAcceleration::buildAcceleratedRecursion(
     // Extend the old guard by the updated constraints
     // and require that the number of iterations N is positive
     GuardList newGuard = guard;
-    if (validityBound == 0) {
-        newGuard.push_back(N >= 0);
-    } else {
-        newGuard.push_back(N > 0);
-    }
+    newGuard.push_back(N >= 0);
     for (const Expression &ex : rule.getGuard()) {
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
@@ -318,7 +312,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
                                          (pow(dimension, N) - 1) / (dimension - 1);
 
         // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-        accelerated = buildAcceleratedRecursion(iteratedUpdates.get().updates, iteratedCost, strengthenedGuard, N, validityBound.get());
+        accelerated = buildAcceleratedRecursion(iteratedUpdates.get().updates, iteratedCost, strengthenedGuard, N);
     }
     Stats::add(Stats::BackwardSuccess);
     const option<Rule> init = buildInit(validityBound.get());

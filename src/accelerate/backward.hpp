@@ -52,7 +52,7 @@ private:
     Rule buildNontermRule() const;
 
     Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
-                                   const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
+                                   const GuardList &guard, const ExprSymbol &N) const;
 
     bool checkCommutation(const std::vector<UpdateMap> &updates);
 

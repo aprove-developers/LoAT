@@ -263,8 +263,9 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     }
 }
 
-const option<Rule> Accelerator::chainNonNegative(const Rule &rule) const {
+const Rule Accelerator::chain(const Rule &rule) const {
     if (!rule.isLinear()) return rule;
+    Rule res = rule;
     for (const auto &p: rule.getUpdate(0)) {
         const ExprSymbol &var = its.getVarSymbol(p.first);
         const Expression &up = p.second.expand();
@@ -273,12 +274,36 @@ const option<Rule> Accelerator::chainNonNegative(const Rule &rule) const {
             if (up.isPolynomial() && up.degree(var) == 1) {
                 const Expression &coeff = up.coeff(var);
                 if (coeff.isRationalConstant() && coeff < 0) {
-                    return Chaining::chainRules(its, rule, rule, false);
+                    res = Chaining::chainRules(its, res, res, false).get();
+                    break;
                 }
             }
         }
     }
-    return {};
+    unsigned int last = numNotInUpdate(res.getUpdate(0));
+    do {
+        Rule chained = Chaining::chainRules(its, res, res, false).get();
+        unsigned int next = numNotInUpdate(chained.getUpdate(0));
+        if (next != last) {
+            last = next;
+            res = chained;
+            continue;
+        }
+    } while (false);
+    return res;
+}
+
+unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
+    unsigned int res = 0;
+    std::vector<UpdateMap> maps = {up};
+    for (auto const &p: up) {
+        const ExprSymbol &x = its.getVarSymbol(p.first);
+        const ExprSymbolSet &vars = p.second.getVariables();
+        if (vars.find(x) == vars.end()) {
+            res++;
+        }
+    }
+    return res;
 }
 
 // ###################
@@ -289,7 +314,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
     stack<Rule> todo;
-    todo.push(rule);
+    todo.push(chain(rule));
     bool unrestricted = true;
     bool unrestrictedNonTerm = false;
     do {
@@ -297,11 +322,6 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
         if (r.getCost().isNontermSymbol()) {
             todo.pop();
             continue;
-        }
-        option<Rule> nn = chainNonNegative(rule);
-        if (nn) {
-            debugTest("eliminated negative numbers from diagonal");
-            r = nn.get();
         }
         // first try to prove non-termination
         option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
