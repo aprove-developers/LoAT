@@ -280,9 +280,10 @@ const Rule Accelerator::chain(const Rule &rule) const {
             }
         }
     }
+    const Rule &orig = res;
     unsigned int last = numNotInUpdate(res.getUpdate(0));
     do {
-        Rule chained = Chaining::chainRules(its, res, res, false).get();
+        Rule chained = Chaining::chainRules(its, res, orig, false).get();
         unsigned int next = numNotInUpdate(chained.getUpdate(0));
         if (next != last) {
             last = next;
@@ -295,11 +296,10 @@ const Rule Accelerator::chain(const Rule &rule) const {
 
 unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
     unsigned int res = 0;
-    std::vector<UpdateMap> maps = {up};
     for (auto const &p: up) {
         const ExprSymbol &x = its.getVarSymbol(p.first);
         const ExprSymbolSet &vars = p.second.getVariables();
-        if (vars.find(x) == vars.end()) {
+        if (!vars.empty() && vars.find(x) == vars.end()) {
             res++;
         }
     }
