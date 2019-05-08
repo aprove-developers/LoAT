@@ -11,6 +11,9 @@
 namespace nonterm {
 
     option<std::pair<Rule, ForwardAcceleration::ResultKind>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+        if (!Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
+            return {};
+        }
         std::map<unsigned int, unsigned int> depthMap;
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
