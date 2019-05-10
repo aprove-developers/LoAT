@@ -137,7 +137,9 @@ add_executable(${EXECUTABLE}
         src/merging/rulemerger.cpp
         src/merging/rulemerger.hpp
         src/nonterm/nonterm.cpp
-        src/nonterm/nonterm.hpp)
+        src/nonterm/nonterm.hpp
+        src/its/t2parser/t2parser.cpp
+        src/its/t2parser/t2parser.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

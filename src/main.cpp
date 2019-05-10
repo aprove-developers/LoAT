@@ -18,6 +18,7 @@
 #include "analysis/analysis.hpp"
 #include "its/parser/itsparser.hpp"
 #include "its/sexpressionparser/parser.hpp"
+#include "its/t2parser/t2parser.hpp"
 
 #include "util/stats.hpp"
 #include "util/timing.hpp"
@@ -183,6 +184,8 @@ int main(int argc, char *argv[]) {
             its = parser::ITSParser::loadFromFile(filename);
         } else if (boost::algorithm::ends_with(filename, ".smt2")) {
             its = sexpressionparser::Parser::loadFromFile(filename);
+        } else if (boost::algorithm::ends_with(filename, ".t2")) {
+            its = t2parser::T2Parser::loadFromFile(filename);
         }
     } catch (const parser::ITSParser::FileError &err) {
         cout << "Error loading file " << filename << ": " << err.what() << endl;
