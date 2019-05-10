@@ -92,11 +92,13 @@ Rule BackwardAcceleration::buildNontermRule() const {
 Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
                                                 const Expression &iteratedCost,
                                                 const GuardList &strengthenedGuard,
-                                                const ExprSymbol &N) const
+                                                const ExprSymbol &N,
+                                                const unsigned int validityBound) const
 {
+    assert(validityBound <= 1);
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
     GuardList newGuard = strengthenedGuard;
-    newGuard.push_back(N >= 0);
+    newGuard.push_back(N >= validityBound);
     for (const Expression &ex : nonInvariants) {
         newGuard.erase(std::find(newGuard.begin(), newGuard.end(), ex));
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
@@ -110,8 +112,10 @@ Rule BackwardAcceleration::buildAcceleratedRecursion(
         const std::vector<UpdateMap> &iteratedUpdates,
         const Expression &iteratedCost,
         const GuardList &guard,
-        const ExprSymbol &N) const
+        const ExprSymbol &N,
+        const unsigned int validityBound) const
 {
+    assert(validityBound <= 1);
     GiNaC::exmap updateSubs = iteratedUpdates.begin()->toSubstitution(varMan);
     for (auto it = iteratedUpdates.begin() + 1; it < iteratedUpdates.end(); it++) {
         GiNaC::exmap subs = it->toSubstitution(varMan);
@@ -128,7 +132,7 @@ Rule BackwardAcceleration::buildAcceleratedRecursion(
     // Extend the old guard by the updated constraints
     // and require that the number of iterations N is positive
     GuardList newGuard = guard;
-    newGuard.push_back(N >= 0);
+    newGuard.push_back(N >= validityBound);
     for (const Expression &ex : rule.getGuard()) {
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
     }
@@ -241,18 +245,6 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
     return true;
 }
 
-option<Rule> Self::buildInit(unsigned int iterations) const {
-    if (iterations == 0) {
-        return {};
-    } else {
-        Rule res = rule;
-        for (unsigned int i = 0; i < iterations - 1; i++) {
-            Chaining::chainRules(varMan, res, rule, false);
-        }
-        return res;
-    }
-}
-
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
@@ -287,7 +279,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
         }
 
         // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-        accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, strengthenedGuard, N);
+        accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, strengthenedGuard, N, validityBound.get());
     } else {
         if (!checkCommutation(updates)) {
             debugBackwardAccel("Failed to accelerate recursive rule due to non-commutative udpates");
@@ -312,15 +304,18 @@ Self::AccelerationResult BackwardAcceleration::run() {
                                          (pow(dimension, N) - 1) / (dimension - 1);
 
         // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-        accelerated = buildAcceleratedRecursion(iteratedUpdates.get().updates, iteratedCost, strengthenedGuard, N);
+        accelerated = buildAcceleratedRecursion(
+                iteratedUpdates.get().updates,
+                iteratedCost,
+                strengthenedGuard,
+                N,
+                validityBound.get());
     }
     Stats::add(Stats::BackwardSuccess);
-    const option<Rule> init = buildInit(validityBound.get());
-    const Rule r = init ? Chaining::chainRules(varMan, init.get(), accelerated.get(), false).get() : accelerated.get();
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-        return {.res=replaceByUpperbounds(N, r), .status=ForwardAcceleration::Success};
+        return {.res=replaceByUpperbounds(N, accelerated.get()), .status=ForwardAcceleration::Success};
     } else {
-        return {{r}, .status=ForwardAcceleration::Success};
+        return {{accelerated.get()}, .status=ForwardAcceleration::Success};
     }
 }
 

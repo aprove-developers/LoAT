@@ -31,8 +31,6 @@ private:
      */
     AccelerationResult run();
 
-    option<Rule> buildInit(unsigned int iterations) const;
-
     /**
      * Checks whether the backward acceleration technique might be applicable.
      */
@@ -47,12 +45,13 @@ private:
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
     Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                              const GuardList &strengthenedGuard, const ExprSymbol &N) const;
+                              const GuardList &strengthenedGuard, const ExprSymbol &N,
+                              const unsigned int validityBound) const;
 
     Rule buildNontermRule() const;
 
     Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
-                                   const GuardList &guard, const ExprSymbol &N) const;
+                                   const GuardList &guard, const ExprSymbol &N, const unsigned int validityBound) const;
 
     bool checkCommutation(const std::vector<UpdateMap> &updates);
 

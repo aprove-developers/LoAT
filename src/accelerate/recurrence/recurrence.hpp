@@ -57,6 +57,11 @@ public:
 private:
 
     struct RecurrenceSolution {
+        Expression res;
+        const unsigned int validityBound;
+    };
+
+    struct RecurrenceSystemSolution {
         UpdateMap update;
         const unsigned int validityBound;
     };
@@ -73,7 +78,7 @@ private:
      * @note dependencyOrder must be set before
      * @note sets updatePreRecurrences
      */
-    option<RecurrenceSolution> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
+    option<RecurrenceSystemSolution> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
 
     /**
      * Computes the iterated cost, with meterfunc as iteration step (if possible).
@@ -86,7 +91,7 @@ private:
      * Tries to find a recurrence for the given single update.
      * Note that all variables occurring in update must have been solved before (and added to updatePreRecurrences).
      */
-    option<Expression> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs);
+    option<RecurrenceSolution> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs);
 
     /**
      * Tries to find a recurrence for the given cost term.

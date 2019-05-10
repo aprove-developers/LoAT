@@ -17,10 +17,6 @@ namespace nonterm {
 
         static option<std::pair<Rule, ForwardAcceleration::ResultKind>> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
 
-    private:
-
-        static unsigned int maxDepth(const UpdateMap &up, const VariableManager &varMan);
-
     };
 
 }
