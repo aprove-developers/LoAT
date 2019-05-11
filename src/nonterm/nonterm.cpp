@@ -24,8 +24,8 @@ namespace nonterm {
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const GiNaC::exmap &up = chained.getUpdate(0).toSubstitution(its);
-            if (Z3Toolbox::isValidImplication(chained.getGuard(), chained.getGuard().subs(up))) {
-                return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), ForwardAcceleration::Success}};
+            if (Z3Toolbox::checkAll({chained.getGuard()}) == z3::sat && Z3Toolbox::isValidImplication(chained.getGuard(), chained.getGuard().subs(up))) {
+                return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
             }
         }
         return {};

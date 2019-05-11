@@ -44,9 +44,9 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
     option<Expression> result0;
     option<Expression> result1;
     Purrs::Recurrence rec(rhs);
-    rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(updateLhs)} });
     Purrs::Recurrence::Solver_Status res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
     try {
+        rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(updateLhs)} });
         res = rec.compute_exact_solution();
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
@@ -60,8 +60,8 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
         }
     }
     res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
-    rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(updateRhs)} });
     try {
+        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(updateRhs)} });
         res = rec.compute_exact_solution();
     } catch (...) {
         debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(1)=" << updateRhs << " for updated variable " << updateLhs);

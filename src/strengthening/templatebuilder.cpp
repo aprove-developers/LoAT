@@ -23,8 +23,7 @@ namespace strengthening {
                     ruleCtx.updates,
                     guardCtx.guard,
                     ruleCtx.varMan);
-            const Templates::Template &t = buildTemplate(varSymbols);
-            res.add(t);
+            res.add(buildTemplate(varSymbols));
         }
         return res;
     }
