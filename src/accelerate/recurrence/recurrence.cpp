@@ -41,8 +41,10 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
     Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last));
     Purrs::Expr exact;
 
-    option<Expression> result0;
-    option<Expression> result1;
+    const ExprSymbolSet &vars = updateRhs.getVariables();
+    if (vars.find(updateLhs) == vars.end()) {
+        return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=1}};
+    }
     Purrs::Recurrence rec(rhs);
     Purrs::Recurrence::Solver_Status res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
     try {
@@ -54,28 +56,8 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
     }
     if (res == Purrs::Recurrence::SUCCESS) {
         rec.exact_solution(exact);
-        result0 = exact.toGiNaC();
-        if (result0.get().isPolynomial()) {
-            return {{.res=result0.get(), .validityBound=0}};
-        }
+        return {{.res=exact.toGiNaC(), .validityBound=0}};
     }
-    res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
-    try {
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(updateRhs)} });
-        res = rec.compute_exact_solution();
-    } catch (...) {
-        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(1)=" << updateRhs << " for updated variable " << updateLhs);
-    }
-    if (res == Purrs::Recurrence::SUCCESS) {
-        rec.exact_solution(exact);
-        result1 = exact.toGiNaC();
-        if (!result0 || result1.get().isPolynomial()) {
-            return {{.res=result1.get(), .validityBound=1}};;
-        } else {
-            return {{.res=result0.get(), .validityBound=0}};
-        }
-    }
-
     return {};
 }
 
