@@ -148,11 +148,6 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
         return false;
     }
 
-    // Skip inner loops with constant costs
-    if (currentCpx == Complexity::Const || currentCpx.getType() != Complexity::ComplexityType::CpxPolynomial) {
-        return false;
-    }
-
     // Check by some heuristic if it makes sense to nest inner and outer
     if (!canNest(innerRule, outerRule)) {
         return false;
@@ -319,8 +314,20 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     bool unrestrictedNonTerm = false;
     do {
         Rule r = todo.top();
-        if (r.getCost().isNontermSymbol()) {
+        bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
+        if (sat && r.getCost().isNontermSymbol()) {
             todo.pop();
+            if (!status) {
+                status = Forward::Success;
+                unrestrictedNonTerm = true;
+            }
+            continue;
+        } else if (!sat) {
+            todo.pop();
+            if (!status) {
+                status = Forward::NonMonotonic;
+                unrestricted = false;
+            }
             continue;
         }
         // first try to prove non-termination
@@ -509,6 +516,7 @@ void Accelerator::run() {
 
             case Forward::NonMonotonic:
                 if (its.getRule(loop).isLinear()) {
+                    innerCandidates.push_back(InnerCandidate{.oldRule=loop,.newRule=loop});
                     outerCandidates.push_back({loop});
                 }
                 keepRules.insert(loop);
