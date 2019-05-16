@@ -21,7 +21,14 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O4")
+
+message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
+message(STATUS "Compiler cxx debug flags:" ${CMAKE_CXX_FLAGS_DEBUG})
+message(STATUS "Compiler cxx release flags:" ${CMAKE_CXX_FLAGS_RELEASE})
+message(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
+message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
 add_executable(${EXECUTABLE}
         src/accelerate/meter/farkas.cpp
