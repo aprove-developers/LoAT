@@ -18,7 +18,6 @@
 #include "../expr/relation.hpp"
 #include "../z3/z3context.hpp"
 #include "../z3/z3solver.hpp"
-#include "../z3/z3toolbox.hpp"
 #include "strengthener.hpp"
 #include "templatebuilder.hpp"
 #include "constraintsolver.hpp"
@@ -96,44 +95,13 @@ namespace strengthening {
             for (const Expression &e: newInv.get().invariants) {
                 debugTest("deduced invariant " << e);
             }
-            std::vector<GuardList> monotonicityPremises;
-            // TODO we could also add constraints that became monotonically decreasing due to the new local invariants
-            // (but not those that became decreasing due to other new invariants)
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
-                GuardList decreasingPremise = guardCtx.decreasing.subs(up);
-                GuardList g(guardCtx.simpleInvariants);
-                g.insert(g.end(), newInv.get().invariants.begin(), newInv.get().invariants.end());
-                g.insert(g.end(), decreasingPremise.begin(), decreasingPremise.end());
-                monotonicityPremises.push_back(g);
-            }
             for (const Expression &e: newInv.get().pseudoInvariants) {
+                GuardList pseudoInvariantInvalid(newGuard);
                 assert(Relation::isInequality(e));
-                const Expression &neg = Relation::negateLessEqInequality(Relation::toLessEq(e));
-                for (const Expression &t: guardCtx.todo) {
-                    bool success = true;
-                    for (unsigned int i = 0; i < ruleCtx.updates.size(); i++) {
-                        const GiNaC::exmap &up = ruleCtx.updates[i];
-                        monotonicityPremises[i].push_back(neg.subs(up));
-                        monotonicityPremises[i].push_back(t.subs(up));
-                        bool res = Z3Toolbox::isValidImplication(monotonicityPremises[i], {t});
-                        monotonicityPremises[i].pop_back();
-                        monotonicityPremises[i].pop_back();
-                        newGuard.push_back(neg);
-                        res = res || Z3Toolbox::isValidImplication(newGuard, {t.subs(up)});
-                        newGuard.pop_back();
-                        if (!res) {
-                            success = false;
-                            break;
-                        }
-                    }
-                    if (success) {
-                        GuardList pseudoInvariantInvalid(newGuard);
-                        debugTest("deduced non-local invariant " << e << ", also trying " << neg);
-                        pseudoInvariantInvalid.push_back(neg);
-                        res.emplace_back(pseudoInvariantInvalid);
-                        break;
-                    }
-                }
+                const Expression &negated = Relation::negateLessEqInequality(Relation::toLessEq(e));
+                debugTest("deduced pseudo-invariant " << e << ", also trying " << negated);
+                pseudoInvariantInvalid.push_back(negated);
+                res.emplace_back(pseudoInvariantInvalid);
             }
         }
         return res;
