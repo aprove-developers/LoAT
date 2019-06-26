@@ -38,7 +38,9 @@ OBJECTS = \
   expr/complexity.o \
   z3/z3context.o \
   z3/z3toolbox.o \
-  z3/z3solver.o
+  z3/z3solver.o \
+  sexpresso/sexpresso.o \
+  its/sexpressionparser/parser.o
 
 
 .PHONY: clean all
