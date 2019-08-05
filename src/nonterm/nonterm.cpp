@@ -59,11 +59,8 @@ namespace nonterm {
             }
             if (solver.check() == z3::sat) {
                 GuardList newGuard(r.getGuard());
-                const z3::model &model = solver.get_model();
                 for (const ExprSymbol &var: vars) {
-                    const z3::expr &z3var = context.getVariable(var).get();
-                    const Expression &pi = Z3Toolbox::getRealFromModel(model, z3var);
-                    newGuard.emplace_back(var == pi);
+                    newGuard.emplace_back(var == var.subs(up));
                 }
                 return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
             }
