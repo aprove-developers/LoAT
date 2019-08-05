@@ -19,17 +19,16 @@ else()
     set(EXECUTABLE loat)
 endif()
 
-include_directories(src)
-include_directories(src/accelerate)
-include_directories(src/accelerate/meter)
-include_directories(src/accelerate/recurrence)
-include_directories(src/analysis)
-include_directories(src/asymptotic)
-include_directories(src/expr)
-include_directories(src/its)
-include_directories(src/its/parser)
-include_directories(src/util)
-include_directories(src/z3)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O4")
+
+message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
+message(STATUS "Compiler cxx debug flags:" ${CMAKE_CXX_FLAGS_DEBUG})
+message(STATUS "Compiler cxx release flags:" ${CMAKE_CXX_FLAGS_RELEASE})
+message(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
+message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
 add_executable(${EXECUTABLE}
         src/sexpresso/sexpresso.cpp
