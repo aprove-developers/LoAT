@@ -84,13 +84,20 @@ bool BackwardAcceleration::checkGuardImplication() const {
 
     for (const auto &update: updateSubs) {
         solver.push();
+        GuardList todo;
         for (const Expression &ex : nonInvariants) {
             solver.add(GinacToZ3::convert(ex.subs(update), context));
+            if (Relation::isEquality(ex)) {
+                todo.push_back(ex.op(0) >= ex.op(1));
+                todo.push_back(ex.op(0) <= ex.op(1));
+            } else {
+                todo.push_back(ex);
+            }
         }
         if (solver.check() != z3::sat) {
             return false;
         }
-        for (const Expression &ex : nonInvariants) {
+        for (const Expression &ex : todo) {
             solver.push();
             const Expression &e = Relation::normalizeInequality(ex).op(0);
             const Expression &eup = e.subs(update);
