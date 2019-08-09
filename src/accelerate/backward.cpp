@@ -265,18 +265,18 @@ bool BackwardAcceleration::checkCommutation(const std::vector<UpdateMap> &update
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
-        return {.res={}, .status=ForwardAcceleration::NotSupported};
+        return {{}, ForwardAcceleration::NotSupported};
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
     if (nonInvariants.empty() && Z3Toolbox::isValidImplication(rule.getGuard(), {rule.getCost() > 0})) {
-        return {.res={buildNontermRule()}, .status=ForwardAcceleration::Success};
+        return {{buildNontermRule()}, ForwardAcceleration::Success};
     }
 
     if (!checkGuardImplication()) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
-        return {.res={}, .status=ForwardAcceleration::NonMonotonic};
+        return {{}, ForwardAcceleration::NonMonotonic};
     }
 
     // compute the iterated update and cost, with a fresh variable N as iteration step
@@ -292,7 +292,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
         if (!validityBound) {
             debugBackwardAccel("Failed to compute iterated cost/update");
             Stats::add(Stats::BackwardCannotIterate);
-            return {.res={}, .status=ForwardAcceleration::NoClosedFrom};
+            return {{}, ForwardAcceleration::NoClosedFrom};
         }
 
         // compute the resulting rule and try to simplify it by instantiating N (if enabled)
@@ -301,13 +301,13 @@ Self::AccelerationResult BackwardAcceleration::run() {
         if (!checkCommutation(updates)) {
             debugBackwardAccel("Failed to accelerate recursive rule due to non-commutative udpates");
             Stats::add(Stats::BackwardNonCommutative);
-            return {.res={}, .status=ForwardAcceleration::NonCommutative};
+            return {{}, ForwardAcceleration::NonCommutative};
         }
         option<Recurrence::IteratedUpdates> iteratedUpdates = Recurrence::iterateUpdates(varMan, updates, N);
         if (!iteratedUpdates) {
             debugBackwardAccel("Failed to compute iterated updates");
             Stats::add(Stats::BackwardCannotIterate);
-            return {.res={}, .status=ForwardAcceleration::NoClosedFrom};
+            return {{}, ForwardAcceleration::NoClosedFrom};
         }
         validityBound = iteratedUpdates.get().validityBound;
         GuardList strengthenedGuard = rule.getGuard();
@@ -330,9 +330,9 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
     Stats::add(Stats::BackwardSuccess);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-        return {.res=replaceByUpperbounds(N, accelerated.get()), .status=ForwardAcceleration::Success};
+        return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};
     } else {
-        return {{accelerated.get()}, .status=ForwardAcceleration::Success};
+        return {{accelerated.get()}, ForwardAcceleration::Success};
     }
 }
 
