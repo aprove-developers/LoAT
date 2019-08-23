@@ -175,9 +175,10 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             Stats::add(Stats::MeterSuccess);
             return res;
         }
+        default:
+            throw std::runtime_error("Unknown metering result!");
     }
 
-    unreachable();
 }
 
 

@@ -147,7 +147,7 @@ namespace sexpressionparser {
             assert(!negate);
             return fst == snd;
         }
-        assert(false);
+        throw std::runtime_error("Unknown operator " + op);
     }
 
     GiNaC::ex Self::parseExpression(sexpresso::Sexp &sexp) {
@@ -177,8 +177,7 @@ namespace sexpressionparser {
             assert(op == "-");
             return -fst;
         }
-        std::cout << "unknown operator " << op << std::endl;
-        assert(false);
+        throw std::runtime_error("Unknown operator " + op);
     }
 
 }

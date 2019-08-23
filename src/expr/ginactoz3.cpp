@@ -157,7 +157,7 @@ z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {
     if (e.info(info_flags::relation_greater)) return a > b;
     if (e.info(info_flags::relation_greater_or_equal)) return a >= b;
 
-    unreachable();
+    throw new std::runtime_error("Unknown relation!");
 }
 
 Z3Context::VariableType GinacToZ3::variableType() const {

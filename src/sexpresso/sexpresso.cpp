@@ -60,6 +60,7 @@ namespace sexpresso {
                 return this->value.sexp.size();
             case SexpValueKind::STRING:
                 return 1;
+            default: throw std::runtime_error("Unknown S-expression kind!");
         }
     }
 
@@ -124,10 +125,13 @@ namespace sexpresso {
                             return false;
                         case SexpValueKind::STRING:
                             return hd.str() == name;
+                        default: throw std::runtime_error("Unknown S-expression kind!");
                     }
                 }
+                break;
                 case SexpValueKind::STRING:
                     return s.str() == name;
+                default: throw std::runtime_error("Unknown S-expression kind!");
             }
         };
         auto loc = std::find_if(sexp.value.sexp.begin(), sexp.value.sexp.end(), findPred);
@@ -254,6 +258,7 @@ namespace sexpresso {
                 return childrenEqual(this->value.sexp, other.value.sexp);
             case SexpValueKind::STRING:
                 return this->value.str == other.value.str;
+            default: throw std::runtime_error("Unknown S-expression kind!");
         }
     }
 

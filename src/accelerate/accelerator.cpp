@@ -164,12 +164,16 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             // Simplify the rule again (chaining can introduce many useless constraints)
             Preprocess::simplifyRule(its, nestedRule);
 
-            const std::vector<LinearRule> accelRules;
+            std::vector<LinearRule> accelRules;
             if (Config::Accel::UseBackwardAccel) {
-                accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+                auto rules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+                accelRules.insert(accelRules.end(), rules.begin(), rules.end());
             } else {
                 assert(Config::Accel::UseForwardAccel);
-                accelRules = Forward::accelerateFast(its, nestedRule, sinkLoc);
+                auto rule = Forward::accelerateFast(its, nestedRule, sinkLoc);
+                if (rule) {
+                    accelRules.push_back(rule.get().rule.toLinear());
+                }
             }
             bool success = false;
             for (const Rule &accelRule: accelRules) {
@@ -377,16 +381,15 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
-    assert(Config::Accel::UseForwardAccel || Config::Accel::UseBackwardAccel);
+    assert(Config::Accel::UseForwardAccel ^ Config::Accel::UseBackwardAccel);
     Forward::Result res;
     if (Config::Accel::UseForwardAccel || !rule.isLinear()) {
         return Forward::accelerate(its, rule, sinkLoc);
     }
-
     if (Config::Accel::UseBackwardAccel && rule.isLinear()) {
         return strengthenAndAccelerate(rule.toLinear());
     }
-
+    throw std::runtime_error("Neither forward nor backward acceleration is enabled!");
 }
 
 

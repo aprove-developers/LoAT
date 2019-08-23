@@ -22,8 +22,8 @@ Expression TermBinOp::toGinacExpression(const ITSProblem &its) const {
         case Multiplication: return l * r;
         case Division: return l / r;
         case Power: return GiNaC::pow(l, r);
+        default: throw new std::runtime_error("Unknown operator!");
     }
-    unreachable();
 }
 
 
@@ -53,6 +53,6 @@ Expression Relation::toGinacExpression(const ITSProblem &its) const {
         case RelationGreaterEqual: return l >= r;
         case RelationLess: return l < r;
         case RelationLessEqual: return l <= r;
+        default: throw new std::runtime_error("Unknown operator!");
     }
-    unreachable();
 }

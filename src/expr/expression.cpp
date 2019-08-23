@@ -60,7 +60,7 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
             else return Expression(lhsExpr == rhsExpr);
         }
     }
-    unreachable();
+    throw std::runtime_error("Failed to parse expression " + s);
 }
 
 void Expression::applySubs(const GiNaC::exmap &subs) {

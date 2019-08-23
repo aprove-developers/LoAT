@@ -40,7 +40,6 @@
 
 /* ### Some special assertions ### */
 
-#define unreachable() assert(false && "unreachable")
 #define unimplemented() assert(false && "not implemented")
 
 

@@ -91,8 +91,8 @@ std::string Complexity::toString() const {
         case CpxNestedExponential: return "ExpNested";
         case CpxUnbounded: return "Unbounded";
         case CpxNonterm: return "Nonterm";
+        default: throw std::runtime_error("Unknown complexity!");
     }
-    unreachable();
 }
 
 std::string Complexity::toWstString() const {
@@ -113,7 +113,7 @@ std::string Complexity::toWstString() const {
                 res += "Omega(n^" + polyDegree.toString() + ")";
             }
             break;
-        default: unreachable();
+        default: throw std::runtime_error("Unknown complexity!");
     }
     res += ",?)";
     return res;
