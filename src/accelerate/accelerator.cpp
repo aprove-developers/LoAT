@@ -164,7 +164,13 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             // Simplify the rule again (chaining can introduce many useless constraints)
             Preprocess::simplifyRule(its, nestedRule);
 
-            const std::vector<LinearRule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+            const std::vector<LinearRule> accelRules;
+            if (Config::Accel::UseBackwardAccel) {
+                accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+            } else {
+                assert(Config::Accel::UseForwardAccel);
+                accelRules = Forward::accelerateFast(its, nestedRule, sinkLoc);
+            }
             bool success = false;
             for (const Rule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
