@@ -43,10 +43,6 @@ message(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
 message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
 add_executable(${EXECUTABLE}
-        src/sexpresso/sexpresso.cpp
-        src/sexpresso/sexpresso.hpp
-        src/its/sexpressionparser/parser.cpp
-        src/its/sexpressionparser/parser.hpp
         src/accelerate/meter/farkas.cpp
         src/accelerate/meter/farkas.h
         src/accelerate/meter/linearize.cpp

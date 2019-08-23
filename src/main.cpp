@@ -24,7 +24,6 @@
 #include "util/stats.h"
 #include "util/timing.h"
 #include "util/timeout.h"
-#include "its/sexpressionparser/parser.hpp"
 
 using namespace std;
 
@@ -189,11 +188,7 @@ int main(int argc, char *argv[]) {
 
     ITSProblem its;
     try {
-        if (boost::algorithm::ends_with(filename, ".koat")) {
-            its = parser::ITSParser::loadFromFile(filename);
-        } else if (boost::algorithm::ends_with(filename, ".smt2")) {
-            its = sexpressionparser::Parser::loadFromFile(filename);
-        }
+        its = parser::ITSParser::loadFromFile(filename);
     } catch (const parser::ITSParser::FileError &err) {
         cout << "Error loading file " << filename << ": " << err.what() << endl;
         return 1;
