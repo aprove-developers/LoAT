@@ -16,7 +16,6 @@
  */
 
 #include <iostream>
-#include <boost/algorithm/string.hpp>
 
 #include "its/parser/itsparser.h"
 #include "analysis/analysis.h"
@@ -42,23 +41,23 @@ bool allowRecursion = true;
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --benchmark <basic|cond|bkwd|rec|smt|just-smt>   Set configuration for the benchmarks in the paper" << endl;
-    cout << "  --proof-level <n>                                Detail level for proof output (0-3, default 2)" << endl;
+    cout << "  --timeout <sec>                        Timeout (in seconds), minimum: 10" << endl;
+    cout << "  --benchmark <basic|cond|bkwd|rec|smt>  Set configuration for the benchmarks in the paper" << endl;
+    cout << "  --proof-level <n>                      Detail level for proof output (0-3, default 2)" << endl;
     cout << endl;
-    cout << "  --plain                                          Disable colored output" << endl;
-    cout << "  --dot <file>                                     Dump dot output to given file (only for non-recursive problems)" << endl;
-    cout << "  --stats                                          Print some statistics about the performed steps" << endl;
-    cout << "  --timing                                         Print information about time usage" << endl;
-    cout << "  --config                                         Show configuration after handling command line flags" << endl;
-    cout << "  --timestamps                                     Include time stamps in proof output" << endl;
-    cout << "  --print-simplified                               Print simplified program in the input format" << endl;
+    cout << "  --plain                                Disable colored output" << endl;
+    cout << "  --dot <file>                           Dump dot output to given file (only for non-recursive problems)" << endl;
+    cout << "  --stats                                Print some statistics about the performed steps" << endl;
+    cout << "  --timing                               Print information about time usage" << endl;
+    cout << "  --config                               Show configuration after handling command line flags" << endl;
+    cout << "  --timestamps                           Include time stamps in proof output" << endl;
+    cout << "  --print-simplified                     Print simplified program in the input format" << endl;
     cout << endl;
-    cout << "  --allow-division                                 Allow division in the input program (potentially unsound)" << endl;
-    cout << "  --no-cost-check                                  Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing                               Don't try to simplify the program first (which involves SMT)" << endl;
-    cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
-    cout << "  --no-const-cpx                                   Don't check for constant complexity (might improve performance)" << endl;
+    cout << "  --allow-division                       Allow division in the input program (potentially unsound)" << endl;
+    cout << "  --no-cost-check                        Don't check if costs are nonnegative (potentially unsound)" << endl;
+    cout << "  --no-preprocessing                     Don't try to simplify the program first (which involves SMT)" << endl;
+    cout << "  --no-limit-smt                         Don't use the SMT encoding for limit problems" << endl;
+    cout << "  --no-const-cpx                         Don't check for constant complexity (might improve performance)" << endl;
 }
 
 
@@ -106,19 +105,8 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::Preprocessing = false;
         } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
             Config::Analysis::EnsureNonnegativeCosts = false;
-        } else if (strcmp("--limit-strategy",argv[arg]) == 0) {
-            const std::string &strategy = getNext();
-            bool found = false;
-            for (Config::Limit::PolynomialLimitProblemStrategy* s: Config::Limit::PolyStrategies) {
-                if (boost::iequals(strategy, s->name())) {
-                    Config::Limit::PolyStrategy = s;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                cout << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name();
-            }
+        } else if (strcmp("--no-limit-smt",argv[arg]) == 0) {
+            Config::Limit::UseSmtEncoding = false;
         } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
             Config::Analysis::ConstantCpxCheck = false;
         } else {
@@ -132,10 +120,10 @@ void parseFlags(int argc, char *argv[]) {
 }
 
 
-void setBenchmarkConfig(bool conditionalMeter, bool backAccel, bool recursion, Config::Limit::PolynomialLimitProblemStrategy* limitStrategy) {
+void setBenchmarkConfig(bool conditionalMeter, bool backAccel, bool recursion, bool limitSmt) {
     Config::ForwardAccel::ConditionalMetering = conditionalMeter;
     Config::Accel::UseBackwardAccel = backAccel;
-    Config::Limit::PolyStrategy = limitStrategy;
+    Config::Limit::UseSmtEncoding = limitSmt;
     allowRecursion = recursion;
 }
 
@@ -155,13 +143,12 @@ int main(int argc, char *argv[]) {
     Config::Output::ProofChain = (proofLevel >= 3);
 
     // Benchmark and heuristic settings
-         if (benchmarkMode.compare("basic")    == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("cond")     == 0) setBenchmarkConfig(true,  false, false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("bkwd")     == 0) setBenchmarkConfig(false, true,  false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("rec")      == 0) setBenchmarkConfig(false, false, true,  &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("smt")      == 0) setBenchmarkConfig(false, false, false, &Config::Limit::SmtAndCalculus);
-    else if (benchmarkMode.compare("just-smt") == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Smt);
-    else if (benchmarkMode.compare("none")     != 0) {
+         if (benchmarkMode.compare("basic") == 0) setBenchmarkConfig(false, false, false, false);
+    else if (benchmarkMode.compare("cond")  == 0) setBenchmarkConfig(true,  false, false, false);
+    else if (benchmarkMode.compare("bkwd")  == 0) setBenchmarkConfig(false, true,  false, false);
+    else if (benchmarkMode.compare("rec")   == 0) setBenchmarkConfig(false, false, true,  false);
+    else if (benchmarkMode.compare("smt")   == 0) setBenchmarkConfig(false, false, false, true );
+    else if (benchmarkMode.compare("none")  != 0) {
         cout << "Unknown benchmark setting" << endl;
         return 1;
     }

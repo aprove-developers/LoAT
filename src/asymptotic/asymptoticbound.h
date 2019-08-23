@@ -36,7 +36,7 @@ private:
     int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
     void removeUnsatProblems();
-    bool solveViaSMT(Complexity currentRes);
+    bool solveViaSMT();
     bool solveLimitProblem();
     ComplexityResult getComplexity(const LimitProblem &limitProblem);
     bool isAdequateSolution(const LimitProblem &limitProblem);
@@ -53,7 +53,7 @@ private:
                                         const std::vector<LimitVector> &limitVectors);
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
-    bool trySmtEncoding(Complexity currentRes);
+    bool trySmtEncoding();
 
     //check Timeout::soft or Timeout::hard, depending on finalCheck
     bool isTimeout() const;
@@ -105,12 +105,10 @@ public:
      * @param varMan the VariableManager instance is needed to get information about free variables
      * @param finalCheck enables more sophisticated backtracking and uses Timeout::hard
      */
-    static Result determineComplexity(VarMan &varMan,
+    static Result determineComplexity(const VarMan &varMan,
                                       const GuardList &guard,
                                       const Expression &cost,
-                                      bool finalCheck,
-                                      const Complexity &currentRes);
-
+                                      bool finalCheck);
 };
 
 #endif //ASYMPTOTICBOUND_H

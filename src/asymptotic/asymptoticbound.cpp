@@ -407,12 +407,12 @@ void AsymptoticBound::removeUnsatProblems() {
 }
 
 
-bool AsymptoticBound::solveViaSMT(Complexity currentRes) {
+bool AsymptoticBound::solveViaSMT() {
     debugAsymptoticBound("Trying to solve the initial limit problem via SMT.");
 
-    bool smtApplicable = Config::Limit::PolyStrategy->smtEnabled() && LimitSmtEncoding::isApplicable(cost);
+    bool smtApplicable = Config::Limit::UseSmtEncoding && LimitSmtEncoding::isApplicable(cost);
 
-    if (!smtApplicable || !currentLP.isPolynomial() || !trySmtEncoding(currentRes)) {
+    if (!smtApplicable || !currentLP.isPolynomial() || !trySmtEncoding()) {
         return false;
     }
 
@@ -437,7 +437,7 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    bool smtApplicable = Config::Limit::PolyStrategy->smtEnabled() && LimitSmtEncoding::isApplicable(cost);
+    bool smtApplicable = Config::Limit::UseSmtEncoding && LimitSmtEncoding::isApplicable(cost);
 
     currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
@@ -458,7 +458,7 @@ bool AsymptoticBound::solveLimitProblem() {
 
         //if the problem is polynomial, try a (max)SMT encoding
         if (smtApplicable && currentLP.isPolynomial()) {
-            if (trySmtEncoding(Complexity::Const)) {
+            if (trySmtEncoding()) {
                 goto start;
             } else if (!Config::Limit::PolyStrategy->calculusEnabled()) {
                 goto end;
@@ -1002,8 +1002,8 @@ bool AsymptoticBound::trySubstitutingVariable() {
 }
 
 
-bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
-    auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, finalCheck, currentRes);
+bool AsymptoticBound::trySmtEncoding() {
+    auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, finalCheck);
     if (!optSubs) return false;
 
     substitutions.push_back(optSubs.get());
@@ -1018,16 +1018,14 @@ bool AsymptoticBound::isTimeout() const {
 }
 
 
-AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
+AsymptoticBound::Result AsymptoticBound::determineComplexity(const VarMan &varMan,
                                                              const GuardList &guard,
                                                              const Expression &cost,
-                                                             bool finalCheck,
-                                                             const Complexity &currentRes) {
+                                                             bool finalCheck) {
     debugAsymptoticBound("Analyzing asymptotic bound.");
 
     // Expand the cost to make it easier to analyze
     Expression expandedCost = cost.expand();
-    Expression costToCheck = expandedCost;
 
 #ifdef DEBUG_ASYMPTOTIC_BOUNDS
     debugAsymptoticBound("guard:");
@@ -1044,25 +1042,24 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
             if (finalCheck) proofout << "Guard is satisfiable, yielding nontermination" << endl;
             return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
         } else {
-            // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
-            costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
+            if (finalCheck) proofout << "Could not show satisfiability of the guard (z3 result: " << z3res << ")." << endl;
+            return Result(Complexity::Unknown);
         }
     }
-    assert(!costToCheck.has(Expression::NontermSymbol));
+    assert(!expandedCost.has(Expression::NontermSymbol));
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
     if (finalCheck) Timing::start(Timing::Asymptotic);
 
-    AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck);
+    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, finalCheck);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
     asymptoticBound.createInitialLimitProblem();
     // first try the SMT encoding
-    bool polynomial = cost.isPolynomial() && asymptoticBound.currentLP.isPolynomial();
-    bool result = polynomial && asymptoticBound.solveViaSMT(currentRes);
-    if (!result && (!polynomial || Config::Limit::PolyStrategy->calculusEnabled())) {
+    bool result = asymptoticBound.solveViaSMT();
+    if (!result) {
         // Otherwise perform limit calculus
         asymptoticBound.propagateBounds();
         asymptoticBound.removeUnsatProblems();
@@ -1085,15 +1082,11 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         proofout.setEnabled(wasProofEnabled);
 
         // Gather all relevant information
-        if (expandedCost.isNontermSymbol()) {
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
-        } else {
-            Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
-            return Result(asymptoticBound.bestComplexity.complexity,
-                          solvedCost.expand(),
-                          asymptoticBound.bestComplexity.upperBound > 1,
-                          asymptoticBound.bestComplexity.inftyVars);
-        }
+        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+        return Result(asymptoticBound.bestComplexity.complexity,
+                      solvedCost.expand(),
+                      asymptoticBound.bestComplexity.upperBound > 1,
+                      asymptoticBound.bestComplexity.inftyVars);
     } else {
         debugAsymptoticBound("Could not solve the initial limit problem");
 
@@ -1102,5 +1095,4 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
         return Result(Complexity::Unknown);
     }
-
 }
