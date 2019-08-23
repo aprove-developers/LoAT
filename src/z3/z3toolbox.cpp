@@ -52,7 +52,7 @@ Expression Z3Toolbox::getRealFromModel(const z3::model &model, const z3::expr &s
 
 z3::check_result Z3Toolbox::checkAll(const std::vector<Expression> &list) {
     Z3Context context;
-    return checkAll(list, context);
+    return checkAll(list, context, NULL);
 }
 
 

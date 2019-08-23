@@ -24,6 +24,7 @@
 #include "util/timing.hpp"
 #include "util/timeout.hpp"
 
+#include <stdlib.h>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 

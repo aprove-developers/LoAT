@@ -198,6 +198,8 @@ namespace Config {
 
     // Asymptotic complexity computation using limit problems
     namespace Limit {
+        PolynomialLimitProblemStrategy* PolyStrategy = &SmtAndCalculus;
+
         // Use an SMT encoding to solve limit problems?
         bool UseSmtEncoding = true;
 
@@ -315,6 +317,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
     {
         using namespace Config::Limit;
         startSection("Limit Problems");
+        PrintCfg(PolyStrategy, "Strategy to solve limit problems");
         PrintCfg(UseSmtEncoding, "Make use of the SMT encoding to solve limit problems");
         PrintCfg(ProblemDiscardSize, "Discard problems of this size if z3 says unknown");
     }
