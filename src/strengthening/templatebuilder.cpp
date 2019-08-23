@@ -33,7 +33,7 @@ namespace strengthening {
         for (const Expression &g: guardCtx.todo) {
             const ExprSymbolSet &varSymbols = util::RelevantVariables::find(
                     {g},
-                    ruleCtx.updates,
+                    {ruleCtx.update},
                     guardCtx.guard,
                     ruleCtx.varMan);
             res.add(buildTemplate(varSymbols));
