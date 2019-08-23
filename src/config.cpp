@@ -152,6 +152,8 @@ namespace Config {
         // If there are several upperbounds, several rules are created.
         // To avoid rule explosion, the propagation is only performed up to this number of upperbounds.
         const unsigned MaxUpperboundsForPropagation = 3;
+
+        const bool Strengthen = true;
     }
 
     namespace Accel {
@@ -294,6 +296,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
         startSection("Backward Acceleration");
         PrintCfg(ReplaceTempVarByUpperbounds, "Replace iteration count by its upper bounds");
         PrintCfg(MaxUpperboundsForPropagation, "Max number of upper bounds to allow when replacing");
+        PrintCfg(Strengthen, "Use strengthening if backward acceleration is inapplicable");
     }
     {
         using namespace Config::Accel;

@@ -349,10 +349,12 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                 }
             }
             if (res.res.empty()) {
-                vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-                for (const LinearRule &sr: strengthened) {
-                    debugBackwardAccel("invariant inference yields " << sr);
-                    todo.push(sr);
+                if (Config::BackwardAccel::Strengthen) {
+                    vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
+                    for (const LinearRule &sr: strengthened) {
+                        debugBackwardAccel("invariant inference yields " << sr);
+                        todo.push(sr);
+                    }
                 }
             } else {
                 for (const LinearRule &ar: res.res) {
