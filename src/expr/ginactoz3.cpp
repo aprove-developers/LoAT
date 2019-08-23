@@ -64,7 +64,7 @@ z3::expr GinacToZ3::convert_add(const GiNaC::ex &e) {
     assert(e.nops() > 0);
 
     z3::expr res = convert_ex(e.op(0));
-    for (int i=1; i < e.nops(); ++i) {
+    for (unsigned int i=1; i < e.nops(); ++i) {
         res = res + convert_ex(e.op(i));
     }
 
@@ -75,7 +75,7 @@ z3::expr GinacToZ3::convert_mul(const GiNaC::ex &e) {
     assert(e.nops() > 0);
 
     z3::expr res = convert_ex(e.op(0));
-    for (int i=1; i < e.nops(); ++i) {
+    for (unsigned int i=1; i < e.nops(); ++i) {
         res = res * convert_ex(e.op(i));
     }
 

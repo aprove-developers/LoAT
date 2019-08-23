@@ -103,6 +103,8 @@
 #define DEBUG_PARSER
 #define DEBUG_TERM_PARSER
 
+#define DEBUG_INVARIANTS
+
 //debugging for all other parts
 #define DEBUG_OTHER
 
@@ -233,6 +235,12 @@
 #define debugTermParser(output) do { std::cout << COLOR_DEBUG << "[termparser] " << output << COLOR_NONE << std::endl; } while(0)
 #else
 #define debugTermParser(output) (void(0))
+#endif
+
+#ifdef DEBUG_INVARIANTS
+#define debugInvariants(output) do { std::cout << COLOR_DEBUG << "[invariants] " << output << COLOR_NONE << std::endl; } while(0)
+#else
+#define debugInvariants(output) (void(0))
 #endif
 
 #ifdef DEBUG_OTHER

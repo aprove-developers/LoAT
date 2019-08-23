@@ -55,7 +55,7 @@ void ITSExport::printGuard(const GuardList &guard, std::ostream &s, bool colors)
         s << "[]";
     } else {
         s << "[ ";
-        for (int i=0; i < guard.size(); ++i) {
+        for (unsigned int i=0; i < guard.size(); ++i) {
             if (i > 0) s << " && ";
             if (colors) printColor(s, Color::Guard);
             s << guard.at(i);
@@ -231,7 +231,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
 
             //guard
             s << ") :|: ";
-            for (int i=0; i < rule.getGuard().size(); ++i) {
+            for (unsigned int i=0; i < rule.getGuard().size(); ++i) {
                 if (i > 0) s << " && ";
                 s << rule.getGuard().at(i).expand();
             }
@@ -262,7 +262,7 @@ void LinearITSExport::printDotSubgraph(const ITSProblem &its, int step, const st
                     s << its.getVarName(upit.first) << "=" << upit.second << ", ";
                 }
                 s << "[";
-                for (int i=0; i < rule.getGuard().size(); ++i) {
+                for (unsigned int i=0; i < rule.getGuard().size(); ++i) {
                     if (i > 0) s << ", ";
                     s << rule.getGuard().at(i);
                 }
@@ -312,7 +312,7 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
 
             if (!rule.getGuard().empty()) {
                 s << "assume(";
-                for (int i=0; i < rule.getGuard().size(); ++i) {
+                for (unsigned int i=0; i < rule.getGuard().size(); ++i) {
                     if (i > 0) s << " && ";
                     s << rule.getGuard().at(i).subs(t2subs);
                 }

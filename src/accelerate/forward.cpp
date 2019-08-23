@@ -142,7 +142,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
-                if (!Recurrence::iterateRule(varMan, linRule, iterationCount)) {
+                if (Recurrence::iterateRule(varMan, linRule, iterationCount)) {
                     res.result = TooComplicated;
                     Stats::add(Stats::MeterCannotIterate);
                     return res;

@@ -252,7 +252,7 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
 
     Expression powerInExp;
     if (is_a<add>(*it)) {
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && summand.op(1).has(x)) {
                 powerInExp = summand;
@@ -305,7 +305,7 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
 
     Expression powerInExp;
     if (is_a<add>(*it)) {
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
                                          || summand.hasAtLeastTwoVariables())) {
@@ -519,7 +519,7 @@ bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterato
 
     Expression powerInExp;
     if (is_a<add>(*it)) {
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && summand.op(1).has(x)) {
                 powerInExp = summand;
@@ -559,7 +559,7 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
     }
 
     if (is_a<add>(*it)) {
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
             if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
                                          || summand.hasAtLeastTwoVariables())) {

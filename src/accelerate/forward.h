@@ -34,6 +34,10 @@
 namespace ForwardAcceleration {
     enum ResultKind {
         NoMetering, // No metering function could be found
+        NonMonotonic, //
+        NoClosedFrom,
+        NonCommutative,
+        NotSupported,
         TooComplicated, // Guard/update is too complicated (nonlinear or no dependency order)
         Success, // Rule was successfully accelerated or is non-terminating (then the cost is set to InftySymbol)
         SuccessWithRestriction // Success after a heuristic extended the guard (so it is now more restrictive)
@@ -41,8 +45,8 @@ namespace ForwardAcceleration {
 
     struct MeteredRule {
         std::string info; // printable version of the metering function
-        LinearRule rule;
-        MeteredRule(std::string s, LinearRule r) : info(s), rule(r) {}
+        Rule rule;
+        MeteredRule(std::string s, Rule r) : info(s), rule(r) {}
         MeteredRule appendInfo(const std::string &s) { return MeteredRule(info + s, rule); }
     };
 

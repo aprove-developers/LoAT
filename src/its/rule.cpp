@@ -22,15 +22,24 @@ using namespace std;
 
 Rule::Rule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     assert(!rhss.empty());
+    if (getCost().isNontermSymbol()) {
+        rhss = {RuleRhs(rhss[0].getLoc(), {})};
+    }
 }
 
 Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
-        : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)})
-{}
+        : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)}) {
+    if (getCost().isNontermSymbol()) {
+        rhss = {RuleRhs(rhss[0].getLoc(), {})};
+    }
+}
 
 Rule::Rule(RuleLhs lhs, RuleRhs rhs)
-        : lhs(lhs), rhss({rhs})
-{}
+        : lhs(lhs), rhss({rhs}) {
+    if (getCost().isNontermSymbol()) {
+        rhss = {RuleRhs(rhss[0].getLoc(), {})};
+    }
+}
 
 LinearRule Rule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
     return LinearRule(lhsLoc, {}, Expression(0), rhsLoc, {});
@@ -82,6 +91,10 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     } else {
         return Rule(lhs, newRhss);
     }
+}
+
+bool operator ==(const RuleRhs &fst, const RuleRhs &snd) {
+    return fst.getLoc() == snd.getLoc() && fst.getUpdate() == snd.getUpdate();
 }
 
 ostream& operator<<(ostream &s, const Rule &rule) {

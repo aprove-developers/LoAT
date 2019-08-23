@@ -4,18 +4,32 @@
 #include "its/itsproblem.h"
 #include "its/rule.h"
 #include "util/option.h"
+#include "accelerate/forward.h"
 
 class BackwardAcceleration {
 public:
-    static option<std::vector<LinearRule>> accelerate(VarMan &varMan, const LinearRule &rule);
+
+    struct AcceleratedRules {
+        const std::vector<Rule> rules;
+        const unsigned int validityBound;
+    };
+
+    struct AccelerationResult {
+        const std::vector<Rule> res;
+        const ForwardAcceleration::ResultKind status;
+    };
+
+    static AccelerationResult accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const LinearRule &rule);
+    BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
 
     /**
      * Main function, just calls the methods below in the correct order
      */
-    option<std::vector<LinearRule>> run();
+    AccelerationResult run();
+
+    option<Rule> buildInit(unsigned int iterations) const;
 
     /**
      * Checks whether the backward acceleration technique might be applicable.
@@ -25,13 +39,20 @@ private:
     /**
      * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
      */
-    bool checkGuardImplication() const;
+    bool checkGuardImplication(const GuardList &reducedGuard, const GuardList &irrelevantGuard) const;
 
     /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
-    LinearRule buildAcceleratedRule(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                                    const ExprSymbol &N) const;
+    Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
+                              const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
+
+    Rule buildNontermRule() const;
+
+    Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
+                                   const GuardList &guard, const ExprSymbol &N, unsigned int validityBound) const;
+
+    bool checkCommutation(const std::vector<UpdateMap> &updates);
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
@@ -43,17 +64,18 @@ private:
      *
      * @return A list of rules, either with N eliminated or only containing the given rule
      */
-    static std::vector<LinearRule> replaceByUpperbounds(const ExprSymbol &N, const LinearRule &rule);
+    static std::vector<Rule> replaceByUpperbounds(const ExprSymbol &N, const Rule &rule);
 
     /**
      * Helper for replaceByUpperbounds, returns all upperbounds of N in rule's guard,
      * or fails if not all of them can be computed.
      */
-    static option<std::vector<Expression>> computeUpperbounds(const ExprSymbol &N, const GuardList &guard);
+    static std::vector<Expression> computeUpperbounds(const ExprSymbol &N, const GuardList &guard);
 
 private:
     VariableManager &varMan;
-    const LinearRule &rule;
+    const Rule &rule;
+    const LocationIdx &sink;
 };
 
 #endif /* BACKWARDACCELERATION_H */

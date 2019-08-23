@@ -53,8 +53,10 @@ public:
     LocationIdx getLoc() const { return loc; }
     const UpdateMap& getUpdate() const { return update; }
     UpdateMap& getUpdateMut() { return update; }
+
 };
 
+bool operator ==(const RuleRhs &fst, const RuleRhs &snd);
 
 class LinearRule;
 

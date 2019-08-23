@@ -55,7 +55,7 @@ std::string ITSParser::escapeVariableName(const std::string &name) {
     assert(!name.empty());
 
     std::string escapedName = name;
-    for (int i = 0; i < escapedName.length(); ++i) {
+    for (unsigned int i = 0; i < escapedName.length(); ++i) {
         //replace I to avoid interpretation as complex number
         if (escapedName[i] == 'I') {
             escapedName[i] = 'Q';
@@ -284,7 +284,7 @@ vector<TermPtr> ITSParser::parseRightHandSide(const std::string &rhs) const {
 
     // Handle Com_n syntax for multiple calls
     if (name.substr(0,4) == "Com_") {
-        int n = std::stoi(name.substr(4));
+        unsigned long n = std::stoul(name.substr(4));
         if (n != funapp->getArguments().size()) {
             throw FileError("Com_n application has incorrect number of arguments: "+rhs);
         }
@@ -295,7 +295,7 @@ vector<TermPtr> ITSParser::parseRightHandSide(const std::string &rhs) const {
     }
 
     // Check that all rhs terms are well-formed
-    for (int i=0; i < res.size(); ++i) {
+    for (unsigned int i=0; i < res.size(); ++i) {
         if (!res[i]->isFunappOnArithmeticExpressions()) {
             throw FileError("Invalid rhs, argument "+std::to_string(i)+" is malformed: "+rhs);
         }
@@ -458,7 +458,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     replaceUnboundedByTemporaryVariables(newRule, getLocationData(rule.lhs));
 
     // Remove trivial updates like "x := x" (to simplify rules)
-    for (int i=0; i < newRule.rhsCount(); ++i) {
+    for (unsigned int i=0; i < newRule.rhsCount(); ++i) {
         stripTrivialUpdates(newRule.getUpdateMut(i));
     }
 

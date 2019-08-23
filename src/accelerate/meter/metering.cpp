@@ -155,7 +155,7 @@ void MeteringFinder::buildLinearConstraints() {
         }
     }
 
-    for (int i=0; i < updates.size(); ++i) {
+    for (unsigned int i=0; i < updates.size(); ++i) {
         for (const auto &it : updates[i]) {
             assert(meterVars.primedSymbols.count(it.first) > 0);
             ExprSymbol primed = meterVars.primedSymbols.at(it.first);
@@ -219,11 +219,11 @@ z3::expr MeteringFinder::genUpdateImplications() const {
     // The other variables can be left out to simplify the z3 query (since they cancel out)
 
     vector<z3::expr> res;
-    for (int updateIdx=0; updateIdx < updates.size(); ++updateIdx) {
+    for (unsigned int updateIdx=0; updateIdx < updates.size(); ++updateIdx) {
         vector<ExprSymbol> vars;
         vector<z3::expr> coeffs;
 
-        for (int i=0; i < meterVars.symbols.size(); ++i) {
+        for (unsigned int i=0; i < meterVars.symbols.size(); ++i) {
             ExprSymbol sym = meterVars.symbols[i];
             VariableIdx var = varMan.getVarIdx(sym);
             z3::expr coeff = meterVars.coeffs[i];
@@ -268,7 +268,7 @@ Expression MeteringFinder::buildResult(const z3::model &model) const {
 
     // read off the coefficients of the metering function
     Expression result = Z3Toolbox::getRealFromModel(model, absCoeff);
-    for (int i=0; i < coeffs.size(); ++i) {
+    for (unsigned int i=0; i < coeffs.size(); ++i) {
         result = result + Z3Toolbox::getRealFromModel(model,coeffs[i]) * symbols[i];
     }
     debugMeter("Result before substitution: " << result);

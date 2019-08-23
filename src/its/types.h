@@ -25,9 +25,9 @@ class VariableManager;
 
 
 // some typedefs for clarity
-using TransIdx = int;
-using LocationIdx = int;
-using VariableIdx = int;
+using TransIdx = unsigned int;
+using LocationIdx = unsigned int;
+using VariableIdx = unsigned int;
 using VariablePair = std::pair<VariableIdx, VariableIdx>;
 
 
@@ -37,6 +37,8 @@ public:
     // inherit constructors of base class
     using std::vector<Expression>::vector;
     void collectVariables(ExprSymbolSet &res) const;
+    GuardList subs(const GiNaC::exmap &sigma) const;
+    void applySubstitution(const GiNaC::exmap &sigma);
 };
 
 

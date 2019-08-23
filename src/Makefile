@@ -4,6 +4,7 @@ OBJECTS = \
   util/timing.o \
   util/stats.o \
   util/timeout.o \
+  util/relevantvariables.o \
   accelerate/accelerator.o \
   accelerate/backward.o \
   accelerate/meter/farkas.o \
@@ -37,7 +38,16 @@ OBJECTS = \
   expr/guardtoolbox.o \
   expr/complexity.o \
   z3/z3context.o \
-  z3/z3toolbox.o
+  z3/z3toolbox.o \
+  z3/z3solver.o \
+  strengthening/constraintbuilder.o \
+  strengthening/constraintsolver.o \
+  strengthening/guardcontextbuilder.o \
+  strengthening/modes.o \
+  strengthening/rulecontextbuilder.o \
+  strengthening/strengthener.o \
+  strengthening/templatebuilder.o \
+  strengthening/templates.o
 
 
 .PHONY: clean all

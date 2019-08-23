@@ -25,7 +25,7 @@ using namespace std;
 
 typedef map<Stats::StatAction,int> StatData;
 
-static int step = 0;
+static unsigned int step = 0;
 static map<int,StatData> data;
 static vector<string> names = { "Initial" };
 
@@ -53,7 +53,7 @@ void Stats::print(ostream &os, bool printZero) {
     };
 
     os << " ======== STATS =========" << endl;
-    for (int i=0; i <= step; ++i) {
+    for (unsigned int i=0; i <= step; ++i) {
         os << " ---- " << names[i] << " ----" << endl;
         printVal(data[i][ChainSuccess],"Chain[success]");
         printVal(data[i][ChainFail],"Chain[fail]");

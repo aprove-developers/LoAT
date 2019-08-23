@@ -16,6 +16,8 @@
  */
 
 #include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <its/sexpressionparser/parser.h>
 
 #include "its/parser/itsparser.h"
 #include "analysis/analysis.h"
@@ -58,6 +60,7 @@ void printHelp(char *arg0) {
     cout << "  --no-preprocessing                     Don't try to simplify the program first (which involves SMT)" << endl;
     cout << "  --no-limit-smt                         Don't use the SMT encoding for limit problems" << endl;
     cout << "  --no-const-cpx                         Don't check for constant complexity (might improve performance)" << endl;
+    cout << "  --nonterm                              Just try to prove non-termination" << endl;
 }
 
 
@@ -109,6 +112,8 @@ void parseFlags(int argc, char *argv[]) {
             Config::Limit::UseSmtEncoding = false;
         } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
             Config::Analysis::ConstantCpxCheck = false;
+        } else if (strcmp("--nonterm",argv[arg]) == 0) {
+            Config::Analysis::NonTermMode = true;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -175,7 +180,11 @@ int main(int argc, char *argv[]) {
 
     ITSProblem its;
     try {
-        its = parser::ITSParser::loadFromFile(filename);
+        if (boost::algorithm::ends_with(filename, ".koat")) {
+            its = parser::ITSParser::loadFromFile(filename);
+        } else if (boost::algorithm::ends_with(filename, ".smt2")) {
+            its = sexpressionparser::Parser::loadFromFile(filename);
+        }
     } catch (const parser::ITSParser::FileError &err) {
         cout << "Error loading file " << filename << ": " << err.what() << endl;
         return 1;

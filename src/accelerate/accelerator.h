@@ -118,14 +118,14 @@ private:
      * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
      * Takes care of proof output (the arguments inner, outer are only used for the output).
      */
-    void addNestedRule(const ForwardAcceleration::MeteredRule &accelerated, const LinearRule &chain,
+    void addNestedRule(const Rule &accelerated, const LinearRule &chain,
                        TransIdx inner, TransIdx outer);
 
     /**
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */
-    bool nestRules(const InnerCandidate &inner, const OuterCandidate &outer);
+    bool nestRules(const Complexity &currentCpx, const InnerCandidate &inner, const OuterCandidate &outer);
 
     /**
      * Main implementation of nesting
@@ -155,6 +155,9 @@ private:
 
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
     std::set<TransIdx> keepRules;
+
+    const ForwardAcceleration::Result strengthenAndAccelerate(const Rule &rule) const;
+
 };
 
 #endif // ACCELERATE_H

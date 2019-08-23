@@ -68,7 +68,10 @@ namespace Config {
     namespace Z3 {
         extern const unsigned DefaultTimeout;
         extern const unsigned MeterTimeout;
+        extern const unsigned StrengtheningTimeout;
         extern const unsigned LimitTimeout;
+        extern const unsigned LimitTimeoutFinal;
+        extern const unsigned LimitTimeoutFinalFast;
         extern const unsigned MaxExponentWithoutPow;
     }
 
@@ -95,6 +98,7 @@ namespace Config {
         extern const bool SimplifyRulesBefore;
         extern bool PartialDeletionHeuristic;
         extern bool UseBackwardAccel;
+        extern bool UseForwardAccel;
         extern bool TryNesting;
     }
 
@@ -112,7 +116,7 @@ namespace Config {
     // Asymptotic complexity computation using limit problems
     namespace Limit {
         extern bool UseSmtEncoding;
-        extern const int ProblemDiscardSize;
+        extern const unsigned int ProblemDiscardSize;
     }
 
     // Parser for ITS problems
@@ -127,6 +131,7 @@ namespace Config {
         extern bool EnsureNonnegativeCosts;
         extern bool ConstantCpxCheck;
         extern bool AsymptoticCheck; // must be enabled for soundness!
+        extern bool NonTermMode;
     }
 
     /**

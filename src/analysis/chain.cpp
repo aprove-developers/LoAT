@@ -142,7 +142,7 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
  * with the second rule (the locations must match).
  * @return The resulting rule, unless it can be shown to be unsatisfiable.
  */
-static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int firstRhsIdx, const Rule &second,
+static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, unsigned int firstRhsIdx, const Rule &second,
                                     bool checkSat)
 {
     const UpdateMap &firstUpdate = first.getUpdate(firstRhsIdx);
@@ -157,7 +157,7 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int
     const vector<RuleRhs> &firstRhss = first.getRhss();
 
     // keep the first rhss of first (up to the one we want to chain)
-    for (int i=0; i < firstRhsIdx; ++i) {
+    for (unsigned int i=0; i < firstRhsIdx; ++i) {
         newRhss.push_back(firstRhss[i]);
     }
 
@@ -168,7 +168,7 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, int
     }
 
     // keep the last rhss of first (after the one we want to chain)
-    for (int i=firstRhsIdx+1; i < firstRhss.size(); ++i) {
+    for (unsigned int i=firstRhsIdx+1; i < firstRhss.size(); ++i) {
         newRhss.push_back(firstRhss[i]);
     }
 
@@ -186,7 +186,7 @@ static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first,
     // Iterate over rhss, chain every rhs whose location matches second's lhs location.
     // Note that the number of rhss can increase while iterating (due to chaining).
     // The order of the rhss is preserved, a single rhs is replaced by all rhss resulting from chaining.
-    int rhsIdx = 0;
+    unsigned int rhsIdx = 0;
     while (rhsIdx < res.rhsCount()) {
         if (first.getRhsLoc(rhsIdx) == second.getLhsLoc()) {
             auto chained = chainRulesOnRhs(varMan, res, rhsIdx, second, checkSat);

@@ -100,7 +100,7 @@ public:
      * Returns true iff this expression is linear
      * (e.g. 1/2*x+y is linear, but x^2 or x*y are not considered linear)
      */
-    bool isLinear() const;
+    bool isLinear(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
 
     /**
      * Returns true iff this expression is polynomial, e.g. 1/2 * y * x^2 + y^3.

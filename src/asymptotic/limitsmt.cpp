@@ -121,19 +121,27 @@ static bool isTimeout(bool finalCheck) {
 }
 
 
-bool LimitSmtEncoding::isApplicable(const Expression &cost) {
-    return cost.isPolynomial();
+void updateTimeout(bool finalCheck, Z3Context &context, Z3Solver &solver) {
+    unsigned int timeout;
+    if (finalCheck && Timeout::soft()) {
+        timeout = Config::Z3::LimitTimeoutFinalFast;
+    } else if (finalCheck) {
+        timeout = Config::Z3::LimitTimeoutFinal;
+    } else {
+        timeout = Config::Z3::LimitTimeout;
+    }
+    solver.setTimeout(context, timeout);
 }
 
-
 option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
-                                                     const VarMan &varMan, bool finalCheck)
+                                                     const VarMan &varMan, bool finalCheck, Complexity currentRes)
 {
     debugAsymptoticBound(endl << "SMT: " << currentLP << endl);
 
     // initialize z3
     Z3Context context;
-    Z3Solver solver(context, Config::Z3::LimitTimeout);
+    Z3Solver solver(context);
+    updateTimeout(finalCheck, context, solver);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();
@@ -153,12 +161,13 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     }
 
     // replace variables in the cost function with their linear templates
-    assert(cost.isPolynomial()); // as checked in isApplicable()
     Expression templateCost = cost.subs(templateSubs).expand();
 
     // if the cost function is a constant, then we are bound to fail
-    int maxDeg = templateCost.degree(n);
-    if (maxDeg == 0) {
+    Complexity maxPossibleFiniteRes = templateCost.isPolynomial() ?
+            Complexity::Poly(templateCost.degree(n)) :
+            Complexity::NestedExp;
+    if (maxPossibleFiniteRes == Complexity::Const) {
         return {};
     }
 
@@ -191,11 +200,6 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
         return res == z3::sat;
     };
 
-    // all constraints that we have so far are mandatory, so fail if we can't even solve these
-    if (!checkSolver()) {
-        return {};
-    }
-
     // remember the current state for backtracking before trying several variations
     solver.push();
 
@@ -208,25 +212,34 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     }
 
     if (!checkSolver()) {
+        if (maxPossibleFiniteRes <= currentRes) {
+            return {};
+        }
         // we failed to find a model -- drop all non-mandatory constraints
         solver.pop();
-        // try to find a witness for polynomial complexity with degree maxDeg,...,1
-        map<int, Expression> coefficients = getCoefficients(templateCost, n);
-        for (int i = maxDeg; i > 0; i--) {
-            if (isTimeout(finalCheck)) return {};
-            Expression c = coefficients.find(i)->second;
-            // remember the current state for backtracking
-            solver.push();
-            solver.add(c.toZ3(context) > 0);
-            if (checkSolver()) {
-                break;
-            } else if (i == 1) {
-                // we even failed to prove a linear bound -- give up
-                return {};
-            } else {
-                // remove all non-mandatory constraints and retry with degree i-1
-                solver.pop();
+        if (maxPossibleFiniteRes.getType() == Complexity::CpxPolynomial && maxPossibleFiniteRes.getPolynomialDegree().isInteger()) {
+            int maxPossibleDegree = maxPossibleFiniteRes.getPolynomialDegree().asInteger();
+            // try to find a witness for polynomial complexity with degree maxDeg,...,1
+            map<int, Expression> coefficients = getCoefficients(templateCost, n);
+            for (int i = maxPossibleDegree; i > 0 && Complexity::Poly(i) > currentRes; i--) {
+                if (isTimeout(finalCheck)) return {};
+                updateTimeout(finalCheck, context, solver);
+                Expression c = coefficients.find(i)->second;
+                // remember the current state for backtracking
+                solver.push();
+                solver.add(c.toZ3(context) > 0);
+                if (checkSolver()) {
+                    break;
+                } else if (i == 1 || Complexity::Poly(i - 1) <= currentRes) {
+                    // we even failed to prove the minimal requested bound -- give up
+                    return {};
+                } else {
+                    // remove all non-mandatory constraints and retry with degree i-1
+                    solver.pop();
+                }
             }
+        } else if (!checkSolver()) {
+            return {};
         }
     }
 
