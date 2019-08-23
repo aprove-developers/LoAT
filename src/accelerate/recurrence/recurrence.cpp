@@ -34,30 +34,31 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 {}
 
 
-option<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs) {
+option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs) {
     Timing::Scope timer(Timing::Purrs);
 
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
     Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last));
     Purrs::Expr exact;
 
+    const ExprSymbolSet &vars = updateRhs.getVariables();
+    if (vars.find(updateLhs) == vars.end()) {
+        return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=1}};
+    }
+    Purrs::Recurrence rec(rhs);
+    Purrs::Recurrence::Solver_Status res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
     try {
-        Purrs::Recurrence rec(rhs);
         rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(updateLhs)} });
-
-        auto res = rec.compute_exact_solution();
-        if (res != Purrs::Recurrence::SUCCESS) {
-            return {};
-        }
-        rec.exact_solution(exact);
+        res = rec.compute_exact_solution();
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
-        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(1)=" << updateRhs << " for updated variable " << updateLhs);
-        return {};
+        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << updateLhs << " for updated variable " << updateLhs);
     }
-
-    Expression result = exact.toGiNaC();
-    return result;
+    if (res == Purrs::Recurrence::SUCCESS) {
+        rec.exact_solution(exact);
+        return {{.res=exact.toGiNaC(), .validityBound=0}};
+    }
+    return {};
 }
 
 
@@ -99,49 +100,33 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
 }
 
 
-option<Recurrence::RecurrenceSolution> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
+option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
     assert(dependencyOrder.size() == update.size());
     UpdateMap newUpdate;
 
     //in the given order try to solve the recurrence for every updated variable
-    std::map<VariableIdx, unsigned int> validityBoundMap;
-    unsigned int maxValidityBound = 0;
+    unsigned int validityBound = 0;
     for (VariableIdx vi : dependencyOrder) {
         ExprSymbol target = varMan.getVarSymbol(vi);
 
         const Expression &rhs = update.at(vi);
         const ExprSymbolSet &vars = rhs.getVariables();
-        option<Expression> updateRec;
-        unsigned int validityBound = 0;
-        if (vars.find(target) != vars.end()) {
-            updateRec = findUpdateRecurrence(rhs, target);
-        } else {
-            validityBound = 1;
-            for (const ExprSymbol &var: vars) {
-                auto it = validityBoundMap.find(varMan.getVarIdx(var));
-                if (it != validityBoundMap.end() && it->second >= validityBound) {
-                    validityBound = it->second + 1;
-                }
-            }
-            updateRec = rhs.subs(updatePreRecurrences);
-        }
+        option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target);
         if (!updateRec) {
             return {};
         }
-        validityBoundMap[vi] = validityBound;
-        if (validityBound > maxValidityBound) {
-            maxValidityBound = validityBound;
-        }
+
+        validityBound = max(validityBound, updateRec.get().validityBound);
 
         //remember this recurrence to replace vi in the updates depending on vi
         //note that updates need the value at n-1, e.g. x(n) = x(n-1) + vi(n-1) for the update x=x+vi
-        updatePreRecurrences[target] = updateRec.get().subs(ginacN == ginacN-1);
+        updatePreRecurrences[target] = updateRec.get().res.subs(ginacN == ginacN-1);
 
         //calculate the final update using the loop's runtime
-        newUpdate[vi] = updateRec.get().subs(ginacN == meterfunc);
+        newUpdate[vi] = updateRec.get().res.subs(ginacN == meterfunc);
     }
 
-    return {{.update=newUpdate, .validityBound=maxValidityBound}};
+    return {{.update=newUpdate, .validityBound=validityBound}};
 }
 
 
@@ -227,7 +212,7 @@ const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdate(
     UpdateMap refinedUpdate = update;
     auto order = DependencyOrder::findOrderWithHeuristic(varMan, refinedUpdate, refinement);
     Recurrence rec(varMan, order.get());
-    const option<RecurrenceSolution> &iteratedUpdate = rec.iterateUpdate(refinedUpdate, n);
+    const option<RecurrenceSystemSolution> &iteratedUpdate = rec.iterateUpdate(refinedUpdate, n);
     if (iteratedUpdate) {
         return {{
             .updates={iteratedUpdate.get().update},

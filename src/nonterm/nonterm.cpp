@@ -1,84 +1,74 @@
-//
-// Created by ffrohn on 3/27/19.
-//
+/*  This file is part of LoAT.
+ *  Copyright (c) 2019 Florian Frohn
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses>.
+ */
 
 #include "nonterm.hpp"
 #include "../accelerate/meter/metertools.hpp"
 #include "../z3/z3toolbox.hpp"
 #include "../accelerate/forward.hpp"
 #include "../accelerate/recurrence/dependencyorder.hpp"
+#include "../analysis/chain.hpp"
+#include "../z3/z3solver.hpp"
+#include "../util/relevantvariables.hpp"
 
 namespace nonterm {
 
     option<std::pair<Rule, ForwardAcceleration::ResultKind>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        std::map<unsigned int, unsigned int> depthMap;
+        if (!Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
+            return {};
+        }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
             if (Z3Toolbox::isValidImplication(r.getGuard(), r.getGuard().subs(up))) {
                 return {{Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {}), ForwardAcceleration::Success}};
-            } else {
-                depthMap[i] = maxDepth(r.getUpdate(i), its);
             }
         }
+        if (r.isLinear()) {
+            Rule chained = Chaining::chainRules(its, r, r, false).get();
+            const GiNaC::exmap &up = chained.getUpdate(0).toSubstitution(its);
+            if (Z3Toolbox::checkAll({chained.getGuard()}) == z3::sat && Z3Toolbox::isValidImplication(chained.getGuard(), chained.getGuard().subs(up))) {
+                return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
+            }
+        }
+        Z3Context context;
+        Z3Solver solver(context);
+        for (const Expression &e: r.getGuard()) {
+            solver.add(e.toZ3(context));
+        }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
-            unsigned int depth = depthMap[i];
-            for (unsigned int j = 1; j <= depth; j++) {
-                const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
-                GuardList updatedGuard(r.getGuard());
-                GuardList newGuard;
-                for (unsigned int k = 0; k <= j; k++) {
-                    newGuard.insert(newGuard.end(), updatedGuard.begin(), updatedGuard.end());
-                    updatedGuard.applySubstitution(up);
+            if (!r.isLinear()) {
+                solver.push();
+            }
+            const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
+            const ExprSymbolSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
+            for (const ExprSymbol &var: vars) {
+                solver.add(Expression(var == var.subs(up)).toZ3(context));
+            }
+            if (solver.check() == z3::sat) {
+                GuardList newGuard(r.getGuard());
+                for (const ExprSymbol &var: vars) {
+                    newGuard.emplace_back(var == var.subs(up));
                 }
-                if (Z3Toolbox::checkAll(newGuard) == z3::sat && Z3Toolbox::isValidImplication(newGuard, updatedGuard)) {
-                    return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
-                }
+                return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
+            }
+            if (!r.isLinear()) {
+                solver.pop();
             }
         }
         return {};
-    }
-
-    unsigned int NonTerm::maxDepth(const UpdateMap &up, const VariableManager &varMan) {
-        if (!DependencyOrder::findOrder(varMan, up)) {
-            return 1;
-        }
-        unsigned int max = 0;
-        std::vector<VariableIdx> todo;
-        std::map<VariableIdx, unsigned int> res;
-        for (const auto &p: up) {
-            todo.push_back(p.first);
-        }
-        while (!todo.empty()) {
-            auto it = todo.begin();
-            while (it != todo.end()) {
-                bool done = true;
-                unsigned int depth = 0;
-                const ExprSymbol  &var = varMan.getVarSymbol(*it);
-                const ExprSymbolSet &vars = up.getUpdate(*it).getVariables();
-                if (vars.find(var) == vars.end()) {
-                    depth = 1;
-                    for (const ExprSymbol &x: vars) {
-                        const VariableIdx &xi = varMan.getVarIdx(x);
-                        if (xi != *it && up.find(xi) != up.end()) {
-                            if (res.find(xi) == res.end()) {
-                                done = false;
-                                break;
-                            } else {
-                                depth = std::max(depth, res[xi]);
-                            }
-                        }
-                    }
-                }
-                if (done) {
-                    res[*it] = depth;
-                    max = std::max(max, depth);
-                    it = todo.erase(it);
-                } else {
-                    it++;
-                }
-            }
-        }
-        return max;
     }
 
 }

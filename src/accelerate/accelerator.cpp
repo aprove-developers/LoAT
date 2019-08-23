@@ -148,11 +148,6 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
         return false;
     }
 
-    // Skip inner loops with constant costs
-    if (currentCpx == Complexity::Const || currentCpx.getType() != Complexity::ComplexityType::CpxPolynomial) {
-        return false;
-    }
-
     // Check by some heuristic if it makes sense to nest inner and outer
     if (!canNest(innerRule, outerRule)) {
         return false;
@@ -263,6 +258,48 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     }
 }
 
+const Rule Accelerator::chain(const Rule &rule) const {
+    if (!rule.isLinear()) return rule;
+    Rule res = rule;
+    for (const auto &p: rule.getUpdate(0)) {
+        const ExprSymbol &var = its.getVarSymbol(p.first);
+        const Expression &up = p.second.expand();
+        const ExprSymbolSet &upVars = up.getVariables();
+        if (upVars.find(var) != upVars.end()) {
+            if (up.isPolynomial() && up.degree(var) == 1) {
+                const Expression &coeff = up.coeff(var);
+                if (coeff.isRationalConstant() && coeff < 0) {
+                    res = Chaining::chainRules(its, res, res, false).get();
+                    break;
+                }
+            }
+        }
+    }
+    const Rule &orig = res;
+    unsigned int last = numNotInUpdate(res.getUpdate(0));
+    do {
+        Rule chained = Chaining::chainRules(its, res, orig, false).get();
+        unsigned int next = numNotInUpdate(chained.getUpdate(0));
+        if (next != last) {
+            last = next;
+            res = chained;
+            continue;
+        }
+    } while (false);
+    return res;
+}
+
+unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
+    unsigned int res = 0;
+    for (auto const &p: up) {
+        const ExprSymbol &x = its.getVarSymbol(p.first);
+        const ExprSymbolSet &vars = p.second.getVariables();
+        if (!vars.empty() && vars.find(x) == vars.end()) {
+            res++;
+        }
+    }
+    return res;
+}
 
 // ###################
 // ## Acceleration  ##
@@ -272,13 +309,25 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
     stack<Rule> todo;
-    todo.push(rule);
+    todo.push(chain(rule));
     bool unrestricted = true;
     bool unrestrictedNonTerm = false;
     do {
         Rule r = todo.top();
-        if (r.getCost().isNontermSymbol()) {
+        bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
+        if (sat && r.getCost().isNontermSymbol()) {
             todo.pop();
+            if (!status) {
+                status = Forward::Success;
+                unrestrictedNonTerm = true;
+            }
+            continue;
+        } else if (!sat) {
+            todo.pop();
+            if (!status) {
+                status = Forward::NonMonotonic;
+                unrestricted = false;
+            }
             continue;
         }
         // first try to prove non-termination
@@ -294,9 +343,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
             BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
             // if backwards acceleration is not supported, we can only hope to prove non-termination
             // for proving non-termination, only invariance is of interest
-            std::vector<strengthening::Mode> strengtheningModes = res.status == ForwardAcceleration::NotSupported ?
-                                                                  strengthening::Modes::invarianceModes() :
-                                                                  strengthening::Modes::modes();
+            std::vector<strengthening::Mode> strengtheningModes = strengthening::Modes::modes();
             // store the result for the original rule so that we can return it if we fail
             if (!status) {
                 status = res.status;
@@ -469,6 +516,7 @@ void Accelerator::run() {
 
             case Forward::NonMonotonic:
                 if (its.getRule(loop).isLinear()) {
+                    innerCandidates.push_back(InnerCandidate{.oldRule=loop,.newRule=loop});
                     outerCandidates.push_back({loop});
                 }
                 keepRules.insert(loop);

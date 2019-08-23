@@ -1,6 +1,19 @@
-//
-// Created by ffrohn on 2/8/19.
-//
+/*  This file is part of LoAT.
+ *  Copyright (c) 2019 Florian Frohn
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses>.
+ */
 
 #include "../expr/relation.hpp"
 #include "../accelerate/meter/farkas.hpp"
@@ -31,20 +44,18 @@ namespace strengthening {
 
     const SmtConstraints ConstraintBuilder::build() const {
         GuardList invariancePremise;
-        GuardList invarianceConclusion;
         GuardList monotonicityPremise;
-        GuardList monotonicityConclusion;
         const GuardList &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
-        for (const Expression &e: relevantConstraints) {
+        for (const Expression &e: guardCtx.decreasing) {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
                 monotonicityPremise.push_back(updated);
             }
         }
-        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.invariants.begin(), guardCtx.invariants.end());
-        const Implication &templatesInvariantImplication = buildTemplatesInvariantImplication();
+        monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.simpleInvariants.begin(), guardCtx.simpleInvariants.end());
+        Implication templatesInvariantImplication = buildTemplatesInvariantImplication();
         // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication
         // discards templates that become non-linear when applying the update.
         invariancePremise.insert(
@@ -55,32 +66,32 @@ namespace strengthening {
                 monotonicityPremise.end(),
                 templatesInvariantImplication.premise.begin(),
                 templatesInvariantImplication.premise.end());
-        monotonicityPremise.insert(
-                monotonicityPremise.end(),
-                templatesInvariantImplication.conclusion.begin(),
-                templatesInvariantImplication.conclusion.end());
+        templatesInvariantImplication.premise.insert(
+                templatesInvariantImplication.premise.end(),
+                guardCtx.simpleInvariants.begin(),
+                guardCtx.simpleInvariants.end());
+        std::vector<z3::expr> conclusionMonotonic;
+        std::vector<z3::expr> conclusionInvariant;
         for (const Expression &e: guardCtx.todo) {
+            z3::expr_vector eMonotonic(z3Ctx);
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
-                if (Relation::isLinearInequality(updated, templates.vars())) {
-                    invarianceConclusion.push_back(updated);
+                if (Relation::isLinearInequality(e, templates.vars()) && Relation::isLinearInequality(updated, templates.vars())) {
+                    monotonicityPremise.push_back(e.subs(up));
+                    const z3::expr &decreasing = constructImplicationConstraints(monotonicityPremise, e);
+                    monotonicityPremise.pop_back();
+                    const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
+                    conclusionInvariant.push_back(invariant);
+                    eMonotonic.push_back(decreasing || invariant);
                 }
-            }
-            if (Relation::isLinearInequality(e, templates.vars())) {
-                monotonicityConclusion.push_back(e);
+                conclusionMonotonic.push_back(z3::mk_and(eMonotonic));
             }
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
-                invariancePremise,
+                templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
-        const std::vector<z3::expr> &conclusionInvariant = constructImplicationConstraints(
-                invariancePremise,
-                invarianceConclusion);
-        const std::vector<z3::expr> &conclusionMonotonic = constructImplicationConstraints(
-                monotonicityPremise,
-                monotonicityConclusion);
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant, conclusionMonotonic);
     }
 
@@ -125,10 +136,6 @@ namespace strengthening {
     const Initiation ConstraintBuilder::constructInitiationConstraints(const GuardList &relevantConstraints) const {
         Initiation res;
         for (const GuardList &pre: ruleCtx.preconditions) {
-            z3::expr_vector gVec(z3Ctx);
-            for (const Expression &e: pre) {
-                gVec.push_back(e.toZ3(z3Ctx));
-            }
             for (const Expression &t: templates) {
                 res.valid.push_back(constructImplicationConstraints(pre, t));
             }
@@ -140,6 +147,7 @@ namespace strengthening {
             for (const Expression &e: pre) {
                 e.collectVariables(allVars);
             }
+            // TODO Why is this variable renaming needed?
             GiNaC::exmap varRenaming;
             for (const ExprSymbol &x: allVars) {
                 varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));

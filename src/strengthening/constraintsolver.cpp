@@ -1,6 +1,19 @@
-//
-// Created by ffrohn on 2/21/19.
-//
+/*  This file is part of LoAT.
+ *  Copyright (c) 2019 Florian Frohn
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses>.
+ */
 
 #include "../util/option.hpp"
 #include "../z3/z3solver.hpp"
@@ -36,9 +49,6 @@ namespace strengthening {
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
             if (!newInvariants.empty()) {
-                for (const Expression &e: newInvariants) {
-                    debugInvariants("new invariant " << e);
-                }
                 return splitInitiallyValid(newInvariants);
             }
         }
@@ -46,6 +56,7 @@ namespace strengthening {
     }
 
     const GuardList Self::instantiateTemplates(const z3::model &model) const {
+        Z3Solver solver(z3Ctx);
         GuardList res;
         UpdateMap parameterInstantiation;
         for (const ExprSymbol &p: templates.params()) {
@@ -59,7 +70,11 @@ namespace strengthening {
         const std::vector<Expression> instantiatedTemplates = templates.subs(subs);
         for (const Expression &e: instantiatedTemplates) {
             if (!templates.isParametric(e)) {
-                res.push_back(e);
+                solver.add(!e.toZ3(z3Ctx));
+                if (solver.check() != z3::unsat) {
+                    res.push_back(e);
+                }
+                solver.reset();
             }
         }
         return res;

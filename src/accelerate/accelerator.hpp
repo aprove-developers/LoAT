@@ -138,6 +138,10 @@ private:
      */
     void removeOldLoops(const std::vector<TransIdx> &loops);
 
+    const Rule chain(const Rule &rule) const;
+
+    unsigned int numNotInUpdate(const UpdateMap &up) const;
+
 private:
     // The ITS problem. Accelerated rules are added to the ITS immediately,
     // but no rules are removed until the very end (end of run()).
