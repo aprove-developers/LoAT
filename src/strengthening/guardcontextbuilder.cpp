@@ -24,14 +24,14 @@ namespace strengthening {
 
     typedef GuardContextBuilder Self;
 
-    const GuardContext Self::build(const GuardList &guard, const std::vector<GiNaC::exmap> &updates) {
-        return GuardContextBuilder(guard, updates).build();
+    const GuardContext Self::build(const GuardList &guard, const GiNaC::exmap &update) {
+        return GuardContextBuilder(guard, update).build();
     }
 
     Self::GuardContextBuilder(
             const GuardList &guard,
-            const std::vector<GiNaC::exmap> &updates
-    ): guard(guard), updates(updates) { }
+            const GiNaC::exmap &update
+    ): guard(guard), update(update) { }
 
     const GuardList Self::computeConstraints() const {
         GuardList constraints;
@@ -54,21 +54,14 @@ namespace strengthening {
         }
         Result res;
         for (const Expression &g: constraints) {
-            bool isInvariant = true;
-            for (const GiNaC::exmap &up: updates) {
-                Expression conclusionExp = g;
-                conclusionExp.applySubs(up);
-                const z3::expr &conclusion = conclusionExp.toZ3(z3Ctx);
-                solver.push();
-                solver.add(!conclusion);
-                const z3::check_result &z3Res = solver.check();
-                solver.pop();
-                if (z3Res != z3::check_result::unsat) {
-                    isInvariant = false;
-                    break;
-                }
-            }
-            if (isInvariant) {
+            Expression conclusionExp = g;
+            conclusionExp.applySubs(update);
+            const z3::expr &conclusion = conclusionExp.toZ3(z3Ctx);
+            solver.push();
+            solver.add(!conclusion);
+            const z3::check_result &z3Res = solver.check();
+            solver.pop();
+            if (z3Res == z3::check_result::unsat) {
                 res.solved.push_back(g);
             } else {
                 res.failed.push_back(g);
@@ -87,26 +80,22 @@ namespace strengthening {
         }
         Result res;
         res.solved.insert(res.solved.end(), nonInvariants.begin(), nonInvariants.end());
-        for (const GiNaC::exmap &up: updates) {
+        for (Expression g: guard) {
+            g.applySubs(update);
+            solver.add(g.toZ3(z3Ctx));
+        }
+        auto g = res.solved.begin();
+        while (g != res.solved.end()) {
             solver.push();
-            for (Expression g: guard) {
-                g.applySubs(up);
-                solver.add(g.toZ3(z3Ctx));
-            }
-            auto g = res.solved.begin();
-            while (g != res.solved.end()) {
-                solver.push();
-                solver.add(!(*g).toZ3(z3Ctx));
-                const z3::check_result &z3Res = solver.check();
-                solver.pop();
-                if (z3Res == z3::check_result::unsat) {
-                    g++;
-                } else {
-                    res.failed.push_back(*g);
-                    g = res.solved.erase(g);
-                }
-            }
+            solver.add(!(*g).toZ3(z3Ctx));
+            const z3::check_result &z3Res = solver.check();
             solver.pop();
+            if (z3Res == z3::check_result::unsat) {
+                g++;
+            } else {
+                res.failed.push_back(*g);
+                g = res.solved.erase(g);
+            }
         }
         return res;
     }
@@ -119,11 +108,7 @@ namespace strengthening {
             done = true;
             auto it = res.solved.begin();
             while (it != res.solved.end()) {
-                GuardList updated;
-                for (const GiNaC::exmap &up: updates) {
-                    updated.push_back((*it).subs(up));
-                }
-                if (Z3Toolbox::isValidImplication(res.solved, updated)) {
+                if (Z3Toolbox::isValidImplication(res.solved, {(*it).subs(update)})) {
                     it++;
                 } else {
                     res.solved.erase(it);

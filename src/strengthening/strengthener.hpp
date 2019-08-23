@@ -32,7 +32,7 @@ namespace strengthening {
 
     public:
 
-        static const std::vector<Rule> apply(const Rule &r, ITSProblem &its, const std::vector<Mode> &modes);
+        static const std::vector<LinearRule> apply(const LinearRule &r, ITSProblem &its);
 
     private:
 
@@ -40,7 +40,9 @@ namespace strengthening {
 
         explicit Strengthener(const RuleContext &ruleCtx);
 
-        const std::vector<GuardList> apply(const Mode &mode, const GuardList &guard) const;
+        const std::vector<GuardList> apply(const GuardList &guard) const;
+
+        static const MaxSmtConstraints toMaxSmt(const SmtConstraints &constraints, bool preferInvariance, Z3Context &z3Ctx);
 
     };
 

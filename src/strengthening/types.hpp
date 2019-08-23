@@ -27,17 +27,17 @@ namespace strengthening {
     struct RuleContext {
 
         RuleContext(
-                const Rule &rule,
-                const std::vector<GiNaC::exmap> &updates,
+                const LinearRule &rule,
+                const GiNaC::exmap &update,
                 const std::vector<GuardList> &preconditions,
                 VariableManager &varMan):
                 rule(rule),
-                updates(std::move(updates)),
+                update(std::move(update)),
                 preconditions(std::move(preconditions)),
                 varMan(varMan) { }
 
-        const Rule &rule;
-        const std::vector<GiNaC::exmap> updates;
+        const LinearRule &rule;
+        const GiNaC::exmap update;
         const std::vector<GuardList> preconditions;
         VariableManager &varMan;
     };

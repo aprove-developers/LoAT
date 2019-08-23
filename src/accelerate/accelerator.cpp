@@ -164,8 +164,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             // Simplify the rule again (chaining can introduce many useless constraints)
             Preprocess::simplifyRule(its, nestedRule);
 
-            // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const std::vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+            const std::vector<LinearRule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
             bool success = false;
             for (const Rule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
@@ -258,10 +257,9 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     }
 }
 
-const Rule Accelerator::chain(const Rule &rule) const {
-    if (!rule.isLinear()) return rule;
-    Rule res = rule;
-    for (const auto &p: rule.getUpdate(0)) {
+const LinearRule Accelerator::chain(const LinearRule &rule) const {
+    LinearRule res = rule;
+    for (const auto &p: rule.getUpdate()) {
         const ExprSymbol &var = its.getVarSymbol(p.first);
         const Expression &up = p.second.expand();
         const ExprSymbolSet &upVars = up.getVariables();
@@ -276,10 +274,10 @@ const Rule Accelerator::chain(const Rule &rule) const {
         }
     }
     const Rule &orig = res;
-    unsigned int last = numNotInUpdate(res.getUpdate(0));
+    unsigned int last = numNotInUpdate(res.getUpdate());
     do {
-        Rule chained = Chaining::chainRules(its, res, orig, false).get();
-        unsigned int next = numNotInUpdate(chained.getUpdate(0));
+        LinearRule chained = Chaining::chainRules(its, res, orig, false).get().toLinear();
+        unsigned int next = numNotInUpdate(chained.getUpdate());
         if (next != last) {
             last = next;
             res = chained;
@@ -305,16 +303,16 @@ unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
 // ## Acceleration  ##
 // ###################
 
-const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) const {
+const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
-    stack<Rule> todo;
+    stack<LinearRule> todo;
     todo.push(chain(rule));
     bool unrestricted = true;
     bool unrestrictedNonTerm = false;
     do {
-        Rule r = todo.top();
-        bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
+        LinearRule r = todo.top();
+        bool sat = Z3Toolbox::checkAll(r.getGuard()) == z3::sat;
         if (sat && r.getCost().isNontermSymbol()) {
             todo.pop();
             if (!status) {
@@ -343,7 +341,6 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
             BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
             // if backwards acceleration is not supported, we can only hope to prove non-termination
             // for proving non-termination, only invariance is of interest
-            std::vector<strengthening::Mode> strengtheningModes = strengthening::Modes::modes();
             // store the result for the original rule so that we can return it if we fail
             if (!status) {
                 status = res.status;
@@ -352,13 +349,13 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
                 }
             }
             if (res.res.empty()) {
-                vector<Rule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
-                for (const Rule &sr: strengthened) {
+                vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
+                for (const LinearRule &sr: strengthened) {
                     debugBackwardAccel("invariant inference yields " << sr);
                     todo.push(sr);
                 }
             } else {
-                for (const Rule &ar: res.res) {
+                for (const LinearRule &ar: res.res) {
                     rules.emplace_back("backward acceleration", ar);
                 }
             }
@@ -367,22 +364,19 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
     if (!rules.empty()) {
         status = unrestrictedNonTerm || unrestricted ? Forward::Success : Forward::SuccessWithRestriction;
     }
-    return {.result=status.get(), .rules=rules};
+    return {status.get(), rules};
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
     assert(Config::Accel::UseForwardAccel || Config::Accel::UseBackwardAccel);
     Forward::Result res;
-    if (Config::Accel::UseForwardAccel) {
+    if (Config::Accel::UseForwardAccel || !rule.isLinear()) {
         return Forward::accelerate(its, rule, sinkLoc);
     }
 
-    // Try backward acceleration only if forward acceleration failed,
-    // or if it only succeeded by restricting the guard. In this case,
-    // we keep the rules from forward and just add the ones from backward acceleration.
-    if (Config::Accel::UseBackwardAccel) {
-        return strengthenAndAccelerate(rule);
+    if (Config::Accel::UseBackwardAccel && rule.isLinear()) {
+        return strengthenAndAccelerate(rule.toLinear());
     }
 
 }
@@ -510,9 +504,6 @@ void Accelerator::run() {
                 keepRules.insert(loop);
                 proofout << "Found no closed form for " << loop << "." << endl;
                 break;
-
-            case Forward::NonCommutative:
-                throw std::logic_error("Acceleration failed due to non-commutative updates, but rule should have been shortened.");
 
             case Forward::NonMonotonic:
                 if (its.getRule(loop).isLinear()) {

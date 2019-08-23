@@ -27,7 +27,7 @@
 namespace strengthening {
 
 
-    const std::vector<Rule> Strengthener::apply(const Rule &rule, ITSProblem &its, const std::vector<Mode> &modes) {
+    const std::vector<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its) {
         std::stack<GuardList> todo;
         todo.push(rule.getGuard());
         std::vector<GuardList> res;
@@ -37,45 +37,39 @@ namespace strengthening {
         while (!todo.empty() && i < 10) {
             i++;
             const GuardList &current = todo.top();
-            bool failed = true;
-            for (const Mode &mode: modes) {
-                if (Timeout::soft()) {
-                    return {};
-                }
-                const std::vector<GuardList> &strengthened = strengthener.apply(mode, current);
-                if (!strengthened.empty()) {
-                    failed = false;
-                    todo.pop();
-                    for (const GuardList &s: strengthened) {
-                        todo.push(s);
-                    }
-                    break;
-                }
+            if (Timeout::soft()) {
+                return {};
             }
-            if (failed) {
+            const std::vector<GuardList> &strengthened = strengthener.apply(current);
+            if (!strengthened.empty()) {
+                todo.pop();
+                for (const GuardList &s: strengthened) {
+                    todo.push(s);
+                }
+            } else {
                 if (current != rule.getGuard()) {
                     res.push_back(current);
                 }
                 todo.pop();
             }
         }
-        std::vector<Rule> rules;
+        std::vector<LinearRule> rules;
         for (const GuardList &g: res) {
             const RuleLhs newLhs(rule.getLhsLoc(), g, rule.getCost());
-            rules.emplace_back(Rule(newLhs, rule.getRhss()));
+            rules.emplace_back(LinearRule(newLhs, rule.getRhss()[0]));
         }
         return rules;
     }
 
     Strengthener::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
 
-    const std::vector<GuardList> Strengthener::apply(const Mode &mode, const GuardList &guard) const {
+    const std::vector<GuardList> Strengthener::apply(const GuardList &guard) const {
         std::vector<GuardList> res;
-        const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates);
+        const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.update);
         const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);
         Z3Context z3Ctx;
         const SmtConstraints &smtConstraints = ConstraintBuilder::build(templates, ruleCtx, guardCtx, z3Ctx);
-        MaxSmtConstraints maxSmtConstraints = mode(smtConstraints, guardCtx.decreasing.empty(), z3Ctx);
+        MaxSmtConstraints maxSmtConstraints = toMaxSmt(smtConstraints, guardCtx.decreasing.empty(), z3Ctx);
         if (maxSmtConstraints.hard.empty()) {
             return {};
         }
@@ -104,6 +98,31 @@ namespace strengthening {
                 res.emplace_back(pseudoInvariantInvalid);
             }
         }
+        return res;
+    }
+
+    const MaxSmtConstraints Strengthener::toMaxSmt(const SmtConstraints &constraints, bool preferInvariance, Z3Context &z3Ctx) {
+        MaxSmtConstraints res;
+        res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
+        if (preferInvariance) {
+            z3::expr_vector allInvariant(z3Ctx);
+            for (const z3::expr &e: constraints.conclusionsInvariant) {
+                allInvariant.push_back(e);
+                res.soft.push_back(z3::mk_and(allInvariant));
+            }
+        }
+        z3::expr_vector sat(z3Ctx);
+        for (const z3::expr &e: constraints.initiation.satisfiable) {
+            sat.push_back(e);
+        }
+        res.hard.push_back(z3::mk_or(sat));
+        z3::expr_vector someMonotonic(z3Ctx);
+        for (const z3::expr &e: constraints.conclusionsMonotonic) {
+            res.soft.push_back(e);
+            someMonotonic.push_back(e);
+        }
+        res.hard.push_back(z3::mk_or(someMonotonic));
+        res.hard.insert(res.hard.end(), constraints.templatesInvariant.begin(), constraints.templatesInvariant.end());
         return res;
     }
 

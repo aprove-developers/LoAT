@@ -27,19 +27,19 @@ class BackwardAcceleration {
 public:
 
     struct AcceleratedRules {
-        const std::vector<Rule> rules;
+        const std::vector<LinearRule> rules;
         const unsigned int validityBound;
     };
 
     struct AccelerationResult {
-        const std::vector<Rule> res;
+        const std::vector<LinearRule> res;
         const ForwardAcceleration::ResultKind status;
     };
 
-    static AccelerationResult accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
+    static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule, const LocationIdx &sink);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
+    BackwardAcceleration(VarMan &varMan, const LinearRule &rule, const LocationIdx &sink);
 
     void computeInvarianceSplit();
 
@@ -61,16 +61,11 @@ private:
     /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
-    Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
+    LinearRule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
                               const GuardList &strengthenedGuard, const ExprSymbol &N,
                               const unsigned int validityBound) const;
 
-    Rule buildNontermRule() const;
-
-    Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
-                                   const GuardList &guard, const ExprSymbol &N, const unsigned int validityBound) const;
-
-    bool checkCommutation(const std::vector<UpdateMap> &updates);
+    LinearRule buildNontermRule() const;
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
@@ -82,7 +77,7 @@ private:
      *
      * @return A list of rules, either with N eliminated or only containing the given rule
      */
-    static std::vector<Rule> replaceByUpperbounds(const ExprSymbol &N, const Rule &rule);
+    static std::vector<LinearRule> replaceByUpperbounds(const ExprSymbol &N, const LinearRule &rule);
 
     /**
      * Helper for replaceByUpperbounds, returns all upperbounds of N in rule's guard,
@@ -92,13 +87,13 @@ private:
 
 private:
     VariableManager &varMan;
-    const Rule &rule;
+    const LinearRule &rule;
     const LocationIdx &sink;
     GuardList simpleInvariants;
     GuardList conditionalInvariants;
     GuardList nonInvariants;
-    std::vector<UpdateMap> updates;
-    std::vector<GiNaC::exmap> updateSubs;
+    UpdateMap update;
+    GiNaC::exmap updateSubs;
 };
 
 #endif /* BACKWARDACCELERATION_H */

@@ -25,11 +25,11 @@ namespace strengthening {
 
     typedef RuleContextBuilder Self;
 
-    const RuleContext Self::build(const Rule &rule, ITSProblem &its) {
+    const RuleContext Self::build(const LinearRule &rule, ITSProblem &its) {
         return RuleContextBuilder(rule, its).build();
     }
 
-    Self::RuleContextBuilder(const Rule &rule, ITSProblem &its): rule(rule), its(its) { }
+    Self::RuleContextBuilder(const LinearRule &rule, ITSProblem &its): rule(rule), its(its) { }
 
     const std::vector<Rule> Self::computePredecessors() const {
         std::set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
@@ -41,14 +41,6 @@ namespace strengthening {
             }
         }
         return predecessors;
-    }
-
-    const std::vector<GiNaC::exmap> Self::computeUpdates() const {
-        std::vector<GiNaC::exmap> res;
-        for (const RuleRhs &rhs: rule.getRhss()) {
-            res.push_back(rhs.getUpdate().toSubstitution(its));
-        }
-        return res;
     }
 
     const std::vector<GuardList> Self::buildPreconditions(const std::vector<Rule> &predecessors) const {
@@ -89,10 +81,10 @@ namespace strengthening {
     }
 
     const RuleContext Self::build() const {
-        const std::vector<GiNaC::exmap> &updates = computeUpdates();
+        const GiNaC::exmap &update = rule.getUpdate().toSubstitution(its);
         const std::vector<Rule> &predecessors = computePredecessors();
         const std::vector<GuardList> preconditions = buildPreconditions(predecessors);
-        return RuleContext(rule, updates, preconditions, its);
+        return RuleContext(rule, update, preconditions, its);
     }
 
 }

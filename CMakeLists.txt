@@ -121,8 +121,6 @@ add_executable(${EXECUTABLE}
         src/strengthening/strengthener.cpp
         src/strengthening/strengthener.hpp
         src/strengthening/types.hpp
-        src/strengthening/modes.cpp
-        src/strengthening/modes.hpp
         src/strengthening/templatebuilder.cpp
         src/strengthening/templatebuilder.hpp
         src/strengthening/templates.cpp

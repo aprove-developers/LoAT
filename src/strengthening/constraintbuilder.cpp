@@ -48,11 +48,9 @@ namespace strengthening {
         const GuardList &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
         for (const Expression &e: guardCtx.decreasing) {
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
-                Expression updated = e;
-                updated.applySubs(up);
-                monotonicityPremise.push_back(updated);
-            }
+            Expression updated = e;
+            updated.applySubs(ruleCtx.update);
+            monotonicityPremise.push_back(updated);
         }
         monotonicityPremise.insert(monotonicityPremise.end(), guardCtx.simpleInvariants.begin(), guardCtx.simpleInvariants.end());
         Implication templatesInvariantImplication = buildTemplatesInvariantImplication();
@@ -74,19 +72,17 @@ namespace strengthening {
         std::vector<z3::expr> conclusionInvariant;
         for (const Expression &e: guardCtx.todo) {
             z3::expr_vector eMonotonic(z3Ctx);
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
-                Expression updated = e;
-                updated.applySubs(up);
-                if (Relation::isLinearInequality(e, templates.vars()) && Relation::isLinearInequality(updated, templates.vars())) {
-                    monotonicityPremise.push_back(e.subs(up));
-                    const z3::expr &decreasing = constructImplicationConstraints(monotonicityPremise, e);
-                    monotonicityPremise.pop_back();
-                    const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
-                    conclusionInvariant.push_back(invariant);
-                    eMonotonic.push_back(decreasing || invariant);
-                }
-                conclusionMonotonic.push_back(z3::mk_and(eMonotonic));
+            Expression updated = e;
+            updated.applySubs(ruleCtx.update);
+            if (Relation::isLinearInequality(e, templates.vars()) && Relation::isLinearInequality(updated, templates.vars())) {
+                monotonicityPremise.push_back(e.subs(ruleCtx.update));
+                const z3::expr &decreasing = constructImplicationConstraints(monotonicityPremise, e);
+                monotonicityPremise.pop_back();
+                const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
+                conclusionInvariant.push_back(invariant);
+                eMonotonic.push_back(decreasing || invariant);
             }
+            conclusionMonotonic.push_back(z3::mk_and(eMonotonic));
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
@@ -111,23 +107,11 @@ namespace strengthening {
     const Implication ConstraintBuilder::buildTemplatesInvariantImplication() const {
         Implication res;
         for (const Expression &invTemplate: templates) {
-            bool linear = true;
-            GuardList updatedTemplates;
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
-                Expression updated = invTemplate;
-                updated.applySubs(up);
-                if (Relation::isLinearInequality(updated, templates.vars())) {
-                    updatedTemplates.push_back(updated);
-                } else {
-                    linear = false;
-                    break;
-                }
-            }
-            if (linear) {
+            Expression updated = invTemplate;
+            updated.applySubs(ruleCtx.update);
+            if (Relation::isLinearInequality(updated, templates.vars())) {
                 res.premise.push_back(invTemplate);
-                for (const Expression &t: updatedTemplates) {
-                    res.conclusion.push_back(t);
-                }
+                res.conclusion.push_back(updated);
             }
         }
         return res;

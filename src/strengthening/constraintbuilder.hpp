@@ -21,7 +21,6 @@
 #include "../its/rule.hpp"
 #include "../its/variablemanager.hpp"
 #include "types.hpp"
-#include "modes.hpp"
 #include "templates.hpp"
 
 namespace strengthening {
