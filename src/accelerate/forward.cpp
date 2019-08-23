@@ -142,7 +142,8 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
-                if (Recurrence::iterateRule(varMan, linRule, iterationCount)) {
+                option<unsigned int> validityBound = Recurrence::iterateRule(varMan, linRule, iterationCount);
+                if (!validityBound) {
                     res.result = TooComplicated;
                     Stats::add(Stats::MeterCannotIterate);
                     return res;
@@ -150,7 +151,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
                 // The iterated update/cost computation is only sound if we do >= 1 iterations.
                 // Hence we have to ensure that the metering function is >= 1 (corresponding to 0 < tv).
-                linRule.getGuardMut().push_back(iterationCount >= 1);
+                linRule.getGuardMut().push_back(iterationCount >= validityBound.get());
 
                 // If we use a temporary variable instead of the metering function, add the upper bound.
                 // Note that meter always maps to int, so we can use <= here.
