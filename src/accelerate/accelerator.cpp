@@ -317,7 +317,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
     stack<LinearRule> todo;
-    todo.push(chain(rule));
+    todo.push(rule);
     bool unrestricted = true;
     bool unrestrictedNonTerm = false;
     do {
@@ -384,10 +384,15 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     assert(Config::Accel::UseForwardAccel ^ Config::Accel::UseBackwardAccel);
     Forward::Result res;
     if (Config::Accel::UseForwardAccel || !rule.isLinear()) {
+        if (rule.isLinear()) {
+            return Forward::accelerate(its, chain(rule.toLinear()), sinkLoc);
+        } else {
+            return Forward::accelerate(its, rule, sinkLoc);
+        }
         return Forward::accelerate(its, rule, sinkLoc);
     }
     if (Config::Accel::UseBackwardAccel && rule.isLinear()) {
-        return strengthenAndAccelerate(rule.toLinear());
+        return strengthenAndAccelerate(chain(rule.toLinear()));
     }
     throw std::runtime_error("Neither forward nor backward acceleration is enabled!");
 }
