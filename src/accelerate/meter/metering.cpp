@@ -190,7 +190,8 @@ z3::expr MeteringFinder::genNotGuardImplication() const {
     }
 
     // split into one implication for every guard constraint, apply Farkas for each implication
-    for (const Expression &g : linearConstraints.reducedGuard) {
+    auto &gs = Config::ForwardAccel::ReducedGuard ? linearConstraints.reducedGuard : linearConstraints.guard;
+    for (const Expression &g : gs) {
         lhs.push_back(Relation::negateLessEqInequality(g));
         res.push_back(FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, context));
         lhs.pop_back();
@@ -490,6 +491,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
         solver.add(meter.genNotGuardImplication());
         solver.add(meter.genUpdateImplications());
         solver.add(meter.genNonTrivial());
+        // TODO that should not be needed if we require that the metering function is non-trivial
         solver.add(meter.genGuardPositiveImplication(false));
         z3res = solver.check();
 

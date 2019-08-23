@@ -67,7 +67,26 @@ bool BackwardAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
 }
 
-bool BackwardAcceleration::checkGuardImplication() const {
+bool BackwardAcceleration::checkMonotonicDecreasingness() const {
+    Z3Context context;
+    Z3Solver solver(context);
+    z3::expr_vector rhss(context);
+
+    for (const Expression &ex : rule.getGuard()) {
+        solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
+        rhss.push_back(GinacToZ3::convert(ex, context));
+    }
+    if (solver.check() != z3::sat) {
+        return false;
+    }
+    solver.add(!z3::mk_and(rhss));
+    if (solver.check() != z3::unsat) {
+        return false;
+    }
+    return true;
+}
+
+bool BackwardAcceleration::checkMonotonicity() const {
     Z3Context context;
     Z3Solver solver(context);
     z3::expr_vector rhss(context);
@@ -86,6 +105,43 @@ bool BackwardAcceleration::checkGuardImplication() const {
     solver.add(!z3::mk_and(rhss));
     if (solver.check() != z3::unsat) {
         return false;
+    }
+    return true;
+}
+
+bool BackwardAcceleration::checkEventualMonotonicity() const {
+    Z3Context context;
+    Z3Solver solver(context);
+    z3::expr_vector rhss(context);
+
+    for (const Expression &ex : simpleInvariants) {
+        solver.add(GinacToZ3::convert(ex, context));
+    }
+
+    GuardList todo;
+    for (const Expression &ex : nonInvariants) {
+        solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
+        if (Relation::isEquality(ex)) {
+            todo.push_back(ex.op(0) >= ex.op(1));
+            todo.push_back(ex.op(0) <= ex.op(1));
+        } else {
+            todo.push_back(ex);
+        }
+    }
+    if (solver.check() != z3::sat) {
+        return false;
+    }
+    for (const Expression &ex : todo) {
+        solver.push();
+        const Expression &e = Relation::normalizeInequality(ex).op(0);
+        const Expression &eup = e.subs(updateSubs);
+        solver.add(GinacToZ3::convert(e > eup, context));
+        solver.add(GinacToZ3::convert(eup <= eup.subs(updateSubs), context));
+        rhss.push_back(GinacToZ3::convert(ex, context));
+        if (solver.check() != z3::unsat) {
+            return false;
+        }
+        solver.pop();
     }
     return true;
 }
@@ -195,7 +251,21 @@ Self::AccelerationResult BackwardAcceleration::run() {
         return {{buildNontermRule()}, ForwardAcceleration::Success};
     }
 
-    if (!checkGuardImplication()) {
+    bool applicable = false;
+    switch (Config::BackwardAccel::Criterion) {
+        case Config::BackwardAccel::MonototonicityCriterion::Decreasing:
+            applicable = checkMonotonicDecreasingness();
+            break;
+        case Config::BackwardAccel::MonototonicityCriterion::Monotonic:
+            applicable = checkMonotonicity();
+            break;
+        case Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic:
+            applicable = checkEventualMonotonicity();
+            break;
+        default:
+            break;
+    }
+    if (!applicable) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
         return {{}, ForwardAcceleration::NonMonotonic};

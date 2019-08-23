@@ -56,7 +56,11 @@ private:
     /**
      * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
      */
-    bool checkGuardImplication() const;
+    bool checkMonotonicity() const;
+
+    bool checkEventualMonotonicity() const;
+
+    bool checkMonotonicDecreasingness() const;
 
     /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.

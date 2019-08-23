@@ -79,6 +79,7 @@ namespace Config {
         extern bool AllowRealCoeffs;
         extern bool AllowLinearization;
         extern bool ConditionalMetering;
+        extern bool ReducedGuard;
         extern bool TempVarInstantiation;
         extern bool ConflictVarHeuristic;
         extern bool ConstantUpdateHeuristic;
@@ -91,6 +92,13 @@ namespace Config {
         extern const bool ReplaceTempVarByUpperbounds;
         extern const unsigned MaxUpperboundsForPropagation;
         extern const bool Strengthen;
+
+        enum MonototonicityCriterion {
+            Decreasing, Monotonic, EventuallyMonotonic
+        };
+
+        extern const MonototonicityCriterion Criterion;
+
     }
 
     // High level acceleration strategy

@@ -117,6 +117,8 @@ namespace Config {
         // when considering the constraint "not guard  ==>  b <= 0"
         bool ConditionalMetering = true;
 
+        bool ReducedGuard = true;
+
         // Instantiate temp vars by all possible bounds found in the guard if metering failed?
         // We currently try to instantiate all at the same time, so this can be expensive.
         bool TempVarInstantiation = true;
@@ -154,6 +156,9 @@ namespace Config {
         const unsigned MaxUpperboundsForPropagation = 3;
 
         const bool Strengthen = true;
+
+        const MonototonicityCriterion Criterion = MonototonicityCriterion::EventuallyMonotonic;
+
     }
 
     namespace Accel {
@@ -285,6 +290,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
         PrintCfg(AllowRealCoeffs, "Allow rational coefficients in metering functions");
         PrintCfg(AllowLinearization, "Linearize guard/update by temporary substitutions");
         PrintCfg(ConditionalMetering, "Include the irrelevant guard for conditional metering");
+        PrintCfg(ReducedGuard, "only use the reduced guard in the base case of metering functions");
         PrintCfg(TempVarInstantiation, "Instantiate temporary variables by their bounds");
         PrintCfg(TempVarInstantiationMaxBounds, "Max bounds to try when instantiating temp vars");
         PrintCfg(ConflictVarHeuristic, "Workaround for cases with metering function min(A,B)");
