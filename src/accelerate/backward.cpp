@@ -39,11 +39,19 @@ typedef BackwardAcceleration Self;
 
 BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule, const LocationIdx &sink)
         : varMan(varMan), rule(rule), sink(sink), update(rule.getUpdate()), updateSubs(rule.getUpdate().toSubstitution(varMan)) {
+    for (const Expression &ex: rule.getGuard()) {
+        if (Relation::isEquality(ex)) {
+            guard.push_back(ex.lhs() - ex.rhs() + 1 > 0);
+            guard.push_back(ex.rhs() - ex.lhs() + 1 > 0);
+        } else {
+            guard.push_back(Relation::normalizeInequality(ex));
+        }
+    }
     computeInvarianceSplit();
 }
 
 void BackwardAcceleration::computeInvarianceSplit() {
-    nonInvariants = MeteringToolbox::reduceGuard(varMan, rule.getGuard(), {update}, &simpleInvariants);
+    nonInvariants = MeteringToolbox::reduceGuard(varMan, guard, {update}, &simpleInvariants);
     bool done;
     do {
         done = true;
@@ -60,6 +68,26 @@ void BackwardAcceleration::computeInvarianceSplit() {
                 break;
             }
         }
+        GuardList todo;
+        Z3Context ctx;
+        Z3Solver solver(ctx);
+        for (const Expression &e: guard) {
+            solver.add(e.toZ3(ctx));
+        }
+        for (const Expression &ex: nonInvariants) {
+            solver.push();
+            Expression normalized = ex.lhs();
+            Expression normalizedUp = normalized.subs(updateSubs);
+            solver.add(Expression(normalized < normalizedUp).toZ3(ctx));
+            if (solver.check() == z3::check_result::sat) {
+                solver.add(Expression(normalizedUp >= normalizedUp.subs(updateSubs)).toZ3(ctx));
+                if (solver.check() == z3::check_result::unsat) {
+                    eventualInvariants.push_back(ex);
+                    debugTest("found eventual invariant " << ex);
+                }
+            }
+            solver.pop();
+        }
     } while (!done);
 }
 
@@ -72,7 +100,7 @@ bool BackwardAcceleration::checkMonotonicDecreasingness() const {
     Z3Solver solver(context);
     z3::expr_vector rhss(context);
 
-    for (const Expression &ex : rule.getGuard()) {
+    for (const Expression &ex : guard) {
         solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
         rhss.push_back(GinacToZ3::convert(ex, context));
     }
@@ -120,11 +148,8 @@ bool BackwardAcceleration::checkEventualMonotonicity() const {
 
     GuardList todo;
     for (const Expression &ex : nonInvariants) {
-        solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
-        if (Relation::isEquality(ex)) {
-            todo.push_back(ex.op(0) >= ex.op(1));
-            todo.push_back(ex.op(0) <= ex.op(1));
-        } else {
+        if (std::find(eventualInvariants.begin(), eventualInvariants.end(), ex) == eventualInvariants.end()) {
+            solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
             todo.push_back(ex);
         }
     }
@@ -133,7 +158,7 @@ bool BackwardAcceleration::checkEventualMonotonicity() const {
     }
     for (const Expression &ex : todo) {
         solver.push();
-        const Expression &e = Relation::normalizeInequality(ex).op(0);
+        const Expression &e = ex.op(0);
         const Expression &eup = e.subs(updateSubs);
         solver.add(GinacToZ3::convert(e > eup, context));
         solver.add(GinacToZ3::convert(eup <= eup.subs(updateSubs), context));
@@ -163,8 +188,16 @@ LinearRule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedU
     GuardList newGuard = strengthenedGuard;
     newGuard.push_back(N >= validityBound);
     for (const Expression &ex : nonInvariants) {
-        newGuard.erase(std::find(newGuard.begin(), newGuard.end(), ex));
-        newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
+        if (Config::BackwardAccel::Criterion != Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic ||
+                std::find(eventualInvariants.begin(), eventualInvariants.end(), ex) == eventualInvariants.end()) {
+            newGuard.erase(std::find(newGuard.begin(), newGuard.end(), ex));
+            newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
+        }
+    }
+    if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic) {
+        for (const Expression &ex : eventualInvariants) {
+            newGuard.push_back(ex.lhs() < ex.lhs().subs(updateSubs));
+        }
     }
     LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(), iteratedUpdate);
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
@@ -247,7 +280,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
-    if (nonInvariants.empty() && Z3Toolbox::isValidImplication(rule.getGuard(), {rule.getCost() > 0})) {
+    if (nonInvariants.empty() && Z3Toolbox::isValidImplication(guard, {rule.getCost() > 0})) {
         return {{buildNontermRule()}, ForwardAcceleration::Success};
     }
 

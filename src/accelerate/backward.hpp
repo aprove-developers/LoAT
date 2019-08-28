@@ -96,8 +96,10 @@ private:
     GuardList simpleInvariants;
     GuardList conditionalInvariants;
     GuardList nonInvariants;
+    GuardList eventualInvariants;
     UpdateMap update;
     GiNaC::exmap updateSubs;
+    GuardList guard;
 };
 
 #endif /* BACKWARDACCELERATION_H */

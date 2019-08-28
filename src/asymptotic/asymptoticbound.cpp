@@ -1058,10 +1058,8 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
     asymptoticBound.createInitialLimitProblem();
     // first try the SMT encoding
-    debugTest("Trying smt encoding.");
     bool result = asymptoticBound.solveViaSMT(Complexity::Const);
     if (!result) {
-        debugTest("Trying limit calculus.");
         // Otherwise perform limit calculus
         asymptoticBound.propagateBounds();
         asymptoticBound.removeUnsatProblems();

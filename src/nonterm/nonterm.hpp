@@ -30,6 +30,14 @@ namespace nonterm {
 
         static option<std::pair<Rule, ForwardAcceleration::ResultKind>> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
 
+    private:
+
+        static option<Rule> checkRecurrentSet(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+
+        static option<Rule> checkEventualRecurrentSet(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+
+        static option<Rule> searchFixpoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+
     };
 
 }
