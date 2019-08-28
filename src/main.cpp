@@ -105,8 +105,6 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::Preprocessing = false;
         } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
             Config::Analysis::EnsureNonnegativeCosts = false;
-        } else if (strcmp("--no-limit-smt",argv[arg]) == 0) {
-            Config::Limit::UseSmtEncoding = false;
         } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
             Config::Analysis::ConstantCpxCheck = false;
         } else if (strcmp("--nonterm",argv[arg]) == 0) {
@@ -120,15 +118,6 @@ void parseFlags(int argc, char *argv[]) {
         }
     }
 }
-
-
-void setBenchmarkConfig(bool conditionalMeter, bool backAccel, bool recursion, bool limitSmt) {
-    Config::ForwardAccel::ConditionalMetering = conditionalMeter;
-    Config::Accel::UseBackwardAccel = backAccel;
-    Config::Limit::UseSmtEncoding = limitSmt;
-    allowRecursion = recursion;
-}
-
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
