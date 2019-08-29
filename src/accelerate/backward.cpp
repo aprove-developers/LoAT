@@ -65,8 +65,8 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                 continue;
             }
             // no simple invariant -- move the problematic constraint to conditionalInvariants and retry
-            simpleInvariants.erase(it);
             conditionalInvariants.push_back(*it);
+            simpleInvariants.erase(it);
             done = false;
             break;
         }
@@ -82,7 +82,7 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         done = true;
         solver.push();
         for (const Expression &ex: decreasing) {
-            solver.add(ex.toZ3(ctx));
+            solver.add(GinacToZ3::convert(ex.subs(updateSubs), ctx));
         }
         auto it = decreasing.begin();
         while (it != decreasing.end()) {
@@ -101,8 +101,8 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                 return false;
             }
             // otherwise, move the problematic constraint to eventuallyDecreasing
-            decreasing.erase(it);
             eventuallyDecreasing.push_back(*it);
+            decreasing.erase(it);
             done = false;
             solver.pop();
             break;
@@ -114,6 +114,9 @@ bool BackwardAcceleration::computeInvarianceSplit() {
     for (const Expression &ex: decreasing) {
         solver.add(ex.toZ3(ctx));
     }
+    for (const Expression &ex: conditionalInvariants) {
+        solver.add(ex.toZ3(ctx));
+    }
     do {
         done = true;
         solver.push();
@@ -123,7 +126,7 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         auto it = eventuallyDecreasing.begin();
         while (it != eventuallyDecreasing.end()) {
             solver.push();
-            const Expression &e = (*it).op(0);
+            const Expression &e = (*it).lhs();
             const Expression &eup = e.subs(updateSubs);
             // first check the strict version
             solver.add(GinacToZ3::convert(e > eup, ctx));
@@ -157,8 +160,8 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyDecreasing) {
                 return false;
             }
-            eventuallyDecreasing.erase(it);
             nonStrictEventualInvariants.push_back(*it);
+            eventuallyDecreasing.erase(it);
             done = false;
             solver.pop();
             break;
@@ -201,8 +204,8 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                 solver.add(GinacToZ3::convert(conclusion, ctx));
                 if (solver.check() == z3::check_result::unsat) {
                     solver.pop();
-                    it = nonStrictEventualInvariants.erase(it);
                     strictEventualInvariants.push_back(*it);
+                    it = nonStrictEventualInvariants.erase(it);
                     continue;
                 }
             }
@@ -210,6 +213,12 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         // the current constraint is not eventually increasing -- fail
         return false;
     }
+//    dumpList("simple invariants", simpleInvariants);
+//    dumpList("conditional invariants", conditionalInvariants);
+//    dumpList("decreasing", decreasing);
+//    dumpList("eventually decreasing", eventuallyDecreasing);
+//    dumpList("eventually increasing strict", strictEventualInvariants);
+//    dumpList("eventually increasing non-strict", nonStrictEventualInvariants);
     return true;
 }
 
