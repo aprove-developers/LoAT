@@ -27,11 +27,11 @@
 
 namespace nonterm {
 
-    option<std::pair<Rule, ForwardAcceleration::ResultKind>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<LinearRule, ForwardAcceleration::ResultKind>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         if (!Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
             return {};
         }
-        option<Rule> res = checkRecurrentSet(r, its, sink);
+        option<LinearRule> res = checkRecurrentSet(r, its, sink);
         if (res) {
             return {{res.get(), ForwardAcceleration::Success}};
         }
@@ -65,17 +65,17 @@ namespace nonterm {
         return {};
     }
 
-    option<Rule> NonTerm::checkRecurrentSet(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<LinearRule> NonTerm::checkRecurrentSet(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
             if (Z3Toolbox::isValidImplication(r.getGuard(), r.getGuard().subs(up))) {
-                return {Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {})};
+                return {LinearRule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {})};
             }
         }
         return {};
     }
 
-    option<Rule> NonTerm::checkEventualRecurrentSet(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<LinearRule> NonTerm::checkEventualRecurrentSet(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         GuardList todo;
         Z3Context ctx;
         Z3Solver solver(ctx);
@@ -120,13 +120,13 @@ namespace nonterm {
                 solver.pop();
             }
             if (diverges) {
-                return {Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {})};
+                return {LinearRule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {})};
             }
         }
         return {};
     }
 
-    option<Rule> NonTerm::searchFixpoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<LinearRule> NonTerm::searchFixpoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         Z3Context context;
         Z3Solver solver(context);
         for (const Expression &e: r.getGuard()) {
@@ -146,7 +146,7 @@ namespace nonterm {
                 for (const ExprSymbol &var: vars) {
                     newGuard.emplace_back(var == var.subs(up));
                 }
-                return {Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {})};
+                return {LinearRule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {})};
             }
             if (!r.isLinear()) {
                 solver.pop();

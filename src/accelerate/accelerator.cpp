@@ -165,14 +165,20 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             std::vector<LinearRule> accelRules;
-            if (Config::Accel::UseBackwardAccel) {
-                auto rules = Backward::accelerate(its, nestedRule, sinkLoc).res;
-                accelRules.insert(accelRules.end(), rules.begin(), rules.end());
-            } else {
-                assert(Config::Accel::UseForwardAccel);
-                auto rule = Forward::accelerateFast(its, nestedRule, sinkLoc);
-                if (rule) {
-                    accelRules.push_back(rule.get().rule.toLinear());
+            option<std::pair<LinearRule, ForwardAcceleration::ResultKind>> nontermRes = nonterm::NonTerm::apply(nestedRule, its, sinkLoc);
+            if (nontermRes) {
+                accelRules.push_back(nontermRes.get().first);
+            }
+            if (!nontermRes || nontermRes.get().second != ForwardAcceleration::Success) {
+                if (Config::Accel::UseBackwardAccel) {
+                    auto rules = Backward::accelerate(its, nestedRule, sinkLoc).res;
+                    accelRules.insert(accelRules.end(), rules.begin(), rules.end());
+                } else {
+                    assert(Config::Accel::UseForwardAccel);
+                    auto rule = Forward::accelerateFast(its, nestedRule, sinkLoc);
+                    if (rule) {
+                        accelRules.push_back(rule.get().rule.toLinear());
+                    }
                 }
             }
             bool success = false;
@@ -339,7 +345,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             continue;
         }
         // first try to prove non-termination
-        option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
+        option<std::pair<LinearRule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
         if (p) {
             rules.emplace_back("non-termination", p.get().first);
             if (unrestricted && p.get().second == Forward::Success) {
