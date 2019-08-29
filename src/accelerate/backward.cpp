@@ -94,8 +94,8 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                 solver.pop();
                 continue;
             }
-            // not monotonically decreasing -- if eventual monotonicity is disabled, give up
-            if (Config::BackwardAccel::Criterion != Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic) {
+            // not monotonically decreasing -- if eventual decreasingness is disabled, give up
+            if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::Monotonic) {
                 return false;
             }
             // otherwise, move the problematic constraint to eventuallyDecreasing
@@ -145,7 +145,10 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                     continue;
                 }
             }
-            // not eventually decreasing, move to eventualInvariants
+            // not eventually decreasing -- if eventual monotonicity is disabled, give up
+            if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyDecreasing) {
+                return false;
+            }
             eventuallyDecreasing.erase(it);
             nonStrictEventualInvariants.push_back(*it);
             done = false;

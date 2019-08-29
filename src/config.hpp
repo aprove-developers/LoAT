@@ -94,10 +94,10 @@ namespace Config {
         extern const bool Strengthen;
 
         enum MonototonicityCriterion {
-            Decreasing, Monotonic, EventuallyMonotonic
+            Monotonic, EventuallyDecreasing, EventuallyMonotonic
         };
 
-        extern const MonototonicityCriterion Criterion;
+        extern MonototonicityCriterion Criterion;
 
     }
 

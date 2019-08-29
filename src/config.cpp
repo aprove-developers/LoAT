@@ -157,7 +157,7 @@ namespace Config {
 
         const bool Strengthen = false;
 
-        const MonototonicityCriterion Criterion = MonototonicityCriterion::EventuallyMonotonic;
+        MonototonicityCriterion Criterion = MonototonicityCriterion::EventuallyMonotonic;
 
     }
 

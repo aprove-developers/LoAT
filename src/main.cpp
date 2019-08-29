@@ -43,23 +43,24 @@ bool allowRecursion = true;
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --timeout <sec>                        Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --proof-level <n>                      Detail level for proof output (0-3, default 2)" << endl;
+    cout << "  --timeout <sec>                                    Timeout (in seconds), minimum: 10" << endl;
+    cout << "  --proof-level <n>                                  Detail level for proof output (0-3, default 2)" << endl;
     cout << endl;
-    cout << "  --plain                                Disable colored output" << endl;
-    cout << "  --dot <file>                           Dump dot output to given file (only for non-recursive problems)" << endl;
-    cout << "  --stats                                Print some statistics about the performed steps" << endl;
-    cout << "  --timing                               Print information about time usage" << endl;
-    cout << "  --config                               Show configuration after handling command line flags" << endl;
-    cout << "  --timestamps                           Include time stamps in proof output" << endl;
-    cout << "  --print-simplified                     Print simplified program in the input format" << endl;
+    cout << "  --plain                                            Disable colored output" << endl;
+    cout << "  --dot <file>                                       Dump dot output to given file (only for non-recursive problems)" << endl;
+    cout << "  --stats                                            Print some statistics about the performed steps" << endl;
+    cout << "  --timing                                           Print information about time usage" << endl;
+    cout << "  --config                                           Show configuration after handling command line flags" << endl;
+    cout << "  --timestamps                                       Include time stamps in proof output" << endl;
+    cout << "  --print-simplified                                 Print simplified program in the input format" << endl;
     cout << endl;
-    cout << "  --allow-division                       Allow division in the input program (potentially unsound)" << endl;
-    cout << "  --no-cost-check                        Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing                     Don't try to simplify the program first (which involves SMT)" << endl;
-    cout << "  --no-limit-smt                         Don't use the SMT encoding for limit problems" << endl;
-    cout << "  --no-const-cpx                         Don't check for constant complexity (might improve performance)" << endl;
-    cout << "  --nonterm                              Just try to prove non-termination" << endl;
+    cout << "  --allow-division                                   Allow division in the input program (potentially unsound)" << endl;
+    cout << "  --no-cost-check                                    Don't check if costs are nonnegative (potentially unsound)" << endl;
+    cout << "  --no-preprocessing                                 Don't try to simplify the program first (which involves SMT)" << endl;
+    cout << "  --no-limit-smt                                     Don't use the SMT encoding for limit problems" << endl;
+    cout << "  --no-const-cpx                                     Don't check for constant complexity (might improve performance)" << endl;
+    cout << "  --nonterm                                          Just try to prove non-termination" << endl;
+    cout << "  --acceleration forward|backward|monotonic|ev-dec   use the given acceleration technique" << endl;
 }
 
 
@@ -109,9 +110,30 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::ConstantCpxCheck = false;
         } else if (strcmp("--nonterm",argv[arg]) == 0) {
             Config::Analysis::NonTermMode = true;
+        } else if (strcmp("--acceleration",argv[arg]) == 0) {
+            const char* mode = getNext();
+            if (strcmp("forward", mode) == 0) {
+                Config::Accel::UseForwardAccel = true;
+                Config::Accel::UseBackwardAccel = false;
+            } else if (strcmp("monotonic", mode) == 0) {
+                Config::Accel::UseForwardAccel = false;
+                Config::Accel::UseBackwardAccel = true;
+                Config::BackwardAccel::Criterion = Config::BackwardAccel::Monotonic;
+            } else if (strcmp("ev-dec", mode) == 0) {
+                Config::Accel::UseForwardAccel = false;
+                Config::Accel::UseBackwardAccel = true;
+                Config::BackwardAccel::Criterion = Config::BackwardAccel::EventuallyDecreasing;
+            } else if (strcmp("backward", mode) == 0) {
+                Config::Accel::UseForwardAccel = false;
+                Config::Accel::UseBackwardAccel = true;
+                Config::BackwardAccel::Criterion = Config::BackwardAccel::EventuallyMonotonic;
+            } else {
+                cout << "unknown acceleration technique " << mode << endl;
+                exit(1);
+            }
         } else {
             if (!filename.empty()) {
-                cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
+                cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;
                 exit(1);
             }
             filename = argv[arg];
