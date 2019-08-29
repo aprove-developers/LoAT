@@ -58,7 +58,7 @@ private:
      */
     bool checkMonotonicity() const;
 
-    bool checkEventualMonotonicity() const;
+    bool checkEventualMonotonicity();
 
     bool checkMonotonicDecreasingness() const;
 
