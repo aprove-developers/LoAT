@@ -88,11 +88,13 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         while (it != decreasing.end()) {
             solver.push();
             solver.add(GinacToZ3::convert(it->subs(updateSubs), ctx));
-            solver.add(GinacToZ3::convert(-it->lhs() + 1 > 0, ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                it++;
-                solver.pop();
-                continue;
+            if (solver.check() == z3::check_result::sat) {
+                solver.add(GinacToZ3::convert(-it->lhs() + 1 > 0, ctx));
+                if (solver.check() == z3::check_result::unsat) {
+                    it++;
+                    solver.pop();
+                    continue;
+                }
             }
             // not monotonically decreasing -- if eventual decreasingness is disabled, give up
             if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::Monotonic) {
@@ -126,11 +128,14 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             // first check the strict version
             solver.add(GinacToZ3::convert(e > eup, ctx));
             if (solver.check() == z3::check_result::sat) {
-                solver.add(GinacToZ3::convert(eup <= eup.subs(updateSubs), ctx));
-                if (solver.check() == z3::check_result::unsat) {
-                    it++;
-                    solver.pop();
-                    continue;
+                Expression conclusion = eup <= eup.subs(updateSubs);
+                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+                    solver.add(GinacToZ3::convert(conclusion, ctx));
+                    if (solver.check() == z3::check_result::unsat) {
+                        it++;
+                        solver.pop();
+                        continue;
+                    }
                 }
             }
             solver.pop();
@@ -138,11 +143,14 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             // checking the strict version failed, check the non-strict version
             solver.add(GinacToZ3::convert(e >= eup, ctx));
             if (solver.check() == z3::check_result::sat) {
-                solver.add(GinacToZ3::convert(eup < eup.subs(updateSubs), ctx));
-                if (solver.check() == z3::check_result::unsat) {
-                    it++;
-                    solver.pop();
-                    continue;
+                Expression conclusion = eup < eup.subs(updateSubs);
+                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+                    solver.add(GinacToZ3::convert(conclusion, ctx));
+                    if (solver.check() == z3::check_result::unsat) {
+                        it++;
+                        solver.pop();
+                        continue;
+                    }
                 }
             }
             // not eventually decreasing -- if eventual monotonicity is disabled, give up
@@ -172,11 +180,14 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         Expression pre = it->lhs() <= updated;
         solver.add(pre.toZ3(ctx));
         if (solver.check() == z3::check_result::sat) {
-            solver.add(GinacToZ3::convert(updated > updated.subs(updateSubs), ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                solver.pop();
-                it++;
-                continue;
+            Expression conclusion = updated > updated.subs(updateSubs);
+            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+                solver.add(GinacToZ3::convert(conclusion, ctx));
+                if (solver.check() == z3::check_result::unsat) {
+                    solver.pop();
+                    it++;
+                    continue;
+                }
             }
         }
         solver.pop();
@@ -185,12 +196,15 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         pre = it->lhs() < updated;
         solver.add(pre.toZ3(ctx));
         if (solver.check() == z3::check_result::sat) {
-            solver.add(GinacToZ3::convert(updated >= updated.subs(updateSubs), ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                solver.pop();
-                it = nonStrictEventualInvariants.erase(it);
-                strictEventualInvariants.push_back(*it);
-                continue;
+            Expression conclusion = updated >= updated.subs(updateSubs);
+            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+                solver.add(GinacToZ3::convert(conclusion, ctx));
+                if (solver.check() == z3::check_result::unsat) {
+                    solver.pop();
+                    it = nonStrictEventualInvariants.erase(it);
+                    strictEventualInvariants.push_back(*it);
+                    continue;
+                }
             }
         }
         // the current constraint is not eventually increasing -- fail
