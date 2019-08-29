@@ -155,7 +155,7 @@ namespace Config {
         // To avoid rule explosion, the propagation is only performed up to this number of upperbounds.
         const unsigned MaxUpperboundsForPropagation = 3;
 
-        const bool Strengthen = true;
+        const bool Strengthen = false;
 
         const MonototonicityCriterion Criterion = MonototonicityCriterion::EventuallyMonotonic;
 

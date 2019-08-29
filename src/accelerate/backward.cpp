@@ -164,7 +164,7 @@ bool BackwardAcceleration::computeInvarianceSplit() {
     auto it = nonStrictEventualInvariants.begin();
     while (it != nonStrictEventualInvariants.end()) {
         solver.push();
-        Expression updated = it->subs(updateSubs);
+        Expression updated = it->lhs().subs(updateSubs);
         // first check the non-strict version
         Expression pre = it->lhs() <= updated;
         solver.add(pre.toZ3(ctx));
@@ -193,12 +193,6 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         // the current constraint is not eventually increasing -- fail
         return false;
     }
-    dumpList("simple invariants", simpleInvariants);
-    dumpList("conditional invariants", conditionalInvariants);
-    dumpList("decreasing", decreasing);
-    dumpList("eventually decreasing", eventuallyDecreasing);
-    dumpList("non-strict eventual invariants", nonStrictEventualInvariants);
-    dumpList("strict eventual invariants", strictEventualInvariants);
     return true;
 }
 
