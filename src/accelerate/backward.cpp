@@ -1,3 +1,4 @@
+
 /*  This file is part of LoAT.
  *  Copyright (c) 2018-2019 Florian Frohn
  *
@@ -50,7 +51,7 @@ BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rul
 }
 
 bool BackwardAcceleration::computeInvarianceSplit() {
-    // find conditional invariants (temporarily stored in simpleInvariants)
+    // find conditional invariants (temporarily stored in simpleInvariants), store all other constraints in 'decreasing'
     decreasing = MeteringToolbox::reduceGuard(varMan, guard, {update}, &simpleInvariants);
     // check if simpleInvariants is a simple invariant
     bool done;
@@ -89,7 +90,7 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             solver.push();
             solver.add(GinacToZ3::convert(it->subs(updateSubs), ctx));
             if (solver.check() == z3::check_result::sat) {
-                solver.add(GinacToZ3::convert(-it->lhs() + 1 > 0, ctx));
+                solver.add(GinacToZ3::convert(it->lhs() <= 0, ctx));
                 if (solver.check() == z3::check_result::unsat) {
                     it++;
                     solver.pop();
