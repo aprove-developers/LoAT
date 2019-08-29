@@ -41,7 +41,7 @@ public:
 private:
     BackwardAcceleration(VarMan &varMan, const LinearRule &rule, const LocationIdx &sink);
 
-    void computeInvarianceSplit();
+    bool computeInvarianceSplit();
 
     /**
      * Main function, just calls the methods below in the correct order
@@ -54,22 +54,11 @@ private:
     bool shouldAccelerate() const;
 
     /**
-     * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
-     */
-    bool checkMonotonicity() const;
-
-    bool checkEventualMonotonicity();
-
-    bool checkMonotonicDecreasingness() const;
-
-    /**
      * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
      */
     LinearRule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
                               const GuardList &strengthenedGuard, const ExprSymbol &N,
                               const unsigned int validityBound) const;
-
-    LinearRule buildNontermRule() const;
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
@@ -95,8 +84,10 @@ private:
     const LocationIdx &sink;
     GuardList simpleInvariants;
     GuardList conditionalInvariants;
-    GuardList nonInvariants;
-    GuardList eventualInvariants;
+    GuardList strictEventualInvariants;
+    GuardList nonStrictEventualInvariants;
+    GuardList decreasing;
+    GuardList eventuallyDecreasing;
     UpdateMap update;
     GiNaC::exmap updateSubs;
     GuardList guard;

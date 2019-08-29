@@ -44,7 +44,7 @@ public:
      * If successful, returns true and modifies update and cost to represent update/cost after N iterations.
      * @return true iff both computations were successful
      */
-    static option<unsigned int> iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N);
+    static option<unsigned int> iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, const Expression &N, GuardList &restrictions);
 
     struct IteratedUpdates {
         const std::vector<UpdateMap> updates;

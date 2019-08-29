@@ -173,8 +173,8 @@ option<unsigned int> Recurrence::iterateRule(const VarMan &varMan, LinearRule &r
 }
 
 
-option<unsigned int> Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N) {
-    auto order = DependencyOrder::findOrderWithHeuristic(varMan, update, guard);
+option<unsigned int> Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, const Expression &N, GuardList &restrictions) {
+    auto order = DependencyOrder::findOrderWithHeuristic(varMan, update, restrictions);
     if (!order) {
         debugPurrs("iterateUpdateAndCost: failed to find a dependency order");
         return {};

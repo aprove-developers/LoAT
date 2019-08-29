@@ -47,11 +47,12 @@ BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rul
             guard.push_back(Relation::normalizeInequality(ex));
         }
     }
-    computeInvarianceSplit();
 }
 
-void BackwardAcceleration::computeInvarianceSplit() {
-    nonInvariants = MeteringToolbox::reduceGuard(varMan, guard, {update}, &simpleInvariants);
+bool BackwardAcceleration::computeInvarianceSplit() {
+    // find conditional invariants (temporarily stored in simpleInvariants)
+    decreasing = MeteringToolbox::reduceGuard(varMan, guard, {update}, &simpleInvariants);
+    // check if simpleInvariants is a simple invariant
     bool done;
     do {
         done = true;
@@ -61,154 +62,178 @@ void BackwardAcceleration::computeInvarianceSplit() {
             updated.push_back((*it).subs(updateSubs));
             if (Z3Toolbox::isValidImplication(simpleInvariants, updated)) {
                 it++;
-            } else {
-                simpleInvariants.erase(it);
-                conditionalInvariants.push_back(*it);
-                done = false;
-                break;
+                continue;
             }
-        }
-        if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic) {
-            GuardList todo;
-            Z3Context ctx;
-            Z3Solver solver(ctx);
-            for (const Expression &e: guard) {
-                solver.add(e.toZ3(ctx));
-            }
-            for (const Expression &ex: nonInvariants) {
-                solver.push();
-                Expression normalized = ex.lhs();
-                Expression normalizedUp = normalized.subs(updateSubs);
-                solver.add(Expression(normalized < normalizedUp).toZ3(ctx));
-                if (solver.check() == z3::check_result::sat) {
-                    solver.add(Expression(normalizedUp >= normalizedUp.subs(updateSubs)).toZ3(ctx));
-                    if (solver.check() == z3::check_result::unsat) {
-                        eventualInvariants.push_back(ex);
-                    }
-                }
-                solver.pop();
-            }
+            // no simple invariant -- move the problematic constraint to conditionalInvariants and retry
+            simpleInvariants.erase(it);
+            conditionalInvariants.push_back(*it);
+            done = false;
+            break;
         }
     } while (!done);
+    // from now on, we may assume that simpleInvariants always holds
+    Z3Context ctx;
+    Z3Solver solver(ctx);
+    for (const Expression &ex: simpleInvariants) {
+        solver.add(ex.toZ3(ctx));
+    }
+    // check if 'decreasing' is monotonically decreasing
+    do {
+        done = true;
+        solver.push();
+        for (const Expression &ex: decreasing) {
+            solver.add(ex.toZ3(ctx));
+        }
+        auto it = decreasing.begin();
+        while (it != decreasing.end()) {
+            solver.push();
+            solver.add(GinacToZ3::convert(it->subs(updateSubs), ctx));
+            solver.add(GinacToZ3::convert(-it->lhs() + 1 > 0, ctx));
+            if (solver.check() == z3::check_result::unsat) {
+                it++;
+                solver.pop();
+                continue;
+            }
+            // not monotonically decreasing -- if eventual monotonicity is disabled, give up
+            if (Config::BackwardAccel::Criterion != Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic) {
+                return false;
+            }
+            // otherwise, move the problematic constraint to eventuallyDecreasing
+            decreasing.erase(it);
+            eventuallyDecreasing.push_back(*it);
+            done = false;
+            solver.pop();
+            break;
+        }
+        solver.pop();
+    } while (!done);
+    // check if eventuallyDecreasing is eventually decreasing
+    // from now on, we may assume that 'decreasing' always holds
+    for (const Expression &ex: decreasing) {
+        solver.add(ex.toZ3(ctx));
+    }
+    do {
+        done = true;
+        solver.push();
+        for (const Expression &ex: eventuallyDecreasing) {
+            solver.add(ex.toZ3(ctx));
+        }
+        auto it = eventuallyDecreasing.begin();
+        while (it != eventuallyDecreasing.end()) {
+            solver.push();
+            const Expression &e = (*it).op(0);
+            const Expression &eup = e.subs(updateSubs);
+            // first check the strict version
+            solver.add(GinacToZ3::convert(e > eup, ctx));
+            if (solver.check() == z3::check_result::sat) {
+                solver.add(GinacToZ3::convert(eup <= eup.subs(updateSubs), ctx));
+                if (solver.check() == z3::check_result::unsat) {
+                    it++;
+                    solver.pop();
+                    continue;
+                }
+            }
+            solver.pop();
+            solver.push();
+            // checking the strict version failed, check the non-strict version
+            solver.add(GinacToZ3::convert(e >= eup, ctx));
+            if (solver.check() == z3::check_result::sat) {
+                solver.add(GinacToZ3::convert(eup < eup.subs(updateSubs), ctx));
+                if (solver.check() == z3::check_result::unsat) {
+                    it++;
+                    solver.pop();
+                    continue;
+                }
+            }
+            // not eventually decreasing, move to eventualInvariants
+            eventuallyDecreasing.erase(it);
+            nonStrictEventualInvariants.push_back(*it);
+            done = false;
+            solver.pop();
+            break;
+        }
+        solver.pop();
+    } while (!done);
+    // now all remaining constraints are in eventualInvariants and they have to be eventually invariant -- otherwise, acceleration fails
+    for (const Expression &e: eventuallyDecreasing) {
+        solver.add(e.toZ3(ctx));
+    }
+    for (const Expression &e: nonStrictEventualInvariants) {
+        solver.add(e.toZ3(ctx));
+    }
+    auto it = nonStrictEventualInvariants.begin();
+    while (it != nonStrictEventualInvariants.end()) {
+        solver.push();
+        Expression updated = it->subs(updateSubs);
+        // first check the non-strict version
+        Expression pre = it->lhs() <= updated;
+        solver.add(pre.toZ3(ctx));
+        if (solver.check() == z3::check_result::sat) {
+            solver.add(GinacToZ3::convert(updated > updated.subs(updateSubs), ctx));
+            if (solver.check() == z3::check_result::unsat) {
+                solver.pop();
+                it++;
+                continue;
+            }
+        }
+        solver.pop();
+        solver.push();
+        // checking the non-strict version failed, check the strict version
+        pre = it->lhs() < updated;
+        solver.add(pre.toZ3(ctx));
+        if (solver.check() == z3::check_result::sat) {
+            solver.add(GinacToZ3::convert(updated >= updated.subs(updateSubs), ctx));
+            if (solver.check() == z3::check_result::unsat) {
+                solver.pop();
+                it = nonStrictEventualInvariants.erase(it);
+                strictEventualInvariants.push_back(*it);
+                continue;
+            }
+        }
+        // the current constraint is not eventually increasing -- fail
+        return false;
+    }
     dumpList("simple invariants", simpleInvariants);
     dumpList("conditional invariants", conditionalInvariants);
-    dumpList("non-invariants", nonInvariants);
-    dumpList("eventual invariants", eventualInvariants);
+    dumpList("decreasing", decreasing);
+    dumpList("eventually decreasing", eventuallyDecreasing);
+    dumpList("non-strict eventual invariants", nonStrictEventualInvariants);
+    dumpList("strict eventual invariants", strictEventualInvariants);
+    return true;
 }
 
 bool BackwardAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
 }
 
-bool BackwardAcceleration::checkMonotonicDecreasingness() const {
-    Z3Context context;
-    Z3Solver solver(context);
-    z3::expr_vector rhss(context);
-
-    for (const Expression &ex : guard) {
-        solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
-        rhss.push_back(GinacToZ3::convert(ex, context));
-    }
-    if (solver.check() != z3::sat) {
-        return false;
-    }
-    solver.add(!z3::mk_and(rhss));
-    if (solver.check() != z3::unsat) {
-        return false;
-    }
-    return true;
-}
-
-bool BackwardAcceleration::checkMonotonicity() const {
-    Z3Context context;
-    Z3Solver solver(context);
-    z3::expr_vector rhss(context);
-
-    for (const Expression &ex : simpleInvariants) {
-        solver.add(GinacToZ3::convert(ex, context));
-    }
-
-    for (const Expression &ex : nonInvariants) {
-        solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
-        rhss.push_back(GinacToZ3::convert(ex, context));
-    }
-    if (solver.check() != z3::sat) {
-        return false;
-    }
-    solver.add(!z3::mk_and(rhss));
-    if (solver.check() != z3::unsat) {
-        return false;
-    }
-    return true;
-}
-
-bool BackwardAcceleration::checkEventualMonotonicity() {
-    Z3Context context;
-    Z3Solver solver(context);
-    z3::expr_vector rhss(context);
-
-    for (const Expression &ex : simpleInvariants) {
-        solver.add(GinacToZ3::convert(ex, context));
-    }
-
-    GuardList todo;
-    for (const Expression &ex : nonInvariants) {
-        solver.add(GinacToZ3::convert(ex.subs(updateSubs), context));
-        todo.push_back(ex);
-    }
-    if (solver.check() != z3::sat) {
-        return false;
-    }
-    for (const Expression &ex : todo) {
-        solver.push();
-        const Expression &e = ex.op(0);
-        const Expression &eup = e.subs(updateSubs);
-        solver.add(GinacToZ3::convert(e > eup, context));
-        solver.add(GinacToZ3::convert(eup <= eup.subs(updateSubs), context));
-        rhss.push_back(GinacToZ3::convert(ex, context));
-        const auto &pos = std::find(eventualInvariants.begin(), eventualInvariants.end(), ex);
-        if (solver.check() != z3::unsat) {
-            if (pos == eventualInvariants.end()) {
-                return false;
-            }
-        } else if (pos != eventualInvariants.end()) {
-            eventualInvariants.erase(pos);
-        }
-        solver.pop();
-    }
-    return true;
-}
-
-LinearRule BackwardAcceleration::buildNontermRule() const {
-    LinearRule res(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
-    debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
-    return std::move(res);
-}
-
 LinearRule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
                                                 const Expression &iteratedCost,
-                                                const GuardList &strengthenedGuard,
+                                                const GuardList &restrictions,
                                                 const ExprSymbol &N,
                                                 const unsigned int validityBound) const
 {
     assert(validityBound <= 1);
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
-    GuardList newGuard = strengthenedGuard;
+    GuardList newGuard = restrictions;
     newGuard.push_back(N >= validityBound);
-    for (const Expression &ex : nonInvariants) {
-        if (Config::BackwardAccel::Criterion != Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic ||
-                std::find(eventualInvariants.begin(), eventualInvariants.end(), ex) == eventualInvariants.end()) {
-            auto pos = std::find(newGuard.begin(), newGuard.end(), ex);
-            if (pos != newGuard.end()) {
-                newGuard.erase(pos);
-            }
-            newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
-        }
+    for (const Expression &ex : simpleInvariants) {
+        newGuard.push_back(ex);
     }
-    if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic) {
-        for (const Expression &ex : eventualInvariants) {
-            newGuard.push_back(ex.lhs() < ex.lhs().subs(updateSubs));
-        }
+    for (const Expression &ex : conditionalInvariants) {
+        newGuard.push_back(ex);
+    }
+    for (const Expression &ex : decreasing) {
+        newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
+    }
+    for (const Expression &ex : eventuallyDecreasing) {
+        newGuard.push_back(ex);
+        newGuard.push_back(ex.subs(updateSubs).subs(N == N-1));
+    }
+    for (const Expression &ex : nonStrictEventualInvariants) {
+        newGuard.push_back(ex.lhs() <= ex.lhs().subs(updateSubs));
+    }
+    for (const Expression &ex : strictEventualInvariants) {
+        newGuard.push_back(ex.lhs() < ex.lhs().subs(updateSubs));
     }
     LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(), iteratedUpdate);
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
@@ -291,24 +316,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
 
-    if (nonInvariants.empty() && Z3Toolbox::isValidImplication(guard, {rule.getCost() > 0})) {
-        return {{buildNontermRule()}, ForwardAcceleration::Success};
-    }
-
-    bool applicable = false;
-    switch (Config::BackwardAccel::Criterion) {
-        case Config::BackwardAccel::MonototonicityCriterion::Decreasing:
-            applicable = checkMonotonicDecreasingness();
-            break;
-        case Config::BackwardAccel::MonototonicityCriterion::Monotonic:
-            applicable = checkMonotonicity();
-            break;
-        case Config::BackwardAccel::MonototonicityCriterion::EventuallyMonotonic:
-            applicable = checkEventualMonotonicity();
-            break;
-        default:
-            break;
-    }
+    bool applicable = computeInvarianceSplit();
     if (!applicable) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
@@ -322,8 +330,8 @@ Self::AccelerationResult BackwardAcceleration::run() {
     option<unsigned int> validityBound;
     UpdateMap iteratedUpdate = rule.getUpdate();
     Expression iteratedCost = rule.getCost();
-    GuardList strengthenedGuard = guard;
-    validityBound = Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, strengthenedGuard, N);
+    GuardList restrictions;
+    validityBound = Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N, restrictions);
     if (!validityBound) {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
@@ -331,7 +339,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
 
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-    accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, strengthenedGuard, N, validityBound.get());
+    accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, restrictions, N, validityBound.get());
     Stats::add(Stats::BackwardSuccess);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
         return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};
