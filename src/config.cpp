@@ -236,6 +236,8 @@ namespace Config {
         bool AsymptoticCheck = true;
 
         bool NonTermMode = false;
+
+        std::string ExtractLoops = "";
     }
 
 }

@@ -139,6 +139,7 @@ namespace Config {
         extern bool ConstantCpxCheck;
         extern bool AsymptoticCheck; // must be enabled for soundness!
         extern bool NonTermMode;
+        extern std::string ExtractLoops;
     }
 
     /**

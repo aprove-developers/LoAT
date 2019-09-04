@@ -162,6 +162,8 @@ private:
     void setupDotOutput();
     void finalizeDotOutput(const RuntimeResult &runtime);
 
+    void extractLoops(const std::string &dir);
+
 private:
     ITSProblem &its;
 

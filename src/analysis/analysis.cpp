@@ -36,6 +36,7 @@
 
 #include "../merging/rulemerger.hpp"
 
+#include <sys/time.h>
 
 using namespace std;
 
@@ -111,6 +112,10 @@ RuntimeResult Analysis::run() {
         if (Timeout::preprocessing()) {
             debugWarn("Timeout for pre-processing exceeded!");
         }
+    }
+
+    if (!Config::Analysis::ExtractLoops.empty()) {
+        extractLoops(Config::Analysis::ExtractLoops);
     }
 
     // We cannot prove any lower bound for an empty ITS
@@ -262,6 +267,68 @@ done:
     return runtime;
 }
 
+void Analysis::extractLoops(const std::string &dir) {
+
+    chainLinearPaths();
+    chainTreePaths();
+
+    ofstream file;
+    for (const LocationIdx &l: its.getLocations()) {
+        for (const TransIdx &i: its.getTransitionsFromTo(l, l)) {
+            const Rule &r = its.getRule(i);
+            ITSProblem loop;
+            const LocationIdx &start = loop.addNamedLocation("start");
+            loop.setInitialLocation(start);
+            GuardList expressions(r.getGuard());
+            UpdateMap up = r.getUpdate(0);
+            for (const auto &p: up) {
+                expressions.push_back(p.second);
+            }
+            ExprSymbolSet oldVars;
+            expressions.collectVariables(oldVars);
+            GiNaC::exmap subs;
+            for (const ExprSymbol &e: oldVars) {
+                const VariableIdx &i = loop.addFreshVariable("x");
+                subs[e] = loop.getVarSymbol(i);
+            }
+            UpdateMap newUp;
+            for (const ExprSymbol &e: oldVars) {
+                const VariableIdx &i = its.getVarIdx(e);
+                const ExprSymbol &newE = Expression(e.subs(subs)).getAVariable();
+                if (up.find(i) != up.end()) {
+                    const Expression &rhs = up[i].subs(subs);
+                    newUp.insert({loop.getVarIdx(newE), rhs.normal()});
+                } else {
+                    newUp.insert({loop.getVarIdx(newE), newE});
+                }
+            }
+            const LocationIdx &f = loop.addNamedLocation("f");
+            GuardList newGuard;
+            for (const Expression &ex: r.getGuard()) {
+                newGuard.push_back(ex.subs(subs).normal());
+            }
+            Rule newRule(f, newGuard, Expression(1), f, newUp);
+            loop.addRule(newRule);
+            UpdateMap id;
+            for (const ExprSymbol &e: oldVars) {
+                const ExprSymbol &newE = Expression(e.subs(subs)).getAVariable();
+                id.insert({loop.getVarIdx(newE), newE});
+            }
+            GuardList empty;
+            Rule initialRule(start, empty, Expression(0), f, id);
+            loop.addRule(initialRule);
+            struct timeval tp;
+            gettimeofday(&tp, NULL);
+            long int ms = tp.tv_sec * 1000000 + tp.tv_usec;
+            stringstream ss;
+            ss << dir << ms << ".koat";
+            file.open(ss.str());
+            ITSExport::printKoAT(loop, file);
+            file.close();
+        }
+    }
+    exit(0);
+}
 
 // ############################
 // ## Preprocessing, Output  ##
