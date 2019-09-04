@@ -328,30 +328,30 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     bool unrestrictedNonTerm = false;
     do {
         LinearRule r = todo.top();
-        bool sat = Z3Toolbox::checkAll(r.getGuard()) == z3::sat;
-        if (sat && r.getCost().isNontermSymbol()) {
-            todo.pop();
-            if (!status) {
-                status = Forward::Success;
-                unrestrictedNonTerm = true;
-            }
-            continue;
-        } else if (!sat) {
-            todo.pop();
-            if (!status) {
-                status = Forward::NonMonotonic;
-                unrestricted = false;
-            }
-            continue;
-        }
+//        bool sat = Z3Toolbox::checkAll(r.getGuard()) == z3::sat;
+//        if (sat && r.getCost().isNontermSymbol()) {
+//            todo.pop();
+//            if (!status) {
+//                status = Forward::Success;
+//                unrestrictedNonTerm = true;
+//            }
+//            continue;
+//        } else if (!sat) {
+//            todo.pop();
+//            if (!status) {
+//                status = Forward::NonMonotonic;
+//                unrestricted = false;
+//            }
+//            continue;
+//        }
         // first try to prove non-termination
-        option<std::pair<LinearRule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
-        if (p) {
-            rules.emplace_back("non-termination", p.get().first);
-            if (unrestricted && p.get().second == Forward::Success) {
-                unrestrictedNonTerm = true;
-            }
-        }
+//        option<std::pair<LinearRule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
+//        if (p) {
+//            rules.emplace_back("non-termination", p.get().first);
+//            if (unrestricted && p.get().second == Forward::Success) {
+//                unrestrictedNonTerm = true;
+//            }
+//        }
         todo.pop();
         if (!unrestrictedNonTerm) {
             BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);

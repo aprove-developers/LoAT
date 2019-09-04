@@ -133,14 +133,14 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             solver.add(GinacToZ3::convert(e > eup, ctx));
             if (solver.check() == z3::check_result::sat) {
                 Expression conclusion = eup <= eup.subs(updateSubs);
-                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+//                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
                     solver.add(GinacToZ3::convert(conclusion, ctx));
                     if (solver.check() == z3::check_result::unsat) {
                         it++;
                         solver.pop();
                         continue;
                     }
-                }
+//                }
             }
             solver.pop();
             solver.push();
@@ -148,14 +148,14 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             solver.add(GinacToZ3::convert(e >= eup, ctx));
             if (solver.check() == z3::check_result::sat) {
                 Expression conclusion = eup < eup.subs(updateSubs);
-                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+//                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
                     solver.add(GinacToZ3::convert(conclusion, ctx));
                     if (solver.check() == z3::check_result::unsat) {
                         it++;
                         solver.pop();
                         continue;
                     }
-                }
+//                }
             }
             // not eventually decreasing -- if eventual monotonicity is disabled, give up
             if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyDecreasing) {
@@ -185,14 +185,14 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         solver.add(pre.toZ3(ctx));
         if (solver.check() == z3::check_result::sat) {
             Expression conclusion = updated > updated.subs(updateSubs);
-            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+//            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
                 solver.add(GinacToZ3::convert(conclusion, ctx));
                 if (solver.check() == z3::check_result::unsat) {
                     solver.pop();
                     it++;
                     continue;
                 }
-            }
+//            }
         }
         solver.pop();
         solver.push();
@@ -201,7 +201,7 @@ bool BackwardAcceleration::computeInvarianceSplit() {
         solver.add(pre.toZ3(ctx));
         if (solver.check() == z3::check_result::sat) {
             Expression conclusion = updated >= updated.subs(updateSubs);
-            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
+//            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
                 solver.add(GinacToZ3::convert(conclusion, ctx));
                 if (solver.check() == z3::check_result::unsat) {
                     solver.pop();
@@ -209,7 +209,7 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                     it = nonStrictEventualInvariants.erase(it);
                     continue;
                 }
-            }
+//            }
         }
         // the current constraint is not eventually increasing -- fail
         return false;
@@ -333,6 +333,8 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
+        cout << "NO" << endl;
+        exit(1);
         return {{}, ForwardAcceleration::NotSupported};
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
@@ -341,6 +343,8 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (!applicable) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
+        cout << "NO" << endl;
+        exit(1);
         return {{}, ForwardAcceleration::NonMonotonic};
     }
 
@@ -356,12 +360,16 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (!validityBound) {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
+        cout << "NO" << endl;
+        exit(1);
         return {{}, ForwardAcceleration::NoClosedFrom};
     }
 
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
     accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, restrictions, N, validityBound.get());
     Stats::add(Stats::BackwardSuccess);
+    cout << "YES" << endl;
+    exit(1);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
         return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};
     } else {

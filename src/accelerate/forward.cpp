@@ -200,6 +200,12 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
     // Try to find a metering function without any heuristics
     option<VariablePair> conflictVar;
     Result res = meterAndIterate(varMan, rule, sink, conflictVar);
+    if (res.result == Success) {
+        cout << "YES" << endl;
+    } else {
+        cout << "NO" << endl;
+    }
+    exit(0);
     if (res.result != NoMetering) {
         return res; // either successful or there is no point in applying heuristics
     }

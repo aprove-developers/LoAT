@@ -109,7 +109,7 @@ namespace Config {
         // Whether to perform linearization if the guard/update has nonlinear arithmetic.
         // This can help to still infer a linear metering function (linear in the substituted variables).
         // Disabling is mostly relevant for benchmarking (this is not described in the paper) and for debugging.
-        bool AllowLinearization = true;
+        bool AllowLinearization = false;
 
         // Whether to allow conditional metering functions.
         // Note that we always allow to reduce the guard (drop constraints irrelevant for termination).
@@ -121,7 +121,7 @@ namespace Config {
 
         // Instantiate temp vars by all possible bounds found in the guard if metering failed?
         // We currently try to instantiate all at the same time, so this can be expensive.
-        bool TempVarInstantiation = true;
+        bool TempVarInstantiation = false;
 
         // The maximum number of bounds that are tried for a single free variable
         // when instantiating temporary variables (this limit is there to prevent exponential complexity).
@@ -129,12 +129,12 @@ namespace Config {
 
         // Heuristic to workaround missing min(A,B), e.g. for "X <= A && X <= B".
         // The heuristic adds "A >= B" or "A <= B" to the guard, which allows finding a metering function.
-        bool ConflictVarHeuristic = true;
+        bool ConflictVarHeuristic = false;
 
         // Heuristic to workaround updates like "A := 0" or "A := free" (update rhs has no updated variable).
         // We often fail to find a metering function. The heuristic propagates "A/0" or "A/free" to the guard
         // by extending the guard. This restricts the rule, but might allow us to find a metering function.
-        bool ConstantUpdateHeuristic = true;
+        bool ConstantUpdateHeuristic = false;
 
         // If true, iterated update/cost are computed for a fresh variable "tv"
         // and the constraint "0 < tv <= meter" is added to the guard (as in the paper).
@@ -157,7 +157,7 @@ namespace Config {
 
         const bool Strengthen = false;
 
-        MonototonicityCriterion Criterion = MonototonicityCriterion::EventuallyMonotonic;
+        MonototonicityCriterion Criterion = MonototonicityCriterion::Monotonic;
 
     }
 
@@ -173,13 +173,13 @@ namespace Config {
         // If true, tries to nest parallel rules. Nesting means that one iteration of the "outer"
         // loop is followed by a full execution of the "inner" loop. This is a simple application
         // of chaining combined with acceleration, but is not described in the paper.
-        bool TryNesting = true;
+        bool TryNesting = false;
 
         // Whether to use the backward acceleration.
         // Even if enabled, backward acceleration is only used if forward acceleration fails.
-        bool UseBackwardAccel = true;
+        bool UseBackwardAccel = false;
 
-        bool UseForwardAccel = false;
+        bool UseForwardAccel = true;
     }
 
     // Chaining and chaining strategies
@@ -228,7 +228,7 @@ namespace Config {
         // If disabled, Omega(0) is reported if no non-constant complexity can be inferred.
         // If enabled, a heuristic is used that only checks initial rules to prove Omega(1).
         // Involves SMT queries and can impact performance (even if a higher complexity is inferred).
-        bool ConstantCpxCheck = true;
+        bool ConstantCpxCheck = false;
 
         // Whether to enable the asymptotic complexity computation at all.
         // NOTE: It is not sound to disable this (only intended for testing!)
