@@ -343,7 +343,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (!applicable) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
-        cout << "NO" << endl;
+        cout << "NO monotonicity" << endl;
         exit(1);
         return {{}, ForwardAcceleration::NonMonotonic};
     }
@@ -360,7 +360,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (!validityBound) {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
-        cout << "NO" << endl;
+        cout << "NO closed form" << endl;
         exit(1);
         return {{}, ForwardAcceleration::NoClosedFrom};
     }
