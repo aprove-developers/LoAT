@@ -60,7 +60,7 @@ void printHelp(char *arg0) {
     cout << "  --no-limit-smt                                     Don't use the SMT encoding for limit problems" << endl;
     cout << "  --no-const-cpx                                     Don't check for constant complexity (might improve performance)" << endl;
     cout << "  --nonterm                                          Just try to prove non-termination" << endl;
-    cout << "  --acceleration forward|backward|monotonic|ev-dec   use the given acceleration technique" << endl;
+    cout << "  --acceleration metering|three-way|calculus         use the given acceleration technique" << endl;
 }
 
 
@@ -112,21 +112,18 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::NonTermMode = true;
         } else if (strcmp("--acceleration",argv[arg]) == 0) {
             const char* mode = getNext();
-            if (strcmp("forward", mode) == 0) {
+            if (strcmp("metering", mode) == 0) {
                 Config::Accel::UseForwardAccel = true;
                 Config::Accel::UseBackwardAccel = false;
-            } else if (strcmp("monotonic", mode) == 0) {
+                Config::Accel::UseAccelerationCalculus = false;
+            } else if (strcmp("three-way", mode) == 0) {
                 Config::Accel::UseForwardAccel = false;
                 Config::Accel::UseBackwardAccel = true;
-                Config::BackwardAccel::Criterion = Config::BackwardAccel::Monotonic;
-            } else if (strcmp("ev-dec", mode) == 0) {
+                Config::Accel::UseAccelerationCalculus = false;
+            } else if (strcmp("calculus", mode) == 0) {
                 Config::Accel::UseForwardAccel = false;
-                Config::Accel::UseBackwardAccel = true;
-                Config::BackwardAccel::Criterion = Config::BackwardAccel::EventuallyDecreasing;
-            } else if (strcmp("backward", mode) == 0) {
-                Config::Accel::UseForwardAccel = false;
-                Config::Accel::UseBackwardAccel = true;
-                Config::BackwardAccel::Criterion = Config::BackwardAccel::EventuallyMonotonic;
+                Config::Accel::UseBackwardAccel = false;
+                Config::Accel::UseAccelerationCalculus = true;
             } else {
                 cout << "unknown acceleration technique " << mode << endl;
                 exit(1);

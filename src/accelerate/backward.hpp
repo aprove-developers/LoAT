@@ -84,10 +84,7 @@ private:
     const LocationIdx &sink;
     GuardList simpleInvariants;
     GuardList conditionalInvariants;
-    GuardList strictEventualInvariants;
-    GuardList nonStrictEventualInvariants;
     GuardList decreasing;
-    GuardList eventuallyDecreasing;
     UpdateMap update;
     GiNaC::exmap updateSubs;
     GuardList guard;

@@ -101,125 +101,10 @@ bool BackwardAcceleration::computeInvarianceSplit() {
             if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::Monotonic) {
                 return false;
             }
-            // otherwise, move the problematic constraint to eventuallyDecreasing
-            eventuallyDecreasing.push_back(*it);
-            decreasing.erase(it);
-            done = false;
-            solver.pop();
-            break;
+            return false;
         }
         solver.pop();
     } while (!done);
-    // check if eventuallyDecreasing is eventually decreasing
-    // from now on, we may assume that 'decreasing' always holds
-    for (const Expression &ex: decreasing) {
-        solver.add(ex.toZ3(ctx));
-    }
-    for (const Expression &ex: conditionalInvariants) {
-        solver.add(ex.toZ3(ctx));
-    }
-    do {
-        done = true;
-        solver.push();
-        for (const Expression &ex: eventuallyDecreasing) {
-            solver.add(ex.toZ3(ctx));
-        }
-        auto it = eventuallyDecreasing.begin();
-        while (it != eventuallyDecreasing.end()) {
-            solver.push();
-            const Expression &e = (*it).lhs();
-            const Expression &eup = e.subs(updateSubs);
-            // first check the strict version
-            solver.add(GinacToZ3::convert(e > eup, ctx));
-            if (solver.check() == z3::check_result::sat) {
-                Expression conclusion = eup <= eup.subs(updateSubs);
-//                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
-                    solver.add(GinacToZ3::convert(conclusion, ctx));
-                    if (solver.check() == z3::check_result::unsat) {
-                        it++;
-                        solver.pop();
-                        continue;
-                    }
-//                }
-            }
-            solver.pop();
-            solver.push();
-            // checking the strict version failed, check the non-strict version
-            solver.add(GinacToZ3::convert(e >= eup, ctx));
-            if (solver.check() == z3::check_result::sat) {
-                Expression conclusion = eup < eup.subs(updateSubs);
-//                if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
-                    solver.add(GinacToZ3::convert(conclusion, ctx));
-                    if (solver.check() == z3::check_result::unsat) {
-                        it++;
-                        solver.pop();
-                        continue;
-                    }
-//                }
-            }
-            // not eventually decreasing -- if eventual monotonicity is disabled, give up
-            if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::EventuallyDecreasing) {
-                return false;
-            }
-            nonStrictEventualInvariants.push_back(*it);
-            eventuallyDecreasing.erase(it);
-            done = false;
-            solver.pop();
-            break;
-        }
-        solver.pop();
-    } while (!done);
-    // now all remaining constraints are in eventualInvariants and they have to be eventually invariant -- otherwise, acceleration fails
-    for (const Expression &e: eventuallyDecreasing) {
-        solver.add(e.toZ3(ctx));
-    }
-    for (const Expression &e: nonStrictEventualInvariants) {
-        solver.add(e.toZ3(ctx));
-    }
-    auto it = nonStrictEventualInvariants.begin();
-    while (it != nonStrictEventualInvariants.end()) {
-        solver.push();
-        Expression updated = it->lhs().subs(updateSubs);
-        // first check the non-strict version
-        Expression pre = it->lhs() <= updated;
-        solver.add(pre.toZ3(ctx));
-        if (solver.check() == z3::check_result::sat) {
-            Expression conclusion = updated > updated.subs(updateSubs);
-//            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
-                solver.add(GinacToZ3::convert(conclusion, ctx));
-                if (solver.check() == z3::check_result::unsat) {
-                    solver.pop();
-                    it++;
-                    continue;
-                }
-//            }
-        }
-        solver.pop();
-        solver.push();
-        // checking the non-strict version failed, check the strict version
-        pre = it->lhs() < updated;
-        solver.add(pre.toZ3(ctx));
-        if (solver.check() == z3::check_result::sat) {
-            Expression conclusion = updated >= updated.subs(updateSubs);
-//            if (Z3Toolbox::checkAll({conclusion}) == z3::check_result::sat) {
-                solver.add(GinacToZ3::convert(conclusion, ctx));
-                if (solver.check() == z3::check_result::unsat) {
-                    solver.pop();
-                    strictEventualInvariants.push_back(*it);
-                    it = nonStrictEventualInvariants.erase(it);
-                    continue;
-                }
-//            }
-        }
-        // the current constraint is not eventually increasing -- fail
-        return false;
-    }
-//    dumpList("simple invariants", simpleInvariants);
-//    dumpList("conditional invariants", conditionalInvariants);
-//    dumpList("decreasing", decreasing);
-//    dumpList("eventually decreasing", eventuallyDecreasing);
-//    dumpList("eventually increasing strict", strictEventualInvariants);
-//    dumpList("eventually increasing non-strict", nonStrictEventualInvariants);
     return true;
 }
 
@@ -245,16 +130,6 @@ LinearRule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedU
     }
     for (const Expression &ex : decreasing) {
         newGuard.push_back(ex.subs(updateSubs).subs(N == N-1)); // apply the update N-1 times
-    }
-    for (const Expression &ex : eventuallyDecreasing) {
-        newGuard.push_back(ex);
-        newGuard.push_back(ex.subs(updateSubs).subs(N == N-1));
-    }
-    for (const Expression &ex : nonStrictEventualInvariants) {
-        newGuard.push_back(ex.lhs() <= ex.lhs().subs(updateSubs));
-    }
-    for (const Expression &ex : strictEventualInvariants) {
-        newGuard.push_back(ex.lhs() < ex.lhs().subs(updateSubs));
     }
     LinearRule res(rule.getLhsLoc(), newGuard, iteratedCost, rule.getRhsLoc(), iteratedUpdate);
     debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
@@ -333,8 +208,6 @@ vector<LinearRule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
-        cout << "NO" << endl;
-        exit(1);
         return {{}, ForwardAcceleration::NotSupported};
     }
     debugBackwardAccel("Trying to accelerate rule " << rule);
@@ -343,8 +216,6 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (!applicable) {
         debugBackwardAccel("Failed to check guard implication");
         Stats::add(Stats::BackwardNonMonotonic);
-        cout << "NO monotonicity" << endl;
-        exit(1);
         return {{}, ForwardAcceleration::NonMonotonic};
     }
 
@@ -357,19 +228,15 @@ Self::AccelerationResult BackwardAcceleration::run() {
     Expression iteratedCost = rule.getCost();
     GuardList restrictions;
     validityBound = Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N, restrictions);
-    if (!validityBound) {
+    if (!validityBound || validityBound.get() > 0) {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
-        cout << "NO closed form" << endl;
-        exit(1);
         return {{}, ForwardAcceleration::NoClosedFrom};
     }
 
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
     accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, restrictions, N, validityBound.get());
     Stats::add(Stats::BackwardSuccess);
-    cout << "YES" << endl;
-    exit(1);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
         return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};
     } else {

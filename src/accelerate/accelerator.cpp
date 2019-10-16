@@ -302,93 +302,46 @@ unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
 const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
-    stack<LinearRule> todo;
-    todo.push(rule);
-    bool unrestricted = true;
-    bool unrestrictedNonTerm = false;
-    do {
-        LinearRule r = todo.top();
-//        bool sat = Z3Toolbox::checkAll(r.getGuard()) == z3::sat;
-//        if (sat && r.getCost().isNontermSymbol()) {
-//            todo.pop();
-//            if (!status) {
-//                status = Forward::Success;
-//                unrestrictedNonTerm = true;
-//            }
-//            continue;
-//        } else if (!sat) {
-//            todo.pop();
-//            if (!status) {
-//                status = Forward::NonMonotonic;
-//                unrestricted = false;
-//            }
-//            continue;
-//        }
-        // first try to prove non-termination
-//        option<std::pair<LinearRule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
-//        if (p) {
-//            rules.emplace_back("non-termination", p.get().first);
-//            if (unrestricted && p.get().second == Forward::Success) {
-//                unrestrictedNonTerm = true;
-//            }
-//        }
-        todo.pop();
-        if (!unrestrictedNonTerm) {
-            BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
-            // if backwards acceleration is not supported, we can only hope to prove non-termination
-            // for proving non-termination, only invariance is of interest
-            // store the result for the original rule so that we can return it if we fail
-            if (!status) {
-                status = res.status;
-                if (status.get() != Forward::Success) {
-                    unrestricted = false;
-                }
-            }
-            if (res.res.empty()) {
-                if (Config::BackwardAccel::Strengthen) {
-                    vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-                    for (const LinearRule &sr: strengthened) {
-                        debugBackwardAccel("invariant inference yields " << sr);
-                        todo.push(sr);
-                    }
-                }
-            } else {
-                for (const LinearRule &ar: res.res) {
-                    rules.emplace_back("backward acceleration", ar);
-                }
-            }
-        }
-    } while (!todo.empty());
-    if (!rules.empty()) {
-        status = unrestrictedNonTerm || unrestricted ? Forward::Success : Forward::SuccessWithRestriction;
+    BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, rule, sinkLoc);
+    // if backwards acceleration is not supported, we can only hope to prove non-termination
+    // for proving non-termination, only invariance is of interest
+    // store the result for the original rule so that we can return it if we fail
+    status = res.status;
+    for (const LinearRule &ar: res.res) {
+        rules.emplace_back("backward acceleration", ar);
     }
     return {status.get(), rules};
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
-//    return Forward::accelerate(its, rule, sinkLoc);
-//    return strengthenAndAccelerate(chain(rule.toLinear()));
-    option<AccelerationProblem> ap = AccelerationCalculus::init(rule.toLinear(), its);
-    if (!ap) {
-        return {Forward::NoClosedFrom, {}};
-    }
-    option<AccelerationProblem> res = AccelerationCalculus::solve(ap.get());
-    if (!res) {
-        return {Forward::NonMonotonic, {}};
+    if (Config::Accel::UseForwardAccel) {
+        return Forward::accelerate(its, rule, sinkLoc);
+    } else if (Config::Accel::UseBackwardAccel) {
+        return strengthenAndAccelerate(chain(rule.toLinear()));
     } else {
-        UpdateMap up;
-        for (const auto &e: res.get().closed) {
-            up[its.getVarIdx(Expression(e.first).getAVariable())] = e.second;
+        assert(Config::Accel::UseAccelerationCalculus);
+        option<AccelerationProblem> ap = AccelerationCalculus::init(rule.toLinear(), its);
+        if (!ap) {
+            return {Forward::NoClosedFrom, {}};
         }
-        Forward::Result result;
-        LinearRule accelerated(rule.getLhs().getLoc(), res.get().res, Expression(1), rule.getLhs().getLoc(), up);
-        result.rules.push_back({"acceleration calculus", accelerated});
-        if (res.get().equivalent) {
-            result.result = Forward::Success;
+        option<AccelerationProblem> res = AccelerationCalculus::solve(ap.get());
+        if (!res) {
+            return {Forward::NonMonotonic, {}};
         } else {
-            result.result = Forward::SuccessWithRestriction;
+            UpdateMap up;
+            for (const auto &e: res.get().closed) {
+                up[its.getVarIdx(Expression(e.first).getAVariable())] = e.second;
+            }
+            Forward::Result result;
+            LinearRule accelerated(rule.getLhs().getLoc(), res.get().res, Expression(1), rule.getLhs().getLoc(), up);
+            result.rules.push_back({"acceleration calculus", accelerated});
+            if (res.get().equivalent) {
+                result.result = Forward::Success;
+            } else {
+                result.result = Forward::SuccessWithRestriction;
+            }
+            return result;
         }
-        return result;
     }
 }
 

@@ -107,6 +107,7 @@ namespace Config {
         extern bool PartialDeletionHeuristic;
         extern bool UseBackwardAccel;
         extern bool UseForwardAccel;
+        extern bool UseAccelerationCalculus;
         extern bool TryNesting;
     }
 
