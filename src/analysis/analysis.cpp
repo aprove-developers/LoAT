@@ -63,206 +63,33 @@ RuntimeResult Analysis::run() {
     proofout.headline("Initial linear ITS problem");
     printForProof("Initial");
 
-    if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
-        proofout.headline("Added constraints to the guards to ensure costs are nonnegative:");
-        printForProof("Costs >= 0");
-    }
-
     if (ensureProperInitialLocation()) {
         proofout.headline("Added a fresh start location (such that it has no incoming rules):");
         printForProof("Fresh start");
     }
 
     RuntimeResult runtime; // defaults to unknown complexity
-    string eliminatedLocation; // for proof output of eliminateALocation
-    bool acceleratedOnce = false; // whether we did at least one acceleration step
-    bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
-    // Check if we have at least constant complexity (i.e., at least one rule can be taken with cost >= 1)
-    if (Config::Analysis::ConstantCpxCheck) {
-        auto optRuntime = checkConstantComplexity();
-        if (optRuntime) {
-            runtime = optRuntime.get();
-        }
+    if (preprocessRules()) {
+        proofout.headline("Simplified all rules, resulting in:");
+        printForProof("Simplify");
     }
 
-    if (Config::Analysis::Preprocessing) {
-        Timing::Scope timer(Timing::Preprocess);
-
-        if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable and leaf rules:");
-            printForProof("Removed unreachable");
-        }
-
-        if (removeUnsatRules()) {
-            proofout.headline("Removed rules with unsatisfiable guard:");
-            printForProof("Removed unsat");
-        }
-
-        if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable and leaf rules:");
-            printForProof("Removed unreachable");
-        }
-
-        if (preprocessRules()) {
-            proofout.headline("Simplified all rules, resulting in:");
-            printForProof("Simplify");
-        }
-
-        if (Timeout::preprocessing()) {
-            debugWarn("Timeout for pre-processing exceeded!");
-        }
+    if (Timeout::preprocessing()) {
+        debugWarn("Timeout for pre-processing exceeded!");
     }
 
     if (!Config::Analysis::ExtractLoops.empty()) {
         extractLoops(Config::Analysis::ExtractLoops);
     }
 
-    // We cannot prove any lower bound for an empty ITS
-    if (its.isEmpty()) {
-        proofout.headline("Empty problem, aborting");
-        goto done;
-    }
+    proofout.section("accelerating loops");
 
-    proofout.section("Simplification by acceleration and chaining");
-
-    while (!isFullySimplified()) {
-
-        // Repeat linear chaining and simple loop acceleration
-        bool changed;
-        do {
-            changed = false;
-            set<TransIdx> acceleratedRules;
-
-            // Special handling of nonlinear rules
-            if (nonlinearProblem && Pruning::removeSinkRhss(its)) {
-                changed = true;
-                proofout.headline("Removed locations with no outgoing rules from right-hand sides");
-                printForProof("Removed sinks");
-            }
-            if (Timeout::soft()) break;
-
-            if (accelerateSimpleLoops(acceleratedRules)) {
-                changed = true;
-                acceleratedOnce = true;
-                proofout.headline("Accelerated all simple loops using metering functions (where possible):");
-                printForProof("Accelerate simple loops");
-            }
-            if (Timeout::soft()) break;
-
-            if (chainAcceleratedLoops(acceleratedRules)) {
-                changed = true;
-                proofout.headline("Chained accelerated rules (with incoming rules):");
-                printForProof("Chain accelerated rules");
-            }
-            if (Timeout::soft()) break;
-
-            if (Pruning::removeLeafsAndUnreachable(its)) {
-                changed = true;
-                proofout.headline("Removed unreachable locations (and leaf rules with constant cost):");
-                printForProof("Remove unreachable");
-            }
-            if (Timeout::soft()) break;
-
-            if (chainLinearPaths()) {
-                changed = true;
-                proofout.headline("Eliminated locations (on linear paths):");
-                printForProof("Chain linear paths");
-            }
-            if (Timeout::soft()) break;
-
-            // Check if the ITS is now linear (we accelerated all nonlinear rules)
-            if (changed && nonlinearProblem) {
-                nonlinearProblem = !its.isLinear();
-                if (!nonlinearProblem) {
-                    proofout.section("Obtained a tail recursive problem, continuing simplification");
-                }
-            }
-        } while (changed);
-
-        // Avoid wasting time on chaining/pruning if we are already done
-        if (isFullySimplified()) {
-            break;
-        }
-
-        // Try more involved chaining strategies if we no longer make progress
-        if (chainTreePaths()) {
-            proofout.headline("Eliminated locations (on tree-shaped paths):");
-            printForProof("Chain tree paths");
-
-        } else if (eliminateALocation(eliminatedLocation)) {
-            proofout.headline("Eliminated location " + eliminatedLocation + " (as a last resort):");
-            printForProof("Eliminate location");
-        }
-        if (Timeout::soft()) break;
-
-        if (isFullySimplified()) {
-            break;
-        }
-
-        if (acceleratedOnce) {
-
-            if (merging::RuleMerger::mergeRules(its)) {
-                proofout.headline("Merged rules:");
-                printForProof("Merging");
-            }
-
-            // Try to avoid rule explosion (often caused by chainTreePaths).
-            // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
-            if (pruneRules()) {
-                proofout.headline("Applied pruning (of leafs and parallel rules):");
-                printForProof("Prune");
-            }
-        }
-
-        if (Timeout::soft()) break;
-    }
-
-    if (Timeout::soft()) {
-        proofout.warning("Aborted due to lack of remaining time");
-    }
-
-    if (isFullySimplified()) {
-        // Remove duplicate rules (ignoring updates) to avoid wasting time on asymptotic bounds
-        Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false);
-    }
-
-    if (Config::Output::ExportSimplified) {
-        proofout.headline("Fully simplified program in input format:");
-        ITSExport::printKoAT(its, proofout);
+    set<TransIdx> acceleratedRules;
+    if (accelerateSimpleLoops(acceleratedRules)) {
+        printForProof("Accelerated");
         proofout << endl;
     }
-
-    proofout.section("Computing asymptotic complexity");
-    proofout.headline("Fully simplified ITS problem");
-    printForProof("Final");
-
-    if (!isFullySimplified()) {
-        // A timeout occurred before we managed to complete the analysis.
-        // We try to quickly extract at least some complexity results.
-        proofout.warning("This is only a partial result (probably due to a timeout).");
-        proofout << "Trying to find the maximal complexity that has already been derived." << endl;
-
-        // Reduce the number of rules to avoid z3 invocations
-        removeConstantPathsAfterTimeout();
-
-        // Try to find a high complexity in the remaining problem (with chaining, but without acceleration)
-        RuntimeResult res = getMaxPartialResult();
-        if (res.cpx != Complexity::Unknown) {
-            runtime = res;
-        }
-
-    } else {
-        // No timeout, fully simplified, find the maximum runtime
-        RuntimeResult res = getMaxRuntime();
-        if (res.cpx != Complexity::Unknown) {
-            runtime = res;
-        }
-    }
-
-done:
-    printResult(runtime);
-    finalizeDotOutput(runtime);
 
     return runtime;
 }

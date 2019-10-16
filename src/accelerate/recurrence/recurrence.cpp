@@ -210,7 +210,10 @@ const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdate(
         const ExprSymbol &n) {
     GuardList refinement;
     UpdateMap refinedUpdate = update;
-    auto order = DependencyOrder::findOrderWithHeuristic(varMan, refinedUpdate, refinement);
+    auto order = DependencyOrder::findOrder(varMan, refinedUpdate);
+    if (!order) {
+        return {};
+    }
     Recurrence rec(varMan, order.get());
     const option<RecurrenceSystemSolution> &iteratedUpdate = rec.iterateUpdate(refinedUpdate, n);
     if (iteratedUpdate) {

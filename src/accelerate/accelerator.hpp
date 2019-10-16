@@ -26,7 +26,6 @@
 #include "meter/metering.hpp"
 #include "forward.hpp"
 
-
 class Accelerator {
 public:
     /**
@@ -66,7 +65,7 @@ private:
      * Main function. Tries to accelerate and nest all loops
      * by calling the methods below in a suitable way.
      */
-    void run();
+    bool run();
 
     /**
      * Helper that calls Preprocess::simplifyRule

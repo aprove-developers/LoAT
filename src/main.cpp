@@ -232,7 +232,6 @@ int main(int argc, char *argv[]) {
 
     // WST style proof output
     proofout.setEnabled(true);
-    proofout << endl << runtime.cpx.toWstString() << endl;
 
     return 0;
 }
