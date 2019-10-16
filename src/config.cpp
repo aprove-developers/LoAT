@@ -157,8 +157,6 @@ namespace Config {
 
         const bool Strengthen = false;
 
-        MonototonicityCriterion Criterion = MonototonicityCriterion::EventuallyMonotonic;
-
     }
 
     namespace Accel {
@@ -182,6 +180,10 @@ namespace Config {
         bool UseForwardAccel = false;
 
         bool UseAccelerationCalculus = true;
+
+        bool UseEvDec = true;
+
+        bool UseEvInc = true;
     }
 
     // Chaining and chaining strategies

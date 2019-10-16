@@ -92,13 +92,6 @@ namespace Config {
         extern const bool ReplaceTempVarByUpperbounds;
         extern const unsigned MaxUpperboundsForPropagation;
         extern const bool Strengthen;
-
-        enum MonototonicityCriterion {
-            Monotonic, EventuallyDecreasing, EventuallyMonotonic
-        };
-
-        extern MonototonicityCriterion Criterion;
-
     }
 
     // High level acceleration strategy
@@ -108,6 +101,8 @@ namespace Config {
         extern bool UseBackwardAccel;
         extern bool UseForwardAccel;
         extern bool UseAccelerationCalculus;
+        extern bool UseEvDec;
+        extern bool UseEvInc;
         extern bool TryNesting;
     }
 

@@ -43,24 +43,8 @@ bool allowRecursion = true;
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --timeout <sec>                                    Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --proof-level <n>                                  Detail level for proof output (0-3, default 2)" << endl;
-    cout << endl;
-    cout << "  --plain                                            Disable colored output" << endl;
-    cout << "  --dot <file>                                       Dump dot output to given file (only for non-recursive problems)" << endl;
-    cout << "  --stats                                            Print some statistics about the performed steps" << endl;
-    cout << "  --timing                                           Print information about time usage" << endl;
-    cout << "  --config                                           Show configuration after handling command line flags" << endl;
-    cout << "  --timestamps                                       Include time stamps in proof output" << endl;
-    cout << "  --print-simplified                                 Print simplified program in the input format" << endl;
-    cout << endl;
-    cout << "  --allow-division                                   Allow division in the input program (potentially unsound)" << endl;
-    cout << "  --no-cost-check                                    Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing                                 Don't try to simplify the program first (which involves SMT)" << endl;
-    cout << "  --no-limit-smt                                     Don't use the SMT encoding for limit problems" << endl;
-    cout << "  --no-const-cpx                                     Don't check for constant complexity (might improve performance)" << endl;
-    cout << "  --nonterm                                          Just try to prove non-termination" << endl;
-    cout << "  --acceleration metering|three-way|calculus         use the given acceleration technique" << endl;
+    cout << "  --plain                                                       Disable colored output" << endl;
+    cout << "  --acceleration metering|three-way|no-ev|no-ev-inc|no-ev-dec   use the given acceleration technique" << endl;
 }
 
 
@@ -81,49 +65,24 @@ void parseFlags(int argc, char *argv[]) {
             printHelp(argv[0]);
             exit(1);
         }
-        else if (strcmp("--dot",argv[arg]) == 0) {
-            Config::Output::DotFile = getNext();
-        } else if (strcmp("--timeout",argv[arg]) == 0) {
-            timeout = atoi(getNext());
-        } else if (strcmp("--proof-level",argv[arg]) == 0) {
-            proofLevel = atoi(getNext());
-        } else if (strcmp("--plain",argv[arg]) == 0) {
+        else if (strcmp("--plain",argv[arg]) == 0) {
             Config::Output::Colors = false;
             Config::Output::ColorsInITS = false;
-        } else if (strcmp("--config",argv[arg]) == 0) {
-            printConfig = true;
-        } else if (strcmp("--stats",argv[arg]) == 0) {
-            printStats = true;
-        } else if (strcmp("--timing",argv[arg]) == 0) {
-            printTiming = true;
-        } else if (strcmp("--timestamps",argv[arg]) == 0) {
-            Config::Output::Timestamps = true;
-        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
-            Config::Output::ExportSimplified = true;
-        } else if (strcmp("--allow-division",argv[arg]) == 0) {
-            Config::Parser::AllowDivision = true;
-        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
-            Config::Analysis::Preprocessing = false;
-        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
-            Config::Analysis::EnsureNonnegativeCosts = false;
-        } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
-            Config::Analysis::ConstantCpxCheck = false;
-        } else if (strcmp("--nonterm",argv[arg]) == 0) {
-            Config::Analysis::NonTermMode = true;
         } else if (strcmp("--acceleration",argv[arg]) == 0) {
             const char* mode = getNext();
             if (strcmp("metering", mode) == 0) {
                 Config::Accel::UseForwardAccel = true;
-                Config::Accel::UseBackwardAccel = false;
                 Config::Accel::UseAccelerationCalculus = false;
             } else if (strcmp("three-way", mode) == 0) {
-                Config::Accel::UseForwardAccel = false;
                 Config::Accel::UseBackwardAccel = true;
                 Config::Accel::UseAccelerationCalculus = false;
-            } else if (strcmp("calculus", mode) == 0) {
-                Config::Accel::UseForwardAccel = false;
-                Config::Accel::UseBackwardAccel = false;
-                Config::Accel::UseAccelerationCalculus = true;
+            } else if (strcmp("no-ev", mode) == 0) {
+                Config::Accel::UseEvDec = false;
+                Config::Accel::UseEvInc = false;
+            } else if (strcmp("no-ev-dec", mode) == 0) {
+                Config::Accel::UseEvDec = false;
+            } else if (strcmp("no-ev-inc", mode) == 0) {
+                Config::Accel::UseEvInc = false;
             } else {
                 cout << "unknown acceleration technique " << mode << endl;
                 exit(1);

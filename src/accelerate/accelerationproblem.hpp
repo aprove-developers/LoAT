@@ -166,7 +166,11 @@ struct AccelerationProblem {
 
     void simplify() {
         while (true) {
-            if (recurrence() || monotonicity() || eventualStrictDecrease() || eventualWeakDecrease() || eventualStrictIncrease() || eventualWeakIncrease()) {
+            if (recurrence() || monotonicity()) {
+                continue;
+            } else if (Config::Accel::UseEvDec && (eventualStrictDecrease() || eventualWeakDecrease())) {
+                continue;
+            } else if (Config::Accel::UseEvInc && (eventualStrictIncrease() || eventualWeakIncrease())) {
                 continue;
             }
             break;

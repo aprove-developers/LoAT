@@ -97,10 +97,6 @@ bool BackwardAcceleration::computeInvarianceSplit() {
                     continue;
                 }
             }
-            // not monotonically decreasing -- if eventual decreasingness is disabled, give up
-            if (Config::BackwardAccel::Criterion == Config::BackwardAccel::MonototonicityCriterion::Monotonic) {
-                return false;
-            }
             return false;
         }
         solver.pop();
