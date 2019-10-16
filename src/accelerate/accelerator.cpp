@@ -372,7 +372,7 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     if (!ap) {
         return {Forward::NoClosedFrom, {}};
     }
-    option<AccelerationProblem> res = AccelerationCalculus::solve(ap.get(), its);
+    option<AccelerationProblem> res = AccelerationCalculus::solve(ap.get());
     if (!res) {
         return {Forward::NonMonotonic, {}};
     } else {
@@ -381,11 +381,8 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
             up[its.getVarIdx(Expression(e.first).getAVariable())] = e.second;
         }
         Forward::Result result;
-        for (auto p: res.get().ress) {
-            LinearRule accelerated(rule.getLhs().getLoc(), p, Expression(1), rule.getLhs().getLoc(), up);
-            result.rules.push_back({"acceleration calculus", accelerated});
-        }
-        result.rules.push_back({"acceleration calculus", rule});
+        LinearRule accelerated(rule.getLhs().getLoc(), res.get().res, Expression(1), rule.getLhs().getLoc(), up);
+        result.rules.push_back({"acceleration calculus", accelerated});
         if (res.get().equivalent) {
             result.result = Forward::Success;
         } else {

@@ -8,12 +8,10 @@
 #include "../z3/z3context.hpp"
 #include "../z3/z3solver.hpp"
 #include "../expr/ginactoz3.hpp"
-#include "../util/ginacutils.hpp"
 #include "../analysis/preprocess.hpp"
 
 struct AccelerationProblem {
     GuardList res;
-    std::vector<GuardList> ress;
     GuardList done;
     GuardList todo;
     GiNaC::exmap up;
@@ -28,7 +26,7 @@ struct AccelerationProblem {
             const GiNaC::exmap &up,
             const GiNaC::exmap &closed,
             const ExprSymbol &n): res(res), done(done), todo(todo), up(up), closed(closed), n(n) {
-        this->res.push_back(n > 1);
+        this->res.push_back(n > 0);
     }
 
     static AccelerationProblem init(const LinearRule &r, const VariableManager &varMan, const UpdateMap &closed, const ExprSymbol &n) {
@@ -65,7 +63,6 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout.section("Simplify");
                 proofout << std::endl << "handled " << e.toString() << " via conditional one-way monotonicity" << std::endl;
                 done.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
@@ -93,7 +90,6 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.subs(up).lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout.section("Simplify");
                 proofout << std::endl << "handled " << e << " via conditional recurrent sets" << std::endl;
                 done.push_back(e);
                 res.push_back(e);
@@ -122,8 +118,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated <= updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout.section("Simplify");
-                proofout << std::endl << "handled " << e << " via eventual monotonicity" << std::endl;
+                proofout << std::endl << "handled " << e << " via eventual strict decrease" << std::endl;
                 done.push_back(e);
                 res.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
@@ -152,8 +147,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated < updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout.section("Simplify");
-                proofout << std::endl << "handled " << e << " via eventual monotonicity" << std::endl;
+                proofout << std::endl << "handled " << e << " via eventual weak decrease" << std::endl;
                 done.push_back(e);
                 res.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
@@ -172,14 +166,14 @@ struct AccelerationProblem {
 
     void simplify() {
         while (true) {
-            if (recurrence() || monotonicity() || eventualStrictDecrease() || eventualWeakDecrease()) {
+            if (recurrence() || monotonicity() || eventualStrictDecrease() || eventualWeakDecrease() || eventualStrictIncrease() || eventualWeakIncrease()) {
                 continue;
             }
             break;
         }
     }
 
-    option<Expression> eventualStrictIncrease() {
+    bool eventualStrictIncrease() {
         Z3Context ctx;
         Z3Solver solver(ctx);
         for (const Expression &e: done) {
@@ -195,14 +189,21 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated >= updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                return Relation::normalizeInequality(e.lhs() < updated);
+                proofout << std::endl << "handled " << e << " via eventual strict increase" << std::endl;
+                done.push_back(e);
+                res.push_back(Relation::normalizeInequality(e.lhs() > updated));
+                res.push_back(e);
+                todo.erase(it);
+                this->equivalent = false;
+                print();
+                return true;
             }
             solver.pop();
         }
-        return {};
+        return false;
     }
 
-    option<Expression> eventualWeakIncrease() {
+    bool eventualWeakIncrease() {
         Z3Context ctx;
         Z3Solver solver(ctx);
         for (const Expression &e: done) {
@@ -218,11 +219,18 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated > updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                return Relation::normalizeInequality(e.lhs() <= updated);
+                proofout << std::endl << "handled " << e << " via eventual weak increase" << std::endl;
+                done.push_back(e);
+                res.push_back(Relation::normalizeInequality(e.lhs() >= updated));
+                res.push_back(e);
+                todo.erase(it);
+                this->equivalent = false;
+                print();
+                return true;
             }
             solver.pop();
         }
-        return {};
+        return false;
     }
 
     void print() {
@@ -259,68 +267,12 @@ struct AccelerationCalculus {
         return AccelerationProblem::init(r, varMan, sol.get().updates[0], n);
     }
 
-    static option<AccelerationProblem> solve(AccelerationProblem &p, VariableManager &varMan) {
+    static option<AccelerationProblem> solve(AccelerationProblem &p) {
         p.simplify();
         if (p.solved()) {
-            p.ress.push_back(p.res);
             return p;
         } else {
-            option<Expression> eventualInvariant = p.eventualStrictIncrease();
-            if (!eventualInvariant) {
-                eventualInvariant = p.eventualWeakIncrease();
-            }
-            if (eventualInvariant) {
-                proofout.section("Split");
-                proofout << std::endl << "splitting wrt. " << eventualInvariant.get() << std::endl;
-                GuardList leftTodo(p.todo);
-                leftTodo.push_back(Relation::normalizeInequality(eventualInvariant.get().lhs() <= 0));
-                const ExprSymbol &leftN = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
-                AccelerationProblem left = AccelerationProblem(p.res, p.done, leftTodo, p.up, util::GiNaCUtils::concat(p.closed, {{p.n, leftN}}), leftN);
-                solve(left, varMan);
-                GuardList rightTodo(p.todo);
-                rightTodo.push_back(eventualInvariant.get());
-                const ExprSymbol &rightN = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
-                AccelerationProblem right = AccelerationProblem(p.res, p.done, rightTodo, p.up, util::GiNaCUtils::concat(p.closed, {{p.n, rightN}}), rightN);
-                solve(right, varMan);
-                if (left.solved()) {
-                    if (right.solved()) {
-                        // merge
-                        proofout.section("Merge");
-                        proofout << std::endl << "merging after split wrt. " << eventualInvariant.get() << std::endl;
-                        p.equivalent = false;
-                        for (auto p1: left.ress) {
-                            for (auto p2: right.ress) {
-                                GuardList res(p1);
-                                res.push_back(p.n == left.n + right.n);
-                                for (const Expression &e: p2) {
-                                    res.push_back(e.subs(left.closed));
-                                }
-                                Preprocess::simplifyGuard(res);
-                                p.ress.push_back(res);
-                            }
-                        }
-                        for (const auto &p2: right.ress) {
-                            p.ress.push_back(p2.subs({{right.n, p.n}}));
-                        }
-                        for (const auto &p1: left.ress) {
-                            p.ress.push_back(p1.subs({{left.n, p.n}}));
-                        }
-                        return p;
-                    } else {
-                        proofout.section("Remove Right");
-                        proofout << std::endl << "removing case " << eventualInvariant.get() << " after split wrt. " << eventualInvariant.get() << std::endl;
-                        return left;
-                    }
-                } else if (right.solved()) {
-                    proofout.section("Remove Left");
-                    proofout << std::endl << "removing case " << Expression(eventualInvariant.get().lhs() <= 0) << " after split wrt. " << eventualInvariant.get() << std::endl;
-                    return right;
-                } else {
-                    return {};
-                }
-            } else {
-                return {};
-            }
+            return {};
         }
     }
 
