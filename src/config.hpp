@@ -84,7 +84,6 @@ namespace Config {
         extern bool ConflictVarHeuristic;
         extern bool ConstantUpdateHeuristic;
         extern const unsigned TempVarInstantiationMaxBounds;
-        extern const bool UseTempVarForIterationCount;
     }
 
     // Backward acceleration technique

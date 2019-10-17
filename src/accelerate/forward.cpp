@@ -93,34 +93,21 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 // Compute iterated cost/update by recurrence solving (modifies newRule).
                 // Note that we usually assume that the maximal number of iterations is taken, so
                 // instead of adding 0 < tv < meter+1 as in the paper, we instantiate tv by meter.
-                Expression iterationCount = meter.metering;
-                if (Config::ForwardAccel::UseTempVarForIterationCount) {
-                    iterationCount = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("tv"));
-                }
+                ExprSymbol iterationCount = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("tv"));
 
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
-                option<unsigned int> validityBound = Recurrence::iterateRule(varMan, linRule, iterationCount);
-                if (!validityBound) {
-                    res.result = TooComplicated;
-                    Stats::add(Stats::MeterCannotIterate);
-                    return res;
-                }
-                if (validityBound.get() > 1) {
+                const option<Recurrence::IteratedUpdates> &sol = Recurrence::iterateUpdates(varMan, {linRule.getUpdate()}, iterationCount);
+                if (!sol || sol.get().validityBound > 1) {
                     res.result = NoMetering;
-                    Stats::add(Stats::MeterCannotIterate);
                     return res;
                 }
 
                 // The iterated update/cost computation is only sound if we do >= 1 iterations.
                 // Hence we have to ensure that the metering function is >= 1 (corresponding to 0 < tv).
-                linRule.getGuardMut().push_back(iterationCount >= validityBound.get());
+                linRule.getGuardMut().push_back(iterationCount >= sol.get().validityBound);
 
-                // If we use a temporary variable instead of the metering function, add the upper bound.
-                // Note that meter always maps to int, so we can use <= here.
-                if (Config::ForwardAccel::UseTempVarForIterationCount) {
-                    linRule.getGuardMut().push_back(iterationCount <= meter.metering);
-                }
+                linRule.getGuardMut().push_back(iterationCount <= meter.metering);
 
                 res.rules.emplace_back(meterStr, linRule);
 
@@ -135,7 +122,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 res.rules.emplace_back(meterStr, newRule.replaceRhssBySink(sink));
             }
 
-            res.result = Success;
+            res.result = SuccessWithRestriction;
             Stats::add(Stats::MeterSuccess);
             return res;
         }

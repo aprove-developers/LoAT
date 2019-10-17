@@ -78,29 +78,20 @@ bool BackwardAcceleration::computeInvarianceSplit() {
     for (const Expression &ex: simpleInvariants) {
         solver.add(ex.toZ3(ctx));
     }
-    // check if 'decreasing' is monotonically decreasing
-    do {
-        done = true;
+    auto it = decreasing.begin();
+    while (it != decreasing.end()) {
         solver.push();
-        for (const Expression &ex: decreasing) {
-            solver.add(GinacToZ3::convert(ex.subs(updateSubs), ctx));
-        }
-        auto it = decreasing.begin();
-        while (it != decreasing.end()) {
-            solver.push();
-            solver.add(GinacToZ3::convert(it->subs(updateSubs), ctx));
-            if (solver.check() == z3::check_result::sat) {
-                solver.add(GinacToZ3::convert(it->lhs() <= 0, ctx));
-                if (solver.check() == z3::check_result::unsat) {
-                    it++;
-                    solver.pop();
-                    continue;
-                }
+        solver.add(GinacToZ3::convert(it->subs(updateSubs), ctx));
+        if (solver.check() == z3::check_result::sat) {
+            solver.add(GinacToZ3::convert(it->lhs() <= 0, ctx));
+            if (solver.check() == z3::check_result::unsat) {
+                it++;
+                solver.pop();
+                continue;
             }
-            return false;
         }
-        solver.pop();
-    } while (!done);
+        return false;
+    }
     return true;
 }
 
@@ -219,19 +210,16 @@ Self::AccelerationResult BackwardAcceleration::run() {
     ExprSymbol N = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("k"));
 
     option<LinearRule> accelerated;
-    option<unsigned int> validityBound;
-    UpdateMap iteratedUpdate = rule.getUpdate();
-    Expression iteratedCost = rule.getCost();
     GuardList restrictions;
-    validityBound = Recurrence::iterateUpdateAndCost(varMan, iteratedUpdate, iteratedCost, N, restrictions);
-    if (!validityBound || validityBound.get() > 0) {
+    option<Recurrence::IteratedUpdates> recRes = Recurrence::iterateUpdates(varMan, {rule.getUpdate()}, N);
+    if (!recRes || recRes.get().validityBound > 1) {
         debugBackwardAccel("Failed to compute iterated cost/update");
         Stats::add(Stats::BackwardCannotIterate);
         return {{}, ForwardAcceleration::NoClosedFrom};
     }
 
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
-    accelerated = buildAcceleratedLoop(iteratedUpdate, iteratedCost, restrictions, N, validityBound.get());
+    accelerated = buildAcceleratedLoop(recRes.get().updates[0], Expression(1), restrictions, N, recRes.get().validityBound);
     Stats::add(Stats::BackwardSuccess);
     if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
         return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};

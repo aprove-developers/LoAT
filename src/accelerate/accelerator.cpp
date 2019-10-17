@@ -317,7 +317,7 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     if (Config::Accel::UseForwardAccel) {
         return Forward::accelerate(its, rule, sinkLoc);
     } else if (Config::Accel::UseBackwardAccel) {
-        return strengthenAndAccelerate(chain(rule.toLinear()));
+        return strengthenAndAccelerate(rule.toLinear());
     } else {
         assert(Config::Accel::UseAccelerationCalculus);
         option<AccelerationProblem> ap = AccelerationCalculus::init(rule.toLinear(), its);
