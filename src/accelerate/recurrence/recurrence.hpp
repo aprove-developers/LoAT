@@ -91,7 +91,7 @@ private:
      * Tries to find a recurrence for the given single update.
      * Note that all variables occurring in update must have been solved before (and added to updatePreRecurrences).
      */
-    option<RecurrenceSolution> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs);
+    option<RecurrenceSolution> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds);
 
     /**
      * Tries to find a recurrence for the given cost term.

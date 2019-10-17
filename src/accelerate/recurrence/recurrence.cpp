@@ -34,7 +34,7 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 {}
 
 
-option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs) {
+option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
     Timing::Scope timer(Timing::Purrs);
 
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
@@ -43,7 +43,14 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
 
     const ExprSymbolSet &vars = updateRhs.getVariables();
     if (vars.find(updateLhs) == vars.end()) {
-        return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=1}};
+        unsigned int validitybound = 1;
+        for (const ExprSymbol &ex: vars) {
+            VariableIdx vi = varMan.getVarIdx(ex);
+            if (validitybounds.find(vi) != validitybounds.end() && validitybounds.at(vi) + 1 > validitybound) {
+                validitybound = validitybounds.at(vi) + 1;
+            }
+        }
+        return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=validitybound}};
     }
     Purrs::Recurrence rec(rhs);
     Purrs::Recurrence::Solver_Status res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
@@ -106,16 +113,18 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
 
     //in the given order try to solve the recurrence for every updated variable
     unsigned int validityBound = 0;
+    std::map<VariableIdx, unsigned int> validityBounds;
     for (VariableIdx vi : dependencyOrder) {
         ExprSymbol target = varMan.getVarSymbol(vi);
 
         const Expression &rhs = update.at(vi);
         const ExprSymbolSet &vars = rhs.getVariables();
-        option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target);
+        option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target, validityBounds);
         if (!updateRec) {
             return {};
         }
 
+        validityBounds[vi] = updateRec.get().validityBound;
         validityBound = max(validityBound, updateRec.get().validityBound);
 
         //remember this recurrence to replace vi in the updates depending on vi
