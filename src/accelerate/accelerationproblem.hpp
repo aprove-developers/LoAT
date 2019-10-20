@@ -225,7 +225,7 @@ struct AccelerationProblem {
             if (solver.check() == z3::check_result::unsat) {
                 proofout << std::endl << "handled " << e << " via eventual weak increase" << std::endl;
                 done.push_back(e);
-                res.push_back(Relation::normalizeInequality(e.lhs() >= updated));
+                res.push_back(Relation::normalizeInequality(e.lhs() <= updated));
                 res.push_back(e);
                 todo.erase(it);
                 this->equivalent = false;
