@@ -33,7 +33,7 @@ struct AccelerationProblem {
         const GiNaC::exmap &up = r.getUpdate().toSubstitution(varMan);
         AccelerationProblem res({}, {}, normalize(r.getGuard()), up, closed.toSubstitution(varMan), n);
         return res;
-    };
+    }
 
     static GuardList normalize(const GuardList &g) {
         GuardList res;
@@ -168,9 +168,9 @@ struct AccelerationProblem {
         while (true) {
             if (recurrence() || monotonicity()) {
                 continue;
-            } else if (Config::Accel::UseEvDec && (eventualStrictDecrease() || eventualWeakDecrease())) {
+            } else if (Config::Accel::UseEvDec && eventualWeakDecrease()) {
                 continue;
-            } else if (Config::Accel::UseEvInc && (eventualStrictIncrease() || eventualWeakIncrease())) {
+            } else if (Config::Accel::UseEvInc && eventualWeakIncrease()) {
                 continue;
             }
             break;
