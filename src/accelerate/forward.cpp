@@ -93,7 +93,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 // Compute iterated cost/update by recurrence solving (modifies newRule).
                 // Note that we usually assume that the maximal number of iterations is taken, so
                 // instead of adding 0 < tv < meter+1 as in the paper, we instantiate tv by meter.
-                ExprSymbol iterationCount = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("tv"));
+                ExprSymbol iterationCount = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
 
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();

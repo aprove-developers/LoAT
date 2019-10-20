@@ -308,7 +308,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     // store the result for the original rule so that we can return it if we fail
     status = res.status;
     for (const LinearRule &ar: res.res) {
-        rules.emplace_back("backward acceleration", ar);
+        rules.emplace_back("monotonicity", ar);
     }
     return {status.get(), rules};
 }

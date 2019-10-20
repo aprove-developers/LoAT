@@ -63,7 +63,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e.toString() << " via conditional one-way monotonicity" << std::endl;
+                proofout << std::endl << "handled " << e.toString() << " via monotonic decrease" << std::endl;
                 done.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
                 todo.erase(it);
@@ -90,38 +90,9 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.subs(up).lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via conditional recurrent sets" << std::endl;
+                proofout << std::endl << "handled " << e << " via monotonic increase" << std::endl;
                 done.push_back(e);
                 res.push_back(e);
-                todo.erase(it);
-                print();
-                return true;
-            }
-            solver.pop();
-        }
-        return false;
-    }
-
-    bool eventualStrictDecrease() {
-        Z3Context ctx;
-        Z3Solver solver(ctx);
-        for (const Expression &e: done) {
-            solver.add(e.toZ3(ctx));
-        }
-        for (auto it = todo.begin(); it != todo.end(); it++) {
-            const Expression &e = *it;
-            solver.push();
-            const GiNaC::ex &updated = e.lhs().subs(up);
-            solver.add(GinacToZ3::convert(e.lhs() > updated, ctx));
-            if (solver.check() != z3::sat) {
-                return false;
-            }
-            solver.add(GinacToZ3::convert(updated <= updated.subs(up), ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via eventual strict decrease" << std::endl;
-                done.push_back(e);
-                res.push_back(e);
-                res.push_back(e.subs(closed).subs({{n, n-1}}));
                 todo.erase(it);
                 print();
                 return true;
@@ -147,7 +118,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated < updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via eventual weak decrease" << std::endl;
+                proofout << std::endl << "handled " << e << " via eventual decrease" << std::endl;
                 done.push_back(e);
                 res.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
@@ -177,36 +148,6 @@ struct AccelerationProblem {
         }
     }
 
-    bool eventualStrictIncrease() {
-        Z3Context ctx;
-        Z3Solver solver(ctx);
-        for (const Expression &e: done) {
-            solver.add(e.toZ3(ctx));
-        }
-        for (auto it = todo.begin(); it != todo.end(); it++) {
-            const Expression &e = *it;
-            solver.push();
-            const GiNaC::ex &updated = e.lhs().subs(up);
-            solver.add(GinacToZ3::convert(e.lhs() < updated, ctx));
-            if (solver.check() != z3::sat) {
-                return {};
-            }
-            solver.add(GinacToZ3::convert(updated >= updated.subs(up), ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via eventual strict increase" << std::endl;
-                done.push_back(e);
-                res.push_back(Relation::normalizeInequality(e.lhs() > updated));
-                res.push_back(e);
-                todo.erase(it);
-                this->equivalent = false;
-                print();
-                return true;
-            }
-            solver.pop();
-        }
-        return false;
-    }
-
     bool eventualWeakIncrease() {
         Z3Context ctx;
         Z3Solver solver(ctx);
@@ -223,7 +164,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated > updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via eventual weak increase" << std::endl;
+                proofout << std::endl << "handled " << e << " via eventual increase" << std::endl;
                 done.push_back(e);
                 res.push_back(Relation::normalizeInequality(e.lhs() <= updated));
                 res.push_back(e);

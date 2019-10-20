@@ -43,8 +43,8 @@ bool allowRecursion = true;
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
-    cout << "  --plain                                                       Disable colored output" << endl;
-    cout << "  --acceleration metering|three-way|no-ev|no-ev-inc|no-ev-dec   use the given acceleration technique" << endl;
+    cout << "  --plain                                                  Disable colored output" << endl;
+    cout << "  --acceleration meter|mon|no-ev-mon|no-ev-inc|no-ev-dec   use the given acceleration technique" << endl;
 }
 
 
@@ -70,13 +70,13 @@ void parseFlags(int argc, char *argv[]) {
             Config::Output::ColorsInITS = false;
         } else if (strcmp("--acceleration",argv[arg]) == 0) {
             const char* mode = getNext();
-            if (strcmp("metering", mode) == 0) {
+            if (strcmp("meter", mode) == 0) {
                 Config::Accel::UseForwardAccel = true;
                 Config::Accel::UseAccelerationCalculus = false;
-            } else if (strcmp("three-way", mode) == 0) {
+            } else if (strcmp("mon", mode) == 0) {
                 Config::Accel::UseBackwardAccel = true;
                 Config::Accel::UseAccelerationCalculus = false;
-            } else if (strcmp("no-ev", mode) == 0) {
+            } else if (strcmp("no-ev-mon", mode) == 0) {
                 Config::Accel::UseEvDec = false;
                 Config::Accel::UseEvInc = false;
             } else if (strcmp("no-ev-dec", mode) == 0) {

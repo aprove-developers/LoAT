@@ -207,7 +207,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     }
 
     // compute the iterated update and cost, with a fresh variable N as iteration step
-    ExprSymbol N = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("k"));
+    ExprSymbol N = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
 
     option<LinearRule> accelerated;
     GuardList restrictions;
@@ -221,11 +221,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     // compute the resulting rule and try to simplify it by instantiating N (if enabled)
     accelerated = buildAcceleratedLoop(recRes.get().updates[0], Expression(1), restrictions, N, recRes.get().validityBound);
     Stats::add(Stats::BackwardSuccess);
-    if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-        return {replaceByUpperbounds(N, accelerated.get()), ForwardAcceleration::Success};
-    } else {
-        return {{accelerated.get()}, ForwardAcceleration::Success};
-    }
+    return {{accelerated.get()}, ForwardAcceleration::Success};
 }
 
 
