@@ -43,10 +43,10 @@ The techniques implemented in LoAT are described in the following publications (
   IJCAR '16
 * [Proving Non-Termination via Loop Acceleration](https://arxiv.org/abs/1905.11187)\
   F. Frohn and J. Giesl\
-  FMCAD '19, to appear
-* Inferring Lower Runtime Bounds for Integer Programs\
+  FMCAD '19
+* [Inferring Lower Runtime Bounds for Integer Programs](https://arxiv.org/abs/1911.01077)\
   F. Frohn, M. Naaf, M. Brockschmidt, and J. Giesl\
-  coming soon
+  under review
 
 ## Awards
 
