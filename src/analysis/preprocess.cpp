@@ -15,13 +15,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "preprocess.h"
+#include "preprocess.hpp"
 
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "z3/z3toolbox.h"
-#include "z3/z3solver.h"
-#include "util/timeout.h"
+#include "../expr/guardtoolbox.hpp"
+#include "../expr/relation.hpp"
+#include "../z3/z3toolbox.hpp"
+#include "../z3/z3solver.hpp"
+#include "../util/timeout.hpp"
 
 using namespace std;
 
@@ -89,7 +89,7 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
         // Check if the constraint is syntactically implied by one of the other constraints.
         // Also check if one of the others is implied by the new constraint.
         bool implied = false;
-        for (int i=0; i < newGuard.size(); ++i) {
+        for (unsigned int i=0; i < newGuard.size(); ++i) {
             if (GuardToolbox::isTrivialImplication(newGuard.at(i), ex)) {
                 implied = true;
 

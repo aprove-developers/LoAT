@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "types.h"
-#include "variablemanager.h"
+#include "types.hpp"
+#include "variablemanager.hpp"
 
 
 void GuardList::collectVariables(ExprSymbolSet &res) const {
@@ -25,6 +25,19 @@ void GuardList::collectVariables(ExprSymbolSet &res) const {
     }
 }
 
+GuardList GuardList::subs(const GiNaC::exmap &sigma) const {
+    GuardList res;
+    for (const Expression &e: *this) {
+        res.push_back(e.subs(sigma));
+    }
+    return res;
+}
+
+void GuardList::applySubstitution(const GiNaC::exmap &sigma) {
+    for (Expression &e: *this) {
+        e.applySubs(sigma);
+    }
+}
 
 bool UpdateMap::isUpdated(VariableIdx var) const {
     return find(var) != end();
@@ -43,4 +56,3 @@ GiNaC::exmap UpdateMap::toSubstitution(const VariableManager &varMan) const {
     }
     return subs;
 }
-

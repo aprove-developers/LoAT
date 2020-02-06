@@ -15,11 +15,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "linearize.h"
+#include "linearize.hpp"
 
-#include "expr/relation.h"
-#include "metertools.h"
-#include "debug.h"
+#include "../../expr/relation.hpp"
+#include "metertools.hpp"
+#include "../../debug.hpp"
 
 using namespace std;
 

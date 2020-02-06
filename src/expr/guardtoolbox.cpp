@@ -15,9 +15,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "guardtoolbox.h"
-#include "relation.h"
-#include "its/rule.h"
+#include "guardtoolbox.hpp"
+#include "relation.hpp"
+#include "../its/rule.hpp"
 
 using namespace std;
 using namespace Relation;
@@ -110,7 +110,7 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
     GiNaC::exmap varSubs;
     GuardList &guard = rule.getGuardMut();
 
-    for (int i=0; i < guard.size(); ++i) {
+    for (unsigned int i=0; i < guard.size(); ++i) {
         Expression ex = guard[i].subs(varSubs);
         if (!ex.info(GiNaC::info_flags::relation_equal)) continue;
 
@@ -168,7 +168,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
         vector<Expression> varLessThan, varGreaterThan; //var <= expr and var >= expr
         vector<int> guardTerms; //indices of guard terms that can be removed if successful
 
-        for (int i=0; i < guard.size(); ++i) {
+        for (unsigned int i=0; i < guard.size(); ++i) {
             //check if this guard must be used for var
             const Expression &ex = guard[i];
             if (!ex.has(var)) continue;
@@ -219,7 +219,7 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
     map<int,pair<int,Expression>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
 
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
-    for (int i=0; i < guard.size(); ++i) {
+    for (unsigned int i=0; i < guard.size(); ++i) {
         if (isEquality(guard[i])) continue;
         Expression term = toLessEq(guard[i]);
         term = term.lhs() - term.rhs();
@@ -238,7 +238,7 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
     // This code below mostly retains the order of the constraints.
     GuardList res;
     set<int> ignore;
-    for (int i=0; i < guard.size(); ++i) {
+    for (unsigned int i=0; i < guard.size(); ++i) {
         //ignore multiple equalities as well as the original second inequality
         if (ignore.count(i) > 0) continue;
 
@@ -282,7 +282,7 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
     while (true) {
         // substitute every variable x_i by the integer subs[i] and check if the result is an integer
         GiNaC::exmap currSubs;
-        for (int i = 0; i < degrees.size(); i++) {
+        for (unsigned int i = 0; i < degrees.size(); i++) {
             currSubs.emplace(vars[i], subs[i]);
         }
         Expression res = e.subs(currSubs).expand();
@@ -294,7 +294,7 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
         // increase subs (lexicographically) if possible
         // (the idea is that subs takes all possible combinations of 0,...,degree[i]+1 for every entry i)
         bool foundNext = false;
-        for (int i = 0; i < degrees.size(); i++) {
+        for (unsigned int i = 0; i < degrees.size(); i++) {
             if (subs[i] >= degrees[i]+1) {
                 subs[i] = 0;
             } else {

@@ -15,24 +15,26 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "analysis.h"
+#include "analysis.hpp"
 
-#include "expr/relation.h"
-#include "z3/z3toolbox.h"
-#include "asymptotic/asymptoticbound.h"
+#include "../expr/relation.hpp"
+#include "../z3/z3toolbox.hpp"
+#include "../asymptotic/asymptoticbound.hpp"
 
-#include "debug.h"
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
+#include "../debug.hpp"
+#include "../util/stats.hpp"
+#include "../util/timing.hpp"
+#include "../util/timeout.hpp"
 
-#include "prune.h"
-#include "preprocess.h"
-#include "chain.h"
-#include "chainstrategy.h"
-#include "accelerate/accelerator.h"
+#include "prune.hpp"
+#include "preprocess.hpp"
+#include "chain.hpp"
+#include "chainstrategy.hpp"
+#include "../accelerate/accelerator.hpp"
 
-#include "its/export.h"
+#include "../its/export.hpp"
+
+#include "../merging/rulemerger.hpp"
 
 
 using namespace std;
@@ -189,12 +191,25 @@ RuntimeResult Analysis::run() {
         }
         if (Timeout::soft()) break;
 
-        // Try to avoid rule explosion (often caused by chainTreePaths).
-        // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
-        if (acceleratedOnce && pruneRules()) {
-            proofout.headline("Applied pruning (of leafs and parallel rules):");
-            printForProof("Prune");
+        if (isFullySimplified()) {
+            break;
         }
+
+        if (acceleratedOnce) {
+
+            if (merging::RuleMerger::mergeRules(its)) {
+                proofout.headline("Merged rules:");
+                printForProof("Merging");
+            }
+
+            // Try to avoid rule explosion (often caused by chainTreePaths).
+            // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
+            if (pruneRules()) {
+                proofout.headline("Applied pruning (of leafs and parallel rules):");
+                printForProof("Prune");
+            }
+        }
+
         if (Timeout::soft()) break;
     }
 
@@ -225,8 +240,6 @@ RuntimeResult Analysis::run() {
 
         // Reduce the number of rules to avoid z3 invocations
         removeConstantPathsAfterTimeout();
-        proofout.headline("Removed rules with constant/unknown complexity:");
-        printForProof("Removed constant");
 
         // Try to find a high complexity in the remaining problem (with chaining, but without acceleration)
         RuntimeResult res = getMaxPartialResult();
@@ -524,8 +537,43 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
 
     // Only search for runtimes that improve upon the current runtime
     RuntimeResult res = currResult;
+    vector<TransIdx> todo(rules.begin(), rules.end());
 
-    for (TransIdx ruleIdx : rules) {
+    // sort the rules before analyzing them
+    // non-terminating rules first
+    // non-polynomial (i.e., most likely exponential) rules second (preferring rules with temporary variables)
+    // rules with temporary variables (sorted by their degree) third
+    // rules without temporary variables (sorted by their degree) last
+    // if rules are equal wrt. the criteria above, prefer those with less constraints in the guard
+    auto comp = [this, isTempVar](const TransIdx &fst, const TransIdx &snd) {
+        Rule fstRule = its.getRule(fst);
+        Rule sndRule = its.getRule(snd);
+        Expression fstCpxExp = fstRule.getCost().expand();
+        Expression sndCpxExp = sndRule.getCost().expand();
+        if (fstCpxExp != sndCpxExp) {
+            if (fstCpxExp.isNontermSymbol()) return true;
+            if (sndCpxExp.isNontermSymbol()) return false;
+            bool fstIsNonPoly = !fstCpxExp.isPolynomial();
+            bool sndIsNonPoly = !sndCpxExp.isPolynomial();
+            if (fstIsNonPoly > sndIsNonPoly) return true;
+            if (fstIsNonPoly < sndIsNonPoly) return false;
+            bool fstHasTmpVar = fstCpxExp.hasVariableWith(isTempVar);
+            bool sndHasTmpVar = sndCpxExp.hasVariableWith(isTempVar);
+            if (fstHasTmpVar > sndHasTmpVar) return true;
+            if (fstHasTmpVar < sndHasTmpVar) return false;
+            Complexity fstCpx = fstCpxExp.getComplexity();
+            Complexity sndCpx = sndCpxExp.getComplexity();
+            if (fstCpx > sndCpx) return true;
+            if (fstCpx < sndCpx) return false;
+        }
+        long fstGuardSize = fstRule.getGuard().size();
+        long sndGuardSize = sndRule.getGuard().size();
+        return fstGuardSize < sndGuardSize;
+    };
+
+    sort(todo.begin(), todo.end(), comp);
+
+    for (TransIdx ruleIdx : todo) {
         Rule &rule = its.getRuleMut(ruleIdx);
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
@@ -554,24 +602,43 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         if (Timeout::hard()) break;
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
-        AsymptoticBound::Result checkRes = AsymptoticBound::determineComplexity(
-                its,
-                rule.getGuard(),
-                rule.getCost(),
-                true,
-                res.cpx);
+        option<AsymptoticBound::Result> checkRes;
+        bool isPolynomial = rule.getCost().isPolynomial() && !rule.getCost().isNontermSymbol();
+        if (isPolynomial) {
+            for (const Expression &e: rule.getGuard()) {
+                if (!Expression(e.lhs()).isPolynomial() || !Expression(e.rhs()).isPolynomial()) {
+                    isPolynomial = false;
+                    break;
+                }
+            }
+        }
+        if (isPolynomial) {
+            checkRes = AsymptoticBound::determineComplexityViaSMT(
+                    its,
+                    rule.getGuard(),
+                    rule.getCost(),
+                    true,
+                    res.cpx);
+        } else {
+            checkRes = AsymptoticBound::determineComplexity(
+                    its,
+                    rule.getGuard(),
+                    rule.getCost(),
+                    true,
+                    res.cpx);
+        }
 
-        proofout << "Resulting cost " << checkRes.solvedCost << " has complexity: " << checkRes.cpx << endl;
+        proofout << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx << endl;
         proofout.decreaseIndention();
 
-        if (checkRes.cpx > res.cpx) {
+        if (checkRes.get().cpx > res.cpx) {
             proofout << endl;
             proofout.setLineStyle(ProofOutput::Result);
-            proofout << "Found new complexity " << checkRes.cpx << "." << endl;
+            proofout << "Found new complexity " << checkRes.get().cpx << "." << endl;
 
-            res.cpx = checkRes.cpx;
-            res.solvedCost = checkRes.solvedCost;
-            res.reducedCpx = checkRes.reducedCpx;
+            res.cpx = checkRes.get().cpx;
+            res.solvedCost = checkRes.get().solvedCost;
+            res.reducedCpx = checkRes.get().reducedCpx;
             res.guard = rule.getGuard();
             res.cost = rule.getCost();
 
@@ -683,7 +750,6 @@ RuntimeResult Analysis::getMaxPartialResult() {
             }
         }
         proofout.headline("Performed chaining from the start location:");
-        printForProof("Chaining from start");
     }
 
 abort:
@@ -691,4 +757,3 @@ abort:
 done:
     return res;
 }
-

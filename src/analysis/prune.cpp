@@ -15,18 +15,18 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "prune.h"
+#include "prune.hpp"
 
-#include "global.h"
-#include "debug.h"
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
+#include "../global.hpp"
+#include "../debug.hpp"
+#include "../util/stats.hpp"
+#include "../util/timing.hpp"
+#include "../util/timeout.hpp"
 
-#include "its/itsproblem.h"
+#include "../its/itsproblem.hpp"
 
-#include "z3/z3toolbox.h"
-#include "asymptotic/asymptoticbound.h"
+#include "../z3/z3toolbox.hpp"
+#include "../asymptotic/asymptoticbound.hpp"
 
 #include <queue>
 
@@ -47,7 +47,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
 
     // All right-hand sides have to match exactly
     if (compareRhss) {
-        for (int i=0; i < a.rhsCount(); ++i) {
+        for (unsigned int i=0; i < a.rhsCount(); ++i) {
             const UpdateMap &updateA = a.getUpdate(i);
             const UpdateMap &updateB = b.getUpdate(i);
 
@@ -64,7 +64,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     }
 
     // Guard has to be fully equal (including the ordering)
-    for (int i=0; i < guardA.size(); ++i) {
+    for (unsigned int i=0; i < guardA.size(); ++i) {
         if (!guardA[i].is_equal(guardB[i])) return false;
     }
     return true;
@@ -145,16 +145,17 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 
             if (parallel.size() > Config::Prune::MaxParallelRules) {
                 PriorityQueue queue(comp);
+                set<TransIdx> keep;
 
-                for (int i=0; i < parallel.size(); ++i) {
+                for (unsigned int i=0; i < parallel.size(); ++i) {
                     // alternating iteration (idx=0,n-1,1,n-2,...) that might avoid choosing similar edges
-                    int idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
+                    unsigned long idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
 
                     TransIdx ruleIdx = parallel[idx];
                     const Rule &rule = its.getRule(parallel[idx]);
 
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
-                    auto res = AsymptoticBound::determineComplexity(
+                    auto res = AsymptoticBound::determineComplexityViaSMT(
                             its,
                             rule.getGuard(),
                             rule.getCost(),
@@ -165,8 +166,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                 }
 
                 // Keep only the top elements of the queue
-                set<TransIdx> keep;
-                for (int i=0; i < Config::Prune::MaxParallelRules; ++i) {
+                for (unsigned int i=0; i < Config::Prune::MaxParallelRules; ++i) {
                     keep.insert(get<0>(queue.top()));
                     queue.pop();
                 }

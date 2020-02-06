@@ -1,23 +1,23 @@
-#include "asymptoticbound.h"
+#include "asymptoticbound.hpp"
 
 #include <iterator>
 #include <vector>
 #include <ginac/ginac.h>
 #include <z3++.h>
 
-#include "expr/expression.h"
-#include "expr/guardtoolbox.h"
-#include "expr/relation.h"
-#include "expr/ginactoz3.h"
-#include "util/timeout.h"
+#include "../expr/expression.hpp"
+#include "../expr/guardtoolbox.hpp"
+#include "../expr/relation.hpp"
+#include "../expr/ginactoz3.hpp"
+#include "../util/timeout.hpp"
 
-#include "z3/z3solver.h"
-#include "z3/z3context.h"
-#include "z3/z3toolbox.h"
+#include "../z3/z3solver.hpp"
+#include "../z3/z3context.hpp"
+#include "../z3/z3toolbox.hpp"
 
-#include "limitsmt.h"
-#include "inftyexpression.h"
-#include "global.h"
+#include "limitsmt.hpp"
+#include "inftyexpression.hpp"
+#include "../global.hpp"
 
 using namespace GiNaC;
 using namespace std;
@@ -148,7 +148,7 @@ void AsymptoticBound::propagateBounds() {
     }
 
     // apply all substitutions resulting from equations
-    for (int i = 0; i < substitutions.size(); ++i) {
+    for (unsigned int i = 0; i < substitutions.size(); ++i) {
         currentLP.substitute(substitutions[i], i);
     }
 
@@ -246,11 +246,11 @@ void AsymptoticBound::propagateBounds() {
     LimitProblem &limitProblem = limitProblems.back();
 
     debugAsymptoticBound("combination of substitutions:");
-    for (int i = numOfEquations; i < substitutions.size(); ++i) {
+    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
         debugAsymptoticBound(substitutions[i]);
     }
 
-    for (int i = numOfEquations; i < substitutions.size(); ++i) {
+    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
         limitProblem.substitute(substitutions[i], i);
     }
 
@@ -410,9 +410,7 @@ void AsymptoticBound::removeUnsatProblems() {
 bool AsymptoticBound::solveViaSMT(Complexity currentRes) {
     debugAsymptoticBound("Trying to solve the initial limit problem via SMT.");
 
-    bool smtApplicable = Config::Limit::PolyStrategy->smtEnabled() && LimitSmtEncoding::isApplicable(cost);
-
-    if (!smtApplicable || !currentLP.isPolynomial() || !trySmtEncoding(currentRes)) {
+    if (!Config::Limit::PolyStrategy->smtEnabled() || !currentLP.isPolynomial() || !trySmtEncoding(currentRes)) {
         return false;
     }
 
@@ -437,8 +435,6 @@ bool AsymptoticBound::solveLimitProblem() {
         return false;
     }
 
-    bool smtApplicable = Config::Limit::PolyStrategy->smtEnabled() && LimitSmtEncoding::isApplicable(cost);
-
     currentLP = std::move(limitProblems.back());
     limitProblems.pop_back();
 
@@ -457,7 +453,7 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         //if the problem is polynomial, try a (max)SMT encoding
-        if (smtApplicable && currentLP.isPolynomial()) {
+        if (Config::Limit::PolyStrategy->smtEnabled() && currentLP.isPolynomial()) {
             if (trySmtEncoding(Complexity::Const)) {
                 goto start;
             } else if (!Config::Limit::PolyStrategy->calculusEnabled()) {
@@ -732,7 +728,7 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         for (int i = 0; i <= pos; ++i) {
             l += it->op(i);
         }
-        for (int i = pos + 1; i < it->nops(); ++i) {
+        for (unsigned int i = pos + 1; i < it->nops(); ++i) {
             r += it->op(i);
         }
 
@@ -747,7 +743,7 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         for (int i = 0; i <= pos; ++i) {
             l *= it->op(i);
         }
-        for (int i = pos + 1; i < it->nops(); ++i) {
+        for (unsigned int i = pos + 1; i < it->nops(); ++i) {
             r *= it->op(i);
         }
 
@@ -786,7 +782,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 
         bool foundOneVar = false;
         ExprSymbol oneVar;
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression ex(it->op(i));
 
             if (ex.hasNoVariables()) {
@@ -822,7 +818,7 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
 
         bool foundOneVar = false;
         ExprSymbol oneVar;
-        for (int i = 0; i < it->nops(); ++i) {
+        for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression ex(it->op(i));
 
             if (ex.hasNoVariables()) {
@@ -895,7 +891,7 @@ bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::c
     }
 
     if (!toApply.empty()) {
-        for (int i = 0; i < toApply.size() - 1; ++i) {
+        for (unsigned int i = 0; i < toApply.size() - 1; ++i) {
             limitProblems.push_back(currentLP);
             LimitProblem &copy = limitProblems.back();
             auto copyIt = copy.find(*it);
@@ -1048,6 +1044,9 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
             costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
         }
     }
+    if (finalCheck && Config::Analysis::NonTermMode) {
+        return Result(Complexity::Unknown);
+    }
     assert(!costToCheck.has(Expression::NontermSymbol));
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
@@ -1103,4 +1102,45 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         return Result(Complexity::Unknown);
     }
 
+}
+
+AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan &varMan,
+                                                                    const GuardList &guard,
+                                                                    const Expression &cost,
+                                                                    bool finalCheck,
+                                                                    Complexity currentRes) {
+    Expression expandedCost = cost.expand();
+    // Handle nontermination. It suffices to check that the guard is satisfiable
+    if (expandedCost.isNontermSymbol()) {
+        auto z3res = Z3Toolbox::checkAll(guard);
+        if (z3res == z3::sat) {
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        } else {
+            return Result(Complexity::Unknown);
+        }
+    } else if (finalCheck && Config::Analysis::NonTermMode) {
+        return Result(Complexity::Unknown);
+    }
+    assert(!expandedCost.has(Expression::NontermSymbol));
+
+    // Only enable proof output for the final check (we don't want proof output when pruning)
+    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
+    if (finalCheck) Timing::start(Timing::Asymptotic);
+
+    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
+    asymptoticBound.initLimitVectors();
+    asymptoticBound.normalizeGuard();
+    asymptoticBound.createInitialLimitProblem();
+    bool success = asymptoticBound.solveViaSMT(currentRes);
+    if (finalCheck) Timing::done(Timing::Asymptotic);
+    proofout.setEnabled(wasProofEnabled);
+    if (success) {
+        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+        return Result(asymptoticBound.bestComplexity.complexity,
+                      solvedCost.expand(),
+                      asymptoticBound.bestComplexity.upperBound > 1,
+                      asymptoticBound.bestComplexity.inftyVars);
+    } else {
+        return Result(Complexity::Unknown);
+    }
 }

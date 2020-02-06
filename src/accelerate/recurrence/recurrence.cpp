@@ -15,10 +15,10 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "recurrence.h"
-#include "dependencyorder.h"
+#include "recurrence.hpp"
+#include "dependencyorder.hpp"
 
-#include "util/timing.h"
+#include "../../util/timing.hpp"
 
 #include <purrs.hh>
 
@@ -34,30 +34,38 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 {}
 
 
-option<Expression> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs) {
+option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
     Timing::Scope timer(Timing::Purrs);
 
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
     Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last));
     Purrs::Expr exact;
 
-    try {
-        Purrs::Recurrence rec(rhs);
-        rec.set_initial_conditions({ {1, Purrs::Expr::fromGiNaC(updateRhs)} });
-
-        auto res = rec.compute_exact_solution();
-        if (res != Purrs::Recurrence::SUCCESS) {
-            return {};
+    const ExprSymbolSet &vars = updateRhs.getVariables();
+    if (vars.find(updateLhs) == vars.end()) {
+        unsigned int validitybound = 1;
+        for (const ExprSymbol &ex: vars) {
+            VariableIdx vi = varMan.getVarIdx(ex);
+            if (validitybounds.find(vi) != validitybounds.end() && validitybounds.at(vi) + 1 > validitybound) {
+                validitybound = validitybounds.at(vi) + 1;
+            }
         }
-        rec.exact_solution(exact);
+        return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=validitybound}};
+    }
+    Purrs::Recurrence rec(rhs);
+    Purrs::Recurrence::Solver_Status res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
+    try {
+        rec.set_initial_conditions({ {0, Purrs::Expr::fromGiNaC(updateLhs)} });
+        res = rec.compute_exact_solution();
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
-        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(1)=" << updateRhs << " for updated variable " << updateLhs);
-        return {};
+        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << updateLhs << " for updated variable " << updateLhs);
     }
-
-    Expression result = exact.toGiNaC();
-    return result;
+    if (res == Purrs::Recurrence::SUCCESS) {
+        rec.exact_solution(exact);
+        return {{.res=exact.toGiNaC(), .validityBound=0}};
+    }
+    return {};
 }
 
 
@@ -99,28 +107,35 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
 }
 
 
-option<UpdateMap> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
+option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
     assert(dependencyOrder.size() == update.size());
     UpdateMap newUpdate;
 
     //in the given order try to solve the recurrence for every updated variable
+    unsigned int validityBound = 0;
+    std::map<VariableIdx, unsigned int> validityBounds;
     for (VariableIdx vi : dependencyOrder) {
         ExprSymbol target = varMan.getVarSymbol(vi);
 
-        auto updateRec = findUpdateRecurrence(update.at(vi),target);
+        const Expression &rhs = update.at(vi);
+        const ExprSymbolSet &vars = rhs.getVariables();
+        option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target, validityBounds);
         if (!updateRec) {
             return {};
         }
 
+        validityBounds[vi] = updateRec.get().validityBound;
+        validityBound = max(validityBound, updateRec.get().validityBound);
+
         //remember this recurrence to replace vi in the updates depending on vi
         //note that updates need the value at n-1, e.g. x(n) = x(n-1) + vi(n-1) for the update x=x+vi
-        updatePreRecurrences[target] = updateRec.get().subs(ginacN == ginacN-1);
+        updatePreRecurrences[target] = updateRec.get().res.subs(ginacN == ginacN-1);
 
         //calculate the final update using the loop's runtime
-        newUpdate[vi] = updateRec.get().subs(ginacN == meterfunc);
+        newUpdate[vi] = updateRec.get().res.subs(ginacN == meterfunc);
     }
 
-    return newUpdate;
+    return {{.update=newUpdate, .validityBound=validityBound}};
 }
 
 
@@ -135,31 +150,31 @@ option<Expression> Recurrence::iterateCost(const Expression &cost, const Express
 }
 
 
-bool Recurrence::iterateAll(UpdateMap &update, Expression &cost, const Expression &metering) {
+option<unsigned int> Recurrence::iterateAll(UpdateMap &update, Expression &cost, const Expression &metering) {
     auto newUpdate = iterateUpdate(update, metering);
     if (!newUpdate) {
         debugPurrs("calcIterated: failed to calculate update recurrence");
-        return false;
+        return {};
     }
 
     auto newCost = iterateCost(cost, metering);
     if (!newCost) {
         debugPurrs("calcIterated: failed to calculate cost recurrence");
-        return false;
+        return {};
     }
 
-    update.swap(newUpdate.get());
+    update.swap(newUpdate.get().update);
     cost.swap(newCost.get());
-    return true;
+    return newUpdate.get().validityBound;
 }
 
 
-bool Recurrence::iterateRule(const VarMan &varMan, LinearRule &rule, const Expression &metering) {
+option<unsigned int> Recurrence::iterateRule(const VarMan &varMan, LinearRule &rule, const Expression &metering) {
     // This may modify the rule's guard and update
     auto order = DependencyOrder::findOrderWithHeuristic(varMan, rule.getUpdateMut(), rule.getGuardMut());
     if (!order) {
         debugPurrs("iterateRule: failed to find a dependency order");
-        return false;
+        return {};
     }
 
     Recurrence rec(varMan, order.get());
@@ -167,15 +182,53 @@ bool Recurrence::iterateRule(const VarMan &varMan, LinearRule &rule, const Expre
 }
 
 
-bool Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, const Expression &N) {
-    auto order = DependencyOrder::findOrder(varMan, update);
+option<unsigned int> Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N) {
+    auto order = DependencyOrder::findOrderWithHeuristic(varMan, update, guard);
     if (!order) {
         debugPurrs("iterateUpdateAndCost: failed to find a dependency order");
-        return false;
+        return {};
     }
 
     Recurrence rec(varMan, order.get());
     return rec.iterateAll(update, cost, N);
 }
 
+const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdates(
+        const VariableManager &varMan,
+        const std::vector<UpdateMap> &updates,
+        const ExprSymbol &n) {
+    std::vector<UpdateMap> iteratedUpdates;
+    GuardList refinement;
+    unsigned int validityBound = 0;
+    for (const UpdateMap &up: updates) {
+        const option<IteratedUpdates> it = iterateUpdate(varMan, up, n);
+        if (it) {
+            iteratedUpdates.insert(iteratedUpdates.end(), it.get().updates.begin(), it.get().updates.end());
+            refinement.insert(refinement.end(), it.get().refinement.begin(), it.get().refinement.end());
+            validityBound = max(validityBound, it->validityBound);
+        } else {
+            return {};
+        }
+    }
+    return {{.updates=std::move(iteratedUpdates), .refinement=std::move(refinement), .validityBound=validityBound}};
+}
 
+const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdate(
+        const VariableManager &varMan,
+        const UpdateMap &update,
+        const ExprSymbol &n) {
+    GuardList refinement;
+    UpdateMap refinedUpdate = update;
+    auto order = DependencyOrder::findOrderWithHeuristic(varMan, refinedUpdate, refinement);
+    Recurrence rec(varMan, order.get());
+    const option<RecurrenceSystemSolution> &iteratedUpdate = rec.iterateUpdate(refinedUpdate, n);
+    if (iteratedUpdate) {
+        return {{
+            .updates={iteratedUpdate.get().update},
+            .refinement=std::move(refinement),
+            .validityBound=iteratedUpdate.get().validityBound
+        }};
+    } else {
+        return {};
+    }
+}

@@ -15,11 +15,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "expression.h"
+#include "expression.hpp"
 
-#include "expr/ginactoz3.h"
-#include "z3/z3context.h"
-#include "complexity.h"
+#include "../expr/ginactoz3.hpp"
+#include "../z3/z3context.hpp"
+#include "complexity.hpp"
 
 using namespace std;
 
@@ -95,7 +95,8 @@ bool Expression::isNontermSymbol() const {
 }
 
 
-bool Expression::isLinear() const {
+bool Expression::isLinear(const boost::optional<ExprSymbolSet> &vars) const {
+    ExprSymbolSet theVars = vars ? vars.get() : getVariables();
     // linear expressions are always polynomials
     if (!isPolynomial()) return false;
 
@@ -105,15 +106,18 @@ bool Expression::isLinear() const {
     // GiNaC does not provide an info flag for this, so we check the degree of every variable.
     // We also have to check if the coefficient contains variables,
     // e.g. y has degree 1 in x*y, but we don't consider x*y to be linear.
-    for (const ExprSymbol &var : getVariables()) {
+    for (const ExprSymbol &var : theVars) {
         int deg = expanded.degree(var);
         if (deg > 1 || deg < 0) {
             return false;
         }
 
         if (deg == 1) {
-            if (!expanded.coeff(var,deg).info(GiNaC::info_flags::numeric)) {
-                return false;
+            ExprSymbolSet coefficientVars = Expression(expanded.coeff(var,deg)).getVariables();
+            for (const ExprSymbol &e: coefficientVars) {
+                if (theVars.find(e) != theVars.end()) {
+                    return false;
+                }
             }
         }
     }
@@ -335,7 +339,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
     } else if (is_a<mul>(term)) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
-        for (int i=1; i < term.nops(); ++i) {
+        for (unsigned int i=1; i < term.nops(); ++i) {
             cpx = cpx * getComplexity(term.op(i));
         }
         return cpx;
@@ -343,7 +347,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
     } else if (is_a<add>(term)) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
-        for (int i=1; i < term.nops(); ++i) {
+        for (unsigned int i=1; i < term.nops(); ++i) {
             cpx = cpx + getComplexity(term.op(i));
         }
         return cpx;

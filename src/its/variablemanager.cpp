@@ -1,6 +1,3 @@
-#include "variablemanager.h"
-
-
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -18,7 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "itsproblem.h"
+#include "variablemanager.hpp"
+#include "itsproblem.hpp"
 
 using namespace std;
 

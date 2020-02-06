@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "config.h"
+#include "config.hpp"
 #include <iostream>
 
 using namespace std;
@@ -88,10 +88,11 @@ namespace Config {
 
     namespace Z3 {
         // Timeouts (default / for metering / for limit smt encoding)
-        const unsigned DefaultTimeout = 100u;
+        const unsigned DefaultTimeout = 500u;
         const unsigned MeterTimeout = 500u;
+        const unsigned StrengtheningTimeout = 750u;
         const unsigned LimitTimeout = 500u;
-        const unsigned LimitTimeoutFinal = 1000u;
+        const unsigned LimitTimeoutFinal = 3000u;
         const unsigned LimitTimeoutFinalFast = 500u;
 
         // The largest k for which x^k is rewritten to x*x*...*x (k times).
@@ -169,7 +170,9 @@ namespace Config {
 
         // Whether to use the backward acceleration.
         // Even if enabled, backward acceleration is only used if forward acceleration fails.
-        bool UseBackwardAccel = false;
+        bool UseBackwardAccel = true;
+
+        bool UseForwardAccel = false;
     }
 
     // Chaining and chaining strategies
@@ -198,7 +201,7 @@ namespace Config {
         PolynomialLimitProblemStrategy* PolyStrategy = &SmtAndCalculus;
 
         // Discard a limit problem of size >= ProblemDiscardSize in a non-final check if z3 yields "unknown"
-        const int ProblemDiscardSize = 10;
+        const unsigned int ProblemDiscardSize = 10;
     }
 
     namespace Analysis {
@@ -226,6 +229,8 @@ namespace Config {
         // NOTE: It is not sound to disable this (only intended for testing!)
         // NOTE: If disabled, the complexity is only approximated by a syntactic check.
         bool AsymptoticCheck = true;
+
+        bool NonTermMode = false;
     }
 
 }

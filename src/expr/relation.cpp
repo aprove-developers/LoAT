@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "relation.h"
+#include "relation.hpp"
 
 
 namespace Relation {
@@ -39,9 +39,14 @@ namespace Relation {
         return isRelation(ex) && !isEquality(ex);
     }
 
-    bool isLinearInequality(const Expression &ex) {
+    bool isLinearInequality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars) {
         if (!isInequality(ex)) return false;
-        return Expression(ex.lhs()).isLinear() && Expression(ex.rhs()).isLinear();
+        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
+    }
+
+    bool isLinearEquality(const Expression &ex, const boost::optional<ExprSymbolSet> &vars) {
+        if (!isEquality(ex)) return false;
+        return Expression(ex.lhs()).isLinear(vars) && Expression(ex.rhs()).isLinear(vars);
     }
 
     bool isGreaterThanZero(const Expression &ex) {
@@ -125,7 +130,7 @@ namespace Relation {
         return rel;
     }
 
-    Expression splitVariablesAndConstants(const Expression &rel) {
+    Expression splitVariablesAndConstants(const Expression &rel, const ExprSymbolSet &params) {
         assert(isInequality(rel));
 
         //move everything to lhs
@@ -135,13 +140,31 @@ namespace Relation {
         //move all numerical constants back to rhs
         newLhs = newLhs.expand();
         if (GiNaC::is_a<GiNaC::add>(newLhs)) {
-            for (int i=0; i < newLhs.nops(); ++i) {
-                if (GiNaC::is_a<GiNaC::numeric>(newLhs.op(i))) {
+            for (size_t i=0; i < newLhs.nops(); ++i) {
+                bool isConstant = true;
+                ExprSymbolSet vars = Expression(newLhs.op(i)).getVariables();
+                for (const ExprSymbol &var: vars) {
+                    if (params.find(var) == params.end()) {
+                        isConstant = false;
+                        break;
+                    }
+                }
+                if (isConstant) {
                     newRhs -= newLhs.op(i);
                 }
             }
-        } else if (GiNaC::is_a<GiNaC::numeric>(newLhs)) {
-            newRhs -= newLhs;
+        } else {
+            ExprSymbolSet vars = Expression(newLhs).getVariables();
+            bool isConstant = true;
+            for (const ExprSymbol &var: vars) {
+                if (params.find(var) == params.end()) {
+                    isConstant = false;
+                    break;
+                }
+            }
+            if (isConstant) {
+                newRhs -= newLhs;
+            }
         }
         //other cases (mul, pow, sym) should not include numerical constants (only numerical coefficients)
 

@@ -17,17 +17,16 @@
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
-
-#include "its/parser/itsparser.h"
-#include "analysis/analysis.h"
-
-#include "util/stats.h"
-#include "util/timing.h"
-#include "util/timeout.h"
+#include "analysis/analysis.hpp"
+#include "its/parser/itsparser.hpp"
 #include "its/sexpressionparser/parser.hpp"
+#include "its/t2parser/t2parser.hpp"
+
+#include "util/stats.hpp"
+#include "util/timing.hpp"
+#include "util/timeout.hpp"
 
 using namespace std;
-
 
 // Variables for command line flags
 string filename;
@@ -60,6 +59,7 @@ void printHelp(char *arg0) {
     cout << "  --no-preprocessing                               Don't try to simplify the program first (which involves SMT)" << endl;
     cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
     cout << "  --no-const-cpx                                   Don't check for constant complexity (might improve performance)" << endl;
+    cout << "  --nonterm                                        Just try to prove non-termination" << endl;
 }
 
 
@@ -122,6 +122,8 @@ void parseFlags(int argc, char *argv[]) {
             }
         } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
             Config::Analysis::ConstantCpxCheck = false;
+        } else if (strcmp("--nonterm",argv[arg]) == 0) {
+            Config::Analysis::NonTermMode = true;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -193,6 +195,8 @@ int main(int argc, char *argv[]) {
             its = parser::ITSParser::loadFromFile(filename);
         } else if (boost::algorithm::ends_with(filename, ".smt2")) {
             its = sexpressionparser::Parser::loadFromFile(filename);
+        } else if (boost::algorithm::ends_with(filename, ".t2")) {
+            its = t2parser::T2Parser::loadFromFile(filename);
         }
     } catch (const parser::ITSParser::FileError &err) {
         cout << "Error loading file " << filename << ": " << err.what() << endl;

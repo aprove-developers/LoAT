@@ -15,19 +15,19 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "z3toolbox.h"
+#include "z3toolbox.hpp"
 
-#include "z3solver.h"
-#include "z3context.h"
-#include "expr/expression.h"
-#include "debug.h"
+#include "z3solver.hpp"
+#include "z3context.hpp"
+#include "../expr/expression.hpp"
+#include "../debug.hpp"
 
 using namespace std;
 
 
 z3::expr Z3Toolbox::concat(Z3Context &context, const std::vector<z3::expr> &list, ConcatOperator op) {
     z3::expr res = context.bool_val(op == ConcatAnd);
-    for (int i=0; i < list.size(); ++i) {
+    for (unsigned int i=0; i < list.size(); ++i) {
         if (i == 0) {
             res = list[i];
         } else {
@@ -97,18 +97,19 @@ z3::check_result Z3Toolbox::checkAllApproximate(const std::vector<Expression> &l
 }
 
 
-bool Z3Toolbox::isValidImplication(const vector<Expression> &lhs, const Expression &rhs) {
+bool Z3Toolbox::isValidImplication(const vector<Expression> &lhs, const vector<Expression> &rhs) {
     using namespace z3; //for z3::implies, due to a z3 bug
     Z3Context context;
+    Z3Solver solver(context);
 
     //rephrase "forall vars: lhs -> rhs" to "not exist vars: (not rhs) and lhs" to avoid universal quantification
-    z3::expr rhsExpr = rhs.toZ3(context);
-    vector<z3::expr> lhsList;
-    for (const Expression &ex : lhs) {
-        lhsList.push_back(ex.toZ3(context));
+    z3::expr_vector rhsList(context);
+    for (const Expression &ex: rhs) {
+        rhsList.push_back(ex.toZ3(context));
     }
-
-    Z3Solver solver(context);
-    solver.add(!rhsExpr && concat(context, lhsList, ConcatAnd));
+    for (const Expression &ex : lhs) {
+        solver.add(ex.toZ3(context));
+    }
+    solver.add(!z3::mk_and(rhsList));
     return solver.check() == z3::unsat; //must be unsat to prove the original implication
 }

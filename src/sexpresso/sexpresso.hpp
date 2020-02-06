@@ -1,11 +1,14 @@
-//
-// Created by ffrohn on 3/18/19.
-//
+/* This file is part of LoAT.
+ *
+ * adapted version of https://github.com/BitPuffin/sexpresso
+ *
+ * Author: Isak Andersson 2016 bitpuffin dot com
+ *
+ * adapted by: Florian Frohn, 2019
+ */
 
 #ifndef LOAT_SEXPRESSO_H
 #define LOAT_SEXPRESSO_H
-
-// Author: Isak Andersson 2016 bitpuffin dot com
 
 #include <vector>
 #include <string>
