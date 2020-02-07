@@ -372,17 +372,18 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const Rule &rule) con
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
-    assert(Config::Accel::UseForwardAccel || Config::Accel::UseBackwardAccel);
-    Forward::Result res;
-    if (Config::Accel::UseForwardAccel) {
+    if (!rule.isLinear()) {
         return Forward::accelerate(its, rule, sinkLoc);
-    }
+    } else {
+        assert(Config::Accel::UseForwardAccel || Config::Accel::UseBackwardAccel);
+        Forward::Result res;
+        if (Config::Accel::UseForwardAccel) {
+            return Forward::accelerate(its, rule, sinkLoc);
+        }
 
-    // Try backward acceleration only if forward acceleration failed,
-    // or if it only succeeded by restricting the guard. In this case,
-    // we keep the rules from forward and just add the ones from backward acceleration.
-    if (Config::Accel::UseBackwardAccel) {
-        return strengthenAndAccelerate(rule);
+        if (Config::Accel::UseBackwardAccel) {
+            return strengthenAndAccelerate(rule);
+        }
     }
 
 }
