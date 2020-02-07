@@ -112,7 +112,6 @@ Rule BackwardAcceleration::buildAcceleratedLoop(const UpdateMap &iteratedUpdate,
                                                 const ExprSymbol &N,
                                                 const unsigned int validityBound) const
 {
-    assert(validityBound <= 1);
     GiNaC::exmap updateSubs = iteratedUpdate.toSubstitution(varMan);
     GuardList newGuard = strengthenedGuard;
     newGuard.push_back(N >= validityBound);
@@ -132,7 +131,6 @@ Rule BackwardAcceleration::buildAcceleratedRecursion(
         const ExprSymbol &N,
         const unsigned int validityBound) const
 {
-    assert(validityBound <= 1);
     GiNaC::exmap updateSubs = iteratedUpdates.begin()->toSubstitution(varMan);
     for (auto it = iteratedUpdates.begin() + 1; it < iteratedUpdates.end(); it++) {
         GiNaC::exmap subs = it->toSubstitution(varMan);
