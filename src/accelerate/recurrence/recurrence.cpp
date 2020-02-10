@@ -193,26 +193,6 @@ option<unsigned int> Recurrence::iterateUpdateAndCost(const VarMan &varMan, Upda
     return rec.iterateAll(update, cost, N);
 }
 
-const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdates(
-        const VariableManager &varMan,
-        const std::vector<UpdateMap> &updates,
-        const ExprSymbol &n) {
-    std::vector<UpdateMap> iteratedUpdates;
-    GuardList refinement;
-    unsigned int validityBound = 0;
-    for (const UpdateMap &up: updates) {
-        const option<IteratedUpdates> it = iterateUpdate(varMan, up, n);
-        if (it) {
-            iteratedUpdates.insert(iteratedUpdates.end(), it.get().updates.begin(), it.get().updates.end());
-            refinement.insert(refinement.end(), it.get().refinement.begin(), it.get().refinement.end());
-            validityBound = max(validityBound, it->validityBound);
-        } else {
-            return {};
-        }
-    }
-    return {{.updates=std::move(iteratedUpdates), .refinement=std::move(refinement), .validityBound=validityBound}};
-}
-
 const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdate(
         const VariableManager &varMan,
         const UpdateMap &update,

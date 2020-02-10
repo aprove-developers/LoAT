@@ -36,12 +36,10 @@ public:
         const ForwardAcceleration::ResultKind status;
     };
 
-    static AccelerationResult accelerate(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
+    static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const Rule &rule, const LocationIdx &sink);
-
-    void computeInvarianceSplit();
+    BackwardAcceleration(VarMan &varMan, const LinearRule &rule);
 
     /**
      * Main function, just calls the methods below in the correct order
@@ -52,25 +50,6 @@ private:
      * Checks whether the backward acceleration technique might be applicable.
      */
     bool shouldAccelerate() const;
-
-    /**
-     * Checks (with a z3 query) if the guard is monotonic w.r.t. the given inverse update.
-     */
-    bool checkGuardImplication() const;
-
-    /**
-     * Computes the accelerated rule from the given iterated update and cost, where N is the iteration counter.
-     */
-    Rule buildAcceleratedLoop(const UpdateMap &iteratedUpdate, const Expression &iteratedCost,
-                              const GuardList &strengthenedGuard, const ExprSymbol &N,
-                              const unsigned int validityBound) const;
-
-    Rule buildNontermRule() const;
-
-    Rule buildAcceleratedRecursion(const std::vector<UpdateMap> &iteratedUpdates, const Expression &iteratedCost,
-                                   const GuardList &guard, const ExprSymbol &N, const unsigned int validityBound) const;
-
-    bool checkCommutation(const std::vector<UpdateMap> &updates);
 
     /**
      * If possible, replaces N by all its upper bounds from the guard of the given rule.
@@ -92,13 +71,7 @@ private:
 
 private:
     VariableManager &varMan;
-    const Rule &rule;
-    const LocationIdx &sink;
-    GuardList simpleInvariants;
-    GuardList conditionalInvariants;
-    GuardList nonInvariants;
-    std::vector<UpdateMap> updates;
-    std::vector<GiNaC::exmap> updateSubs;
+    const LinearRule &rule;
 };
 
 #endif /* BACKWARDACCELERATION_H */

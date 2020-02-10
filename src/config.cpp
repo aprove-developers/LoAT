@@ -169,7 +169,6 @@ namespace Config {
         bool TryNesting = true;
 
         // Whether to use the backward acceleration.
-        // Even if enabled, backward acceleration is only used if forward acceleration fails.
         bool UseBackwardAccel = true;
 
         bool UseForwardAccel = false;

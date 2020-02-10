@@ -138,7 +138,7 @@ private:
      */
     void removeOldLoops(const std::vector<TransIdx> &loops);
 
-    const Rule chain(const Rule &rule) const;
+    const LinearRule chain(const LinearRule &rule) const;
 
     unsigned int numNotInUpdate(const UpdateMap &up) const;
 
@@ -160,7 +160,7 @@ private:
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
     std::set<TransIdx> keepRules;
 
-    const ForwardAcceleration::Result strengthenAndAccelerate(const Rule &rule) const;
+    const ForwardAcceleration::Result strengthenAndAccelerate(const LinearRule &rule) const;
 
 };
 

@@ -27,7 +27,7 @@
 namespace strengthening {
 
 
-    const std::vector<Rule> Strengthener::apply(const Rule &rule, ITSProblem &its, const std::vector<Mode> &modes) {
+    const std::vector<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its, const std::vector<Mode> &modes) {
         std::stack<GuardList> todo;
         todo.push(rule.getGuard());
         std::vector<GuardList> res;
@@ -59,10 +59,10 @@ namespace strengthening {
                 todo.pop();
             }
         }
-        std::vector<Rule> rules;
+        std::vector<LinearRule> rules;
         for (const GuardList &g: res) {
             const RuleLhs newLhs(rule.getLhsLoc(), g, rule.getCost());
-            rules.emplace_back(Rule(newLhs, rule.getRhss()));
+            rules.emplace_back(LinearRule(newLhs, rule.getRhss()[0]));
         }
         return rules;
     }

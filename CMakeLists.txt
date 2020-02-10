@@ -49,6 +49,7 @@ add_executable(${EXECUTABLE}
         src/accelerate/backward.hpp
         src/accelerate/forward.cpp
         src/accelerate/forward.hpp
+        src/accelerate/accelerationproblem.hpp
         src/analysis/analysis.cpp
         src/analysis/analysis.hpp
         src/analysis/chain.cpp
