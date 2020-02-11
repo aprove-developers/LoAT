@@ -50,6 +50,10 @@ add_executable(${EXECUTABLE}
         src/accelerate/forward.cpp
         src/accelerate/forward.hpp
         src/accelerate/accelerationproblem.hpp
+        src/accelerate/boundextractor.hpp
+        src/accelerate/boundextractor.cpp
+        src/accelerate/vareliminator.cpp
+        src/accelerate/vareliminator.hpp
         src/analysis/analysis.cpp
         src/analysis/analysis.hpp
         src/analysis/chain.cpp

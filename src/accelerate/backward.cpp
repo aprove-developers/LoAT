@@ -33,6 +33,7 @@
 #include "../util/relevantvariables.hpp"
 #include "../analysis/chain.hpp"
 #include "accelerationproblem.hpp"
+#include "vareliminator.hpp"
 
 using namespace std;
 
@@ -45,71 +46,28 @@ bool BackwardAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
 }
 
-vector<Expression> BackwardAcceleration::computeUpperbounds(const ExprSymbol &N, const GuardList &guard) {
-    // First check if there is an equality constraint (we can then ignore all other upper bounds)
-    for (const Expression &ex : guard) {
-        if (Relation::isEquality(ex) && ex.has(N)) {
-            auto optSolved = GuardToolbox::solveTermFor(ex.lhs()-ex.rhs(), N, GuardToolbox::ResultMapsToInt);
-            if (!optSolved) {
-                debugBackwardAccel("unable to compute upperbound from equality " << ex);
-                return {};
-            }
-            // One equality is enough, as all other bounds must also satisfy this equality
-            return vector<Expression>({optSolved.get()});
-        }
-    }
-
-    // Otherwise, collect all upper bounds
-    vector<Expression> bounds;
-    for (const Expression &ex : guard) {
-        if (Relation::isEquality(ex) || !ex.has(N)) continue;
-
-        Expression term = Relation::toLessEq(ex);
-        term = (term.lhs() - term.rhs()).expand();
-        if (term.degree(N) != 1) continue;
-
-        // ignore lower bounds (terms of the form -N <= 0)
-        if (term.coeff(N, 1).info(GiNaC::info_flags::negative)) {
-            continue;
-        }
-
-        // compute the upper bound represented by N and check that it is integral
-        auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
-        if (!optSolved) {
-            debugBackwardAccel("unable to compute upperbound from " << ex);
-            return {};
-        }
-        bounds.push_back(optSolved.get());
-    }
-
-    if (bounds.empty()) {
-        debugBackwardAccel("warning: no upperbounds found, not instantiating " << N);
-        return {};
-    }
-
-    return bounds;
-}
-
-
 vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, const Rule &rule) {
     // gather all upper bounds (if possible)
-    auto bounds = computeUpperbounds(N, rule.getGuard());
+    VarEliminator ve(rule.getGuard(), N, varMan);
 
     // avoid rule explosion (by not instantiating N if there are too many bounds)
-    if (bounds.empty() || bounds.size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
+    if (ve.getRes().empty() || ve.getRes().size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
         return {rule};
     }
 
     // create one rule for each upper bound, by instantiating N with this bound
     vector<Rule> res;
-    for (const Expression &bound : bounds) {
-        GiNaC::exmap subs;
-        subs[N] = bound;
-
-        Rule instantiated = rule;
-        instantiated.applySubstitution(subs);
-        res.push_back(instantiated);
-        debugBackwardAccel("instantiation " << subs << " yielded " << instantiated);
+    if (ve.getRes().empty()) {
+        debugTest("instantiation failed\n");
+        res.push_back(rule);
+    } else {
+        for (const GiNaC::exmap &subs : ve.getRes()) {
+            debugTest("instantiation: " << subs << "\n");
+            Rule instantiated = rule;
+            instantiated.applySubstitution(subs);
+            res.push_back(instantiated);
+            debugBackwardAccel("instantiation " << subs << " yielded " << instantiated);
+        }
     }
     return res;
 }

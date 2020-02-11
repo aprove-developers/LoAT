@@ -61,13 +61,7 @@ private:
      *
      * @return A list of rules, either with N eliminated or only containing the given rule
      */
-    static std::vector<Rule> replaceByUpperbounds(const ExprSymbol &N, const Rule &rule);
-
-    /**
-     * Helper for replaceByUpperbounds, returns all upperbounds of N in rule's guard,
-     * or fails if not all of them can be computed.
-     */
-    static std::vector<Expression> computeUpperbounds(const ExprSymbol &N, const GuardList &guard);
+    std::vector<Rule> replaceByUpperbounds(const ExprSymbol &N, const Rule &rule);
 
 private:
     VariableManager &varMan;
