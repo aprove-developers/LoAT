@@ -9,24 +9,39 @@ VarEliminator::VarEliminator(const GuardList &guard, const ExprSymbol &N, Variab
 
 const ExprSymbolSet VarEliminator::findDependencies(const GuardList &guard) const {
     ExprSymbolSet res;
-    option<ExprSymbol> dep;
-    for (const Expression &rel: guard) {
-        const Expression &ex = (rel.lhs() - rel.rhs()).expand();
-        if (ex.degree(N) == 1) {
-            const Expression &coeff = ex.coeff(N, 1);
-            for (const ExprSymbol &x: coeff.getVariables()) {
-                if (varMan.isTempVar(x)) {
-                    dep = x;
-                } else {
-                    dep = {};
-                    break;
+    res.insert(N);
+    bool changed;
+    do {
+        changed = false;
+        // compute dependencies of var
+        for (const ExprSymbol &var: res) {
+            option<ExprSymbol> dep;
+            for (const Expression &rel: guard) {
+                const Expression &ex = (rel.lhs() - rel.rhs()).expand();
+                if (ex.degree(var) == 1) {
+                    // we found a constraint which is linear in var, check all variables in var's coefficient
+                    const Expression &coeff = ex.coeff(var, 1);
+                    for (const ExprSymbol &x: coeff.getVariables()) {
+                        if (varMan.isTempVar(x)) {
+                            if (res.find(x) == res.end()) {
+                                // we found a tmp variable in coeff which has not yet been marked as dependency
+                                dep = x;
+                            }
+                        } else {
+                            // coeff also contains non-tmp variables, ignore the current constraint
+                            dep = {};
+                            break;
+                        }
+                    }
+                    if (dep) {
+                        res.insert(dep.get());
+                        changed = true;
+                    }
                 }
             }
-            if (dep) {
-                res.insert(dep.get());
-            }
         }
-    }
+    } while (changed);
+    res.erase(N);
     return res;
 }
 
