@@ -4,17 +4,17 @@
 VarEliminator::VarEliminator(const GuardList &guard, const ExprSymbol &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
     todoDeps.push({{}, guard});
+    findDependencies(guard);
     eliminate();
 }
 
-const ExprSymbolSet VarEliminator::findDependencies(const GuardList &guard) const {
-    ExprSymbolSet res;
-    res.insert(N);
+void VarEliminator::findDependencies(const GuardList &guard) {
+    dependencies.insert(N);
     bool changed;
     do {
         changed = false;
         // compute dependencies of var
-        for (const ExprSymbol &var: res) {
+        for (const ExprSymbol &var: dependencies) {
             option<ExprSymbol> dep;
             for (const Expression &rel: guard) {
                 const Expression &ex = (rel.lhs() - rel.rhs()).expand();
@@ -23,7 +23,7 @@ const ExprSymbolSet VarEliminator::findDependencies(const GuardList &guard) cons
                     const Expression &coeff = ex.coeff(var, 1);
                     for (const ExprSymbol &x: coeff.getVariables()) {
                         if (varMan.isTempVar(x)) {
-                            if (res.find(x) == res.end()) {
+                            if (dependencies.find(x) == dependencies.end()) {
                                 // we found a tmp variable in coeff which has not yet been marked as dependency
                                 dep = x;
                             }
@@ -34,20 +34,23 @@ const ExprSymbolSet VarEliminator::findDependencies(const GuardList &guard) cons
                         }
                     }
                     if (dep) {
-                        res.insert(dep.get());
+                        dependencies.insert(dep.get());
                         changed = true;
                     }
                 }
             }
         }
     } while (changed);
-    res.erase(N);
-    return res;
+    dependencies.erase(N);
 }
 
 const std::set<std::pair<GiNaC::exmap, GuardList>> VarEliminator::eliminateDependency(const GiNaC::exmap &subs, const GuardList &guard) const {
-    ExprSymbolSet deps = findDependencies(guard);
-    for (auto it = deps.begin(); it != deps.end(); ++it) {
+    ExprSymbolSet vars;
+    guard.collectVariables(vars);
+    for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
+        if (vars.find(*it) == vars.end()) {
+            continue;
+        }
         BoundExtractor be(guard, *it);
         std::set<std::pair<GiNaC::exmap, GuardList>> res;
         for (const Expression &bound: be.getConstantBounds()) {

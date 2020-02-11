@@ -18,11 +18,11 @@ public:
 private:
 
     /**
-     * "Dependencies" are other temporary variables that render a bound on N useless.
+     * Dependencies are other temporary variables that render a bound on N useless.
      * For example, if we have N * M <= X, then we cannot instantiate N with X/M, as the bound must always evaluate to an integer.
      * Thus, in this case M is a dependency of N.
      */
-    const ExprSymbolSet findDependencies(const GuardList &guard) const;
+    void findDependencies(const GuardList &guard);
 
     /**
      * Tries to eliminate a single dependency by instantiating it with a constant bound.
@@ -60,6 +60,8 @@ private:
      * Substitutions that are suitable to eliminate N.
      */
     std::set<GiNaC::exmap> res;
+
+    ExprSymbolSet dependencies;
 
 };
 
