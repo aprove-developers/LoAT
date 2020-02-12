@@ -36,10 +36,12 @@ public:
         const ForwardAcceleration::ResultKind status;
     };
 
-    static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule);
+    static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule, LocationIdx sink);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const LinearRule &rule);
+    BackwardAcceleration(VarMan &varMan, const LinearRule &rule, LocationIdx sink);
+
+    LinearRule buildNontermRule() const;
 
     /**
      * Main function, just calls the methods below in the correct order
@@ -66,6 +68,7 @@ private:
 private:
     VariableManager &varMan;
     const LinearRule &rule;
+    LocationIdx sink;
 };
 
 #endif /* BACKWARDACCELERATION_H */

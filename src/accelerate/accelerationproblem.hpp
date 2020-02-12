@@ -20,6 +20,7 @@ struct AccelerationProblem {
     ExprSymbol n;
     GuardList guard;
     bool equivalent = true;
+    bool nonterm = true;
 
     AccelerationProblem(
             const GuardList &res,
@@ -77,6 +78,7 @@ struct AccelerationProblem {
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
                 todo.erase(it);
                 print();
+                nonterm = false;
                 return true;
             }
             solver.pop();
@@ -127,13 +129,22 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated < updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via eventual decrease" << std::endl;
-                done.push_back(e);
-                res.push_back(e);
-                res.push_back(e.subs(closed).subs({{n, n-1}}));
-                todo.erase(it);
-                print();
-                return true;
+                solver.pop();
+                solver.push();
+                const Expression &newCond = e.subs(closed).subs({{n, n-1}});
+                solver.add(e.toZ3(ctx));
+                solver.add(newCond.toZ3(ctx));
+                if (solver.check() == z3::sat) {
+                    solver.pop();
+                    proofout << std::endl << "handled " << e << " via eventual decrease" << std::endl;
+                    done.push_back(e);
+                    res.push_back(e);
+                    res.push_back(newCond);
+                    todo.erase(it);
+                    print();
+                    nonterm = false;
+                    return true;
+                }
             }
             solver.pop();
         }
@@ -169,18 +180,24 @@ struct AccelerationProblem {
             const GiNaC::ex &updated = e.lhs().subs(up);
             solver.add(GinacToZ3::convert(e.lhs() <= updated, ctx));
             if (solver.check() != z3::sat) {
-                return {};
+                return false;
             }
             solver.add(GinacToZ3::convert(updated > updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via eventual increase" << std::endl;
-                done.push_back(e);
-                res.push_back(Relation::normalizeInequality(e.lhs() <= updated));
-                res.push_back(e);
-                todo.erase(it);
-                this->equivalent = false;
-                print();
-                return true;
+                const Expression &newCond = Relation::normalizeInequality(e.lhs() <= updated);
+                solver.add(e.toZ3(ctx));
+                solver.add(newCond.toZ3(ctx));
+                if (solver.check() == z3::sat) {
+                    solver.pop();
+                    proofout << std::endl << "handled " << e << " via eventual increase" << std::endl;
+                    done.push_back(e);
+                    res.push_back(newCond);
+                    res.push_back(e);
+                    todo.erase(it);
+                    this->equivalent = false;
+                    print();
+                    return true;
+                }
             }
             solver.pop();
         }

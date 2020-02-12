@@ -165,7 +165,7 @@ bool Accelerator::nestRules(const Complexity &currentCpx, const InnerCandidate &
             Preprocess::simplifyRule(its, nestedRule);
 
             // Note that we do not try all heuristics or backward accel to keep nesting efficient
-            const std::vector<Rule> &accelRules = Backward::accelerate(its, nestedRule).res;
+            const std::vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
             bool success = false;
             for (const Rule &accelRule: accelRules) {
                 Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
@@ -308,63 +308,68 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
     stack<LinearRule> todo;
-    todo.push(chain(rule));
-    bool unrestricted = true;
-    bool unrestrictedNonTerm = false;
-    do {
-        LinearRule r = todo.top();
-        bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
-        if (sat && r.getCost().isNontermSymbol()) {
-            todo.pop();
-            if (!status) {
-                status = Forward::Success;
-                unrestrictedNonTerm = true;
-            }
-            continue;
-        } else if (!sat) {
-            todo.pop();
-            if (!status) {
-                status = Forward::NonMonotonic;
-                unrestricted = false;
-            }
-            continue;
-        }
-        // first try to prove non-termination
+    // chain rule if necessary
+    const LinearRule &r = chain(rule);
+    bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
+    // only proceed if the guard is sat
+    if (sat) {
+        // first try to prove nonterm
         option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
         if (p) {
             rules.emplace_back("non-termination", p.get().first);
-            if (unrestricted && p.get().second == Forward::Success) {
-                unrestrictedNonTerm = true;
+            // if the rule is universaly non-termianting, we are done
+            if (p.get().second == Forward::Success) {
+                return {.result=Forward::Success, .rules=rules};
             }
         }
-        todo.pop();
-        if (!unrestrictedNonTerm) {
-            BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r);
-            // if backwards acceleration is not supported, we can only hope to prove non-termination
-            // for proving non-termination, only invariance is of interest
-            std::vector<strengthening::Mode> strengtheningModes = strengthening::Modes::modes();
-            // store the result for the original rule so that we can return it if we fail
-            if (!status) {
-                status = res.status;
-                if (status.get() != Forward::Success) {
-                    unrestricted = false;
-                }
+        // try acceleration
+        BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
+        if (res.res.empty()) {
+            // if acceleration failed, the best we can hope for is a restricted result
+            status = Forward::SuccessWithRestriction;
+        } else {
+            // if acceleration succeeded, save the result, but we still try to find cases where the rule does not terminate
+            status = res.status;
+            for (const Rule &ar: res.res) {
+                rules.emplace_back("acceleration calculus", ar);
             }
-            if (res.res.empty()) {
-                vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its, strengtheningModes);
+        }
+        // strengthen in order to prove non-termination
+        vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its, strengthening::Modes::modes());
+        for (const LinearRule &sr: strengthened) {
+            debugBackwardAccel("invariant inference yields " << sr);
+            todo.push(sr);
+        }
+        // alter between non-termination proving and strengthening
+        while (!todo.empty()) {
+            LinearRule r = todo.top();
+            bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
+            // only proceed if the guard is sat
+            if (sat) {
+                // try to prove non-termination
+                option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
+                if (p) {
+                    rules.emplace_back("non-termination", p.get().first);
+                    // if the rule is universally non-terminating, we are done
+                    if (p->second == Forward::Success) {
+                        todo.pop();
+                        continue;
+                    }
+                }
+                // strengthen
+                vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its, strengthening::Modes::modes());
+                todo.pop();
                 for (const LinearRule &sr: strengthened) {
                     debugBackwardAccel("invariant inference yields " << sr);
                     todo.push(sr);
                 }
             } else {
-                for (const Rule &ar: res.res) {
-                    rules.emplace_back("backward acceleration", ar);
-                }
+                todo.pop();
             }
         }
-    } while (!todo.empty());
-    if (!rules.empty()) {
-        status = unrestrictedNonTerm || unrestricted ? Forward::Success : Forward::SuccessWithRestriction;
+    }
+    if (rules.empty()) {
+        status = Forward::NonMonotonic;
     }
     return {.result=status.get(), .rules=rules};
 }

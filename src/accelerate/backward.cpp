@@ -39,8 +39,8 @@ using namespace std;
 
 typedef BackwardAcceleration Self;
 
-BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule)
-        : varMan(varMan), rule(rule) {}
+BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule, LocationIdx sink)
+        : varMan(varMan), rule(rule), sink(sink) {}
 
 bool BackwardAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
@@ -72,6 +72,12 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
     return res;
 }
 
+LinearRule BackwardAcceleration::buildNontermRule() const {
+    LinearRule res(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
+    debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
+    return std::move(res);
+}
+
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
         debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
@@ -83,16 +89,20 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (ap) {
         option<AccelerationProblem> solved = AccelerationCalculus::solve(ap.get());
         if (solved) {
-            UpdateMap up;
-            for (auto p: solved.get().closed) {
-                up[varMan.getVarIdx(Expression(p.first).getAVariable())] = p.second;
-            }
-            LinearRule res(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
-            Stats::add(Stats::BackwardSuccess);
-            if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                return {.res=replaceByUpperbounds(solved->n, res), .status=ForwardAcceleration::Success};
+            if (solved->nonterm) {
+                return {{buildNontermRule()}, .status=ForwardAcceleration::Success};
             } else {
-                return {{res}, .status=ForwardAcceleration::Success};
+                UpdateMap up;
+                for (auto p: solved.get().closed) {
+                    up[varMan.getVarIdx(Expression(p.first).getAVariable())] = p.second;
+                }
+                LinearRule res(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
+                Stats::add(Stats::BackwardSuccess);
+                if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
+                    return {.res=replaceByUpperbounds(solved->n, res), .status=ForwardAcceleration::Success};
+                } else {
+                    return {{res}, .status=ForwardAcceleration::Success};
+                }
             }
         } else {
             return {{}, ForwardAcceleration::NonMonotonic};
@@ -103,7 +113,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
 }
 
 
-Self::AccelerationResult BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule) {
-    BackwardAcceleration ba(varMan, rule);
+Self::AccelerationResult BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule, LocationIdx sink) {
+    BackwardAcceleration ba(varMan, rule, sink);
     return ba.run();
 }
