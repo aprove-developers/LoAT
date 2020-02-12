@@ -36,7 +36,6 @@ namespace ForwardAcceleration {
         NoMetering, // No metering function could be found
         NonMonotonic, //
         NoClosedFrom,
-        NonCommutative,
         NotSupported,
         TooComplicated, // Guard/update is too complicated (nonlinear or no dependency order)
         Success, // Rule was successfully accelerated or is non-terminating (then the cost is set to InftySymbol)

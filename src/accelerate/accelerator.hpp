@@ -48,15 +48,10 @@ private:
     // Potential candidate for the inner loop when nesting two loops.
     // Inner loops are always accelerated loops, so this stores the original and the accelerated rule.
     // The information on the original rule is only used to avoid nesting a loop with itself
-    struct InnerCandidate {
+    struct NestingCandidate {
         TransIdx oldRule;
         TransIdx newRule;
-    };
-
-    // Potential candidate for the outer loop when nesting two loops.
-    // Outer loops are always un-accelerated rules, so we just store an original rule here.
-    struct OuterCandidate {
-        TransIdx oldRule;
+        Complexity cpx;
     };
 
 private:
@@ -125,12 +120,12 @@ private:
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */
-    bool nestRules(const Complexity &currentCpx, const InnerCandidate &inner, const OuterCandidate &outer);
+    bool nestRules(const NestingCandidate &inner, const NestingCandidate &outer);
 
     /**
      * Main implementation of nesting
      */
-    void performNesting(std::vector<InnerCandidate> inner, std::vector<OuterCandidate> outer);
+    void performNesting(std::vector<NestingCandidate> candidates);
 
     /**
      * Removes all given loops, unless they are contained in keepRules.
