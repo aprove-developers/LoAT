@@ -89,19 +89,21 @@ Self::AccelerationResult BackwardAcceleration::run() {
     if (ap) {
         option<AccelerationProblem> solved = AccelerationCalculus::solve(ap.get());
         if (solved) {
+            ForwardAcceleration::ResultKind status = solved->equivalent ? ForwardAcceleration::Success : ForwardAcceleration::SuccessWithRestriction;
             if (solved->nonterm) {
-                return {{buildNontermRule()}, .status=ForwardAcceleration::Success};
+                return {{buildNontermRule()}, .status=status};
             } else {
                 UpdateMap up;
                 for (auto p: solved.get().closed) {
                     up[varMan.getVarIdx(Expression(p.first).getAVariable())] = p.second;
                 }
                 LinearRule res(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
+
                 Stats::add(Stats::BackwardSuccess);
                 if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                    return {.res=replaceByUpperbounds(solved->n, res), .status=ForwardAcceleration::Success};
+                    return {.res=replaceByUpperbounds(solved->n, res), .status=status};
                 } else {
-                    return {{res}, .status=ForwardAcceleration::Success};
+                    return {{res}, .status=status};
                 }
             }
         } else {
