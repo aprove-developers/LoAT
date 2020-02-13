@@ -94,34 +94,11 @@ bool Accelerator::simplifySimpleLoops() {
 // ##  Nesting of Loops  ##
 // ########################
 
-bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) const {
-    // Collect all variables appearing in the inner guard
-    ExprSymbolSet innerGuardSyms;
-    for (const Expression &ex : inner.getGuard()) {
-        ex.collectVariables(innerGuardSyms);
-    }
-
-    // If any of these variables is affected by the outer update,
-    // then applying the outer loop can affect the inner loop's condition,
-    // so it might be possible to execute the inner loop again (and thus nesting might work).
-    for (const auto &it : outer.getUpdate()) {
-        ExprSymbol updated = its.getVarSymbol(it.first);
-        if (innerGuardSyms.count(updated) > 0) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-std::vector<TransIdx> Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
+void Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
                                 TransIdx inner, TransIdx outer)
 {
-    std::vector<TransIdx> res;
     // Add the new rule
     TransIdx added = addResultingRule(metered);
-    res.push_back(added);
 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
@@ -134,33 +111,25 @@ std::vector<TransIdx> Accelerator::addNestedRule(const Rule &metered, const Line
     auto chained = Chaining::chainRules(its, chain, metered);
     if (chained) {
         TransIdx added = addResultingRule(chained.get());
-        res.push_back(added);
         proofout << ", " << added;
     }
     proofout << "." << endl;
-    return res;
 }
 
 
-std::vector<Accelerator::NestingCandidate> Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate &snd) {
+void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate &snd) {
     // Avoid nesting a loop with its original transition or itself
     if (fst.oldRule == snd.oldRule) {
-        return {};
+        return;
     }
 
     const LinearRule first = its.getLinearRule(fst.newRule);
     const LinearRule second = its.getLinearRule(snd.newRule);
 
     if (first.getCost().isNontermSymbol() || second.getCost().isNontermSymbol()) {
-        return {};
+        return;
     }
 
-    // Check by some heuristic if it makes sense to nest inner and outer
-    if (!canNest(first, second)) {
-        return {};
-    }
-
-    std::vector<NestingCandidate> res;
     auto optNested = Chaining::chainRules(its, first, second);
     if (optNested) {
         LinearRule nestedRule = optNested.get();
@@ -179,16 +148,10 @@ std::vector<Accelerator::NestingCandidate> Accelerator::nestRules(const NestingC
                         false,
                         currentCpx).cpx;
             if (newCpx > currentCpx) {
-                std::vector<TransIdx> added = addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
-                TransIdx oldRule = fst.oldRule == fst.newRule ? fst.oldRule : snd.oldRule;
-                for (TransIdx i: added) {
-                    res.push_back(NestingCandidate{.oldRule=oldRule, .newRule=i, .cpx=newCpx});
-                }
+                addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
             }
         }
-        return res;
     }
-    return {};
 }
 
 
@@ -199,26 +162,17 @@ void Accelerator::performNesting(std::vector<NestingCandidate> origRules, std::v
         Rule r = its.getLinearRule(in.newRule);
         for (const NestingCandidate &out : origRules) {
             if (in.oldRule == out.oldRule) continue;
-            std::vector<NestingCandidate> toAdd = nestRules(in, out);
-            todo.insert(todo.end(), toAdd.begin(), toAdd.end());
+            nestRules(in, out);
             if (Timeout::soft()) return;
         }
     }
-    // Try to combine previously identified inner and outer candidates via chaining,
-    // then try to accelerate the resulting rule
-    while (!todo.empty()) {
-        std::vector<NestingCandidate> newTodo;
-        for (const NestingCandidate &in : origRules) {
-            Rule r = its.getLinearRule(in.newRule);
-            for (const NestingCandidate &out : todo) {
-                std::vector<NestingCandidate> toAdd = nestRules(in, out);
-                newTodo.insert(newTodo.end(), toAdd.begin(), toAdd.end());
-                toAdd = nestRules(out, in);
-                newTodo.insert(newTodo.end(), toAdd.begin(), toAdd.end());
-                if (Timeout::soft()) return;
-            }
+    for (const NestingCandidate &in : origRules) {
+        Rule r = its.getLinearRule(in.newRule);
+        for (const NestingCandidate &out : todo) {
+            nestRules(in, out);
+            nestRules(out, in);
+            if (Timeout::soft()) return;
         }
-        todo = newTodo;
     }
 }
 

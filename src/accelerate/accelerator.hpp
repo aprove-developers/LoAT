@@ -103,24 +103,18 @@ private:
     TransIdx addResultingRule(Rule rule);
 
     /**
-     * Helper function that checks with a simple heuristic if the transitions might be nested loops
-     * (this is done to avoid too many nesting attemts, as finding a metering function takes some time).
-     */
-    bool canNest(const LinearRule &inner, const LinearRule &outer) const;
-
-    /**
      * Adds the given accelerated rule to the ITS.
      * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
      * Takes care of proof output (the arguments inner, outer are only used for the output).
      */
-    std::vector<TransIdx> addNestedRule(const Rule &accelerated, const LinearRule &chain,
+    void addNestedRule(const Rule &accelerated, const LinearRule &chain,
                        TransIdx inner, TransIdx outer);
 
     /**
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */
-    std::vector<NestingCandidate> nestRules(const NestingCandidate &inner, const NestingCandidate &outer);
+    void nestRules(const NestingCandidate &inner, const NestingCandidate &outer);
 
     /**
      * Main implementation of nesting
