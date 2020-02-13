@@ -113,19 +113,19 @@ private:
      * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
      * Takes care of proof output (the arguments inner, outer are only used for the output).
      */
-    void addNestedRule(const Rule &accelerated, const LinearRule &chain,
+    std::vector<TransIdx> addNestedRule(const Rule &accelerated, const LinearRule &chain,
                        TransIdx inner, TransIdx outer);
 
     /**
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */
-    bool nestRules(const NestingCandidate &inner, const NestingCandidate &outer);
+    std::vector<NestingCandidate> nestRules(const NestingCandidate &inner, const NestingCandidate &outer);
 
     /**
      * Main implementation of nesting
      */
-    void performNesting(std::vector<NestingCandidate> candidates);
+    void performNesting(std::vector<NestingCandidate> origRules, std::vector<NestingCandidate> todo);
 
     /**
      * Removes all given loops, unless they are contained in keepRules.

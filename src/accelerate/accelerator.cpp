@@ -115,11 +115,13 @@ bool Accelerator::canNest(const LinearRule &inner, const LinearRule &outer) cons
 }
 
 
-void Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
+std::vector<TransIdx> Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
                                 TransIdx inner, TransIdx outer)
 {
+    std::vector<TransIdx> res;
     // Add the new rule
     TransIdx added = addResultingRule(metered);
+    res.push_back(added);
 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
@@ -132,21 +134,18 @@ void Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
     auto chained = Chaining::chainRules(its, chain, metered);
     if (chained) {
         TransIdx added = addResultingRule(chained.get());
+        res.push_back(added);
         proofout << ", " << added;
     }
     proofout << "." << endl;
+    return res;
 }
 
 
-bool Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate &snd) {
-    // Avoid nesting two new rules
-    if (fst.oldRule != fst.newRule && snd.oldRule != snd.newRule) {
-        return false;
-    }
-
+std::vector<Accelerator::NestingCandidate> Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate &snd) {
     // Avoid nesting a loop with its original transition or itself
-    if (fst.oldRule == snd.oldRule || fst.newRule == snd.newRule) {
-        return false;
+    if (fst.oldRule == snd.oldRule) {
+        return {};
     }
 
     const LinearRule first = its.getLinearRule(fst.newRule);
@@ -154,9 +153,10 @@ bool Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
 
     // Check by some heuristic if it makes sense to nest inner and outer
     if (!canNest(first, second)) {
-        return false;
+        return {};
     }
 
+    std::vector<NestingCandidate> res;
     auto optNested = Chaining::chainRules(its, first, second);
     if (optNested) {
         LinearRule nestedRule = optNested.get();
@@ -176,27 +176,49 @@ bool Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
                         false,
                         currentCpx).cpx;
             if (newCpx > currentCpx) {
-                addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
+                std::vector<TransIdx> added = addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
                 success = true;
+                TransIdx oldRule = fst.oldRule == fst.newRule ? fst.oldRule : snd.oldRule;
+                for (TransIdx i: added) {
+                    res.push_back(NestingCandidate{.oldRule=oldRule, .newRule=i, .cpx=newCpx});
+                }
             }
         }
-        return success;
+        return res;
     }
-    return false;
+    return {};
 }
 
 
-void Accelerator::performNesting(vector<NestingCandidate> candidates) {
-    debugAccel("Nesting with " << inner.size() << " inner and " << outer.size() << " outer candidates");
+void Accelerator::performNesting(std::vector<NestingCandidate> origRules, std::vector<NestingCandidate> todo) {
+    debugAccel("Nesting with " << origRules.size() << " inner and " << todo.size() << " outer candidates");
 
-    // Try to combine previously identified inner and outer candidates via chaining,
-    // then try to accelerate the resulting rule
-    for (const NestingCandidate &in : candidates) {
+    for (const NestingCandidate &in : origRules) {
         Rule r = its.getLinearRule(in.newRule);
-        for (const NestingCandidate &out : candidates) {
-            nestRules(in, out);
+        for (const NestingCandidate &out : origRules) {
+            if (in.oldRule == out.oldRule) continue;
+            std::vector<NestingCandidate> toAdd = nestRules(in, out);
+            todo.insert(todo.end(), toAdd.begin(), toAdd.end());
+            toAdd = nestRules(out, in);
+            todo.insert(todo.end(), toAdd.begin(), toAdd.end());
             if (Timeout::soft()) return;
         }
+    }
+    // Try to combine previously identified inner and outer candidates via chaining,
+    // then try to accelerate the resulting rule
+    while (!todo.empty()) {
+        std::vector<NestingCandidate> newTodo;
+        for (const NestingCandidate &in : origRules) {
+            Rule r = its.getLinearRule(in.newRule);
+            for (const NestingCandidate &out : todo) {
+                std::vector<NestingCandidate> toAdd = nestRules(in, out);
+                newTodo.insert(newTodo.end(), toAdd.begin(), toAdd.end());
+                toAdd = nestRules(out, in);
+                newTodo.insert(newTodo.end(), toAdd.begin(), toAdd.end());
+                if (Timeout::soft()) return;
+            }
+        }
+        todo = newTodo;
     }
 }
 
@@ -458,7 +480,20 @@ void Accelerator::run() {
     // While accelerating, collect rules that might be feasible for nesting
     // Inner candidates are accelerated rules, since they correspond to a loop within another loop.
     // Outer candidates are loops that cannot be accelerated on their own (because they are missing their inner loop)
+    vector<NestingCandidate> origRules;
     vector<NestingCandidate> nestingCandidates;
+    for (TransIdx loop : loops) {
+        const Rule &r = its.getRule(loop);
+        if (r.isLinear()) {
+            Complexity cpx = AsymptoticBound::determineComplexityViaSMT(
+                    its,
+                    r.getGuard(),
+                    r.getCost(),
+                    false,
+                    Complexity::Const).cpx;
+            origRules.push_back({loop, loop, cpx});
+        }
+    }
 
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
@@ -467,16 +502,6 @@ void Accelerator::run() {
         // Forward and backward accelerate (and partial deletion for nonlinear rules)
         const Rule &r = its.getRule(loop);
         Forward::Result res = accelerateOrShorten(r);
-
-        if (its.getRule(loop).isLinear()) {
-            Complexity cpx = AsymptoticBound::determineComplexityViaSMT(
-                    its,
-                    r.getGuard(),
-                    r.getCost(),
-                    false,
-                    Complexity::Const).cpx;
-            nestingCandidates.push_back({loop, loop, cpx});
-        }
 
         if (res.result != Forward::Success) {
             keepRules.insert(loop);
@@ -531,7 +556,7 @@ void Accelerator::run() {
 
     // Nesting
     if (Config::Accel::TryNesting) {
-        performNesting(std::move(nestingCandidates));
+        performNesting(std::move(origRules), std::move(nestingCandidates));
         if (Timeout::soft()) return;
     }
 
