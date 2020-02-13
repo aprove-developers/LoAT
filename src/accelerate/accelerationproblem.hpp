@@ -21,6 +21,7 @@ struct AccelerationProblem {
     GuardList guard;
     bool equivalent = true;
     bool nonterm = true;
+    bool silent = true;
 
     AccelerationProblem(
             const GuardList &res,
@@ -73,7 +74,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e.toString() << " via monotonic decrease" << std::endl;
+                if (!silent) proofout << std::endl << "handled " << e.toString() << " via monotonic decrease" << std::endl;
                 done.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
                 todo.erase(it);
@@ -101,7 +102,7 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.subs(up).lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                proofout << std::endl << "handled " << e << " via monotonic increase" << std::endl;
+                if (!silent) proofout << std::endl << "handled " << e << " via monotonic increase" << std::endl;
                 done.push_back(e);
                 res.push_back(e);
                 todo.erase(it);
@@ -136,7 +137,7 @@ struct AccelerationProblem {
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
                     solver.pop();
-                    proofout << std::endl << "handled " << e << " via eventual decrease" << std::endl;
+                    if (!silent) proofout << std::endl << "handled " << e << " via eventual decrease" << std::endl;
                     done.push_back(e);
                     res.push_back(e);
                     res.push_back(newCond);
@@ -189,7 +190,7 @@ struct AccelerationProblem {
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
                     solver.pop();
-                    proofout << std::endl << "handled " << e << " via eventual increase" << std::endl;
+                    if (!silent) proofout << std::endl << "handled " << e << " via eventual increase" << std::endl;
                     done.push_back(e);
                     res.push_back(newCond);
                     res.push_back(e);
@@ -205,21 +206,23 @@ struct AccelerationProblem {
     }
 
     void print() {
-        proofout << "res:";
-        for (const auto &e: this->res) {
-            proofout << " " << e;
+        if (!silent) {
+            proofout << "res:";
+            for (const auto &e: this->res) {
+                proofout << " " << e;
+            }
+            proofout << std::endl;
+            proofout << "done:";
+            for (const auto &e: this->done) {
+                proofout << " " << e;
+            }
+            proofout << std::endl;
+            proofout << "todo:";
+            for (const auto &e: this->todo) {
+                proofout << " " << e;
+            }
+            proofout << std::endl;
         }
-        proofout << std::endl;
-        proofout << "done:";
-        for (const auto &e: this->done) {
-            proofout << " " << e;
-        }
-        proofout << std::endl;
-        proofout << "todo:";
-        for (const auto &e: this->todo) {
-            proofout << " " << e;
-        }
-        proofout << std::endl;
     }
 
 };
