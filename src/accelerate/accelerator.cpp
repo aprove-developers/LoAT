@@ -151,6 +151,10 @@ std::vector<Accelerator::NestingCandidate> Accelerator::nestRules(const NestingC
     const LinearRule first = its.getLinearRule(fst.newRule);
     const LinearRule second = its.getLinearRule(snd.newRule);
 
+    if (first.getCost().isNontermSymbol() || second.getCost().isNontermSymbol()) {
+        return {};
+    }
+
     // Check by some heuristic if it makes sense to nest inner and outer
     if (!canNest(first, second)) {
         return {};
@@ -196,8 +200,6 @@ void Accelerator::performNesting(std::vector<NestingCandidate> origRules, std::v
         for (const NestingCandidate &out : origRules) {
             if (in.oldRule == out.oldRule) continue;
             std::vector<NestingCandidate> toAdd = nestRules(in, out);
-            todo.insert(todo.end(), toAdd.begin(), toAdd.end());
-            toAdd = nestRules(out, in);
             todo.insert(todo.end(), toAdd.begin(), toAdd.end());
             if (Timeout::soft()) return;
         }
