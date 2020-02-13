@@ -77,71 +77,10 @@ namespace strengthening {
         return res;
     }
 
-    const Result Self::splitMonotonicConstraints(
-            const GuardList &invariants,
-            const GuardList &nonInvariants) const {
-        Z3Context z3Ctx;
-        Z3Solver solver(z3Ctx);
-        for (const Expression &g: invariants) {
-            solver.add(g.toZ3(z3Ctx));
-        }
-        Result res;
-        res.solved.insert(res.solved.end(), nonInvariants.begin(), nonInvariants.end());
-        for (const GiNaC::exmap &up: updates) {
-            solver.push();
-            for (Expression g: guard) {
-                g.applySubs(up);
-                solver.add(g.toZ3(z3Ctx));
-            }
-            auto g = res.solved.begin();
-            while (g != res.solved.end()) {
-                solver.push();
-                solver.add(!(*g).toZ3(z3Ctx));
-                const z3::check_result &z3Res = solver.check();
-                solver.pop();
-                if (z3Res == z3::check_result::unsat) {
-                    g++;
-                } else {
-                    res.failed.push_back(*g);
-                    g = res.solved.erase(g);
-                }
-            }
-            solver.pop();
-        }
-        return res;
-    }
-
-    const Result Self::splitSimpleInvariants(const GuardList &invariants) const {
-        Result res;
-        res.solved.insert(res.solved.end(), invariants.begin(), invariants.end());
-        bool done;
-        do {
-            done = true;
-            auto it = res.solved.begin();
-            while (it != res.solved.end()) {
-                GuardList updated;
-                for (const GiNaC::exmap &up: updates) {
-                    updated.push_back((*it).subs(up));
-                }
-                if (Z3Toolbox::isValidImplication(res.solved, updated)) {
-                    it++;
-                } else {
-                    res.solved.erase(it);
-                    res.failed.push_back(*it);
-                    done = false;
-                    break;
-                }
-            }
-        } while (!done);
-        return res;
-    }
-
     const GuardContext Self::build() const {
         const GuardList &constraints = computeConstraints();
         const Result inv = splitInvariants(constraints);
-        const Result simpleInv = splitSimpleInvariants(inv.solved);
-        const Result mon = splitMonotonicConstraints(simpleInv.solved, inv.failed);
-        return GuardContext(guard, inv.solved, simpleInv.solved, mon.solved, mon.failed);
+        return GuardContext(guard, inv.solved, inv.failed);
     }
 
 }

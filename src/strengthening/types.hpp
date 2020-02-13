@@ -46,19 +46,13 @@ namespace strengthening {
 
         GuardContext(const GuardList &guard,
                 GuardList invariants,
-                GuardList simpleInvariants,
-                GuardList decreasing,
                 GuardList todo):
                 guard(guard),
                 invariants(std::move(invariants)),
-                simpleInvariants(std::move(simpleInvariants)),
-                decreasing(std::move(decreasing)),
                 todo(std::move(todo)) { }
 
         const GuardList &guard;
         const GuardList invariants;
-        const GuardList simpleInvariants;
-        const GuardList decreasing;
         const GuardList todo;
     };
 
@@ -92,21 +86,18 @@ namespace strengthening {
         SmtConstraints(
                 const Initiation &initiation,
                 const std::vector<z3::expr> &templatesInvariant,
-                const std::vector<z3::expr> &conclusionsInvariant,
-                const std::vector<z3::expr> &conclusionsMonotonic) :
+                const std::vector<z3::expr> &conclusionsInvariant) :
                 initiation(std::move(initiation)),
                 templatesInvariant(std::move(templatesInvariant)),
-                conclusionsInvariant(std::move(conclusionsInvariant)),
-                conclusionsMonotonic(std::move(conclusionsMonotonic)) {}
+                conclusionsInvariant(std::move(conclusionsInvariant)) {}
 
         const Initiation initiation;
         const std::vector<z3::expr> templatesInvariant;
         const std::vector<z3::expr> conclusionsInvariant;
-        const std::vector<z3::expr> conclusionsMonotonic;
 
     };
 
-    typedef std::function<const MaxSmtConstraints(const SmtConstraints &, bool, Z3Context &)> Mode;
+    typedef std::function<const MaxSmtConstraints(const SmtConstraints &, Z3Context &)> Mode;
 
 }
 

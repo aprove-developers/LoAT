@@ -43,12 +43,6 @@ namespace strengthening {
 
         const Result splitInvariants(const GuardList &constraints) const;
 
-        const Result splitMonotonicConstraints(
-                const GuardList &invariants,
-                const GuardList &nonInvariants) const;
-
-        const Result splitSimpleInvariants(const GuardList &invariants) const;
-
     };
 
 }

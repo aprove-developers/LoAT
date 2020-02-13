@@ -26,7 +26,7 @@ namespace strengthening {
 
     private:
 
-        static const MaxSmtConstraints invariance(const SmtConstraints &constraints, bool preferInvariance, Z3Context &z3Ctx);
+        static const MaxSmtConstraints invariance(const SmtConstraints &constraints, Z3Context &z3Ctx);
 
         //        static const MaxSmtConstraints monotonicity(const SmtConstraints &constraints, Z3Context &z3Ctx);
 
