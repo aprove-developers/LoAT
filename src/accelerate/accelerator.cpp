@@ -166,7 +166,6 @@ std::vector<Accelerator::NestingCandidate> Accelerator::nestRules(const NestingC
 
         // Note that we do not try all heuristics or backward accel to keep nesting efficient
         const std::vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).res;
-        bool success = false;
         Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
         for (const Rule &accelRule: accelRules) {
             Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
@@ -177,7 +176,6 @@ std::vector<Accelerator::NestingCandidate> Accelerator::nestRules(const NestingC
                         currentCpx).cpx;
             if (newCpx > currentCpx) {
                 std::vector<TransIdx> added = addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
-                success = true;
                 TransIdx oldRule = fst.oldRule == fst.newRule ? fst.oldRule : snd.oldRule;
                 for (TransIdx i: added) {
                     res.push_back(NestingCandidate{.oldRule=oldRule, .newRule=i, .cpx=newCpx});
