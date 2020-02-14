@@ -55,17 +55,16 @@ Analysis::Analysis(ITSProblem &its)
 RuntimeResult Analysis::run() {
     setupDotOutput();
 
-    proofout.section("Pre-processing the ITS problem");
-    proofout.headline("Initial linear ITS problem");
+    proofout.section("Initial ITS");
     printForProof("Initial");
 
     if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
-        proofout.headline("Added constraints to the guards to ensure costs are nonnegative:");
+        proofout.headline("Strengthening: Ensure Cost >= 0");
         printForProof("Costs >= 0");
     }
 
     if (ensureProperInitialLocation()) {
-        proofout.headline("Added a fresh start location (such that it has no incoming rules):");
+        proofout.headline("Added a fresh start location without incoming rules");
         printForProof("Fresh start");
     }
 
@@ -85,22 +84,22 @@ RuntimeResult Analysis::run() {
     if (Config::Analysis::Preprocessing) {
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable and leaf rules:");
+            proofout.headline("Removed unreachable rules and leaves");
             printForProof("Removed unreachable");
         }
 
         if (removeUnsatRules()) {
-            proofout.headline("Removed rules with unsatisfiable guard:");
+            proofout.headline("Removed rules with unsatisfiable guard");
             printForProof("Removed unsat");
         }
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable and leaf rules:");
+            proofout.headline("Removed unreachable rules and leaves:");
             printForProof("Removed unreachable");
         }
 
         if (preprocessRules()) {
-            proofout.headline("Simplified all rules, resulting in:");
+            proofout.headline("Simplified rules");
             printForProof("Simplify");
         }
 
@@ -108,11 +107,8 @@ RuntimeResult Analysis::run() {
 
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
-        proofout.headline("Empty problem, aborting");
         goto done;
     }
-
-    proofout.section("Simplification by acceleration and chaining");
 
     while (!isFullySimplified()) {
 
@@ -125,7 +121,7 @@ RuntimeResult Analysis::run() {
             // Special handling of nonlinear rules
             if (nonlinearProblem && Pruning::removeSinkRhss(its)) {
                 changed = true;
-                proofout.headline("Removed locations with no outgoing rules from right-hand sides");
+                proofout.headline("Removed sinks");
                 printForProof("Removed sinks");
             }
             if (Timeout::soft()) break;
@@ -133,28 +129,28 @@ RuntimeResult Analysis::run() {
             if (accelerateSimpleLoops(acceleratedRules)) {
                 changed = true;
                 acceleratedOnce = true;
-                proofout.headline("Accelerated all simple loops using metering functions (where possible):");
+                proofout.headline("Accelerated simple loops");
                 printForProof("Accelerate simple loops");
             }
             if (Timeout::soft()) break;
 
             if (chainAcceleratedLoops(acceleratedRules)) {
                 changed = true;
-                proofout.headline("Chained accelerated rules (with incoming rules):");
+                proofout.headline("Chained accelerated rules with incoming rules");
                 printForProof("Chain accelerated rules");
             }
             if (Timeout::soft()) break;
 
             if (Pruning::removeLeafsAndUnreachable(its)) {
                 changed = true;
-                proofout.headline("Removed unreachable locations (and leaf rules with constant cost):");
+                proofout.headline("Removed unreachable locations and irrelevant leaves");
                 printForProof("Remove unreachable");
             }
             if (Timeout::soft()) break;
 
             if (chainLinearPaths()) {
                 changed = true;
-                proofout.headline("Eliminated locations (on linear paths):");
+                proofout.headline("Eliminated locations on linear paths");
                 printForProof("Chain linear paths");
             }
             if (Timeout::soft()) break;
@@ -162,9 +158,6 @@ RuntimeResult Analysis::run() {
             // Check if the ITS is now linear (we accelerated all nonlinear rules)
             if (changed && nonlinearProblem) {
                 nonlinearProblem = !its.isLinear();
-                if (!nonlinearProblem) {
-                    proofout.section("Obtained a tail recursive problem, continuing simplification");
-                }
             }
         } while (changed);
 
@@ -175,7 +168,7 @@ RuntimeResult Analysis::run() {
 
         // Try more involved chaining strategies if we no longer make progress
         if (chainTreePaths()) {
-            proofout.headline("Eliminated locations (on tree-shaped paths):");
+            proofout.headline("Eliminated locations on tree-shaped paths");
             printForProof("Chain tree paths");
 
         } else if (eliminateALocation(eliminatedLocation)) {
@@ -465,7 +458,6 @@ bool Analysis::pruneRules() {
 
 
 option<RuntimeResult> Analysis::checkConstantComplexity() const {
-    proofout.headline("Checking for constant complexity:");
 
     for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
         const Rule &rule = its.getRule(idx);
@@ -473,7 +465,7 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         guard.push_back(rule.getCost() >= 1);
 
         if (Z3Toolbox::checkAll(guard) == z3::sat) {
-            proofout.result("The following rule is satisfiable with cost >= 1, yielding constant complexity:");
+            proofout.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;
             ITSExport::printLabeledRule(idx, its, s);
             proofout.appendLine(s);
@@ -487,7 +479,6 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         }
     }
 
-    proofout.appendLine("Could not prove constant complexity.");
     return {};
 }
 

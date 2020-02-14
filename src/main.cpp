@@ -114,6 +114,7 @@ void parseFlags(int argc, char *argv[]) {
             Config::Analysis::ConstantCpxCheck = false;
         } else if (strcmp("--nonterm",argv[arg]) == 0) {
             Config::Analysis::NonTermMode = true;
+            Config::Analysis::ConstantCpxCheck = false;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
@@ -155,7 +156,7 @@ int main(int argc, char *argv[]) {
     else if (benchmarkMode.compare("smt")      == 0) setBenchmarkConfig(false, false, false, &Config::Limit::SmtAndCalculus);
     else if (benchmarkMode.compare("just-smt") == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Smt);
     else if (benchmarkMode.compare("none")     != 0) {
-        cout << "Unknown benchmark setting" << endl;
+        cerr << "Error: Unknown benchmark setting" << endl;
         return 1;
     }
 
@@ -167,14 +168,14 @@ int main(int argc, char *argv[]) {
 
     // Timeout
     if (timeout < 0 || (timeout > 0 && timeout < 10)) {
-        cout << "Error: timeout must be at least 10 seconds" << endl;
+        cerr << "Error: timeout must be at least 10 seconds" << endl;
         return 1;
     }
     Timeout::setTimeouts(timeout);
 
     // Start parsing
     if (filename.empty()) {
-        cout << "Error: missing filename" << endl;
+        cerr << "Error: missing filename" << endl;
         return 1;
     }
 
@@ -211,7 +212,8 @@ int main(int argc, char *argv[]) {
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
     RuntimeResult runtime;
     if (!allowRecursion && !its.isLinear()) {
-        std::cerr << "Cannot analyze recursive ITS problem (recursion is disabled)." << std::endl;
+        std::cerr << "Error: Cannot analyze recursive ITS problem (recursion is disabled)." << std::endl;
+        return 1;
     } else {
         runtime = Analysis::analyze(its);
     }

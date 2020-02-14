@@ -202,7 +202,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
  * Performs a DFS and removes rules to leafs with constant complexity.
  * Returns true iff the ITS was modified.
  */
-static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
+static bool removeIrrelevantLeaves(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) return false; // already present
 
     // for brevity only
@@ -212,15 +212,20 @@ static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx>
     bool changed = false;
     for (LocationIdx next : its.getSuccessorLocations(node)) {
         // recurse first
-        changed = removeConstLeafs(its, next, visited) || changed;
+        changed = removeIrrelevantLeaves(its, next, visited) || changed;
 
         // If next is (now) a leaf, rules leading to next are candidates for removal
         if (isLeaf(next)) {
             for (TransIdx ruleIdx : its.getTransitionsFromTo(node, next)) {
                 const Rule &rule = its.getRule(ruleIdx);
 
-                // only remove rules with constant complexity
-                if (rule.getCost().getComplexity() > Complexity::Const) continue;
+                // only remove irrelevant rules
+                const Complexity &c = rule.getCost().getComplexity();
+                if (c == Complexity::Nonterm) {
+                    continue;
+                } else if (!Config::Analysis::NonTermMode && rule.getCost().getComplexity() > Complexity::Const) {
+                    continue;
+                }
 
                 // only remove rules where _all_ right-hand sides lead to leaves
                 if (rule.rhsCount() == 1 || std::all_of(rule.rhsBegin(), rule.rhsEnd(), isLeafRhs)) {
@@ -244,7 +249,7 @@ bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
     set<LocationIdx> visited;
 
     // Remove rules to leafs if they do not give nontrivial complexity
-    bool changed = removeConstLeafs(its, its.getInitialLocation(), visited);
+    bool changed = removeIrrelevantLeaves(its, its.getInitialLocation(), visited);
 
     // Remove all nodes that have not been reached in the DFS traversal
     for (LocationIdx node : its.getLocations()) {
