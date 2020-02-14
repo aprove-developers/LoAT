@@ -35,7 +35,6 @@ TermParser::TermParser(const std::map<std::string, VariableIdx> &knownVariables,
 
 
 TermPtr TermParser::parseTerm(const std::string &term) {
-    debugTermParser("Now parsing term: " << term);
     toParseReversed = term;
     std::reverse(toParseReversed.begin(), toParseReversed.end());
 
@@ -58,7 +57,6 @@ void TermParser::nextSymbol() {
     }
 
     char nextChar = toParseReversed.back();
-    debugTermParser("nextSymbol read char: " << nextChar);
 
     if (isdigit(nextChar)) {
         lastIdent.clear();
@@ -68,7 +66,6 @@ void TermParser::nextSymbol() {
         }
 
         symbol = NUMBER;
-        debugTermParser("nextSymbol found number: " << lastIdent);
 
     } else if (isalpha(nextChar)) {
         lastIdent.clear();
@@ -81,11 +78,9 @@ void TermParser::nextSymbol() {
 
         if (!toParseReversed.empty() && toParseReversed.back() == '(') {
             symbol = FUNCTIONSYMBOL;
-            debugTermParser("nextSymbol found function symbol: " << lastIdent);
 
         } else {
             symbol = VARIABLE;
-            debugTermParser("nextSymbol found variable: " << lastIdent);
         }
 
     } else {
@@ -118,7 +113,6 @@ void TermParser::nextSymbol() {
         }
 
         toParseReversed.pop_back();
-        debugTermParser("[nextSymbol] found symbol");
     }
 }
 
@@ -144,7 +138,6 @@ bool TermParser::expect(Symbol sym) {
 
 
 TermPtr TermParser::expression() {
-    debugTermParser("parsing expression");
     bool negative = false;
     if (symbol == PLUS || symbol == MINUS) {
         negative = (symbol == MINUS);
@@ -176,7 +169,6 @@ TermPtr TermParser::expression() {
 
 
 TermPtr TermParser::term() {
-    debugTermParser("parsing term");
     TermPtr result = factor();
 
     while (symbol == TIMES || symbol == SLASH || symbol == CIRCUMFLEX) {
@@ -203,10 +195,8 @@ TermPtr TermParser::term() {
 
 
 TermPtr TermParser::factor() {
-    debugTermParser("parsing factor");
     if (accept(FUNCTIONSYMBOL)) {
         string name = lastIdent;
-        debugTermParser("parsing function symbol " << name);
 
         expect(LPAREN);
 
@@ -225,11 +215,9 @@ TermPtr TermParser::factor() {
 
     } else if (accept(VARIABLE)) {
         std::string name = lastIdent;
-        debugTermParser("parsing variable " << name);
 
         auto it = knownVariables.find(name);
         if (it == knownVariables.end()) {
-            debugTermParser("Ooops, " << name << " is a function symbol of arity 0");
 
             vector<TermPtr> args;
             return make_shared<TermFunApp>(name, args);
@@ -239,7 +227,6 @@ TermPtr TermParser::factor() {
         return make_shared<TermVariable>(index);
 
     } else if (accept(NUMBER)) {
-        debugTermParser("parsing number " << lastIdent);
 
         GiNaC::numeric num(lastIdent.c_str());
         return make_shared<TermNumber>(num);

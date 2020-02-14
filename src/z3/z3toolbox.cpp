@@ -20,7 +20,6 @@
 #include "z3solver.hpp"
 #include "z3context.hpp"
 #include "../expr/expression.hpp"
-#include "../debug.hpp"
 
 using namespace std;
 
@@ -66,7 +65,6 @@ z3::check_result Z3Toolbox::checkAll(const vector<Expression> &list, Z3Context &
     Z3Solver solver(context);
     solver.add(target);
     z3::check_result z3res = solver.check();
-    debugZ3(solver,z3res,"checkAll");
 
     if (z3res == z3::sat && model) {
         *model = solver.get_model();
@@ -92,7 +90,6 @@ z3::check_result Z3Toolbox::checkAllApproximate(const std::vector<Expression> &l
     Z3Solver solver(context);
     solver.add(target);
     z3::check_result z3res = solver.check();
-    debugZ3(solver,z3res,"checkAllApproximate");
     return z3res;
 }
 

@@ -256,7 +256,6 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
 
 
 bool GuardToolbox::mapsToInt(const Expression &e) {
-    debugBackwardAccel("mapsToInt: checking if " << e << " maps to int");
     assert(e.isPolynomial());
 
     // shortcut for the common case
@@ -287,7 +286,6 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
         }
         Expression res = e.subs(currSubs).expand();
         if (!res.isIntegerConstant()) {
-            debugOther("mapsToInt: " << e << " does not map to an integer for " << currSubs << " where it yields " << res);
             return false;
         }
 
@@ -305,7 +303,6 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
         }
 
         if (!foundNext) {
-            debugBackwardAccel("mapsToInt: it does!");
             return true;
         }
     }

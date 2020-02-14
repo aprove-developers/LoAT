@@ -67,12 +67,7 @@ public:
     Expression() : Expression(GiNaC::ex()) {}
     Expression(const GiNaC::basic &other) : Expression(GiNaC::ex(other)) {}
     Expression(const GiNaC::ex &other) : GiNaC::ex(other) {
-#ifdef DEBUG_EXPRESSION
-        //build string representation to be used in debugger
-        std::stringstream ss;
-        print(GiNaC::print_dflt(ss));
-        string_rep = ss.str();
-#endif
+
     }
 
     /**
@@ -229,11 +224,6 @@ private:
      */
     static Complexity getComplexity(const GiNaC::ex &term);
 
-
-private:
-#ifdef DEBUG_EXPRESSION
-    std::string string_rep;
-#endif
 };
 
 #endif // EXPRESSION_H

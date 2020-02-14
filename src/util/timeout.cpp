@@ -16,10 +16,10 @@
  */
 
 #include "timeout.hpp"
-#include "../debug.hpp"
 
 #include <algorithm>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 

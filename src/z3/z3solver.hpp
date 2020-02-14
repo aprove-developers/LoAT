@@ -19,7 +19,6 @@
 #define Z3SOLVER_H
 
 #include "z3context.hpp"
-#include "../util/timing.hpp"
 #include "../config.hpp"
 
 #include <z3++.h>
@@ -36,16 +35,12 @@ public:
     }
 
     inline z3::check_result check() {
-        Timing::start(Timing::Z3);
         z3::check_result res = z3::solver::check();
-        Timing::done(Timing::Z3);
         return res;
     }
 
     inline void add(const z3::expr &e) {
-        Timing::start(Timing::Z3);
         z3::solver::add(e);
-        Timing::done(Timing::Z3);
     }
 
     void setTimeout(Z3Context &context, unsigned int timeout);

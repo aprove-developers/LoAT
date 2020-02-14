@@ -18,7 +18,6 @@
 #ifndef Z3CONTEXT_H
 #define Z3CONTEXT_H
 
-#include "../util/timing.hpp"
 #include "../util/option.hpp"
 #include "../expr/expression.hpp"
 

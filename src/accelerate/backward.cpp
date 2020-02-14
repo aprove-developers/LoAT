@@ -28,7 +28,6 @@
 #include "forward.hpp"
 
 #include <purrs.hh>
-#include "../util/stats.hpp"
 #include "../util/relevantvariables.hpp"
 #include "../analysis/chain.hpp"
 #include "accelerationproblem.hpp"
@@ -92,7 +91,6 @@ Self::AccelerationResult BackwardAcceleration::run() {
                 }
                 LinearRule res(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
 
-                Stats::add(Stats::BackwardSuccess);
                 if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
                     return {.res=replaceByUpperbounds(solved->n, res), .status=status};
                 } else {

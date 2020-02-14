@@ -23,7 +23,7 @@ Expression TermBinOp::toGinacExpression(const ITSProblem &its) const {
         case Division: return l / r;
         case Power: return GiNaC::pow(l, r);
     }
-    unreachable();
+    assert(false && "unreachable");
 }
 
 
@@ -54,5 +54,5 @@ Expression Relation::toGinacExpression(const ITSProblem &its) const {
         case RelationLess: return l < r;
         case RelationLessEqual: return l <= r;
     }
-    unreachable();
+    assert(false && "unreachable");
 }

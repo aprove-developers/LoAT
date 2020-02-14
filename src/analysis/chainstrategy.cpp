@@ -20,8 +20,6 @@
 #include "chain.hpp"
 #include "preprocess.hpp"
 
-#include "../util/stats.hpp"
-#include "../util/timing.hpp"
 #include "../util/timeout.hpp"
 
 

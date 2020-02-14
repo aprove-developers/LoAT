@@ -21,8 +21,6 @@
 #include "../z3/z3toolbox.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
 
-#include "../util/stats.hpp"
-#include "../util/timing.hpp"
 #include "../util/timeout.hpp"
 
 #include "prune.hpp"
@@ -85,7 +83,6 @@ RuntimeResult Analysis::run() {
     }
 
     if (Config::Analysis::Preprocessing) {
-        Timing::Scope timer(Timing::Preprocess);
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
             proofout.headline("Removed unreachable and leaf rules:");
@@ -418,36 +415,26 @@ void Analysis::finalizeDotOutput(const RuntimeResult &runtime) {
 // ##############################
 
 bool Analysis::chainLinearPaths() {
-    Stats::addStep("Chain Linear Paths");
-    Timing::Scope timer(Timing::Chain);
     return Chaining::chainLinearPaths(its);
 }
 
 
 bool Analysis::chainTreePaths() {
-    Stats::addStep("Chain Tree Paths");
-    Timing::Scope timer(Timing::Chain);
     return Chaining::chainTreePaths(its);
 }
 
 
 bool Analysis::eliminateALocation(string &eliminatedLocation) {
-    Stats::addStep("Eliminate Location");
-    Timing::Scope timer(Timing::Chain);
     return Chaining::eliminateALocation(its, eliminatedLocation);
 }
 
 
 bool Analysis::chainAcceleratedLoops(const set<TransIdx> &acceleratedRules) {
-    Stats::addStep("Chain Accelerated");
-    Timing::Scope timer(Timing::Chain);
     return Chaining::chainAcceleratedRules(its, acceleratedRules);
 }
 
 
 bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules) {
-    Stats::addStep("Accelerate");
-    Timing::Scope timer(Timing::Accelerate);
     bool res = false;
 
     for (LocationIdx node : its.getLocations()) {
@@ -465,8 +452,6 @@ bool Analysis::pruneRules() {
 
     // Prune parallel transitions if enabled
     if (Config::Analysis::Pruning) {
-        Stats::addStep("Prune Rules");
-        Timing::Scope timer(Timing::Prune);
         changed = Pruning::pruneParallelRules(its) || changed;
     }
 

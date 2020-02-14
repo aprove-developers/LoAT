@@ -92,7 +92,7 @@ std::string Complexity::toString() const {
         case CpxUnbounded: return "Unbounded";
         case CpxNonterm: return "Nonterm";
     }
-    unreachable();
+    assert(false && "unreachable");
 }
 
 std::string Complexity::toWstString() const {
@@ -113,7 +113,7 @@ std::string Complexity::toWstString() const {
                 res += "Omega(n^" + polyDegree.toString() + ")";
             }
             break;
-        default: unreachable();
+        default: assert(false && "unreachable");;
     }
     res += ",?)";
     return res;

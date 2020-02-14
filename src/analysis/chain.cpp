@@ -18,7 +18,6 @@
 #include "chain.hpp"
 
 #include "../z3/z3toolbox.hpp"
-#include "../util/stats.hpp"
 
 using namespace std;
 
@@ -72,12 +71,10 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
     if (Config::Chain::CheckSat) {
         // Avoid chaining if the resulting rule can never be taken
         if (checkSat && !checkSatisfiability(newGuard)) {
-            Stats::add(Stats::ChainFail);
             return {};
         }
     }
 
-    Stats::add(Stats::ChainSuccess);
     return RuleLhs(firstLhs.getLoc(), newGuard, newCost);
 }
 

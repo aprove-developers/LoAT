@@ -21,7 +21,6 @@
 #include "linearize.hpp"
 #include "metertools.hpp"
 
-#include "../../util/timing.hpp"
 #include "../../expr/guardtoolbox.hpp"
 #include "../../expr/relation.hpp"
 #include "../../expr/expression.hpp"
@@ -325,7 +324,6 @@ option<VariablePair> MeteringFinder::findConflictVars() const {
 /* ### Main function ### */
 
 MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule) {
-    Timing::Scope timer(Timing::Meter);
 
     Result result;
     MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));

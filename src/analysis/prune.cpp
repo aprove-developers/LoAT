@@ -18,8 +18,6 @@
 #include "prune.hpp"
 
 #include "../global.hpp"
-#include "../util/stats.hpp"
-#include "../util/timing.hpp"
 #include "../util/timeout.hpp"
 
 #include "../its/itsproblem.hpp"
@@ -179,7 +177,6 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                 // Note that for nonlinear rules, we only remove edges (so only single rhss), not the entire rule
                 for (TransIdx rule : parallel) {
                     if (keep.count(rule) == 0) {
-                        Stats::add(Stats::PruneRemove);
                         auto optRule = its.getRule(rule).stripRhsLocation(node);
                         if (optRule) {
                             its.addRule(optRule.get());

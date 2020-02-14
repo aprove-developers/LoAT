@@ -904,7 +904,6 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
-    if (finalCheck) Timing::start(Timing::Asymptotic);
 
     AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck);
     asymptoticBound.initLimitVectors();
@@ -920,7 +919,6 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         asymptoticBound.removeUnsatProblems();
         result = asymptoticBound.solveLimitProblem();
     }
-    if (finalCheck) Timing::done(Timing::Asymptotic);
 
     if (result) {
 
@@ -972,14 +970,12 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan
 
     // Only enable proof output for the final check (we don't want proof output when pruning)
     bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
-    if (finalCheck) Timing::start(Timing::Asymptotic);
 
     AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem();
     bool success = asymptoticBound.solveViaSMT(currentRes);
-    if (finalCheck) Timing::done(Timing::Asymptotic);
     proofout.setEnabled(wasProofEnabled);
     if (success) {
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);

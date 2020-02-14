@@ -31,7 +31,6 @@ GinacToZ3::GinacToZ3(Z3Context &context, bool useReals)
 z3::expr GinacToZ3::convert(const GiNaC::ex &expr, Z3Context &context, bool useReals) {
     GinacToZ3 converter(context, useReals);
     z3::expr res = converter.convert_ex(expr);
-    debugGinacToZ3("converted " << expr << " to " << res << " [context=" << &context << ", reals=" << useReals << "]");
     return res;
 }
 
@@ -130,13 +129,6 @@ z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
     // if the symbol is already known, we re-use it (regardless of its type!)
     auto optVar = context.getVariable(e);
     if (optVar) {
-        // Warn if the re-used variable does not have the correct type.
-        // This feature might be useful if useReals = true, but we want some variables to be integers.
-        // However, in most cases it is probably not intended, so we issue the warning.
-        if (!Z3Context::isVariableOfType(optVar.get(), variableType())) {
-            debugWarn("GinacToZ3: Re-using existing symbol of type: " << e << " (but it should have type: " << variableType() << ")");
-        }
-
         return optVar.get();
     }
 
@@ -157,7 +149,7 @@ z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {
     if (e.info(info_flags::relation_greater)) return a > b;
     if (e.info(info_flags::relation_greater_or_equal)) return a >= b;
 
-    unreachable();
+    assert(false && "unreachable");
 }
 
 Z3Context::VariableType GinacToZ3::variableType() const {

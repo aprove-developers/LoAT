@@ -18,8 +18,6 @@
 #include "recurrence.hpp"
 #include "dependencyorder.hpp"
 
-#include "../../util/timing.hpp"
-
 #include <purrs.hh>
 
 using namespace std;
@@ -35,8 +33,6 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 
 
 option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
-    Timing::Scope timer(Timing::Purrs);
-
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
     Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last));
     Purrs::Expr exact;
@@ -69,7 +65,6 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
 
 
 option<Expression> Recurrence::findCostRecurrence(Expression cost) {
-    Timing::Scope timer(Timing::Purrs);
     cost = cost.subs(updatePreRecurrences); //replace variables by their recurrence equations
 
     //Example: if cost = y, the result is x(n) = x(n-1) + y(n-1), with x(0) = 0

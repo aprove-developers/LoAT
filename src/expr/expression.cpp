@@ -60,7 +60,7 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
             else return Expression(lhsExpr == rhsExpr);
         }
     }
-    unreachable();
+    assert(false && "unreachable");
 }
 
 void Expression::applySubs(const GiNaC::exmap &subs) {
@@ -357,7 +357,6 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
     }
 
     //unknown expression type (e.g. relational)
-    debugWarn("Expression: getComplexity called on unknown expression type");
     return Complexity::Unknown;
 }
 

@@ -137,7 +137,6 @@ void ITSParser::parseFile(ifstream &file) {
                     if (endpos == string::npos) throw FileError("Missing ) in term declaration: "+line);
                     initialLocation = line.substr(pos,endpos-pos);
                 }
-                debugParser("Found start location: " << initialLocation);
                 has_start = true;
             }
 
@@ -160,7 +159,6 @@ void ITSParser::parseFile(ifstream &file) {
                     knownVariables.emplace(varname, var);
                 }
 
-                debugParser("Found variable declaration with " << knownVariables.size() << " entries");
                 has_vars = true;
             }
 
@@ -173,10 +171,6 @@ void ITSParser::parseFile(ifstream &file) {
     // Ensure we have at least some rules
     if (parsedRules.empty()) throw FileError("No rules defined");
 
-    // Issue a warning if the initial location is not explicitly defined
-    if (initialLocation.empty()) {
-        debugParser("WARNING: Missing start term, defaulting to first function symbol");
-    }
 }
 
 
@@ -192,7 +186,6 @@ void ITSParser::parseFile(ifstream &file) {
  * @param line the input string
  */
 ITSParser::ParsedRule ITSParser::parseRule(const string &line) const {
-    debugParser("parsing rule: " << line);
 
     /* split string into lhs, rhs (and possibly cost in between) */
     string lhs,rhs,cost;

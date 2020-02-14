@@ -22,8 +22,6 @@
 #include "its/sexpressionparser/parser.hpp"
 #include "its/t2parser/t2parser.hpp"
 
-#include "util/stats.hpp"
-#include "util/timing.hpp"
 #include "util/timeout.hpp"
 
 using namespace std;
@@ -33,8 +31,6 @@ string filename;
 string benchmarkMode = "none"; // no benchmark
 int timeout = 0; // no timeout
 int proofLevel = 2;
-bool printStats = false;
-bool printTiming = false;
 bool printConfig = false;
 bool allowRecursion = true;
 
@@ -48,8 +44,6 @@ void printHelp(char *arg0) {
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
     cout << "  --dot <file>                                     Dump dot output to given file (only for non-recursive problems)" << endl;
-    cout << "  --stats                                          Print some statistics about the performed steps" << endl;
-    cout << "  --timing                                         Print information about time usage" << endl;
     cout << "  --config                                         Show configuration after handling command line flags" << endl;
     cout << "  --timestamps                                     Include time stamps in proof output" << endl;
     cout << "  --print-simplified                               Print simplified program in the input format" << endl;
@@ -93,10 +87,6 @@ void parseFlags(int argc, char *argv[]) {
             Config::Output::ColorsInITS = false;
         } else if (strcmp("--config",argv[arg]) == 0) {
             printConfig = true;
-        } else if (strcmp("--stats",argv[arg]) == 0) {
-            printStats = true;
-        } else if (strcmp("--timing",argv[arg]) == 0) {
-            printTiming = true;
         } else if (strcmp("--timestamps",argv[arg]) == 0) {
             Config::Output::Timestamps = true;
         } else if (strcmp("--print-simplified",argv[arg]) == 0) {
@@ -181,7 +171,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     Timeout::setTimeouts(timeout);
-    Timing::start(Timing::Total);
 
     // Start parsing
     if (filename.empty()) {
@@ -205,17 +194,15 @@ int main(int argc, char *argv[]) {
 
     // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
     if (Config::Parser::AllowDivision) {
-        proofout.newline();
-        proofout.warning("WARNING: Allowing division in the input program can yield unsound results!");
-        proofout.warning("Division is only sound if the result of a term is always an integer.");
+        std::cerr << "WARNING: Allowing division in the input program can yield unsound results!" << std::endl;
+        std::cerr << "Division is only sound if the result of a term is always an integer." << std::endl;
     }
     if (!Config::Analysis::EnsureNonnegativeCosts) {
-        proofout.newline();
-        proofout.warning("WARNING: Not checking the costs can yield unsound results!");
-        proofout.warning("This is only safe if costs in the input program are guaranteed to be nonnegative.");
+        std::cerr << "WARNING: Not checking the costs can yield unsound results!" << std::endl;
+        std::cerr << "This is only safe if costs in the input program are guaranteed to be nonnegative." << std::endl;
     }
 
-    // Disable proof output if requested (after issuing the warnings for unsound configuration)
+    // Disable proof output if requested
     if (proofLevel == 0) {
         proofout.setEnabled(false);
     }
@@ -224,20 +211,9 @@ int main(int argc, char *argv[]) {
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
     RuntimeResult runtime;
     if (!allowRecursion && !its.isLinear()) {
-        proofout.warning("Cannot analyze recursive ITS problem (recursion is disabled).");
+        std::cerr << "Cannot analyze recursive ITS problem (recursion is disabled)." << std::endl;
     } else {
         runtime = Analysis::analyze(its);
-    }
-    Timing::done(Timing::Total);
-
-    // Statistics
-    if (printStats) {
-        cout << endl;
-        Stats::print(cout);
-    }
-    if (printTiming) {
-        cout << endl;
-        Timing::print(cout);
     }
 
     // WST style proof output

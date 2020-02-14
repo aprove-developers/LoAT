@@ -66,7 +66,7 @@ namespace Relation {
         if (rel.info(GiNaC::info_flags::relation_less)) return lhs < rhs;
         if (rel.info(GiNaC::info_flags::relation_greater_or_equal)) return lhs >= rhs;
         if (rel.info(GiNaC::info_flags::relation_equal)) return lhs == rhs;
-        unreachable();
+        assert(false && "unreachable");
     }
 
     Expression toLessEq(Expression rel) {

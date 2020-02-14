@@ -28,8 +28,6 @@
 #include "../analysis/chain.hpp"
 #include "../analysis/prune.hpp"
 
-#include "../util/stats.hpp"
-#include "../util/timing.hpp"
 #include "../util/timeout.hpp"
 #include "forward.hpp"
 #include "backward.hpp"
