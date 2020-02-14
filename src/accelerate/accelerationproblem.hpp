@@ -76,7 +76,7 @@ struct AccelerationProblem {
             if (solver.check() == z3::check_result::unsat) {
                 if (!silent) {
                     proofout.newline();
-                    proofout.appendLine(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
+                    proofout.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
                 }
                 done.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
@@ -107,7 +107,7 @@ struct AccelerationProblem {
             if (solver.check() == z3::check_result::unsat) {
                 if (!silent) {
                     proofout.newline();
-                    proofout.appendLine(std::stringstream() << "handled " << e << " via monotonic increase");
+                    proofout.append(std::stringstream() << "handled " << e << " via monotonic increase");
                 }
                 done.push_back(e);
                 res.push_back(e);
@@ -145,7 +145,7 @@ struct AccelerationProblem {
                     solver.pop();
                     if (!silent) {
                         proofout.newline();
-                        proofout.appendLine(std::stringstream() << "handled " << e << " via eventual decrease");
+                        proofout.append(std::stringstream() << "handled " << e << " via eventual decrease");
                     }
                     done.push_back(e);
                     res.push_back(e);
@@ -201,7 +201,7 @@ struct AccelerationProblem {
                     solver.pop();
                     if (!silent) {
                         proofout.newline();
-                        proofout.appendLine(std::stringstream() << "handled " << e << " via eventual increase");
+                        proofout.append(std::stringstream() << "handled " << e << " via eventual increase");
                     }
                     done.push_back(e);
                     res.push_back(newCond);
@@ -232,7 +232,7 @@ struct AccelerationProblem {
             for (const auto &e: this->todo) {
                 s << " " << e;
             }
-            proofout.appendLine(s);
+            proofout.append(s);
         }
     }
 

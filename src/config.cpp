@@ -49,9 +49,6 @@ namespace Config {
         // This is only applicable to linear ITS problems and often gets very large.
         option<string> DotFile = {};
 
-        // Include acceleration details (metering functions, nesting, ...) in the proof output?
-        bool ProofAccel = true;
-
         // Include all chaining steps in the proof output?
         bool ProofChain = false;
 
@@ -167,11 +164,6 @@ namespace Config {
         // loop is followed by a full execution of the "inner" loop. This is a simple application
         // of chaining combined with acceleration, but is not described in the paper.
         bool TryNesting = true;
-
-        // Whether to use the backward acceleration.
-        bool UseBackwardAccel = true;
-
-        bool UseForwardAccel = false;
     }
 
     // Chaining and chaining strategies
@@ -256,7 +248,6 @@ void Config::printConfig(ostream &os, bool withDescription) {
         PrintCfg(Timestamps, "Include timestamps in the proof output");
         PrintCfg(ExportSimplified, "Print simplified ITS problem in input format");
         PrintCfg(DotFile, "Path for dot export (for linear ITS problems only)");
-        PrintCfg(ProofAccel, "Print acceleration steps and metering functions");
         PrintCfg(ProofChain, "Print all chaining steps");
         PrintCfg(ProofLimit, "Print steps when solving limit problems");
     }
@@ -297,7 +288,6 @@ void Config::printConfig(ostream &os, bool withDescription) {
         PrintCfg(SimplifyRulesBefore, "Simplify simple loops before acceleration");
         PrintCfg(PartialDeletionHeuristic, "Apply partial deletion if acceleration fails");
         PrintCfg(TryNesting, "Try to interpret parallel simple loops as nested loops");
-        PrintCfg(UseBackwardAccel, "Enable backward acceleration (if metering fails)");
     }
     {
         using namespace Config::Chain;

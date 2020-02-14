@@ -397,7 +397,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // Proof output for linearization (since this is an addition to the paper)
     if (!meter.nonlinearSubs.empty()) {
-        proofout.appendLine(stringstream() << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs);
+        proofout.append(stringstream() << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs);
     }
 
     return result;
@@ -480,7 +480,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     instantiatedRule.applySubstitution(successfulSubs);
 
     // Proof output
-    proofout.appendLine(stringstream() << "During metering: Instantiating temporary variables by " << successfulSubs);
+    proofout.append(stringstream() << "During metering: Instantiating temporary variables by " << successfulSubs);
 
     return instantiatedRule;
 }

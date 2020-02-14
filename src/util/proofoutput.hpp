@@ -25,9 +25,10 @@
 #include <sstream>
 #include <iomanip>
 
+#include <boost/algorithm/string.hpp>
+
 #include "../config.hpp"
 #include "../util/timeout.hpp" // for timestamps
-
 
 // Stores a StreambufIndenter instance to control indention of the stream.
 // Also allows colored output with ANSI escape codes.
@@ -47,29 +48,33 @@ public:
         return res;
     }
 
-    void appendLine(const std::string &s) {
-        appendLine(Style::None, s);
+    void append(const std::string &s) {
+        append(Style::None, s);
     }
 
-    void appendLine(const std::ostream &s) {
+    void append(const std::ostream &s) {
         std::stringstream str;
         str << s.rdbuf();
-        appendLine(str.str());
+        append(str.str());
     }
 
-    void appendLine(const Style &style, const std::string &s) {
+    void append(const Style &style, std::string s) {
         if (enabled) {
-            proof.push_back({style, s});
+            std::vector<std::string> lines;
+            boost::split(lines, s, boost::is_any_of("\n"));
+            for (const std::string &l: lines) {
+                proof.push_back({style, l});
+            }
         }
     }
 
     void newline() {
-        appendLine(std::stringstream());
+        append(std::stringstream());
     }
 
     void headline(const std::string &s) {
         newline();
-        appendLine(Headline, s);
+        append(Headline, s);
     }
 
     // print given string in headline style with spacing
@@ -81,7 +86,7 @@ public:
 
     void section(const std::string &s) {
         newline();
-        appendLine(Section, s);
+        append(Section, s);
     }
 
     // print given string in section style with spacing
@@ -92,7 +97,7 @@ public:
     }
 
     void result(const std::string &s) {
-        appendLine(Result, s);
+        append(Result, s);
     }
 
     // print given string in section style with spacing
@@ -104,7 +109,7 @@ public:
 
     void warning(const std::string &s) {
         newline();
-        appendLine(Warning, s);
+        append(Warning, s);
         newline();
     }
 

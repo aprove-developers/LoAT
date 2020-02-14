@@ -51,6 +51,7 @@ static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &
 
 
 void ITSExport::printGuard(const GuardList &guard, std::ostream &s, bool colors) {
+    if (colors) printColor(s, Color::None);
     if (guard.empty()) {
         s << "[]";
     } else {
@@ -94,7 +95,6 @@ void ITSExport::printRule(const Rule &rule, const ITSProblem &its, std::ostream 
     printGuard(rule.getGuard(), s, colors);
     s << ", cost: ";
     printCost(rule.getCost(), s, colors);
-    s << endl;
 }
 
 
@@ -131,6 +131,7 @@ void ITSExport::printDebug(const ITSProblem &its, std::ostream &s) {
     for (LocationIdx loc : its.getLocations()) {
         for (TransIdx trans : its.getTransitionsFrom(loc)) {
             printLabeledRule(trans, its, s);
+            s << endl;
         }
     }
 }
@@ -149,6 +150,7 @@ void ITSExport::printForProof(const ITSProblem &its, std::ostream &s) {
     for (LocationIdx n : its.getLocations()) {
         for (TransIdx trans : its.getTransitionsFrom(n)) {
             printLabeledRule(trans, its, s);
+            s << endl;
         }
     }
 }
@@ -243,7 +245,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
 
 
 
-void LinearITSExport::printDotSubgraph(const ITSProblem &its, int step, const std::string &desc, std::ostream &s) {
+void LinearITSExport::printDotSubgraph(const ITSProblem &its, uint step, const std::string &desc, std::ostream &s) {
     assert(its.isLinear());
     auto printNode = [&](LocationIdx n) { s << "node_" << step << "_" << n; };
 
@@ -276,7 +278,7 @@ void LinearITSExport::printDotSubgraph(const ITSProblem &its, int step, const st
     s << "}" << endl;
 }
 
-void LinearITSExport::printDotText(int step, const std::string &txt, std::ostream &s) {
+void LinearITSExport::printDotText(uint step, const std::string &txt, std::ostream &s) {
     s << "subgraph cluster_" << step << " {" << endl;
     s << "sortv=" << step << ";" << endl;
     s << "label=\"" << step << ": " << "Result" << "\";" << endl;

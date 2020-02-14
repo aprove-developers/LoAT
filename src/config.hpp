@@ -41,7 +41,6 @@ namespace Config {
         extern bool Timestamps;
         extern option<std::string> DotFile;
         extern bool ExportSimplified;
-        extern bool ProofAccel;
         extern bool ProofChain;
         extern bool ProofLimit;
     }
@@ -98,8 +97,6 @@ namespace Config {
     namespace Accel {
         extern const bool SimplifyRulesBefore;
         extern bool PartialDeletionHeuristic;
-        extern bool UseBackwardAccel;
-        extern bool UseForwardAccel;
         extern bool TryNesting;
     }
 

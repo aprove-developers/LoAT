@@ -196,30 +196,29 @@ RuntimeResult Analysis::run() {
     }
 
     if (Timeout::soft()) {
-        proofout.warning("Aborted due to lack of remaining time");
+        std::cerr << "Aborted due to lack of remaining time" << std::endl;
     }
 
     if (isFullySimplified()) {
         // Remove duplicate rules (ignoring updates) to avoid wasting time on asymptotic bounds
-        Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false);
+        if (Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false)) {
+            proofout.headline("Removed duplicate rules (ignoring updates)");
+            printForProof("Remove duplicates");
+        }
     }
 
     if (Config::Output::ExportSimplified) {
-        proofout.headline("Fully simplified program in input format:");
-        stringstream s;
-        ITSExport::printKoAT(its, s);
-        proofout.appendLine(s);
+        cout << "Fully simplified program in input format:" << endl;
+        ITSExport::printKoAT(its, cout);
     }
 
     proofout.section("Computing asymptotic complexity");
-    proofout.headline("Fully simplified ITS problem");
-    printForProof("Final");
 
     if (!isFullySimplified()) {
         // A timeout occurred before we managed to complete the analysis.
         // We try to quickly extract at least some complexity results.
         proofout.warning("This is only a partial result (probably due to a timeout).");
-        proofout.appendLine("Trying to find the maximal complexity that has already been derived.");
+        proofout.append("Trying to find the maximal complexity that has already been derived.");
 
         // Reduce the number of rules to avoid z3 invocations
         removeConstantPathsAfterTimeout();
@@ -329,9 +328,9 @@ bool Analysis::isFullySimplified() const {
 
 void Analysis::printForProof(const std::string &dotDescription) {
     // Proof output
-    stringstream s;
+    std::stringstream s;
     ITSExport::printForProof(its, s);
-    proofout.appendLine(s);
+    proofout.append(s);
 
     if (dotStream.is_open()) {
         LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, dotStream);
@@ -341,7 +340,7 @@ void Analysis::printForProof(const std::string &dotDescription) {
 
 void Analysis::printResult(const RuntimeResult &runtime) {
     proofout.newline();
-    proofout.result("Obtained the following overall complexity (w.r.t. the length of the input n):");
+    proofout.result("Proved the following lower bound");
 
     proofout.result(stringstream() << "Complexity:  " << runtime.cpx);
     stringstream s;
@@ -351,13 +350,11 @@ void Analysis::printResult(const RuntimeResult &runtime) {
         case Complexity::CpxUnknown: s << "?" << endl; break;
         default: s << runtime.cpx << endl;
     }
-    proofout.result(s);
-    proofout.result(stringstream() << "Solved cost: " << runtime.solvedCost);
-    s = stringstream();
-    s  << "Rule cost:   ";
+    s << endl;
+    s << "Solved cost: " << runtime.solvedCost << endl;
+    s << "Rule cost:   ";
     ITSExport::printCost(runtime.cost, s);
-    proofout.result(s);
-    s = stringstream();
+    s << endl;
     s << "Rule guard:  ";
     ITSExport::printGuard(runtime.guard, s);
     proofout.result(s);
@@ -464,14 +461,14 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
             proofout.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;
             ITSExport::printLabeledRule(idx, its, s);
-            proofout.appendLine(s);
+            proofout.append(s);
 
             RuntimeResult res;
             res.guard = rule.getGuard();
             res.cost = rule.getCost();
             res.solvedCost = rule.getCost();
             res.cpx = Complexity::Const;
-            return res;
+            return {res};
         }
     }
 
@@ -533,8 +530,8 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
             if (fstCpx > sndCpx) return true;
             if (fstCpx < sndCpx) return false;
         }
-        long fstGuardSize = fstRule.getGuard().size();
-        long sndGuardSize = sndRule.getGuard().size();
+        unsigned long fstGuardSize = fstRule.getGuard().size();
+        unsigned long sndGuardSize = sndRule.getGuard().size();
         return fstGuardSize < sndGuardSize;
     };
 
@@ -560,10 +557,10 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
         simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
         if (simplified) {
-            proofout.appendLine("Simplified the guard:");
+            proofout.append("Simplified the guard:");
             stringstream s;
             ITSExport::printLabeledRule(ruleIdx, its, s);
-            proofout.appendLine(s);
+            proofout.append(s);
         }
         if (Timeout::hard()) break;
 
@@ -594,7 +591,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
                     res.cpx);
         }
 
-        proofout.appendLine(stringstream() << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx);
+        proofout.append(stringstream() << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx);
 
         if (checkRes.get().cpx > res.cpx) {
             proofout.newline();
@@ -707,7 +704,7 @@ RuntimeResult Analysis::getMaxPartialResult() {
     }
 
 abort:
-    proofout.appendLine("Aborting due to timeout");
+    proofout.append("Aborting due to timeout");
 done:
     return res;
 }

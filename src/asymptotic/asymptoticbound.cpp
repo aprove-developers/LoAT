@@ -347,8 +347,8 @@ bool AsymptoticBound::solveViaSMT(Complexity currentRes) {
 
     solvedLimitProblems.push_back(currentLP);
 
-    proofout.appendLine("Solved the limit problem by the following transformations:");
-    proofout.appendLine(currentLP.getProof());
+    proofout.append("Solved the limit problem by the following transformations:");
+    proofout.append(currentLP.getProof());
 
     isAdequateSolution(currentLP);
     return true;
@@ -433,8 +433,8 @@ bool AsymptoticBound::solveLimitProblem() {
     if (!currentLP.isUnsolvable() && currentLP.isSolved()) {
         solvedLimitProblems.push_back(currentLP);
 
-        proofout.appendLine("Solved the limit problem by the following transformations:");
-        proofout.appendLine(currentLP.getProof());
+        proofout.append("Solved the limit problem by the following transformations:");
+        proofout.append(currentLP.getProof());
 
         if (isAdequateSolution(currentLP)) {
             return true;
@@ -890,7 +890,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     if (expandedCost.isNontermSymbol()) {
         auto z3res = Z3Toolbox::checkAll(guard);
         if (z3res == z3::sat) {
-            if (finalCheck) proofout.appendLine("Guard is satisfiable, yielding nontermination");
+            if (finalCheck) proofout.append("Guard is satisfiable, yielding nontermination");
             return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
         } else {
             // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
@@ -923,9 +923,9 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     if (result) {
 
         // Print solution
-        proofout.appendLine("Solution:");
+        proofout.append("Solution:");
         for (const auto &pair : asymptoticBound.bestComplexity.solution) {
-            proofout.appendLine(stringstream() << pair.first << " / " << pair.second);
+            proofout.append(stringstream() << pair.first << " / " << pair.second);
         }
         proofout.setEnabled(wasProofEnabled);
 
@@ -941,7 +941,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         }
     } else {
 
-        proofout.appendLine("Could not solve the limit problem.");
+        proofout.append("Could not solve the limit problem.");
         proofout.setEnabled(wasProofEnabled);
 
         return Result(Complexity::Unknown);

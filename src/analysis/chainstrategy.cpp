@@ -80,11 +80,11 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                 Preprocess::simplifyGuard(newRule.getGuardMut());
 
                 TransIdx added = its.addRule(newRule);
-                proofout.appendLine(stringstream() << "Chained rules " << in << " and " << out << " to new rule " << added << ".");
+                proofout.append(stringstream() << "Chained rules " << in << " and " << out << " to new rule " << added << ".");
 
             } else {
                 wasChainedWithAll = false;
-                proofout.appendLine(stringstream() << "Failed to chain rules " << in << " and " << out << ".");
+                proofout.append(stringstream() << "Failed to chain rules " << in << " and " << out << ".");
             }
         }
 
@@ -104,11 +104,11 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
             if (newRule) {
                 // In case of nonlinear rules, we can simply delete all rhss leading to loc, but keep the other ones
                 TransIdx added = its.addRule(newRule.get());
-                proofout.appendLine(stringstream() << "Keeping rule " << trans << " after partial deletion, yielding new rule " << added << ".");
+                proofout.append(stringstream() << "Keeping rule " << trans << " after partial deletion, yielding new rule " << added << ".");
             } else {
                 // If all rhss lead to loc (for instance if the rule is linear), we add a new dummy rhs
                 TransIdx added = its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
-                proofout.appendLine(stringstream() << "Keeping rule " << trans << " by adding a dummy rule " << added << ".");
+                proofout.append(stringstream() << "Keeping rule " << trans << " by adding a dummy rule " << added << ".");
             }
         }
     }
@@ -358,12 +358,12 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
 
                     // Add the chained rule
                     TransIdx added = its.addRule(newRule);
-                    proofout.appendLine(stringstream() << "Chained incoming rule " << incoming << " with accelerated rule " << accel << " to new rule " << added << ".");
+                    proofout.append(stringstream() << "Chained incoming rule " << incoming << " with accelerated rule " << accel << " to new rule " << added << ".");
                     successfullyChained.insert(incoming);
                 }
             }
 
-            proofout.appendLine(stringstream() << "Removing accelerated rule " << accel << ".");
+            proofout.append(stringstream() << "Removing accelerated rule " << accel << ".");
             its.removeRule(accel);
         }
     }
@@ -372,7 +372,7 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
     // However, we also lose execution paths (especially if there are more loops, which are not simple).
     if (!Config::Chain::KeepIncomingInChainAccelerated) {
         for (TransIdx toRemove : successfullyChained) {
-            proofout.appendLine(stringstream() << "Removing incoming rule " << toRemove << " (after successful chaining).");
+            proofout.append(stringstream() << "Removing incoming rule " << toRemove << " (after successful chaining).");
             its.removeRule(toRemove);
         }
     }

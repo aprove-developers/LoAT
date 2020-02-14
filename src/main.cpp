@@ -129,7 +129,6 @@ int main(int argc, char *argv[]) {
     parseFlags(argc, argv);
 
     // Proof output
-    Config::Output::ProofAccel = (proofLevel >= 1);
     Config::Output::ProofLimit = (proofLevel >= 2);
     Config::Output::ProofChain = (proofLevel >= 3);
 

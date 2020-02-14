@@ -56,12 +56,12 @@ namespace LinearITSExport {
      * @param desc a description of the current subgraph
      * @param s the output stream to print to (the dotfile)
      */
-    void printDotSubgraph(const ITSProblem &its, int step, const std::string &desc, std::ostream &s);
+    void printDotSubgraph(const ITSProblem &its, uint step, const std::string &desc, std::ostream &s);
 
     /**
      * Similar to printDotSubgraph, but only prints text instead of a graph
      */
-    void printDotText(int step, const std::string &txt, std::ostream &s);
+    void printDotText(uint step, const std::string &txt, std::ostream &s);
 
     /**
      * Print the graph of a linear ITSProblem in the T2 format, to allow conversion from koat -> T2.
