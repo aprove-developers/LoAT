@@ -17,7 +17,6 @@
 
 #include "backward.hpp"
 
-#include "../debug.hpp"
 #include "../z3/z3solver.hpp"
 #include "../z3/z3toolbox.hpp"
 
@@ -58,15 +57,12 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
     // create one rule for each upper bound, by instantiating N with this bound
     vector<Rule> res;
     if (ve.getRes().empty()) {
-        debugTest("instantiation failed\n");
         res.push_back(rule);
     } else {
         for (const GiNaC::exmap &subs : ve.getRes()) {
-            debugTest("instantiation: " << subs << "\n");
             Rule instantiated = rule;
             instantiated.applySubstitution(subs);
             res.push_back(instantiated);
-            debugBackwardAccel("instantiation " << subs << " yielded " << instantiated);
         }
     }
     return res;
@@ -74,16 +70,13 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
 
 LinearRule BackwardAcceleration::buildNontermRule() const {
     LinearRule res(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
-    debugBackwardAccel("backward-accelerating " << rule << " yielded " << res);
     return std::move(res);
 }
 
 Self::AccelerationResult BackwardAcceleration::run() {
     if (!shouldAccelerate()) {
-        debugBackwardAccel("won't try to accelerate transition with costs " << rule.getCost());
         return {.res={}, .status=ForwardAcceleration::NotSupported};
     }
-    debugBackwardAccel("Trying to accelerate rule " << rule);
 
     option<AccelerationProblem> ap = AccelerationCalculus::init(rule, varMan);
     if (ap) {

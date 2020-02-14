@@ -28,9 +28,7 @@ void BoundExtractor::extractBounds() {
     for (const Expression &ex : guard) {
         if (Relation::isEquality(ex) && ex.has(N)) {
             auto optSolved = GuardToolbox::solveTermFor(ex.lhs() - ex.rhs(), N, GuardToolbox::ResultMapsToInt);
-            if (!optSolved) {
-                debugBackwardAccel("unable to compute upperbound from equality " << ex);
-            } else {
+            if (optSolved) {
                 // One equality is enough, as all other bounds must also satisfy this equality
                 eq = optSolved.get();
             }

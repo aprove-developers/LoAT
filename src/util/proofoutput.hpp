@@ -25,167 +25,125 @@
 #include <sstream>
 #include <iomanip>
 
-#include "../debug.hpp"
 #include "../config.hpp"
 #include "../util/timeout.hpp" // for timestamps
 
 
-// Intermediate buffer between the proofout stream and cout (or any other ostream).
-// Inserts indention (and timestamps) after each newline.
-class StreambufIndenter : public std::streambuf {
-public:
-    explicit StreambufIndenter(std::ostream &os)
-            : dst(os.rdbuf()),
-              src(os)
-    {
-        // redirect output from os to this class
-        // (and this class then writes to dst, which is os.rdbuf())
-        src.rdbuf(this);
-    }
-
-    ~StreambufIndenter() override {
-        // remove this class from the stream chain, i.e. let os write to dst again
-        src.rdbuf(dst);
-    }
-
-    void increaseIndention() {
-        indention.append("   ");
-    }
-
-    void decreaseIndention() {
-        if (indention.size() >= 3) {
-            indention.resize(indention.size()-3);
-        } else {
-            debugWarn("ProofOutput: decreaseIndention() called with no indention");
-        }
-    }
-
-    bool setEnabled(bool on) {
-        std::swap(enabled, on);
-        return on;
-    }
-
-    // print the given string before the next \n
-    void printBeforeNewline(const std::string &s) {
-        beforeNewline = s;
-    }
-
-protected:
-    // override printing to insert indention
-    int overflow(int ch) override {
-        if (!enabled) {
-            return ch; // return "success"
-        }
-
-        // print timestamp (if enabled)
-        if (atStartOfLine && Config::Output::Timestamps) {
-            std::string timeStr = formatTimestamp();
-            dst->sputn(timeStr.data(), timeStr.size());
-        }
-
-        // print indention
-        if (atStartOfLine && ch != '\n') {
-            dst->sputn(indention.data(), indention.size());
-        }
-
-        // print given text at end of line (used to reset color codes)
-        if (!beforeNewline.empty() && ch == '\n') {
-            dst->sputn(beforeNewline.data(), beforeNewline.size());
-            beforeNewline.clear();
-        }
-
-        atStartOfLine = (ch == '\n');
-        return dst->sputc(ch);
-    }
-
-    // helper to display timestamps
-    static std::string formatTimestamp() {
-        using namespace std;
-        TimePoint now = chrono::steady_clock::now();
-        chrono::duration<float> elapsed = now - Timeout::start();
-
-        stringstream ss;
-        ss << "[" << std::fixed << std::setprecision(3) << std::setw(7) << elapsed.count() << "] ";
-
-        return ss.str();
-    }
-
-private:
-    // The StreambufIndenter forwards output from src to dst, but adds indention
-    std::streambuf *dst;
-    std::ostream &src;
-
-    // Internal state
-    bool enabled = true;
-    bool atStartOfLine = true;
-    std::string indention;
-    std::string beforeNewline;
-};
-
-
 // Stores a StreambufIndenter instance to control indention of the stream.
 // Also allows colored output with ANSI escape codes.
-class ProofOutput : public std::ostream {
+class ProofOutput {
 public:
     enum Style {
         Section,
         Headline,
         Warning,
-        Result
+        Result,
+        None
     };
 
-    explicit ProofOutput(std::ostream &s) : std::ostream(s.rdbuf()), indenter(*this) {}
-
-    void increaseIndention() {
-        indenter.increaseIndention();
-    }
-
-    void decreaseIndention() {
-        indenter.decreaseIndention();
-    }
-
     bool setEnabled(bool on) {
-        return indenter.setEnabled(on);
+        bool res = enabled;
+        enabled = on;
+        return res;
     }
 
-    // sets the current style, which is reset at the end of line
-    // (just writes the corresponding ANSI code to the stream)
-    void setLineStyle(Style style) {
-        if (Config::Output::Colors) {
-            switch (style) {
-                case Section: *this << Config::Color::Section; break; // bold yellow
-                case Headline: *this << Config::Color::Headline; break; // bold blue
-                case Result: *this << Config::Color::Result; break; // bold green
-                case Warning: *this << Config::Color::Warning; break; // bold red
-            }
-            indenter.printBeforeNewline(Config::Color::None);
+    void appendLine(const std::string &s) {
+        appendLine(Style::None, s);
+    }
+
+    void appendLine(const std::ostream &s) {
+        std::stringstream str;
+        str << s.rdbuf();
+        appendLine(str.str());
+    }
+
+    void appendLine(const Style &style, const std::string &s) {
+        if (enabled) {
+            proof.push_back({style, s});
         }
     }
 
-    // print given string in headline style with spacing
+    void newline() {
+        appendLine(std::stringstream());
+    }
+
     void headline(const std::string &s) {
-        *this << std::endl;
-        setLineStyle(Style::Headline);
-        *this << s << std::endl;
+        newline();
+        appendLine(Headline, s);
+    }
+
+    // print given string in headline style with spacing
+    void headline(const std::ostream &s) {
+        std::stringstream str;
+        str << s.rdbuf();
+        headline(str.str());
+    }
+
+    void section(const std::string &s) {
+        newline();
+        appendLine(Section, s);
     }
 
     // print given string in section style with spacing
-    void section(const std::string &s) {
-        *this << std::endl;
-        setLineStyle(Style::Section);
-        *this << "### " << s << " ###" << std::endl;
+    void section(const std::ostream &s) {
+        std::stringstream str;
+        str << s.rdbuf();
+        section(str.str());
+    }
+
+    void result(const std::string &s) {
+        appendLine(Result, s);
+    }
+
+    // print given string in section style with spacing
+    void result(const std::ostream &s) {
+        std::stringstream str;
+        str << s.rdbuf();
+        result(str.str());
+    }
+
+    void warning(const std::string &s) {
+        newline();
+        appendLine(Warning, s);
+        newline();
     }
 
     // print given string in warning style with spacing
-    void warning(const std::string &s) {
-        *this << std::endl;
-        setLineStyle(Style::Warning);
-        *this << s << std::endl << std::endl;
+    void warning(const std::ostream &s) {
+        std::stringstream str;
+        str << s.rdbuf();
+        warning(str.str());
+    }
+
+    void print() {
+        for (const ProofLine &l: proof) {
+            if (Config::Output::Colors) {
+                switch (l.style) {
+                case None: std::cout << Config::Color::None;
+                    break;
+                case Result: std::cout << Config::Color::Result;
+                    break;
+                case Section: std::cout << Config::Color::Section;
+                    break;
+                case Warning: std::cout << Config::Color::Warning;
+                    break;
+                case Headline: std::cout << Config::Color::Headline;
+                    break;
+                }
+            }
+            std::cout << l.s << std::endl;
+        }
     }
 
 private:
-    StreambufIndenter indenter;
-};
 
+    struct ProofLine {
+        const Style style;
+        const std::string s;
+    };
+
+    std::vector<ProofLine> proof;
+    bool enabled = true;
+};
 
 #endif // PROOFOUTPUT_H

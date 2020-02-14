@@ -22,7 +22,6 @@
 #include "../z3/z3toolbox.hpp"
 
 #include "../global.hpp"
-#include "../debug.hpp"
 #include "../util/stats.hpp"
 #include "../util/timing.hpp"
 #include "../util/timeout.hpp"
@@ -70,7 +69,6 @@ static MeteringFinder::Result meterWithInstantiation(VarMan &varMan, Rule &rule)
 static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, option<VariablePair> &conflictVar) {
     using namespace ForwardAcceleration;
     Result res;
-    proofout.increaseIndention();
 
     // We may require that the cost is at least 1 in every single iteration of the loop.
     // For linear rules, this is only required for non-termination (see special case below).
@@ -91,7 +89,6 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
         rule.getGuardMut().push_back(rule.getCost() >= 1);
         meter = meterWithInstantiation(varMan, rule);
     }
-    proofout.decreaseIndention();
 
     switch (meter.result) {
         case MeteringFinder::Nonlinear:
@@ -177,7 +174,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
         }
     }
 
-    unreachable();
+    assert(false && "unreachable");
 }
 
 
@@ -207,14 +204,12 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         ExprSymbol A = varMan.getVarSymbol(conflictVar->first);
         ExprSymbol B = varMan.getVarSymbol(conflictVar->second);
         Rule newRule = rule;
-        debugAccel("Trying MinMax heuristic with variables " << A << ", " << B << " for rule " << newRule);
 
         // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().push_back(A >= B);
         if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
             auto accelRule = accelerateFast(varMan, newRule, sink);
             if (accelRule) {
-                debugAccel("MinMax heuristic (A >= B) successful with rule: " << newRule);
                 res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A >= B).toString() + ")"));
             }
         }
@@ -225,7 +220,6 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
             auto accelRule = accelerateFast(varMan, newRule, sink);
             if (accelRule) {
-                debugAccel("MinMax heuristic (A <= B) successful with rule: " << newRule);
                 res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A <= B).toString() + ")"));
             }
         }
@@ -241,7 +235,6 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
     // Guard strengthening heuristic (helps in the presence of constant updates like x := 5 or x := free).
     if (Config::ForwardAccel::ConstantUpdateHeuristic) {
         Rule newRule = rule;
-        debugAccel("Trying guard strengthening for rule: " << newRule);
 
         // Check and (possibly) apply heuristic, this modifies newRule
         if (MeteringFinder::strengthenGuard(varMan, newRule)) {

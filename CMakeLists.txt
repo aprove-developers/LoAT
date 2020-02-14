@@ -118,7 +118,6 @@ add_executable(${EXECUTABLE}
         src/z3/z3toolbox.hpp
         src/config.cpp
         src/config.hpp
-        src/debug.hpp
         src/global.cpp
         src/global.hpp
         src/main.cpp

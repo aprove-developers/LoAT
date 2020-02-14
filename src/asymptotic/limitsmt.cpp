@@ -136,8 +136,6 @@ void updateTimeout(bool finalCheck, Z3Context &context, Z3Solver &solver) {
 option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
                                                      const VarMan &varMan, bool finalCheck, Complexity currentRes)
 {
-    debugAsymptoticBound(endl << "SMT: " << currentLP << endl);
-
     // initialize z3
     Z3Context context;
     Z3Solver solver(context);
@@ -194,9 +192,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
 
     // auxiliary function that checks satisfiability wrt. the current state of the solver
     auto checkSolver = [&]() -> bool {
-        debugAsymptoticBound("SMT Query: " << solver);
         z3::check_result res = solver.check();
-        debugAsymptoticBound("SMT Result: " << res);
         return res == z3::sat;
     };
 
@@ -242,8 +238,6 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
             return {};
         }
     }
-
-    debugAsymptoticBound("SMT Model: " << solver.get_model() << endl);
 
     // we found a model -- create the corresponding solution of the limit problem
     GiNaC::exmap smtSubs;

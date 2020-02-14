@@ -19,7 +19,6 @@
 #define GLOBAL_H
 
 #include "config.hpp"
-#include "debug.hpp"
 #include "util/proofoutput.hpp"
 
 // global variables

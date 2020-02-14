@@ -19,7 +19,6 @@
 
 #include "../../expr/relation.hpp"
 #include "metertools.hpp"
-#include "../../debug.hpp"
 
 using namespace std;
 
@@ -27,7 +26,6 @@ using namespace std;
 bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials) {
     // We can only handle polynomials
     if (!ex.isPolynomial()) {
-        debugLinearize("Too complicated, not polynomial: " << ex);
         return false;
     }
 
@@ -44,7 +42,6 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
             assert(lowdeg > 0);
 
             if (lowdeg != deg) {
-                debugLinearize("Too complicated, " << var << " appears with different degrees: " << ex);
                 return false;
             }
         }
@@ -53,7 +50,6 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
             // Substitute powers of x, e.g. 4*x^2 should later become 4*z.
             // We don't handle cases like y*x^2 to keep linearization simple.
             if (!ex.coeff(var, deg).info(GiNaC::info_flags::numeric)) {
-                debugLinearize("Too complicated, " << var << " has power with non-constant coeff: " << ex);
                 return false; // too complicated
             }
             monomials.insert(GiNaC::pow(var, deg));
@@ -65,7 +61,6 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
             ExprSymbolSet coeffVars = coeff.getVariables();
 
             if (coeffVars.size() > 1) {
-                debugLinearize("Too complicated, " << var << " has coeff with mutliple variables: " << ex);
                 return false; // too complicated
             }
 
@@ -219,50 +214,39 @@ GiNaC::exmap Linearize::reverseSubstitution(const GiNaC::exmap &subs) {
 
 
 option<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
-#ifdef DEBUG_METER_LINEARIZE
-    debugLinearize("Trying to linearize the following guard/updates:");
-    dumpGuardUpdates("linearize", guard, updates);
-#endif
 
     Linearize lin(guard, updates, varMan);
 
     // Collect all nonlinear terms that have to be replaced (if possible)
     ExpressionSet monomials;
     if (!lin.collectMonomialsInGuard(monomials)) {
-        debugLinearize("Cannot linearize, guard too complicated");
         return {};
     }
     if (!lin.collectMonomialsInUpdates(monomials)) {
-        debugLinearize("Cannot linearize, guard too complicated");
         return {};
     }
 
     // If everything is linear, there is nothing to do
     if (!lin.needsLinearization(monomials)) {
-        debugLinearize("Everything is linear, nothing to do");
         return GiNaC::exmap(); // empty substitution
     }
 
     // Check if we are allowed to perform substitutions
     if (!Config::ForwardAccel::AllowLinearization) {
-        debugLinearize("Linearization is needed but disabled");
         return {};
     }
 
     // Check if it is safe to replace all nonlinear terms
     if (!lin.checkForConflicts(monomials)) {
-        debugLinearize("Cannot linearize due to conflicts");
         return {};
     }
 
     // Construct the replacement and apply it
     GiNaC::exmap subs = lin.buildSubstitution(monomials);
     lin.applySubstitution(subs);
-    debugLinearize("Applied linearization: " << subs);
 
     // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)
     for (Expression ex : lin.additionalGuard) {
-        debugLinearize("Adding additional guard constraint: " << ex);
         guard.push_back(ex);
     }
 

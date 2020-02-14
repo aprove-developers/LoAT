@@ -21,7 +21,6 @@
 #include "../z3/z3toolbox.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
 
-#include "../debug.hpp"
 #include "../util/stats.hpp"
 #include "../util/timing.hpp"
 #include "../util/timeout.hpp"
@@ -108,9 +107,6 @@ RuntimeResult Analysis::run() {
             printForProof("Simplify");
         }
 
-        if (Timeout::preprocessing()) {
-            debugWarn("Timeout for pre-processing exceeded!");
-        }
     }
 
     // We cannot prove any lower bound for an empty ITS
@@ -224,8 +220,9 @@ RuntimeResult Analysis::run() {
 
     if (Config::Output::ExportSimplified) {
         proofout.headline("Fully simplified program in input format:");
-        ITSExport::printKoAT(its, proofout);
-        proofout << endl;
+        stringstream s;
+        ITSExport::printKoAT(its, s);
+        proofout.appendLine(s);
     }
 
     proofout.section("Computing asymptotic complexity");
@@ -236,7 +233,7 @@ RuntimeResult Analysis::run() {
         // A timeout occurred before we managed to complete the analysis.
         // We try to quickly extract at least some complexity results.
         proofout.warning("This is only a partial result (probably due to a timeout).");
-        proofout << "Trying to find the maximal complexity that has already been derived." << endl;
+        proofout.appendLine("Trying to find the maximal complexity that has already been derived.");
 
         // Reduce the number of rules to avoid z3 invocations
         removeConstantPathsAfterTimeout();
@@ -346,9 +343,9 @@ bool Analysis::isFullySimplified() const {
 
 void Analysis::printForProof(const std::string &dotDescription) {
     // Proof output
-    proofout.increaseIndention();
-    ITSExport::printForProof(its, proofout);
-    proofout.decreaseIndention();
+    stringstream s;
+    ITSExport::printForProof(its, s);
+    proofout.appendLine(s);
 
     if (dotStream.is_open()) {
         LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, dotStream);
@@ -357,26 +354,27 @@ void Analysis::printForProof(const std::string &dotDescription) {
 
 
 void Analysis::printResult(const RuntimeResult &runtime) {
-    proofout << endl;
-    proofout.setLineStyle(ProofOutput::Result);
-    proofout << "Obtained the following overall complexity (w.r.t. the length of the input n):" << endl;
-    proofout.increaseIndention();
+    proofout.newline();
+    proofout.result("Obtained the following overall complexity (w.r.t. the length of the input n):");
 
-    proofout << "Complexity:  " << runtime.cpx << endl;
-    proofout << "Cpx degree:  ";
+    proofout.result(stringstream() << "Complexity:  " << runtime.cpx);
+    stringstream s;
+    s << "Cpx degree: ";
     switch (runtime.cpx.getType()) {
-        case Complexity::CpxPolynomial: proofout << runtime.cpx.getPolynomialDegree().toFloat() << endl; break;
-        case Complexity::CpxUnknown: proofout << "?" << endl; break;
-        default: proofout << runtime.cpx << endl;
+        case Complexity::CpxPolynomial: s << runtime.cpx.getPolynomialDegree().toFloat() << endl; break;
+        case Complexity::CpxUnknown: s << "?" << endl; break;
+        default: s << runtime.cpx << endl;
     }
-    proofout << "Solved cost: " << runtime.solvedCost;
-    proofout << endl << "Rule cost:   ";
-    ITSExport::printCost(runtime.cost, proofout);
-    proofout << endl << "Rule guard:  ";
-    ITSExport::printGuard(runtime.guard, proofout);
-    proofout << endl;
-
-    proofout.decreaseIndention();
+    proofout.result(s);
+    proofout.result(stringstream() << "Solved cost: " << runtime.solvedCost);
+    s = stringstream();
+    s  << "Rule cost:   ";
+    ITSExport::printCost(runtime.cost, s);
+    proofout.result(s);
+    s = stringstream();
+    s << "Rule guard:  ";
+    ITSExport::printGuard(runtime.guard, s);
+    proofout.result(s);
 }
 
 
@@ -393,7 +391,6 @@ void Analysis::setupDotOutput() {
     }
 
     string file = Config::Output::DotFile.get();
-    debugAnalysis("Trying to open dot output file: " << file);
     dotStream.open(file);
 
     if (!dotStream.is_open()) {
@@ -484,7 +481,6 @@ bool Analysis::pruneRules() {
 
 option<RuntimeResult> Analysis::checkConstantComplexity() const {
     proofout.headline("Checking for constant complexity:");
-    proofout.increaseIndention();
 
     for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
         const Rule &rule = its.getRule(idx);
@@ -492,10 +488,10 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         guard.push_back(rule.getCost() >= 1);
 
         if (Z3Toolbox::checkAll(guard) == z3::sat) {
-            proofout.setLineStyle(ProofOutput::Result);
-            proofout << "The following rule is satisfiable with cost >= 1, yielding constant complexity:" << endl;
-            ITSExport::printLabeledRule(idx, its, proofout);
-            proofout.decreaseIndention();
+            proofout.result("The following rule is satisfiable with cost >= 1, yielding constant complexity:");
+            stringstream s;
+            ITSExport::printLabeledRule(idx, its, s);
+            proofout.appendLine(s);
 
             RuntimeResult res;
             res.guard = rule.getGuard();
@@ -506,8 +502,7 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         }
     }
 
-    proofout << "Could not prove constant complexity." << endl;
-    proofout.decreaseIndention();
+    proofout.appendLine("Could not prove constant complexity.");
     return {};
 }
 
@@ -582,22 +577,21 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         bool hasTempVar = !cost.isNontermSymbol() && cost.hasVariableWith(isTempVar);
 
         if (cost.getComplexity() <= max(res.cpx, Complexity::Const) && !hasTempVar) {
-            debugAnalysis("Skipping rule " << ruleIdx << " since it cannot improve the complexity");
             continue;
         }
 
-        proofout << endl;
-        proofout.setLineStyle(ProofOutput::Headline);
-        proofout << "Computing asymptotic complexity for rule " << ruleIdx << endl;
-        proofout.increaseIndention();
+        proofout.newline();
+        proofout.headline(stringstream() << "Computing asymptotic complexity for rule " << ruleIdx);
 
         // Simplify guard to speed up asymptotic check
         bool simplified = false;
         simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
         simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
         if (simplified) {
-            proofout << "Simplified the guard:" << endl;
-            ITSExport::printLabeledRule(ruleIdx, its, proofout);
+            proofout.appendLine("Simplified the guard:");
+            stringstream s;
+            ITSExport::printLabeledRule(ruleIdx, its, s);
+            proofout.appendLine(s);
         }
         if (Timeout::hard()) break;
 
@@ -628,13 +622,11 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
                     res.cpx);
         }
 
-        proofout << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx << endl;
-        proofout.decreaseIndention();
+        proofout.appendLine(stringstream() << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx);
 
         if (checkRes.get().cpx > res.cpx) {
-            proofout << endl;
-            proofout.setLineStyle(ProofOutput::Result);
-            proofout << "Found new complexity " << checkRes.get().cpx << "." << endl;
+            proofout.newline();
+            proofout.result(stringstream() << "Found new complexity " << checkRes.get().cpx << ".");
 
             res.cpx = checkRes.get().cpx;
             res.solvedCost = checkRes.get().solvedCost;
@@ -663,16 +655,6 @@ RuntimeResult Analysis::getMaxRuntime() {
     }
 
     RuntimeResult res = getMaxRuntimeOf(rules, RuntimeResult());
-
-#ifdef DEBUG_PROBLEMS
-    // Check if we lost complexity due to asymptotic bounds check (compared to getComplexity())
-    // This may be fine, but it could also indicate a weakness in the asymptotic check.
-    RuntimeResult unsoundRes = getMaxComplexityApproximation(its, rules);
-    if (unsoundRes.cpx > res.cpx) {
-        debugProblem("Asymptotic bounds lost complexity: " << unsoundRes.cpx << " [" << unsoundRes.cost << "]"
-                << "--> " << res.cpx << " [" << res.solvedCost << "]");
-    }
-#endif
 
     return res;
 }
@@ -753,7 +735,7 @@ RuntimeResult Analysis::getMaxPartialResult() {
     }
 
 abort:
-    proofout << "Aborting due to timeout" << endl;
+    proofout.appendLine("Aborting due to timeout");
 done:
     return res;
 }

@@ -205,18 +205,14 @@ int main(int argc, char *argv[]) {
 
     // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
     if (Config::Parser::AllowDivision) {
-        proofout << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "Division is only sound if the result of a term is always an integer." << endl;
+        proofout.newline();
+        proofout.warning("WARNING: Allowing division in the input program can yield unsound results!");
+        proofout.warning("Division is only sound if the result of a term is always an integer.");
     }
     if (!Config::Analysis::EnsureNonnegativeCosts) {
-        proofout << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "WARNING: Not checking the costs can yield unsound results!" << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "This is only safe if costs in the input program are guaranteed to be nonnegative." << endl;
+        proofout.newline();
+        proofout.warning("WARNING: Not checking the costs can yield unsound results!");
+        proofout.warning("This is only safe if costs in the input program are guaranteed to be nonnegative.");
     }
 
     // Disable proof output if requested (after issuing the warnings for unsound configuration)
@@ -245,8 +241,9 @@ int main(int argc, char *argv[]) {
     }
 
     // WST style proof output
-    proofout.setEnabled(true);
-    proofout << endl << runtime.cpx.toWstString() << endl;
+    cout << runtime.cpx.toWstString() << std::endl;
+
+    proofout.print();
 
     return 0;
 }

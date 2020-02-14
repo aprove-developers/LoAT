@@ -19,7 +19,6 @@
 
 #include "../z3/z3toolbox.hpp"
 #include "../util/stats.hpp"
-#include "../debug.hpp"
 
 using namespace std;
 
@@ -33,13 +32,6 @@ using namespace std;
  */
 static bool checkSatisfiability(const GuardList &newGuard) {
     auto z3res = Z3Toolbox::checkAll(newGuard);
-
-#ifdef DEBUG_PROBLEMS
-    if (z3res == z3::unknown) {
-        debugProblem("Chaining: got z3::unknown for: ");
-        dumpList("guard", newGuard);
-    }
-#endif
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
@@ -123,7 +115,6 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
 
     auto newLhs = chainLhss(varMan, first.getLhs(), first.getUpdate(), second.getLhs(), checkSat);
     if (!newLhs) {
-        debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
     }
 
@@ -149,7 +140,6 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, uns
 
     auto newLhs = chainLhss(varMan, first.getLhs(), firstUpdate, second.getLhs(), checkSat);
     if (!newLhs) {
-        debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
     }
 

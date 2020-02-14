@@ -59,7 +59,6 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
         res = rec.compute_exact_solution();
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
-        debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=" << updateLhs << " for updated variable " << updateLhs);
     }
     if (res == Purrs::Recurrence::SUCCESS) {
         rec.exact_solution(exact);
@@ -81,14 +80,11 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
         Purrs::Recurrence rec(rhs);
         rec.set_initial_conditions({ {0, 0} }); // 0 iterations have 0 costs
 
-        debugPurrs("COST REC: " << rhs);
-
         auto res = rec.compute_exact_solution();
         if (res != Purrs::Recurrence::SUCCESS) {
             // try lower bound as fallback, since it is sound to under-approximate costs
             res = rec.compute_lower_bound();
             if (res != Purrs::Recurrence::SUCCESS) {
-                debugPurrs("Purrs failed on x(n) = " << rhs << " with initial x(0)=0 for cost" << cost);
                 return {};
             } else {
                 rec.lower_bound(sol);
@@ -98,7 +94,6 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
         }
     } catch (...) {
         //purrs throws a runtime exception if the recurrence is too difficult
-        debugPurrs("Purrs failed (exception) on x(n) = " << rhs << " with initial x(0)=0 for cost" << cost);
         return {};
     }
 
@@ -153,13 +148,11 @@ option<Expression> Recurrence::iterateCost(const Expression &cost, const Express
 option<unsigned int> Recurrence::iterateAll(UpdateMap &update, Expression &cost, const Expression &metering) {
     auto newUpdate = iterateUpdate(update, metering);
     if (!newUpdate) {
-        debugPurrs("calcIterated: failed to calculate update recurrence");
         return {};
     }
 
     auto newCost = iterateCost(cost, metering);
     if (!newCost) {
-        debugPurrs("calcIterated: failed to calculate cost recurrence");
         return {};
     }
 
@@ -173,7 +166,6 @@ option<unsigned int> Recurrence::iterateRule(const VarMan &varMan, LinearRule &r
     // This may modify the rule's guard and update
     auto order = DependencyOrder::findOrderWithHeuristic(varMan, rule.getUpdateMut(), rule.getGuardMut());
     if (!order) {
-        debugPurrs("iterateRule: failed to find a dependency order");
         return {};
     }
 
@@ -185,7 +177,6 @@ option<unsigned int> Recurrence::iterateRule(const VarMan &varMan, LinearRule &r
 option<unsigned int> Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N) {
     auto order = DependencyOrder::findOrderWithHeuristic(varMan, update, guard);
     if (!order) {
-        debugPurrs("iterateUpdateAndCost: failed to find a dependency order");
         return {};
     }
 

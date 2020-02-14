@@ -17,7 +17,6 @@
 
 #include "farkas.hpp"
 
-#include "../../debug.hpp"
 #include "../../expr/relation.hpp"
 #include "../../expr/ginactoz3.hpp"
 #include "../../z3/z3toolbox.hpp"
@@ -36,13 +35,6 @@ z3::expr FarkasLemma::apply(
         const Z3Context::VariableType &lambdaType)
 {
     assert(vars.size() == coeffs.size());
-
-#ifdef DEBUG_FARKAS
-    debugFarkas("Applying Farkas Lemma to: (A*x <= b) implies (c*x + " << c0 << " <= " << delta << ")");
-    dumpList("constraints A*x", constraints);
-    dumpList("variables x    ", vars);
-    dumpList("coefficients c ", coeffs);
-#endif
 
     // List of expressions whose conjunction will be the result
     vector<z3::expr> res;
@@ -74,7 +66,6 @@ z3::expr FarkasLemma::apply(
     }
     for (const ExprSymbol &sym : constraintSymbols) {
         if (varToCoeff.find(sym) == varToCoeff.end() && std::find(params.begin(), params.end(), sym) == params.end()) {
-            debugFarkas("FARKAS NOTE: Adding additional variable with 0 coefficient: " << sym);
             varToCoeff.emplace(sym, context.real_val(0));
         }
     }
@@ -96,11 +87,6 @@ z3::expr FarkasLemma::apply(
         sum = sum + lambda[i] * GinacToZ3::convert(constraints[i].rhs(), context);
     }
     res.push_back(sum <= delta);
-
-#ifdef DEBUG_FARKAS
-    debugFarkas("Resulting z3 expressions:");
-    for (z3::expr x : res) debugFarkas(" - " << x);
-#endif
 
     return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
 }

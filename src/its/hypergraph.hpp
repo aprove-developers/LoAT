@@ -24,7 +24,6 @@
 #include <set>
 #include <algorithm>
 
-#include "../debug.hpp"
 #include "../its/types.hpp" // for TransIdx
 
 
@@ -42,14 +41,12 @@ public:
      * @return the index of the added transition
      */
     TransIdx addTrans(Node from, Node to) {
-        assert(check() == Valid);
         TransIdx currIdx = nextIdx++;
         InternalTransition trans = {from, {to}};
 
         transitions[currIdx] = std::move(trans);
         predecessor[to].insert(from);
         outgoing[from][to].push_back(currIdx);
-        assert(check() == Valid);
         return currIdx;
     }
 
@@ -59,7 +56,6 @@ public:
      */
     TransIdx addTrans(Node from, std::set<Node> to) {
         assert(!to.empty());
-        assert(check() == Valid);
         TransIdx currIdx = nextIdx++;
         InternalTransition trans = {from, to};
         transitions[currIdx] = {from, to};
@@ -74,7 +70,6 @@ public:
             outgoing[from][t].push_back(currIdx);
         }
 
-        assert(check() == Valid);
         return currIdx;
     }
 
@@ -178,7 +173,6 @@ public:
      * (no new transition is added, data is kept)
      */
     void changeTransTargets(TransIdx trans, std::set<Node> newTargets) {
-        assert(check() == Valid);
         removeTransFromGraph(trans);
         InternalTransition &t = transitions[trans];
 
@@ -188,7 +182,6 @@ public:
         }
 
         t.to = newTargets;
-        assert(check() == Valid);
     }
 
     /**
@@ -197,7 +190,6 @@ public:
      * @note afterwards, node has only incoming, newOutgoing only outgoing transitions
      */
     void splitNode(Node node, Node newOutgoing) {
-        assert(check() == Valid);
         assert(outgoing.count(newOutgoing) == 0 && predecessor.count(newOutgoing) == 0);
 
         //move outgoing to new node
@@ -217,14 +209,12 @@ public:
         for (TransIdx idx : getTransFrom(newOutgoing)) {
             transitions[idx].from = newOutgoing;
         }
-        assert(check() == Valid);
     }
 
     /**
      * Removes the given node, returns set of transitions that were removed in the process.
      */
     std::set<TransIdx> removeNode(Node idx) {
-        assert(check() == Valid);
         std::set<TransIdx> toRemove;
 
         //find outgoing transitions
@@ -244,29 +234,16 @@ public:
 
         assert(outgoing.count(idx) == 0);
         assert(predecessor.count(idx) == 0);
-        assert(check() == Valid);
 
         return toRemove;
     }
 
     void removeTrans(TransIdx idx) {
-        assert(check() == Valid);
         removeTransFromGraph(idx);
         transitions.erase(idx);
-        assert(check() == Valid);
     }
 
     enum CheckResult { Valid=0, InvalidNode, EmptyMapEntry, UnknownTrans, InvalidTrans, UnusedTrans, DuplicateTrans, InvalidPred, InvalidPredCount };
-    int check(std::set<Node> *nodes = nullptr) const {
-#ifdef DEBUG_GRAPH
-        int res = check_internal(nodes);
-        if (res != 0) debugGraph("Graph ERROR: " << res);
-        return res;
-#else
-        (void)nodes; // suppress compiler warning
-        return Valid;
-#endif
-    }
 
 private:
     //updates outgoing, predecessor to remove given trans from it current location

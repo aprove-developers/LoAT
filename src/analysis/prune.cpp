@@ -18,7 +18,6 @@
 #include "prune.hpp"
 
 #include "../global.hpp"
-#include "../debug.hpp"
 #include "../util/stats.hpp"
 #include "../util/timing.hpp"
 #include "../util/timeout.hpp"
@@ -96,7 +95,6 @@ bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool
     }
 
     for (TransIdx rule : toRemove) {
-        debugPrune("Removing duplicate rule: " << rule);
         its.removeRule(rule);
     }
 
@@ -111,7 +109,6 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
 
     for (TransIdx rule : trans) {
         if (Z3Toolbox::checkAll(its.getRule(rule).getGuard()) == z3::unsat) {
-            debugPrune("Removing unsat rule: " << rule);
             its.removeRule(rule);
             changed = true;
         }
@@ -122,8 +119,6 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
 
 
 bool Pruning::pruneParallelRules(ITSProblem &its) {
-    debugPrune("Pruning parallel rules");
-
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
     // (see ComplexityResult for the latter). We first compare the complexity, then the number of inftyVars.
     typedef tuple<TransIdx,Complexity,int> TransCpx;
@@ -185,8 +180,6 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                 for (TransIdx rule : parallel) {
                     if (keep.count(rule) == 0) {
                         Stats::add(Stats::PruneRemove);
-                        debugPrune("  removing all right-hand sides of " << rule << " from location " << pre << " to " << node);
-
                         auto optRule = its.getRule(rule).stripRhsLocation(node);
                         if (optRule) {
                             its.addRule(optRule.get());
@@ -196,7 +189,6 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     }
                 }
                 if (hasDummy) {
-                    debugPrune("  re-adding dummy rule from location " << pre << " to " << node);
                     its.addRule(LinearRule::dummyRule(pre, node));
                 }
 
@@ -235,7 +227,6 @@ static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx>
 
                 // only remove rules where _all_ right-hand sides lead to leaves
                 if (rule.rhsCount() == 1 || std::all_of(rule.rhsBegin(), rule.rhsEnd(), isLeafRhs)) {
-                    debugPrune("  removing constant leaf rule: " << ruleIdx);
                     its.removeRule(ruleIdx);
                     changed = true;
                 }
@@ -243,7 +234,6 @@ static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx>
 
             // If we removed all rules to the leaf, we can safely delete it
             if (!its.hasTransitionsTo(next)) {
-                debugPrune("  removing isolated sink: " << next);
                 its.removeOnlyLocation(next);
             }
         }
@@ -255,7 +245,6 @@ static bool removeConstLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx>
 
 bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
     set<LocationIdx> visited;
-    debugPrune("Removing leafs and unreachable");
 
     // Remove rules to leafs if they do not give nontrivial complexity
     bool changed = removeConstLeafs(its, its.getInitialLocation(), visited);
@@ -263,7 +252,6 @@ bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
     // Remove all nodes that have not been reached in the DFS traversal
     for (LocationIdx node : its.getLocations()) {
         if (visited.count(node) == 0) {
-            debugPrune("  removing unreachable location: " << node);
             its.removeLocationAndRules(node);
             changed = true;
         }
@@ -294,7 +282,6 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
     if (optRule) {
         TransIdx newIdx = its.addRule(optRule.get());
         (void)newIdx; // suppress compiler warning if debugging is disabled
-        debugPrune("Partial deletion: Added stripped rule " << newIdx << " (for rule " << ruleIdx << ")");
     }
 
     // If all rhss would be deleted, we still keep the rule if it has an interesting complexity.
@@ -305,7 +292,6 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
             assert(!its.hasTransitionsFrom(loc));
             TransIdx newIdx = its.addRule(rule.replaceRhssBySink(loc));
             (void)newIdx; // suppress compiler warning if debugging is disabled
-            debugPrune("Partial deletion: Added dummy rule " << newIdx << " (for rule " << ruleIdx << ")");
         }
     }
 
@@ -322,14 +308,12 @@ bool Pruning::removeSinkRhss(ITSProblem &its) {
     for (LocationIdx node : its.getLocations()) {
         // if the location is a sink, remove it from all rules
         if (!its.hasTransitionsFrom(node)) {
-            debugPrune("Applying partial deletion to sink location: " << node);
             for (TransIdx rule : its.getTransitionsTo(node)) {
                 changed = partialDeletion(its, rule, node) || changed;
             }
 
             // if we could remove all incoming rules, we can remove the sink
             if (!its.isInitialLocation(node) && !its.hasTransitionsTo(node)) {
-                debugPrune("Removing unreachable sink (after partial deletion): " << node);
                 its.removeOnlyLocation(node);
             }
         }

@@ -22,10 +22,6 @@ namespace strengthening {
 
     typedef Modes Self;
 
-    const std::vector<Mode> Self::modes() {
-        return {invariance};
-    }
-
     const MaxSmtConstraints Self::invariance(const SmtConstraints &constraints, Z3Context &z3Ctx) {
         MaxSmtConstraints res;
         res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
@@ -36,10 +32,8 @@ namespace strengthening {
         res.hard.push_back(z3::mk_or(sat));
         z3::expr_vector someInvariant(z3Ctx);
         for (const z3::expr &e: constraints.conclusionsInvariant) {
-            res.soft.push_back(e);
-            someInvariant.push_back(e);
+            res.hard.push_back(e);
         }
-        res.hard.push_back(z3::mk_or(someInvariant));
         res.hard.insert(res.hard.end(), constraints.templatesInvariant.begin(), constraints.templatesInvariant.end());
         return res;
     }

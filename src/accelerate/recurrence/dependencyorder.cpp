@@ -67,7 +67,6 @@ option<vector<VariableIdx>> DependencyOrder::findOrder(const VarMan &varMan, con
         return res.ordering;
     }
 
-    debugPurrs("No dependency order found (not using heuristic).");
     return {};
 }
 
@@ -83,7 +82,6 @@ option<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan
     if (res.ordering.size() == update.size()) {
         return res.ordering;
     }
-    debugPurrs("No dependency order found, trying heuristic.");
 
     // If not all dependencies could be resolved, try to add constraints to the guard to make things easier.
     // e.g. for A'=A+B, B'=A+B we add the constraint A==B and can thus simplify to A'=A+A, B'=A+A.
@@ -120,7 +118,6 @@ option<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan
         up.second.applySubs(subs);
         if (!up.second.is_equal(targetRhs)) {
             // optimization cannot be applied, give up
-            debugPurrs("Heuristic not applicable for different rhss: " << targetRhs << " and " << up.second);
             return {};
         }
     }
@@ -128,6 +125,5 @@ option<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan
     // Now an order is trivial to find (any order will do)
     findOrderUntilConflicting(varMan, update, res);
     assert (res.ordering.size() == update.size());
-    debugPurrs("Heuristic successful, dependency order found.");
     return res.ordering;
 }

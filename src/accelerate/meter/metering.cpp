@@ -165,22 +165,12 @@ void MeteringFinder::buildLinearConstraints() {
         }
     }
 
-#ifdef DEBUG_METERING
-    debugMeter("Resulting linear constraints:");
-    dumpList("guard           ", linearConstraints.guard);
-    dumpList("reduced guard   ", linearConstraints.reducedGuard);
-    dumpList("irrelevant guard", linearConstraints.irrelevantGuard);
-    for (int i=0; i < updates.size(); ++i) {
-        dumpList("update ["+to_string(i)+"]", linearConstraints.guardUpdate[i]);
-    }
-#endif
 }
 
 
 /* ### Step 3: Construction of the final constraints for the metering function using Farkas lemma ### */
 
 z3::expr MeteringFinder::genNotGuardImplication() const {
-    debugMeter("Constructing not-guard implication");
     vector<z3::expr> res;
     vector<Expression> lhs;
 
@@ -200,7 +190,6 @@ z3::expr MeteringFinder::genNotGuardImplication() const {
 }
 
 z3::expr MeteringFinder::genGuardPositiveImplication(bool strict) const {
-    debugMeter("Constructing guard positive implication (strict = " << strict << ")");
     //G ==> f(x) > 0, which is equivalent to -f(x) < 0  ==  -f(x) <= -1 (on integers)
     vector<z3::expr> negCoeff;
     for (const z3::expr &coeff : meterVars.coeffs) {
@@ -212,8 +201,6 @@ z3::expr MeteringFinder::genGuardPositiveImplication(bool strict) const {
 }
 
 z3::expr MeteringFinder::genUpdateImplications() const {
-    debugMeter("Constructing update implication");
-
     // For each update, build f(x)-f(x') => x-x'
     // Note that we only include the (primed) variables actually affected by the update.
     // The other variables can be left out to simplify the z3 query (since they cancel out)
@@ -251,7 +238,6 @@ z3::expr MeteringFinder::genUpdateImplications() const {
 }
 
 z3::expr MeteringFinder::genNonTrivial() const {
-    debugMeter("Constructing non-trivial constraint");
     vector<z3::expr> res;
     for (const z3::expr &c : meterVars.coeffs) {
         res.push_back(c != 0);
@@ -271,11 +257,8 @@ Expression MeteringFinder::buildResult(const z3::model &model) const {
     for (unsigned int i=0; i < coeffs.size(); ++i) {
         result = result + Z3Toolbox::getRealFromModel(model,coeffs[i]) * symbols[i];
     }
-    debugMeter("Result before substitution: " << result);
-
     // reverse linearization
     result.applySubs(nonlinearSubs);
-    debugMeter("Result after substitution: " << result);
     return result;
 }
 
@@ -302,8 +285,6 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const z3::model &mod
 
         // replace the metering function by tempVar
         result.metering = tempVar;
-
-        debugMeter("Has reals, adding constraint: " << result.integralConstraint.get());
     }
 }
 
@@ -334,8 +315,6 @@ option<VariablePair> MeteringFinder::findConflictVars() const {
         auto it = conflictingVars.begin();
         VariableIdx a = *(it++);
         VariableIdx b = *it;
-
-        debugProblem("Metering found conflicting variables: " << varMan.getVarSymbol(a) << " and " << varMan.getVarSymbol(b));
         return make_pair(a, b);
     }
 
@@ -376,8 +355,6 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // the problem is already unsat (even without "GuardPositiveImplication")
     if (z3res == z3::unsat) {
-        debugMeter("z3 pre unsat");
-        debugProblem("Farkas pre unsat for: " << rule);
 
         if (Config::ForwardAccel::ConflictVarHeuristic) {
             auto conflictVar = meter.findConflictVars();
@@ -399,8 +376,6 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // If we fail, try the relaxed version instead (f(x) >= 0 instead of f(x) > 0)
     if (z3res != z3::sat) {
-        debugMeter("z3 strict positive: " << z3res);
-        debugProblem("Farkas strict positive is " << z3res << " for: " << rule);
         solver.pop();
         solver.add(meter.genGuardPositiveImplication(false));
         z3res = solver.check();
@@ -408,14 +383,11 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // If we still fail, we have to give up
     if (z3res != z3::sat) {
-        debugMeter("z3 final res: " << z3res);
-        debugProblem("Farkas final result " << z3res << " for: " << rule);
         result.result = Unsat;
         return result;
     }
 
     // If we succeed, extract the metering function from the model
-    debugMeter("Success (z3 result: " << z3res << ")");
     z3::model model = solver.get_model();
     result.metering = meter.buildResult(model);
     result.result = Success;
@@ -427,7 +399,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // Proof output for linearization (since this is an addition to the paper)
     if (!meter.nonlinearSubs.empty()) {
-        proofout << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs << endl;
+        proofout.appendLine(stringstream() << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs);
     }
 
     return result;
@@ -472,7 +444,6 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
         if (Timeout::soft()) break;
 
         const GiNaC::exmap &sub = freeSubs.top();
-        debugFarkas("Trying instantiation: " << sub);
 
         //apply current substitution (and forget the previous one)
         meter.guard = oldGuard; // copy
@@ -511,7 +482,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     instantiatedRule.applySubstitution(successfulSubs);
 
     // Proof output
-    proofout << "During metering: Instantiating temporary variables by " << successfulSubs << endl;
+    proofout.appendLine(stringstream() << "During metering: Instantiating temporary variables by " << successfulSubs);
 
     return instantiatedRule;
 }

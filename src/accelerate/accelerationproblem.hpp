@@ -74,7 +74,10 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                if (!silent) proofout << std::endl << "handled " << e.toString() << " via monotonic decrease" << std::endl;
+                if (!silent) {
+                    proofout.newline();
+                    proofout.appendLine(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
+                }
                 done.push_back(e);
                 res.push_back(e.subs(closed).subs({{n, n-1}}));
                 todo.erase(it);
@@ -102,7 +105,10 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.subs(up).lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                if (!silent) proofout << std::endl << "handled " << e << " via monotonic increase" << std::endl;
+                if (!silent) {
+                    proofout.newline();
+                    proofout.appendLine(std::stringstream() << "handled " << e << " via monotonic increase");
+                }
                 done.push_back(e);
                 res.push_back(e);
                 todo.erase(it);
@@ -137,7 +143,10 @@ struct AccelerationProblem {
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
                     solver.pop();
-                    if (!silent) proofout << std::endl << "handled " << e << " via eventual decrease" << std::endl;
+                    if (!silent) {
+                        proofout.newline();
+                        proofout.appendLine(std::stringstream() << "handled " << e << " via eventual decrease");
+                    }
                     done.push_back(e);
                     res.push_back(e);
                     res.push_back(newCond);
@@ -190,7 +199,10 @@ struct AccelerationProblem {
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
                     solver.pop();
-                    if (!silent) proofout << std::endl << "handled " << e << " via eventual increase" << std::endl;
+                    if (!silent) {
+                        proofout.newline();
+                        proofout.appendLine(std::stringstream() << "handled " << e << " via eventual increase");
+                    }
                     done.push_back(e);
                     res.push_back(newCond);
                     res.push_back(e);
@@ -207,21 +219,20 @@ struct AccelerationProblem {
 
     void print() {
         if (!silent) {
-            proofout << "res:";
+            std::stringstream s;
+            s << "res:";
             for (const auto &e: this->res) {
-                proofout << " " << e;
+                s << " " << e;
             }
-            proofout << std::endl;
-            proofout << "done:";
+            s << std::endl << "done:";
             for (const auto &e: this->done) {
-                proofout << " " << e;
+                s << " " << e;
             }
-            proofout << std::endl;
-            proofout << "todo:";
+            s << std::endl << "todo:";
             for (const auto &e: this->todo) {
-                proofout << " " << e;
+                s << " " << e;
             }
-            proofout << std::endl;
+            proofout.appendLine(s);
         }
     }
 

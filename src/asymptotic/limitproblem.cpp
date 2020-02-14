@@ -4,7 +4,6 @@
 #include <sstream>
 #include <utility>
 
-#include "../debug.hpp"
 #include "../expr/relation.hpp"
 #include "../z3/z3toolbox.hpp"
 
@@ -140,18 +139,12 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
 
     (*log) << "applying transformation rule (A), replacing " << *it
         << " by " << firstIE << " and " << secondIE << " using " << lv << std::endl;
-    debugLimitProblem("applying transformation rule (A), replacing " << *it
-                      << " by " << firstIE << " and " << secondIE << " using " << lv);
-
 
     set.erase(it);
     addExpression(firstIE);
     addExpression(secondIE);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
@@ -164,14 +157,10 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
            || (num.is_negative() && dir == NEG_CONS));
 
     (*log) << "applying transformation rule (B), deleting " << *it << std::endl;
-    debugLimitProblem("applying transformation rule (B), deleting " << *it);
 
     set.erase(it);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
@@ -181,7 +170,6 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
     }
 
     (*log) << "applying transformation rule (C) using substitution " << sub << std::endl;
-    debugLimitProblem("applying transformation rule (C) using substitution " << sub);
 
     InftyExpressionSet oldSet;
     oldSet.swap(set);
@@ -192,9 +180,6 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
     substitutions.push_back(substitutionIndex);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
@@ -209,13 +194,9 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
     ExprSymbol var = it->getAVariable();
 
     Expression expanded = it->expand();
-    debugLimitProblem("expanded " << *it << " to " << expanded);
-
 
     if (is_a<add>(expanded)) {
         Expression leadingTerm = expanded.lcoeff(var) * pow(var, expanded.degree(var));
-
-        debugLimitProblem("the leading term is " << leadingTerm);
 
         if (dir == POS) {
             // Fix the direction
@@ -226,26 +207,17 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
 
         (*log) << "applying transformation rule (D), replacing " << *it
             << " by " << inftyExp << std::endl;
-        debugLimitProblem("applying transformation rule (D), replacing " << *it
-                          << " by " << inftyExp);
 
         set.erase(it);
         addExpression(inftyExp);
-    } else {
-        debugLimitProblem(*it << " is already a monom");
     }
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
 void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
-
-    debugLimitProblem("expression: " << *it);
 
     assert(it->hasExactlyOneVariable());
     ExprSymbol x = it->getAVariable();
@@ -263,17 +235,13 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     } else {
         powerInExp = *it;
     }
-    debugLimitProblem("exp: " << powerInExp);
     assert(is_a<power>(powerInExp));
 
     Expression b = *it - powerInExp;
-    debugLimitProblem("b: " << b);
     assert(b.is_polynomial(x));
 
     Expression a = powerInExp.op(0);
     Expression e = powerInExp.op(1);
-
-    debugLimitProblem("a: " << a << ", e: " << e);
 
     assert(a.is_polynomial(x));
     assert(e.is_polynomial(x));
@@ -284,24 +252,17 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
 
     (*log) << "applying transformation rule (E), replacing " << *it << " by "
         << firstIE << " and " << secondIE << std::endl;
-    debugLimitProblem("applying transformation rule (E), replacing " << *it
-                      << " by " << firstIE << " and " << secondIE);
 
     set.erase(it);
     addExpression(firstIE);
     addExpression(secondIE);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
 void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it) {
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
-
-    debugLimitProblem("expression: " << *it);
 
     Expression powerInExp;
     if (is_a<add>(*it)) {
@@ -317,35 +278,26 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
     } else {
         powerInExp = *it;
     }
-    debugLimitProblem("general power: " << powerInExp);
     assert(is_a<power>(powerInExp));
     assert(!powerInExp.op(1).info(info_flags::polynomial)
            || powerInExp.hasAtLeastTwoVariables());
 
     Expression b = *it - powerInExp;
-    debugLimitProblem("b: " << b);
 
     Expression a = powerInExp.op(0);
     Expression e = powerInExp.op(1);
-
-    debugLimitProblem("a: " << a << ", e: " << e);
 
     InftyExpression firstIE(a - 1, POS);
     InftyExpression secondIE(e + b, POS_INF);
 
     (*log) << "reducing general power, replacing " << *it
         << " by " << firstIE << " and " << secondIE << std::endl;
-    debugLimitProblem("reducing general power, replacing " << *it
-                      << " by " << firstIE << " and " << secondIE);
 
     set.erase(it);
     addExpression(firstIE);
     addExpression(secondIE);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 

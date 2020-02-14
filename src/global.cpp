@@ -2,4 +2,4 @@
 
 #include <iostream>
 
-ProofOutput GlobalVariables::proofOutput(std::cout);
+ProofOutput GlobalVariables::proofOutput;

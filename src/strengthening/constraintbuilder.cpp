@@ -54,10 +54,6 @@ namespace strengthening {
                 invariancePremise.end(),
                 templatesInvariantImplication.premise.begin(),
                 templatesInvariantImplication.premise.end());
-        templatesInvariantImplication.premise.insert(
-                templatesInvariantImplication.premise.end(),
-                guardCtx.invariants.begin(),
-                guardCtx.invariants.end());
         std::vector<z3::expr> conclusionInvariant;
         for (const Expression &e: guardCtx.todo) {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
@@ -109,6 +105,11 @@ namespace strengthening {
                 for (const Expression &t: updatedTemplates) {
                     res.conclusion.push_back(t);
                 }
+            }
+        }
+        for (const Expression &g: guardCtx.guard) {
+            if (g.isLinear()) {
+                res.premise.push_back(g);
             }
         }
         return res;
