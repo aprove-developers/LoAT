@@ -51,6 +51,7 @@ namespace ForwardAcceleration {
 
     struct Result {
         ResultKind result;
+        ProofOutput proof;
         std::vector<MeteredRule> rules;
     };
 

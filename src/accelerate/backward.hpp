@@ -34,6 +34,7 @@ public:
     struct AccelerationResult {
         const std::vector<Rule> res;
         const ForwardAcceleration::ResultKind status;
+        const ProofOutput proof;
     };
 
     static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule, LocationIdx sink);

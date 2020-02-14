@@ -48,6 +48,10 @@ public:
         return res;
     }
 
+    void concat(const ProofOutput &that) {
+        proof.insert(proof.end(), that.proof.begin(), that.proof.end());
+    }
+
     void append(const std::string &s) {
         append(Style::None, s);
     }
@@ -121,9 +125,9 @@ public:
     }
 
     void print() {
-        for (const ProofLine &l: proof) {
+        for (const auto &l: proof) {
             if (Config::Output::Colors) {
-                switch (l.style) {
+                switch (l.first) {
                 case None: std::cout << Config::Color::None;
                     break;
                 case Result: std::cout << Config::Color::Result;
@@ -136,18 +140,13 @@ public:
                     break;
                 }
             }
-            std::cout << l.s << std::endl;
+            std::cout << l.second << std::endl;
         }
     }
 
 private:
 
-    struct ProofLine {
-        const Style style;
-        const std::string s;
-    };
-
-    std::vector<ProofLine> proof;
+    std::vector<std::pair<Style, std::string>> proof;
     bool enabled = true;
 };
 

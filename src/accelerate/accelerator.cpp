@@ -213,8 +213,9 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     }
 }
 
-const LinearRule Accelerator::chain(const LinearRule &rule) const {
+const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
     LinearRule res = rule;
+    bool changed = false;
     for (const auto &p: rule.getUpdate()) {
         const ExprSymbol &var = its.getVarSymbol(p.first);
         const Expression &up = p.second.expand();
@@ -224,6 +225,7 @@ const LinearRule Accelerator::chain(const LinearRule &rule) const {
                 const Expression &coeff = up.coeff(var);
                 if (coeff.isRationalConstant() && coeff < 0) {
                     res = Chaining::chainRules(its, res, res, false).get();
+                    changed = true;
                     break;
                 }
             }
@@ -237,10 +239,12 @@ const LinearRule Accelerator::chain(const LinearRule &rule) const {
         if (next != last) {
             last = next;
             res = chained;
+            changed = true;
             continue;
         }
     } while (false);
-    return res;
+    if (changed) return {res};
+    else return {};
 }
 
 unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
@@ -260,20 +264,37 @@ unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
 // ###################
 
 const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
+    ProofOutput proof;
     option<Forward::ResultKind> status;
     std::vector<Forward::MeteredRule> rules;
     // chain rule if necessary
-    const LinearRule &r = chain(rule);
+    const option<LinearRule> &optR = chain(rule);
+    if (optR) {
+        proof.section("Unrolled loop");
+        stringstream s;
+        ITSExport::printRule(optR.get(), its, s);
+        proof.append(s);
+    }
+    LinearRule r = optR ? optR.get() : rule;
     bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
     // only proceed if the guard is sat
     if (sat) {
         // first try to prove nonterm
         option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
         if (p) {
-            rules.emplace_back("non-termination", p.get().first);
+            const Rule &nontermRule = p.get().first;
+            Forward::ResultKind status = p.get().second;
+            proof.section("Applied non-termination processor");
+            stringstream s;
+            s << "Original rule:" << endl;
+            ITSExport::printRule(rule, its, s);
+            s << "Accelerated rule:" << endl;
+            ITSExport::printRule(nontermRule, its, s);
+            proof.append(s);
+            rules.emplace_back("non-termination", nontermRule);
             // if the rule is universaly non-termianting, we are done
-            if (p.get().second == Forward::Success) {
-                return {.result=Forward::Success, .rules=rules};
+            if (status == Forward::Success) {
+                return {.result=Forward::Success, .proof=proof, .rules=rules};
             }
         }
         // try acceleration
@@ -282,21 +303,27 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             // if acceleration failed, the best we can hope for is a restricted result
             status = Forward::SuccessWithRestriction;
         } else {
-            // if acceleration succeeded, save the result, but we still try to find cases where the rule does not terminate
             status = res.status;
+            proof.concat(res.proof);
+            // if acceleration succeeded, save the result, but we still try to find cases where the rule does not terminate
             for (const Rule &ar: res.res) {
                 rules.emplace_back("acceleration calculus", ar);
             }
         }
         // strengthen in order to prove non-termination
         vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-        for (const LinearRule &r: strengthened) {
-            bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
-            // only proceed if the guard is sat
-            if (sat) {
-                // try to prove non-termination
-                option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
-                if (p) {
+        if (!strengthened.empty()) {
+            for (const LinearRule &sr: strengthened) {
+                bool sat = Z3Toolbox::checkAll({sr.getGuard()}) == z3::sat;
+                // only proceed if the guard is sat
+                if (sat) {
+                    proof.section("Found recurrent set");
+                    stringstream s;
+                    s << "Original rule:" << endl;
+                    ITSExport::printRule(rule, its, s);
+                    s << "Accelerated rule:" << endl;
+                    ITSExport::printRule(sr, its, s);
+                    proof.append(s);
                     rules.emplace_back("non-termination", p.get().first);
                 }
             }
@@ -305,7 +332,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     if (rules.empty()) {
         status = Forward::NonMonotonic;
     }
-    return {.result=status.get(), .rules=rules};
+    return {.result=status.get(), .proof=proof, .rules=rules};
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {

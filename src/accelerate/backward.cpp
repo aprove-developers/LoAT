@@ -68,8 +68,7 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
 }
 
 LinearRule BackwardAcceleration::buildNontermRule() const {
-    LinearRule res(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
-    return std::move(res);
+    return LinearRule(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
 }
 
 Self::AccelerationResult BackwardAcceleration::run() {

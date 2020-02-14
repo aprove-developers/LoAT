@@ -126,7 +126,7 @@ private:
      */
     void removeOldLoops(const std::vector<TransIdx> &loops);
 
-    const LinearRule chain(const LinearRule &rule) const;
+    const option<LinearRule> chain(const LinearRule &rule) const;
 
     unsigned int numNotInUpdate(const UpdateMap &up) const;
 
