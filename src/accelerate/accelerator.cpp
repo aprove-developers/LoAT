@@ -100,14 +100,25 @@ bool Accelerator::simplifySimpleLoops() {
 // ##  Nesting of Loops  ##
 // ########################
 
-void Accelerator::addNestedRule(const Rule &metered, TransIdx inner, TransIdx outer) {
+void Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
+                                TransIdx inner, TransIdx outer)
+{
     // Add the new rule
     TransIdx added = addResultingRule(metered);
 
     // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
     keepRules.erase(outer);
 
-    proofout.append(stringstream() << "Nested simple loops " << outer << " (outer loop) and " << inner << " (inner loop) with " << metered << ", resulting in the new rules: " << added << ".");
+    stringstream s;
+    s << "Nested simple loops " << outer << " (outer loop) and " << inner << " (inner loop) with " << metered << ", resulting in the new rules: " << added;
+
+    // Try to combine chain and the accelerated loop
+    auto chained = Chaining::chainRules(its, chain, metered);
+    if (chained) {
+        TransIdx added = addResultingRule(chained.get());
+        s << ", " << added;
+    }
+    proofout.append(s << ".");
 }
 
 
@@ -142,7 +153,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
                         false,
                         currentCpx).cpx;
             if (newCpx > currentCpx) {
-                addNestedRule(accelRule, fst.newRule, snd.oldRule);
+                addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
             }
         }
     }
