@@ -196,7 +196,7 @@ RuntimeResult Analysis::run() {
     }
 
     if (Timeout::soft()) {
-        std::cerr << "Aborted due to lack of remaining time" << std::endl;
+        std::cerr << "Aborted due to timeout" << std::endl;
     }
 
     if (isFullySimplified()) {
