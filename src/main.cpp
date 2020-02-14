@@ -28,18 +28,14 @@ using namespace std;
 
 // Variables for command line flags
 string filename;
-string benchmarkMode = "none"; // no benchmark
 int timeout = 0; // no timeout
 int proofLevel = 2;
 bool printConfig = false;
-bool allowRecursion = true;
-
 
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --benchmark <basic|cond|bkwd|rec|smt|just-smt>   Set configuration for the benchmarks in the paper" << endl;
     cout << "  --proof-level <n>                                Detail level for proof output (0-3, default 2)" << endl;
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
@@ -78,8 +74,6 @@ void parseFlags(int argc, char *argv[]) {
             Config::Output::DotFile = getNext();
         } else if (strcmp("--timeout",argv[arg]) == 0) {
             timeout = atoi(getNext());
-        } else if (strcmp("--benchmark",argv[arg]) == 0) {
-            benchmarkMode = getNext();
         } else if (strcmp("--proof-level",argv[arg]) == 0) {
             proofLevel = atoi(getNext());
         } else if (strcmp("--plain",argv[arg]) == 0) {
@@ -125,15 +119,6 @@ void parseFlags(int argc, char *argv[]) {
     }
 }
 
-
-void setBenchmarkConfig(bool conditionalMeter, bool backAccel, bool recursion, Config::Limit::PolynomialLimitProblemStrategy* limitStrategy) {
-    Config::ForwardAccel::ConditionalMetering = conditionalMeter;
-    Config::Accel::UseBackwardAccel = backAccel;
-    Config::Limit::PolyStrategy = limitStrategy;
-    allowRecursion = recursion;
-}
-
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printHelp(argv[0]);
@@ -147,18 +132,6 @@ int main(int argc, char *argv[]) {
     Config::Output::ProofAccel = (proofLevel >= 1);
     Config::Output::ProofLimit = (proofLevel >= 2);
     Config::Output::ProofChain = (proofLevel >= 3);
-
-    // Benchmark and heuristic settings
-         if (benchmarkMode.compare("basic")    == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("cond")     == 0) setBenchmarkConfig(true,  false, false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("bkwd")     == 0) setBenchmarkConfig(false, true,  false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("rec")      == 0) setBenchmarkConfig(false, false, true,  &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("smt")      == 0) setBenchmarkConfig(false, false, false, &Config::Limit::SmtAndCalculus);
-    else if (benchmarkMode.compare("just-smt") == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Smt);
-    else if (benchmarkMode.compare("none")     != 0) {
-        cerr << "Error: Unknown benchmark setting" << endl;
-        return 1;
-    }
 
     // Print current configuration (if requested)
     if (printConfig) {
@@ -210,13 +183,7 @@ int main(int argc, char *argv[]) {
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
-    RuntimeResult runtime;
-    if (!allowRecursion && !its.isLinear()) {
-        std::cerr << "Error: Cannot analyze recursive ITS problem (recursion is disabled)." << std::endl;
-        return 1;
-    } else {
-        runtime = Analysis::analyze(its);
-    }
+    RuntimeResult runtime = Analysis::analyze(its);
 
     // WST style proof output
     cout << runtime.cpx.toWstString() << std::endl;
