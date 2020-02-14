@@ -202,7 +202,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
  * Performs a DFS and removes rules to leafs with constant complexity.
  * Returns true iff the ITS was modified.
  */
-static bool removeIrrelevantLeaves(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
+static bool removeIrrelevantLeafs(ITSProblem &its, LocationIdx node, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) return false; // already present
 
     // for brevity only
@@ -212,7 +212,7 @@ static bool removeIrrelevantLeaves(ITSProblem &its, LocationIdx node, set<Locati
     bool changed = false;
     for (LocationIdx next : its.getSuccessorLocations(node)) {
         // recurse first
-        changed = removeIrrelevantLeaves(its, next, visited) || changed;
+        changed = removeIrrelevantLeafs(its, next, visited) || changed;
 
         // If next is (now) a leaf, rules leading to next are candidates for removal
         if (isLeaf(next)) {
@@ -227,7 +227,7 @@ static bool removeIrrelevantLeaves(ITSProblem &its, LocationIdx node, set<Locati
                     continue;
                 }
 
-                // only remove rules where _all_ right-hand sides lead to leaves
+                // only remove rules where _all_ right-hand sides lead to leafs
                 if (rule.rhsCount() == 1 || std::all_of(rule.rhsBegin(), rule.rhsEnd(), isLeafRhs)) {
                     its.removeRule(ruleIdx);
                     changed = true;
@@ -249,7 +249,7 @@ bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
     set<LocationIdx> visited;
 
     // Remove rules to leafs if they do not give nontrivial complexity
-    bool changed = removeIrrelevantLeaves(its, its.getInitialLocation(), visited);
+    bool changed = removeIrrelevantLeafs(its, its.getInitialLocation(), visited);
 
     // Remove all nodes that have not been reached in the DFS traversal
     for (LocationIdx node : its.getLocations()) {

@@ -59,7 +59,7 @@ RuntimeResult Analysis::run() {
     printForProof("Initial");
 
     if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
-        proofout.headline("Strengthening: Ensure Cost >= 0");
+        proofout.headline("Ensure Cost >= 0");
         printForProof("Costs >= 0");
     }
 
@@ -84,7 +84,7 @@ RuntimeResult Analysis::run() {
     if (Config::Analysis::Preprocessing) {
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable rules and leaves");
+            proofout.headline("Removed unreachable rules and leafs");
             printForProof("Removed unreachable");
         }
 
@@ -94,7 +94,7 @@ RuntimeResult Analysis::run() {
         }
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable rules and leaves:");
+            proofout.headline("Removed unreachable rules and leafs:");
             printForProof("Removed unreachable");
         }
 
@@ -143,7 +143,7 @@ RuntimeResult Analysis::run() {
 
             if (Pruning::removeLeafsAndUnreachable(its)) {
                 changed = true;
-                proofout.headline("Removed unreachable locations and irrelevant leaves");
+                proofout.headline("Removed unreachable locations and irrelevant leafs");
                 printForProof("Remove unreachable");
             }
             if (Timeout::soft()) break;
@@ -172,19 +172,15 @@ RuntimeResult Analysis::run() {
             printForProof("Chain tree paths");
 
         } else if (eliminateALocation(eliminatedLocation)) {
-            proofout.headline("Eliminated location " + eliminatedLocation + " (as a last resort):");
+            proofout.headline("Eliminated location " + eliminatedLocation);
             printForProof("Eliminate location");
         }
-        if (Timeout::soft()) break;
-
-        if (isFullySimplified()) {
-            break;
-        }
+        if (Timeout::soft() || isFullySimplified()) break;
 
         if (acceleratedOnce) {
 
             if (merging::RuleMerger::mergeRules(its)) {
-                proofout.headline("Merged rules:");
+                proofout.headline("Merged rules");
                 printForProof("Merging");
             }
 
