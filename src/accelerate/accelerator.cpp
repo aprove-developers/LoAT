@@ -328,14 +328,24 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                 bool sat = Z3Toolbox::checkAll({sr.getGuard()}) == z3::sat;
                 // only proceed if the guard is sat
                 if (sat) {
-                    proof.section("Found recurrent set");
-                    stringstream s;
-                    s << "Original rule:" << endl;
-                    ITSExport::printRule(rule, its, s);
-                    s << "Accelerated rule:" << endl;
-                    ITSExport::printRule(sr, its, s);
-                    proof.append(s);
-                    rules.emplace_back("non-termination", p.get().first);
+                    option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(sr, its, sinkLoc);
+                    if (p) {
+                        proof.section("Applied strengthening");
+                        stringstream s;
+                        s << "Original rule:" << endl;
+                        ITSExport::printRule(r, its, s);
+                        s << "Strengthened rule:" << endl;
+                        ITSExport::printRule(sr, its, s);
+
+                        const Rule &nontermRule = p.get().first;
+                        proof.section("Applied non-termination processor");
+                        s << "Original rule:" << endl;
+                        ITSExport::printRule(sr, its, s);
+                        s << "Accelerated rule:" << endl;
+                        ITSExport::printRule(nontermRule, its, s);
+                        proof.append(s);
+                        rules.emplace_back("non-termination", nontermRule);
+                    }
                 }
             }
         }

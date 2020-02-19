@@ -194,6 +194,8 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(updated > updated.subs(up), ctx));
             if (solver.check() == z3::check_result::unsat) {
+                solver.pop();
+                solver.push();
                 const Expression &newCond = Relation::normalizeInequality(e.lhs() <= updated);
                 solver.add(e.toZ3(ctx));
                 solver.add(newCond.toZ3(ctx));
