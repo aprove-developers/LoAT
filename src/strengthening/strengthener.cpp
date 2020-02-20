@@ -27,6 +27,16 @@
 namespace strengthening {
 
     const std::vector<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its) {
+        for (const Expression &e: rule.getGuard()) {
+            if (!e.isLinear()) {
+                return {};
+            }
+        }
+        for (const auto &p: rule.getUpdate()) {
+            if (!p.second.isLinear()) {
+                return {};
+            }
+        }
         const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
         const Strengthener strengthener(ruleCtx);
         const std::vector<GuardList> &strengthened = strengthener.apply(rule.getGuard());
@@ -42,17 +52,20 @@ namespace strengthening {
 
     const std::vector<GuardList> Strengthener::apply(const GuardList &guard) const {
         std::vector<GuardList> res;
-        const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates);
-        const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);
+        const option<GuardContext> &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates);
+        if (!guardCtx) {
+            return res;
+        }
+        const Templates &templates = TemplateBuilder::build(guardCtx.get(), ruleCtx);
         Z3Context z3Ctx;
-        const SmtConstraints &smtConstraints = ConstraintBuilder::build(templates, ruleCtx, guardCtx, z3Ctx);
+        const SmtConstraints &smtConstraints = ConstraintBuilder::build(templates, ruleCtx, guardCtx.get(), z3Ctx);
         MaxSmtConstraints maxSmtConstraints = Modes::invariance(smtConstraints, z3Ctx);
         if (maxSmtConstraints.hard.empty()) {
             return {};
         }
         const option<Invariants> &newInv = ConstraintSolver::solve(ruleCtx, maxSmtConstraints, templates, z3Ctx);
         if (newInv) {
-            GuardList newGuard(guardCtx.guard);
+            GuardList newGuard(guardCtx->guard);
             newGuard.insert(
                     newGuard.end(),
                     newInv.get().invariants.begin(),

@@ -59,10 +59,8 @@ namespace strengthening {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
-                if (Relation::isLinearInequality(e, templates.vars()) && Relation::isLinearInequality(updated, templates.vars())) {
-                    const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
-                    conclusionInvariant.push_back(invariant);
-                }
+                const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
+                conclusionInvariant.push_back(invariant);
             }
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
@@ -88,29 +86,19 @@ namespace strengthening {
     const Implication ConstraintBuilder::buildTemplatesInvariantImplication() const {
         Implication res;
         for (const Expression &invTemplate: templates) {
-            bool linear = true;
             GuardList updatedTemplates;
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = invTemplate;
                 updated.applySubs(up);
-                if (Relation::isLinearInequality(updated, templates.vars())) {
-                    updatedTemplates.push_back(updated);
-                } else {
-                    linear = false;
-                    break;
-                }
+                updatedTemplates.push_back(updated);
             }
-            if (linear) {
-                res.premise.push_back(invTemplate);
-                for (const Expression &t: updatedTemplates) {
-                    res.conclusion.push_back(t);
-                }
+            res.premise.push_back(invTemplate);
+            for (const Expression &t: updatedTemplates) {
+                res.conclusion.push_back(t);
             }
         }
         for (const Expression &g: guardCtx.guard) {
-            if (g.isLinear()) {
-                res.premise.push_back(g);
-            }
+            res.premise.push_back(g);
         }
         return res;
     }

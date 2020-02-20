@@ -137,7 +137,6 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
                         addResultingRule(chained.get());
                         proofout.concat(chainingProof(second, accelRule, chained.get(), its));
                     }
-                    keepRules.erase(snd.newRule); // TODO does this help?
                 } else {
                     proofout.concat(deletionProof(accelRule, its));
                 }
@@ -288,14 +287,11 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                     bool sat = Z3Toolbox::checkAll({sr.getGuard()}) == z3::sat;
                     // only proceed if the guard is sat
                     if (sat) {
-                        option<std::pair<Rule, Status>> p = nonterm::NonTerm::universal(sr, its, sinkLoc);
-                        if (p) {
-                            nonterm = true;
-                            const Rule &nontermRule = p.get().first;
-                            res.proof.concat(ruleTransformationProof(r, "strengthening", sr, its));
-                            res.proof.concat(ruleTransformationProof(sr, "non-termination processor", nontermRule, its));
-                            res.rules.emplace_back(nontermRule);
-                        }
+                        assert(nonterm::NonTerm::universal(sr, its, sinkLoc));
+                        nonterm = true;
+                        const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expression::NontermSymbol, sinkLoc, {});
+                        res.proof.concat(ruleTransformationProof(r, "recurrent set", nontermRule, its));
+                        res.rules.emplace_back(nontermRule);
                     }
                 }
             }
