@@ -90,11 +90,11 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
     switch (meter.result) {
         case MeteringFinder::Nonlinear:
-            res.status = TooComplicated;
+            res.status = Failure;
             return res;
 
         case MeteringFinder::ConflictVar:
-            res.status = NoMetering;
+            res.status = Failure;
             conflictVar = meter.conflictVar;
             return res;
 
@@ -108,7 +108,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
         }
 
         case MeteringFinder::Unsat:
-            res.status = NoMetering;
+            res.status = Failure;
             return res;
 
         case MeteringFinder::Success:
@@ -134,7 +134,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
                 if (Recurrence::iterateRule(varMan, linRule, iterationCount)) {
-                    res.status = TooComplicated;
+                    res.status = Failure;
                     return res;
                 }
 
@@ -187,8 +187,8 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
     // Try to find a metering function without any heuristics
     option<VariablePair> conflictVar;
     Result res = meterAndIterate(varMan, rule, sink, conflictVar);
-    if (res.status != NoMetering) {
-        return res; // either successful or there is no point in applying heuristics
+    if (res.status != Failure) {
+        return res;
     }
 
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
@@ -219,7 +219,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         // Check if at least one attempt was successful.
         // If both were successful, then there is no real restriction (since we add both alternatives).
         if (!res.rules.empty()) {
-            res.status = (res.rules.size() == 2) ? Success : SuccessWithRestriction;
+            res.status = (res.rules.size() == 2) ? Success : PartialSuccess;
             return res;
         }
     }
@@ -233,12 +233,12 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
             auto accelRule = accelerateFast(varMan, newRule, sink);
             if (accelRule) {
                 res.rules.push_back(accelRule.get().appendInfo(" (after strengthening guard)"));
-                res.status = SuccessWithRestriction;
+                res.status = PartialSuccess;
                 return res;
             }
         }
     }
 
-    assert(res.status == NoMetering && res.rules.empty());
+    assert(res.status == Failure && res.rules.empty());
     return res;
 }

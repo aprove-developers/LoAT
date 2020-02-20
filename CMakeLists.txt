@@ -106,6 +106,9 @@ add_executable(${EXECUTABLE}
         src/util/proofoutput.hpp
         src/util/timeout.cpp
         src/util/timeout.hpp
+        src/util/result.hpp
+        src/util/proofutil.hpp
+        src/util/proofutil.cpp
         src/z3/z3context.cpp
         src/z3/z3context.hpp
         src/z3/z3solver.hpp

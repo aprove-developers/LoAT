@@ -24,6 +24,7 @@
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
+#include "../util/result.hpp"
 
 #include "../util/option.hpp"
 
@@ -32,15 +33,6 @@
  * This is applicable to for both linear and nonlinear rules (with several right-hand sides).
  */
 namespace ForwardAcceleration {
-    enum ResultKind {
-        NoMetering, // No metering function could be found
-        NonMonotonic, //
-        NoClosedFrom,
-        NotSupported,
-        TooComplicated, // Guard/update is too complicated (nonlinear or no dependency order)
-        Success, // Rule was successfully accelerated or is non-terminating (then the cost is set to InftySymbol)
-        SuccessWithRestriction // Success after a heuristic extended the guard (so it is now more restrictive)
-    };
 
     struct MeteredRule {
         std::string info; // printable version of the metering function
@@ -50,7 +42,7 @@ namespace ForwardAcceleration {
     };
 
     struct Result {
-        ResultKind status;
+        Status status;
         ProofOutput proof;
         std::vector<MeteredRule> rules;
     };

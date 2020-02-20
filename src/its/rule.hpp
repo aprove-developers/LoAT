@@ -103,9 +103,9 @@ public:
     size_t rhsCount() const { return rhss.size(); }
 
     // special methods for nonlinear rules (idx is an index to rhss)
-    LocationIdx getRhsLoc(int idx) const { return rhss[idx].getLoc(); }
-    const UpdateMap& getUpdate(int idx) const { return rhss[idx].getUpdate(); }
-    UpdateMap& getUpdateMut(int idx) { return rhss[idx].getUpdateMut(); }
+    LocationIdx getRhsLoc(uint idx) const { return rhss[idx].getLoc(); }
+    const UpdateMap& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
+    UpdateMap& getUpdateMut(uint idx) { return rhss[idx].getUpdateMut(); }
 
     // conversion to linear rule
     bool isLinear() const;

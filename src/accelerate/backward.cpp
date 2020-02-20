@@ -32,13 +32,16 @@
 #include "../analysis/chain.hpp"
 #include "accelerationproblem.hpp"
 #include "vareliminator.hpp"
+#include "../util/result.hpp"
+#include "../its/export.hpp"
+#include "../util/proofutil.hpp"
 
 using namespace std;
 
 typedef BackwardAcceleration Self;
 
-BackwardAcceleration::BackwardAcceleration(VarMan &varMan, const LinearRule &rule, LocationIdx sink)
-        : varMan(varMan), rule(rule), sink(sink) {}
+BackwardAcceleration::BackwardAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink)
+        : its(its), rule(rule), sink(sink) {}
 
 bool BackwardAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
@@ -46,11 +49,11 @@ bool BackwardAcceleration::shouldAccelerate() const {
 
 vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, const Rule &rule) {
     // gather all upper bounds (if possible)
-    VarEliminator ve(rule.getGuard(), N, varMan);
+    VarEliminator ve(rule.getGuard(), N, its);
 
     // avoid rule explosion (by not instantiating N if there are too many bounds)
     if (ve.getRes().empty() || ve.getRes().size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
-        return {rule};
+        return {};
     }
 
     // create one rule for each upper bound, by instantiating N with this bound
@@ -73,40 +76,51 @@ LinearRule BackwardAcceleration::buildNontermRule(const GuardList &guard) const 
 
 Self::AccelerationResult BackwardAcceleration::run() {
     AccelerationResult res;
+    res.status = Failure;
     if (shouldAccelerate()) {
-        option<AccelerationProblem> ap = AccelerationCalculus::init(rule, varMan);
+        option<AccelerationProblem> ap = AccelerationCalculus::init(rule, its);
         if (ap) {
-            option<AccelerationProblem> solved = AccelerationCalculus::solve(ap.get());
+            option<AccelerationProblem> solved = AccelerationCalculus::solveNonterm(ap.get());
             if (solved) {
-                res.status = solved->equivalent ? ForwardAcceleration::Success : ForwardAcceleration::SuccessWithRestriction;
-                if (solved->nonterm) {
-                    res.res = {buildNontermRule(solved->res)};
+                const Rule &nontermRule = buildNontermRule(solved->res);
+                res.rules.push_back(nontermRule);
+                res.proof.concat(ruleTransformationProof(rule, "acceleration", nontermRule, its));
+                if (solved->equivalent) {
+                    res.status = Success;
+                    return res;
                 } else {
-                    UpdateMap up;
-                    for (auto p: solved.get().closed) {
-                        up[varMan.getVarIdx(Expression(p.first).getAVariable())] = p.second;
-                    }
-                    LinearRule accel(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
-                    if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                        res.res = replaceByUpperbounds(solved->n, accel);
-                    } else {
-                        res.res = {accel};
-                    }
+                    res.status = PartialSuccess;
                 }
-            } else {
-                res.status = ForwardAcceleration::NonMonotonic;
             }
-        } else {
-            res.status = ForwardAcceleration::NoClosedFrom;
+            solved = AccelerationCalculus::solveEquivalently(ap.get());
+            if (solved) {
+                res.status = Success;
+                UpdateMap up;
+                for (auto p: solved.get().closed.get()) {
+                    up[its.getVarIdx(Expression(p.first).getAVariable())] = p.second;
+                }
+                LinearRule accel(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
+                res.proof.concat(ruleTransformationProof(rule, "acceleration", accel, its));
+                if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
+                    res.rules = replaceByUpperbounds(solved->n, accel);
+                    if (res.rules.empty()) {
+                        res.rules.push_back(accel);
+                    } else {
+                        for (const Rule &r: res.rules) {
+                            res.proof.concat(ruleTransformationProof(accel, "instantiation", r, its));
+                        }
+                    }
+                } else {
+                    res.rules.push_back(accel);
+                }
+            }
         }
-    } else {
-        res.status = ForwardAcceleration::NotSupported;
     }
     return res;
 }
 
 
-Self::AccelerationResult BackwardAcceleration::accelerate(VarMan &varMan, const LinearRule &rule, LocationIdx sink) {
-    BackwardAcceleration ba(varMan, rule, sink);
+Self::AccelerationResult BackwardAcceleration::accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink) {
+    BackwardAcceleration ba(its, rule, sink);
     return ba.run();
 }

@@ -25,6 +25,7 @@
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
 #include "forward.hpp"
+#include "../util/result.hpp"
 
 
 class Accelerator {

@@ -32,15 +32,15 @@ public:
     };
 
     struct AccelerationResult {
-        std::vector<Rule> res;
-        ForwardAcceleration::ResultKind status;
+        std::vector<Rule> rules;
+        Status status;
         ProofOutput proof;
     };
 
-    static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule, LocationIdx sink);
+    static AccelerationResult accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
 
 private:
-    BackwardAcceleration(VarMan &varMan, const LinearRule &rule, LocationIdx sink);
+    BackwardAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
 
     LinearRule buildNontermRule(const GuardList &guard) const;
 
@@ -67,7 +67,7 @@ private:
     std::vector<Rule> replaceByUpperbounds(const ExprSymbol &N, const Rule &rule);
 
 private:
-    VariableManager &varMan;
+    ITSProblem &its;
     const LinearRule &rule;
     LocationIdx sink;
 };

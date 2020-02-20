@@ -23,24 +23,25 @@
 #include "../analysis/chain.hpp"
 #include "../z3/z3solver.hpp"
 #include "../util/relevantvariables.hpp"
+#include "../util/result.hpp"
 
 namespace nonterm {
 
-    option<std::pair<Rule, ForwardAcceleration::ResultKind>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<Rule, Status>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         if (!Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
             if (Z3Toolbox::isValidImplication(r.getGuard(), r.getGuard().subs(up))) {
-                return {{Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {}), ForwardAcceleration::Success}};
+                return {{Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {}), Success}};
             }
         }
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const GiNaC::exmap &up = chained.getUpdate(0).toSubstitution(its);
             if (Z3Toolbox::checkAll({chained.getGuard()}) == z3::sat && Z3Toolbox::isValidImplication(chained.getGuard(), chained.getGuard().subs(up))) {
-                return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
+                return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
         }
         Z3Context context;
@@ -62,7 +63,7 @@ namespace nonterm {
                 for (const ExprSymbol &var: vars) {
                     newGuard.emplace_back(var == var.subs(up));
                 }
-                return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), ForwardAcceleration::SuccessWithRestriction}};
+                return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
             if (!r.isLinear()) {
                 solver.pop();

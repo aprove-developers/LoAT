@@ -15,7 +15,7 @@ struct AccelerationProblem {
     GuardList done;
     GuardList todo;
     GiNaC::exmap up;
-    GiNaC::exmap closed;
+    option<GiNaC::exmap> closed;
     Expression cost;
     ExprSymbol n;
     GuardList guard;
@@ -28,7 +28,7 @@ struct AccelerationProblem {
             const GuardList &done,
             const GuardList &todo,
             const GiNaC::exmap &up,
-            const GiNaC::exmap &closed,
+            const option<GiNaC::exmap> &closed,
             const Expression &cost,
             const ExprSymbol &n): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n) {
         this->res.push_back(n > 0);
@@ -38,11 +38,18 @@ struct AccelerationProblem {
             const UpdateMap &update,
             const GuardList &guard,
             const VariableManager &varMan,
-            const UpdateMap &closed,
+            const option<UpdateMap> &closed,
             const Expression &cost,
             const ExprSymbol &n) {
         const GiNaC::exmap &up = update.toSubstitution(varMan);
-        AccelerationProblem res({}, {}, normalize(guard), up, closed.toSubstitution(varMan), cost, n);
+        option<GiNaC::exmap> closedSubs;
+        if (closed){
+            closedSubs = closed.get().toSubstitution(varMan);
+        } else {
+            closedSubs = {};
+        }
+        AccelerationProblem res({}, {}, normalize(guard), up, closedSubs, cost, n);
+        while (res.recurrence());
         return res;
     }
 
@@ -60,6 +67,9 @@ struct AccelerationProblem {
     }
 
     bool monotonicity() {
+        if (!closed) {
+            return false;
+        }
         Z3Context ctx;
         Z3Solver solver(ctx);
         for (const Expression &e: done) {
@@ -79,7 +89,7 @@ struct AccelerationProblem {
                     proofout.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
                 }
                 done.push_back(e);
-                res.push_back(e.subs(closed).subs({{n, n-1}}));
+                res.push_back(e.subs(closed.get()).subs({{n, n-1}}));
                 todo.erase(it);
                 print();
                 nonterm = false;
@@ -121,6 +131,9 @@ struct AccelerationProblem {
     }
 
     bool eventualWeakDecrease() {
+        if (!closed) {
+            return false;
+        }
         Z3Context ctx;
         Z3Solver solver(ctx);
         for (const Expression &e: done) {
@@ -138,7 +151,7 @@ struct AccelerationProblem {
             if (solver.check() == z3::check_result::unsat) {
                 solver.pop();
                 solver.push();
-                const Expression &newCond = e.subs(closed).subs({{n, n-1}});
+                const Expression &newCond = e.subs(closed.get()).subs({{n, n-1}});
                 solver.add(e.toZ3(ctx));
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
@@ -165,16 +178,19 @@ struct AccelerationProblem {
         return todo.empty();
     }
 
-    void simplify() {
+    void simplifyEquivalently() {
         while (true) {
-            if (recurrence() || monotonicity()) {
-                continue;
-            } else if (eventualWeakDecrease()) {
-                continue;
-            } else if (eventualWeakIncrease()) {
-                continue;
+            if (!recurrence() && !monotonicity() && !eventualWeakDecrease()) {
+                break;
             }
-            break;
+        }
+    }
+
+    void simplifyNonterm() {
+        while (true) {
+            if (!recurrence() && !eventualWeakIncrease()) {
+                break;
+            }
         }
     }
 
@@ -242,21 +258,31 @@ struct AccelerationProblem {
 
 struct AccelerationCalculus {
 
-    static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan) {
+    static AccelerationProblem init(const LinearRule &r, VariableManager &varMan) {
         const ExprSymbol &n = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
         UpdateMap closed = r.getUpdate();
         Expression cost = r.getCost();
         GuardList guard = r.getGuard();
         const option<unsigned int> &validityBound = Recurrence::iterateUpdateAndCost(varMan, closed, cost, guard, n);
-        if (!validityBound || validityBound.get() > 1) {
+        if (!validityBound) {
             proofout.headline("Failed to compute closed form");
-            return {};
+            return AccelerationProblem::init(r.getUpdate(), guard, varMan, {}, cost, n);
+        } else {
+            return AccelerationProblem::init(r.getUpdate(), guard, varMan, closed, cost, n);
         }
-        return AccelerationProblem::init(r.getUpdate(), guard, varMan, closed, cost, n);
     }
 
-    static option<AccelerationProblem> solve(AccelerationProblem &p) {
-        p.simplify();
+    static option<AccelerationProblem> solveEquivalently(AccelerationProblem &p) {
+        p.simplifyEquivalently();
+        if (p.solved()) {
+            return p;
+        } else {
+            return {};
+        }
+    }
+
+    static option<AccelerationProblem> solveNonterm(AccelerationProblem &p) {
+        p.simplifyNonterm();
         if (p.solved()) {
             return p;
         } else {
