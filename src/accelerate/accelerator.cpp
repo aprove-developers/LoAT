@@ -78,13 +78,13 @@ bool Accelerator::simplifySimpleLoops() {
         }
     }
     if (res) {
-        proofout.concat(majorProofStep("Simplified simple loops", its));
+        minorProofStep("Simplified simple loops", its);
     }
 
     // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
     if (Pruning::removeDuplicateRules(its, loops)) {
         res = true;
-        proofout.concat(majorProofStep("Removed duplicate rules", its));
+        minorProofStep("Removed duplicate rules", its);
     }
 
     return res;
@@ -94,28 +94,6 @@ bool Accelerator::simplifySimpleLoops() {
 // ########################
 // ##  Nesting of Loops  ##
 // ########################
-
-void Accelerator::addNestedRule(const Rule &metered, const LinearRule &chain,
-                                TransIdx inner, TransIdx outer)
-{
-    // Add the new rule
-    TransIdx added = addResultingRule(metered);
-
-    // The outer rule was accelerated (after nesting), so we do not need to keep it anymore
-    keepRules.erase(outer);
-
-    stringstream s;
-    s << "Nested simple loops " << outer << " (outer loop) and " << inner << " (inner loop) with " << metered << ", resulting in the new rules: " << added;
-
-    // Try to combine chain and the accelerated loop
-    auto chained = Chaining::chainRules(its, chain, metered);
-    if (chained) {
-        TransIdx added = addResultingRule(chained.get());
-        s << ", " << added;
-    }
-    proofout.append(s << ".");
-}
-
 
 void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate &snd) {
     // Avoid nesting a loop with its original transition or itself
@@ -138,17 +116,31 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         Preprocess::simplifyRule(its, nestedRule);
 
         // Note that we do not try all heuristics or backward accel to keep nesting efficient
-        const std::vector<Rule> &accelRules = Backward::accelerate(its, nestedRule, sinkLoc).rules;
-        Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
-        for (const Rule &accelRule: accelRules) {
-            Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
-                        its,
-                        accelRule.getGuard(),
-                        accelRule.getCost(),
-                        false,
-                        currentCpx).cpx;
-            if (newCpx > currentCpx) {
-                addNestedRule(accelRule, second, fst.newRule, snd.oldRule);
+        const Backward::AccelerationResult &accel = Backward::accelerate(its, nestedRule, sinkLoc);
+        if (accel.status != Failure) {
+            Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
+            proofout.concat(chainingProof(first, second, nestedRule, its));
+            proofout.concat(accel.proof);
+            for (const Rule &accelRule: accel.rules) {
+                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
+                            its,
+                            accelRule.getGuard(),
+                            accelRule.getCost(),
+                            false,
+                            currentCpx).cpx;
+                if (newCpx > currentCpx) {
+                    // Add the new rule
+                    addResultingRule(accelRule);
+                    // Try to combine chain and the accelerated loop
+                    auto chained = Chaining::chainRules(its, second, accelRule);
+                    if (chained) {
+                        addResultingRule(chained.get());
+                        proofout.concat(chainingProof(second, accelRule, chained.get(), its));
+                    }
+                    keepRules.erase(snd.newRule); // TODO does this help?
+                } else {
+                    proofout.concat(deletionProof(accelRule, its));
+                }
             }
         }
     }
@@ -259,6 +251,7 @@ unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
 
 const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
     Forward::Result res;
+    res.status = PartialSuccess;
     // chain rule if necessary
     const option<LinearRule> &optR = chain(rule);
     if (optR) {
@@ -268,47 +261,51 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
     // only proceed if the guard is sat
     if (sat) {
-        // first try to prove nonterm
-        option<std::pair<Rule, Status>> p = nonterm::NonTerm::apply(r, its, sinkLoc);
-        if (p) {
-            const Rule &nontermRule = p.get().first;
-            Status status = p.get().second;
-            res.proof.concat(ruleTransformationProof(r, "non-termination processor", nontermRule, its));
-            res.rules.emplace_back("non-termination", nontermRule);
-            // if the rule is universaly non-termianting, we are done
-            if (status == Success) {
-                res.status = Success;
-                return res;
-            }
-        }
         // try acceleration
+        bool nonterm = false;
         BackwardAcceleration::AccelerationResult accelRes = Backward::accelerate(its, r, sinkLoc);
-        if (accelRes.rules.empty()) {
-            // if acceleration failed, the best we can hope for is a restricted result
-            res.status = PartialSuccess;
-        } else {
+        if (!accelRes.rules.empty()) {
             res.status = accelRes.status;
             res.proof.concat(accelRes.proof);
-            // if acceleration succeeded, save the result, but we still try to find cases where the rule does not terminate
             for (const Rule &ar: accelRes.rules) {
-                res.rules.emplace_back("acceleration calculus", ar);
+                nonterm |= ar.getCost().isNontermSymbol();
+                res.rules.emplace_back(ar);
             }
         }
-        // strengthen in order to prove non-termination
-        vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-        if (!strengthened.empty()) {
-            for (const LinearRule &sr: strengthened) {
-                bool sat = Z3Toolbox::checkAll({sr.getGuard()}) == z3::sat;
-                // only proceed if the guard is sat
-                if (sat) {
-                    option<std::pair<Rule, Status>> p = nonterm::NonTerm::apply(sr, its, sinkLoc);
-                    if (p) {
-                        const Rule &nontermRule = p.get().first;
-                        res.proof.concat(ruleTransformationProof(r, "strengthening", sr, its));
-                        res.proof.concat(ruleTransformationProof(sr, "non-termination processor", nontermRule, its));
-                        res.rules.emplace_back("non-termination", nontermRule);
+        if (!nonterm) {
+            option<std::pair<Rule, Status>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+            if (p) {
+                nonterm = true;
+                const Rule &nontermRule = p.get().first;
+                res.proof.concat(ruleTransformationProof(r, "non-termination processor", nontermRule, its));
+                res.rules.emplace_back(nontermRule);
+            }
+        }
+        if (!nonterm) {
+            vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
+            if (!strengthened.empty()) {
+                for (const LinearRule &sr: strengthened) {
+                    bool sat = Z3Toolbox::checkAll({sr.getGuard()}) == z3::sat;
+                    // only proceed if the guard is sat
+                    if (sat) {
+                        option<std::pair<Rule, Status>> p = nonterm::NonTerm::universal(sr, its, sinkLoc);
+                        if (p) {
+                            nonterm = true;
+                            const Rule &nontermRule = p.get().first;
+                            res.proof.concat(ruleTransformationProof(r, "strengthening", sr, its));
+                            res.proof.concat(ruleTransformationProof(sr, "non-termination processor", nontermRule, its));
+                            res.rules.emplace_back(nontermRule);
+                        }
                     }
                 }
+            }
+        }
+        if (!nonterm) {
+            option<std::pair<Rule, Status>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
+            if (p) {
+                const Rule &nontermRule = p.get().first;
+                res.proof.concat(ruleTransformationProof(r, "fixed-point processor", nontermRule, its));
+                res.rules.emplace_back(nontermRule);
             }
         }
     }
@@ -351,8 +348,9 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     auto tryAccel = [&](const Rule &newRule) {
         res = tryAccelerate(newRule);
         if (res.status != Failure) {
-            for (Forward::MeteredRule &rule : res.rules) {
-                rule = rule.appendInfo(" (after partial deletion)");
+            for (const Rule &r : res.rules) {
+                res.proof.concat(ruleTransformationProof(rule, "partial deletion", newRule, its));
+                res.proof.concat(ruleTransformationProof(newRule, "acceleration", r, its));
             }
             return true;
         }
@@ -432,15 +430,15 @@ void Accelerator::run() {
         if  (res.status != Failure) {
             // Add accelerated rules, also mark them as inner nesting candidates
             proofout.concat(res.proof);
-            for (const Forward::MeteredRule &accel : res.rules) {
-                TransIdx added = addResultingRule(accel.rule);
+            for (const Rule &accel : res.rules) {
+                TransIdx added = addResultingRule(accel);
 
-                if (accel.rule.isSimpleLoop()) {
+                if (accel.isSimpleLoop()) {
                     // accel.rule is a simple loop iff the original was linear and not non-terminating.
                     Complexity cpx = AsymptoticBound::determineComplexityViaSMT(
                                 its,
-                                accel.rule.getGuard(),
-                                accel.rule.getCost(),
+                                accel.getGuard(),
+                                accel.getCost(),
                                 false,
                                 Complexity::Const).cpx;
                     nestingCandidates.push_back(NestingCandidate{.oldRule=loop, .newRule=added, .cpx=cpx});
@@ -450,10 +448,10 @@ void Accelerator::run() {
     }
 
     // Nesting
-//    if (Config::Accel::TryNesting) {
-//        performNesting(std::move(origRules), std::move(nestingCandidates));
-//        if (Timeout::soft()) return;
-//    }
+    if (Config::Accel::TryNesting) {
+        performNesting(std::move(origRules), std::move(nestingCandidates));
+        if (Timeout::soft()) return;
+    }
 
     // Chaining accelerated rules amongst themselves would be another heuristic.
     // Although it helps in certain examples, it is currently not implemented

@@ -28,7 +28,9 @@ namespace nonterm {
 
     public:
 
-        static option<std::pair<Rule, Status>> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+        static option<std::pair<Rule, Status>> universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+
+        static option<std::pair<Rule, Status>> fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
 
     };
 

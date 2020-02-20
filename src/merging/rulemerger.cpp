@@ -19,6 +19,7 @@
 #include "../its/itsproblem.hpp"
 #include "../z3/z3context.hpp"
 #include "../z3/z3solver.hpp"
+#include "../util/timeout.hpp"
 
 namespace merging {
 

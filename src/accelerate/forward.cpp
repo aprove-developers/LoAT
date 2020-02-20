@@ -23,11 +23,11 @@
 
 #include "../global.hpp"
 #include "../util/timeout.hpp"
+#include "../util/proofutil.hpp"
 
 
 using namespace std;
 using ForwardAcceleration::Result;
-using ForwardAcceleration::MeteredRule;
 
 
 /**
@@ -64,7 +64,7 @@ static MeteringFinder::Result meterWithInstantiation(VarMan &varMan, Rule &rule)
  * @param conflictVar If the metering result is ConflictVar, conflictVar is set to the conflicting variables,
  * otherwise it is not modified.
  */
-static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, option<VariablePair> &conflictVar) {
+static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, option<VariablePair> &conflictVar) {
     using namespace ForwardAcceleration;
     Result res;
 
@@ -77,7 +77,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
     }
 
     // Try to find a metering function
-    MeteringFinder::Result meter = meterWithInstantiation(varMan, rule);
+    MeteringFinder::Result meter = meterWithInstantiation(its, rule);
 
     // In case of nontermination, we have to ensure that the costs are at least 1 in every step.
     // The reason is that an infinite iteration of a rule with cost 0 is not considered nontermination.
@@ -85,7 +85,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
     // (Note that instantiation has already been performed, but this is probably not a big issue at this point)
     if (meter.result == MeteringFinder::Nonterm && rule.isLinear()) {
         rule.getGuardMut().push_back(rule.getCost() >= 1);
-        meter = meterWithInstantiation(varMan, rule);
+        meter = meterWithInstantiation(its, rule);
     }
 
     switch (meter.result) {
@@ -102,7 +102,9 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
         {
             // Since the loop is non-terminating, the right-hand sides are of no interest.
             rule.getCostMut() = Expression::NontermSymbol;
-            res.rules.emplace_back("NONTERM", rule.replaceRhssBySink(sink));
+            const Rule &nontermRule = rule.replaceRhssBySink(sink);
+            res.proof.concat(ruleTransformationProof(rule, "Proved universal non-termiation while searching metering function", nontermRule, its));
+            res.rules.emplace_back(nontermRule);
             res.status = Success;
             return res;
         }
@@ -113,7 +115,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
         case MeteringFinder::Success:
         {
-            string meterStr = "metering function " + meter.metering.toString();
+            string meterStr = meter.metering.toString();
 
             // First apply the modifications required for this metering function
             Rule newRule = rule;
@@ -128,12 +130,12 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 // instead of adding 0 < tv < meter+1 as in the paper, we instantiate tv by meter.
                 Expression iterationCount = meter.metering;
                 if (Config::ForwardAccel::UseTempVarForIterationCount) {
-                    iterationCount = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("tv"));
+                    iterationCount = its.getVarSymbol(its.addFreshTemporaryVariable("tv"));
                 }
 
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
-                if (Recurrence::iterateRule(varMan, linRule, iterationCount)) {
+                if (Recurrence::iterateRule(its, linRule, iterationCount)) {
                     res.status = Failure;
                     return res;
                 }
@@ -148,17 +150,20 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                     linRule.getGuardMut().push_back(iterationCount <= meter.metering);
                 }
 
-                res.rules.emplace_back(meterStr, linRule);
+                res.proof.concat(ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, linRule, its));
+                res.rules.emplace_back(linRule);
 
             } else {
                 // Compute the "iterated costs" by just assuming every step has cost 1
-                int degree = newRule.rhsCount();
+                size_t degree = newRule.rhsCount();
                 Expression newCost = GiNaC::pow(degree, meter.metering);
                 newRule.getCostMut() = (newCost - 1) / (degree - 1); // resulting cost is (d^meter-1)/(d-1)
 
                 // We don't know to what result the rule evaluates (multiple rhss, so no single result).
                 // So we have to clear the rhs (fresh sink location, update is irrelevant).
-                res.rules.emplace_back(meterStr, newRule.replaceRhssBySink(sink));
+                const Rule &accelRule = newRule.replaceRhssBySink(sink);
+                res.proof.concat(ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, accelRule, its));
+                res.rules.emplace_back(accelRule);
             }
 
             res.status = Success;
@@ -170,39 +175,35 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 }
 
 
-option<MeteredRule> ForwardAcceleration::accelerateFast(VarMan &varMan, const Rule &rule, LocationIdx sink) {
+Result ForwardAcceleration::accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink) {
     option<VariablePair> dummy;
-    Result res = meterAndIterate(varMan, rule, sink, dummy);
-
-    if (res.status == Success) {
-        assert(res.rules.size() == 1);
-        return res.rules.front();
-    }
-
-    return {};
+    return meterAndIterate(its, rule, sink, dummy);
 }
 
 
-Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, LocationIdx sink) {
+Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink) {
     // Try to find a metering function without any heuristics
     option<VariablePair> conflictVar;
-    Result res = meterAndIterate(varMan, rule, sink, conflictVar);
-    if (res.status != Failure) {
-        return res;
+    Result accel = meterAndIterate(its, rule, sink, conflictVar);
+    if (accel.status != Failure) {
+        return accel;
     }
 
+    Result res;
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
     if (Config::ForwardAccel::ConflictVarHeuristic && conflictVar) {
-        ExprSymbol A = varMan.getVarSymbol(conflictVar->first);
-        ExprSymbol B = varMan.getVarSymbol(conflictVar->second);
+        ExprSymbol A = its.getVarSymbol(conflictVar->first);
+        ExprSymbol B = its.getVarSymbol(conflictVar->second);
         Rule newRule = rule;
 
         // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().push_back(A >= B);
         if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
-            auto accelRule = accelerateFast(varMan, newRule, sink);
-            if (accelRule) {
-                res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A >= B).toString() + ")"));
+            const Result &accel = accelerateFast(its, newRule, sink);
+            if (accel.status != Failure) {
+                res.proof.concat(ruleTransformationProof(rule, "strengthening", newRule, its));
+                res.proof.concat(accel.proof);
+                res.rules.insert(res.rules.end(), accel.rules.begin(), accel.rules.end());
             }
         }
 
@@ -210,9 +211,11 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         newRule.getGuardMut().pop_back();
         newRule.getGuardMut().push_back(A <= B);
         if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
-            auto accelRule = accelerateFast(varMan, newRule, sink);
-            if (accelRule) {
-                res.rules.push_back(accelRule.get().appendInfo(" (after adding " + Expression(A <= B).toString() + ")"));
+            const Result &accel = accelerateFast(its, newRule, sink);
+            if (accel.status != Failure) {
+                res.proof.concat(ruleTransformationProof(rule, "strengthening", newRule, its));
+                res.proof.concat(accel.proof);
+                res.rules.insert(res.rules.end(), accel.rules.begin(), accel.rules.end());
             }
         }
 
@@ -229,10 +232,12 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         Rule newRule = rule;
 
         // Check and (possibly) apply heuristic, this modifies newRule
-        if (MeteringFinder::strengthenGuard(varMan, newRule)) {
-            auto accelRule = accelerateFast(varMan, newRule, sink);
-            if (accelRule) {
-                res.rules.push_back(accelRule.get().appendInfo(" (after strengthening guard)"));
+        if (MeteringFinder::strengthenGuard(its, newRule)) {
+            const Result &accel = accelerateFast(its, newRule, sink);
+            if (accel.status != Failure) {
+                res.proof.concat(ruleTransformationProof(rule, "strengthening", newRule, its));
+                res.proof.concat(accel.proof);
+                res.rules.insert(res.rules.end(), accel.rules.begin(), accel.rules.end());
                 res.status = PartialSuccess;
                 return res;
             }

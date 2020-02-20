@@ -27,8 +27,8 @@
 
 namespace nonterm {
 
-    option<std::pair<Rule, Status>> NonTerm::apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
+    option<std::pair<Rule, Status>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+        if (!Config::Analysis::NonTermMode && !Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
@@ -43,6 +43,13 @@ namespace nonterm {
             if (Z3Toolbox::checkAll({chained.getGuard()}) == z3::sat && Z3Toolbox::isValidImplication(chained.getGuard(), chained.getGuard().subs(up))) {
                 return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
+        }
+        return {};
+    }
+
+    option<std::pair<Rule, Status>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+        if (!Config::Analysis::NonTermMode && !Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
+            return {};
         }
         Z3Context context;
         Z3Solver solver(context);

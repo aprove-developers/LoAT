@@ -20,6 +20,7 @@
 #include "../z3/z3toolbox.hpp"
 #include "constraintsolver.hpp"
 #include "../its/variablemanager.hpp"
+#include "../util/timeout.hpp"
 
 namespace strengthening {
 

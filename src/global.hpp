@@ -18,6 +18,8 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <boost/filesystem.hpp>
+
 #include "config.hpp"
 #include "util/proofoutput.hpp"
 
@@ -35,5 +37,7 @@ struct DummyStream {
     static std::ostream dummy;
 };
 #endif
+
+boost::filesystem::path getProofFile();
 
 #endif //GLOBAL_H

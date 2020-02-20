@@ -24,11 +24,13 @@
 
 #include <sstream>
 #include <iomanip>
+#include <iostream>
+#include <fstream>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include "../config.hpp"
-#include "../util/timeout.hpp" // for timestamps
 
 // Stores a StreambufIndenter instance to control indention of the stream.
 // Also allows colored output with ANSI escape codes.
@@ -142,6 +144,15 @@ public:
             }
             std::cout << l.second << std::endl;
         }
+    }
+
+    void writeToFile(const boost::filesystem::path &file) const {
+        boost::filesystem::ofstream myfile;
+        myfile.open(file);
+        for (const auto &l: proof) {
+            myfile << l.second << std::endl;
+        }
+        myfile.close();
     }
 
 private:

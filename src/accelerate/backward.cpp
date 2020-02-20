@@ -36,6 +36,8 @@
 #include "../its/export.hpp"
 #include "../util/proofutil.hpp"
 
+#include <boost/filesystem.hpp>
+
 using namespace std;
 
 typedef BackwardAcceleration Self;
@@ -78,36 +80,31 @@ Self::AccelerationResult BackwardAcceleration::run() {
     AccelerationResult res;
     res.status = Failure;
     if (shouldAccelerate()) {
-        option<AccelerationProblem> ap = AccelerationCalculus::init(rule, its);
-        if (ap) {
-            option<AccelerationProblem> solved = AccelerationCalculus::solveNonterm(ap.get());
-            if (solved) {
+        AccelerationProblem ap = AccelerationCalculus::init(rule, its);
+        option<AccelerationProblem> solved = AccelerationCalculus::solveEquivalently(ap);
+        if (solved) {
+            res.status = Success;
+            if (solved->nonterm) {
                 const Rule &nontermRule = buildNontermRule(solved->res);
                 res.rules.push_back(nontermRule);
-                res.proof.concat(ruleTransformationProof(rule, "acceleration", nontermRule, its));
-                if (solved->equivalent) {
-                    res.status = Success;
-                    return res;
-                } else {
-                    res.status = PartialSuccess;
-                }
-            }
-            solved = AccelerationCalculus::solveEquivalently(ap.get());
-            if (solved) {
-                res.status = Success;
+                res.proof.concat(ruleTransformationProof(rule, "nonterm", nontermRule, its));
+                res.proof.concat(storeSubProof(solved->proof, "acceration calculus"));
+            } else {
                 UpdateMap up;
                 for (auto p: solved.get().closed.get()) {
                     up[its.getVarIdx(Expression(p.first).getAVariable())] = p.second;
                 }
                 LinearRule accel(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
                 res.proof.concat(ruleTransformationProof(rule, "acceleration", accel, its));
+                res.proof.concat(storeSubProof(solved->proof, "acceration calculus"));
                 if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                    res.rules = replaceByUpperbounds(solved->n, accel);
-                    if (res.rules.empty()) {
+                    std::vector<Rule> instantiated = replaceByUpperbounds(solved->n, accel);
+                    if (instantiated.empty()) {
                         res.rules.push_back(accel);
                     } else {
-                        for (const Rule &r: res.rules) {
+                        for (const Rule &r: instantiated) {
                             res.proof.concat(ruleTransformationProof(accel, "instantiation", r, its));
+                            res.rules.push_back(r);
                         }
                     }
                 } else {

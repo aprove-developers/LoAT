@@ -16,6 +16,7 @@
  */
 
 #include "z3solver.hpp"
+#include "../util/timeout.hpp"
 
 using namespace std;
 

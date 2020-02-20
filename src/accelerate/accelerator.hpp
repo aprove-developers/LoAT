@@ -104,14 +104,6 @@ private:
     TransIdx addResultingRule(Rule rule);
 
     /**
-     * Adds the given accelerated rule to the ITS.
-     * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
-     * Takes care of proof output (the arguments inner, outer are only used for the output).
-     */
-    void addNestedRule(const Rule &accelerated, const LinearRule &chain,
-                       TransIdx inner, TransIdx outer);
-
-    /**
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */

@@ -21,7 +21,7 @@ struct AccelerationProblem {
     GuardList guard;
     bool equivalent = true;
     bool nonterm = true;
-    bool silent = true;
+    ProofOutput proof;
 
     AccelerationProblem(
             const GuardList &res,
@@ -84,10 +84,8 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                if (!silent) {
-                    proofout.newline();
-                    proofout.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
-                }
+                proof.newline();
+                proof.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
                 done.push_back(e);
                 res.push_back(e.subs(closed.get()).subs({{n, n-1}}));
                 todo.erase(it);
@@ -115,10 +113,8 @@ struct AccelerationProblem {
             }
             solver.add(GinacToZ3::convert(e.subs(up).lhs() <= 0, ctx));
             if (solver.check() == z3::check_result::unsat) {
-                if (!silent) {
-                    proofout.newline();
-                    proofout.append(std::stringstream() << "handled " << e << " via monotonic increase");
-                }
+                proof.newline();
+                proof.append(std::stringstream() << "handled " << e << " via monotonic increase");
                 done.push_back(e);
                 res.push_back(e);
                 todo.erase(it);
@@ -156,10 +152,8 @@ struct AccelerationProblem {
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
                     solver.pop();
-                    if (!silent) {
-                        proofout.newline();
-                        proofout.append(std::stringstream() << "handled " << e << " via eventual decrease");
-                    }
+                    proof.newline();
+                    proof.append(std::stringstream() << "handled " << e << " via eventual decrease");
                     done.push_back(e);
                     res.push_back(e);
                     res.push_back(newCond);
@@ -217,10 +211,8 @@ struct AccelerationProblem {
                 solver.add(newCond.toZ3(ctx));
                 if (solver.check() == z3::sat) {
                     solver.pop();
-                    if (!silent) {
-                        proofout.newline();
-                        proofout.append(std::stringstream() << "handled " << e << " via eventual increase");
-                    }
+                    proof.newline();
+                    proof.append(std::stringstream() << "handled " << e << " via eventual increase");
                     done.push_back(e);
                     res.push_back(newCond);
                     res.push_back(e);
@@ -236,22 +228,20 @@ struct AccelerationProblem {
     }
 
     void print() {
-        if (!silent) {
-            std::stringstream s;
-            s << "res:";
-            for (const auto &e: this->res) {
-                s << " " << e;
-            }
-            s << std::endl << "done:";
-            for (const auto &e: this->done) {
-                s << " " << e;
-            }
-            s << std::endl << "todo:";
-            for (const auto &e: this->todo) {
-                s << " " << e;
-            }
-            proofout.append(s);
+        std::stringstream s;
+        s << "res:";
+        for (const auto &e: this->res) {
+            s << " " << e;
         }
+        s << std::endl << "done:";
+        for (const auto &e: this->done) {
+            s << " " << e;
+        }
+        s << std::endl << "todo:";
+        for (const auto &e: this->todo) {
+            s << " " << e;
+        }
+        proof.append(s);
     }
 
 };
@@ -265,7 +255,6 @@ struct AccelerationCalculus {
         GuardList guard = r.getGuard();
         const option<unsigned int> &validityBound = Recurrence::iterateUpdateAndCost(varMan, closed, cost, guard, n);
         if (!validityBound) {
-            proofout.headline("Failed to compute closed form");
             return AccelerationProblem::init(r.getUpdate(), guard, varMan, {}, cost, n);
         } else {
             return AccelerationProblem::init(r.getUpdate(), guard, varMan, closed, cost, n);

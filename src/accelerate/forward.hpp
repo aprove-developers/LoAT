@@ -34,17 +34,10 @@
  */
 namespace ForwardAcceleration {
 
-    struct MeteredRule {
-        std::string info; // printable version of the metering function
-        Rule rule;
-        MeteredRule(std::string s, Rule r) : info(s), rule(r) {}
-        MeteredRule appendInfo(const std::string &s) { return MeteredRule(info + s, rule); }
-    };
-
     struct Result {
         Status status;
         ProofOutput proof;
-        std::vector<MeteredRule> rules;
+        std::vector<Rule> rules;
     };
 
     /**
@@ -56,13 +49,13 @@ namespace ForwardAcceleration {
      * If the original loop was linear, the result is still a simple loop, unless it is non-terminating.
      * If the original loop was nonlinear or found to be non-terminating, the resulting rules go to the given sink.
      */
-    Result accelerate(VarMan &varMan, const Rule &rule, LocationIdx sink);
+    Result accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink);
 
     /**
      * Like accelerateNonlinear, but does not invoke any heuristics (and is thus faster but less powerful).
      * The result is always a single accelerated rule (if acceleration was successful).
      */
-    option<MeteredRule> accelerateFast(VarMan &varMan, const Rule &rule, LocationIdx sink);
+    Result accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink);
 };
 
 #endif // FORWARD_H

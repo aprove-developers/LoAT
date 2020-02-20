@@ -32,6 +32,7 @@
 #include "../its/export.hpp"
 
 #include "../merging/rulemerger.hpp"
+#include "../util/proofutil.hpp"
 
 
 using namespace std;
@@ -58,13 +59,15 @@ RuntimeResult Analysis::run() {
     proofout.headline("Initial ITS");
     printForProof("Initial");
 
+    proofout.headline("Preprocessing");
+
     if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
-        proofout.headline("Ensure Cost >= 0");
+        proofout.section("Ensure Cost >= 0");
         printForProof("Costs >= 0");
     }
 
     if (ensureProperInitialLocation()) {
-        proofout.headline("Added a fresh start location without incoming rules");
+        proofout.section("Added a fresh start location without incoming rules");
         printForProof("Fresh start");
     }
 
@@ -84,22 +87,22 @@ RuntimeResult Analysis::run() {
     if (Config::Analysis::Preprocessing) {
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable rules and leafs");
+            proofout.section("Removed unreachable rules and leafs");
             printForProof("Removed unreachable");
         }
 
         if (removeUnsatRules()) {
-            proofout.headline("Removed rules with unsatisfiable guard");
+            proofout.section("Removed rules with unsatisfiable guard");
             printForProof("Removed unsat");
         }
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.headline("Removed unreachable rules and leafs:");
+            proofout.section("Removed unreachable rules and leafs");
             printForProof("Removed unreachable");
         }
 
         if (preprocessRules()) {
-            proofout.headline("Simplified rules");
+            proofout.section("Simplified rules");
             printForProof("Simplify");
         }
 
@@ -109,6 +112,8 @@ RuntimeResult Analysis::run() {
     if (its.isEmpty()) {
         goto done;
     }
+
+    proofout.headline("Finished Preprocessing");
 
     while (!isFullySimplified()) {
 
