@@ -90,11 +90,11 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
 
     switch (meter.result) {
         case MeteringFinder::Nonlinear:
-            res.result = TooComplicated;
+            res.status = TooComplicated;
             return res;
 
         case MeteringFinder::ConflictVar:
-            res.result = NoMetering;
+            res.status = NoMetering;
             conflictVar = meter.conflictVar;
             return res;
 
@@ -103,12 +103,12 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
             // Since the loop is non-terminating, the right-hand sides are of no interest.
             rule.getCostMut() = Expression::NontermSymbol;
             res.rules.emplace_back("NONTERM", rule.replaceRhssBySink(sink));
-            res.result = Success;
+            res.status = Success;
             return res;
         }
 
         case MeteringFinder::Unsat:
-            res.result = NoMetering;
+            res.status = NoMetering;
             return res;
 
         case MeteringFinder::Success:
@@ -134,7 +134,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
                 if (Recurrence::iterateRule(varMan, linRule, iterationCount)) {
-                    res.result = TooComplicated;
+                    res.status = TooComplicated;
                     return res;
                 }
 
@@ -161,7 +161,7 @@ static Result meterAndIterate(VarMan &varMan, Rule rule, LocationIdx sink, optio
                 res.rules.emplace_back(meterStr, newRule.replaceRhssBySink(sink));
             }
 
-            res.result = Success;
+            res.status = Success;
             return res;
         }
     }
@@ -174,7 +174,7 @@ option<MeteredRule> ForwardAcceleration::accelerateFast(VarMan &varMan, const Ru
     option<VariablePair> dummy;
     Result res = meterAndIterate(varMan, rule, sink, dummy);
 
-    if (res.result == Success) {
+    if (res.status == Success) {
         assert(res.rules.size() == 1);
         return res.rules.front();
     }
@@ -187,7 +187,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
     // Try to find a metering function without any heuristics
     option<VariablePair> conflictVar;
     Result res = meterAndIterate(varMan, rule, sink, conflictVar);
-    if (res.result != NoMetering) {
+    if (res.status != NoMetering) {
         return res; // either successful or there is no point in applying heuristics
     }
 
@@ -219,7 +219,7 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
         // Check if at least one attempt was successful.
         // If both were successful, then there is no real restriction (since we add both alternatives).
         if (!res.rules.empty()) {
-            res.result = (res.rules.size() == 2) ? Success : SuccessWithRestriction;
+            res.status = (res.rules.size() == 2) ? Success : SuccessWithRestriction;
             return res;
         }
     }
@@ -233,12 +233,12 @@ Result ForwardAcceleration::accelerate(VarMan &varMan, const Rule &rule, Locatio
             auto accelRule = accelerateFast(varMan, newRule, sink);
             if (accelRule) {
                 res.rules.push_back(accelRule.get().appendInfo(" (after strengthening guard)"));
-                res.result = SuccessWithRestriction;
+                res.status = SuccessWithRestriction;
                 return res;
             }
         }
     }
 
-    assert(res.result == NoMetering && res.rules.empty());
+    assert(res.status == NoMetering && res.rules.empty());
     return res;
 }

@@ -67,41 +67,42 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
     return res;
 }
 
-LinearRule BackwardAcceleration::buildNontermRule() const {
-    return LinearRule(rule.getLhsLoc(), rule.getGuard(), Expression::NontermSymbol, sink, {});
+LinearRule BackwardAcceleration::buildNontermRule(const GuardList &guard) const {
+    return LinearRule(rule.getLhsLoc(), guard, Expression::NontermSymbol, sink, {});
 }
 
 Self::AccelerationResult BackwardAcceleration::run() {
-    if (!shouldAccelerate()) {
-        return {.res={}, .status=ForwardAcceleration::NotSupported};
-    }
-
-    option<AccelerationProblem> ap = AccelerationCalculus::init(rule, varMan);
-    if (ap) {
-        option<AccelerationProblem> solved = AccelerationCalculus::solve(ap.get());
-        if (solved) {
-            ForwardAcceleration::ResultKind status = solved->equivalent ? ForwardAcceleration::Success : ForwardAcceleration::SuccessWithRestriction;
-            if (solved->nonterm) {
-                return {{buildNontermRule()}, .status=status};
-            } else {
-                UpdateMap up;
-                for (auto p: solved.get().closed) {
-                    up[varMan.getVarIdx(Expression(p.first).getAVariable())] = p.second;
-                }
-                LinearRule res(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
-
-                if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                    return {.res=replaceByUpperbounds(solved->n, res), .status=status};
+    AccelerationResult res;
+    if (shouldAccelerate()) {
+        option<AccelerationProblem> ap = AccelerationCalculus::init(rule, varMan);
+        if (ap) {
+            option<AccelerationProblem> solved = AccelerationCalculus::solve(ap.get());
+            if (solved) {
+                res.status = solved->equivalent ? ForwardAcceleration::Success : ForwardAcceleration::SuccessWithRestriction;
+                if (solved->nonterm) {
+                    res.res = {buildNontermRule(solved->res)};
                 } else {
-                    return {{res}, .status=status};
+                    UpdateMap up;
+                    for (auto p: solved.get().closed) {
+                        up[varMan.getVarIdx(Expression(p.first).getAVariable())] = p.second;
+                    }
+                    LinearRule accel(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
+                    if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
+                        res.res = replaceByUpperbounds(solved->n, accel);
+                    } else {
+                        res.res = {accel};
+                    }
                 }
+            } else {
+                res.status = ForwardAcceleration::NonMonotonic;
             }
         } else {
-            return {{}, ForwardAcceleration::NonMonotonic};
+            res.status = ForwardAcceleration::NoClosedFrom;
         }
     } else {
-        return {{}, ForwardAcceleration::NoClosedFrom};
+        res.status = ForwardAcceleration::NotSupported;
     }
+    return res;
 }
 
 

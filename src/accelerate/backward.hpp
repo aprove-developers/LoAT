@@ -32,9 +32,9 @@ public:
     };
 
     struct AccelerationResult {
-        const std::vector<Rule> res;
-        const ForwardAcceleration::ResultKind status;
-        const ProofOutput proof;
+        std::vector<Rule> res;
+        ForwardAcceleration::ResultKind status;
+        ProofOutput proof;
     };
 
     static AccelerationResult accelerate(VarMan &varMan, const LinearRule &rule, LocationIdx sink);
@@ -42,7 +42,7 @@ public:
 private:
     BackwardAcceleration(VarMan &varMan, const LinearRule &rule, LocationIdx sink);
 
-    LinearRule buildNontermRule() const;
+    LinearRule buildNontermRule(const GuardList &guard) const;
 
     /**
      * Main function, just calls the methods below in the correct order

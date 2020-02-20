@@ -55,7 +55,7 @@ Analysis::Analysis(ITSProblem &its)
 RuntimeResult Analysis::run() {
     setupDotOutput();
 
-    proofout.section("Initial ITS");
+    proofout.headline("Initial ITS");
     printForProof("Initial");
 
     if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {

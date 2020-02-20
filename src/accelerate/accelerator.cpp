@@ -188,7 +188,7 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
     // Remove all old loops, unless we have decided to keep them
     bool foundOne = true;
     stringstream s;
-    s << "Removing the simple loops:";
+    s << "Removed the following rules:";
     for (TransIdx loop : loops) {
         if (keepRules.count(loop) == 0) {
             if (foundOne) {
@@ -199,7 +199,8 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
         }
     }
     if (!foundOne) {
-        proofout.append(s << ".");
+        proofout.section("Applied deletion");
+        proofout.append(s);
     }
 
     // In some cases, two loops can yield similar accelerated rules, so we prune duplicates
@@ -275,16 +276,17 @@ unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
 // ###################
 
 const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
-    ProofOutput proof;
-    option<Forward::ResultKind> status;
-    std::vector<Forward::MeteredRule> rules;
+    Forward::Result res;
     // chain rule if necessary
     const option<LinearRule> &optR = chain(rule);
     if (optR) {
-        proof.section("Unrolled loop");
+        res.proof.section("Unrolled loop");
         stringstream s;
+        s << "Original rule:" << endl;
+        ITSExport::printRule(rule, its, s);
+        s << "\nUnrolled rule:" << endl;
         ITSExport::printRule(optR.get(), its, s);
-        proof.append(s);
+        res.proof.append(s);
     }
     LinearRule r = optR ? optR.get() : rule;
     bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
@@ -295,30 +297,31 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
         if (p) {
             const Rule &nontermRule = p.get().first;
             Forward::ResultKind status = p.get().second;
-            proof.section("Applied non-termination processor");
+            res.proof.section("Applied non-termination processor");
             stringstream s;
             s << "Original rule:" << endl;
-            ITSExport::printRule(rule, its, s);
-            s << "Accelerated rule:" << endl;
+            ITSExport::printRule(r, its, s);
+            s << "\nAccelerated rule:" << endl;
             ITSExport::printRule(nontermRule, its, s);
-            proof.append(s);
-            rules.emplace_back("non-termination", nontermRule);
+            res.proof.append(s);
+            res.rules.emplace_back("non-termination", nontermRule);
             // if the rule is universaly non-termianting, we are done
             if (status == Forward::Success) {
-                return {.result=Forward::Success, .proof=proof, .rules=rules};
+                res.status = Forward::Success;
+                return res;
             }
         }
         // try acceleration
-        BackwardAcceleration::AccelerationResult res = Backward::accelerate(its, r, sinkLoc);
-        if (res.res.empty()) {
+        BackwardAcceleration::AccelerationResult accelRes = Backward::accelerate(its, r, sinkLoc);
+        if (accelRes.res.empty()) {
             // if acceleration failed, the best we can hope for is a restricted result
-            status = Forward::SuccessWithRestriction;
+            res.status = Forward::SuccessWithRestriction;
         } else {
-            status = res.status;
-            proof.concat(res.proof);
+            res.status = accelRes.status;
+            res.proof.concat(accelRes.proof);
             // if acceleration succeeded, save the result, but we still try to find cases where the rule does not terminate
-            for (const Rule &ar: res.res) {
-                rules.emplace_back("acceleration calculus", ar);
+            for (const Rule &ar: accelRes.res) {
+                res.rules.emplace_back("acceleration calculus", ar);
             }
         }
         // strengthen in order to prove non-termination
@@ -330,30 +333,32 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                 if (sat) {
                     option<std::pair<Rule, Forward::ResultKind>> p = nonterm::NonTerm::apply(sr, its, sinkLoc);
                     if (p) {
-                        proof.section("Applied strengthening");
+                        res.proof.section("Applied strengthening");
                         stringstream s;
                         s << "Original rule:" << endl;
                         ITSExport::printRule(r, its, s);
-                        s << "Strengthened rule:" << endl;
+                        s << "\nStrengthened rule:" << endl;
                         ITSExport::printRule(sr, its, s);
+                        res.proof.append(s);
 
+                        s.clear();
                         const Rule &nontermRule = p.get().first;
-                        proof.section("Applied non-termination processor");
+                        res.proof.section("Applied non-termination processor");
                         s << "Original rule:" << endl;
                         ITSExport::printRule(sr, its, s);
-                        s << "Accelerated rule:" << endl;
+                        s << "\nAccelerated rule:" << endl;
                         ITSExport::printRule(nontermRule, its, s);
-                        proof.append(s);
-                        rules.emplace_back("non-termination", nontermRule);
+                        res.proof.append(s);
+                        res.rules.emplace_back("non-termination", nontermRule);
                     }
                 }
             }
         }
     }
-    if (rules.empty()) {
-        status = Forward::NonMonotonic;
+    if (res.rules.empty()) {
+        res.status = Forward::NonMonotonic;
     }
-    return {.result=status.get(), .proof=proof, .rules=rules};
+    return res;
 }
 
 Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
@@ -377,7 +382,7 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     if (!Config::Accel::PartialDeletionHeuristic || rule.isLinear()) {
         return res;
     }
-    if (res.result == Success || res.result == SuccessWithRestriction) {
+    if (res.status == Success || res.status == SuccessWithRestriction) {
         return res;
     }
 
@@ -388,7 +393,7 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     // Returns true if accelerating was successful.
     auto tryAccel = [&](const Rule &newRule) {
         res = tryAccelerate(newRule);
-        if (res.result == Success || res.result == SuccessWithRestriction) {
+        if (res.status == Success || res.status == SuccessWithRestriction) {
             for (Forward::MeteredRule &rule : res.rules) {
                 rule = rule.appendInfo(" (after partial deletion)");
             }
@@ -462,16 +467,16 @@ void Accelerator::run() {
         const Rule &r = its.getRule(loop);
         Forward::Result res = accelerateOrShorten(r);
 
-        if (res.result != Forward::Success) {
+        if (res.status != Forward::Success) {
             keepRules.insert(loop);
         }
 
         // Interpret the results, add new rules
-        if  (res.result == Forward::Success || res.result == Forward::SuccessWithRestriction) {
+        if  (res.status == Forward::Success || res.status == Forward::SuccessWithRestriction) {
             // Add accelerated rules, also mark them as inner nesting candidates
+            proofout.concat(res.proof);
             for (const Forward::MeteredRule &accel : res.rules) {
                 TransIdx added = addResultingRule(accel.rule);
-                proofout.append(stringstream() << "Accelerating rule " << loop << " with " << accel.info << " yielded rule " << added << ".");
 
                 if (accel.rule.isSimpleLoop()) {
                     // accel.rule is a simple loop iff the original was linear and not non-terminating.
@@ -488,10 +493,10 @@ void Accelerator::run() {
     }
 
     // Nesting
-    if (Config::Accel::TryNesting) {
-        performNesting(std::move(origRules), std::move(nestingCandidates));
-        if (Timeout::soft()) return;
-    }
+//    if (Config::Accel::TryNesting) {
+//        performNesting(std::move(origRules), std::move(nestingCandidates));
+//        if (Timeout::soft()) return;
+//    }
 
     // Chaining accelerated rules amongst themselves would be another heuristic.
     // Although it helps in certain examples, it is currently not implemented
