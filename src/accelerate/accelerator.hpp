@@ -51,6 +51,8 @@ private:
         TransIdx oldRule;
         TransIdx newRule;
         Complexity cpx;
+
+        NestingCandidate(TransIdx oldRule, TransIdx newRule, Complexity cpx): oldRule(oldRule), newRule(newRule), cpx(cpx) {}
     };
 
 private:

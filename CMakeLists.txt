@@ -11,11 +11,11 @@ if(${STATIC})
     message(STATUS "Configuring static build")
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
     set(BUILD_SHARED_LIBS OFF)
-    set(LINKER_OPTIONS "-static -ldl -lboost_filesystem -lboost_system")
+    set(LINKER_OPTIONS "-static -ldl")
     set(EXECUTABLE loat-static)
 else()
     message(STATUS "Configuring non-static build")
-    set(LINKER_OPTIONS "-lboost_filesystem -lboost_system")
+    set(LINKER_OPTIONS "")
     set(EXECUTABLE loat)
 endif()
 
@@ -122,8 +122,6 @@ add_executable(${EXECUTABLE}
         src/strengthening/strengthener.cpp
         src/strengthening/strengthener.hpp
         src/strengthening/types.hpp
-        src/strengthening/modes.cpp
-        src/strengthening/modes.hpp
         src/strengthening/templatebuilder.cpp
         src/strengthening/templatebuilder.hpp
         src/strengthening/templates.cpp
@@ -138,7 +136,6 @@ add_executable(${EXECUTABLE}
         src/util/relevantvariables.hpp
         src/util/ginacutils.cpp
         src/util/ginacutils.hpp
-        src/util/collections.hpp
         src/sexpresso/sexpresso.cpp
         src/sexpresso/sexpresso.hpp
         src/its/sexpressionparser/parser.cpp

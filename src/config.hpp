@@ -39,7 +39,6 @@ namespace Config {
         extern bool Colors;
         extern bool ColorsInITS;
         extern bool ExportSimplified;
-        extern bool ProofLimit;
     }
 
     // Colors (Ansi color codes) for output

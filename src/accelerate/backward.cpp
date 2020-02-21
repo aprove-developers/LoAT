@@ -35,8 +35,6 @@
 #include "../util/result.hpp"
 #include "../its/export.hpp"
 
-#include <boost/filesystem.hpp>
-
 using namespace std;
 
 typedef BackwardAcceleration Self;

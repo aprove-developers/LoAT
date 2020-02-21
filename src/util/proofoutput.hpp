@@ -28,7 +28,6 @@
 #include <fstream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 
 #include "../config.hpp"
 #include "../its/itsproblem.hpp"
@@ -77,8 +76,6 @@ public:
 
     void deletionProof(const std::set<TransIdx> &rules);
 
-    void deletionProof(const Rule &rule, const ITSProblem &its);
-
     void storeSubProof(const ProofOutput &subProof, const std::string &technique);
 
     void chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule, const ITSProblem &its);
@@ -91,9 +88,7 @@ private:
 
     std::vector<std::pair<Style, std::string>> proof;
 
-    boost::filesystem::path getProofFile() const;
-
-    void writeToFile(const boost::filesystem::path &file) const;
+    void writeToFile(const std::string &file) const;
 
 };
 

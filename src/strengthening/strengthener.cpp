@@ -58,8 +58,7 @@ namespace strengthening {
         }
         const Templates &templates = TemplateBuilder::build(guardCtx.get(), ruleCtx);
         Z3Context z3Ctx;
-        const SmtConstraints &smtConstraints = ConstraintBuilder::build(templates, ruleCtx, guardCtx.get(), z3Ctx);
-        MaxSmtConstraints maxSmtConstraints = Modes::invariance(smtConstraints, z3Ctx);
+        const MaxSmtConstraints &maxSmtConstraints = ConstraintBuilder::buildMaxSmtConstraints(templates, ruleCtx, guardCtx.get(), z3Ctx);
         if (maxSmtConstraints.hard.empty()) {
             return {};
         }

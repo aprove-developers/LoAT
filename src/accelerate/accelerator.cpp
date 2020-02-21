@@ -443,7 +443,7 @@ void Accelerator::run() {
                                 accel.getCost(),
                                 false,
                                 Complexity::Const).cpx;
-                    nestingCandidates.push_back(NestingCandidate{.oldRule=loop, .newRule=added, .cpx=cpx});
+                    nestingCandidates.push_back(NestingCandidate(loop, added, cpx));
                 }
             }
         }

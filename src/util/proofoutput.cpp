@@ -7,13 +7,9 @@
 ProofOutput ProofOutput::Proof;
 bool ProofOutput::enabled = true;
 
-boost::filesystem::path ProofOutput::getProofFile() const {
-    return (boost::filesystem::temp_directory_path() / boost::filesystem::unique_path()).replace_extension(".txt");
-}
-
-void ProofOutput::writeToFile(const boost::filesystem::path &file) const {
+void ProofOutput::writeToFile(const std::string &file) const {
     if (enabled) {
-        boost::filesystem::ofstream myfile;
+        std::ofstream myfile;
         myfile.open(file);
         for (const auto &l: proof) {
             myfile << l.second << std::endl;
@@ -32,8 +28,6 @@ void ProofOutput::print() const {
                 case Result: std::cout << Config::Color::Result;
                     break;
                 case Section: std::cout << Config::Color::Section;
-                    break;
-                case Warning: std::cout << Config::Color::Warning;
                     break;
                 case Headline: std::cout << Config::Color::Headline;
                     break;
@@ -141,20 +135,12 @@ void ProofOutput::deletionProof(const std::set<TransIdx> &rules) {
     if (!rules.empty()) {
         section("Applied deletion");
         std::stringstream s;
-        s << "removed the following rules:";
+        s << "Removed the following rules:";
         for (TransIdx i: rules) {
             s << " " << i;
         }
         append(s);
     }
-}
-
-void ProofOutput::deletionProof(const Rule &rule, const ITSProblem &its) {
-    section("Applied deletion");
-    std::stringstream s;
-    s << "removed the following rule:\n";
-    ITSExport::printRule(rule, its, s);
-    append(s);
 }
 
 void ProofOutput::chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule, const ITSProblem &its) {
@@ -170,7 +156,7 @@ void ProofOutput::chainingProof(const Rule &fst, const Rule &snd, const Rule &ne
 }
 
 void ProofOutput::storeSubProof(const ProofOutput &subProof, const std::string &technique) {
-    const boost::filesystem::path &file = getProofFile();
-    subProof.writeToFile(file);
-    append("Sub-proof via " + technique + " written to file://" + file.native());
+    const std::string &file = std::tmpnam(nullptr);
+    subProof.writeToFile(file + ".txt");
+    append("Sub-proof via " + technique + " written to file://" + file + ".txt");
 }

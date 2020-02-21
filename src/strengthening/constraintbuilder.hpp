@@ -21,7 +21,6 @@
 #include "../its/rule.hpp"
 #include "../its/variablemanager.hpp"
 #include "types.hpp"
-#include "modes.hpp"
 #include "templates.hpp"
 
 namespace strengthening {
@@ -30,11 +29,10 @@ namespace strengthening {
 
     public:
 
-        static const SmtConstraints build(
-                const Templates &templates,
-                const RuleContext &ruleCtx,
-                const GuardContext &guardCtx,
-                Z3Context &z3Ctx);
+        static const MaxSmtConstraints buildMaxSmtConstraints(const Templates &templates,
+                                                              const RuleContext &ruleCtx,
+                                                              const GuardContext &guardCtx,
+                                                              Z3Context &z3Ctx);
 
     private:
 
@@ -49,8 +47,6 @@ namespace strengthening {
                 const GuardContext &guardCtx,
                 Z3Context &z3Ctx);
 
-        const SmtConstraints build() const;
-
         const Implication buildTemplatesInvariantImplication() const;
 
         const Initiation constructInitiationConstraints(const GuardList &relevantConstraints) const;
@@ -64,6 +60,8 @@ namespace strengthening {
                 const Expression &conclusion) const;
 
         const GuardList findRelevantConstraints() const;
+
+        const SmtConstraints buildSmtConstraints() const;
 
     };
 

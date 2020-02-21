@@ -45,23 +45,23 @@ namespace Config {
 
     namespace Color {
         // Proof output
-        const std::string Section = "\033[1;33m"; // bold yellow
-        const std::string Headline = "\033[1;34m"; // bold blue
+        const std::string Section = "\033[0;4;33m"; // underlined yellow
+        const std::string Headline = "\033[1;4;33m"; // bold underlined yellow
         const std::string Warning = "\033[1;31m"; // bold red
         const std::string Result = "\033[1;32m"; // bold green
         const std::string None = "\033[0m"; // reset color
 
         // ITS Output
-        const std::string Location = "\033[0;34m"; // bold blue
+        const std::string Location = "\033[1;34m"; // bold blue
         const std::string Update = "\033[0;36m"; // cyan
         const std::string Guard = "\033[0;32m"; // green
-        const std::string Cost = "\033[0;33m"; // yellow
+        const std::string Cost = "\033[0;35m"; // bold magenta
 
-        // Debugging
-        const std::string Debug = "\033[0;90m"; // gray/bright black (avoid distraction)
-        const std::string DebugProblem = "\033[1;33m"; // bold yellow
-        const std::string DebugWarning = "\033[1;31m"; // bold red
-        const std::string DebugHighlight = "\033[0;36m"; // cyan
+        const std::string BoldBlue = "\033[0;34m"; // blue
+        const std::string Gray = "\033[0;90m"; // gray/bright black (avoid distraction)
+        const std::string BoldyYellow = "\033[1;33m"; // bold yellow
+        const std::string BoldRed = "\033[1;31m"; // bold red
+        const std::string Cyan = "\033[0;36m"; // cyan
     }
 
     namespace Parser {
@@ -212,7 +212,7 @@ namespace Config {
 
 #define PrintCfg(a,b) \
     os << #a << " = " << a; \
-    if (withDescription) os << GetColor(Debug) << "  // " << b << GetColor(None); \
+    if (withDescription) os << GetColor(Gray) << "  // " << b << GetColor(None); \
     os << endl
 
 void Config::printConfig(ostream &os, bool withDescription) {
