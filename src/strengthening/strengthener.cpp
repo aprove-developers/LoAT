@@ -28,7 +28,7 @@ namespace strengthening {
 
     const std::vector<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its) {
         for (const Expression &e: rule.getGuard()) {
-            if (!e.isLinear()) {
+            if (!Expression(e.lhs()).isLinear() || !Expression(e.rhs()).isLinear()) {
                 return {};
             }
         }
