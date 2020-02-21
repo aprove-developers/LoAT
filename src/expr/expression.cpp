@@ -95,7 +95,7 @@ bool Expression::isNontermSymbol() const {
 }
 
 
-bool Expression::isLinear(const boost::optional<ExprSymbolSet> &vars) const {
+bool Expression::isLinear(const option<ExprSymbolSet> &vars) const {
     ExprSymbolSet theVars = vars ? vars.get() : getVariables();
     // linear expressions are always polynomials
     if (!isPolynomial()) return false;

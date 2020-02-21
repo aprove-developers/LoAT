@@ -18,7 +18,6 @@
 #ifndef RELATION_H
 #define RELATION_H
 
-#include "../global.hpp"
 #include "../expr/expression.hpp"
 #include "../util/option.hpp"
 

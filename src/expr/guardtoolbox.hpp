@@ -18,7 +18,6 @@
 #ifndef GUARDTOOLBOX_H
 #define GUARDTOOLBOX_H
 
-#include "../global.hpp"
 #include "expression.hpp"
 #include "../its/variablemanager.hpp"
 #include "../util/option.hpp"

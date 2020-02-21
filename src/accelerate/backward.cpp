@@ -34,7 +34,6 @@
 #include "vareliminator.hpp"
 #include "../util/result.hpp"
 #include "../its/export.hpp"
-#include "../util/proofutil.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -87,23 +86,23 @@ Self::AccelerationResult BackwardAcceleration::run() {
             if (solved->nonterm) {
                 const Rule &nontermRule = buildNontermRule(solved->res);
                 res.rules.push_back(nontermRule);
-                res.proof.concat(ruleTransformationProof(rule, "nonterm", nontermRule, its));
-                res.proof.concat(storeSubProof(solved->proof, "acceration calculus"));
+                res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
+                res.proof.storeSubProof(solved->proof, "acceration calculus");
             } else {
                 UpdateMap up;
                 for (auto p: solved.get().closed.get()) {
                     up[its.getVarIdx(Expression(p.first).getAVariable())] = p.second;
                 }
                 LinearRule accel(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
-                res.proof.concat(ruleTransformationProof(rule, "acceleration", accel, its));
-                res.proof.concat(storeSubProof(solved->proof, "acceration calculus"));
+                res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
+                res.proof.storeSubProof(solved->proof, "acceration calculus");
                 if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
                     std::vector<Rule> instantiated = replaceByUpperbounds(solved->n, accel);
                     if (instantiated.empty()) {
                         res.rules.push_back(accel);
                     } else {
                         for (const Rule &r: instantiated) {
-                            res.proof.concat(ruleTransformationProof(accel, "instantiation", r, its));
+                            res.proof.ruleTransformationProof(accel, "instantiation", r, its);
                             res.rules.push_back(r);
                         }
                     }

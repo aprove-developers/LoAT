@@ -17,7 +17,7 @@
 
 #include "limitsmt.hpp"
 #include "inftyexpression.hpp"
-#include "../global.hpp"
+#include "../util/proofoutput.hpp"
 
 using namespace GiNaC;
 using namespace std;
@@ -347,8 +347,8 @@ bool AsymptoticBound::solveViaSMT(Complexity currentRes) {
 
     solvedLimitProblems.push_back(currentLP);
 
-    proofout.append("Solved the limit problem by the following transformations:");
-    proofout.append(currentLP.getProof());
+    proof.append("Solved the limit problem by the following transformations:");
+    proof.append(currentLP.getProof());
 
     isAdequateSolution(currentLP);
     return true;
@@ -433,8 +433,8 @@ bool AsymptoticBound::solveLimitProblem() {
     if (!currentLP.isUnsolvable() && currentLP.isSolved()) {
         solvedLimitProblems.push_back(currentLP);
 
-        proofout.append("Solved the limit problem by the following transformations:");
-        proofout.append(currentLP.getProof());
+        proof.append("Solved the limit problem by the following transformations:");
+        proof.append(currentLP.getProof());
 
         if (isAdequateSolution(currentLP)) {
             return true;
@@ -890,8 +890,9 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     if (expandedCost.isNontermSymbol()) {
         auto z3res = Z3Toolbox::checkAll(guard);
         if (z3res == z3::sat) {
-            if (finalCheck) proofout.append("Guard is satisfiable, yielding nontermination");
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+            ProofOutput proof;
+            proof.append("Guard is satisfiable, yielding nontermination");
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, proof);
         } else {
             // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
             costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
@@ -901,9 +902,6 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         return Result(Complexity::Unknown);
     }
     assert(!costToCheck.has(Expression::NontermSymbol));
-
-    // Only enable proof output for the final check (we don't want proof output when pruning)
-    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
 
     AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck);
     asymptoticBound.initLimitVectors();
@@ -923,26 +921,25 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     if (result) {
 
         // Print solution
-        proofout.append("Solution:");
+        asymptoticBound.proof.append("Solution:");
         for (const auto &pair : asymptoticBound.bestComplexity.solution) {
-            proofout.append(stringstream() << pair.first << " / " << pair.second);
+            asymptoticBound.proof.append(stringstream() << pair.first << " / " << pair.second);
         }
-        proofout.setEnabled(wasProofEnabled);
 
         // Gather all relevant information
         if (expandedCost.isNontermSymbol()) {
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, asymptoticBound.proof);
         } else {
             Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
             return Result(asymptoticBound.bestComplexity.complexity,
                           solvedCost.expand(),
                           asymptoticBound.bestComplexity.upperBound > 1,
-                          asymptoticBound.bestComplexity.inftyVars);
+                          asymptoticBound.bestComplexity.inftyVars,
+                          asymptoticBound.proof);
         }
     } else {
 
-        proofout.append("Could not solve the limit problem.");
-        proofout.setEnabled(wasProofEnabled);
+        asymptoticBound.proof.append("Could not solve the limit problem.");
 
         return Result(Complexity::Unknown);
     }
@@ -959,7 +956,9 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan
     if (expandedCost.isNontermSymbol()) {
         auto z3res = Z3Toolbox::checkAll(guard);
         if (z3res == z3::sat) {
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+            ProofOutput proof;
+            proof.append("proved non-termination via SMT");
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, proof);
         } else {
             return Result(Complexity::Unknown);
         }
@@ -968,21 +967,18 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan
     }
     assert(!expandedCost.has(Expression::NontermSymbol));
 
-    // Only enable proof output for the final check (we don't want proof output when pruning)
-    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
-
     AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem();
     bool success = asymptoticBound.solveViaSMT(currentRes);
-    proofout.setEnabled(wasProofEnabled);
     if (success) {
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return Result(asymptoticBound.bestComplexity.complexity,
                       solvedCost.expand(),
                       asymptoticBound.bestComplexity.upperBound > 1,
-                      asymptoticBound.bestComplexity.inftyVars);
+                      asymptoticBound.bestComplexity.inftyVars,
+                      asymptoticBound.proof);
     } else {
         return Result(Complexity::Unknown);
     }

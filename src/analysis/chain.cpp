@@ -18,6 +18,7 @@
 #include "chain.hpp"
 
 #include "../z3/z3toolbox.hpp"
+#include "../config.hpp"
 
 using namespace std;
 

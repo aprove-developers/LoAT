@@ -104,11 +104,10 @@ add_executable(${EXECUTABLE}
         src/util/exceptions.hpp
         src/util/option.hpp
         src/util/proofoutput.hpp
+        src/util/proofoutput.cpp
         src/util/timeout.cpp
         src/util/timeout.hpp
         src/util/result.hpp
-        src/util/proofutil.hpp
-        src/util/proofutil.cpp
         src/z3/z3context.cpp
         src/z3/z3context.hpp
         src/z3/z3solver.hpp
@@ -117,8 +116,6 @@ add_executable(${EXECUTABLE}
         src/z3/z3toolbox.hpp
         src/config.cpp
         src/config.hpp
-        src/global.cpp
-        src/global.hpp
         src/main.cpp
         src/strengthening/constraintbuilder.cpp
         src/strengthening/constraintbuilder.hpp

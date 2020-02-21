@@ -38,10 +38,7 @@ namespace Config {
     namespace Output {
         extern bool Colors;
         extern bool ColorsInITS;
-        extern bool Timestamps;
-        extern option<std::string> DotFile;
         extern bool ExportSimplified;
-        extern bool ProofChain;
         extern bool ProofLimit;
     }
 
@@ -152,7 +149,6 @@ namespace Config {
         extern bool Pruning;
         extern bool EnsureNonnegativeCosts;
         extern bool ConstantCpxCheck;
-        extern bool AsymptoticCheck; // must be enabled for soundness!
         extern bool NonTermMode;
     }
 

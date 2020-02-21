@@ -21,8 +21,9 @@
 #include "its/parser/itsparser.hpp"
 #include "its/sexpressionparser/parser.hpp"
 #include "its/t2parser/t2parser.hpp"
-
+#include "config.hpp"
 #include "util/timeout.hpp"
+#include "util/proofoutput.hpp"
 
 using namespace std;
 
@@ -39,9 +40,7 @@ void printHelp(char *arg0) {
     cout << "  --proof-level <n>                                Detail level for proof output (0-3, default 2)" << endl;
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
-    cout << "  --dot <file>                                     Dump dot output to given file (only for non-recursive problems)" << endl;
     cout << "  --config                                         Show configuration after handling command line flags" << endl;
-    cout << "  --timestamps                                     Include time stamps in proof output" << endl;
     cout << "  --print-simplified                               Print simplified program in the input format" << endl;
     cout << endl;
     cout << "  --allow-division                                 Allow division in the input program (potentially unsound)" << endl;
@@ -69,9 +68,6 @@ void parseFlags(int argc, char *argv[]) {
         if (strcmp("--help",argv[arg]) == 0) {
             printHelp(argv[0]);
             exit(1);
-        }
-        else if (strcmp("--dot",argv[arg]) == 0) {
-            Config::Output::DotFile = getNext();
         } else if (strcmp("--timeout",argv[arg]) == 0) {
             timeout = atoi(getNext());
         } else if (strcmp("--proof-level",argv[arg]) == 0) {
@@ -81,8 +77,6 @@ void parseFlags(int argc, char *argv[]) {
             Config::Output::ColorsInITS = false;
         } else if (strcmp("--config",argv[arg]) == 0) {
             printConfig = true;
-        } else if (strcmp("--timestamps",argv[arg]) == 0) {
-            Config::Output::Timestamps = true;
         } else if (strcmp("--print-simplified",argv[arg]) == 0) {
             Config::Output::ExportSimplified = true;
         } else if (strcmp("--allow-division",argv[arg]) == 0) {
@@ -127,10 +121,6 @@ int main(int argc, char *argv[]) {
 
     // Parse and interpret command line flags
     parseFlags(argc, argv);
-
-    // Proof output
-    Config::Output::ProofLimit = (proofLevel >= 2);
-    Config::Output::ProofChain = (proofLevel >= 3);
 
     // Print current configuration (if requested)
     if (printConfig) {
@@ -177,7 +167,7 @@ int main(int argc, char *argv[]) {
 
     // Disable proof output if requested
     if (proofLevel == 0) {
-        proofout.setEnabled(false);
+        ProofOutput::Proof.setEnabled(false);
     }
 
     // Start the analysis of the parsed ITS problem.
@@ -187,7 +177,7 @@ int main(int argc, char *argv[]) {
     // WST style proof output
     cout << runtime.cpx.toWstString() << std::endl;
 
-    proofout.print();
+    ProofOutput::Proof.print();
 
     return 0;
 }

@@ -19,7 +19,7 @@
 
 #include "chain.hpp"
 #include "preprocess.hpp"
-
+#include "../util/proofoutput.hpp"
 #include "../util/timeout.hpp"
 
 
@@ -48,8 +48,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
 {
     set<TransIdx> keepRules;
 
-    bool wasProofEnabled = proofout.setEnabled(Config::Output::ProofChain);
-    proofout.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
+    ProofOutput::Proof.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
@@ -65,7 +64,8 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
         if (inRule.getLhsLoc() == loc) continue;
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
-            auto optRule = Chaining::chainRules(its, inRule, its.getRule(out));
+            const Rule &outRule = its.getRule(out);
+            auto optRule = Chaining::chainRules(its, inRule, outRule);
             if (optRule) {
                 // If we allow self loops at loc, then chained rules may still lead to loc,
                 // e.g. if h -> f and f -> f,g are chained to h -> f,g (where f is loc).
@@ -79,12 +79,11 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                 Rule newRule = optRule.get();
                 Preprocess::simplifyGuard(newRule.getGuardMut());
 
-                TransIdx added = its.addRule(newRule);
-                proofout.append(stringstream() << "Chained rules " << in << " and " << out << " to new rule " << added << ".");
+                its.addRule(newRule);
+                ProofOutput::Proof.chainingProof(inRule, outRule, newRule, its);
 
             } else {
                 wasChainedWithAll = false;
-                proofout.append(stringstream() << "Failed to chain rules " << in << " and " << out << ".");
             }
         }
 
@@ -100,15 +99,17 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
     if (keepUnchainable && !keepRules.empty()) {
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
-            auto newRule = its.getRule(trans).stripRhsLocation(loc);
+            const Rule &oldRule = its.getRule(trans);
+            auto newRule = oldRule.stripRhsLocation(loc);
             if (newRule) {
                 // In case of nonlinear rules, we can simply delete all rhss leading to loc, but keep the other ones
-                TransIdx added = its.addRule(newRule.get());
-                proofout.append(stringstream() << "Keeping rule " << trans << " after partial deletion, yielding new rule " << added << ".");
+                its.addRule(newRule.get());
+                ProofOutput::Proof.ruleTransformationProof(oldRule, "partial deletion", newRule.get(), its);
             } else {
                 // If all rhss lead to loc (for instance if the rule is linear), we add a new dummy rhs
-                TransIdx added = its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
-                proofout.append(stringstream() << "Keeping rule " << trans << " by adding a dummy rule " << added << ".");
+                const Rule &dummyRule = oldRule.replaceRhssBySink(dummyLoc);
+                its.addRule(dummyRule);
+                ProofOutput::Proof.ruleTransformationProof(oldRule, "partial deletion", dummyRule, its);
             }
         }
     }
@@ -116,8 +117,6 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
     // Remove loc and all incoming/outgoing rules.
     // Note that all rules have already been chained (or backed up), so removing these rules is ok.
     its.removeLocationAndRules(loc);
-
-    proofout.setEnabled(wasProofEnabled);
 }
 
 
@@ -319,9 +318,6 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
     if (acceleratedRules.empty()) return false;
     set<TransIdx> successfullyChained;
 
-    bool wasProofEnabled = proofout.setEnabled(Config::Output::ProofChain);
-    proofout.headline("Chaining " + to_string(acceleratedRules.size()) + " accelerated rules with incoming rules:");
-
     // Find all lhs locations of accelerated rules, so we can iterate over them.
     // If we would iterate over acceleratedRules directly, we might consider an lhs location twice,
     // so we would use chained rules from the first visit as incoming rules for the second visit.
@@ -334,6 +330,7 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
         // We only query the incoming transitions once, before adding new rules starting at node
         set<TransIdx> incomingTransitions = its.getTransitionsTo(node);
 
+        std::set<TransIdx> deleted;
         for (TransIdx accel : its.getTransitionsFrom(node)) {
             if (Timeout::soft()) break;
 
@@ -356,28 +353,28 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
                     Rule newRule = optRule.get();
                     Preprocess::simplifyRule(its, newRule);
 
+                    ProofOutput::Proof.chainingProof(incomingRule, accelRule, newRule, its);
+
                     // Add the chained rule
-                    TransIdx added = its.addRule(newRule);
-                    proofout.append(stringstream() << "Chained incoming rule " << incoming << " with accelerated rule " << accel << " to new rule " << added << ".");
+                    its.addRule(newRule);
                     successfullyChained.insert(incoming);
                 }
             }
 
-            proofout.append(stringstream() << "Removing accelerated rule " << accel << ".");
+            deleted.insert(accel);
             its.removeRule(accel);
         }
+        ProofOutput::Proof.deletionProof(deleted);
     }
 
     // Removing chained incoming rules may help to avoid too many rules.
     // However, we also lose execution paths (especially if there are more loops, which are not simple).
     if (!Config::Chain::KeepIncomingInChainAccelerated) {
         for (TransIdx toRemove : successfullyChained) {
-            proofout.append(stringstream() << "Removing incoming rule " << toRemove << " (after successful chaining).");
             its.removeRule(toRemove);
         }
+        ProofOutput::Proof.deletionProof(successfullyChained);
     }
-
-    proofout.setEnabled(wasProofEnabled);
 
     return !acceleratedRules.empty();
 }

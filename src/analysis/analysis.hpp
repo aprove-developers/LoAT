@@ -18,8 +18,6 @@
 #ifndef LINEAR_H
 #define LINEAR_H
 
-#include "../global.hpp"
-
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
 
@@ -148,26 +146,14 @@ private:
     void removeConstantPathsAfterTimeout();
 
     /**
-     * Prints the ITS problem to the proof output and, if dot output is enabled,
-     * to the dot output stream using the given descriptive text.
-     */
-    void printForProof(const std::string &dotDescription);
-
-    /**
      * Prints the final complexity result with all relevant information to the proof output
      */
     void printResult(const RuntimeResult &runtime);
 
-    // Handling of dot export
-    void setupDotOutput();
-    void finalizeDotOutput(const RuntimeResult &runtime);
 
 private:
     ITSProblem &its;
 
-    // State for dot export (file stream and number of written subgraphs, since they have to be numbered)
-    uint dotCounter = 0;
-    std::ofstream dotStream;
 };
 
 #endif // LINEAR_H

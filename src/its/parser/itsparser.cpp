@@ -22,6 +22,7 @@
 
 #include "termparser.hpp"
 #include "../itsproblem.hpp"
+#include "../../config.hpp"
 
 
 using namespace parser;

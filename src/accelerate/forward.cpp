@@ -21,9 +21,7 @@
 #include "meter/metering.hpp"
 #include "../z3/z3toolbox.hpp"
 
-#include "../global.hpp"
 #include "../util/timeout.hpp"
-#include "../util/proofutil.hpp"
 
 
 using namespace std;
@@ -103,7 +101,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
             // Since the loop is non-terminating, the right-hand sides are of no interest.
             rule.getCostMut() = Expression::NontermSymbol;
             const Rule &nontermRule = rule.replaceRhssBySink(sink);
-            res.proof.concat(ruleTransformationProof(rule, "Proved universal non-termiation while searching metering function", nontermRule, its));
+            res.proof.ruleTransformationProof(rule, "Proved universal non-termiation while searching metering function", nontermRule, its);
             res.rules.emplace_back(nontermRule);
             res.status = Success;
             return res;
@@ -150,7 +148,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
                     linRule.getGuardMut().push_back(iterationCount <= meter.metering);
                 }
 
-                res.proof.concat(ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, linRule, its));
+                res.proof.ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, linRule, its);
                 res.rules.emplace_back(linRule);
 
             } else {
@@ -162,7 +160,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
                 // We don't know to what result the rule evaluates (multiple rhss, so no single result).
                 // So we have to clear the rhs (fresh sink location, update is irrelevant).
                 const Rule &accelRule = newRule.replaceRhssBySink(sink);
-                res.proof.concat(ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, accelRule, its));
+                res.proof.ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, accelRule, its);
                 res.rules.emplace_back(accelRule);
             }
 
@@ -201,7 +199,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
         if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
-                res.proof.concat(ruleTransformationProof(rule, "strengthening", newRule, its));
+                res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);
                 res.proof.concat(accel.proof);
                 res.rules.insert(res.rules.end(), accel.rules.begin(), accel.rules.end());
             }
@@ -213,7 +211,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
         if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
-                res.proof.concat(ruleTransformationProof(rule, "strengthening", newRule, its));
+                res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);
                 res.proof.concat(accel.proof);
                 res.rules.insert(res.rules.end(), accel.rules.begin(), accel.rules.end());
             }
@@ -235,7 +233,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
         if (MeteringFinder::strengthenGuard(its, newRule)) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
-                res.proof.concat(ruleTransformationProof(rule, "strengthening", newRule, its));
+                res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);
                 res.proof.concat(accel.proof);
                 res.rules.insert(res.rules.end(), accel.rules.begin(), accel.rules.end());
                 res.status = PartialSuccess;

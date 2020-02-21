@@ -18,8 +18,6 @@
 #ifndef ITSPROBLEM_H
 #define ITSPROBLEM_H
 
-#include "../global.hpp"
-
 #include "../util/exceptions.hpp"
 #include "../util/option.hpp"
 

@@ -18,8 +18,6 @@
 #ifndef CHAINSTRATEGY_H
 #define CHAINSTRATEGY_H
 
-#include "../global.hpp"
-
 #include "../its/types.hpp"
 #include "../its/itsproblem.hpp"
 #include "../util/option.hpp"

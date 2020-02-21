@@ -38,22 +38,9 @@ namespace Config {
         // Whether to use colors in ITSExport (to distinguish guard/update/cost)
         bool ColorsInITS = true;
 
-        // Whether to include timestamps in every line of the proof output
-        bool Timestamps = false;
-
         // Whether to print the fully simplified ITS problem in the input format (KoAT's format).
         // Mostly useful for debugging the asymptotic check.
         bool ExportSimplified = false;
-
-        // If present, a dot file is generated with a subgraph after every relevant step.
-        // This is only applicable to linear ITS problems and often gets very large.
-        option<string> DotFile = {};
-
-        // Include all chaining steps in the proof output?
-        bool ProofChain = false;
-
-        // Include all solved limit problems in the proof output?
-        bool ProofLimit = true;
     }
 
     namespace Color {
@@ -216,11 +203,6 @@ namespace Config {
         // Involves SMT queries and can impact performance (even if a higher complexity is inferred).
         bool ConstantCpxCheck = true;
 
-        // Whether to enable the asymptotic complexity computation at all.
-        // NOTE: It is not sound to disable this (only intended for testing!)
-        // NOTE: If disabled, the complexity is only approximated by a syntactic check.
-        bool AsymptoticCheck = true;
-
         bool NonTermMode = false;
     }
 
@@ -245,11 +227,7 @@ void Config::printConfig(ostream &os, bool withDescription) {
         startSection("Output");
         PrintCfg(Colors, "Enable colors in proof output");
         PrintCfg(ColorsInITS, "Enable colors when printing ITS problems");
-        PrintCfg(Timestamps, "Include timestamps in the proof output");
         PrintCfg(ExportSimplified, "Print simplified ITS problem in input format");
-        PrintCfg(DotFile, "Path for dot export (for linear ITS problems only)");
-        PrintCfg(ProofChain, "Print all chaining steps");
-        PrintCfg(ProofLimit, "Print steps when solving limit problems");
     }
     {
         using namespace Config::Parser;
@@ -312,6 +290,5 @@ void Config::printConfig(ostream &os, bool withDescription) {
         PrintCfg(Preprocessing, "Perform several pre-processing steps to simplify rules");
         PrintCfg(Pruning, "Whether to enable pruning of rules");
         PrintCfg(EnsureNonnegativeCosts, "Add 'cost >= 0' to all guards, disallow rules with negative costs");
-        PrintCfg(AsymptoticCheck, "Use asymptotic complexity computation (must be enabled for soundness!)");
     }
 }

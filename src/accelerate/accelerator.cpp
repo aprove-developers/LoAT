@@ -37,7 +37,6 @@
 #include "../strengthening/strengthener.hpp"
 #include <stdexcept>
 #include "../nonterm/nonterm.hpp"
-#include "../util/proofutil.hpp"
 
 
 using namespace std;
@@ -78,13 +77,13 @@ bool Accelerator::simplifySimpleLoops() {
         }
     }
     if (res) {
-        minorProofStep("Simplified simple loops", its);
+        ProofOutput::Proof.minorProofStep("Simplified simple loops", its);
     }
 
     // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
     if (Pruning::removeDuplicateRules(its, loops)) {
         res = true;
-        minorProofStep("Removed duplicate rules", its);
+        ProofOutput::Proof.minorProofStep("Removed duplicate rules", its);
     }
 
     return res;
@@ -117,30 +116,37 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
 
         // Note that we do not try all heuristics or backward accel to keep nesting efficient
         const Backward::AccelerationResult &accel = Backward::accelerate(its, nestedRule, sinkLoc);
-        if (accel.status != Failure) {
-            Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
-            proofout.concat(chainingProof(first, second, nestedRule, its));
-            proofout.concat(accel.proof);
-            for (const Rule &accelRule: accel.rules) {
-                Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
-                            its,
-                            accelRule.getGuard(),
-                            accelRule.getCost(),
-                            false,
-                            currentCpx).cpx;
-                if (newCpx > currentCpx) {
-                    // Add the new rule
-                    addResultingRule(accelRule);
-                    // Try to combine chain and the accelerated loop
-                    auto chained = Chaining::chainRules(its, second, accelRule);
-                    if (chained) {
-                        addResultingRule(chained.get());
-                        proofout.concat(chainingProof(second, accelRule, chained.get(), its));
-                    }
-                } else {
-                    proofout.concat(deletionProof(accelRule, its));
+        bool success = false;
+        Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
+        ProofOutput proof;
+        proof.chainingProof(first, second, nestedRule, its);
+        proof.concat(accel.proof);
+        for (const Rule &accelRule: accel.rules) {
+            Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
+                        its,
+                        accelRule.getGuard(),
+                        accelRule.getCost(),
+                        false,
+                        currentCpx).cpx;
+            if (newCpx > currentCpx) {
+                success = true;
+                // Add the new rule
+                addResultingRule(accelRule);
+                // Try to combine chain and the accelerated loop
+                auto chained = Chaining::chainRules(its, second, accelRule);
+                if (chained) {
+                    addResultingRule(chained.get());
+                    proof.chainingProof(second, accelRule, chained.get(), its);
                 }
+            } else {
+                proof.section("Heuristically decided not to add the following rule:");
+                stringstream s;
+                ITSExport::printRule(accelRule, its, s);
+                proof.append(s);
             }
+        }
+        if (success) {
+            ProofOutput::Proof.concat(proof);
         }
     }
 }
@@ -179,7 +185,7 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
             its.removeRule(loop);
         }
     }
-    proofout.concat(deletionProof(deleted));
+    ProofOutput::Proof.deletionProof(deleted);
 
     // In some cases, two loops can yield similar accelerated rules, so we prune duplicates
     // and have to remove rules that were removed from resultingRules.
@@ -194,7 +200,7 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
                 it = resultingRules.erase(it);
             }
         }
-        proofout.concat(deletionProof(deleted));
+        ProofOutput::Proof.deletionProof(deleted);
     }
 }
 
@@ -254,7 +260,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     // chain rule if necessary
     const option<LinearRule> &optR = chain(rule);
     if (optR) {
-        res.proof.concat(ruleTransformationProof(rule, "unrolling", optR.get(), its));
+        res.proof.ruleTransformationProof(rule, "unrolling", optR.get(), its);
     }
     LinearRule r = optR ? optR.get() : rule;
     bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
@@ -276,7 +282,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             if (p) {
                 nonterm = true;
                 const Rule &nontermRule = p.get().first;
-                res.proof.concat(ruleTransformationProof(r, "non-termination processor", nontermRule, its));
+                res.proof.ruleTransformationProof(r, "non-termination processor", nontermRule, its);
                 res.rules.emplace_back(nontermRule);
             }
         }
@@ -290,7 +296,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                         assert(nonterm::NonTerm::universal(sr, its, sinkLoc));
                         nonterm = true;
                         const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expression::NontermSymbol, sinkLoc, {});
-                        res.proof.concat(ruleTransformationProof(r, "recurrent set", nontermRule, its));
+                        res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
                         res.rules.emplace_back(nontermRule);
                     }
                 }
@@ -300,7 +306,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             option<std::pair<Rule, Status>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
             if (p) {
                 const Rule &nontermRule = p.get().first;
-                res.proof.concat(ruleTransformationProof(r, "fixed-point processor", nontermRule, its));
+                res.proof.ruleTransformationProof(r, "fixed-point processor", nontermRule, its);
                 res.rules.emplace_back(nontermRule);
             }
         }
@@ -345,8 +351,8 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
         res = tryAccelerate(newRule);
         if (res.status != Failure) {
             for (const Rule &r : res.rules) {
-                res.proof.concat(ruleTransformationProof(rule, "partial deletion", newRule, its));
-                res.proof.concat(ruleTransformationProof(newRule, "acceleration", r, its));
+                res.proof.ruleTransformationProof(rule, "partial deletion", newRule, its);
+                res.proof.ruleTransformationProof(newRule, "acceleration", r, its);
             }
             return true;
         }
@@ -425,7 +431,7 @@ void Accelerator::run() {
         // Interpret the results, add new rules
         if  (res.status != Failure) {
             // Add accelerated rules, also mark them as inner nesting candidates
-            proofout.concat(res.proof);
+            ProofOutput::Proof.concat(res.proof);
             for (const Rule &accel : res.rules) {
                 TransIdx added = addResultingRule(accel);
 
@@ -456,8 +462,9 @@ void Accelerator::run() {
 
     // Simplify the guards of accelerated rules.
     // Especially backward acceleration and nesting can introduce superfluous constraints.
+    bool changed = false;
     for (TransIdx rule : resultingRules) {
-        Preprocess::simplifyGuard(its.getRuleMut(rule).getGuardMut());
+        changed = Preprocess::simplifyGuard(its.getRuleMut(rule).getGuardMut()) || changed;
     }
 
     // Keep rules for which acceleration failed (maybe these rules are in fact not loops).
@@ -472,6 +479,10 @@ void Accelerator::run() {
     // Remove sink location if we did not need it
     if (!its.hasTransitionsTo(sinkLoc)) {
         its.removeOnlyLocation(sinkLoc);
+    }
+
+    if (changed) {
+        ProofOutput::Proof.minorProofStep("Simplified guards", its);
     }
 }
 

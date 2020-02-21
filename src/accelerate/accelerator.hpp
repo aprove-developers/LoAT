@@ -18,8 +18,6 @@
 #ifndef ACCELERATE_H
 #define ACCELERATE_H
 
-#include "../global.hpp"
-
 #include "../its/types.hpp"
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"

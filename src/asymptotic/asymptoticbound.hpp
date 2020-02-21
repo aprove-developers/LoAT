@@ -9,6 +9,7 @@
 #include "../its/variablemanager.hpp"
 #include "inftyexpression.hpp"
 #include "limitproblem.hpp"
+#include "../util/proofoutput.hpp"
 
 
 class AsymptoticBound {
@@ -65,6 +66,7 @@ private:
     bool finalCheck;
     GuardList normalizedGuard;
     ComplexityResult bestComplexity;
+    ProofOutput proof;
 
     std::vector<std::vector<LimitVector>> addition;
     std::vector<std::vector<LimitVector>> multiplication;
@@ -96,8 +98,10 @@ public:
         // The number of non-constant variables (i.e., which grow with n).
         int inftyVars;
 
+        ProofOutput proof;
+
         explicit Result(Complexity c) : cpx(c), solvedCost(0), reducedCpx(false), inftyVars(0) {}
-        Result(Complexity c, Expression x, bool r, int v) : cpx(c), solvedCost(x), reducedCpx(r), inftyVars(v) {}
+        Result(Complexity c, Expression x, bool r, int v, ProofOutput proof) : cpx(c), solvedCost(x), reducedCpx(r), inftyVars(v), proof(proof) {}
     };
 
     /**

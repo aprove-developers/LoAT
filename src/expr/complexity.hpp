@@ -18,8 +18,8 @@
 #ifndef COMPLEXITY_H
 #define COMPLEXITY_H
 
-#include "../global.hpp"
 #include <ginac/ginac.h>
+#include <assert.h>
 
 
 class SimpleFraction {

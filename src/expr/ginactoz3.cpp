@@ -17,7 +17,7 @@
 
 #include "ginactoz3.hpp"
 
-#include "../global.hpp"
+#include "../config.hpp"
 #include "../z3/z3context.hpp"
 
 using namespace std;

@@ -27,6 +27,7 @@
 #include "../../z3/z3solver.hpp"
 #include "../../z3/z3toolbox.hpp"
 #include "../../util/timeout.hpp"
+#include "../../util/proofoutput.hpp"
 
 #include <boost/integer/common_factor.hpp> // for lcm
 
@@ -397,7 +398,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // Proof output for linearization (since this is an addition to the paper)
     if (!meter.nonlinearSubs.empty()) {
-        proofout.append(stringstream() << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs);
+        ProofOutput::Proof.append(stringstream() << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs);
     }
 
     return result;
@@ -480,7 +481,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     instantiatedRule.applySubstitution(successfulSubs);
 
     // Proof output
-    proofout.append(stringstream() << "During metering: Instantiating temporary variables by " << successfulSubs);
+    ProofOutput::Proof.append(stringstream() << "During metering: Instantiating temporary variables by " << successfulSubs);
 
     return instantiatedRule;
 }

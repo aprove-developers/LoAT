@@ -18,8 +18,6 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-#include "../global.hpp"
-
 #include <ginac/ginac.h>
 #include <z3++.h>
 #include <string>
@@ -27,6 +25,7 @@
 
 #include "../util/exceptions.hpp"
 #include "complexity.hpp"
+#include "../util/option.hpp"
 
 
 class Z3Context;
@@ -95,7 +94,7 @@ public:
      * Returns true iff this expression is linear
      * (e.g. 1/2*x+y is linear, but x^2 or x*y are not considered linear)
      */
-    bool isLinear(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
+    bool isLinear(const option<ExprSymbolSet> &vars = option<ExprSymbolSet>()) const;
 
     /**
      * Returns true iff this expression is polynomial, e.g. 1/2 * y * x^2 + y^3.

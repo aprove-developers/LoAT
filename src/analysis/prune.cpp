@@ -17,9 +17,8 @@
 
 #include "prune.hpp"
 
-#include "../global.hpp"
 #include "../util/timeout.hpp"
-
+#include "../config.hpp"
 #include "../its/itsproblem.hpp"
 
 #include "../z3/z3toolbox.hpp"

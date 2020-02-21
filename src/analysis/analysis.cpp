@@ -32,7 +32,6 @@
 #include "../its/export.hpp"
 
 #include "../merging/rulemerger.hpp"
-#include "../util/proofutil.hpp"
 
 
 using namespace std;
@@ -54,21 +53,17 @@ Analysis::Analysis(ITSProblem &its)
 // ##############################
 
 RuntimeResult Analysis::run() {
-    setupDotOutput();
 
-    proofout.headline("Initial ITS");
-    printForProof("Initial");
+    ProofOutput::Proof.majorProofStep("Initial ITS", its);
 
-    proofout.headline("Preprocessing");
+    ProofOutput::Proof.headline("Preprocessing");
 
     if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
-        proofout.section("Ensure Cost >= 0");
-        printForProof("Costs >= 0");
+        ProofOutput::Proof.minorProofStep("Ensure Cost >= 0", its);
     }
 
     if (ensureProperInitialLocation()) {
-        proofout.section("Added a fresh start location without incoming rules");
-        printForProof("Fresh start");
+        ProofOutput::Proof.minorProofStep("Added a fresh start location without incoming rules", its);
     }
 
     RuntimeResult runtime; // defaults to unknown complexity
@@ -87,23 +82,19 @@ RuntimeResult Analysis::run() {
     if (Config::Analysis::Preprocessing) {
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.section("Removed unreachable rules and leafs");
-            printForProof("Removed unreachable");
+            ProofOutput::Proof.minorProofStep("Removed unreachable rules and leafs", its);
         }
 
         if (removeUnsatRules()) {
-            proofout.section("Removed rules with unsatisfiable guard");
-            printForProof("Removed unsat");
+            ProofOutput::Proof.minorProofStep("Removed rules with unsatisfiable guard", its);
         }
 
         if (Pruning::removeLeafsAndUnreachable(its)) {
-            proofout.section("Removed unreachable rules and leafs");
-            printForProof("Removed unreachable");
+            ProofOutput::Proof.minorProofStep("Removed unreachable rules and leafs", its);
         }
 
         if (preprocessRules()) {
-            proofout.section("Simplified rules");
-            printForProof("Simplify");
+            ProofOutput::Proof.minorProofStep("Simplified rules", its);
         }
 
     }
@@ -112,8 +103,6 @@ RuntimeResult Analysis::run() {
     if (its.isEmpty()) {
         goto done;
     }
-
-    proofout.headline("Finished Preprocessing");
 
     while (!isFullySimplified()) {
 
@@ -126,37 +115,32 @@ RuntimeResult Analysis::run() {
             // Special handling of nonlinear rules
             if (nonlinearProblem && Pruning::removeSinkRhss(its)) {
                 changed = true;
-                proofout.headline("Removed sinks");
-                printForProof("Removed sinks");
+                ProofOutput::Proof.majorProofStep("Removed sinks", its);
             }
             if (Timeout::soft()) break;
 
             if (accelerateSimpleLoops(acceleratedRules)) {
                 changed = true;
                 acceleratedOnce = true;
-                proofout.headline("Accelerated simple loops");
-                printForProof("Accelerate simple loops");
+                ProofOutput::Proof.majorProofStep("Accelerated simple loops", its);
             }
             if (Timeout::soft()) break;
 
             if (chainAcceleratedLoops(acceleratedRules)) {
                 changed = true;
-                proofout.headline("Chained accelerated rules with incoming rules");
-                printForProof("Chain accelerated rules");
+                ProofOutput::Proof.majorProofStep("Chained accelerated rules with incoming rules", its);
             }
             if (Timeout::soft()) break;
 
             if (Pruning::removeLeafsAndUnreachable(its)) {
                 changed = true;
-                proofout.headline("Removed unreachable locations and irrelevant leafs");
-                printForProof("Remove unreachable");
+                ProofOutput::Proof.majorProofStep("Removed unreachable locations and irrelevant leafs", its);
             }
             if (Timeout::soft()) break;
 
             if (chainLinearPaths()) {
                 changed = true;
-                proofout.headline("Eliminated locations on linear paths");
-                printForProof("Chain linear paths");
+                ProofOutput::Proof.majorProofStep("Eliminated locations on linear paths", its);
             }
             if (Timeout::soft()) break;
 
@@ -173,27 +157,23 @@ RuntimeResult Analysis::run() {
 
         // Try more involved chaining strategies if we no longer make progress
         if (chainTreePaths()) {
-            proofout.headline("Eliminated locations on tree-shaped paths");
-            printForProof("Chain tree paths");
+            ProofOutput::Proof.majorProofStep("Eliminated locations on tree-shaped paths", its);
 
         } else if (eliminateALocation(eliminatedLocation)) {
-            proofout.headline("Eliminated location " + eliminatedLocation);
-            printForProof("Eliminate location");
+            ProofOutput::Proof.majorProofStep("Eliminated location " + eliminatedLocation, its);
         }
         if (Timeout::soft() || isFullySimplified()) break;
 
         if (acceleratedOnce) {
 
             if (merging::RuleMerger::mergeRules(its)) {
-                proofout.headline("Merged rules");
-                printForProof("Merging");
+                ProofOutput::Proof.majorProofStep("Merged rules", its);
             }
 
             // Try to avoid rule explosion (often caused by chainTreePaths).
             // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
             if (pruneRules()) {
-                proofout.headline("Applied pruning (of leafs and parallel rules):");
-                printForProof("Prune");
+                ProofOutput::Proof.majorProofStep("Applied pruning (of leafs and parallel rules):", its);
             }
         }
 
@@ -207,8 +187,7 @@ RuntimeResult Analysis::run() {
     if (isFullySimplified()) {
         // Remove duplicate rules (ignoring updates) to avoid wasting time on asymptotic bounds
         if (Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false)) {
-            proofout.headline("Removed duplicate rules (ignoring updates)");
-            printForProof("Remove duplicates");
+            ProofOutput::Proof.majorProofStep("Removed duplicate rules (ignoring updates)", its);
         }
     }
 
@@ -217,14 +196,11 @@ RuntimeResult Analysis::run() {
         ITSExport::printKoAT(its, cout);
     }
 
-    proofout.section("Computing asymptotic complexity");
+    ProofOutput::Proof.headline("Computing asymptotic complexity");
 
     if (!isFullySimplified()) {
         // A timeout occurred before we managed to complete the analysis.
         // We try to quickly extract at least some complexity results.
-        proofout.warning("This is only a partial result (probably due to a timeout).");
-        proofout.append("Trying to find the maximal complexity that has already been derived.");
-
         // Reduce the number of rules to avoid z3 invocations
         removeConstantPathsAfterTimeout();
 
@@ -244,8 +220,6 @@ RuntimeResult Analysis::run() {
 
 done:
     printResult(runtime);
-    finalizeDotOutput(runtime);
-
     return runtime;
 }
 
@@ -331,23 +305,11 @@ bool Analysis::isFullySimplified() const {
 }
 
 
-void Analysis::printForProof(const std::string &dotDescription) {
-    // Proof output
-    std::stringstream s;
-    ITSExport::printForProof(its, s);
-    proofout.append(s);
-
-    if (dotStream.is_open()) {
-        LinearITSExport::printDotSubgraph(its, dotCounter++, dotDescription, dotStream);
-    }
-}
-
-
 void Analysis::printResult(const RuntimeResult &runtime) {
-    proofout.newline();
-    proofout.result("Proved the following lower bound");
+    ProofOutput::Proof.newline();
+    ProofOutput::Proof.result("Proved the following lower bound");
 
-    proofout.result(stringstream() << "Complexity:  " << runtime.cpx);
+    ProofOutput::Proof.result(stringstream() << "Complexity:  " << runtime.cpx);
     stringstream s;
     s << "Cpx degree: ";
     switch (runtime.cpx.getType()) {
@@ -362,42 +324,7 @@ void Analysis::printResult(const RuntimeResult &runtime) {
     s << endl;
     s << "Rule guard:  ";
     ITSExport::printGuard(runtime.guard, s);
-    proofout.result(s);
-}
-
-
-void Analysis::setupDotOutput() {
-    if (!Config::Output::DotFile) {
-        return;
-    }
-
-    if (!its.isLinear()) {
-        bool proofWasEnabled = proofout.setEnabled(true);
-        proofout.warning("Dot output is only applicable to non-recursive ITS problems, disabling.");
-        proofout.setEnabled(proofWasEnabled);
-        return;
-    }
-
-    string file = Config::Output::DotFile.get();
-    dotStream.open(file);
-
-    if (!dotStream.is_open()) {
-        bool proofWasEnabled = proofout.setEnabled(true);
-        proofout.warning("Could not open file " + file + " for dot output, disabling.");
-        proofout.setEnabled(proofWasEnabled);
-        return;
-    }
-
-    dotStream << "digraph {" << endl;
-}
-
-
-void Analysis::finalizeDotOutput(const RuntimeResult &runtime) {
-    if (dotStream.is_open()) {
-        LinearITSExport::printDotText(++dotCounter, runtime.cpx.toString(), dotStream);
-        dotStream << "}" << endl;
-        dotStream.close();
-    }
+    ProofOutput::Proof.result(s);
 }
 
 
@@ -463,10 +390,11 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         guard.push_back(rule.getCost() >= 1);
 
         if (Z3Toolbox::checkAll(guard) == z3::sat) {
-            proofout.result("The following rule witnesses the lower bound Omega(1):");
+            ProofOutput::Proof.newline();
+            ProofOutput::Proof.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;
             ITSExport::printLabeledRule(idx, its, s);
-            proofout.append(s);
+            ProofOutput::Proof.append(s);
 
             RuntimeResult res;
             res.guard = rule.getGuard();
@@ -478,26 +406,6 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
     }
 
     return {};
-}
-
-
-/**
- * Helper for getMaxRuntime that searches for the maximal cost.getComplexity().
- * Note that this does not involve the asymptotic bounds check and thus not give sound results!
- */
-static RuntimeResult getMaxComplexityApproximation(const ITSProblem &its, set<TransIdx> rules) {
-    RuntimeResult res;
-
-    for (TransIdx rule : rules) {
-        Complexity cpxRule = its.getRule(rule).getCost().getComplexity();
-        if (cpxRule > res.cpx) {
-            res.cpx = cpxRule;
-            res.guard = its.getRule(rule).getGuard();
-            res.cost = its.getRule(rule).getCost();
-        }
-    }
-
-    return res;
 }
 
 
@@ -554,18 +462,17 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
             continue;
         }
 
-        proofout.newline();
-        proofout.headline(stringstream() << "Computing asymptotic complexity for rule " << ruleIdx);
+        ProofOutput::Proof.section(stringstream() << "Computing asymptotic complexity for rule " << ruleIdx);
 
         // Simplify guard to speed up asymptotic check
         bool simplified = false;
         simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
         simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
         if (simplified) {
-            proofout.append("Simplified the guard:");
+            ProofOutput::Proof.append("Simplified the guard:");
             stringstream s;
             ITSExport::printLabeledRule(ruleIdx, its, s);
-            proofout.append(s);
+            ProofOutput::Proof.append(s);
         }
         if (Timeout::hard()) break;
 
@@ -596,11 +503,10 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
                     res.cpx);
         }
 
-        proofout.append(stringstream() << "Resulting cost " << checkRes.get().solvedCost << " has complexity: " << checkRes.get().cpx);
-
         if (checkRes.get().cpx > res.cpx) {
-            proofout.newline();
-            proofout.result(stringstream() << "Found new complexity " << checkRes.get().cpx << ".");
+            ProofOutput::Proof.newline();
+            ProofOutput::Proof.result(stringstream() << "Proved lower bound " << checkRes.get().cpx << ".");
+            ProofOutput::Proof.storeSubProof(checkRes.get().proof, "limit calculus");
 
             res.cpx = checkRes.get().cpx;
             res.solvedCost = checkRes.get().solvedCost;
@@ -622,15 +528,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
 
 RuntimeResult Analysis::getMaxRuntime() {
     auto rules = its.getTransitionsFrom(its.getInitialLocation());
-
-    if (!Config::Analysis::AsymptoticCheck) {
-        proofout.warning("WARNING: The asymptotic check is disabled, the result might be unsound!");
-        return getMaxComplexityApproximation(its, rules);
-    }
-
-    RuntimeResult res = getMaxRuntimeOf(rules, RuntimeResult());
-
-    return res;
+    return getMaxRuntimeOf(rules, RuntimeResult());
 }
 
 
@@ -705,11 +603,11 @@ RuntimeResult Analysis::getMaxPartialResult() {
                 its.removeRule(first);
             }
         }
-        proofout.headline("Performed chaining from the start location:");
+        ProofOutput::Proof.headline("Performed chaining from the start location:");
     }
 
 abort:
-    proofout.append("Aborting due to timeout");
+    ProofOutput::Proof.append("Aborting due to timeout");
 done:
     return res;
 }

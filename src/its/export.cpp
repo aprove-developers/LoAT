@@ -1,4 +1,5 @@
 #include "export.hpp"
+#include "../config.hpp"
 
 using namespace std;
 namespace Color = Config::Color;
@@ -244,47 +245,6 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
 }
 
 
-
-void LinearITSExport::printDotSubgraph(const ITSProblem &its, uint step, const std::string &desc, std::ostream &s) {
-    assert(its.isLinear());
-    auto printNode = [&](LocationIdx n) { s << "node_" << step << "_" << n; };
-
-    s << "subgraph cluster_" << step << " {" << endl;
-    s << "sortv=" << step << ";" << endl;
-    s << "label=\"" << step << ": " << desc << "\";" << endl;
-    for (LocationIdx n : its.getLocations()) {
-        printNode(n); s << " [label=\""; printLocation(n, its, s, false); s << "\"];" << endl;
-    }
-    for (LocationIdx n : its.getLocations()) {
-        for (LocationIdx succ : its.getSuccessorLocations(n)) {
-            printNode(n); s << " -> "; printNode(succ); s << " [label=\"";
-            for (TransIdx trans : its.getTransitionsFromTo(n,succ)) {
-                const LinearRule rule = its.getLinearRule(trans);
-                for (auto upit : rule.getUpdate()) {
-                    s << its.getVarName(upit.first) << "=" << upit.second << ", ";
-                }
-                s << "[";
-                for (unsigned int i=0; i < rule.getGuard().size(); ++i) {
-                    if (i > 0) s << ", ";
-                    s << rule.getGuard().at(i);
-                }
-                s << "], ";
-                s << rule.getCost().expand(); //simplify for readability
-                s << "\\l";
-            }
-            s << "\"];" << endl;
-        }
-    }
-    s << "}" << endl;
-}
-
-void LinearITSExport::printDotText(uint step, const std::string &txt, std::ostream &s) {
-    s << "subgraph cluster_" << step << " {" << endl;
-    s << "sortv=" << step << ";" << endl;
-    s << "label=\"" << step << ": " << "Result" << "\";" << endl;
-    s << "node_" << step << "_result [label=\"" << txt << "\"];" << endl;
-    s << "}" << endl;
-}
 
 void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
     assert(its.isLinear());

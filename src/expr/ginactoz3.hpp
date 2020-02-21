@@ -18,7 +18,6 @@
 #ifndef GINACTOZ3_H
 #define GINACTOZ3_H
 
-#include "../global.hpp"
 #include "../util/exceptions.hpp"
 #include "../z3/z3context.hpp"
 

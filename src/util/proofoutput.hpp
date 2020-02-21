@@ -31,9 +31,8 @@
 #include <boost/filesystem.hpp>
 
 #include "../config.hpp"
+#include "../its/itsproblem.hpp"
 
-// Stores a StreambufIndenter instance to control indention of the stream.
-// Also allows colored output with ANSI escape codes.
 class ProofOutput {
 public:
     enum Style {
@@ -44,121 +43,58 @@ public:
         None
     };
 
-    bool setEnabled(bool on) {
-        bool res = enabled;
-        enabled = on;
-        return res;
-    }
+    static ProofOutput Proof;
 
-    void concat(const ProofOutput &that) {
-        proof.insert(proof.end(), that.proof.begin(), that.proof.end());
-    }
+    bool setEnabled(bool on);
 
-    void append(const std::string &s) {
-        append(Style::None, s);
-    }
+    void append(const std::string &s);
 
-    void append(const std::ostream &s) {
-        std::stringstream str;
-        str << s.rdbuf();
-        append(str.str());
-    }
+    void append(const std::ostream &s);
 
-    void append(const Style &style, std::string s) {
-        if (enabled) {
-            std::vector<std::string> lines;
-            boost::split(lines, s, boost::is_any_of("\n"));
-            for (const std::string &l: lines) {
-                proof.push_back({style, l});
-            }
-        }
-    }
+    void append(const Style &style, std::string s);
 
-    void newline() {
-        append(std::stringstream());
-    }
+    void newline();
 
-    void headline(const std::string &s) {
-        newline();
-        append(Headline, s);
-    }
+    void headline(const std::string &s);
 
-    // print given string in headline style with spacing
-    void headline(const std::ostream &s) {
-        std::stringstream str;
-        str << s.rdbuf();
-        headline(str.str());
-    }
+    void headline(const std::ostream &s);
 
-    void section(const std::string &s) {
-        newline();
-        append(Section, s);
-    }
+    void section(const std::string &s);
 
-    // print given string in section style with spacing
-    void section(const std::ostream &s) {
-        std::stringstream str;
-        str << s.rdbuf();
-        section(str.str());
-    }
+    void section(const std::ostream &s);
 
-    void result(const std::string &s) {
-        append(Result, s);
-    }
+    void result(const std::string &s);
 
-    // print given string in section style with spacing
-    void result(const std::ostream &s) {
-        std::stringstream str;
-        str << s.rdbuf();
-        result(str.str());
-    }
+    void result(const std::ostream &s);
 
-    void warning(const std::string &s) {
-        newline();
-        append(Warning, s);
-        newline();
-    }
+    void print() const;
 
-    // print given string in warning style with spacing
-    void warning(const std::ostream &s) {
-        std::stringstream str;
-        str << s.rdbuf();
-        warning(str.str());
-    }
+    void ruleTransformationProof(const Rule &oldRule, const std::string &transformation, const Rule &newRule, const ITSProblem &its);
 
-    void print() {
-        for (const auto &l: proof) {
-            if (Config::Output::Colors) {
-                switch (l.first) {
-                case None: std::cout << Config::Color::None;
-                    break;
-                case Result: std::cout << Config::Color::Result;
-                    break;
-                case Section: std::cout << Config::Color::Section;
-                    break;
-                case Warning: std::cout << Config::Color::Warning;
-                    break;
-                case Headline: std::cout << Config::Color::Headline;
-                    break;
-                }
-            }
-            std::cout << l.second << std::endl;
-        }
-    }
+    void majorProofStep(const std::string &step, const ITSProblem &its);
 
-    void writeToFile(const boost::filesystem::path &file) const {
-        boost::filesystem::ofstream myfile;
-        myfile.open(file);
-        for (const auto &l: proof) {
-            myfile << l.second << std::endl;
-        }
-        myfile.close();
-    }
+    void minorProofStep(const std::string &step, const ITSProblem &its);
+
+    void deletionProof(const std::set<TransIdx> &rules);
+
+    void deletionProof(const Rule &rule, const ITSProblem &its);
+
+    void storeSubProof(const ProofOutput &subProof, const std::string &technique);
+
+    void chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule, const ITSProblem &its);
+
+    void concat(const ProofOutput &that);
 
 private:
 
+    static bool enabled;
+
     std::vector<std::pair<Style, std::string>> proof;
-    bool enabled = true;
+
+    boost::filesystem::path getProofFile() const;
+
+    void writeToFile(const boost::filesystem::path &file) const;
+
 };
 
 #endif // PROOFOUTPUT_H

@@ -19,6 +19,7 @@
 
 #include "../../expr/relation.hpp"
 #include "metertools.hpp"
+#include "../../config.hpp"
 
 using namespace std;
 

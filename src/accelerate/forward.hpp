@@ -18,14 +18,12 @@
 #ifndef FORWARD_H
 #define FORWARD_H
 
-#include "../global.hpp"
-
 #include "../its/types.hpp"
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
 #include "../util/result.hpp"
-
+#include "../util/proofoutput.hpp"
 #include "../util/option.hpp"
 
 /**
