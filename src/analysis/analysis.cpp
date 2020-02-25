@@ -53,8 +53,6 @@ RuntimeResult Analysis::run() {
 
     ProofOutput::Proof.majorProofStep("Initial ITS", its);
 
-    ProofOutput::Proof.headline("Preprocessing");
-
     if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
         ProofOutput::Proof.minorProofStep("Ensure Cost >= 0", its);
     }

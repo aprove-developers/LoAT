@@ -21,8 +21,9 @@ bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs) {
     return s->check() == Smt::Unsat;
 }
 
-option<ExprSymbolMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<BoolExpr> soft) {
+option<ExprSymbolMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout) {
     std::unique_ptr<Smt> s = SmtFactory::solver();
+    s->setTimeout(timeout);
     s->add(hard);
     if (s->check() != Sat) {
         return {};

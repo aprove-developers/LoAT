@@ -43,9 +43,7 @@ namespace strengthening {
             templates(templates) { }
 
     const option<Invariants> Self::solve() const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
-        solver->setTimeout(Config::Z3::StrengtheningTimeout);
-        const option<ExprSymbolMap<GiNaC::numeric>> &model = solver->maxSmt(constraints.hard, constraints.soft);
+        const option<ExprSymbolMap<GiNaC::numeric>> &model = Smt::maxSmt(constraints.hard, constraints.soft, Config::Z3::StrengtheningTimeout);
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
             if (!newInvariants.empty()) {
