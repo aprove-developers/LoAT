@@ -19,7 +19,7 @@
 #define GINACTOZ3_H
 
 #include "../util/exceptions.hpp"
-#include "../z3/z3context.hpp"
+#include "../smt/z3context.hpp"
 #include "../its/itsproblem.hpp"
 
 #include <ginac/ginac.h>

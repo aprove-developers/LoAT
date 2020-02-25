@@ -110,8 +110,8 @@ add_executable(${EXECUTABLE}
         src/util/timeout.cpp
         src/util/timeout.hpp
         src/util/result.hpp
-        src/z3/z3context.cpp
-        src/z3/z3context.hpp
+        src/smt/z3context.cpp
+        src/smt/z3context.hpp
         src/config.cpp
         src/config.hpp
         src/main.cpp

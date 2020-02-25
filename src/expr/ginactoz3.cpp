@@ -18,7 +18,7 @@
 #include "ginactoz3.hpp"
 
 #include "../config.hpp"
-#include "../z3/z3context.hpp"
+#include "../smt/z3context.hpp"
 
 using namespace std;
 using namespace GiNaC;
