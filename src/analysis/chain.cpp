@@ -31,8 +31,8 @@ using namespace std;
 /**
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
-static bool checkSatisfiability(const GuardList &newGuard) {
-    auto smtRes = Smt::check(buildAnd(newGuard));
+static bool checkSatisfiability(const GuardList &newGuard, const VariableManager &varMan) {
+    auto smtRes = Smt::check(buildAnd(newGuard), varMan);
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
@@ -72,7 +72,7 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
 
     if (Config::Chain::CheckSat) {
         // Avoid chaining if the resulting rule can never be taken
-        if (checkSat && !checkSatisfiability(newGuard)) {
+        if (checkSat && !checkSatisfiability(newGuard, varMan)) {
             return {};
         }
     }

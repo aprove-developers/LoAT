@@ -28,19 +28,19 @@
 namespace nonterm {
 
     option<std::pair<Rule, Status>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0))) {
+        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
-            if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)))) {
+            if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
                 return {{Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {}), Success}};
             }
         }
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const GiNaC::exmap &up = chained.getUpdate(0).toSubstitution(its);
-            if (Smt::check(buildAnd(chained.getGuard())) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)))) {
+            if (Smt::check(buildAnd(chained.getGuard()), its) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
                 return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
         }
@@ -48,10 +48,10 @@ namespace nonterm {
     }
 
     option<std::pair<Rule, Status>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0))) {
+        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(its);
         for (const Expression &e: r.getGuard()) {
             solver->add(e);
         }

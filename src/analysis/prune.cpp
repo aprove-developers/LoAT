@@ -105,7 +105,7 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
     bool changed = false;
 
     for (TransIdx rule : trans) {
-        if (Smt::check(buildAnd(its.getRule(rule).getGuard())) == Smt::Unsat) {
+        if (Smt::check(buildAnd(its.getRule(rule).getGuard()), its) == Smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }

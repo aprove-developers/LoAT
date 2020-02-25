@@ -24,14 +24,15 @@ namespace strengthening {
 
     typedef GuardContextBuilder Self;
 
-    const GuardContext Self::build(const GuardList &guard, const std::vector<GiNaC::exmap> &updates) {
-        return GuardContextBuilder(guard, updates).build();
+    const GuardContext Self::build(const GuardList &guard, const std::vector<GiNaC::exmap> &updates, const VariableManager &varMan) {
+        return GuardContextBuilder(guard, updates, varMan).build();
     }
 
     Self::GuardContextBuilder(
             const GuardList &guard,
-            const std::vector<GiNaC::exmap> &updates
-    ): guard(guard), updates(updates) { }
+            const std::vector<GiNaC::exmap> &updates,
+            const VariableManager &varMan
+    ): guard(guard), updates(updates), varMan(varMan) { }
 
     const GuardList Self::computeConstraints() const {
         GuardList constraints;
@@ -47,7 +48,7 @@ namespace strengthening {
     }
 
     const Result Self::splitInvariants(const GuardList &constraints) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
         for (const Expression &g: guard) {
             solver->add(g);
         }

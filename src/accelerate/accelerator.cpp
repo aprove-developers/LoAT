@@ -263,7 +263,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
         res.proof.ruleTransformationProof(rule, "unrolling", optR.get(), its);
     }
     LinearRule r = optR ? optR.get() : rule;
-    bool sat = Smt::check(buildAnd(r.getGuard())) == Smt::Sat;
+    bool sat = Smt::check(buildAnd(r.getGuard()), its) == Smt::Sat;
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
@@ -290,7 +290,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
             if (!strengthened.empty()) {
                 for (const LinearRule &sr: strengthened) {
-                    bool sat = Smt::check(buildAnd(sr.getGuard())) == Smt::Sat;
+                    bool sat = Smt::check(buildAnd(sr.getGuard()), its) == Smt::Sat;
                     // only proceed if the guard is sat
                     if (sat) {
                         assert(nonterm::NonTerm::universal(sr, its, sinkLoc));

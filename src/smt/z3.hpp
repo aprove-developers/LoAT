@@ -7,7 +7,7 @@
 class Z3 : public Smt {
 
 public:
-    Z3();
+    Z3(const VariableManager &varMan);
 
     void add(const BoolExpr &e) override;
     void push() override;
@@ -22,6 +22,7 @@ public:
 private:
     option<unsigned int> timeout = {};
     Z3Context ctx;
+    const VariableManager &varMan;
     z3::solver solver;
 
     z3::expr convert(const BoolExpr &e);

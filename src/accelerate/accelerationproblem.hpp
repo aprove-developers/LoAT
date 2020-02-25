@@ -22,6 +22,7 @@ struct AccelerationProblem {
     bool equivalent = true;
     bool nonterm = true;
     ProofOutput proof;
+    const VariableManager varMan;
 
     AccelerationProblem(
             const GuardList &res,
@@ -30,7 +31,8 @@ struct AccelerationProblem {
             const GiNaC::exmap &up,
             const option<GiNaC::exmap> &closed,
             const Expression &cost,
-            const ExprSymbol &n): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n) {
+            const ExprSymbol &n,
+            const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), varMan(varMan) {
         this->res.push_back(n > 0);
     }
 
@@ -48,7 +50,7 @@ struct AccelerationProblem {
         } else {
             closedSubs = {};
         }
-        AccelerationProblem res({}, {}, normalize(guard), up, closedSubs, cost, n);
+        AccelerationProblem res({}, {}, normalize(guard), up, closedSubs, cost, n, varMan);
         while (res.recurrence());
         return res;
     }
@@ -70,7 +72,7 @@ struct AccelerationProblem {
         if (!closed) {
             return false;
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
         for (const Expression &e: done) {
             solver->add(e);
         }
@@ -98,7 +100,7 @@ struct AccelerationProblem {
     }
 
     bool recurrence() {
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
         for (const Expression &e: done) {
             solver->add(e);
         }
@@ -128,7 +130,7 @@ struct AccelerationProblem {
         if (!closed) {
             return false;
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
         for (const Expression &e: done) {
             solver->add(e);
         }
@@ -186,7 +188,7 @@ struct AccelerationProblem {
     }
 
     bool eventualWeakIncrease() {
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
         for (const Expression &e: done) {
             solver->add(e);
         }

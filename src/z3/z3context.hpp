@@ -35,8 +35,6 @@
  * but these symbols cannot be looked up later (as they are not associated to any GiNaC symbol).
  */
 class Z3Context : public z3::context {
-public:
-    enum VariableType { Integer, Real };
 
 public:
     /**
@@ -51,26 +49,26 @@ public:
      * @note This method must not be called twice for the same GiNaC symbol
      * (i.e., each GiNaC symbol can only be associated to a single z3 variable).
      */
-    z3::expr addNewVariable(const ExprSymbol &symbol, VariableType type = Integer);
+    z3::expr addNewVariable(const ExprSymbol &symbol, Expression::Type type = Expression::Int);
 
     /**
      * Adds a new z3 variable (with the given name, if possible, otherwise a number is appended).
      * The new variable is not associated to any GiNaC symbol, hence lookup via getVariable is not possible!
      * This is provided for convenience, one could also use addNewVariable with a newly created GiNaC symbol.
      */
-    z3::expr addFreshVariable(const std::string &basename, VariableType type = Integer);
+    z3::expr addFreshVariable(const std::string &basename, Expression::Type type = Expression::Int);
 
     /**
      * Static wrapper around z3::expr::sort that checks if the given symbol is of the given type.
      * @note symbol must be a z3::symbol, not an arbitrary z3::expr!
      */
-    static bool isVariableOfType(const z3::expr &symbol, VariableType type);
+    static bool isVariableOfType(const z3::expr &symbol, Expression::Type type);
 
     ExprSymbolMap<z3::expr> getSymbolMap() const;
 
 private:
     // Generates a z3 variable of the given type with a fresh name based on the given name
-    z3::expr generateFreshVar(const std::string &basename, VariableType type);
+    z3::expr generateFreshVar(const std::string &basename, Expression::Type type);
 
 private:
     // Maps GiNaC symbols to their associated z3 symbols/variables.
@@ -87,7 +85,7 @@ private:
 /**
  * For debugging
  */
-std::ostream& operator<<(std::ostream &s, const Z3Context::VariableType &type);
+std::ostream& operator<<(std::ostream &s, const Expression::Type &type);
 
 
 #endif // Z3CONTEXT_H

@@ -7,7 +7,7 @@ std::ostream& Z3::print(std::ostream& os) const {
 
 Z3::~Z3() {}
 
-Z3::Z3(): solver(z3::solver(ctx)) {}
+Z3::Z3(const VariableManager &varMan): varMan(varMan), solver(z3::solver(ctx)) {}
 
 void Z3::add(const BoolExpr &e) {
     solver.add(convert(e));
@@ -51,7 +51,7 @@ void Z3::setTimeout(unsigned int timeout) {
 
 z3::expr Z3::convert(const BoolExpr &e) {
     if (e->getLit()) {
-        return GinacToZ3::convert(e->getLit().get(), ctx);
+        return GinacToZ3::convert(e->getLit().get(), ctx, varMan);
     }
     z3::expr res = ctx.bool_val(e->isAnd());
     bool first = true;

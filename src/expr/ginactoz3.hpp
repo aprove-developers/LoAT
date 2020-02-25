@@ -20,6 +20,7 @@
 
 #include "../util/exceptions.hpp"
 #include "../z3/z3context.hpp"
+#include "../its/itsproblem.hpp"
 
 #include <ginac/ginac.h>
 #include <z3++.h>
@@ -39,10 +40,10 @@ public:
      * Variables already present in the Z3Context are re-used (even if they are integer variables).
      * If false, all newly created variables and constants are integers, except for real constants like 1/2.
      */
-    static z3::expr convert(const GiNaC::ex &expr, Z3Context &context);
+    static z3::expr convert(const GiNaC::ex &expr, Z3Context &context, const VariableManager &varMan);
 
 private:
-    GinacToZ3(Z3Context &context);
+    GinacToZ3(Z3Context &context, const VariableManager &varMan);
 
     z3::expr convert_ex(const GiNaC::ex &e);
     z3::expr convert_add(const GiNaC::ex &e);
@@ -52,11 +53,9 @@ private:
     z3::expr convert_symbol(const GiNaC::symbol &sym);
     z3::expr convert_relational(const GiNaC::ex &e);
 
-    // returns the variable type for fresh variables according to settings
-    Z3Context::VariableType variableType() const;
-
 private:
     Z3Context &context;
+    const VariableManager &varMan;
 };
 
 #endif // GINACTOZ3_H

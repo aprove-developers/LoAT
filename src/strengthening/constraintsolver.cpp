@@ -43,7 +43,7 @@ namespace strengthening {
             templates(templates) { }
 
     const option<Invariants> Self::solve() const {
-        const option<ExprSymbolMap<GiNaC::numeric>> &model = Smt::maxSmt(constraints.hard, constraints.soft, Config::Z3::StrengtheningTimeout);
+        const option<ExprSymbolMap<GiNaC::numeric>> &model = Smt::maxSmt(constraints.hard, constraints.soft, Config::Z3::StrengtheningTimeout, ruleCtx.varMan);
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
             if (!newInvariants.empty()) {
@@ -54,7 +54,7 @@ namespace strengthening {
     }
 
     const GuardList Self::instantiateTemplates(const ExprSymbolMap<GiNaC::numeric> &model) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(ruleCtx.varMan);
         GuardList res;
         UpdateMap parameterInstantiation;
         for (const ExprSymbol &p: templates.params()) {
@@ -79,7 +79,7 @@ namespace strengthening {
     }
 
     const option<Invariants> Self::splitInitiallyValid(const GuardList &invariants) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        std::unique_ptr<Smt> solver = SmtFactory::solver(ruleCtx.varMan);
         Invariants res;
         BoolExpr preconditionVec = False;
         for (const GuardList &pre: ruleCtx.preconditions) {

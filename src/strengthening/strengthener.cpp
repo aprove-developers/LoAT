@@ -50,7 +50,7 @@ namespace strengthening {
 
     const std::vector<GuardList> Strengthener::apply(const GuardList &guard) const {
         std::vector<GuardList> res;
-        const option<GuardContext> &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates);
+        const option<GuardContext> &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates, ruleCtx.varMan);
         if (!guardCtx) {
             return res;
         }

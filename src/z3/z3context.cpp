@@ -30,7 +30,7 @@ option<z3::expr> Z3Context::getVariable(const ExprSymbol &symbol) const {
     return {};
 }
 
-z3::expr Z3Context::addNewVariable(const ExprSymbol &symbol, Z3Context::VariableType type) {
+z3::expr Z3Context::addNewVariable(const ExprSymbol &symbol, Expression::Type type) {
     // This symbol must not have been mapped to a z3 variable before (can be checked via getVariable)
     assert(symbolMap.count(symbol) == 0);
 
@@ -40,12 +40,12 @@ z3::expr Z3Context::addNewVariable(const ExprSymbol &symbol, Z3Context::Variable
     return res;
 }
 
-z3::expr Z3Context::addFreshVariable(const std::string &basename, Z3Context::VariableType type) {
+z3::expr Z3Context::addFreshVariable(const std::string &basename, Expression::Type type) {
     // Generate a fresh variable, but do not associate it to anything
     return generateFreshVar(basename, type);
 }
 
-z3::expr Z3Context::generateFreshVar(const std::string &basename, Z3Context::VariableType type) {
+z3::expr Z3Context::generateFreshVar(const std::string &basename, Expression::Type type) {
     string newname = basename;
 
     while (usedNames.find(newname) != usedNames.end()) {
@@ -54,18 +54,18 @@ z3::expr Z3Context::generateFreshVar(const std::string &basename, Z3Context::Var
     }
 
     usedNames.emplace(newname, 1); // newname is now used once
-    return (type == Integer) ? int_const(newname.c_str()) : real_const(newname.c_str());
+    return (type == Expression::Int) ? int_const(newname.c_str()) : real_const(newname.c_str());
 }
 
-bool Z3Context::isVariableOfType(const z3::expr &symbol, VariableType type) {
+bool Z3Context::isVariableOfType(const z3::expr &symbol, Expression::Type type) {
     const z3::sort sort = symbol.get_sort();
-    return ((type == Integer && sort.is_int()) || (type == Real && sort.is_real()));
+    return ((type == Expression::Int && sort.is_int()) || (type == Expression::Real && sort.is_real()));
 }
 
-std::ostream& operator<<(std::ostream &s, const Z3Context::VariableType &type) {
+std::ostream& operator<<(std::ostream &s, const Expression::Type &type) {
     switch (type) {
-        case Z3Context::Real: s << "Real"; break;
-        case Z3Context::Integer: s << "Integer"; break;
+        case Expression::Real: s << "Real"; break;
+        case Expression::Int: s << "Integer"; break;
     }
     return s;
 }

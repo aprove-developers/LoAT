@@ -61,7 +61,7 @@ namespace Preprocess
      *
      * @return true iff the given guard was modified (some constraints were removed)
      */
-    bool simplifyGuardBySmt(GuardList &guard);
+    bool simplifyGuardBySmt(GuardList &guard, const VariableManager &varMan);
 
     /**
      * Removes trivial updates of the form x <- x.

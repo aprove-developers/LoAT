@@ -7,7 +7,7 @@ class SmtFactory {
 
 public:
 
-    static std::unique_ptr<Smt> solver();
+    static std::unique_ptr<Smt> solver(const VariableManager &varMan);
 
 };
 

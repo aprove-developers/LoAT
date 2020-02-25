@@ -37,7 +37,7 @@ bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
 
     // Simplify with smt only once
     result |= simplifyGuard(rule.getGuardMut());
-    result |= simplifyGuardBySmt(rule.getGuardMut());
+    result |= simplifyGuardBySmt(rule.getGuardMut(), varMan);
 
     // The other steps are repeated (might not help very often, but is probably cheap enough)
     do {
@@ -110,9 +110,9 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
 }
 
 
-bool Preprocess::simplifyGuardBySmt(GuardList &guard) {
+bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &varMan) {
     GuardList newGuard;
-    unique_ptr<Smt> solver = SmtFactory::solver();
+    unique_ptr<Smt> solver = SmtFactory::solver(varMan);
 
     // iterates once over guard and drops constraints that are implied by previous constraints
     auto dropImplied = [&]() {

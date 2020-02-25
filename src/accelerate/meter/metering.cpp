@@ -346,7 +346,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     meter.buildLinearConstraints();
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    std::unique_ptr<Smt> solver = SmtFactory::solver();
+    std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
     solver->setTimeout(Config::Z3::MeterTimeout);
     solver->add(meter.genNotGuardImplication());
     solver->add(meter.genUpdateImplications());
@@ -429,7 +429,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    std::unique_ptr<Smt> solver = SmtFactory::solver();
+    std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
     solver->setTimeout(Config::Z3::MeterTimeout);
     Smt::Result smtRes = Smt::Unsat; // this method should only be called if generate() fails
 

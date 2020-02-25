@@ -95,3 +95,11 @@ string VariableManager::getFreshName(string basename) const {
 size_t VariableManager::getVariableCount() const {
     return variables.size();
 }
+
+Expression::Type VariableManager::getType(const ExprSymbol &x) const {
+    if (variableNameLookup.find(x.get_name()) == variableNameLookup.end()) {
+        return untrackedVariables.at(x);
+    } else {
+        return Expression::Int;
+    }
+}

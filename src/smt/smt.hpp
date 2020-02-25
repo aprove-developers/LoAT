@@ -21,9 +21,9 @@ public:
     virtual std::ostream& print(std::ostream& os) const = 0;
     virtual ~Smt();
 
-    static option<ExprSymbolMap<GiNaC::numeric>> maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout);
-    static Smt::Result check(const BoolExpr &e);
-    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs);
+    static option<ExprSymbolMap<GiNaC::numeric>> maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan);
+    static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
+    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
 
 };
 

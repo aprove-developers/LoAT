@@ -31,7 +31,7 @@ private:
 
     void initLimitVectors();
     void normalizeGuard();
-    void createInitialLimitProblem();
+    void createInitialLimitProblem(const VariableManager &varMan);
     void propagateBounds();
     GiNaC::exmap calcSolution(const LimitProblem &limitProblem);
     int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);

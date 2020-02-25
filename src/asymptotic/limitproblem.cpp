@@ -8,13 +8,13 @@
 
 using namespace GiNaC;
 
-LimitProblem::LimitProblem()
-    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
+LimitProblem::LimitProblem(const VariableManager &varMan)
+    : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
-    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
+LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost, const VariableManager &varMan)
+    : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
         assert(Relation::isGreaterThanZero(ex));
 
@@ -29,8 +29,8 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard)
-    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
+LimitProblem::LimitProblem(const GuardList &normalizedGuard, const VariableManager &varMan)
+    : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
         assert(Relation::isGreaterThanZero(ex));
         addExpression(InftyExpression(ex.lhs(), POS));
@@ -46,6 +46,7 @@ LimitProblem::LimitProblem(const LimitProblem &other)
       variableN(other.variableN),
       substitutions(other.substitutions),
       unsolvable(other.unsolvable),
+      varMan(other.varMan),
       log(new std::ostringstream()) {
     (*log) << other.log->str();
 }
@@ -69,6 +70,7 @@ LimitProblem::LimitProblem(LimitProblem &&other)
       variableN(other.variableN),
       substitutions(std::move(other.substitutions)),
       unsolvable(other.unsolvable),
+      varMan(other.varMan),
       log(std::move(other.log)) {
 }
 
@@ -402,7 +404,7 @@ std::vector<Expression> LimitProblem::getQuery() const {
 
 
 bool LimitProblem::isUnsat() const {
-    return Smt::check(buildAnd(getQuery())) == Smt::Unsat;
+    return Smt::check(buildAnd(getQuery()), varMan) == Smt::Unsat;
 }
 
 

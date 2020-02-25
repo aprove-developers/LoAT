@@ -23,7 +23,7 @@ using namespace std;
 AsymptoticBound::AsymptoticBound(VarMan &varMan, GuardList guard,
                                  Expression cost, bool finalCheck)
     : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck),
-      addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
+      addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize), currentLP(varMan) {
     assert(GuardToolbox::isWellformedGuard(guard));
 }
 
@@ -77,8 +77,8 @@ void AsymptoticBound::normalizeGuard() {
 
 }
 
-void AsymptoticBound::createInitialLimitProblem() {
-    currentLP = LimitProblem(normalizedGuard, cost);
+void AsymptoticBound::createInitialLimitProblem(const VariableManager &varMan) {
+    currentLP = LimitProblem(normalizedGuard, cost, varMan);
 }
 
 void AsymptoticBound::propagateBounds() {
@@ -324,7 +324,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
-        auto result = Smt::check(buildAnd(limitProblems[i].getQuery()));
+        auto result = Smt::check(buildAnd(limitProblems[i].getQuery()), varMan);
 
         if (result == Smt::Unsat) {
             limitProblems.erase(limitProblems.begin() + i);
@@ -787,7 +787,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
         Direction dir = it->getDirection();
 
         if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-            std::unique_ptr<Smt> solver = SmtFactory::solver();
+            std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
             solver->add(buildAnd(currentLP.getQuery()));
             Smt::Result result = solver->check();
 
@@ -884,7 +884,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto smtRes = Smt::check(buildAnd(guard));
+        auto smtRes = Smt::check(buildAnd(guard), varMan);
         if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("Guard is satisfiable, yielding nontermination");
@@ -903,7 +903,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
-    asymptoticBound.createInitialLimitProblem();
+    asymptoticBound.createInitialLimitProblem(varMan);
     // first try the SMT encoding
     bool polynomial = cost.isPolynomial() && asymptoticBound.currentLP.isPolynomial();
     bool result = polynomial && asymptoticBound.solveViaSMT(currentRes);
@@ -950,7 +950,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     Expression expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto smtRes = Smt::check(buildAnd(guard));
+        auto smtRes = Smt::check(buildAnd(guard), varMan);
         if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("proved non-termination via SMT");
@@ -966,7 +966,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
-    asymptoticBound.createInitialLimitProblem();
+    asymptoticBound.createInitialLimitProblem(varMan);
     bool success = asymptoticBound.solveViaSMT(currentRes);
     if (success) {
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);

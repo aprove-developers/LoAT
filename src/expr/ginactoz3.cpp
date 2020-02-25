@@ -24,12 +24,12 @@ using namespace std;
 using namespace GiNaC;
 
 
-GinacToZ3::GinacToZ3(Z3Context &context)
-        : context(context)
+GinacToZ3::GinacToZ3(Z3Context &context, const VariableManager &varMan)
+        : context(context), varMan(varMan)
 {}
 
-z3::expr GinacToZ3::convert(const GiNaC::ex &expr, Z3Context &context) {
-    GinacToZ3 converter(context);
+z3::expr GinacToZ3::convert(const GiNaC::ex &expr, Z3Context &context, const VariableManager &varMan) {
+    GinacToZ3 converter(context, varMan);
     z3::expr res = converter.convert_ex(expr);
     return res;
 }
@@ -129,7 +129,7 @@ z3::expr GinacToZ3::convert_symbol(const GiNaC::symbol &e) {
     }
 
     // otherwise we add a fresh z3 variable and associate it with this symbol
-    return context.addNewVariable(e, variableType());
+    return context.addNewVariable(e, varMan.getType(e));
 }
 
 z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {
@@ -146,8 +146,4 @@ z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {
     if (e.info(info_flags::relation_greater_or_equal)) return a >= b;
 
     assert(false && "unreachable");
-}
-
-Z3Context::VariableType GinacToZ3::variableType() const {
-    return Z3Context::Integer;
 }

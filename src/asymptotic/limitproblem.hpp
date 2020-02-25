@@ -19,7 +19,7 @@ public:
     /**
      * Creates a new, empty LimitProblem.
      */
-    LimitProblem();
+    LimitProblem(const VariableManager &varMan);
 
     /**
      * Creates the initial LimitProblem for the given guard and cost.
@@ -27,12 +27,12 @@ public:
      *                        of the form t > 0
      * @param cost a term
      */
-    LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
+    LimitProblem(const GuardList &normalizedGuard, const Expression &cost, const VariableManager &varMan);
 
     /**
      * Creates the initial LimitProblem without any cost term.
      */
-    LimitProblem(const GuardList &normalizedGuard);
+    LimitProblem(const GuardList &normalizedGuard, const VariableManager &varMan);
 
     // copy constructor and assignment operator
     LimitProblem(const LimitProblem &other);
@@ -224,6 +224,7 @@ private:
     ExprSymbol variableN;
     std::vector<int> substitutions;
     bool unsolvable;
+    const VariableManager &varMan;
 
     // use unique_ptr, as gcc < 5 is lacking std::move on ostringstream
     std::unique_ptr<std::ostringstream> log;

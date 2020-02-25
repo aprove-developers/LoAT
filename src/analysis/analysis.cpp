@@ -253,7 +253,7 @@ bool Analysis::removeUnsatRules() {
     for (TransIdx rule : its.getAllTransitions()) {
         if (Timeout::preprocessing()) break;
 
-        if (Smt::check(buildAnd(its.getRule(rule).getGuard())) == Smt::Unsat) {
+        if (Smt::check(buildAnd(its.getRule(rule).getGuard()), its) == Smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }
@@ -380,7 +380,7 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         GuardList guard = rule.getGuard();
         guard.push_back(rule.getCost() >= 1);
 
-        if (Smt::check(buildAnd(guard)) == Smt::Sat) {
+        if (Smt::check(buildAnd(guard), its) == Smt::Sat) {
             ProofOutput::Proof.newline();
             ProofOutput::Proof.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;
@@ -458,7 +458,7 @@ RuntimeResult Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResul
         // Simplify guard to speed up asymptotic check
         bool simplified = false;
         simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
-        simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut());
+        simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut(), its);
         if (simplified) {
             ProofOutput::Proof.append("Simplified the guard:");
             stringstream s;

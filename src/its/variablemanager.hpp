@@ -53,6 +53,8 @@ public:
      */
     ExprSymbol getFreshUntrackedSymbol(std::string basename, Expression::Type type);
 
+    Expression::Type getType(const ExprSymbol &x) const;
+
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
     VariableIdx addVariable(std::string name);

@@ -28,14 +28,15 @@ namespace strengthening {
 
     public:
 
-        static const GuardContext build(const GuardList &guard, const std::vector<GiNaC::exmap> &updates);
+        static const GuardContext build(const GuardList &guard, const std::vector<GiNaC::exmap> &updates, const VariableManager &varMan);
 
     private:
 
         const GuardList &guard;
         const std::vector<GiNaC::exmap> &updates;
+        const VariableManager &varMan;
 
-        GuardContextBuilder(const GuardList &guard, const std::vector<GiNaC::exmap> &updates);
+        GuardContextBuilder(const GuardList &guard, const std::vector<GiNaC::exmap> &updates, const VariableManager &varMan);
 
         const GuardContext build() const;
 
