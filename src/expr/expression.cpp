@@ -16,10 +16,8 @@
  */
 
 #include "expression.hpp"
-
-#include "../expr/ginactoz3.hpp"
-#include "../z3/z3context.hpp"
 #include "complexity.hpp"
+#include <sstream>
 
 using namespace std;
 
@@ -292,11 +290,6 @@ bool Expression::hasAtLeastTwoVariables() const {
     SymbolVisitor visitor;
     traverse(visitor);
     return visitor.result();
-}
-
-
-z3::expr Expression::toZ3(Z3Context &context) const {
-    return GinacToZ3::convert(*this, context);
 }
 
 

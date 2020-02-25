@@ -19,7 +19,6 @@
 #define FARKAS_H
 
 #include "../../expr/expression.hpp"
-#include "../../z3/z3context.hpp"
 #include "../../expr/boolexpr.hpp"
 #include "../../smt/smt.hpp"
 #include <vector>

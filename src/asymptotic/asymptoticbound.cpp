@@ -3,12 +3,10 @@
 #include <iterator>
 #include <vector>
 #include <ginac/ginac.h>
-#include <z3++.h>
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
 #include "../expr/relation.hpp"
-#include "../expr/ginactoz3.hpp"
 #include "../util/timeout.hpp"
 
 #include "../smt/smt.hpp"

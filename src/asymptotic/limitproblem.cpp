@@ -1,6 +1,5 @@
 #include "limitproblem.hpp"
 
-#include <z3++.h>
 #include <sstream>
 #include <utility>
 

@@ -18,7 +18,6 @@
 #include "farkas.hpp"
 
 #include "../../expr/relation.hpp"
-#include "../../expr/ginactoz3.hpp"
 #include "../../smt/smt.hpp"
 #include "../../its/variablemanager.hpp"
 

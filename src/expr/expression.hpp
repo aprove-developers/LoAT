@@ -19,7 +19,6 @@
 #define EXPRESSION_H
 
 #include <ginac/ginac.h>
-#include <z3++.h>
 #include <string>
 #include <vector>
 
@@ -200,12 +199,6 @@ public:
      * getVariables().size() >= 2 (but this methods is more efficient)
      */
     bool hasAtLeastTwoVariables() const;
-
-    /**
-     * Converts this term from a GiNaC::ex to a Z3 expression, see GinacToZ3
-     * @return newly created z3 expression
-     */
-    z3::expr toZ3(Z3Context &context) const;
 
     /**
      * Returns an estimate of the exponent of the complexity class, e.g. "x^3" is 3, "x*y" is 2, "42" is 0 (constant)

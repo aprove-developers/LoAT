@@ -19,7 +19,6 @@
 #define METERING_H
 
 #include "../../expr/expression.hpp"
-#include "../../z3/z3context.hpp"
 #include "../../its/variablemanager.hpp"
 #include "../../its/rule.hpp"
 #include "../../util/option.hpp"

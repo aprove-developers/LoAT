@@ -7,7 +7,6 @@
 #include "../accelerate/recurrence/recurrence.hpp"
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
-#include "../expr/ginactoz3.hpp"
 #include "../analysis/preprocess.hpp"
 #include "../util/proofoutput.hpp"
 

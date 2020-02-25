@@ -24,7 +24,6 @@
 #include "meter/metertools.hpp"
 #include "../expr/guardtoolbox.hpp"
 #include "../expr/relation.hpp"
-#include "../expr/ginactoz3.hpp"
 #include "forward.hpp"
 
 #include <purrs.hh>
