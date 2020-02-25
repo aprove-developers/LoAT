@@ -17,30 +17,30 @@
 
 #include "nonterm.hpp"
 #include "../accelerate/meter/metertools.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 #include "../accelerate/forward.hpp"
 #include "../accelerate/recurrence/dependencyorder.hpp"
 #include "../analysis/chain.hpp"
-#include "../z3/z3solver.hpp"
 #include "../util/relevantvariables.hpp"
 #include "../util/result.hpp"
 
 namespace nonterm {
 
     option<std::pair<Rule, Status>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Config::Analysis::NonTermMode && !Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
+        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0))) {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
-            if (Z3Toolbox::isValidImplication(r.getGuard(), r.getGuard().subs(up))) {
+            if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)))) {
                 return {{Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {}), Success}};
             }
         }
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const GiNaC::exmap &up = chained.getUpdate(0).toSubstitution(its);
-            if (Z3Toolbox::checkAll({chained.getGuard()}) == z3::sat && Z3Toolbox::isValidImplication(chained.getGuard(), chained.getGuard().subs(up))) {
+            if (Smt::check(buildAnd(chained.getGuard())) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)))) {
                 return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
         }
@@ -48,24 +48,24 @@ namespace nonterm {
     }
 
     option<std::pair<Rule, Status>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Config::Analysis::NonTermMode && !Z3Toolbox::isValidImplication(r.getGuard(), {r.getCost() > 0})) {
+        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0))) {
             return {};
         }
-        Z3Context context;
-        Z3Solver solver(context);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         for (const Expression &e: r.getGuard()) {
-            solver.add(e.toZ3(context));
+            solver->add(e);
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             if (!r.isLinear()) {
-                solver.push();
+                solver->push();
             }
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
             const ExprSymbolSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
             for (const ExprSymbol &var: vars) {
-                solver.add(Expression(var == var.subs(up)).toZ3(context));
+                solver->add(Expression(var == var.subs(up)));
             }
-            if (solver.check() == z3::sat) {
+            Smt::Result smtRes = solver->check();
+            if (smtRes == Smt::Sat) {
                 GuardList newGuard(r.getGuard());
                 for (const ExprSymbol &var: vars) {
                     newGuard.emplace_back(var == var.subs(up));
@@ -73,7 +73,7 @@ namespace nonterm {
                 return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
             if (!r.isLinear()) {
-                solver.pop();
+                solver->pop();
             }
         }
         return {};

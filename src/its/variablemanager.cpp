@@ -60,8 +60,10 @@ VariableIdx VariableManager::addFreshTemporaryVariable(string basename) {
     return idx;
 }
 
-ExprSymbol VariableManager::getFreshUntrackedSymbol(string basename) const {
-    return ExprSymbol(getFreshName(basename));
+ExprSymbol VariableManager::getFreshUntrackedSymbol(string basename, Expression::Type type) {
+    const ExprSymbol &res = ExprSymbol(getFreshName(basename));
+    untrackedVariables[res] = type;
+    return res;
 }
 
 VariableIdx VariableManager::addVariable(string name) {

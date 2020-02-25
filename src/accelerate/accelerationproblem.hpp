@@ -5,10 +5,11 @@
 #include "../expr/relation.hpp"
 #include "../its/variablemanager.hpp"
 #include "../accelerate/recurrence/recurrence.hpp"
-#include "../z3/z3context.hpp"
-#include "../z3/z3solver.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 #include "../expr/ginactoz3.hpp"
 #include "../analysis/preprocess.hpp"
+#include "../util/proofoutput.hpp"
 
 struct AccelerationProblem {
     GuardList res;
@@ -70,20 +71,19 @@ struct AccelerationProblem {
         if (!closed) {
             return false;
         }
-        Z3Context ctx;
-        Z3Solver solver(ctx);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         for (const Expression &e: done) {
-            solver.add(e.toZ3(ctx));
+            solver->add(e);
         }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
-            solver.push();
-            solver.add(GinacToZ3::convert(e.subs(up), ctx));
-            if (solver.check() != z3::sat) {
+            solver->push();
+            solver->add(e.subs(up));
+            if (solver->check() != Smt::Sat) {
                 return false;
             }
-            solver.add(GinacToZ3::convert(e.lhs() <= 0, ctx));
-            if (solver.check() == z3::check_result::unsat) {
+            solver->add(e.lhs() <= 0);
+            if (solver->check() == Smt::Unsat) {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
                 done.push_back(e);
@@ -93,26 +93,25 @@ struct AccelerationProblem {
                 nonterm = false;
                 return true;
             }
-            solver.pop();
+            solver->pop();
         }
         return false;
     }
 
     bool recurrence() {
-        Z3Context ctx;
-        Z3Solver solver(ctx);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         for (const Expression &e: done) {
-            solver.add(e.toZ3(ctx));
+            solver->add(e);
         }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
-            solver.push();
-            solver.add(GinacToZ3::convert(e, ctx));
-            if (solver.check() != z3::sat) {
+            solver->push();
+            solver->add(e);
+            if (solver->check() != Smt::Sat) {
                 return false;
             }
-            solver.add(GinacToZ3::convert(e.subs(up).lhs() <= 0, ctx));
-            if (solver.check() == z3::check_result::unsat) {
+            solver->add(e.subs(up).lhs() <= 0);
+            if (solver->check() == Smt::Unsat) {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << e << " via monotonic increase");
                 done.push_back(e);
@@ -121,7 +120,7 @@ struct AccelerationProblem {
                 print();
                 return true;
             }
-            solver.pop();
+            solver->pop();
         }
         return false;
     }
@@ -130,28 +129,27 @@ struct AccelerationProblem {
         if (!closed) {
             return false;
         }
-        Z3Context ctx;
-        Z3Solver solver(ctx);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         for (const Expression &e: done) {
-            solver.add(e.toZ3(ctx));
+            solver->add(e);
         }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
-            solver.push();
+            solver->push();
             const GiNaC::ex &updated = e.lhs().subs(up);
-            solver.add(GinacToZ3::convert(e.lhs() >= updated, ctx));
-            if (solver.check() != z3::sat) {
+            solver->add(e.lhs() >= updated);
+            if (solver->check() != Smt::Sat) {
                 return false;
             }
-            solver.add(GinacToZ3::convert(updated < updated.subs(up), ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                solver.pop();
-                solver.push();
+            solver->add(updated < updated.subs(up));
+            if (solver->check() == Smt::Unsat) {
+                solver->pop();
+                solver->push();
                 const Expression &newCond = e.subs(closed.get()).subs({{n, n-1}});
-                solver.add(e.toZ3(ctx));
-                solver.add(newCond.toZ3(ctx));
-                if (solver.check() == z3::sat) {
-                    solver.pop();
+                solver->add(e);
+                solver->add(newCond);
+                if (solver->check() == Smt::Sat) {
+                    solver->pop();
                     proof.newline();
                     proof.append(std::stringstream() << "handled " << e << " via eventual decrease");
                     done.push_back(e);
@@ -163,7 +161,7 @@ struct AccelerationProblem {
                     return true;
                 }
             }
-            solver.pop();
+            solver->pop();
         }
         return false;
     }
@@ -189,28 +187,27 @@ struct AccelerationProblem {
     }
 
     bool eventualWeakIncrease() {
-        Z3Context ctx;
-        Z3Solver solver(ctx);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         for (const Expression &e: done) {
-            solver.add(e.toZ3(ctx));
+            solver->add(e);
         }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
-            solver.push();
+            solver->push();
             const GiNaC::ex &updated = e.lhs().subs(up);
-            solver.add(GinacToZ3::convert(e.lhs() <= updated, ctx));
-            if (solver.check() != z3::sat) {
+            solver->add(e.lhs() <= updated);
+            if (solver->check() != Smt::Sat) {
                 return false;
             }
-            solver.add(GinacToZ3::convert(updated > updated.subs(up), ctx));
-            if (solver.check() == z3::check_result::unsat) {
-                solver.pop();
-                solver.push();
+            solver->add(updated > updated.subs(up));
+            if (solver->check() == Smt::Unsat) {
+                solver->pop();
+                solver->push();
                 const Expression &newCond = Relation::normalizeInequality(e.lhs() <= updated);
-                solver.add(e.toZ3(ctx));
-                solver.add(newCond.toZ3(ctx));
-                if (solver.check() == z3::sat) {
-                    solver.pop();
+                solver->add(e);
+                solver->add(newCond);
+                if (solver->check() == Smt::Sat) {
+                    solver->pop();
                     proof.newline();
                     proof.append(std::stringstream() << "handled " << e << " via eventual increase");
                     done.push_back(e);
@@ -222,7 +219,7 @@ struct AccelerationProblem {
                     return true;
                 }
             }
-            solver.pop();
+            solver->pop();
         }
         return false;
     }

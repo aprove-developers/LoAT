@@ -23,6 +23,7 @@
 #include "../../its/variablemanager.hpp"
 #include "../../its/rule.hpp"
 #include "../../util/option.hpp"
+#include "../../expr/boolexpr.hpp"
 
 #include <vector>
 #include <map>
@@ -136,29 +137,29 @@ private:
     /**
      * Helper to build the implication: "(G and U) --> f(x)-f(x') <= 1" using applyFarkas
      */
-    z3::expr genUpdateImplications() const;
+    BoolExpr genUpdateImplications() const;
 
     /**
      * Helper to build the implication: "(not G) --> f(x) <= 0" using multiple applyFarkas calls (which are AND-concated)
      * @note makes use of reducedGuard instead of guard
      */
-    z3::expr genNotGuardImplication() const;
+    BoolExpr genNotGuardImplication() const;
 
     /**
      * Helper to build the implication: "G --> f(x) > 0" using applyFarkas
      * @param strict if true, the rhs is strict, i.e. f(x) > 0 formulated as f(x) >= 1; if false f(x) >= 0 is used
      */
-    z3::expr genGuardPositiveImplication(bool strict) const;
+    BoolExpr genGuardPositiveImplication(bool strict) const;
 
     /**
      * Helper to build constraints to suppress trivial solutions, i.e. "OR c_i != 0" for the coefficients c_i
      */
-    z3::expr genNonTrivial() const;
+    BoolExpr genNonTrivial() const;
 
     /**
      * Given the z3 model, builds the corresponding linear metering function and applies the reverse substitution nonlinearSubs
      */
-    Expression buildResult(const z3::model &model) const;
+    Expression buildResult(const ExprSymbolMap<GiNaC::numeric> &model) const;
 
     /**
      * Tries to find a pair conflicting variables A, B.
@@ -175,7 +176,7 @@ private:
      *
      * Note: Only required if FARKAS_ALLOW_REAL_COEFFS is set.
      */
-    void ensureIntegralMetering(Result &result, const z3::model &model) const;
+    void ensureIntegralMetering(Result &result, const ExprSymbolMap<GiNaC::numeric> &model) const;
 
 
     void dump(const std::string &msg) const;
@@ -186,12 +187,6 @@ private:
      * The VariableManager instance, used for fresh variables and for conversion between indices/symbols
      */
     VariableManager &varMan;
-
-    /**
-     * The Z3 context to handle z3 symbols/expressions
-     */
-    mutable Z3Context context;
-
 
 
     /**
@@ -237,14 +232,14 @@ private:
      */
     struct {
         std::vector<ExprSymbol> symbols;
-        std::vector<z3::expr> coeffs;
-        std::map<VariableIdx,ExprSymbol> primedSymbols;
+        std::vector<ExprSymbol> coeffs;
+        std::map<VariableIdx, ExprSymbol> primedSymbols;
     } meterVars;
 
     /**
      * The absolute coefficient for the metering function template.
      */
-    z3::expr absCoeff;
+    ExprSymbol absCoeff;
 
 };
 

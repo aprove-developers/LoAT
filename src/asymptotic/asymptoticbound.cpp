@@ -11,9 +11,8 @@
 #include "../expr/ginactoz3.hpp"
 #include "../util/timeout.hpp"
 
-#include "../z3/z3solver.hpp"
-#include "../z3/z3context.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 
 #include "limitsmt.hpp"
 #include "inftyexpression.hpp"
@@ -23,7 +22,7 @@ using namespace GiNaC;
 using namespace std;
 
 
-AsymptoticBound::AsymptoticBound(const VarMan &varMan, GuardList guard,
+AsymptoticBound::AsymptoticBound(VarMan &varMan, GuardList guard,
                                  Expression cost, bool finalCheck)
     : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
@@ -327,11 +326,11 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
-        auto result = Z3Toolbox::checkAll(limitProblems[i].getQuery());
+        auto result = Smt::check(buildAnd(limitProblems[i].getQuery()));
 
-        if (result == z3::unsat) {
+        if (result == Smt::Unsat) {
             limitProblems.erase(limitProblems.begin() + i);
-        } else if (result == z3::unknown
+        } else if (result == Smt::Unknown
                    && !finalCheck
                    && limitProblems[i].getSize() >= Config::Limit::ProblemDiscardSize) {
             limitProblems.erase(limitProblems.begin() + i);
@@ -790,19 +789,18 @@ bool AsymptoticBound::tryInstantiatingVariable() {
         Direction dir = it->getDirection();
 
         if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-            Z3Context context;
-            z3::model model(context, Z3_model());
-            z3::check_result result;
-            result = Z3Toolbox::checkAll(currentLP.getQuery(), context, &model);
+            std::unique_ptr<Smt> solver = SmtFactory::solver();
+            solver->add(buildAnd(currentLP.getQuery()));
+            Smt::Result result = solver->check();
 
-            if (result == z3::unsat) {
+            if (result == Smt::Unsat) {
                 currentLP.setUnsolvable();
 
-            } else if (result == z3::sat) {
+            } else if (result == Smt::Sat) {
+                const ExprSymbolMap<GiNaC::numeric> &model = solver->model();
                 ExprSymbol var = it->getAVariable();
 
-                Expression rational =
-                    Z3Toolbox::getRealFromModel(model, GinacToZ3::convert(var, context));
+                Expression rational = model.at(var);
 
                 exmap sub;
                 sub.insert(std::make_pair(var, rational));
@@ -888,8 +886,8 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto z3res = Z3Toolbox::checkAll(guard);
-        if (z3res == z3::sat) {
+        auto smtRes = Smt::check(buildAnd(guard));
+        if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("Guard is satisfiable, yielding nontermination");
             return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, proof);
@@ -946,7 +944,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
 }
 
-AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan &varMan,
+AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varMan,
                                                                     const GuardList &guard,
                                                                     const Expression &cost,
                                                                     bool finalCheck,
@@ -954,8 +952,8 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan
     Expression expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto z3res = Z3Toolbox::checkAll(guard);
-        if (z3res == z3::sat) {
+        auto smtRes = Smt::check(buildAnd(guard));
+        if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("proved non-termination via SMT");
             return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, proof);

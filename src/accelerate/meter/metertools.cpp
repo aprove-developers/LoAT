@@ -20,8 +20,10 @@
 #include "../../expr/guardtoolbox.hpp"
 #include "../../expr/relation.hpp"
 #include "../../expr/ginactoz3.hpp"
-#include "../../z3/z3solver.hpp"
-#include "../../z3/z3toolbox.hpp"
+#include "../../smt/smt.hpp"
+#include "../../smt/smtfactory.hpp"
+#include "../../expr/boolexpr.hpp"
+#include "../../config.hpp"
 
 using namespace std;
 
@@ -81,10 +83,9 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
     auto isUpdated = [&](const ExprSymbol &var){ return updatedVars.count(var) > 0; };
 
     // create Z3 solver with the guard here to use push/pop for efficiency
-    Z3Context context;
-    Z3Solver solver(context);
+    unique_ptr<Smt> solver = SmtFactory::solver();
     for (const Expression &ex : guard) {
-        solver.add(ex.toZ3(context));
+        solver->add(ex);
     }
 
     for (const Expression &ex : guard) {
@@ -95,13 +96,13 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
         if (add) {
             bool implied = true;
             for (const UpdateMap &update : updates) {
-                solver.push();
-                solver.add(!GinacToZ3::convert(ex.subs(update.toSubstitution(varMan)), context));
-                auto z3res = solver.check();
-                solver.pop();
+                solver->push();
+                solver->add(!buildLit(ex.subs(update.toSubstitution(varMan))));
+                auto smtRes = solver->check();
+                solver->pop();
 
                 // unsat means that the updated `ex` must always hold (i.e., is implied after the update)
-                if (z3res != z3::unsat) {
+                if (smtRes != Smt::Unsat) {
                     implied = false;
                     break;
                 }

@@ -27,7 +27,7 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(const VarMan &varMan, GuardList guard, Expression cost, bool finalCheck);
+    AsymptoticBound(VarMan &varMan, GuardList guard, Expression cost, bool finalCheck);
 
     void initLimitVectors();
     void normalizeGuard();
@@ -60,7 +60,7 @@ private:
     bool isTimeout() const;
 
 private:
-    const VariableManager &varMan;
+    VariableManager &varMan;
     const GuardList guard;
     const Expression cost;
     bool finalCheck;
@@ -115,7 +115,7 @@ public:
                                       bool finalCheck,
                                       const Complexity &currentRes);
 
-    static Result determineComplexityViaSMT(const VarMan &varMan,
+    static Result determineComplexityViaSMT(VarMan &varMan,
                                             const GuardList &guard,
                                             const Expression &cost,
                                             bool finalCheck,

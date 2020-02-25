@@ -30,25 +30,22 @@ namespace strengthening {
         static const option<Invariants> solve(
                 const RuleContext &ruleCtx,
                 const MaxSmtConstraints &constraints,
-                const Templates &templates,
-                Z3Context &z3Ctx);
+                const Templates &templates);
 
     private:
 
         const RuleContext &ruleCtx;
         const MaxSmtConstraints &constraints;
         const Templates &templates;
-        Z3Context &z3Ctx;
 
         ConstraintSolver(
                 const RuleContext &ruleCtx,
                 const MaxSmtConstraints &constraints,
-                const Templates &templates,
-                Z3Context &z3Ctx);
+                const Templates &templates);
 
         const option<Invariants> solve() const;
 
-        const GuardList instantiateTemplates(const z3::model &model) const;
+        const GuardList instantiateTemplates(const ExprSymbolMap<GiNaC::numeric> &model) const;
 
         const option<Invariants> splitInitiallyValid(const GuardList &invariants) const;
 

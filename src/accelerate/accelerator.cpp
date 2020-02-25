@@ -20,7 +20,7 @@
 #include "../analysis/preprocess.hpp"
 #include "recurrence/recurrence.hpp"
 #include "meter/metering.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
 
 #include "../its/rule.hpp"
 #include "../its/export.hpp"
@@ -263,7 +263,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
         res.proof.ruleTransformationProof(rule, "unrolling", optR.get(), its);
     }
     LinearRule r = optR ? optR.get() : rule;
-    bool sat = Z3Toolbox::checkAll({r.getGuard()}) == z3::sat;
+    bool sat = Smt::check(buildAnd(r.getGuard())) == Smt::Sat;
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
@@ -290,7 +290,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
             if (!strengthened.empty()) {
                 for (const LinearRule &sr: strengthened) {
-                    bool sat = Z3Toolbox::checkAll({sr.getGuard()}) == z3::sat;
+                    bool sat = Smt::check(buildAnd(sr.getGuard())) == Smt::Sat;
                     // only proceed if the guard is sat
                     if (sat) {
                         assert(nonterm::NonTerm::universal(sr, its, sinkLoc));

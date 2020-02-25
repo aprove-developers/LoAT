@@ -24,12 +24,12 @@ using namespace std;
 using namespace GiNaC;
 
 
-GinacToZ3::GinacToZ3(Z3Context &context, bool useReals)
-        : context(context), useReals(useReals)
+GinacToZ3::GinacToZ3(Z3Context &context)
+        : context(context)
 {}
 
-z3::expr GinacToZ3::convert(const GiNaC::ex &expr, Z3Context &context, bool useReals) {
-    GinacToZ3 converter(context, useReals);
+z3::expr GinacToZ3::convert(const GiNaC::ex &expr, Z3Context &context) {
+    GinacToZ3 converter(context);
     z3::expr res = converter.convert_ex(expr);
     return res;
 }
@@ -110,11 +110,7 @@ z3::expr GinacToZ3::convert_numeric(const GiNaC::numeric &num) {
     try {
         // convert integer either as integer or as reals (depending on settings)
         if (num.is_integer()) {
-            if (useReals) {
-                return context.real_val(num.to_long(),1);
-            } else {
-                return context.int_val(num.to_long());
-            }
+            return context.int_val(num.to_long());
         }
 
         // always convert real numbers as reals
@@ -153,5 +149,5 @@ z3::expr GinacToZ3::convert_relational(const GiNaC::ex &e) {
 }
 
 Z3Context::VariableType GinacToZ3::variableType() const {
-    return (useReals) ? Z3Context::Real : Z3Context::Integer;
+    return Z3Context::Integer;
 }

@@ -39,10 +39,10 @@ public:
      * Variables already present in the Z3Context are re-used (even if they are integer variables).
      * If false, all newly created variables and constants are integers, except for real constants like 1/2.
      */
-    static z3::expr convert(const GiNaC::ex &expr, Z3Context &context, bool useReals = false);
+    static z3::expr convert(const GiNaC::ex &expr, Z3Context &context);
 
 private:
-    GinacToZ3(Z3Context &context, bool useReals);
+    GinacToZ3(Z3Context &context);
 
     z3::expr convert_ex(const GiNaC::ex &e);
     z3::expr convert_add(const GiNaC::ex &e);
@@ -57,7 +57,6 @@ private:
 
 private:
     Z3Context &context;
-    bool useReals;
 };
 
 #endif // GINACTOZ3_H

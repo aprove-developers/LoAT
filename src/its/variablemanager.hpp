@@ -51,7 +51,7 @@ public:
      *
      * @return The newly created symbol (_not_ associated with a variable index!)
      */
-    ExprSymbol getFreshUntrackedSymbol(std::string basename) const;
+    ExprSymbol getFreshUntrackedSymbol(std::string basename, Expression::Type type);
 
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
@@ -70,6 +70,7 @@ private:
     // List of all variables (VariableIdx is an index in this list; a Variable is a name and a ginac symbol)
     // Note: Variables are never removed, so this list is appended, but otherwise not modified
     std::vector<Variable> variables;
+    ExprSymbolMap<Expression::Type> untrackedVariables;
 
     // The set of variables (identified by their index) that are used as temporary variables (not bound by lhs)
     std::set<VariableIdx> temporaryVariables;

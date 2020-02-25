@@ -19,40 +19,41 @@
 
 #include "../../expr/relation.hpp"
 #include "../../expr/ginactoz3.hpp"
-#include "../../z3/z3toolbox.hpp"
+#include "../../smt/smt.hpp"
+#include "../../its/variablemanager.hpp"
 
 using namespace std;
 
 
-z3::expr FarkasLemma::apply(
+BoolExpr FarkasLemma::apply(
         const vector<Expression> &constraints,
         const vector<ExprSymbol> &vars,
-        const vector<z3::expr> &coeffs,
-        z3::expr c0,
+        const vector<Expression> &coeffs,
+        Expression c0,
         int delta,
-        Z3Context &context,
+        VariableManager &varMan,
         const ExprSymbolSet &params,
-        const Z3Context::VariableType &lambdaType)
+        Expression::Type lambdaType)
 {
     assert(vars.size() == coeffs.size());
 
     // List of expressions whose conjunction will be the result
-    vector<z3::expr> res;
+    BoolExpr res = True;
 
     // Create lambda variables, add the constraint "lambda >= 0"
-    vector<z3::expr> lambda;
+    vector<ExprSymbol> lambda;
     ExprSymbolSet varSet(vars.begin(), vars.end());
     for (const Expression &ex : constraints) {
         assert(Relation::isLinearInequality(ex, varSet));
         assert(Relation::isLessOrEqual(ex));
 
-        z3::expr var = context.addFreshVariable("l", lambdaType);
+        ExprSymbol var = varMan.getFreshUntrackedSymbol("l", lambdaType);
         lambda.push_back(var);
-        res.push_back(var >= 0);
+        res = res & (var >= 0);
     }
 
     // Create mapping from every variable to its coefficient
-    ExprSymbolMap<z3::expr> varToCoeff;
+    ExprSymbolMap<Expression> varToCoeff;
     for (unsigned int i=0; i < vars.size(); ++i) {
         varToCoeff.emplace(vars[i], coeffs[i]);
     }
@@ -66,40 +67,55 @@ z3::expr FarkasLemma::apply(
     }
     for (const ExprSymbol &sym : constraintSymbols) {
         if (varToCoeff.find(sym) == varToCoeff.end() && std::find(params.begin(), params.end(), sym) == params.end()) {
-            varToCoeff.emplace(sym, context.real_val(0));
+            varToCoeff.emplace(sym, 0);
         }
     }
 
     // Build the constraints "lambda^T * A = c^T"
     for (auto varIt : varToCoeff) {
-        z3::expr lambdaA = context.int_val(0);
+        Expression lambdaA = Expression(0);
         for (unsigned int j=0; j < constraints.size(); ++j) {
             Expression a = constraints[j].lhs().expand().coeff(varIt.first);
-            z3::expr add = lambda[j] * GinacToZ3::convert(a, context);
-            lambdaA = (j==0) ? add : lambdaA+add; // avoid superflous +0
+            Expression add = lambda[j] * a;
+            lambdaA = (j==0) ? add : lambdaA + add; // avoid superflous +0
         }
-        res.push_back(lambdaA == varIt.second);
+        res = res & (lambdaA == varIt.second);
     }
 
     // Build the constraints "lambda^T * b + c0 <= delta"
-    z3::expr sum = c0;
+    Expression sum = c0;
     for (unsigned int i=0; i < constraints.size(); ++i) {
-        sum = sum + lambda[i] * GinacToZ3::convert(constraints[i].rhs(), context);
+        sum = sum + lambda[i] * constraints[i].rhs();
     }
-    res.push_back(sum <= delta);
-
-    return Z3Toolbox::concat(context, res, Z3Toolbox::ConcatAnd);
+    return res & (sum <= delta);
 }
 
-const vector<z3::expr> FarkasLemma::apply(
+BoolExpr FarkasLemma::apply(
+        const vector<Expression> &constraints,
+        const vector<ExprSymbol> &vars,
+        const vector<ExprSymbol> &coeffs,
+        ExprSymbol c0,
+        int delta,
+        VariableManager &varMan,
+        const ExprSymbolSet &params,
+        Expression::Type lambdaType)
+{
+    std::vector<Expression> theCoeffs;
+    for (const ExprSymbol &x: coeffs) {
+        theCoeffs.push_back(x);
+    }
+    return apply(constraints, vars, theCoeffs, c0, delta, varMan, params, lambdaType);
+}
+
+const BoolExpr FarkasLemma::apply(
         const vector<Expression> &premise,
         const vector<Expression> &conclusion,
         const ExprSymbolSet &vars,
         const ExprSymbolSet &params,
-        Z3Context &context,
-        const Z3Context::VariableType &lambdaType) {
-    vector<z3::expr> res;
-    vector<Expression> normalizedPremise;
+        VariableManager &varMan,
+        Expression::Type lambdaType) {
+    BoolExpr res = True;
+    std::vector<Expression> normalizedPremise;
     for (const Expression &p: premise) {
         if (Relation::isLinearInequality(p, vars)) {
             normalizedPremise.push_back(Relation::splitVariablesAndConstants(Relation::toLessEq(p), params));
@@ -122,28 +138,23 @@ const vector<z3::expr> FarkasLemma::apply(
     }
     for (const Expression &c: splitConclusion) {
         Expression normalized = Relation::splitVariablesAndConstants(Relation::toLessEq(c), params);
-        vector<z3::expr> coefficients;
+        vector<Expression> coefficients;
         for (ExprSymbol &x : varList) {
-            coefficients.push_back(Expression(normalized.lhs().coeff(x, 1)).toZ3(context));
+            coefficients.push_back(Expression(normalized.lhs().coeff(x, 1)));
         }
-        z3::expr c0 = -Expression(normalized.rhs()).toZ3(context);
-        res.push_back(FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, context, params, lambdaType));
+        Expression c0 = -Expression(normalized.rhs());
+        res = res & FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, varMan, params, lambdaType);
     }
     return res;
 }
 
-const z3::expr FarkasLemma::apply(
+const BoolExpr FarkasLemma::apply(
         const vector<Expression> &premise,
         const Expression &conclusion,
         const ExprSymbolSet &vars,
         const ExprSymbolSet &params,
-        Z3Context &context,
-        const Z3Context::VariableType &lambdaType) {
+        VariableManager &varMan,
+        Expression::Type lambdaType) {
     const vector<Expression> &conclusions = {conclusion};
-    const vector<z3::expr> &v = apply(premise, conclusions, vars, params, context, lambdaType);
-    z3::expr_vector z3v(context);
-    for (const z3::expr &e: v) {
-        z3v.push_back(e);
-    }
-    return z3::mk_and(z3v);
+    return apply(premise, conclusions, vars, params, varMan, lambdaType);
 }

@@ -16,11 +16,12 @@
  */
 
 #include "../util/option.hpp"
-#include "../z3/z3solver.hpp"
-#include "../z3/z3toolbox.hpp"
 #include "constraintsolver.hpp"
 #include "../its/variablemanager.hpp"
 #include "../util/timeout.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
+#include "../config.hpp"
 
 namespace strengthening {
 
@@ -29,24 +30,22 @@ namespace strengthening {
     const option<Invariants> Self::solve(
             const RuleContext &ruleCtx,
             const MaxSmtConstraints &constraints,
-            const Templates &templates,
-            Z3Context &z3Ctx) {
-        return ConstraintSolver(ruleCtx, constraints, templates, z3Ctx).solve();
+            const Templates &templates) {
+        return ConstraintSolver(ruleCtx, constraints, templates).solve();
     }
 
     Self::ConstraintSolver(
             const RuleContext &ruleCtx,
             const MaxSmtConstraints &constraints,
-            const Templates &templates,
-            Z3Context &z3Ctx):
+            const Templates &templates):
             ruleCtx(ruleCtx),
             constraints(constraints),
-            templates(templates),
-            z3Ctx(z3Ctx) { }
+            templates(templates) { }
 
     const option<Invariants> Self::solve() const {
-        Z3Solver solver(z3Ctx, Config::Z3::StrengtheningTimeout);
-        const option<z3::model> &model = solver.maxSmt(constraints.hard, constraints.soft);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
+        solver->setTimeout(Config::Z3::StrengtheningTimeout);
+        const option<ExprSymbolMap<GiNaC::numeric>> &model = solver->maxSmt(constraints.hard, constraints.soft);
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
             if (!newInvariants.empty()) {
@@ -56,14 +55,14 @@ namespace strengthening {
         return {};
     }
 
-    const GuardList Self::instantiateTemplates(const z3::model &model) const {
-        Z3Solver solver(z3Ctx);
+    const GuardList Self::instantiateTemplates(const ExprSymbolMap<GiNaC::numeric> &model) const {
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         GuardList res;
         UpdateMap parameterInstantiation;
         for (const ExprSymbol &p: templates.params()) {
-            const option<z3::expr> &var = z3Ctx.getVariable(p);
-            if (var) {
-                const Expression &pi = Z3Toolbox::getRealFromModel(model, var.get());
+            auto it = model.find(p);
+            if (it != model.end()) {
+                const Expression &pi = it->second;
                 parameterInstantiation.emplace(ruleCtx.varMan.getVarIdx(p), pi);
             }
         }
@@ -71,42 +70,41 @@ namespace strengthening {
         const std::vector<Expression> instantiatedTemplates = templates.subs(subs);
         for (const Expression &e: instantiatedTemplates) {
             if (!templates.isParametric(e)) {
-                solver.add(!e.toZ3(z3Ctx));
-                if (solver.check() != z3::unsat) {
+                solver->add(!buildLit(e));
+                if (solver->check() != Smt::Unsat) {
                     res.push_back(e);
                 }
-                solver.reset();
+                solver->resetSolver();
             }
         }
         return res;
     }
 
     const option<Invariants> Self::splitInitiallyValid(const GuardList &invariants) const {
-        Z3Solver solver(z3Ctx);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         Invariants res;
-        z3::expr_vector preconditionVec(z3Ctx);
+        BoolExpr preconditionVec = False;
         for (const GuardList &pre: ruleCtx.preconditions) {
-            z3::expr_vector preVec(z3Ctx);
+            BoolExpr preVec = True;
             for (const Expression &e: pre) {
-                preVec.push_back(e.toZ3(z3Ctx));
+                preVec = preVec & e;
             }
-            preconditionVec.push_back(z3::mk_and(preVec));
+            preconditionVec = preconditionVec | preVec;
         }
-        solver.add(z3::mk_or(preconditionVec));
         for (const Expression &i: invariants) {
             if (Timeout::soft()) {
                 return {};
             }
-            solver.push();
-            solver.add(!i.toZ3(z3Ctx));
-            if (solver.check() == z3::unsat) {
+            solver->push();
+            solver->add(!buildLit(i));
+            if (solver->check() == Smt::Unsat) {
                 res.invariants.push_back(i);
             } else {
                 res.pseudoInvariants.push_back(i);
             }
-            solver.pop();
+            solver->pop();
         }
-        return res;
+        return {res};
     }
 
 }

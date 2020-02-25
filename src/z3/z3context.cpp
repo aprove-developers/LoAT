@@ -69,3 +69,7 @@ std::ostream& operator<<(std::ostream &s, const Z3Context::VariableType &type) {
     }
     return s;
 }
+
+ExprSymbolMap<z3::expr> Z3Context::getSymbolMap() const {
+    return symbolMap;
+}

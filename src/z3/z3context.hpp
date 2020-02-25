@@ -66,6 +66,8 @@ public:
      */
     static bool isVariableOfType(const z3::expr &symbol, VariableType type);
 
+    ExprSymbolMap<z3::expr> getSymbolMap() const;
+
 private:
     // Generates a z3 variable of the given type with a fresh name based on the given name
     z3::expr generateFreshVar(const std::string &basename, VariableType type);

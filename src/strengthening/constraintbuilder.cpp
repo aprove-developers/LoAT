@@ -18,39 +18,32 @@
 #include "../expr/relation.hpp"
 #include "../accelerate/meter/farkas.hpp"
 #include "constraintbuilder.hpp"
-#include "../z3/z3toolbox.hpp"
 
 namespace strengthening {
 
     ConstraintBuilder::ConstraintBuilder(
             const Templates &templates,
             const RuleContext &ruleCtx,
-            const GuardContext &guardCtx,
-            Z3Context &z3Ctx
+            const GuardContext &guardCtx
     ) : templates(templates),
         ruleCtx(ruleCtx),
-        guardCtx(guardCtx),
-        z3Ctx(z3Ctx) {
+        guardCtx(guardCtx) {
     }
 
     const MaxSmtConstraints ConstraintBuilder::buildMaxSmtConstraints(const Templates &templates,
                                                                       const RuleContext &ruleCtx,
-                                                                      const GuardContext &guardCtx,
-                                                                      Z3Context &z3Ctx) {
-        ConstraintBuilder builder(templates, ruleCtx, guardCtx, z3Ctx);
+                                                                      const GuardContext &guardCtx) {
+        ConstraintBuilder builder(templates, ruleCtx, guardCtx);
         const SmtConstraints &constraints = builder.buildSmtConstraints();
         MaxSmtConstraints res;
-        res.soft.insert(res.soft.end(), constraints.initiation.valid.begin(), constraints.initiation.valid.end());
-        z3::expr_vector sat(z3Ctx);
-        for (const z3::expr &e: constraints.initiation.satisfiable) {
-            sat.push_back(e);
+        res.soft.push_back(constraints.initiation.valid);
+        BoolExpr sat = False;
+        for (const BoolExpr &e: constraints.initiation.satisfiable) {
+            sat = sat | e;
         }
-        res.hard.push_back(z3::mk_or(sat));
-        z3::expr_vector someInvariant(z3Ctx);
-        for (const z3::expr &e: constraints.conclusionsInvariant) {
-            res.hard.push_back(e);
-        }
-        res.hard.insert(res.hard.end(), constraints.templatesInvariant.begin(), constraints.templatesInvariant.end());
+        res.hard = res.hard & sat;
+        res.hard = res.hard & constraints.conclusionsInvariant;
+        res.hard = res.hard & constraints.templatesInvariant;
         return res;
     }
 
@@ -66,17 +59,17 @@ namespace strengthening {
                 invariancePremise.end(),
                 templatesInvariantImplication.premise.begin(),
                 templatesInvariantImplication.premise.end());
-        std::vector<z3::expr> conclusionInvariant;
+        BoolExpr conclusionInvariant = True;
         for (const Expression &e: guardCtx.todo) {
             for (const GiNaC::exmap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
-                const z3::expr &invariant = constructImplicationConstraints(invariancePremise, updated);
-                conclusionInvariant.push_back(invariant);
+                const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, updated);
+                conclusionInvariant = conclusionInvariant & invariant;
             }
         }
         const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
-        const std::vector<z3::expr> templatesInvariant = constructImplicationConstraints(
+        const BoolExpr &templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
@@ -117,9 +110,10 @@ namespace strengthening {
 
     const Initiation ConstraintBuilder::constructInitiationConstraints(const GuardList &relevantConstraints) const {
         Initiation res;
+        res.valid = True;
         for (const GuardList &pre: ruleCtx.preconditions) {
             for (const Expression &t: templates) {
-                res.valid.push_back(constructImplicationConstraints(pre, t));
+                res.valid = res.valid & constructImplicationConstraints(pre, t);
             }
             ExprSymbolSet allVars;
             pre.collectVariables(allVars);
@@ -134,26 +128,26 @@ namespace strengthening {
             for (const ExprSymbol &x: allVars) {
                 varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
             }
-            z3::expr_vector renamed(z3Ctx);
+            std::vector<Expression> renamed;
             for (Expression e: pre) {
                 e.applySubs(varRenaming);
-                renamed.push_back(e.toZ3(z3Ctx));
+                renamed.push_back(e);
             }
             const std::vector<Expression> &updatedTemplates = templates.subs(varRenaming);
             for (const Expression &e: updatedTemplates) {
-                renamed.push_back(e.toZ3(z3Ctx));
+                renamed.push_back(e);
             }
             for (Expression e: relevantConstraints) {
                 e.applySubs(varRenaming);
-                renamed.push_back(e.toZ3(z3Ctx));
+                renamed.push_back(e);
             }
-            const z3::expr &expr = mk_and(renamed);
+            const BoolExpr &expr = buildAnd(renamed);
             res.satisfiable.push_back(expr);
         }
         return res;
     }
 
-    const std::vector<z3::expr> ConstraintBuilder::constructImplicationConstraints(
+    const BoolExpr ConstraintBuilder::constructImplicationConstraints(
             const GuardList &premise,
             const GuardList &conclusion) const {
         return FarkasLemma::apply(
@@ -161,11 +155,11 @@ namespace strengthening {
                 conclusion,
                 templates.vars(),
                 templates.params(),
-                z3Ctx,
-                Z3Context::Integer);
+                ruleCtx.varMan,
+                Expression::Int);
     }
 
-    const z3::expr ConstraintBuilder::constructImplicationConstraints(
+    const BoolExpr ConstraintBuilder::constructImplicationConstraints(
             const GuardList &premise,
             const Expression &conclusion) const {
         return FarkasLemma::apply(
@@ -173,8 +167,8 @@ namespace strengthening {
                 conclusion,
                 templates.vars(),
                 templates.params(),
-                z3Ctx,
-                Z3Context::Integer);
+                ruleCtx.varMan,
+                Expression::Int);
     }
 
 }

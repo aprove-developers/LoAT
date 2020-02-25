@@ -16,8 +16,8 @@
  */
 
 #include "../expr/relation.hpp"
-#include "../z3/z3solver.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 #include "guardcontextbuilder.hpp"
 
 namespace strengthening {
@@ -47,10 +47,9 @@ namespace strengthening {
     }
 
     const Result Self::splitInvariants(const GuardList &constraints) const {
-        Z3Context z3Ctx;
-        Z3Solver solver(z3Ctx);
+        std::unique_ptr<Smt> solver = SmtFactory::solver();
         for (const Expression &g: guard) {
-            solver.add(g.toZ3(z3Ctx));
+            solver->add(g);
         }
         Result res;
         for (const Expression &g: constraints) {
@@ -58,12 +57,12 @@ namespace strengthening {
             for (const GiNaC::exmap &up: updates) {
                 Expression conclusionExp = g;
                 conclusionExp.applySubs(up);
-                const z3::expr &conclusion = conclusionExp.toZ3(z3Ctx);
-                solver.push();
-                solver.add(!conclusion);
-                const z3::check_result &z3Res = solver.check();
-                solver.pop();
-                if (z3Res != z3::check_result::unsat) {
+                const BoolExpr &conclusion = buildLit(conclusionExp);
+                solver->push();
+                solver->add(!conclusion);
+                const Smt::Result &smtRes = solver->check();
+                solver->pop();
+                if (smtRes != Smt::Unsat) {
                     isInvariant = false;
                     break;
                 }

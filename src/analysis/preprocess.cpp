@@ -19,8 +19,8 @@
 
 #include "../expr/guardtoolbox.hpp"
 #include "../expr/relation.hpp"
-#include "../z3/z3toolbox.hpp"
-#include "../z3/z3solver.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 #include "../util/timeout.hpp"
 
 using namespace std;
@@ -112,21 +112,20 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
 
 bool Preprocess::simplifyGuardBySmt(GuardList &guard) {
     GuardList newGuard;
-    Z3Context context;
-    Z3Solver solver(context);
+    unique_ptr<Smt> solver = SmtFactory::solver();
 
     // iterates once over guard and drops constraints that are implied by previous constraints
     auto dropImplied = [&]() {
         for (const Expression &ex : guard) {
-            solver.push();
-            solver.add( ! ex.toZ3(context) );
-            auto z3res = solver.check();
-            solver.pop();
+            solver->push();
+            solver->add(!buildLit(ex));
+            auto smtRes = solver->check();
+            solver->pop();
 
             // unsat means that ex is implied by the previous constraints
-            if (z3res != z3::unsat) {
+            if (smtRes != Smt::Unsat) {
                 newGuard.push_back(ex);
-                solver.add(ex.toZ3(context));
+                solver->add(ex);
             }
         }
     };
@@ -141,7 +140,7 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard) {
     // iterate over the reversed guard, drop more implied constraints,
     // e.g. for "A > 0, A > 1" only the reverse iteration can remove "A > 0".
     newGuard.clear();
-    solver.reset();
+    solver->resetSolver();
     dropImplied();
 
     // reverse again to preserve original order

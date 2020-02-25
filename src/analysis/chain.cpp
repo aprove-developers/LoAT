@@ -17,8 +17,9 @@
 
 #include "chain.hpp"
 
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
 #include "../config.hpp"
+#include "../expr/boolexpr.hpp"
 
 using namespace std;
 
@@ -31,11 +32,11 @@ using namespace std;
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
 static bool checkSatisfiability(const GuardList &newGuard) {
-    auto z3res = Z3Toolbox::checkAll(newGuard);
+    auto smtRes = Smt::check(buildAnd(newGuard));
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
-    return z3res != z3::unsat;
+    return smtRes != Smt::Unsat;
 }
 
 

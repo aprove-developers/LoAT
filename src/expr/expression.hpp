@@ -46,6 +46,8 @@ using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
  */
 class Expression : public GiNaC::ex {
 public:
+    enum Type {Int, Real};
+
     static const ExprSymbol NontermSymbol; // special symbol "INF" to be used within cost expressions
 
 public:
@@ -203,7 +205,7 @@ public:
      * Converts this term from a GiNaC::ex to a Z3 expression, see GinacToZ3
      * @return newly created z3 expression
      */
-    z3::expr toZ3(Z3Context &context, bool useReals = false) const;
+    z3::expr toZ3(Z3Context &context) const;
 
     /**
      * Returns an estimate of the exponent of the complexity class, e.g. "x^3" is 3, "x*y" is 2, "42" is 0 (constant)

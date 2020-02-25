@@ -20,6 +20,8 @@
 
 #include "../../expr/expression.hpp"
 #include "../../z3/z3context.hpp"
+#include "../../expr/boolexpr.hpp"
+#include "../../smt/smt.hpp"
 #include <vector>
 
 
@@ -62,30 +64,39 @@ namespace FarkasLemma {
      *
      * @return the resulting z3 expression (without quantifiers, as all variables are existentially quantified)
      */
-    z3::expr apply(const std::vector<Expression> &constraints,
+    BoolExpr apply(const std::vector<Expression> &constraints,
                    const std::vector<ExprSymbol> &vars,
-                   const std::vector<z3::expr> &coeffs,
-                   z3::expr c0,
+                   const std::vector<Expression> &coeffs,
+                   Expression c0,
                    int delta,
-                   Z3Context &context,
+                   VariableManager &varMan,
                    const ExprSymbolSet &params = ExprSymbolSet(),
-                   const Z3Context::VariableType &lambdaType = Z3Context::Real);
+                   Expression::Type lambdaType = Expression::Real);
 
-    const std::vector<z3::expr> apply(
+    BoolExpr apply(const std::vector<Expression> &constraints,
+                   const std::vector<ExprSymbol> &vars,
+                   const std::vector<ExprSymbol> &coeffs,
+                   ExprSymbol c0,
+                   int delta,
+                   VariableManager &varMan,
+                   const ExprSymbolSet &params = ExprSymbolSet(),
+                   Expression::Type lambdaType = Expression::Real);
+
+    const BoolExpr apply(
             const std::vector<Expression> &premise,
             const std::vector<Expression> &conclusion,
             const ExprSymbolSet &vars,
             const ExprSymbolSet &params,
-            Z3Context &context,
-            const Z3Context::VariableType &lambdaType = Z3Context::Real);
+            VariableManager &varMan,
+            Expression::Type lambdaType = Expression::Real);
 
-    const z3::expr apply(
+    const BoolExpr apply(
             const std::vector<Expression> &premise,
             const Expression &conclusion,
             const ExprSymbolSet &vars,
             const ExprSymbolSet &params,
-            Z3Context &context,
-            const Z3Context::VariableType &lambdaType = Z3Context::Real);
+            VariableManager &varMan,
+            Expression::Type lambdaType = Expression::Real);
 
 };
 

@@ -20,8 +20,8 @@
 #include "../util/timeout.hpp"
 #include "../config.hpp"
 #include "../its/itsproblem.hpp"
-
-#include "../z3/z3toolbox.hpp"
+#include "../expr/boolexpr.hpp"
+#include "../smt/smt.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
 
 #include <queue>
@@ -105,7 +105,7 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
     bool changed = false;
 
     for (TransIdx rule : trans) {
-        if (Z3Toolbox::checkAll(its.getRule(rule).getGuard()) == z3::unsat) {
+        if (Smt::check(buildAnd(its.getRule(rule).getGuard())) == Smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }

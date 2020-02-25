@@ -19,7 +19,7 @@
 
 #include "recurrence/recurrence.hpp"
 #include "meter/metering.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
 
 #include "../util/timeout.hpp"
 
@@ -196,7 +196,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
 
         // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().push_back(A >= B);
-        if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
+        if (Smt::check(buildAnd(newRule.getGuard())) != Smt::Unsat) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
                 res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);
@@ -208,7 +208,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
         // Add A <= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().pop_back();
         newRule.getGuardMut().push_back(A <= B);
-        if (Z3Toolbox::checkAll(newRule.getGuard()) != z3::unsat) {
+        if (Smt::check(buildAnd(newRule.getGuard())) != Smt::Unsat) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
                 res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);

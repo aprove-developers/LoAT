@@ -17,7 +17,6 @@
 
 #include "../expr/relation.hpp"
 #include "../z3/z3context.hpp"
-#include "../z3/z3solver.hpp"
 #include "strengthener.hpp"
 #include "templatebuilder.hpp"
 #include "constraintsolver.hpp"
@@ -57,12 +56,11 @@ namespace strengthening {
             return res;
         }
         const Templates &templates = TemplateBuilder::build(guardCtx.get(), ruleCtx);
-        Z3Context z3Ctx;
-        const MaxSmtConstraints &maxSmtConstraints = ConstraintBuilder::buildMaxSmtConstraints(templates, ruleCtx, guardCtx.get(), z3Ctx);
-        if (maxSmtConstraints.hard.empty()) {
+        const MaxSmtConstraints &maxSmtConstraints = ConstraintBuilder::buildMaxSmtConstraints(templates, ruleCtx, guardCtx.get());
+        if (maxSmtConstraints.hard == True) {
             return {};
         }
-        const option<Invariants> &newInv = ConstraintSolver::solve(ruleCtx, maxSmtConstraints, templates, z3Ctx);
+        const option<Invariants> &newInv = ConstraintSolver::solve(ruleCtx, maxSmtConstraints, templates);
         if (newInv) {
             GuardList newGuard(guardCtx->guard);
             newGuard.insert(

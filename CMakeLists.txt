@@ -84,6 +84,8 @@ add_executable(${EXECUTABLE}
         src/expr/guardtoolbox.hpp
         src/expr/relation.cpp
         src/expr/relation.hpp
+        src/expr/boolexpr.cpp
+        src/expr/boolexpr.hpp
         src/its/parser/itsparser.cpp
         src/its/parser/itsparser.hpp
         src/its/parser/term.cpp
@@ -110,10 +112,6 @@ add_executable(${EXECUTABLE}
         src/util/result.hpp
         src/z3/z3context.cpp
         src/z3/z3context.hpp
-        src/z3/z3solver.hpp
-        src/z3/z3solver.cpp
-        src/z3/z3toolbox.cpp
-        src/z3/z3toolbox.hpp
         src/config.cpp
         src/config.hpp
         src/main.cpp
@@ -140,12 +138,16 @@ add_executable(${EXECUTABLE}
         src/sexpresso/sexpresso.hpp
         src/its/sexpressionparser/parser.cpp
         src/its/sexpressionparser/parser.hpp
-        src/merging/rulemerger.cpp
-        src/merging/rulemerger.hpp
         src/nonterm/nonterm.cpp
         src/nonterm/nonterm.hpp
         src/its/t2parser/t2parser.cpp
-        src/its/t2parser/t2parser.hpp)
+        src/its/t2parser/t2parser.hpp
+        src/smt/smt.hpp
+        src/smt/smt.cpp
+        src/smt/z3.cpp
+        src/smt/z3.hpp
+        src/smt/smtfactory.cpp
+        src/smt/smtfactory.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

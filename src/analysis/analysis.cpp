@@ -18,7 +18,7 @@
 #include "analysis.hpp"
 
 #include "../expr/relation.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
 
 #include "../util/timeout.hpp"
@@ -28,10 +28,7 @@
 #include "chain.hpp"
 #include "chainstrategy.hpp"
 #include "../accelerate/accelerator.hpp"
-
 #include "../its/export.hpp"
-
-#include "../merging/rulemerger.hpp"
 
 
 using namespace std;
@@ -166,10 +163,6 @@ RuntimeResult Analysis::run() {
 
         if (acceleratedOnce) {
 
-            if (merging::RuleMerger::mergeRules(its)) {
-                ProofOutput::Proof.majorProofStep("Merged rules", its);
-            }
-
             // Try to avoid rule explosion (often caused by chainTreePaths).
             // Since pruning relies on the rule's complexities, we only do this after the first acceleration.
             if (pruneRules()) {
@@ -262,7 +255,7 @@ bool Analysis::removeUnsatRules() {
     for (TransIdx rule : its.getAllTransitions()) {
         if (Timeout::preprocessing()) break;
 
-        if (Z3Toolbox::checkAll(its.getRule(rule).getGuard()) == z3::unsat) {
+        if (Smt::check(buildAnd(its.getRule(rule).getGuard())) == Smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }
@@ -389,7 +382,7 @@ option<RuntimeResult> Analysis::checkConstantComplexity() const {
         GuardList guard = rule.getGuard();
         guard.push_back(rule.getCost() >= 1);
 
-        if (Z3Toolbox::checkAll(guard) == z3::sat) {
+        if (Smt::check(buildAnd(guard)) == Smt::Sat) {
             ProofOutput::Proof.newline();
             ProofOutput::Proof.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;

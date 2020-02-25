@@ -21,6 +21,7 @@
 
 #include "../its/types.hpp"
 #include "../its/rule.hpp"
+#include "../expr/boolexpr.hpp"
 
 namespace strengthening {
 
@@ -72,32 +73,32 @@ namespace strengthening {
     };
 
     struct MaxSmtConstraints {
-        std::vector<z3::expr> hard;
-        std::vector<z3::expr> soft;
+        BoolExpr hard = True;
+        std::vector<BoolExpr> soft;
     };
 
     struct Initiation {
-        std::vector<z3::expr> valid;
-        std::vector<z3::expr> satisfiable;
+        BoolExpr valid;
+        std::vector<BoolExpr> satisfiable;
     };
 
     struct SmtConstraints {
 
         SmtConstraints(
                 const Initiation &initiation,
-                const std::vector<z3::expr> &templatesInvariant,
-                const std::vector<z3::expr> &conclusionsInvariant) :
+                const BoolExpr &templatesInvariant,
+                const BoolExpr &conclusionsInvariant) :
                 initiation(std::move(initiation)),
                 templatesInvariant(std::move(templatesInvariant)),
                 conclusionsInvariant(std::move(conclusionsInvariant)) {}
 
         const Initiation initiation;
-        const std::vector<z3::expr> templatesInvariant;
-        const std::vector<z3::expr> conclusionsInvariant;
+        const BoolExpr templatesInvariant;
+        const BoolExpr conclusionsInvariant;
 
     };
 
-    typedef std::function<const MaxSmtConstraints(const SmtConstraints &, Z3Context &)> Mode;
+    typedef std::function<const MaxSmtConstraints(const SmtConstraints &)> Mode;
 
 }
 

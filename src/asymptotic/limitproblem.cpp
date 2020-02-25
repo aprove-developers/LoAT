@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "../expr/relation.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
 
 using namespace GiNaC;
 
@@ -403,7 +403,7 @@ std::vector<Expression> LimitProblem::getQuery() const {
 
 
 bool LimitProblem::isUnsat() const {
-    return Z3Toolbox::checkAll(getQuery()) == z3::unsat;
+    return Smt::check(buildAnd(getQuery())) == Smt::Unsat;
 }
 
 

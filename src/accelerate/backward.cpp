@@ -17,8 +17,8 @@
 
 #include "backward.hpp"
 
-#include "../z3/z3solver.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 
 #include "recurrence/recurrence.hpp"
 #include "meter/metertools.hpp"
