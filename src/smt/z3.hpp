@@ -20,7 +20,7 @@ public:
     ~Z3() override;
 
 private:
-    option<unsigned int> timeout = {};
+    unsigned int timeout;
     Z3Context ctx;
     const VariableManager &varMan;
     z3::solver solver;

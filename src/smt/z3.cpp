@@ -1,5 +1,6 @@
 #include "z3.hpp"
 #include "../expr/ginactoz3.hpp"
+#include "../config.hpp"
 
 std::ostream& Z3::print(std::ostream& os) const {
     return os << solver;
@@ -7,7 +8,9 @@ std::ostream& Z3::print(std::ostream& os) const {
 
 Z3::~Z3() {}
 
-Z3::Z3(const VariableManager &varMan): varMan(varMan), solver(z3::solver(ctx)) {}
+Z3::Z3(const VariableManager &varMan): varMan(varMan), solver(z3::solver(ctx)) {
+    setTimeout(Config::Z3::DefaultTimeout);
+}
 
 void Z3::add(const BoolExpr &e) {
     solver.add(convert(e));
@@ -39,13 +42,13 @@ ExprSymbolMap<GiNaC::numeric> Z3::model() {
 }
 
 void Z3::setTimeout(unsigned int timeout) {
-    if (this->timeout && this->timeout.get() == timeout) {
+    if (this->timeout == timeout) {
         return;
     } else if (timeout > 0) {
         z3::params params(ctx);
         params.set(":timeout", timeout);
         solver.set(params);
-        this->timeout = {timeout};
+        this->timeout = timeout;
     }
 }
 

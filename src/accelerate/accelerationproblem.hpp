@@ -9,6 +9,7 @@
 #include "../smt/smtfactory.hpp"
 #include "../analysis/preprocess.hpp"
 #include "../util/proofoutput.hpp"
+#include "../util/timeout.hpp"
 
 struct AccelerationProblem {
     GuardList res;
@@ -51,7 +52,7 @@ struct AccelerationProblem {
             closedSubs = {};
         }
         AccelerationProblem res({}, {}, normalize(guard), up, closedSubs, cost, n, varMan);
-        while (res.recurrence());
+        while (res.recurrence() && !Timeout::soft());
         return res;
     }
 
@@ -172,7 +173,7 @@ struct AccelerationProblem {
     }
 
     void simplifyEquivalently() {
-        while (true) {
+        while (!Timeout::soft()) {
             if (!recurrence() && !monotonicity() && !eventualWeakDecrease()) {
                 break;
             }
@@ -180,7 +181,7 @@ struct AccelerationProblem {
     }
 
     void simplifyNonterm() {
-        while (true) {
+        while (!Timeout::soft()) {
             if (!recurrence() && !eventualWeakIncrease()) {
                 break;
             }

@@ -16,6 +16,7 @@
  */
 
 #include "timeout.hpp"
+#include "../config.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -59,7 +60,7 @@ bool Timeout::soft() {
 }
 
 bool Timeout::hard() {
-    if (!timeout_enable) return false;
+    if (!timeout_enable || Config::Analysis::NonTermMode) return false;
     TimePoint now = chrono::steady_clock::now();
     return now >= timeout_hard;
 }

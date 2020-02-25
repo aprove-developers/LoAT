@@ -37,7 +37,6 @@ public:
     enum Style {
         Section,
         Headline,
-        Warning,
         Result,
         None
     };
