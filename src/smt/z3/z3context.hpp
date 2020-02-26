@@ -18,8 +18,8 @@
 #ifndef Z3CONTEXT_H
 #define Z3CONTEXT_H
 
-#include "../util/option.hpp"
-#include "../expr/expression.hpp"
+#include "../../util/option.hpp"
+#include "../../expr/expression.hpp"
 
 #include <z3++.h>
 #include <map>
@@ -50,19 +50,6 @@ public:
      * (i.e., each GiNaC symbol can only be associated to a single z3 variable).
      */
     z3::expr addNewVariable(const ExprSymbol &symbol, Expression::Type type = Expression::Int);
-
-    /**
-     * Adds a new z3 variable (with the given name, if possible, otherwise a number is appended).
-     * The new variable is not associated to any GiNaC symbol, hence lookup via getVariable is not possible!
-     * This is provided for convenience, one could also use addNewVariable with a newly created GiNaC symbol.
-     */
-    z3::expr addFreshVariable(const std::string &basename, Expression::Type type = Expression::Int);
-
-    /**
-     * Static wrapper around z3::expr::sort that checks if the given symbol is of the given type.
-     * @note symbol must be a z3::symbol, not an arbitrary z3::expr!
-     */
-    static bool isVariableOfType(const z3::expr &symbol, Expression::Type type);
 
     ExprSymbolMap<z3::expr> getSymbolMap() const;
 

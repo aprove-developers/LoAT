@@ -78,8 +78,6 @@ add_executable(${EXECUTABLE}
         src/expr/complexity.hpp
         src/expr/expression.cpp
         src/expr/expression.hpp
-        src/expr/ginactoz3.cpp
-        src/expr/ginactoz3.hpp
         src/expr/guardtoolbox.cpp
         src/expr/guardtoolbox.hpp
         src/expr/relation.cpp
@@ -110,8 +108,6 @@ add_executable(${EXECUTABLE}
         src/util/timeout.cpp
         src/util/timeout.hpp
         src/util/result.hpp
-        src/smt/z3context.cpp
-        src/smt/z3context.hpp
         src/config.cpp
         src/config.hpp
         src/main.cpp
@@ -144,14 +140,26 @@ add_executable(${EXECUTABLE}
         src/its/t2parser/t2parser.hpp
         src/smt/smt.hpp
         src/smt/smt.cpp
-        src/smt/z3.cpp
-        src/smt/z3.hpp
+        src/smt/z3/z3.cpp
+        src/smt/z3/z3.hpp
+        src/smt/z3/z3context.cpp
+        src/smt/z3/z3context.hpp
+        src/smt/z3/ginactoz3.cpp
+        src/smt/z3/ginactoz3.hpp
+        src/smt/cvc4/cvc4.cpp
+        src/smt/cvc4/cvc4.hpp
+        src/smt/cvc4/cvc4context.cpp
+        src/smt/cvc4/cvc4context.hpp
+        src/smt/cvc4/ginactocvc4.cpp
+        src/smt/cvc4/ginactocvc4.hpp
         src/smt/smtfactory.cpp
         src/smt/smtfactory.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
 message(STATUS "z3: ${Z3}")
+find_library(CVC4 cvc4)
+message(STATUS "cvc4: ${CVC4}")
 find_library(PURRS purrs)
 message(STATUS "purrs: ${PURRS}")
 find_library(GINAC ginac)
@@ -172,6 +180,11 @@ get_filename_component(Z3_BIN ${Z3} DIRECTORY)
 get_filename_component(Z3_HOME ${Z3_BIN} DIRECTORY)
 message(STATUS "Setting Z3_HOME to ${Z3_HOME}")
 
+#get_filename_component(CVC4_SRC ${CVC4} DIRECTORY)
+#get_filename_component(CVC4_BUILD ${CVC4_SRC} DIRECTORY)
+#get_filename_component(CVC4_HOME ${CVC4_BUILD} DIRECTORY)
+#message(STATUS "Setting CVC4_HOME to ${CVC4_HOME}")
+
 target_include_directories(${EXECUTABLE} PUBLIC ${Z3_HOME}/include)
 
-target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${CLN} ${NTL} ${Z3} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})
+target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${CLN} ${NTL} ${Z3} ${CVC4} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})

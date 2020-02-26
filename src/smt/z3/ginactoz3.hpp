@@ -18,9 +18,9 @@
 #ifndef GINACTOZ3_H
 #define GINACTOZ3_H
 
-#include "../util/exceptions.hpp"
-#include "../smt/z3context.hpp"
-#include "../its/itsproblem.hpp"
+#include "../../util/exceptions.hpp"
+#include "z3context.hpp"
+#include "../../its/itsproblem.hpp"
 
 #include <ginac/ginac.h>
 #include <z3++.h>

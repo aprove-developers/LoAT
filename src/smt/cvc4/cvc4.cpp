@@ -1,0 +1,71 @@
+#include "cvc4.hpp"
+#include "../../config.hpp"
+#include "ginactocvc4.hpp"
+
+Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) {
+    setTimeout(Config::Z3::DefaultTimeout);
+    solver.setOption("produce-models", true);
+}
+
+void Cvc4::add(const BoolExpr &e) {
+    solver.assertFormula(convert(e));
+}
+
+void Cvc4::push() {
+    solver.push();
+}
+
+void Cvc4::pop() {
+    solver.pop();
+}
+
+Smt::Result Cvc4::check() {
+    switch (solver.checkSat().isSat()) {
+    case CVC4::Result::SAT: return Smt::Sat;
+    case CVC4::Result::UNSAT: return Smt::Unsat;
+    case CVC4::Result::SAT_UNKNOWN: return Smt::Unknown;
+    }
+}
+
+GiNaC::numeric Cvc4::getRealFromModel(const CVC4::Expr &symbol) {
+    CVC4::Rational rat = solver.getValue(symbol).getConst<CVC4::Rational>();
+    GiNaC::numeric res = rat.getNumerator().getLong();
+    return res / rat.getDenominator().getLong();
+}
+
+ExprSymbolMap<GiNaC::numeric> Cvc4::model() {
+    ExprSymbolMap<GiNaC::numeric> res;
+    for (const auto &p: ctx.getSymbolMap()) {
+        res[p.first] = getRealFromModel(p.second);
+    }
+    return res;
+}
+
+void Cvc4::setTimeout(unsigned int timeout) {
+    this->timeout = timeout;
+    solver.setTimeLimit(timeout);
+}
+
+void Cvc4::resetSolver() {
+    solver.reset();
+    solver.setTimeLimit(timeout);
+}
+
+CVC4::Expr Cvc4::convert(const BoolExpr &e) {
+    if (e->getLit()) {
+        return GinacToCvc4::convert(e->getLit().get(), ctx, varMan);
+    }
+    CVC4::Expr res = ctx.mkConst(e->isAnd());
+    bool first = true;
+    for (const BoolExpr &c: e->getChildren()) {
+        if (first) {
+            res = convert(c);
+            first = false;
+        } else {
+            res = e->isAnd() ? ctx.mkExpr(CVC4::Kind::AND, res, convert(c)) : ctx.mkExpr(CVC4::Kind::OR, res, convert(c));
+        }
+    }
+    return res;
+}
+
+Cvc4::~Cvc4() {}

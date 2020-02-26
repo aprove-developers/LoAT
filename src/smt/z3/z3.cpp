@@ -1,6 +1,6 @@
 #include "z3.hpp"
-#include "../expr/ginactoz3.hpp"
-#include "../config.hpp"
+#include "ginactoz3.hpp"
+#include "../../config.hpp"
 
 std::ostream& Z3::print(std::ostream& os) const {
     return os << solver;

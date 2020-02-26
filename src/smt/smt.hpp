@@ -18,7 +18,6 @@ public:
     virtual ExprSymbolMap<GiNaC::numeric> model() = 0;
     virtual void setTimeout(unsigned int timeout) = 0;
     virtual void resetSolver() = 0;
-    virtual std::ostream& print(std::ostream& os) const = 0;
     virtual ~Smt();
 
     static option<ExprSymbolMap<GiNaC::numeric>> maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan);

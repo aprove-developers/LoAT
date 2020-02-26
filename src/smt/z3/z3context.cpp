@@ -17,7 +17,7 @@
 
 #include "z3context.hpp"
 
-#include "../expr/expression.hpp"
+#include "../../expr/expression.hpp"
 
 using namespace std;
 
@@ -40,11 +40,6 @@ z3::expr Z3Context::addNewVariable(const ExprSymbol &symbol, Expression::Type ty
     return res;
 }
 
-z3::expr Z3Context::addFreshVariable(const std::string &basename, Expression::Type type) {
-    // Generate a fresh variable, but do not associate it to anything
-    return generateFreshVar(basename, type);
-}
-
 z3::expr Z3Context::generateFreshVar(const std::string &basename, Expression::Type type) {
     string newname = basename;
 
@@ -55,11 +50,6 @@ z3::expr Z3Context::generateFreshVar(const std::string &basename, Expression::Ty
 
     usedNames.emplace(newname, 1); // newname is now used once
     return (type == Expression::Int) ? int_const(newname.c_str()) : real_const(newname.c_str());
-}
-
-bool Z3Context::isVariableOfType(const z3::expr &symbol, Expression::Type type) {
-    const z3::sort sort = symbol.get_sort();
-    return ((type == Expression::Int && sort.is_int()) || (type == Expression::Real && sort.is_real()));
 }
 
 std::ostream& operator<<(std::ostream &s, const Expression::Type &type) {
