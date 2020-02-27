@@ -25,6 +25,14 @@ const BoolExpr BoolLit::negation() const {
     return std::shared_ptr<BoolExpression>(new BoolLit(Relation::negateLessEqInequality(lit)));
 }
 
+bool BoolLit::isLinear() const {
+    return Expression(lit.lhs()).isLinear() && Expression(lit.rhs()).isLinear();
+}
+
+bool BoolLit::isPolynomial() const {
+    return Expression(lit.lhs()).isPolynomial() && Expression(lit.rhs()).isPolynomial();
+}
+
 BoolLit::~BoolLit() {}
 
 
@@ -56,6 +64,25 @@ const BoolExpr BoolJunction::negation() const {
     case ConcatAnd: return buildOr(newChildren);
     }
 }
+
+bool BoolJunction::isLinear() const {
+    for (const BoolExpr &e: children) {
+        if (!e->isLinear()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BoolJunction::isPolynomial() const {
+    for (const BoolExpr &e: children) {
+        if (!e->isPolynomial()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 BoolJunction::~BoolJunction() {}
 

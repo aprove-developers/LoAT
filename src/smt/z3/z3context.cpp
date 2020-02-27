@@ -1,3 +1,5 @@
+#ifdef HAS_Z3
+
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -68,3 +70,5 @@ z3::expr Z3Context::ge(const z3::expr &x, const z3::expr &y) {
 z3::expr Z3Context::neq(const z3::expr &x, const z3::expr &y) {
     return x != y;
 }
+
+#endif

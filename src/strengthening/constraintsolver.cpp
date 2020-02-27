@@ -54,7 +54,6 @@ namespace strengthening {
     }
 
     const GuardList Self::instantiateTemplates(const ExprSymbolMap<GiNaC::numeric> &model) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver(ruleCtx.varMan);
         GuardList res;
         UpdateMap parameterInstantiation;
         for (const ExprSymbol &p: templates.params()) {
@@ -66,20 +65,21 @@ namespace strengthening {
         }
         const GiNaC::exmap &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
         const std::vector<Expression> instantiatedTemplates = templates.subs(subs);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({instantiatedTemplates}, {}), ruleCtx.varMan);
         for (const Expression &e: instantiatedTemplates) {
             if (!templates.isParametric(e)) {
+                solver->push();
                 solver->add(!buildLit(e));
                 if (solver->check() != Smt::Unsat) {
                     res.push_back(e);
                 }
-                solver->resetSolver();
+                solver->pop();
             }
         }
         return res;
     }
 
     const option<Invariants> Self::splitInitiallyValid(const GuardList &invariants) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver(ruleCtx.varMan);
         Invariants res;
         BoolExpr preconditionVec = False;
         for (const GuardList &pre: ruleCtx.preconditions) {
@@ -89,6 +89,7 @@ namespace strengthening {
             }
             preconditionVec = preconditionVec | preVec;
         }
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({invariants}, {}), ruleCtx.varMan);
         for (const Expression &i: invariants) {
             if (Timeout::soft()) {
                 return {};

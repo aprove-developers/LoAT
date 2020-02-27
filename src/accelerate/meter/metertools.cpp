@@ -82,7 +82,7 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
     auto isUpdated = [&](const ExprSymbol &var){ return updatedVars.count(var) > 0; };
 
     // create Z3 solver with the guard here to use push/pop for efficiency
-    unique_ptr<Smt> solver = SmtFactory::solver(varMan);
+    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
     for (const Expression &ex : guard) {
         solver->add(ex);
     }

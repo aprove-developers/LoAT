@@ -23,6 +23,7 @@ struct AccelerationProblem {
     bool equivalent = true;
     bool nonterm = true;
     ProofOutput proof;
+    std::unique_ptr<Smt> solver;
     const VariableManager varMan;
 
     AccelerationProblem(
@@ -35,6 +36,7 @@ struct AccelerationProblem {
             const ExprSymbol &n,
             const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), varMan(varMan) {
         this->res.push_back(n > 0);
+        this->solver = SmtFactory::solver(Smt::chooseLogic<GiNaC::exmap>({todo}, {up}), varMan);
     }
 
     static AccelerationProblem init(
@@ -51,7 +53,8 @@ struct AccelerationProblem {
         } else {
             closedSubs = {};
         }
-        AccelerationProblem res({}, {}, normalize(guard), up, closedSubs, cost, n, varMan);
+        const GuardList &todo = normalize(guard);
+        AccelerationProblem res({}, {}, todo, up, closedSubs, cost, n, varMan);
         while (res.recurrence() && !Timeout::soft());
         return res;
     }
@@ -73,15 +76,12 @@ struct AccelerationProblem {
         if (!closed) {
             return false;
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
-        for (const Expression &e: done) {
-            solver->add(e);
-        }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
             solver->push();
             solver->add(e.subs(up));
             if (solver->check() != Smt::Sat) {
+                solver->pop();
                 return false;
             }
             solver->add(e.lhs() <= 0);
@@ -93,6 +93,8 @@ struct AccelerationProblem {
                 todo.erase(it);
                 print();
                 nonterm = false;
+                solver->pop();
+                solver->add(e);
                 return true;
             }
             solver->pop();
@@ -101,15 +103,12 @@ struct AccelerationProblem {
     }
 
     bool recurrence() {
-        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
-        for (const Expression &e: done) {
-            solver->add(e);
-        }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
             solver->push();
             solver->add(e);
             if (solver->check() != Smt::Sat) {
+                solver->pop();
                 return false;
             }
             solver->add(e.subs(up).lhs() <= 0);
@@ -120,6 +119,8 @@ struct AccelerationProblem {
                 res.push_back(e);
                 todo.erase(it);
                 print();
+                solver->pop();
+                solver->add(e);
                 return true;
             }
             solver->pop();
@@ -131,16 +132,13 @@ struct AccelerationProblem {
         if (!closed) {
             return false;
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
-        for (const Expression &e: done) {
-            solver->add(e);
-        }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
             solver->push();
             const GiNaC::ex &updated = e.lhs().subs(up);
             solver->add(e.lhs() >= updated);
             if (solver->check() != Smt::Sat) {
+                solver->pop();
                 return false;
             }
             solver->add(updated < updated.subs(up));
@@ -151,7 +149,6 @@ struct AccelerationProblem {
                 solver->add(e);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {
-                    solver->pop();
                     proof.newline();
                     proof.append(std::stringstream() << "handled " << e << " via eventual decrease");
                     done.push_back(e);
@@ -160,6 +157,8 @@ struct AccelerationProblem {
                     todo.erase(it);
                     print();
                     nonterm = false;
+                    solver->pop();
+                    solver->add(e);
                     return true;
                 }
             }
@@ -189,16 +188,13 @@ struct AccelerationProblem {
     }
 
     bool eventualWeakIncrease() {
-        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
-        for (const Expression &e: done) {
-            solver->add(e);
-        }
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
             solver->push();
             const GiNaC::ex &updated = e.lhs().subs(up);
             solver->add(e.lhs() <= updated);
             if (solver->check() != Smt::Sat) {
+                solver->pop();
                 return false;
             }
             solver->add(updated > updated.subs(up));
@@ -209,7 +205,6 @@ struct AccelerationProblem {
                 solver->add(e);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {
-                    solver->pop();
                     proof.newline();
                     proof.append(std::stringstream() << "handled " << e << " via eventual increase");
                     done.push_back(e);
@@ -218,6 +213,8 @@ struct AccelerationProblem {
                     todo.erase(it);
                     this->equivalent = false;
                     print();
+                    solver->pop();
+                    solver->add(e);
                     return true;
                 }
             }
@@ -257,24 +254,6 @@ struct AccelerationCalculus {
             return AccelerationProblem::init(r.getUpdate(), guard, varMan, {}, cost, n);
         } else {
             return AccelerationProblem::init(r.getUpdate(), guard, varMan, closed, cost, n);
-        }
-    }
-
-    static option<AccelerationProblem> solveEquivalently(AccelerationProblem &p) {
-        p.simplifyEquivalently();
-        if (p.solved()) {
-            return p;
-        } else {
-            return {};
-        }
-    }
-
-    static option<AccelerationProblem> solveNonterm(AccelerationProblem &p) {
-        p.simplifyNonterm();
-        if (p.solved()) {
-            return p;
-        } else {
-            return {};
         }
     }
 

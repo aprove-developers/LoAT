@@ -15,6 +15,8 @@ public:
     virtual bool isOr() const = 0;
     virtual std::set<BoolExpr> getChildren() const = 0;
     virtual const BoolExpr negation() const = 0;
+    virtual bool isLinear() const = 0;
+    virtual bool isPolynomial() const = 0;
     virtual ~BoolExpression();
 };
 
@@ -32,6 +34,8 @@ public:
     option<Expression> getLit() const override;
     std::set<BoolExpr> getChildren() const override;
     const BoolExpr negation() const override;
+    bool isLinear() const override;
+    bool isPolynomial() const override;
     ~BoolLit() override;
 
 };
@@ -53,6 +57,8 @@ public:
     option<Expression> getLit() const override;
     std::set<BoolExpr> getChildren() const override;
     const BoolExpr negation() const override;
+    bool isLinear() const override;
+    bool isPolynomial() const override;
     ~BoolJunction() override;
 
 };

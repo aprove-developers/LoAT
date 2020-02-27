@@ -787,8 +787,9 @@ bool AsymptoticBound::tryInstantiatingVariable() {
         Direction dir = it->getDirection();
 
         if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-            std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
-            solver->add(buildAnd(currentLP.getQuery()));
+            const std::vector<Expression> &query = currentLP.getQuery();
+            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({query}, {}), varMan);
+            solver->add(buildAnd(query));
             Smt::Result result = solver->check();
 
             if (result == Smt::Unsat) {

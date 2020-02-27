@@ -1,3 +1,5 @@
+#ifdef HAS_CVC4
+
 #include "cvc4context.hpp"
 
 Cvc4Context::~Cvc4Context() { }
@@ -7,7 +9,7 @@ CVC4::Expr Cvc4Context::buildVar(const std::string &name, Expression::Type type)
 }
 
 CVC4::Expr Cvc4Context::getInt(long val) {
-    return mkConst(CVC4::Rational(val));
+    return mkConst(CVC4::Rational(val, 1l));
 }
 
 CVC4::Expr Cvc4Context::getReal(long num, long denom) {
@@ -49,3 +51,5 @@ CVC4::Expr Cvc4Context::ge(const CVC4::Expr &x, const CVC4::Expr &y) {
 CVC4::Expr Cvc4Context::neq(const CVC4::Expr &x, const CVC4::Expr &y) {
     return mkExpr(CVC4::Kind::NOT, mkExpr(CVC4::Kind::EQUAL, x, y));
 }
+
+#endif

@@ -112,7 +112,7 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
 
 bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &varMan) {
     GuardList newGuard;
-    unique_ptr<Smt> solver = SmtFactory::solver(varMan);
+    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({guard}, {}), varMan);
 
     // iterates once over guard and drops constraints that are implied by previous constraints
     auto dropImplied = [&]() {

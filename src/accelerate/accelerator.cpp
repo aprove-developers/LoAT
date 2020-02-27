@@ -293,11 +293,12 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                     bool sat = Smt::check(buildAnd(sr.getGuard()), its) == Smt::Sat;
                     // only proceed if the guard is sat
                     if (sat) {
-                        assert(nonterm::NonTerm::universal(sr, its, sinkLoc));
-                        nonterm = true;
-                        const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expression::NontermSymbol, sinkLoc, {});
-                        res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
-                        res.rules.emplace_back(nontermRule);
+                        if (nonterm::NonTerm::universal(sr, its, sinkLoc)) {
+                            nonterm = true;
+                            const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expression::NontermSymbol, sinkLoc, {});
+                            res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
+                            res.rules.emplace_back(nontermRule);
+                        }
                     }
                 }
             }

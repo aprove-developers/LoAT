@@ -1,11 +1,11 @@
+#ifdef HAS_CVC4
+
 #include "cvc4.hpp"
 #include "../../config.hpp"
 #include "../ginactosmt.hpp"
 
 Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) {
     setTimeout(Config::Z3::DefaultTimeout);
-    solver.setOption("produce-models", true);
-    solver.setLogic("QF_NIA");
 }
 
 void Cvc4::add(const BoolExpr &e) {
@@ -35,6 +35,7 @@ GiNaC::numeric Cvc4::getRealFromModel(const CVC4::Expr &symbol) {
 }
 
 ExprSymbolMap<GiNaC::numeric> Cvc4::model() {
+    assert(models);
     ExprSymbolMap<GiNaC::numeric> res;
     for (const auto &p: ctx.getSymbolMap()) {
         res[p.first] = getRealFromModel(p.second);
@@ -47,11 +48,14 @@ void Cvc4::setTimeout(unsigned int timeout) {
     solver.setTimeLimit(timeout);
 }
 
+void Cvc4::enableModels() {
+    this->models = true;
+    solver.setOption("produce-models", true);
+}
+
 void Cvc4::resetSolver() {
     solver.reset();
     solver.setTimeLimit(timeout);
-    solver.setOption("produce-models", true);
-    solver.setLogic("QF_NIA");
 }
 
 CVC4::Expr Cvc4::convert(const BoolExpr &e) {
@@ -72,3 +76,5 @@ CVC4::Expr Cvc4::convert(const BoolExpr &e) {
 }
 
 Cvc4::~Cvc4() {}
+
+#endif

@@ -48,7 +48,7 @@ namespace strengthening {
     }
 
     const Result Self::splitInvariants(const GuardList &constraints) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver(varMan);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
         for (const Expression &g: guard) {
             solver->add(g);
         }

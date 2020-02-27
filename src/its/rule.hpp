@@ -104,6 +104,13 @@ public:
 
     // special methods for nonlinear rules (idx is an index to rhss)
     LocationIdx getRhsLoc(uint idx) const { return rhss[idx].getLoc(); }
+    const std::vector<UpdateMap> getUpdates() const {
+        std::vector<UpdateMap> res;
+        for (const RuleRhs &rhs: rhss) {
+            res.push_back(rhs.getUpdate());
+        }
+        return res;
+    }
     const UpdateMap& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
     UpdateMap& getUpdateMut(uint idx) { return rhss[idx].getUpdateMut(); }
 

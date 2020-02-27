@@ -77,24 +77,24 @@ Self::AccelerationResult BackwardAcceleration::run() {
     res.status = Failure;
     if (shouldAccelerate()) {
         AccelerationProblem ap = AccelerationCalculus::init(rule, its);
-        option<AccelerationProblem> solved = AccelerationCalculus::solveEquivalently(ap);
-        if (solved) {
+        ap.simplifyEquivalently();
+        if (ap.solved()) {
             res.status = Success;
-            if (solved->nonterm) {
-                const Rule &nontermRule = buildNontermRule(solved->res);
+            if (ap.nonterm) {
+                const Rule &nontermRule = buildNontermRule(ap.res);
                 res.rules.push_back(nontermRule);
                 res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
-                res.proof.storeSubProof(solved->proof, "acceration calculus");
+                res.proof.storeSubProof(ap.proof, "acceration calculus");
             } else {
                 UpdateMap up;
-                for (auto p: solved.get().closed.get()) {
+                for (auto p: ap.closed.get()) {
                     up[its.getVarIdx(Expression(p.first).getAVariable())] = p.second;
                 }
-                LinearRule accel(rule.getLhsLoc(), solved.get().res, solved.get().cost, rule.getRhsLoc(), up);
+                LinearRule accel(rule.getLhsLoc(), ap.res, ap.cost, rule.getRhsLoc(), up);
                 res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
-                res.proof.storeSubProof(solved->proof, "acceration calculus");
+                res.proof.storeSubProof(ap.proof, "acceration calculus");
                 if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                    std::vector<Rule> instantiated = replaceByUpperbounds(solved->n, accel);
+                    std::vector<Rule> instantiated = replaceByUpperbounds(ap.n, accel);
                     if (instantiated.empty()) {
                         res.rules.push_back(accel);
                     } else {

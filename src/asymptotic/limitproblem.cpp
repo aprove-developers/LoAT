@@ -531,6 +531,9 @@ InftyExpressionSet::size_type LimitProblem::getSize() const {
     return set.size();
 }
 
+const InftyExpressionSet LimitProblem::getSet() const {
+    return set;
+}
 
 std::string LimitProblem::getProof() const {
     return log->str();

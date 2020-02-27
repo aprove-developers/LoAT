@@ -18,6 +18,7 @@ public:
     Result check() override;
     ExprSymbolMap<GiNaC::numeric> model() override;
     void setTimeout(unsigned int timeout) override;
+    void enableModels() override;
     void resetSolver() override;
     ~Cvc4() override;
 
@@ -26,6 +27,7 @@ private:
     Cvc4Context ctx;
     const VariableManager &varMan;
     CVC4::SmtEngine solver;
+    bool models = false;
 
     CVC4::Expr convert(const BoolExpr &exp);
     GiNaC::numeric getRealFromModel(const CVC4::Expr &symbol);

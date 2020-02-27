@@ -51,14 +51,12 @@ namespace nonterm {
         if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver(its);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its);
         for (const Expression &e: r.getGuard()) {
             solver->add(e);
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
-            if (!r.isLinear()) {
-                solver->push();
-            }
+            solver->push();
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
             const ExprSymbolSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
             for (const ExprSymbol &var: vars) {
@@ -72,9 +70,7 @@ namespace nonterm {
                 }
                 return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
-            if (!r.isLinear()) {
-                solver->pop();
-            }
+            solver->pop();
         }
         return {};
     }

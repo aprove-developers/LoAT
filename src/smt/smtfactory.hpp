@@ -6,8 +6,8 @@
 class SmtFactory {
 
 public:
-
-    static std::unique_ptr<Smt> solver(const VariableManager &varMan);
+    static std::unique_ptr<Smt> solver(Smt::Logic logic, const VariableManager &varMan);
+    static std::unique_ptr<Smt> modelBuildingSolver(Smt::Logic logic, const VariableManager &varMan);
 
 };
 

@@ -1,16 +1,16 @@
-#ifdef HAS_Z3
+#ifdef HAS_YICES
 
-#ifndef Z3_HPP
-#define Z3_HPP
+#ifndef YICES_HPP
+#define YICES_HPP
 
 #include "../smt.hpp"
-#include "z3context.hpp"
+#include "yicescontext.hpp"
 #include "../../config.hpp"
 
-class Z3 : public Smt {
+class Yices : public Smt {
 
 public:
-    Z3(const VariableManager &varMan);
+    Yices(const VariableManager &varMan);
 
     void add(const BoolExpr &e) override;
     void push() override;
@@ -20,23 +20,23 @@ public:
     void setTimeout(unsigned int timeout) override;
     void enableModels() override;
     void resetSolver() override;
-    ~Z3() override;
+    ~Yices() override;
 
     std::ostream& print(std::ostream& os) const;
 
 private:
     bool models = false;
     unsigned int timeout = Config::Z3::DefaultTimeout;
-    Z3Context ctx;
+    YicesContext ctx;
     const VariableManager &varMan;
-    z3::solver solver;
+    context_t *solver;
+    smt_status res;
 
-    z3::expr convert(const BoolExpr &e);
-    GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
-    void updateParams();
+    term_t convert(const BoolExpr &e);
+    GiNaC::numeric getRealFromModel(model_t *model, type_t symbol);
 
 };
 
-#endif // Z3_HPP
+#endif // YICES_HPP
 
 #endif

@@ -1,6 +1,7 @@
+#ifdef HAS_Z3
+
 #include "z3.hpp"
 #include "../ginactosmt.hpp"
-#include "../../config.hpp"
 
 std::ostream& Z3::print(std::ostream& os) const {
     return os << solver;
@@ -9,7 +10,7 @@ std::ostream& Z3::print(std::ostream& os) const {
 Z3::~Z3() {}
 
 Z3::Z3(const VariableManager &varMan): varMan(varMan), solver(z3::solver(ctx)) {
-    setTimeout(Config::Z3::DefaultTimeout);
+    updateParams();
 }
 
 void Z3::add(const BoolExpr &e) {
@@ -33,6 +34,7 @@ Smt::Result Z3::check() {
 }
 
 ExprSymbolMap<GiNaC::numeric> Z3::model() {
+    assert(models);
     const z3::model &m = solver.get_model();
     ExprSymbolMap<GiNaC::numeric> res;
     for (const auto &p: ctx.getSymbolMap()) {
@@ -42,14 +44,20 @@ ExprSymbolMap<GiNaC::numeric> Z3::model() {
 }
 
 void Z3::setTimeout(unsigned int timeout) {
-    if (this->timeout == timeout) {
-        return;
-    } else if (timeout > 0) {
-        z3::params params(ctx);
-        params.set(":timeout", timeout);
-        solver.set(params);
-        this->timeout = timeout;
-    }
+    this->timeout = timeout;
+    updateParams();
+}
+
+void Z3::enableModels() {
+    this->models = true;
+    updateParams();
+}
+
+void Z3::updateParams() {
+    z3::params params(ctx);
+    params.set(":model", models);
+    params.set(":timeout", timeout);
+    solver.set(params);
 }
 
 z3::expr Z3::convert(const BoolExpr &e) {
@@ -82,4 +90,7 @@ GiNaC::numeric Z3::getRealFromModel(const z3::model &model, const z3::expr &symb
 
 void Z3::resetSolver() {
     solver.reset();
+    updateParams();
 }
+
+#endif

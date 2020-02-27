@@ -150,6 +150,10 @@ add_executable(${EXECUTABLE}
         src/smt/cvc4/cvc4.hpp
         src/smt/cvc4/cvc4context.cpp
         src/smt/cvc4/cvc4context.hpp
+        src/smt/yices/yices.cpp
+        src/smt/yices/yices.hpp
+        src/smt/yices/yicescontext.cpp
+        src/smt/yices/yicescontext.hpp
         src/smt/smtfactory.cpp
         src/smt/smtfactory.hpp)
 
@@ -158,6 +162,8 @@ find_library(Z3 z3)
 message(STATUS "z3: ${Z3}")
 find_library(CVC4 cvc4)
 message(STATUS "cvc4: ${CVC4}")
+find_library(YICES yices)
+message(STATUS "yices: ${YICES}")
 find_library(PURRS purrs)
 message(STATUS "purrs: ${PURRS}")
 find_library(GINAC ginac)
@@ -174,22 +180,21 @@ find_library(NTL ntl)
 message(STATUS "ntl: ${NTL}")
 
 if(Z3)
-  add_compile_definitions(HAS_Z3)
+    # Z3 should be z3/bin/libz3.so, go to the parent directory twice to get Z3_HOME
+    get_filename_component(Z3_BIN ${Z3} DIRECTORY)
+    get_filename_component(Z3_HOME ${Z3_BIN} DIRECTORY)
+    message(STATUS "Setting Z3_HOME to ${Z3_HOME}")
+    target_include_directories(${EXECUTABLE} PUBLIC ${Z3_HOME}/include)
+    add_compile_definitions(HAS_Z3)
+    message(STATUS "has Z3")
 endif()
 if(CVC4)
-  add_compile_definitions(HAS_CVC4)
+    add_compile_definitions(HAS_CVC4)
+    message(STATUS "has CVC4")
+endif()
+if(YICES)
+    add_compile_definitions(HAS_YICES)
+    message(STATUS "has Yices")
 endif()
 
-# Z3 should be z3/bin/libz3.so, go to the parent directory twice to get Z3_HOME
-get_filename_component(Z3_BIN ${Z3} DIRECTORY)
-get_filename_component(Z3_HOME ${Z3_BIN} DIRECTORY)
-message(STATUS "Setting Z3_HOME to ${Z3_HOME}")
-
-#get_filename_component(CVC4_SRC ${CVC4} DIRECTORY)
-#get_filename_component(CVC4_BUILD ${CVC4_SRC} DIRECTORY)
-#get_filename_component(CVC4_HOME ${CVC4_BUILD} DIRECTORY)
-#message(STATUS "Setting CVC4_HOME to ${CVC4_HOME}")
-
-target_include_directories(${EXECUTABLE} PUBLIC ${Z3_HOME}/include)
-
-target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${CLN} ${NTL} ${Z3} ${CVC4} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})
+target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${NTL} ${Z3} ${CVC4} ${YICES} ${CLN} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})

@@ -214,6 +214,8 @@ public:
      */
     InftyExpressionSet::size_type getSize() const;
 
+    const InftyExpressionSet getSet() const;
+
     /**
      * Returns the internal log.
      */
