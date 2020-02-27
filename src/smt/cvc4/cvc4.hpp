@@ -1,3 +1,5 @@
+#ifdef HAS_CVC4
+
 #ifndef CVC4_HPP
 #define CVC4_HPP
 
@@ -30,3 +32,5 @@ private:
 };
 
 #endif // CVC4_HPP
+
+#endif

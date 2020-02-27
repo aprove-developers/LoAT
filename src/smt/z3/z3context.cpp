@@ -17,49 +17,54 @@
 
 #include "z3context.hpp"
 
-#include "../../expr/expression.hpp"
-
 using namespace std;
 
+Z3Context::~Z3Context() { }
 
-option<z3::expr> Z3Context::getVariable(const ExprSymbol &symbol) const {
-    auto it = symbolMap.find(symbol);
-    if (it != symbolMap.end()) {
-        return it->second;
-    }
-    return {};
+z3::expr Z3Context::buildVar(const std::string &name, Expression::Type type) {
+    return (type == Expression::Int) ? int_const(name.c_str()) : real_const(name.c_str());
 }
 
-z3::expr Z3Context::addNewVariable(const ExprSymbol &symbol, Expression::Type type) {
-    // This symbol must not have been mapped to a z3 variable before (can be checked via getVariable)
-    assert(symbolMap.count(symbol) == 0);
-
-    // Associated the GiNaC symbol with the resulting variable
-    z3::expr res = generateFreshVar(symbol.get_name(), type);
-    symbolMap.emplace(symbol, res);
-    return res;
+z3::expr Z3Context::getInt(long val) {
+    return int_val(val);
 }
 
-z3::expr Z3Context::generateFreshVar(const std::string &basename, Expression::Type type) {
-    string newname = basename;
-
-    while (usedNames.find(newname) != usedNames.end()) {
-        int cnt = usedNames[basename]++;
-        newname = basename + "_" + to_string(cnt);
-    }
-
-    usedNames.emplace(newname, 1); // newname is now used once
-    return (type == Expression::Int) ? int_const(newname.c_str()) : real_const(newname.c_str());
+z3::expr Z3Context::getReal(long num, long denom) {
+    return real_val(num, denom);
 }
 
-std::ostream& operator<<(std::ostream &s, const Expression::Type &type) {
-    switch (type) {
-        case Expression::Real: s << "Real"; break;
-        case Expression::Int: s << "Integer"; break;
-    }
-    return s;
+z3::expr Z3Context::pow(const z3::expr &base, const z3::expr &exp) {
+    return z3::pw(base, exp);
 }
 
-ExprSymbolMap<z3::expr> Z3Context::getSymbolMap() const {
-    return symbolMap;
+z3::expr Z3Context::plus(const z3::expr &x, const z3::expr &y) {
+    return x + y;
+}
+
+z3::expr Z3Context::times(const z3::expr &x, const z3::expr &y) {
+    return x * y;
+}
+
+z3::expr Z3Context::eq(const z3::expr &x, const z3::expr &y) {
+    return x == y;
+}
+
+z3::expr Z3Context::lt(const z3::expr &x, const z3::expr &y) {
+    return x < y;
+}
+
+z3::expr Z3Context::le(const z3::expr &x, const z3::expr &y) {
+    return x <= y;
+}
+
+z3::expr Z3Context::gt(const z3::expr &x, const z3::expr &y) {
+    return x > y;
+}
+
+z3::expr Z3Context::ge(const z3::expr &x, const z3::expr &y) {
+    return x >= y;
+}
+
+z3::expr Z3Context::neq(const z3::expr &x, const z3::expr &y) {
+    return x != y;
 }

@@ -1,5 +1,5 @@
 #include "z3.hpp"
-#include "ginactoz3.hpp"
+#include "../ginactosmt.hpp"
 #include "../../config.hpp"
 
 std::ostream& Z3::print(std::ostream& os) const {
@@ -54,7 +54,7 @@ void Z3::setTimeout(unsigned int timeout) {
 
 z3::expr Z3::convert(const BoolExpr &e) {
     if (e->getLit()) {
-        return GinacToZ3::convert(e->getLit().get(), ctx, varMan);
+        return GinacToSmt<z3::expr>::convert(e->getLit().get(), ctx, varMan);
     }
     z3::expr res = ctx.bool_val(e->isAnd());
     bool first = true;

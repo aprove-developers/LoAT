@@ -1,35 +1,51 @@
 #include "cvc4context.hpp"
 
-option<CVC4::Expr> Cvc4Context::getVariable(const ExprSymbol &symbol) const {
-    auto it = symbolMap.find(symbol);
-    if (it != symbolMap.end()) {
-        return it->second;
-    }
-    return {};
+Cvc4Context::~Cvc4Context() { }
+
+CVC4::Expr Cvc4Context::buildVar(const std::string &name, Expression::Type type) {
+    return (type == Expression::Int) ? mkVar(name, integerType()) : mkVar(name, realType());
 }
 
-CVC4::Expr Cvc4Context::addNewVariable(const ExprSymbol &symbol, Expression::Type type) {
-    // This symbol must not have been mapped to a z3 variable before (can be checked via getVariable)
-    assert(symbolMap.count(symbol) == 0);
-
-    // Associated the GiNaC symbol with the resulting variable
-    CVC4::Expr res = generateFreshVar(symbol.get_name(), type);
-    symbolMap.emplace(symbol, res);
-    return res;
+CVC4::Expr Cvc4Context::getInt(long val) {
+    return mkConst(CVC4::Rational(val));
 }
 
-CVC4::Expr Cvc4Context::generateFreshVar(const std::string &basename, Expression::Type type) {
-    std::string newname = basename;
-
-    while (usedNames.find(newname) != usedNames.end()) {
-        int cnt = usedNames[basename]++;
-        newname = basename + "_" + std::to_string(cnt);
-    }
-
-    usedNames.emplace(newname, 1); // newname is now used once
-    return (type == Expression::Int) ? mkVar(newname.c_str(), integerType()) : mkVar(newname.c_str(), realType());
+CVC4::Expr Cvc4Context::getReal(long num, long denom) {
+    return mkConst(CVC4::Rational(num, denom));
 }
 
-ExprSymbolMap<CVC4::Expr> Cvc4Context::getSymbolMap() const {
-    return symbolMap;
+CVC4::Expr Cvc4Context::pow(const CVC4::Expr &base, const CVC4::Expr &exp) {
+    return mkExpr(CVC4::Kind::POW, base, exp);
+}
+
+CVC4::Expr Cvc4Context::plus(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::PLUS, x, y);
+}
+
+CVC4::Expr Cvc4Context::times(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::MULT, x, y);
+}
+
+CVC4::Expr Cvc4Context::eq(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::EQUAL, x, y);
+}
+
+CVC4::Expr Cvc4Context::lt(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::LT, x, y);
+}
+
+CVC4::Expr Cvc4Context::le(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::LEQ, x, y);
+}
+
+CVC4::Expr Cvc4Context::gt(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::GT, x, y);
+}
+
+CVC4::Expr Cvc4Context::ge(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::GEQ, x, y);
+}
+
+CVC4::Expr Cvc4Context::neq(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::NOT, mkExpr(CVC4::Kind::EQUAL, x, y));
 }

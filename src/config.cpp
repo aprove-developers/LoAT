@@ -71,6 +71,11 @@ namespace Config {
     }
 
     namespace Z3 {
+#ifdef HAS_CVC4
+        Solver solver = cvc4;
+#elif defined HAS_Z3
+        const Solver solver = z3;
+#endif
         // Timeouts (default / for metering / for limit smt encoding)
         const unsigned DefaultTimeout = 500u;
         const unsigned MeterTimeout = 500u;

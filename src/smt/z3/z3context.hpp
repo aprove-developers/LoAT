@@ -1,3 +1,5 @@
+#ifdef HAS_Z3
+
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -18,6 +20,7 @@
 #ifndef Z3CONTEXT_H
 #define Z3CONTEXT_H
 
+#include "../smtcontext.hpp"
 #include "../../util/option.hpp"
 #include "../../expr/expression.hpp"
 
@@ -34,45 +37,27 @@
  * For convenience, it is also possible to create z3 symbols not associated to any GiNaC symbol,
  * but these symbols cannot be looked up later (as they are not associated to any GiNaC symbol).
  */
-class Z3Context : public z3::context {
+class Z3Context : public z3::context, public SmtContext<z3::expr> {
 
 public:
-    /**
-     * Returns the variable associated with the given symbol, if present
-     */
-    option<z3::expr> getVariable(const ExprSymbol &symbol) const;
+    ~Z3Context() override;
+    z3::expr getInt(long val) override;
+    z3::expr getReal(long num, long denom) override;
+    z3::expr pow(const z3::expr &base, const z3::expr &exp) override;
+    z3::expr plus(const z3::expr &x, const z3::expr &y) override;
+    z3::expr times(const z3::expr &x, const z3::expr &y) override;
+    z3::expr eq(const z3::expr &x, const z3::expr &y) override;
+    z3::expr lt(const z3::expr &x, const z3::expr &y) override;
+    z3::expr le(const z3::expr &x, const z3::expr &y) override;
+    z3::expr gt(const z3::expr &x, const z3::expr &y) override;
+    z3::expr ge(const z3::expr &x, const z3::expr &y) override;
+    z3::expr neq(const z3::expr &x, const z3::expr &y) override;
 
-    /**
-     * Adds a new z3 variable (with the given symbol's name, if possible, otherwise a number is appended)
-     * and associates it to the given GiNaC symbol.
-     *
-     * @note This method must not be called twice for the same GiNaC symbol
-     * (i.e., each GiNaC symbol can only be associated to a single z3 variable).
-     */
-    z3::expr addNewVariable(const ExprSymbol &symbol, Expression::Type type = Expression::Int);
+protected:
+    z3::expr buildVar(const std::string &basename, Expression::Type type) override;
 
-    ExprSymbolMap<z3::expr> getSymbolMap() const;
-
-private:
-    // Generates a z3 variable of the given type with a fresh name based on the given name
-    z3::expr generateFreshVar(const std::string &basename, Expression::Type type);
-
-private:
-    // Maps GiNaC symbols to their associated z3 symbols/variables.
-    // Only used for lookup via getVariable.
-    ExprSymbolMap<z3::expr> symbolMap;
-
-    // The set of names used by the generated z3 variables (used to find fresh names).
-    // Only for efficiency: Count how often a name was already given to generateFreshName.
-    // (this speeds up generating a fresh name if the same name is requested several times).
-    std::map<std::string,int> usedNames;
 };
 
-
-/**
- * For debugging
- */
-std::ostream& operator<<(std::ostream &s, const Expression::Type &type);
-
-
 #endif // Z3CONTEXT_H
+
+#endif

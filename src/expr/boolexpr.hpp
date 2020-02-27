@@ -78,5 +78,6 @@ const BoolExpr operator !(const BoolExpr);
 
 bool operator ==(const BoolExpression &a, const BoolExpression &b);
 bool operator <(const BoolExpression &a, const BoolExpression &b);
+std::ostream& operator<<(std::ostream &s, const BoolExpr &e);
 
 #endif // BOOLEXPR_HPP

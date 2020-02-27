@@ -49,6 +49,7 @@ void printHelp(char *arg0) {
     cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
     cout << "  --no-const-cpx                                   Don't check for constant complexity (might improve performance)" << endl;
     cout << "  --nonterm                                        Just try to prove non-termination" << endl;
+    cout << "  --smt <cvc4|z3>                                  smt solver to use" << endl;
 }
 
 
@@ -96,16 +97,33 @@ void parseFlags(int argc, char *argv[]) {
                 }
             }
             if (!found) {
-                cout << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name();
+                cerr << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name() << endl;
             }
         } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
             Config::Analysis::ConstantCpxCheck = false;
         } else if (strcmp("--nonterm",argv[arg]) == 0) {
             Config::Analysis::NonTermMode = true;
             Config::Analysis::ConstantCpxCheck = false;
+        } else if (strcmp("--smt",argv[arg]) == 0) {
+            const std::string &solver = getNext();
+            if (solver == "z3") {
+#ifdef HAS_Z3
+                Config::Z3::solver = Config::Z3::Solver::z3;
+#else
+                cerr << "z3 not found" << endl;
+#endif
+            } else if (solver == "cvc4") {
+#ifdef HAS_CVC4
+                Config::Z3::solver = Config::Z3::Solver::cvc4;
+#else
+                cerr << "cvc4 not found" << endl;
+#endif
+            } else {
+                cerr << "unknown smt solver" << endl;
+            }
         } else {
             if (!filename.empty()) {
-                cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
+                cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;
                 exit(1);
             }
             filename = argv[arg];

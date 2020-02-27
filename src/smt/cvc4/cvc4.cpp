@@ -1,10 +1,11 @@
 #include "cvc4.hpp"
 #include "../../config.hpp"
-#include "ginactocvc4.hpp"
+#include "../ginactosmt.hpp"
 
 Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) {
     setTimeout(Config::Z3::DefaultTimeout);
     solver.setOption("produce-models", true);
+    solver.setLogic("QF_NIA");
 }
 
 void Cvc4::add(const BoolExpr &e) {
@@ -49,11 +50,13 @@ void Cvc4::setTimeout(unsigned int timeout) {
 void Cvc4::resetSolver() {
     solver.reset();
     solver.setTimeLimit(timeout);
+    solver.setOption("produce-models", true);
+    solver.setLogic("QF_NIA");
 }
 
 CVC4::Expr Cvc4::convert(const BoolExpr &e) {
     if (e->getLit()) {
-        return GinacToCvc4::convert(e->getLit().get(), ctx, varMan);
+        return GinacToSmt<CVC4::Expr>::convert(e->getLit().get(), ctx, varMan);
     }
     CVC4::Expr res = ctx.mkConst(e->isAnd());
     bool first = true;

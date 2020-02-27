@@ -140,18 +140,16 @@ add_executable(${EXECUTABLE}
         src/its/t2parser/t2parser.hpp
         src/smt/smt.hpp
         src/smt/smt.cpp
+        src/smt/smtcontext.hpp
+        src/smt/ginactosmt.hpp
         src/smt/z3/z3.cpp
         src/smt/z3/z3.hpp
         src/smt/z3/z3context.cpp
         src/smt/z3/z3context.hpp
-        src/smt/z3/ginactoz3.cpp
-        src/smt/z3/ginactoz3.hpp
         src/smt/cvc4/cvc4.cpp
         src/smt/cvc4/cvc4.hpp
         src/smt/cvc4/cvc4context.cpp
         src/smt/cvc4/cvc4context.hpp
-        src/smt/cvc4/ginactocvc4.cpp
-        src/smt/cvc4/ginactocvc4.hpp
         src/smt/smtfactory.cpp
         src/smt/smtfactory.hpp)
 
@@ -174,6 +172,13 @@ find_library(PTHREAD pthread)
 message(STATUS "pthread: ${PTHREAD}")
 find_library(NTL ntl)
 message(STATUS "ntl: ${NTL}")
+
+if(Z3)
+  add_compile_definitions(HAS_Z3)
+endif()
+if(CVC4)
+  add_compile_definitions(HAS_CVC4)
+endif()
 
 # Z3 should be z3/bin/libz3.so, go to the parent directory twice to get Z3_HOME
 get_filename_component(Z3_BIN ${Z3} DIRECTORY)

@@ -62,6 +62,8 @@ namespace Config {
 
     // All settings for interfacing z3
     namespace Z3 {
+        enum Solver {z3, cvc4};
+        extern Solver solver;
         extern const unsigned DefaultTimeout;
         extern const unsigned MeterTimeout;
         extern const unsigned StrengtheningTimeout;

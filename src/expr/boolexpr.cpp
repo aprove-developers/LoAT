@@ -185,3 +185,31 @@ bool operator <(const BoolExpression &a, const BoolExpression &b) {
     }
     return a.getChildren() < b.getChildren();
 }
+
+std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
+    if (e->getLit()) {
+        s << e->getLit().get();
+    } else if (e->getChildren().empty()) {
+        if (e->isAnd()) {
+            s << "TRUE";
+        } else {
+            s << "FALSE";
+        }
+    } else {
+        bool first = true;
+        for (const BoolExpr &c: e->getChildren()) {
+            if (first) {
+                s << c;
+                first = false;
+            } else {
+                if (e->isAnd()) {
+                    s << " /\\ ";
+                } else {
+                    s << " \\/ ";
+                }
+                s << c;
+            }
+        }
+    }
+    return s;
+}
