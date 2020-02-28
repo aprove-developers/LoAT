@@ -67,7 +67,7 @@ term_t Yices::convert(const BoolExpr &e) {
             res = convert(c);
             first = false;
         } else {
-            res = e->isAnd() ? (res && convert(c)) : (res || convert(c));
+            res = e->isAnd() ? yices_and2(res, convert(c)) : yices_or2(res, convert(c));
         }
     }
     return res;

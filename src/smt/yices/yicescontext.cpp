@@ -24,14 +24,7 @@ using namespace std;
 YicesContext::~YicesContext() { }
 
 term_t YicesContext::buildVar(const std::string &name, Expression::Type type) {
-    auto it = vars.find(name);
-    if (it == vars.end()) {
-        type_t res = (type == Expression::Int) ? yices_new_variable(yices_int_type()) : yices_new_variable(yices_real_type());
-        vars[name] = res;
-        return res;
-    } else {
-        return it->second;
-    }
+    return (type == Expression::Int) ? yices_new_uninterpreted_term(yices_int_type()) : yices_new_uninterpreted_term(yices_real_type());
 }
 
 term_t YicesContext::getInt(long val) {

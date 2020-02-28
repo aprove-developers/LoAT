@@ -115,7 +115,6 @@ bool Smt::isLinear(const std::vector<std::vector<Expression>> &gs) {
 bool Smt::isPolynomial(const std::vector<Expression> &guard) {
     for (const Expression &e: guard) {
         if (!Expression(e.lhs()).isPolynomial() || !Expression(e.rhs()).isPolynomial()) {
-            std::cerr << e << " is no poly" << std::endl;
             return false;
         }
     }
@@ -125,7 +124,6 @@ bool Smt::isPolynomial(const std::vector<Expression> &guard) {
 bool Smt::isPolynomial(const UpdateMap &up) {
     for (const auto &p: up) {
         if (!p.second.isPolynomial()) {
-            std::cerr << p.second << " is no poly" << std::endl;
             return false;
         }
     }

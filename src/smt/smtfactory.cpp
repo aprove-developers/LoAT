@@ -14,12 +14,12 @@
 std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager &varMan) {
     switch (logic) {
     case Smt::NA:
-#ifdef HAS_YICES
-        return std::unique_ptr<Smt>(new Yices(varMan));
+#ifdef HAS_CVC4
+        return std::unique_ptr<Smt>(new Cvc4(varMan));
 #elif #defined HAS_Z3
         return std::unique_ptr<Smt>(new Z3(varMan));
 #else
-        return std::unique_ptr<Smt>(new Cvc4(varMan));
+        return std::unique_ptr<Smt>(new Yices(varMan));
 #endif
     case Smt::ENA:
 #ifdef HAS_Z3
@@ -30,10 +30,10 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
         return std::unique_ptr<Smt>(new Cvc4(varMan));
 #endif
     case Smt::LA:
-#ifdef HAS_CVC4
-        return std::unique_ptr<Smt>(new Cvc4(varMan));
-#elif defined HAS_Z3
+#ifdef HAS_Z3
         return std::unique_ptr<Smt>(new Z3(varMan));
+#elif defined HAS_CVC4
+        return std::unique_ptr<Smt>(new Cvc4(varMan));
 #else
         return std::unique_ptr<Smt>(new Yices(varMan));
 #endif

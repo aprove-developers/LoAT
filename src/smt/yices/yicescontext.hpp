@@ -48,8 +48,6 @@ public:
 protected:
     term_t buildVar(const std::string &basename, Expression::Type type) override;
 
-private:
-    std::map<std::string, type_t> vars;
 };
 
 #endif // YICESCONTEXT_H
