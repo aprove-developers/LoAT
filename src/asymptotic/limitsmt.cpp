@@ -117,8 +117,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
-    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({currentLP.getQuery()}, {}), varMan);
-    solver->setTimeout(timeout);
+    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({currentLP.getQuery()}, {}), varMan, timeout);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();

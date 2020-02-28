@@ -11,37 +11,49 @@
 #include "yices/yices.hpp"
 #endif
 
-std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager &varMan) {
+std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager &varMan, uint timeout) {
+    std::unique_ptr<Smt> res;
     switch (logic) {
     case Smt::LA:
+        if (timeout < 1000) {
+            res = std::unique_ptr<Smt>(new Yices(varMan));
+        } else {
 #if HAS_Z3
-        return std::unique_ptr<Smt>(new Z3(varMan));
+            res = std::unique_ptr<Smt>(new Z3(varMan));
 #elif HAS_CVC4
-        return std::unique_ptr<Smt>(new Cvc4(varMan));
+            res = std::unique_ptr<Smt>(new Cvc4(varMan));
 #else
-        return std::unique_ptr<Smt>(new Yices(varMan));
+            res = std::unique_ptr<Smt>(new Yices(varMan));
 #endif
+        }
+        break;
     case Smt::NA:
+        if (timeout < 1000) {
+            res = std::unique_ptr<Smt>(new Yices(varMan));
+        } else {
 #if HAS_CVC4
-        return std::unique_ptr<Smt>(new Z3(varMan));
+            res = std::unique_ptr<Smt>(new Z3(varMan));
 #elif HAS_Z3
-        return std::unique_ptr<Smt>(new Z3(varMan));
+            res = std::unique_ptr<Smt>(new Z3(varMan));
 #else
-        return std::unique_ptr<Smt>(new Yices(varMan));
+            res = std::unique_ptr<Smt>(new Yices(varMan));
 #endif
+        }
+        break;
     case Smt::ENA:
 #if HAS_Z3
-        return std::unique_ptr<Smt>(new Z3(varMan));
+        res = std::unique_ptr<Smt>(new Z3(varMan));
 #elif HAS_YICES
-        return std::unique_ptr<Smt>(new Yices(varMan));
+        res = std::unique_ptr<Smt>(new Yices(varMan));
 #else
-        return std::unique_ptr<Smt>(new Cvc4(varMan));
+        res = std::unique_ptr<Smt>(new Cvc4(varMan));
 #endif
     }
+    res->setTimeout(timeout);
 }
 
-std::unique_ptr<Smt> SmtFactory::modelBuildingSolver(Smt::Logic logic, const VariableManager &varMan) {
-    std::unique_ptr<Smt> res = solver(logic, varMan);
+std::unique_ptr<Smt> SmtFactory::modelBuildingSolver(Smt::Logic logic, const VariableManager &varMan, uint timeout) {
+    std::unique_ptr<Smt> res = solver(logic, varMan, timeout);
     res->enableModels();
     return res;
 }
