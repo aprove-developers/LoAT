@@ -38,7 +38,6 @@ Smt::Result Yices::check() {
 }
 
 ExprSymbolMap<GiNaC::numeric> Yices::model() {
-    assert(models);
     model_t *m = yices_get_model(solver, true);
     ExprSymbolMap<GiNaC::numeric> res;
     for (const auto &p: ctx.getSymbolMap()) {
@@ -52,9 +51,7 @@ void Yices::setTimeout(unsigned int timeout) {
     this->timeout = timeout;
 }
 
-void Yices::enableModels() {
-    this->models = true;
-}
+void Yices::enableModels() { }
 
 term_t Yices::convert(const BoolExpr &e) {
     if (e->getLit()) {

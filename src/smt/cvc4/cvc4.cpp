@@ -4,9 +4,7 @@
 #include "../../config.hpp"
 #include "../ginactosmt.hpp"
 
-Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) {
-    setTimeout(Config::Z3::DefaultTimeout);
-}
+Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) { }
 
 void Cvc4::add(const BoolExpr &e) {
     solver.assertFormula(convert(e));

@@ -54,7 +54,7 @@ bool Timeout::soft() {
 }
 
 bool Timeout::enabled() {
-    return enabled();
+    return timeout_enable;
 }
 
 long Timeout::remainingSoft() {

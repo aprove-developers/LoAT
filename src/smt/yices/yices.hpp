@@ -25,7 +25,6 @@ public:
     std::ostream& print(std::ostream& os) const;
 
 private:
-    bool models = false;
     unsigned int timeout = Config::Z3::DefaultTimeout;
     YicesContext ctx;
     const VariableManager &varMan;

@@ -15,30 +15,22 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
     std::unique_ptr<Smt> res;
     switch (logic) {
     case Smt::LA:
-        if (timeout < 1000) {
+#if HAS_YICES
             res = std::unique_ptr<Smt>(new Yices(varMan));
-        } else {
-#if HAS_Z3
-            res = std::unique_ptr<Smt>(new Z3(varMan));
-#elif HAS_CVC4
-            res = std::unique_ptr<Smt>(new Cvc4(varMan));
-#else
-            res = std::unique_ptr<Smt>(new Yices(varMan));
-#endif
-        }
-        break;
-    case Smt::NA:
-        if (timeout < 1000) {
-            res = std::unique_ptr<Smt>(new Yices(varMan));
-        } else {
-#if HAS_CVC4
-            res = std::unique_ptr<Smt>(new Z3(varMan));
 #elif HAS_Z3
             res = std::unique_ptr<Smt>(new Z3(varMan));
 #else
-            res = std::unique_ptr<Smt>(new Yices(varMan));
+            res = std::unique_ptr<Smt>(new Cvc4(varMan));
 #endif
-        }
+        break;
+    case Smt::NA:
+#if HAS_YICES
+            res = std::unique_ptr<Smt>(new Yices(varMan));
+#elif HAS_Z3
+            res = std::unique_ptr<Smt>(new Z3(varMan));
+#else
+            res = std::unique_ptr<Smt>(new Cvc4(varMan));
+#endif
         break;
     case Smt::ENA:
 #if HAS_Z3
@@ -50,6 +42,7 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
 #endif
     }
     res->setTimeout(timeout);
+    return res;
 }
 
 std::unique_ptr<Smt> SmtFactory::modelBuildingSolver(Smt::Logic logic, const VariableManager &varMan, uint timeout) {

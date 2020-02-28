@@ -195,4 +195,9 @@ if(YICES)
     message(STATUS "has Yices")
 endif()
 
+if ((NOT YICES) AND (NOT Z3) AND (NOT CVC4))
+    message(STATUS "no SMT solver found -- please install Yices, Z3, or CVC4")
+    return()
+endif()
+
 target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${NTL} ${CLN} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})
