@@ -53,6 +53,10 @@ bool Timeout::soft() {
     return now >= timeout_soft;
 }
 
+bool Timeout::enabled() {
+    return enabled();
+}
+
 long Timeout::remainingSoft() {
     return std::chrono::duration_cast<std::chrono::seconds>(timeout_soft - chrono::steady_clock::now()).count();
 }

@@ -41,6 +41,7 @@ namespace Timeout {
     //return true if the timeout has already occurred
     bool hard();
     bool soft();
+    bool enabled();
 
     long remainingSoft();
     long remainingHard();

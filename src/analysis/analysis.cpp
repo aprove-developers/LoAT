@@ -36,7 +36,7 @@ using namespace std;
 
 
 
-RuntimeResult *Analysis::analyze(ITSProblem &its) {
+Complexity Analysis::analyze(ITSProblem &its) {
     Analysis analysis(its);
     return analysis.run();
 }
@@ -165,7 +165,7 @@ void Analysis::simplify(RuntimeResult &res) {
 
 void Analysis::finalize(RuntimeResult &res) {
     its.lock();
-    if (isFullySimplified()) {
+    if (!Timeout::soft()) {
         // Remove duplicate rules (ignoring updates) to avoid wasting time on asymptotic bounds
         if (Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false)) {
             ProofOutput::Proof.majorProofStep("Removed duplicate rules (ignoring updates)", its);
@@ -179,7 +179,7 @@ void Analysis::finalize(RuntimeResult &res) {
 
     ProofOutput::Proof.headline("Computing asymptotic complexity");
 
-    if (!isFullySimplified()) {
+    if (Timeout::soft()) {
         // A timeout occurred before we managed to complete the analysis.
         // We try to quickly extract at least some complexity results.
         // Reduce the number of rules to avoid z3 invocations
@@ -192,20 +192,31 @@ void Analysis::finalize(RuntimeResult &res) {
     }
 }
 
-RuntimeResult *Analysis::run() {
+Complexity Analysis::run() {
     RuntimeResult *res = new RuntimeResult();
     auto simp = std::async([this, res]{this->simplify(*res);});
-    if (simp.wait_for(std::chrono::seconds(Timeout::remainingSoft())) == std::future_status::timeout) {
-        std::cerr << "Aborted due to timeout" << std::endl;
+    if (Timeout::enabled()) {
+        if (simp.wait_for(std::chrono::seconds(Timeout::remainingSoft())) == std::future_status::timeout) {
+            std::cerr << "Aborted due to timeout" << std::endl;
+        }
+    } else {
+        simp.wait();
     }
     auto finalize = std::async([this, res]{this->finalize(*res);});
-    long remaining = Timeout::remainingHard();
-    if (remaining > 0) {
-        finalize.wait_for(std::chrono::seconds(remaining));
+    if (Timeout::enabled()) {
+        long remaining = Timeout::remainingHard();
+        if (remaining > 0) {
+            finalize.wait_for(std::chrono::seconds(remaining));
+        }
+    } else {
+        finalize.wait();
     }
     res->mutex.lock();
     printResult(*res);
-    return res;
+    Complexity cpx = res->cpx;
+    res->mutex.unlock();
+    delete res;
+    return cpx;
 }
 
 // ############################

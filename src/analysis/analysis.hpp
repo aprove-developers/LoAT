@@ -59,7 +59,7 @@ struct RuntimeResult {
  */
 class Analysis {
 public:
-    static RuntimeResult *analyze(ITSProblem &its);
+    static Complexity analyze(ITSProblem &its);
 
 private:
     explicit Analysis(ITSProblem &its);
@@ -68,7 +68,7 @@ private:
      * Main analysis algorithm.
      * Combines chaining, acceleration, pruning in some sensible order.
      */
-    RuntimeResult *run();
+    Complexity run();
 
     void simplify(RuntimeResult &res);
 
