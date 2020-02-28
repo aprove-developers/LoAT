@@ -36,7 +36,11 @@ struct AccelerationProblem {
             const ExprSymbol &n,
             const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), varMan(varMan) {
         this->res.push_back(n > 0);
-        this->solver = SmtFactory::solver(Smt::chooseLogic<GiNaC::exmap>({todo}, {up}), varMan);
+        if (closed) {
+            this->solver = SmtFactory::solver(Smt::chooseLogic<GiNaC::exmap>({todo}, {up, closed.get()}), varMan);
+        } else {
+            this->solver = SmtFactory::solver(Smt::chooseLogic<GiNaC::exmap>({todo}, {up}), varMan);
+        }
     }
 
     static AccelerationProblem init(
