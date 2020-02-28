@@ -59,7 +59,7 @@ struct AccelerationProblem {
         }
         const GuardList &todo = normalize(guard);
         AccelerationProblem res({}, {}, todo, up, closedSubs, cost, n, varMan);
-        while (res.recurrence() && !Timeout::soft());
+        while (res.recurrence());
         return res;
     }
 
@@ -176,7 +176,7 @@ struct AccelerationProblem {
     }
 
     void simplifyEquivalently() {
-        while (!Timeout::soft()) {
+        while (true) {
             if (!recurrence() && !monotonicity() && !eventualWeakDecrease()) {
                 break;
             }
@@ -184,7 +184,7 @@ struct AccelerationProblem {
     }
 
     void simplifyNonterm() {
-        while (!Timeout::soft()) {
+        while (true) {
             if (!recurrence() && !eventualWeakIncrease()) {
                 break;
             }

@@ -23,7 +23,7 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
 #endif
     case Smt::NA:
 #if HAS_CVC4
-        return std::unique_ptr<Smt>(new Cvc4(varMan));
+        return std::unique_ptr<Smt>(new Z3(varMan));
 #elif HAS_Z3
         return std::unique_ptr<Smt>(new Z3(varMan));
 #else

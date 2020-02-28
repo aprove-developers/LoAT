@@ -442,8 +442,6 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     stack<GiNaC::exmap> freeSubs = MT::findInstantiationsForTempVars(varMan, meter.guard);
 
     while (!freeSubs.empty()) {
-        if (Timeout::soft()) break;
-
         const GiNaC::exmap &sub = freeSubs.top();
 
         //apply current substitution (and forget the previous one)

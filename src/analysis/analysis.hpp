@@ -22,6 +22,7 @@
 #include "../expr/expression.hpp"
 
 #include <fstream>
+#include <mutex>
 
 
 /**
@@ -45,6 +46,8 @@ struct RuntimeResult {
     // If true, the complexity had to be reduced to satisfy the guard (e.g. cost x and guard x = y^2).
     bool reducedCpx;
 
+    std::mutex mutex;
+
     // Default constructor yields unknown complexity
     RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0), reducedCpx(false) {}
 };
@@ -56,7 +59,7 @@ struct RuntimeResult {
  */
 class Analysis {
 public:
-    static RuntimeResult analyze(ITSProblem &its);
+    static RuntimeResult *analyze(ITSProblem &its);
 
 private:
     explicit Analysis(ITSProblem &its);
@@ -65,7 +68,11 @@ private:
      * Main analysis algorithm.
      * Combines chaining, acceleration, pruning in some sensible order.
      */
-    RuntimeResult run();
+    RuntimeResult *run();
+
+    void simplify(RuntimeResult &res);
+
+    void finalize(RuntimeResult &res);
 
     /**
      * Makes sure that the cost of a rule is always nonnegative when the rule is applicable
@@ -115,12 +122,12 @@ private:
      *
      * @return If a satisfiable rule is found, returns the corresponding runtime result.
      */
-    option<RuntimeResult> checkConstantComplexity() const;
+    void checkConstantComplexity(RuntimeResult &res) const;
 
     /**
      * For a fully chained ITS problem, this calculates the maximum runtime complexity (using asymptotic bounds)
      */
-    RuntimeResult getMaxRuntime();
+    void getMaxRuntime(RuntimeResult &res);
 
     /**
      * In case of a timeout (when the ITS is not fully chained), this tries to find a good partial result.
@@ -129,7 +136,7 @@ private:
      * Then, these rules are chained with their successors and the process is repeated.
      * This way, complexity results are quickly obtained and deeper rules are considered if enough time is left.
      */
-    RuntimeResult getMaxPartialResult();
+    void getMaxPartialResult(RuntimeResult &res);
 
     /**
      * Used by getMaxRuntime and getMaxPartialResult.
@@ -137,7 +144,7 @@ private:
      * computed runtime or currResult, whichever is larger. If currResult is given, rules whose
      * complexity cannot be larger than currResult are skipped to make the computation faster.
      */
-    RuntimeResult getMaxRuntimeOf(const std::set<TransIdx> &rules, RuntimeResult currResult);
+    void getMaxRuntimeOf(const std::set<TransIdx> &rules, RuntimeResult &res);
 
     /**
      * This removes all subgraphs where all rules only have constant/unknown cost (this includes simple loops!).

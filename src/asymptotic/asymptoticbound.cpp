@@ -21,8 +21,8 @@ using namespace std;
 
 
 AsymptoticBound::AsymptoticBound(VarMan &varMan, GuardList guard,
-                                 Expression cost, bool finalCheck)
-    : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck),
+                                 Expression cost, bool finalCheck, uint timeout)
+    : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck), timeout(timeout),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize), currentLP(varMan) {
     assert(GuardToolbox::isWellformedGuard(guard));
 }
@@ -77,7 +77,7 @@ void AsymptoticBound::normalizeGuard() {
 
 }
 
-void AsymptoticBound::createInitialLimitProblem(const VariableManager &varMan) {
+void AsymptoticBound::createInitialLimitProblem(VariableManager &varMan) {
     currentLP = LimitProblem(normalizedGuard, cost, varMan);
 }
 
@@ -361,7 +361,7 @@ bool AsymptoticBound::solveLimitProblem() {
     limitProblems.pop_back();
 
     start:
-    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !isTimeout()) {
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
 
         InftyExpressionSet::const_iterator it;
 
@@ -438,7 +438,7 @@ bool AsymptoticBound::solveLimitProblem() {
         }
     }
 
-    if (limitProblems.empty() || isTimeout()) {
+    if (limitProblems.empty()) {
         return !solvedLimitProblems.empty();
 
     } else {
@@ -858,7 +858,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
 
 
 bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
-    auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, finalCheck, currentRes);
+    auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, currentRes, timeout);
     if (!optSubs) return false;
 
     substitutions.push_back(optSubs.get());
@@ -868,16 +868,12 @@ bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
 }
 
 
-bool AsymptoticBound::isTimeout() const {
-    return finalCheck ? Timeout::hard() : Timeout::soft();
-}
-
-
 AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
                                                              const GuardList &guard,
                                                              const Expression &cost,
                                                              bool finalCheck,
-                                                             const Complexity &currentRes) {
+                                                             const Complexity &currentRes,
+                                                             uint timeout) {
 
     // Expand the cost to make it easier to analyze
     Expression expandedCost = cost.expand();
@@ -900,7 +896,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     }
     assert(!costToCheck.has(Expression::NontermSymbol));
 
-    AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck);
+    AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck, timeout);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
@@ -947,7 +943,8 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
                                                                     const GuardList &guard,
                                                                     const Expression &cost,
                                                                     bool finalCheck,
-                                                                    Complexity currentRes) {
+                                                                    Complexity currentRes,
+                                                                    uint timeout) {
     Expression expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
@@ -964,7 +961,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     }
     assert(!expandedCost.has(Expression::NontermSymbol));
 
-    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
+    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false, timeout);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
     asymptoticBound.createInitialLimitProblem(varMan);

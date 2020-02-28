@@ -17,9 +17,13 @@
 
 #include "itsproblem.hpp"
 #include "export.hpp"
+#include "../util/exceptions.hpp"
+
+EXCEPTION(TimeoutException, CustomException);
 
 using namespace std;
 
+std::recursive_mutex ITSProblem::mutex;
 
 bool ITSProblem::isEmpty() const {
     return rules.empty();
@@ -51,15 +55,35 @@ bool ITSProblem::hasRule(TransIdx transition) const {
 }
 
 const Rule& ITSProblem::getRule(TransIdx transition) const {
-    return rules.at(transition);
+    try_lock();
+    const Rule &res = rules.at(transition);
+    unlock();
+    return res;
 }
 
 Rule& ITSProblem::getRuleMut(TransIdx transition) {
     return rules.at(transition);
 }
 
+void ITSProblem::lock() {
+    mutex.lock();
+}
+
+void ITSProblem::try_lock() {
+    if (!mutex.try_lock()) {
+        throw TimeoutException();
+    }
+}
+
+void ITSProblem::unlock() {
+    mutex.unlock();
+}
+
 LinearRule ITSProblem::getLinearRule(TransIdx transition) const {
-    return rules.at(transition).toLinear();
+    try_lock();
+    const LinearRule &res = rules.at(transition).toLinear();
+    unlock();
+    return res;
 }
 
 const std::set<LocationIdx>& ITSProblem::getTransitionTargets(TransIdx idx) const {
@@ -113,8 +137,10 @@ std::set<LocationIdx> ITSProblem::getPredecessorLocations(LocationIdx loc) const
 }
 
 void ITSProblem::removeRule(TransIdx transition) {
+    try_lock();
     graph.removeTrans(transition);
     rules.erase(transition);
+    unlock();
 }
 
 TransIdx ITSProblem::addRule(Rule rule) {
@@ -126,7 +152,9 @@ TransIdx ITSProblem::addRule(Rule rule) {
 
     // add transition and store mapping to rule
     TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
+    try_lock();
     rules.emplace(idx, rule);
+    unlock();
     return idx;
 }
 

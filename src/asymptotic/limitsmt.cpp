@@ -113,29 +113,12 @@ static map<int, Expression> getCoefficients(const Expression &ex, const ExprSymb
     return coefficients;
 }
 
-static bool isTimeout(bool finalCheck) {
-    return finalCheck ? Timeout::hard() : Timeout::soft();
-}
-
-
-void updateTimeout(bool finalCheck, unique_ptr<Smt> &solver) {
-    unsigned int timeout;
-    if (finalCheck && Timeout::soft()) {
-        timeout = Config::Z3::LimitTimeoutFinalFast;
-    } else if (finalCheck) {
-        timeout = Config::Z3::LimitTimeoutFinal;
-    } else {
-        timeout = Config::Z3::LimitTimeout;
-    }
-    solver->setTimeout(timeout);
-}
-
 option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
-                                                     VarMan &varMan, bool finalCheck, Complexity currentRes)
+                                                     VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
     unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({currentLP.getQuery()}, {}), varMan);
-    updateTimeout(finalCheck, solver);
+    solver->setTimeout(timeout);
 
     // the parameter of the desired family of solutions
     ExprSymbol n = currentLP.getN();
@@ -214,8 +197,6 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
             // try to find a witness for polynomial complexity with degree maxDeg,...,1
             map<int, Expression> coefficients = getCoefficients(templateCost, n);
             for (int i = maxPossibleDegree; i > 0 && Complexity::Poly(i) > currentRes; i--) {
-                if (isTimeout(finalCheck)) return {};
-                updateTimeout(finalCheck, solver);
                 Expression c = coefficients.find(i)->second;
                 // remember the current state for backtracking
                 solver->push();

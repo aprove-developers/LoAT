@@ -179,15 +179,15 @@ int main(int argc, char *argv[]) {
 #ifdef HAS_YICES
     yices_init();
 #endif
-    RuntimeResult runtime = Analysis::analyze(its);
+    RuntimeResult *runtime = Analysis::analyze(its);
 #ifdef HAS_YICES
     yices_exit();
 #endif
 
     // WST style proof output
-    cout << runtime.cpx.toWstString() << std::endl;
-
+    cout << runtime->cpx.toWstString() << std::endl;
     ProofOutput::Proof.print();
+    delete runtime;
 
     return 0;
 }

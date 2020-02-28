@@ -91,9 +91,6 @@ namespace strengthening {
         }
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({invariants}, {}), ruleCtx.varMan);
         for (const Expression &i: invariants) {
-            if (Timeout::soft()) {
-                return {};
-            }
             solver->push();
             solver->add(!buildLit(i));
             if (solver->check() == Smt::Unsat) {

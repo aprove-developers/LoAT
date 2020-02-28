@@ -31,9 +31,6 @@ option<ExprSymbolMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<Boo
     }
     ExprSymbolMap<GiNaC::numeric> model = s->model();
     for (const BoolExpr &e: soft) {
-        if (Timeout::soft()) {
-            return {};
-        }
         s->push();
         s->add(e);
         if (s->check() == Sat) {

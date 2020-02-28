@@ -304,9 +304,15 @@ private:
                 if (nodes && nodes->count(it.first) == 0) return InvalidNode;
                 cnt++;
                 //at() will throw an exception if outgoing trans does exist
-                try {
-                    outgoing.at(node).at(it.first);
-                } catch (...) { return InvalidPred; }
+                auto it1 = outgoing.find(node);
+                if (it1 == outgoing.end()) {
+                    return InvalidPred;
+                }
+                auto m = it1->second;
+                auto it2 = m.find(it.first);
+                if (it2 == m.end()) {
+                    return InvalidPred;
+                }
             }
         }
         if (cnt != edgecount) return InvalidPredCount;

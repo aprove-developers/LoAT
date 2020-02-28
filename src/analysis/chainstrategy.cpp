@@ -140,21 +140,12 @@ static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bo
     do {
         changed = function(its, node);
         changedOverall = changedOverall || changed;
-
-        if (Timeout::soft()) {
-            return changedOverall;
-        }
-
     } while (repeat && changed);
 
     // Continue with the successors of the current node (DFS traversal)
     for (LocationIdx next : its.getSuccessorLocations(node)) {
         bool changed = callOnEachNodeImpl(its, function, next, repeat, visited);
         changedOverall = changedOverall || changed;
-
-        if (Timeout::soft()) {
-            return changedOverall;
-        }
     }
 
     return changedOverall;
@@ -256,8 +247,6 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
                 eliminateLocationByChaining(its, succ, true);
                 changed = true;
             }
-
-            if (Timeout::soft()) break;
         }
         return changed;
     };
@@ -288,10 +277,6 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
             if (eliminateALocationImpl(its, succ, visited, eliminated)) {
                 return true;
-            }
-
-            if (Timeout::soft()) {
-                return false;
             }
         }
         return false;
@@ -332,8 +317,6 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
 
         std::set<TransIdx> deleted;
         for (TransIdx accel : its.getTransitionsFrom(node)) {
-            if (Timeout::soft()) break;
-
             // Only chain accelerated rules
             if (acceleratedRules.count(accel) == 0) continue;
             const Rule &accelRule = its.getRule(accel);

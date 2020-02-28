@@ -127,8 +127,6 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
     bool changed = false;
     for (LocationIdx node : its.getLocations()) {
         for (LocationIdx pre : its.getPredecessorLocations(node)) {
-            if (Timeout::soft()) return changed;
-
             // First remove duplicates (this is rather cheap)
             removeDuplicateRules(its, its.getTransitionsFromTo(pre, node));
 
@@ -152,9 +150,9 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                             rule.getGuard(),
                             rule.getCost(),
                             false,
-                            Complexity::Const);
+                            Complexity::Const,
+                            Config::Z3::LimitTimeout);
                     queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
-                    if (Timeout::soft()) return changed;
                 }
 
                 // Keep only the top elements of the queue

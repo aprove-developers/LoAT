@@ -8,12 +8,12 @@
 
 using namespace GiNaC;
 
-LimitProblem::LimitProblem(const VariableManager &varMan)
+LimitProblem::LimitProblem(VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost, const VariableManager &varMan)
+LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost, VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
         assert(Relation::isGreaterThanZero(ex));
@@ -29,7 +29,7 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, const VariableManager &varMan)
+LimitProblem::LimitProblem(const GuardList &normalizedGuard, VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Expression &ex : normalizedGuard) {
         assert(Relation::isGreaterThanZero(ex));
@@ -57,6 +57,7 @@ LimitProblem& LimitProblem::operator=(const LimitProblem &other) {
         set = other.set;
         variableN = other.variableN;
         substitutions = other.substitutions;
+        varMan = other.varMan;
         (*log) << other.log->str();
         unsolvable = other.unsolvable;
     }
@@ -80,6 +81,7 @@ LimitProblem& LimitProblem::operator=(LimitProblem &&other) {
         set = std::move(other.set);
         variableN = other.variableN;
         substitutions = std::move(other.substitutions);
+        varMan = other.varMan;
         log = std::move(other.log);
         unsolvable = other.unsolvable;
     }

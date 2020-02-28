@@ -20,6 +20,7 @@
 
 #include <chrono>
 typedef std::chrono::time_point<std::chrono::steady_clock> TimePoint;
+typedef std::chrono::duration<std::chrono::seconds> Duration;
 
 
 /**
@@ -35,17 +36,12 @@ typedef std::chrono::time_point<std::chrono::steady_clock> TimePoint;
 namespace Timeout {
     //calculates all relevant timeout points from this global timeout
     //call with 0 to disable timeouts
-    void setTimeouts(int seconds);
-
-    //returns the point in time when "setTimeouts" was called (should be the start of the application)
-    TimePoint start();
+    void setTimeouts(uint seconds);
 
     //return true if the timeout has already occurred
-    bool preprocessing();
-    bool soft();
     bool hard();
+    bool soft();
 
-    //custom timeouts
-    TimePoint create(int seconds);
-    bool over(const TimePoint &point);
+    long remainingSoft();
+    long remainingHard();
 }

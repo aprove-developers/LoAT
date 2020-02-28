@@ -27,11 +27,11 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(VarMan &varMan, GuardList guard, Expression cost, bool finalCheck);
+    AsymptoticBound(VarMan &varMan, GuardList guard, Expression cost, bool finalCheck, uint timeout);
 
     void initLimitVectors();
     void normalizeGuard();
-    void createInitialLimitProblem(const VariableManager &varMan);
+    void createInitialLimitProblem(VariableManager &varMan);
     void propagateBounds();
     GiNaC::exmap calcSolution(const LimitProblem &limitProblem);
     int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
@@ -56,9 +56,6 @@ private:
     bool trySubstitutingVariable();
     bool trySmtEncoding(Complexity currentRes);
 
-    //check Timeout::soft or Timeout::hard, depending on finalCheck
-    bool isTimeout() const;
-
 private:
     VariableManager &varMan;
     const GuardList guard;
@@ -67,6 +64,7 @@ private:
     GuardList normalizedGuard;
     ComplexityResult bestComplexity;
     ProofOutput proof;
+    uint timeout;
 
     std::vector<std::vector<LimitVector>> addition;
     std::vector<std::vector<LimitVector>> multiplication;
@@ -113,13 +111,15 @@ public:
                                       const GuardList &guard,
                                       const Expression &cost,
                                       bool finalCheck,
-                                      const Complexity &currentRes);
+                                      const Complexity &currentRes,
+                                      uint timeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
                                             const GuardList &guard,
                                             const Expression &cost,
                                             bool finalCheck,
-                                            Complexity currentRes);
+                                            Complexity currentRes,
+                                            uint timeout);
 
 };
 

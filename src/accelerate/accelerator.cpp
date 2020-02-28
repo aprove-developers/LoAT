@@ -72,8 +72,9 @@ bool Accelerator::simplifySimpleLoops() {
     // This is especially useful to eliminate temporary variables before metering.
     if (Config::Accel::SimplifyRulesBefore) {
         for (TransIdx loop : loops) {
+            its.lock();
             res |= Preprocess::simplifyRule(its, its.getRuleMut(loop));
-            if (Timeout::soft()) return res;
+            its.unlock();
         }
     }
     if (res) {
@@ -127,7 +128,8 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
                         accelRule.getGuard(),
                         accelRule.getCost(),
                         false,
-                        currentCpx).cpx;
+                        currentCpx,
+                        Config::Z3::LimitTimeout).cpx;
             if (newCpx > currentCpx) {
                 success = true;
                 // Add the new rule
@@ -158,7 +160,6 @@ void Accelerator::performNesting(std::vector<NestingCandidate> origRules, std::v
         for (const NestingCandidate &out : origRules) {
             if (in.oldRule == out.oldRule) continue;
             nestRules(in, out);
-            if (Timeout::soft()) return;
         }
     }
     for (const NestingCandidate &in : origRules) {
@@ -166,7 +167,6 @@ void Accelerator::performNesting(std::vector<NestingCandidate> origRules, std::v
         for (const NestingCandidate &out : todo) {
             nestRules(in, out);
             nestRules(out, in);
-            if (Timeout::soft()) return;
         }
     }
 }
@@ -412,15 +412,14 @@ void Accelerator::run() {
                     r.getGuard(),
                     r.getCost(),
                     false,
-                    Complexity::Const).cpx;
+                    Complexity::Const,
+                    Config::Z3::LimitTimeout).cpx;
             origRules.push_back({loop, loop, cpx});
         }
     }
 
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
-        if (Timeout::soft()) return;
-
         // Forward and backward accelerate (and partial deletion for nonlinear rules)
         const Rule &r = its.getRule(loop);
         Forward::Result res = accelerateOrShorten(r);
@@ -443,7 +442,8 @@ void Accelerator::run() {
                                 accel.getGuard(),
                                 accel.getCost(),
                                 false,
-                                Complexity::Const).cpx;
+                                Complexity::Const,
+                                Config::Z3::LimitTimeout).cpx;
                     nestingCandidates.push_back(NestingCandidate(loop, added, cpx));
                 }
             }
@@ -453,7 +453,6 @@ void Accelerator::run() {
     // Nesting
     if (Config::Accel::TryNesting) {
         performNesting(std::move(origRules), std::move(nestingCandidates));
-        if (Timeout::soft()) return;
     }
 
     // Chaining accelerated rules amongst themselves would be another heuristic.
@@ -465,7 +464,9 @@ void Accelerator::run() {
     // Especially backward acceleration and nesting can introduce superfluous constraints.
     bool changed = false;
     for (TransIdx rule : resultingRules) {
+        its.lock();
         changed = Preprocess::simplifyGuard(its.getRuleMut(rule).getGuardMut()) || changed;
+        its.unlock();
     }
 
     // Keep rules for which acceleration failed (maybe these rules are in fact not loops).
