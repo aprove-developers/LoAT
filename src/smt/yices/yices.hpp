@@ -10,7 +10,7 @@
 class Yices : public Smt {
 
 public:
-    Yices(const VariableManager &varMan);
+    Yices(const VariableManager &varMan, bool verbose);
 
     void add(const BoolExpr &e) override;
     void push() override;
@@ -30,6 +30,7 @@ private:
     const VariableManager &varMan;
     context_t *solver;
     smt_status res;
+    bool verbose;
 
     term_t convert(const BoolExpr &e);
     GiNaC::numeric getRealFromModel(model_t *model, type_t symbol);

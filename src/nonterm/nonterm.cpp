@@ -51,8 +51,10 @@ namespace nonterm {
         if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its);
+        std::cerr << std::endl;
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its, Config::Z3::DefaultTimeout, true);
         for (const Expression &e: r.getGuard()) {
+            std::cerr << "adding " << e << std::endl;
             solver->add(e);
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
@@ -60,10 +62,15 @@ namespace nonterm {
             const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
             const ExprSymbolSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
             for (const ExprSymbol &var: vars) {
+                std::cerr << "adding " << Expression(var == var.subs(up)) << std::endl;
                 solver->add(Expression(var == var.subs(up)));
             }
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {
+                auto model = solver->model();
+                for (auto p: model) {
+                    std::cerr << p.first << ": " << p.second << std::endl;
+                }
                 GuardList newGuard(r.getGuard());
                 for (const ExprSymbol &var: vars) {
                     newGuard.emplace_back(var == var.subs(up));
