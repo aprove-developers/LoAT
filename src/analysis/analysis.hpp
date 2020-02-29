@@ -20,6 +20,8 @@
 
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
+#include "../util/proofoutput.hpp"
+#include "../its/export.hpp"
 
 #include <fstream>
 #include <mutex>
@@ -29,7 +31,8 @@
  * Represents the final runtime complexity result,
  * including the final cost and guard
  */
-struct RuntimeResult {
+class RuntimeResult {
+private:
     // The final complexity (computed from bound and guard)
     Complexity cpx;
 
@@ -42,16 +45,87 @@ struct RuntimeResult {
     // The final guard
     GuardList guard;
 
-    // If false, cpx is the complexity of bound.
-    // If true, the complexity had to be reduced to satisfy the guard (e.g. cost x and guard x = y^2).
-    bool reducedCpx;
+    ProofOutput proof;
 
-    std::mutex mutex;
+    std::recursive_mutex mutex;
 
+public:
     // Default constructor yields unknown complexity
-    RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0), reducedCpx(false) {}
-};
+    RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0) {}
 
+    void update(const GuardList &guard, const Expression &cost, const Expression &solvedCost, const Complexity &cpx) {
+        try_lock();
+        this->guard = guard;
+        this->cost = cost;
+        this->solvedCost = solvedCost;
+        this->cpx = cpx;
+        unlock();
+    }
+
+    void majorProofStep(const std::string &step, const ITSProblem &its) {
+        try_lock();
+        proof.majorProofStep(step, its);
+        unlock();
+    }
+
+    void minorProofStep(const std::string &step, const ITSProblem &its) {
+        try_lock();
+        proof.minorProofStep(step, its);
+        unlock();
+    }
+
+    void headline(const std::string &s) {
+        try_lock();
+        proof.headline(s);
+        unlock();
+    }
+
+    void concat(const ProofOutput &p) {
+        try_lock();
+        proof.concat(p);
+        unlock();
+    }
+
+    void try_lock() {
+        if (!mutex.try_lock()) {
+            throw TimeoutException();
+        }
+    }
+
+    void lock() {
+        mutex.lock();
+    }
+
+    void unlock() {
+        mutex.unlock();
+    }
+
+    ProofOutput getProof() {
+        return proof;
+    }
+
+    Complexity getCpx() {
+        return cpx;
+    }
+
+    friend std::ostream& operator<<(std::ostream &s, const RuntimeResult &res) {
+        s << "Cpx degree: ";
+        switch (res.cpx.getType()) {
+        case Complexity::CpxPolynomial: s << res.cpx.getPolynomialDegree().toFloat() << std::endl; break;
+        case Complexity::CpxUnknown: s << "?" << std::endl; break;
+        default: s << res.cpx << std::endl;
+        }
+        s << std::endl;
+        s << "Solved cost: " << res.solvedCost << std::endl;
+        s << "Rule cost:   ";
+        ITSExport::printCost(res.cost, s);
+        s << std::endl;
+        s << "Rule guard:  ";
+        ITSExport::printGuard(res.guard, s);
+        return s;
+    }
+
+};
 
 /**
  * Analysis of ITSProblems where all rules are linear.
@@ -59,7 +133,7 @@ struct RuntimeResult {
  */
 class Analysis {
 public:
-    static Complexity analyze(ITSProblem &its);
+    static void analyze(ITSProblem &its);
 
 private:
     explicit Analysis(ITSProblem &its);
@@ -68,9 +142,9 @@ private:
      * Main analysis algorithm.
      * Combines chaining, acceleration, pruning in some sensible order.
      */
-    Complexity run();
+    void run();
 
-    void simplify(RuntimeResult &res);
+    void simplify(RuntimeResult &res, ProofOutput &proof);
 
     void finalize(RuntimeResult &res);
 
@@ -109,11 +183,8 @@ private:
     bool isFullySimplified() const;
 
     // Wrapper methods for Chaining/Accelerator/Pruning methods (adding statistics, debug output)
-    bool chainLinearPaths();
-    bool chainTreePaths();
     bool eliminateALocation(std::string &eliminatedLocation);
-    bool chainAcceleratedLoops(const std::set<TransIdx> &acceleratedRules);
-    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules);
+    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules, ProofOutput &proof);
     bool pruneRules();
 
     /**
@@ -122,7 +193,7 @@ private:
      *
      * @return If a satisfiable rule is found, returns the corresponding runtime result.
      */
-    void checkConstantComplexity(RuntimeResult &res) const;
+    void checkConstantComplexity(RuntimeResult &res, ProofOutput &proof) const;
 
     /**
      * For a fully chained ITS problem, this calculates the maximum runtime complexity (using asymptotic bounds)
@@ -155,7 +226,7 @@ private:
     /**
      * Prints the final complexity result with all relevant information to the proof output
      */
-    void printResult(const RuntimeResult &runtime);
+    void printResult(ProofOutput &proof, RuntimeResult &runtime);
 
 
 private:

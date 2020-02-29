@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
 
     // Disable proof output if requested
     if (proofLevel == 0) {
-        ProofOutput::Proof.setEnabled(false);
+        ProofOutput::setEnabled(false);
     }
 
     // Start the analysis of the parsed ITS problem.

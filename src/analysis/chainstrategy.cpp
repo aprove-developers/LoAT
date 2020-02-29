@@ -43,12 +43,12 @@ using namespace std;
  * The old location is removed, together with all old transitions. So if an outgoing transition cannot be chained
  * with any incoming transition, it will simply be removed.
  */
-static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
+static ProofOutput eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                                         bool keepUnchainable, bool allowSelfloops = false)
 {
     set<TransIdx> keepRules;
-
-    ProofOutput::Proof.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
+    ProofOutput proof;
+    proof.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
@@ -80,7 +80,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                 Preprocess::simplifyGuard(newRule.getGuardMut());
 
                 its.addRule(newRule);
-                ProofOutput::Proof.chainingProof(inRule, outRule, newRule, its);
+                proof.chainingProof(inRule, outRule, newRule, its);
 
             } else {
                 wasChainedWithAll = false;
@@ -104,12 +104,12 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
             if (newRule) {
                 // In case of nonlinear rules, we can simply delete all rhss leading to loc, but keep the other ones
                 its.addRule(newRule.get());
-                ProofOutput::Proof.ruleTransformationProof(oldRule, "partial deletion", newRule.get(), its);
+                proof.ruleTransformationProof(oldRule, "partial deletion", newRule.get(), its);
             } else {
                 // If all rhss lead to loc (for instance if the rule is linear), we add a new dummy rhs
                 const Rule &dummyRule = oldRule.replaceRhssBySink(dummyLoc);
                 its.addRule(dummyRule);
-                ProofOutput::Proof.ruleTransformationProof(oldRule, "partial deletion", dummyRule, its);
+                proof.ruleTransformationProof(oldRule, "partial deletion", dummyRule, its);
             }
         }
     }
@@ -117,6 +117,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
     // Remove loc and all incoming/outgoing rules.
     // Note that all rules have already been chained (or backed up), so removing these rules is ok.
     its.removeLocationAndRules(loc);
+    return proof;
 }
 
 
@@ -128,7 +129,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
  * Implementation of callRepeatedlyOnEachNode
  */
 template <typename F>
-static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
+static bool callOnEachNodeImpl(ITSProblem &its, ProofOutput &proof, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -138,13 +139,13 @@ static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bo
 
     // Call the function repeatedly, until it returns false
     do {
-        changed = function(its, node);
+        changed = function(its, proof, node);
         changedOverall = changedOverall || changed;
     } while (repeat && changed);
 
     // Continue with the successors of the current node (DFS traversal)
     for (LocationIdx next : its.getSuccessorLocations(node)) {
-        bool changed = callOnEachNodeImpl(its, function, next, repeat, visited);
+        bool changed = callOnEachNodeImpl(its, proof, function, next, repeat, visited);
         changedOverall = changedOverall || changed;
     }
 
@@ -167,9 +168,9 @@ static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bo
  * @returns true iff at least one call of the given function returned true.
  */
 template <typename F>
-static bool callOnEachNode(ITSProblem &its, F function, bool repeat) {
+static bool callOnEachNode(ITSProblem &its, ProofOutput &proof, F function, bool repeat) {
     set<LocationIdx> visited;
-    return callOnEachNodeImpl(its, function, its.getInitialLocation(), repeat, visited);
+    return callOnEachNodeImpl(its, proof, function, its.getInitialLocation(), repeat, visited);
 }
 
 
@@ -204,8 +205,8 @@ static bool isOnLinearPath(ITSProblem &its, LocationIdx node) {
 // ##  Chaining Strategies  ##
 // ###########################
 
-bool Chaining::chainLinearPaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, LocationIdx node) {
+option<ProofOutput> Chaining::chainLinearPaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, ProofOutput &proof, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -216,19 +217,23 @@ bool Chaining::chainLinearPaths(ITSProblem &its) {
 
             // Only apply chaining if succ has exactly one in- and one outgoing transition
             if (isOnLinearPath(its, succ)) {
-                eliminateLocationByChaining(its, succ, true);
                 changed = true;
+                proof.concat(eliminateLocationByChaining(its, succ, true));
             }
         }
         return changed;
     };
-
-    return callOnEachNode(its, implementation, true);
+    ProofOutput proof;
+    if (callOnEachNode(its, proof, implementation, true)) {
+        return {proof};
+    } else {
+        return {};
+    }
 }
 
 
-bool Chaining::chainTreePaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, LocationIdx node) {
+option<ProofOutput> Chaining::chainTreePaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, ProofOutput &proof, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -244,7 +249,7 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
 
             // Chain transitions from node to succ with all transitions from succ.
             if (its.hasTransitionsFrom(succ)) {
-                eliminateLocationByChaining(its, succ, true);
+                proof.concat(eliminateLocationByChaining(its, succ, true));
                 changed = true;
             }
         }
@@ -256,7 +261,12 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
     // We then call the implementation on h (f's new child), which may eliminate u.
     // This avoids the exponential blowup, so we can first accelerate rules or
     // prune rules before calling this method again.
-    return callOnEachNode(its, implementation, false);
+    ProofOutput proof;
+    if (callOnEachNode(its, proof, implementation, false)) {
+        return {proof};
+    } else {
+        return {};
+    }
 }
 
 
@@ -299,8 +309,9 @@ bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
 // ##  Chaining after Acceleration  ##
 // ###################################
 
-bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
-    if (acceleratedRules.empty()) return false;
+option<ProofOutput> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
+    if (acceleratedRules.empty()) return {};
+    ProofOutput proof;
     set<TransIdx> successfullyChained;
 
     // Find all lhs locations of accelerated rules, so we can iterate over them.
@@ -336,7 +347,7 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
                     Rule newRule = optRule.get();
                     Preprocess::simplifyRule(its, newRule);
 
-                    ProofOutput::Proof.chainingProof(incomingRule, accelRule, newRule, its);
+                    proof.chainingProof(incomingRule, accelRule, newRule, its);
 
                     // Add the chained rule
                     its.addRule(newRule);
@@ -347,7 +358,7 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
             deleted.insert(accel);
             its.removeRule(accel);
         }
-        ProofOutput::Proof.deletionProof(deleted);
+        proof.deletionProof(deleted);
     }
 
     // Removing chained incoming rules may help to avoid too many rules.
@@ -356,8 +367,8 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
         for (TransIdx toRemove : successfullyChained) {
             its.removeRule(toRemove);
         }
-        ProofOutput::Proof.deletionProof(successfullyChained);
+        proof.deletionProof(successfullyChained);
     }
 
-    return !acceleratedRules.empty();
+    return {proof};
 }

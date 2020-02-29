@@ -23,6 +23,7 @@
 #include "../../its/rule.hpp"
 #include "../../util/option.hpp"
 #include "../../expr/boolexpr.hpp"
+#include "../../util/proofoutput.hpp"
 
 #include <vector>
 #include <map>
@@ -65,6 +66,8 @@ public:
         // Additional constraint that has to be added to the rule's guard to ensure correctness.
         // Only relevant if result is Success (and real coefficients are used).
         option<Expression> integralConstraint;
+
+        ProofOutput proof;
     };
 
     /**
@@ -86,7 +89,7 @@ public:
      *
      * @return the rule resulting from instantiation, if a successful instantiaton was found
      */
-    static option<Rule> instantiateTempVarsHeuristic(VarMan &varMan, const Rule &rule);
+    static option<std::pair<Rule, ProofOutput>> instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule);
 
     /**
      * Guard strengthening heuristic for constant updates, see MeteringToolbox::strengthenGuard.

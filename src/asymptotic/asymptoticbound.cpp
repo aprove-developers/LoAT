@@ -885,7 +885,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("Guard is satisfiable, yielding nontermination");
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, proof);
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, 0, proof);
         } else {
             // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
             costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
@@ -921,12 +921,11 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
         // Gather all relevant information
         if (expandedCost.isNontermSymbol()) {
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, asymptoticBound.proof);
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, 0, asymptoticBound.proof);
         } else {
             Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
             return Result(asymptoticBound.bestComplexity.complexity,
                           solvedCost.expand(),
-                          asymptoticBound.bestComplexity.upperBound > 1,
                           asymptoticBound.bestComplexity.inftyVars,
                           asymptoticBound.proof);
         }
@@ -952,7 +951,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
         if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("proved non-termination via SMT");
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0, proof);
+            return Result(Complexity::Nonterm, Expression::NontermSymbol, 0, proof);
         } else {
             return Result(Complexity::Unknown);
         }
@@ -970,7 +969,6 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
         Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return Result(asymptoticBound.bestComplexity.complexity,
                       solvedCost.expand(),
-                      asymptoticBound.bestComplexity.upperBound > 1,
                       asymptoticBound.bestComplexity.inftyVars,
                       asymptoticBound.proof);
     } else {

@@ -41,7 +41,7 @@ public:
      * @return true iff the ITS was modified
      *         (which is always the case if any simple loops were present)
      */
-    static bool accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules);
+    static option<ProofOutput> accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules);
 
 private:
     // Potential candidate for the inner loop when nesting two loops.
@@ -62,7 +62,7 @@ private:
      * Main function. Tries to accelerate and nest all loops
      * by calling the methods below in a suitable way.
      */
-    void run();
+    option<ProofOutput> run();
 
     /**
      * Helper that calls Preprocess::simplifyRule
@@ -143,6 +143,8 @@ private:
     std::set<TransIdx> keepRules;
 
     const ForwardAcceleration::Result strengthenAndAccelerate(const LinearRule &rule) const;
+
+    ProofOutput proof;
 
 };
 

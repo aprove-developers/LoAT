@@ -32,19 +32,22 @@ using ForwardAcceleration::Result;
  * Helper function that searches for a metering function and,
  * if not successful, tries to instantiate temporary variables.
  */
-static MeteringFinder::Result meterWithInstantiation(VarMan &varMan, Rule &rule) {
+static MeteringFinder::Result meterWithInstantiation(ITSProblem &its, Rule &rule) {
     // Searching for metering functions works the same for linear and nonlinear rules
-    MeteringFinder::Result meter = MeteringFinder::generate(varMan, rule);
+    MeteringFinder::Result meter = MeteringFinder::generate(its, rule);
 
     // If we fail, try again after instantiating temporary variables
     // (we always want to try this heuristic, since it is often applicable)
     if (Config::ForwardAccel::TempVarInstantiation) {
         if (meter.result == MeteringFinder::Unsat || meter.result == MeteringFinder::ConflictVar) {
             Rule instantiatedRule = rule;
-            auto optRule = MeteringFinder::instantiateTempVarsHeuristic(varMan, rule);
+            auto optRule = MeteringFinder::instantiateTempVarsHeuristic(its, rule);
             if (optRule) {
-                rule = optRule.get();
-                meter = MeteringFinder::generate(varMan, rule);
+                rule = optRule.get().first;
+                ProofOutput proof = optRule.get().second;
+                meter = MeteringFinder::generate(its, rule);
+                proof.concat(meter.proof);
+                meter.proof = proof;
             }
         }
     }
@@ -101,6 +104,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
             // Since the loop is non-terminating, the right-hand sides are of no interest.
             rule.getCostMut() = Expression::NontermSymbol;
             const Rule &nontermRule = rule.replaceRhssBySink(sink);
+            res.proof.concat(meter.proof);
             res.proof.ruleTransformationProof(rule, "Proved universal non-termiation while searching metering function", nontermRule, its);
             res.rules.emplace_back(nontermRule);
             res.status = Success;
@@ -147,7 +151,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
                 if (Config::ForwardAccel::UseTempVarForIterationCount) {
                     linRule.getGuardMut().push_back(iterationCount <= meter.metering);
                 }
-
+                res.proof.concat(meter.proof);
                 res.proof.ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, linRule, its);
                 res.rules.emplace_back(linRule);
 

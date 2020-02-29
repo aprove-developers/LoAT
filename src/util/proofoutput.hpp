@@ -41,9 +41,7 @@ public:
         None
     };
 
-    static ProofOutput Proof;
-
-    bool setEnabled(bool on);
+    static bool setEnabled(bool on);
 
     void append(const std::string &s);
 

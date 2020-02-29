@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-ProofOutput ProofOutput::Proof;
 bool ProofOutput::enabled = true;
 
 void ProofOutput::writeToFile(const std::string &file) const {

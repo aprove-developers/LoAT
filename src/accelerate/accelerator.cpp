@@ -78,13 +78,13 @@ bool Accelerator::simplifySimpleLoops() {
         }
     }
     if (res) {
-        ProofOutput::Proof.minorProofStep("Simplified simple loops", its);
+        this->proof.minorProofStep("Simplified simple loops", its);
     }
 
     // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
     if (Pruning::removeDuplicateRules(its, loops)) {
         res = true;
-        ProofOutput::Proof.minorProofStep("Removed duplicate rules", its);
+        this->proof.minorProofStep("Removed duplicate rules", its);
     }
 
     return res;
@@ -148,7 +148,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
             }
         }
         if (success) {
-            ProofOutput::Proof.concat(proof);
+            this->proof.concat(proof);
         }
     }
 }
@@ -185,7 +185,7 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
             its.removeRule(loop);
         }
     }
-    ProofOutput::Proof.deletionProof(deleted);
+    this->proof.deletionProof(deleted);
 
     // In some cases, two loops can yield similar accelerated rules, so we prune duplicates
     // and have to remove rules that were removed from resultingRules.
@@ -200,7 +200,7 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
                 it = resultingRules.erase(it);
             }
         }
-        ProofOutput::Proof.deletionProof(deleted);
+        this->proof.deletionProof(deleted);
     }
 }
 
@@ -389,14 +389,14 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
 // ## Main algorithm  ##
 // #####################
 
-void Accelerator::run() {
+option<ProofOutput> Accelerator::run() {
     // Simplifying rules might make it easier to find metering functions
     simplifySimpleLoops();
 
     // Since we might add accelerated loops, we store the list of loops before acceleration
     vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
     if (loops.empty()) {
-        return; // may happen if rules get removed in simplifySimpleLoops
+        return {}; // may happen if rules get removed in simplifySimpleLoops
     }
 
     // While accelerating, collect rules that might be feasible for nesting
@@ -431,7 +431,7 @@ void Accelerator::run() {
         // Interpret the results, add new rules
         if  (res.status != Failure) {
             // Add accelerated rules, also mark them as inner nesting candidates
-            ProofOutput::Proof.concat(res.proof);
+            this->proof.concat(res.proof);
             for (const Rule &accel : res.rules) {
                 TransIdx added = addResultingRule(accel);
 
@@ -484,8 +484,9 @@ void Accelerator::run() {
     }
 
     if (changed) {
-        ProofOutput::Proof.minorProofStep("Simplified guards", its);
+        this->proof.minorProofStep("Simplified guards", its);
     }
+    return {this->proof};
 }
 
 
@@ -493,14 +494,12 @@ void Accelerator::run() {
 // ## Public interface  ##
 // #######################
 
-bool Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules) {
+option<ProofOutput> Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules) {
     if (its.getSimpleLoopsAt(loc).empty()) {
-        return false;
+        return {};
     }
 
     // Accelerate all loops (includes optimizations like nesting)
     Accelerator accel(its, loc, resultingRules);
-    accel.run();
-
-    return true;
+    return accel.run();
 }

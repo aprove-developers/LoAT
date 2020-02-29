@@ -398,7 +398,8 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // Proof output for linearization (since this is an addition to the paper)
     if (!meter.nonlinearSubs.empty()) {
-        ProofOutput::Proof.append(stringstream() << "During metering: Linearized rule by temporarily substituting " << meter.nonlinearSubs);
+        result.proof.section("Applied linearization");
+        result.proof.append(stringstream() << "Linearized rule by temporarily substituting " << meter.nonlinearSubs);
     }
 
     return result;
@@ -412,15 +413,15 @@ bool MeteringFinder::strengthenGuard(VarMan &varMan, Rule &rule) {
     return MT::strengthenGuard(varMan, rule.getGuardMut(), getUpdateList(rule));
 }
 
-option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const Rule &rule) {
+option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule) {
     // Quick check whether there are any bounds on temp vars we can use to instantiate them.
-    auto hasTempVar = [&](const Expression &ex) { return GuardToolbox::containsTempVar(varMan, ex); };
+    auto hasTempVar = [&](const Expression &ex) { return GuardToolbox::containsTempVar(its, ex); };
     if (std::none_of(rule.getGuard().begin(), rule.getGuard().end(), hasTempVar)) {
         return {};
     }
 
     // We first perform the same steps as in generate()
-    MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
+    MeteringFinder meter(its, rule.getGuard(), getUpdateList(rule));
 
     if (!meter.preprocessAndLinearize()) return {};
     assert(!meter.reducedGuard.empty()); // this method must only be called if generate() fails
@@ -428,7 +429,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, varMan, Config::Z3::MeterTimeout);
+    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Z3::MeterTimeout);
     Smt::Result smtRes = Smt::Unsat; // this method should only be called if generate() fails
 
     GuardList oldGuard = meter.guard;
@@ -437,7 +438,7 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     // Now try all possible instantiations until the solver is satisfied
 
     GiNaC::exmap successfulSubs;
-    stack<GiNaC::exmap> freeSubs = MT::findInstantiationsForTempVars(varMan, meter.guard);
+    stack<GiNaC::exmap> freeSubs = MT::findInstantiationsForTempVars(its, meter.guard);
 
     while (!freeSubs.empty()) {
         const GiNaC::exmap &sub = freeSubs.top();
@@ -479,7 +480,8 @@ option<Rule> MeteringFinder::instantiateTempVarsHeuristic(VarMan &varMan, const 
     instantiatedRule.applySubstitution(successfulSubs);
 
     // Proof output
-    ProofOutput::Proof.append(stringstream() << "During metering: Instantiating temporary variables by " << successfulSubs);
+    ProofOutput proof;
+    proof.ruleTransformationProof(rule, "instantiation", instantiatedRule, its);
 
-    return {instantiatedRule};
+    return {{instantiatedRule, proof}};
 }

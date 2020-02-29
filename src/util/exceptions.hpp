@@ -50,7 +50,7 @@ public: \
 }
 
 //example:
-//EXCEPTION(NotYetImplementedException, CustomException);
+EXCEPTION(TimeoutException, CustomException);
 
 
 #endif // EXCEPTIONS_H

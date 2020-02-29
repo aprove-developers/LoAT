@@ -19,8 +19,6 @@
 #include "export.hpp"
 #include "../util/exceptions.hpp"
 
-EXCEPTION(TimeoutException, CustomException);
-
 using namespace std;
 
 std::recursive_mutex ITSProblem::mutex;

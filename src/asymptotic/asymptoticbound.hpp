@@ -89,17 +89,13 @@ public:
         // The resulting cost, after expressing variables in terms of n.
         Expression solvedCost;
 
-        // Whether the complexity of the cost had to be reduced due to the size of other variables.
-        // E.g. "cost x, guard x^2 == y" only has complexity sqrt(n), as y is also part of the input!
-        bool reducedCpx;
-
         // The number of non-constant variables (i.e., which grow with n).
         int inftyVars;
 
         ProofOutput proof;
 
-        explicit Result(Complexity c) : cpx(c), solvedCost(0), reducedCpx(false), inftyVars(0) {}
-        Result(Complexity c, Expression x, bool r, int v, ProofOutput proof) : cpx(c), solvedCost(x), reducedCpx(r), inftyVars(v), proof(proof) {}
+        explicit Result(Complexity c) : cpx(c), solvedCost(0), inftyVars(0) {}
+        Result(Complexity c, Expression x, int v, ProofOutput proof) : cpx(c), solvedCost(x), inftyVars(v), proof(proof) {}
     };
 
     /**
