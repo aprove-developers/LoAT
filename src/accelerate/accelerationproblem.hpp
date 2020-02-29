@@ -94,11 +94,11 @@ struct AccelerationProblem {
                 proof.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
                 done.push_back(e);
                 res.push_back(e.subs(closed.get()).subs({{n, n-1}}));
-                todo.erase(it);
                 print();
                 nonterm = false;
                 solver->pop();
                 solver->add(e);
+                todo.erase(it);
                 return true;
             }
             solver->pop();
@@ -121,10 +121,10 @@ struct AccelerationProblem {
                 proof.append(std::stringstream() << "handled " << e << " via monotonic increase");
                 done.push_back(e);
                 res.push_back(e);
-                todo.erase(it);
                 print();
                 solver->pop();
                 solver->add(e);
+                todo.erase(it);
                 return true;
             }
             solver->pop();
@@ -158,11 +158,11 @@ struct AccelerationProblem {
                     done.push_back(e);
                     res.push_back(e);
                     res.push_back(newCond);
-                    todo.erase(it);
                     print();
                     nonterm = false;
                     solver->pop();
                     solver->add(e);
+                    todo.erase(it);
                     return true;
                 }
             }
@@ -214,11 +214,11 @@ struct AccelerationProblem {
                     done.push_back(e);
                     res.push_back(newCond);
                     res.push_back(e);
-                    todo.erase(it);
                     this->equivalent = false;
                     print();
                     solver->pop();
                     solver->add(e);
+                    todo.erase(it);
                     return true;
                 }
             }
