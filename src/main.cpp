@@ -176,17 +176,6 @@ int main(int argc, char *argv[]) {
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
-#ifdef HAS_YICES
-    yices_init();
-#endif
-    Complexity cpx = Analysis::analyze(its);
-#ifdef HAS_YICES
-    yices_exit();
-#endif
-
-    // WST style proof output
-    cout << cpx.toWstString() << std::endl;
-    ProofOutput::Proof.print();
-
+    Analysis::analyze(its);
     return 0;
 }

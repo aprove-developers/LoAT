@@ -32,13 +32,17 @@
 
 #include <future>
 
+#ifdef HAS_YICES
+    #include <yices.h>
+#endif
+
 using namespace std;
 
 
 
-Complexity Analysis::analyze(ITSProblem &its) {
+void Analysis::analyze(ITSProblem &its) {
     Analysis analysis(its);
-    return analysis.run();
+    analysis.run();
 }
 
 
@@ -192,12 +196,16 @@ void Analysis::finalize(RuntimeResult &res) {
     }
 }
 
-Complexity Analysis::run() {
+void Analysis::run() {
+#ifdef HAS_YICES
+    yices_init();
+#endif
+
     RuntimeResult *res = new RuntimeResult();
     auto simp = std::async([this, res]{this->simplify(*res);});
     if (Timeout::enabled()) {
         if (simp.wait_for(std::chrono::seconds(Timeout::remainingSoft())) == std::future_status::timeout) {
-            std::cerr << "Aborted due to timeout" << std::endl;
+            std::cerr << "Aborted simplification due to soft timeout" << std::endl;
         }
     } else {
         simp.wait();
@@ -206,17 +214,28 @@ Complexity Analysis::run() {
     if (Timeout::enabled()) {
         long remaining = Timeout::remainingHard();
         if (remaining > 0) {
-            finalize.wait_for(std::chrono::seconds(remaining));
+            if (finalize.wait_for(std::chrono::seconds(remaining)) == std::future_status::timeout) {
+                std::cerr << "Aborted analysis of simplified ITS due to timeout" << std::endl;
+            }
         }
     } else {
         finalize.wait();
     }
     res->mutex.lock();
     printResult(*res);
-    Complexity cpx = res->cpx;
+    // WST style proof output
+    cout << res->cpx.toWstString() << std::endl;
+    ProofOutput::Proof.print();
     res->mutex.unlock();
+
     delete res;
-    return cpx;
+#ifdef HAS_YICES
+    yices_exit();
+#endif
+    if (simp.wait_for(std::chrono::seconds(0)) != std::future_status::ready || finalize.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+        std::cerr << "some tasks are still running, calling std::terminte" << std::endl;
+        std::terminate();
+    }
 }
 
 // ############################
