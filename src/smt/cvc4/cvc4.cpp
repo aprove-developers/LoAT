@@ -7,7 +7,7 @@
 Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) { }
 
 void Cvc4::add(const BoolExpr &e) {
-    solver.assertFormula(convert(e));
+    solver.assertFormula(GinacToSmt<CVC4::Expr>::convert(e, ctx, varMan));
 }
 
 void Cvc4::push() {
@@ -56,22 +56,6 @@ void Cvc4::resetSolver() {
     solver.setTimeLimit(timeout);
 }
 
-CVC4::Expr Cvc4::convert(const BoolExpr &e) {
-    if (e->getLit()) {
-        return GinacToSmt<CVC4::Expr>::convert(e->getLit().get(), ctx, varMan);
-    }
-    CVC4::Expr res = ctx.mkConst(e->isAnd());
-    bool first = true;
-    for (const BoolExpr &c: e->getChildren()) {
-        if (first) {
-            res = convert(c);
-            first = false;
-        } else {
-            res = e->isAnd() ? ctx.mkExpr(CVC4::Kind::AND, res, convert(c)) : ctx.mkExpr(CVC4::Kind::OR, res, convert(c));
-        }
-    }
-    return res;
-}
 
 Cvc4::~Cvc4() {}
 

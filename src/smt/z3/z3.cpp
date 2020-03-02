@@ -14,7 +14,7 @@ Z3::Z3(const VariableManager &varMan): varMan(varMan), solver(z3::solver(ctx)) {
 }
 
 void Z3::add(const BoolExpr &e) {
-    solver.add(convert(e));
+    solver.add(GinacToSmt<z3::expr>::convert(e, ctx, varMan));
 }
 
 void Z3::push() {
@@ -58,23 +58,6 @@ void Z3::updateParams() {
     params.set(":model", models);
     params.set(":timeout", timeout);
     solver.set(params);
-}
-
-z3::expr Z3::convert(const BoolExpr &e) {
-    if (e->getLit()) {
-        return GinacToSmt<z3::expr>::convert(e->getLit().get(), ctx, varMan);
-    }
-    z3::expr res = ctx.bool_val(e->isAnd());
-    bool first = true;
-    for (const BoolExpr &c: e->getChildren()) {
-        if (first) {
-            res = convert(c);
-            first = false;
-        } else {
-            res = e->isAnd() ? (res && convert(c)) : (res || convert(c));
-        }
-    }
-    return res;
 }
 
 GiNaC::numeric Z3::getRealFromModel(const z3::model &model, const z3::expr &symbol) {

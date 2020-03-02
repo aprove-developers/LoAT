@@ -31,7 +31,6 @@ private:
     const VariableManager &varMan;
     z3::solver solver;
 
-    z3::expr convert(const BoolExpr &e);
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
     void updateParams();
 

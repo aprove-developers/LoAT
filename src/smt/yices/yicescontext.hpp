@@ -44,6 +44,10 @@ public:
     term_t gt(const term_t &x, const term_t &y) override;
     term_t ge(const term_t &x, const term_t &y) override;
     term_t neq(const term_t &x, const term_t &y) override;
+    term_t bAnd(const term_t &x, const term_t &y) override;
+    term_t bOr(const term_t &x, const term_t &y) override;
+    term_t bTrue() override;
+    term_t bFalse() override;
 
 protected:
     term_t buildVar(const std::string &basename, Expression::Type type) override;

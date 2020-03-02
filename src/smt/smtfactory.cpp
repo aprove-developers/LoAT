@@ -11,12 +11,12 @@
 #include "yices/yices.hpp"
 #endif
 
-std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager &varMan, uint timeout, bool verbose) {
+std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager &varMan, uint timeout) {
     std::unique_ptr<Smt> res;
     switch (logic) {
     case Smt::LA:
 #if HAS_YICES
-            res = std::unique_ptr<Smt>(new Yices(varMan, verbose));
+            res = std::unique_ptr<Smt>(new Yices(varMan));
 #elif HAS_Z3
             res = std::unique_ptr<Smt>(new Z3(varMan));
 #else
@@ -25,7 +25,7 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
         break;
     case Smt::NA:
 #if HAS_YICES
-            res = std::unique_ptr<Smt>(new Yices(varMan, verbose));
+            res = std::unique_ptr<Smt>(new Yices(varMan));
 #elif HAS_Z3
             res = std::unique_ptr<Smt>(new Z3(varMan));
 #else

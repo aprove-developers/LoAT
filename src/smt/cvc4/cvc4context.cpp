@@ -52,4 +52,20 @@ CVC4::Expr Cvc4Context::neq(const CVC4::Expr &x, const CVC4::Expr &y) {
     return mkExpr(CVC4::Kind::NOT, mkExpr(CVC4::Kind::EQUAL, x, y));
 }
 
+CVC4::Expr Cvc4Context::bAnd(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::AND, x, y);
+}
+
+CVC4::Expr Cvc4Context::bOr(const CVC4::Expr &x, const CVC4::Expr &y) {
+    return mkExpr(CVC4::Kind::OR, x, y);
+}
+
+CVC4::Expr Cvc4Context::bTrue() {
+    return mkConst(true);
+}
+
+CVC4::Expr Cvc4Context::bFalse() {
+    return mkConst(false);
+}
+
 #endif

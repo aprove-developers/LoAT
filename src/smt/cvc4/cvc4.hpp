@@ -29,7 +29,6 @@ private:
     CVC4::SmtEngine solver;
     bool models = false;
 
-    CVC4::Expr convert(const BoolExpr &exp);
     GiNaC::numeric getRealFromModel(const CVC4::Expr &symbol);
 };
 

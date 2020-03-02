@@ -22,6 +22,7 @@
 #include "smtcontext.hpp"
 #include "../its/itsproblem.hpp"
 #include "../config.hpp"
+#include "../expr/boolexpr.hpp"
 
 #include <ginac/ginac.h>
 #include <map>
@@ -33,6 +34,23 @@ template<typename EXPR> class GinacToSmt {
 public:
     EXCEPTION(GinacConversionError,CustomException);
     EXCEPTION(GinacLargeConstantError,CustomException);
+
+    static EXPR convert(const BoolExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
+        if (e->getLit()) {
+            return convert(e->getLit().get(), ctx, varMan);
+        }
+        EXPR res = ctx.bTrue();
+        bool first = true;
+        for (const BoolExpr &c: e->getChildren()) {
+            if (first) {
+                res = convert(c, ctx, varMan);
+                first = false;
+            } else {
+                res = e->isAnd() ? ctx.bAnd(res, convert(c, ctx, varMan)) : ctx.bOr(res, convert(c, ctx, varMan));
+            }
+        }
+        return res;
+    }
 
     static EXPR convert(const GiNaC::ex &expr, SmtContext<EXPR> &context, const VariableManager &varMan) {
         GinacToSmt<EXPR> converter(context, varMan);

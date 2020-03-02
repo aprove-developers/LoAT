@@ -86,4 +86,20 @@ term_t YicesContext::neq(const term_t &x, const term_t &y) {
     return yices_arith_neq_atom(x, y);
 }
 
+term_t YicesContext::bAnd(const term_t &x, const term_t &y) {
+    return yices_and2(x, y);
+}
+
+term_t YicesContext::bOr(const term_t &x, const term_t &y) {
+    return yices_or2(x, y);
+}
+
+term_t YicesContext::bTrue() {
+    return yices_true();
+}
+
+term_t YicesContext::bFalse() {
+    return yices_false();
+}
+
 #endif

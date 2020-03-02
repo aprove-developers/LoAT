@@ -30,11 +30,11 @@
 #include "../accelerate/accelerator.hpp"
 #include "../its/export.hpp"
 
-#include <future>
-
-#ifdef HAS_YICES
-    #include <yices.h>
+#if HAS_YICES
+#include "../smt/yices/yices.hpp"
 #endif
+
+#include <future>
 
 using namespace std;
 
@@ -204,7 +204,7 @@ void Analysis::finalize(RuntimeResult &res) {
 
 void Analysis::run() {
 #ifdef HAS_YICES
-    yices_init();
+    Yices::init();
 #endif
     ProofOutput *proof = new ProofOutput();
     RuntimeResult *res = new RuntimeResult();
@@ -237,7 +237,7 @@ void Analysis::run() {
     delete res;
     delete proof;
 #ifdef HAS_YICES
-    yices_exit();
+    Yices::exit();
 #endif
     if (simp.wait_for(std::chrono::seconds(0)) != std::future_status::ready || finalize.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
         std::cerr << "some tasks are still running, calling std::terminte" << std::endl;

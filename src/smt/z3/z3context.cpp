@@ -71,4 +71,20 @@ z3::expr Z3Context::neq(const z3::expr &x, const z3::expr &y) {
     return x != y;
 }
 
+z3::expr Z3Context::bAnd(const z3::expr &x, const z3::expr &y) {
+    return x && y;
+}
+
+z3::expr Z3Context::bOr(const z3::expr &x, const z3::expr &y) {
+    return x && y;
+}
+
+z3::expr Z3Context::bTrue() {
+    return bool_val(true);
+}
+
+z3::expr Z3Context::bFalse() {
+    return bool_val(false);
+}
+
 #endif

@@ -24,6 +24,10 @@ public:
     CVC4::Expr gt(const CVC4::Expr &x, const CVC4::Expr &y) override;
     CVC4::Expr ge(const CVC4::Expr &x, const CVC4::Expr &y) override;
     CVC4::Expr neq(const CVC4::Expr &x, const CVC4::Expr &y) override;
+    CVC4::Expr bAnd(const CVC4::Expr &x, const CVC4::Expr &y) override;
+    CVC4::Expr bOr(const CVC4::Expr &x, const CVC4::Expr &y) override;
+    CVC4::Expr bTrue() override;
+    CVC4::Expr bFalse() override;
 
 protected:
 

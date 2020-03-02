@@ -52,6 +52,10 @@ public:
     z3::expr gt(const z3::expr &x, const z3::expr &y) override;
     z3::expr ge(const z3::expr &x, const z3::expr &y) override;
     z3::expr neq(const z3::expr &x, const z3::expr &y) override;
+    z3::expr bAnd(const z3::expr &x, const z3::expr &y) override;
+    z3::expr bOr(const z3::expr &x, const z3::expr &y) override;
+    z3::expr bTrue() override;
+    z3::expr bFalse() override;
 
 protected:
     z3::expr buildVar(const std::string &basename, Expression::Type type) override;

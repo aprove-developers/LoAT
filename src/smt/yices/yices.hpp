@@ -7,10 +7,12 @@
 #include "yicescontext.hpp"
 #include "../../config.hpp"
 
+#include <mutex>
+
 class Yices : public Smt {
 
 public:
-    Yices(const VariableManager &varMan, bool verbose);
+    Yices(const VariableManager &varMan);
 
     void add(const BoolExpr &e) override;
     void push() override;
@@ -22,17 +24,23 @@ public:
     void resetSolver() override;
     ~Yices() override;
 
+    static void init();
+    static void exit();
+
     std::ostream& print(std::ostream& os) const;
 
 private:
     unsigned int timeout = Config::Z3::DefaultTimeout;
     YicesContext ctx;
     const VariableManager &varMan;
+    ctx_config_t *config;
     context_t *solver;
     smt_status res;
-    bool verbose;
 
-    term_t convert(const BoolExpr &e);
+    static uint running;
+    static std::mutex mutex;
+
+
     GiNaC::numeric getRealFromModel(model_t *model, type_t symbol);
 
 };

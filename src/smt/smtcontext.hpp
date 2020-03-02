@@ -39,6 +39,10 @@ public:
     virtual EXPR gt(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR ge(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR neq(const EXPR &x, const EXPR &y) = 0;
+    virtual EXPR bAnd(const EXPR &x, const EXPR &y) = 0;
+    virtual EXPR bOr(const EXPR &x, const EXPR &y) = 0;
+    virtual EXPR bTrue() = 0;
+    virtual EXPR bFalse() = 0;
 
     option<EXPR> getVariable(const ExprSymbol &symbol) const {
         auto it = symbolMap.find(symbol);
