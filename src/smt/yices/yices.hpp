@@ -12,7 +12,7 @@
 class Yices : public Smt {
 
 public:
-    Yices(const VariableManager &varMan);
+    Yices(const VariableManager &varMan, Logic logic);
 
     void add(const BoolExpr &e) override;
     void push() override;

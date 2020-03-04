@@ -66,9 +66,6 @@ namespace nonterm {
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {
                 auto model = solver->model();
-                for (auto p: model) {
-                    std::cerr << p.first << ": " << p.second << std::endl;
-                }
                 GuardList newGuard(r.getGuard());
                 for (const ExprSymbol &var: vars) {
                     const auto &it = up.find(var);

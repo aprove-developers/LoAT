@@ -16,7 +16,7 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
     switch (logic) {
     case Smt::LA:
 #if HAS_YICES
-            res = std::unique_ptr<Smt>(new Yices(varMan));
+            res = std::unique_ptr<Smt>(new Yices(varMan, logic));
 #elif HAS_Z3
             res = std::unique_ptr<Smt>(new Z3(varMan));
 #else
@@ -24,12 +24,12 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
 #endif
         break;
     case Smt::NA:
-#if HAS_YICES
-            res = std::unique_ptr<Smt>(new Yices(varMan));
-#elif HAS_Z3
+#if HAS_Z3
             res = std::unique_ptr<Smt>(new Z3(varMan));
-#else
+#elif HAS_CVC4
             res = std::unique_ptr<Smt>(new Cvc4(varMan));
+#else
+            res = std::unique_ptr<Smt>(new Yices(varMan, logic));
 #endif
         break;
     case Smt::ENA:

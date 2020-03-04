@@ -17,8 +17,10 @@ Yices::~Yices() {
     yices_free_context(solver);
 }
 
-Yices::Yices(const VariableManager &varMan): ctx(YicesContext()), varMan(varMan), config(yices_new_config()) {
-    yices_set_config(config, "solver-type", "mcsat");
+Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), varMan(varMan), config(yices_new_config()) {
+    if (logic == Smt::NA) {
+        yices_set_config(config, "solver-type", "mcsat");
+    }
     solver = yices_new_context(config);
     mutex.lock();
     ++running;

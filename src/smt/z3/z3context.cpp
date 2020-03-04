@@ -78,7 +78,7 @@ z3::expr Z3Context::bAnd(const z3::expr &x, const z3::expr &y) {
 }
 
 z3::expr Z3Context::bOr(const z3::expr &x, const z3::expr &y) {
-    return x && y;
+    return x || y;
 }
 
 z3::expr Z3Context::bTrue() {

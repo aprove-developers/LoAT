@@ -586,7 +586,7 @@ Rel Rel::toGreater() const {
         res = (res.lhs() + 1) > res.rhs();
     }
 
-    assert(res.op == Rel::geq);
+    assert(res.op == Rel::gt);
     return res;
 }
 
@@ -760,7 +760,7 @@ Rel operator!(const Rel &x) {
     case Rel::neq: return Rel(x.l, Rel::eq, x.r);
     case Rel::lt: return Rel(x.l, Rel::geq, x.r);
     case Rel::leq: return Rel(x.l, Rel::gt, x.r);
-    case Rel::gt: return Rel(x.l, Rel::geq, x.r);
+    case Rel::gt: return Rel(x.l, Rel::leq, x.r);
     case Rel::geq: return Rel(x.l, Rel::lt, x.r);
     }
     assert(false && "unknown relation");
