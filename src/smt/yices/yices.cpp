@@ -84,8 +84,7 @@ GiNaC::numeric Yices::getRealFromModel(model_t *model, type_t symbol) {
 }
 
 void Yices::resetSolver() {
-    yices_free_context(solver);
-    solver = yices_new_context(config);
+    yices_reset_context(solver);
 }
 
 uint Yices::running;
