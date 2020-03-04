@@ -25,7 +25,7 @@ void GuardList::collectVariables(ExprSymbolSet &res) const {
     }
 }
 
-GuardList GuardList::subs(const GiNaC::exmap &sigma) const {
+GuardList GuardList::subs(const ExprMap &sigma) const {
     GuardList res;
     for (const Expression &e: *this) {
         res.push_back(e.subs(sigma));
@@ -33,7 +33,7 @@ GuardList GuardList::subs(const GiNaC::exmap &sigma) const {
     return res;
 }
 
-void GuardList::applySubstitution(const GiNaC::exmap &sigma) {
+void GuardList::applySubstitution(const ExprMap &sigma) {
     for (Expression &e: *this) {
         e.applySubs(sigma);
     }
@@ -49,8 +49,8 @@ Expression UpdateMap::getUpdate(VariableIdx var) const {
     return it->second;
 }
 
-GiNaC::exmap UpdateMap::toSubstitution(const VariableManager &varMan) const {
-    GiNaC::exmap subs;
+ExprMap UpdateMap::toSubstitution(const VariableManager &varMan) const {
+    ExprMap subs;
     for (const auto &it : *this) {
         subs[varMan.getVarSymbol(it.first)] = it.second;
     }

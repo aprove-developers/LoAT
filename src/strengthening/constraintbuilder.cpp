@@ -61,7 +61,7 @@ namespace strengthening {
                 templatesInvariantImplication.premise.end());
         BoolExpr conclusionInvariant = True;
         for (const Expression &e: guardCtx.todo) {
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
+            for (const ExprMap &up: ruleCtx.updates) {
                 Expression updated = e;
                 updated.applySubs(up);
                 const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, updated);
@@ -92,7 +92,7 @@ namespace strengthening {
         Implication res;
         for (const Expression &invTemplate: templates) {
             GuardList updatedTemplates;
-            for (const GiNaC::exmap &up: ruleCtx.updates) {
+            for (const ExprMap &up: ruleCtx.updates) {
                 Expression updated = invTemplate;
                 updated.applySubs(up);
                 updatedTemplates.push_back(updated);
@@ -124,7 +124,7 @@ namespace strengthening {
                 e.collectVariables(allVars);
             }
             // TODO Why is this variable renaming needed?
-            GiNaC::exmap varRenaming;
+            ExprMap varRenaming;
             for (const ExprSymbol &x: allVars) {
                 varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
             }

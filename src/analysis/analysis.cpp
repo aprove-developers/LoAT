@@ -409,7 +409,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
         Rule sndRule = its.getRule(snd);
         Expression fstCpxExp = fstRule.getCost().expand();
         Expression sndCpxExp = sndRule.getCost().expand();
-        if (fstCpxExp != sndCpxExp) {
+        if (!fstCpxExp.is_equal(sndCpxExp)) {
             if (fstCpxExp.isNontermSymbol()) return true;
             if (sndCpxExp.isNontermSymbol()) return false;
             bool fstIsNonPoly = !fstCpxExp.isPolynomial();

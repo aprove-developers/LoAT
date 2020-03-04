@@ -213,7 +213,7 @@ private:
     /**
      * Reverse substitution from linearization
      */
-    GiNaC::exmap nonlinearSubs;
+    ExprMap nonlinearSubs;
 
 
 

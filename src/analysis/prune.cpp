@@ -39,7 +39,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     if (compareRhss && a.rhsCount() != b.rhsCount()) return false;
 
     // Costs have to be equal up to a numeric constant
-    if (!GiNaC::is_a<GiNaC::numeric>(a.getCost() - b.getCost())) return false;
+    if (!(a.getCost() - b.getCost()).isNumeric()) return false;
 
     // All right-hand sides have to match exactly
     if (compareRhss) {
@@ -81,7 +81,7 @@ bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool
 
             // if rules are identical up to cost, keep the one with the higher cost
             if (compareRules(ruleA, ruleB, compareRhss)) {
-                if (GiNaC::ex_to<GiNaC::numeric>(ruleA.getCost() - ruleB.getCost()).is_positive()) {
+                if ((ruleA.getCost() - ruleB.getCost()).toNumeric().is_positive() > 0) {
                     toRemove.insert(idxB);
                 } else {
                     toRemove.insert(idxA);

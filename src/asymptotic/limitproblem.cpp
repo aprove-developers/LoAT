@@ -21,7 +21,7 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
         addExpression(InftyExpression(ex.lhs(), POS));
     }
 
-    assert(!is_a<relational>(cost));
+    assert(!cost.isRelation());
     addExpression(InftyExpression(cost, POS_INF));
 
     (*log) << "Created initial limit problem:" << std::endl
@@ -154,7 +154,7 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
 void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
     assert(it->info(info_flags::integer));
 
-    numeric num = ex_to<numeric>(*it);
+    GiNaC::numeric num = it->toNumeric();
     Direction dir = it->getDirection();
     assert((num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS));
@@ -167,7 +167,7 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
 }
 
 
-void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
+void LimitProblem::substitute(const ExprMap &sub, int substitutionIndex) {
     for (auto const &s : sub) {
         assert(!s.second.has(s.first));
     }
@@ -198,7 +198,7 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
 
     Expression expanded = it->expand();
 
-    if (is_a<add>(expanded)) {
+    if (expanded.isAdd()) {
         Expression leadingTerm = expanded.lcoeff(var) * pow(var, expanded.degree(var));
 
         if (dir == POS) {
@@ -226,10 +226,10 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     ExprSymbol x = it->getAVariable();
 
     Expression powerInExp;
-    if (is_a<add>(*it)) {
+    if (it->isAdd()) {
         for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
-            if (is_a<power>(summand) && summand.op(1).has(x)) {
+            if (summand.isPower() && summand.op(1).has(x)) {
                 powerInExp = summand;
                 break;
             }
@@ -238,7 +238,7 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     } else {
         powerInExp = *it;
     }
-    assert(is_a<power>(powerInExp));
+    assert(powerInExp.isPower());
 
     Expression b = *it - powerInExp;
     assert(b.is_polynomial(x));
@@ -268,10 +268,10 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
 
     Expression powerInExp;
-    if (is_a<add>(*it)) {
+    if (it->isAdd()) {
         for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
-            if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
+            if (summand.isPower() && (!summand.op(1).info(info_flags::polynomial)
                                          || summand.hasAtLeastTwoVariables())) {
                 powerInExp = summand;
                 break;
@@ -281,7 +281,7 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
     } else {
         powerInExp = *it;
     }
-    assert(is_a<power>(powerInExp));
+    assert(powerInExp.isPower());
     assert(!powerInExp.op(1).info(info_flags::polynomial)
            || powerInExp.hasAtLeastTwoVariables());
 
@@ -327,7 +327,7 @@ bool LimitProblem::isSolved() const {
 
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {
-        if (!is_a<symbol>(ex)) {
+        if (!ex.isSymbol()) {
             return false;
         }
     }
@@ -339,24 +339,24 @@ bool LimitProblem::isSolved() const {
 }
 
 
-GiNaC::exmap LimitProblem::getSolution() const {
+ExprMap LimitProblem::getSolution() const {
     assert(isSolved());
 
-    exmap solution;
+    ExprMap solution;
     for (const InftyExpression &ex : set) {
         switch (ex.getDirection()) {
             case POS:
             case POS_INF:
-                solution.insert(std::make_pair(ex, variableN));
+                solution.put(ex, variableN);
                 break;
             case NEG_INF:
-                solution.insert(std::make_pair(ex, -variableN));
+                solution.put(ex, -variableN);
                 break;
             case POS_CONS:
-                solution.insert(std::make_pair(ex, numeric(1)));
+                solution.put(ex, 1);
                 break;
             case NEG_CONS:
-                solution.insert(std::make_pair(ex, numeric(-1)));
+                solution.put(ex, -1);
                 break;
         }
     }
@@ -433,7 +433,7 @@ bool LimitProblem::removeConstantIsApplicable(const InftyExpressionSet::const_it
         return false;
     }
 
-    numeric num = ex_to<numeric>(*it);
+    GiNaC::numeric num = it->toNumeric();
     Direction dir = it->getDirection();
 
     return (num.is_positive() && (dir == POS_CONS || dir == POS))
@@ -452,7 +452,7 @@ bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_it
     }
 
     // Check if it is a monom
-    if (!is_a<add>(it->expand())) {
+    if (!it->expand().isAdd()) {
         return false;
     }
 
@@ -473,10 +473,10 @@ bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterato
     ExprSymbol x = it->getAVariable();
 
     Expression powerInExp;
-    if (is_a<add>(*it)) {
+    if (it->isAdd()) {
         for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
-            if (is_a<power>(summand) && summand.op(1).has(x)) {
+            if (summand.isPower() && summand.op(1).has(x)) {
                 powerInExp = summand;
                 break;
             }
@@ -486,7 +486,7 @@ bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterato
         powerInExp = *it;
     }
 
-    if (!is_a<power>(powerInExp)) {
+    if (!powerInExp.isPower()) {
         return false;
     }
 
@@ -513,10 +513,10 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
         return false;
     }
 
-    if (is_a<add>(*it)) {
+    if (it->isAdd()) {
         for (unsigned int i = 0; i < it->nops(); ++i) {
             Expression summand = it->op(i);
-            if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
+            if (summand.isPower() && (!summand.op(1).info(info_flags::polynomial)
                                          || summand.hasAtLeastTwoVariables())) {
                 return true;
             }
@@ -525,7 +525,7 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
         return false;
     }
 
-    return is_a<power>(*it) && (!it->op(1).info(info_flags::polynomial)
+    return it->isPower() && (!it->op(1).info(info_flags::polynomial)
                                 || it->hasAtLeastTwoVariables());
 }
 

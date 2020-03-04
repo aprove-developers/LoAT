@@ -13,7 +13,7 @@ public:
 
     VarEliminator(const GuardList &guard, const ExprSymbol &N, VariableManager &varMan);
 
-    const std::set<GiNaC::exmap> getRes() const;
+    const std::set<ExprMap> getRes() const;
 
 private:
 
@@ -28,7 +28,7 @@ private:
      * Tries to eliminate a single dependency by instantiating it with a constant bound.
      * Creates a new branch (i.e., a new entry in todoDeps) for every possible instantiation.
      */
-    const std::set<std::pair<GiNaC::exmap, GuardList>> eliminateDependency(const GiNaC::exmap &subs, const GuardList &guard) const;
+    const std::set<std::pair<ExprMap, GuardList>> eliminateDependency(const ExprMap &subs, const GuardList &guard) const;
 
     /**
      * Eliminates as many dependencies as possible by instantiating them with constant bounds.
@@ -48,18 +48,18 @@ private:
      * Each entry represents one branch in the search for suitable instantiations of dependencies.
      * Entries that do not allow for further instantiation are moved to todoN.
      */
-    std::stack<std::pair<GiNaC::exmap, GuardList>> todoDeps;
+    std::stack<std::pair<ExprMap, GuardList>> todoDeps;
 
     /**
      * Each entry represents one possibility to instantiate dependencies exhaustively.
      * N still needs to be eliminated.
      */
-    std::set<std::pair<GiNaC::exmap, GuardList>> todoN;
+    std::set<std::pair<ExprMap, GuardList>> todoN;
 
     /**
      * Substitutions that are suitable to eliminate N.
      */
-    std::set<GiNaC::exmap> res;
+    std::set<ExprMap> res;
 
     ExprSymbolSet dependencies;
 

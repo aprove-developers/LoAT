@@ -129,7 +129,7 @@ void MeteringFinder::buildLinearConstraints() {
     linearConstraints.guardUpdate.resize(updates.size());
 
     // helper lambda to transform the given inequality into the required form
-    auto makeConstraint = [&](const GiNaC::ex &rel, vector<Expression> &vec) {
+    auto makeConstraint = [&](const Expression &rel, vector<Expression> &vec) {
         using namespace Relation;
         assert(isLinearInequality(rel));
 
@@ -437,11 +437,11 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
 
     // Now try all possible instantiations until the solver is satisfied
 
-    GiNaC::exmap successfulSubs;
-    stack<GiNaC::exmap> freeSubs = MT::findInstantiationsForTempVars(its, meter.guard);
+    ExprMap successfulSubs;
+    stack<ExprMap> freeSubs = MT::findInstantiationsForTempVars(its, meter.guard);
 
     while (!freeSubs.empty()) {
-        const GiNaC::exmap &sub = freeSubs.top();
+        const ExprMap &sub = freeSubs.top();
 
         //apply current substitution (and forget the previous one)
         meter.guard = oldGuard; // copy

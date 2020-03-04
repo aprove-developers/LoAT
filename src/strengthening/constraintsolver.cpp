@@ -63,7 +63,7 @@ namespace strengthening {
                 parameterInstantiation.emplace(ruleCtx.varMan.getVarIdx(p), pi);
             }
         }
-        const GiNaC::exmap &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
+        const ExprMap &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
         const std::vector<Expression> instantiatedTemplates = templates.subs(subs);
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({instantiatedTemplates}, {}), ruleCtx.varMan);
         for (const Expression &e: instantiatedTemplates) {

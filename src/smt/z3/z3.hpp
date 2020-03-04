@@ -27,8 +27,9 @@ public:
 private:
     bool models = false;
     unsigned int timeout = Config::Z3::DefaultTimeout;
-    Z3Context ctx;
     const VariableManager &varMan;
+    z3::context z3Ctx;
+    Z3Context ctx;
     z3::solver solver;
 
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);

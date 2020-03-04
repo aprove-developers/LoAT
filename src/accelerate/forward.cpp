@@ -137,28 +137,28 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
 
                 // Iterate cost and update
                 LinearRule linRule = newRule.toLinear();
-                if (Recurrence::iterateRule(its, linRule, iterationCount)) {
+                const option<Recurrence::Result> &recurrenceRes = Recurrence::iterateRule(its, linRule, iterationCount);
+                if (!recurrenceRes) {
                     res.status = Failure;
                     return res;
                 }
 
-                // The iterated update/cost computation is only sound if we do >= 1 iterations.
-                // Hence we have to ensure that the metering function is >= 1 (corresponding to 0 < tv).
-                linRule.getGuardMut().push_back(iterationCount >= 1);
-
+                GuardList newGuard(rule.getGuard());
+                newGuard.push_back(iterationCount >= recurrenceRes->validityBound);
                 // If we use a temporary variable instead of the metering function, add the upper bound.
                 // Note that meter always maps to int, so we can use <= here.
                 if (Config::ForwardAccel::UseTempVarForIterationCount) {
-                    linRule.getGuardMut().push_back(iterationCount <= meter.metering);
+                    newGuard.push_back(iterationCount <= meter.metering);
                 }
+                LinearRule newRule(linRule.getLhsLoc(), newGuard, recurrenceRes->cost, linRule.getRhsLoc(), recurrenceRes->update);
                 res.proof.concat(meter.proof);
-                res.proof.ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, linRule, its);
-                res.rules.emplace_back(linRule);
+                res.proof.ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, newRule, its);
+                res.rules.emplace_back(newRule);
 
             } else {
                 // Compute the "iterated costs" by just assuming every step has cost 1
                 size_t degree = newRule.rhsCount();
-                Expression newCost = GiNaC::pow(degree, meter.metering);
+                Expression newCost = degree ^ meter.metering;
                 newRule.getCostMut() = (newCost - 1) / (degree - 1); // resulting cost is (d^meter-1)/(d-1)
 
                 // We don't know to what result the rule evaluates (multiple rhss, so no single result).

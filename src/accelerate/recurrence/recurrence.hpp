@@ -32,27 +32,19 @@ class Recurrence
 private:
 
 public:
+
+    struct Result {
+        Expression cost;
+        UpdateMap update;
+        unsigned int validityBound;
+    };
+
     /**
      * Iterates the rule's update and cost, similar to iterateUpdateCost.
      * In addition to iterateUpdateCost, an additional heuristic is used if no dependency order is found.
      * This heuristic adds new constraints to the rule's guard and is thus only used in this method.
      */
-    static option<unsigned int> iterateRule(const VarMan &varMan, LinearRule &rule, const Expression &metering);
-
-    /**
-     * Tries to solve recurrences to compute the iterated update and cost.
-     * If successful, returns true and modifies update and cost to represent update/cost after N iterations.
-     * @return true iff both computations were successful
-     */
-    static option<unsigned int> iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N);
-
-    struct IteratedUpdates {
-        const std::vector<UpdateMap> updates;
-        const GuardList refinement;
-        const unsigned int validityBound;
-    };
-
-    static const option<IteratedUpdates> iterateUpdates(const VariableManager&, const std::vector<UpdateMap>&, const ExprSymbol&);
+    static option<Result> iterateRule(const VarMan &varMan, const LinearRule &rule, const Expression &metering);
 
 private:
 
@@ -71,7 +63,7 @@ private:
     /**
      * Main implementation
      */
-    option<unsigned int> iterateAll(UpdateMap &update, Expression &cost, const Expression &metering);
+    option<Result> iterate(const UpdateMap &update, const Expression &cost, const Expression &metering);
 
     /**
      * Computes the iterated update, with meterfunc as iteration step (if possible).
@@ -99,7 +91,7 @@ private:
      */
     option<Expression> findCostRecurrence(Expression cost);
 
-    static const option<IteratedUpdates> iterateUpdate(const VariableManager&, const UpdateMap&, const ExprSymbol&);
+    static const option<RecurrenceSystemSolution> iterateUpdate(const VariableManager&, const UpdateMap&, const ExprSymbol&);
 
 private:
     /**
@@ -122,7 +114,7 @@ private:
      * @note the recurrence equations are valid *before* the transition is taken,
      * i.e. these are the terms for r(n-1) and _not_ for r(n) where r is the recurrence equation.
      */
-    GiNaC::exmap updatePreRecurrences;
+    ExprMap updatePreRecurrences;
 };
 
 #endif // RECURRENCE_H

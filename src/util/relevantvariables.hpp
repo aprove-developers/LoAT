@@ -30,7 +30,7 @@ namespace util {
 
         static const ExprSymbolSet find(
                 const GuardList &constraints,
-                const std::vector<GiNaC::exmap> &updates,
+                const std::vector<ExprMap> &updates,
                 const GuardList &guard,
                 const VariableManager &varMan);
 

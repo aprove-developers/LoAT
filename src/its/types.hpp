@@ -37,8 +37,10 @@ public:
     // inherit constructors of base class
     using std::vector<Expression>::vector;
     void collectVariables(ExprSymbolSet &res) const;
-    GuardList subs(const GiNaC::exmap &sigma) const;
-    void applySubstitution(const GiNaC::exmap &sigma);
+    GuardList subs(const ExprMap &sigma) const;
+    void applySubstitution(const ExprMap &sigma);
+    friend bool operator==(const GuardList &m1, const GuardList &m2);
+    friend bool operator<(const GuardList &m1, const GuardList &m2);
 };
 
 
@@ -48,7 +50,8 @@ class UpdateMap : public std::map<VariableIdx,Expression> {
 public:
     bool isUpdated(VariableIdx var) const;
     Expression getUpdate(VariableIdx var) const;
-    GiNaC::exmap toSubstitution(const VariableManager &varMan) const;
+    ExprMap toSubstitution(const VariableManager &varMan) const;
+    friend bool operator==(const UpdateMap &m1, const UpdateMap &m2);
 };
 
 

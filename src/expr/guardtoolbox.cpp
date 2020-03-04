@@ -25,7 +25,7 @@ using namespace Relation;
 
 bool GuardToolbox::isWellformedGuard(const GuardList &guard) {
     for (const Expression &ex : guard) {
-        if (!GiNaC::is_a<GiNaC::relational>(ex) || ex.nops() != 2) return false;
+        if (!ex.isRelation() || ex.nops() != 2) return false;
         if (ex.info(GiNaC::info_flags::relation_not_equal)) return false;
     }
     return true;
@@ -70,7 +70,7 @@ bool GuardToolbox::isTrivialImplication(const Expression &a, const Expression &b
 
 
 option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level) {
-    assert(!GiNaC::is_a<GiNaC::relational>(term));
+    assert(!term.isRelation());
 
     // expand is needed before using degree/coeff
     term = term.expand();
@@ -107,7 +107,7 @@ option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol 
 
 
 bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
-    GiNaC::exmap varSubs;
+    ExprMap varSubs;
     GuardList &guard = rule.getGuardMut();
 
     for (unsigned int i=0; i < guard.size(); ++i) {
@@ -280,9 +280,9 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
 
     while (true) {
         // substitute every variable x_i by the integer subs[i] and check if the result is an integer
-        GiNaC::exmap currSubs;
+        ExprMap currSubs;
         for (unsigned int i = 0; i < degrees.size(); i++) {
-            currSubs.emplace(vars[i], subs[i]);
+            currSubs.put(vars[i], subs[i]);
         }
         Expression res = e.subs(currSubs).expand();
         if (!res.isIntegerConstant()) {
@@ -309,16 +309,16 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
 }
 
 
-GiNaC::exmap GuardToolbox::composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g) {
-    GiNaC::exmap substitution;
+ExprMap GuardToolbox::composeSubs(const ExprMap &f, const ExprMap &g) {
+    ExprMap substitution;
 
     for (auto const &pair : g) {
-        substitution.insert(std::make_pair(pair.first, pair.second.subs(f)));
+        substitution.put(pair.first, pair.second.subs(f));
     }
 
     for (auto const &pair : f) {
-        if (substitution.count(pair.first) == 0) {
-            substitution.insert(pair);
+        if (!substitution.contains(pair.first)) {
+            substitution.put(pair.first, pair.second);
         }
     }
 

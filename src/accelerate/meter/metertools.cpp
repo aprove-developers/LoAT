@@ -29,7 +29,7 @@ using namespace std;
 
 /* ### Helpers ### */
 
-void MeteringToolbox::applySubsToUpdates(const GiNaC::exmap &subs, MultiUpdate &updates) {
+void MeteringToolbox::applySubsToUpdates(const ExprMap &subs, MultiUpdate &updates) {
     for (UpdateMap &update : updates) {
         for (auto &it : update) {
             it.second.applySubs(subs);
@@ -213,7 +213,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
     for (const UpdateMap &update : updates) {
         // helper lambda to pass as argument
         auto isUpdated = [&](const ExprSymbol &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
-        GiNaC::exmap updateSubs = update.toSubstitution(varMan);
+        ExprMap updateSubs = update.toSubstitution(varMan);
 
         for (const auto &it : update) {
             // only consider relevant variables
@@ -229,7 +229,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             // (this makes the guard stronger and might thus help to find a metering function)
             ExprSymbol lhsVar = varMan.getVarSymbol(it.first);
 
-            GiNaC::exmap subs;
+            ExprMap subs;
             subs[varMan.getVarSymbol(it.first)] = it.second;
 
             for (const Expression &ex : reducedGuard) {
@@ -254,13 +254,13 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
 }
 
 
-stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
+stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
     namespace Config = Config::ForwardAccel;
     assert(Config::TempVarInstantiationMaxBounds > 0);
 
     //find free variables
     const set<VariableIdx> &freeVar = varMan.getTempVars();
-    if (freeVar.empty()) return stack<GiNaC::exmap>();
+    if (freeVar.empty()) return stack<ExprMap>();
 
     //find all bounds for every free variable
     map<VariableIdx,ExpressionSet> freeBounds;
@@ -281,21 +281,21 @@ stack<GiNaC::exmap> MeteringToolbox::findInstantiationsForTempVars(const VarMan 
     }
 
     //check if there are any bounds at all
-    if (freeBounds.empty()) return stack<GiNaC::exmap>();
+    if (freeBounds.empty()) return stack<ExprMap>();
 
     //combine all bounds in all possible ways
-    stack<GiNaC::exmap> allSubs;
-    allSubs.push(GiNaC::exmap());
+    stack<ExprMap> allSubs;
+    allSubs.push(ExprMap());
     for (auto const &it : freeBounds) {
         ExprSymbol sym = varMan.getVarSymbol(it.first);
         for (const Expression &bound : it.second) {
-            stack<GiNaC::exmap> next;
+            stack<ExprMap> next;
             while (!allSubs.empty()) {
-                GiNaC::exmap subs = allSubs.top();
+                ExprMap subs = allSubs.top();
                 allSubs.pop();
-                if (subs.count(sym) > 0) {
+                if (subs.contains(sym)) {
                     //keep old bound, add a new substitution for the new bound
-                    GiNaC::exmap newsubs = subs;
+                    ExprMap newsubs = subs;
                     newsubs[sym] = bound;
                     next.push(subs);
                     next.push(newsubs);

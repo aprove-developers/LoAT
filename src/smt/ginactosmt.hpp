@@ -52,7 +52,7 @@ public:
         return res;
     }
 
-    static EXPR convert(const GiNaC::ex &expr, SmtContext<EXPR> &context, const VariableManager &varMan) {
+    static EXPR convert(const Expression &expr, SmtContext<EXPR> &context, const VariableManager &varMan) {
         GinacToSmt<EXPR> converter(context, varMan);
         EXPR res = converter.convert_ex(expr);
         return res;
@@ -61,23 +61,23 @@ public:
 protected:
     GinacToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
 
-    EXPR convert_ex(const GiNaC::ex &e){
-        if (is_a<add>(e)) {
+    EXPR convert_ex(const Expression &e){
+        if (e.isAdd()) {
             return convert_add(e);
 
-        } else if (is_a<mul>(e)) {
+        } else if (e.isMul()) {
             return convert_mul(e);
 
-        } else if (is_a<power>(e)) {
+        } else if (e.isPower()) {
             return convert_power(e);
 
-        } else if (is_a<numeric>(e)) {
-            return convert_numeric(ex_to<numeric>(e));
+        } else if (e.isNumeric()) {
+            return convert_numeric(e.toNumeric());
 
-        } else if (is_a<symbol>(e)) {
-            return convert_symbol(ex_to<symbol>(e));
+        } else if (e.isSymbol()) {
+            return convert_symbol(e.toSymbol());
 
-        } else if (is_a<relational>(e)) {
+        } else if (e.isRelation()) {
             return convert_relational(e);
         }
 
@@ -86,7 +86,7 @@ protected:
         throw GinacConversionError(ss.str());
     }
 
-    EXPR convert_add(const GiNaC::ex &e){
+    EXPR convert_add(const Expression &e){
         assert(e.nops() > 0);
 
         EXPR res = convert_ex(e.op(0));
@@ -97,7 +97,7 @@ protected:
         return res;
     }
 
-    EXPR convert_mul(const GiNaC::ex &e) {
+    EXPR convert_mul(const Expression &e) {
         assert(e.nops() > 0);
 
         EXPR res = convert_ex(e.op(0));
@@ -108,12 +108,12 @@ protected:
         return res;
     }
 
-    EXPR convert_power(const GiNaC::ex &e) {
+    EXPR convert_power(const Expression &e) {
         assert(e.nops() == 2);
 
         //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
-        if (is_a<numeric>(e.op(1))) {
-            numeric num = ex_to<numeric>(e.op(1));
+        if (e.op(1).isNumeric()) {
+            numeric num = e.op(1).toNumeric();
             if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Z3::MaxExponentWithoutPow) {
                 int exp = num.to_int();
                 EXPR base = convert_ex(e.op(0));
@@ -159,7 +159,7 @@ protected:
         return context.addNewVariable(e, varMan.getType(e));
     }
 
-    EXPR convert_relational(const GiNaC::ex &e) {
+    EXPR convert_relational(const Expression &e) {
         assert(e.nops() == 2);
 
         EXPR a = convert_ex(e.op(0));

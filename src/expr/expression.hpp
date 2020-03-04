@@ -21,29 +21,39 @@
 #include <ginac/ginac.h>
 #include <string>
 #include <vector>
+#include <purrs.hh>
 
 #include "../util/exceptions.hpp"
 #include "complexity.hpp"
 #include "../util/option.hpp"
 
+namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 class Z3Context;
 class Expression;
+class Recurrence;
+class ExprMap;
+
+struct Expression_is_less {
+    bool operator() (const Expression &lh, const Expression &rh) const;
+};
 
 //Useful typedefs for readability
 using ExprSymbol = GiNaC::symbol;
 using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
-using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>;
+using ExpressionSet = std::set<Expression, Expression_is_less>;
 template <typename T>
 using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
 
 
+std::ostream& operator<<(std::ostream &s, const ExprMap &e);
 
 /**
  * Class for arithmetic expressions, can be converted to a z3 expression.
  * Essentially a wrapper around GiNaC::ex which provides additional functionality.
  */
-class Expression : public GiNaC::ex {
+class Expression {
+    friend class Recurrence;
 public:
     enum Type {Int, Real};
 
@@ -66,19 +76,18 @@ public:
 public:
     Expression() : Expression(GiNaC::ex()) {}
     Expression(const GiNaC::basic &other) : Expression(GiNaC::ex(other)) {}
-    Expression(const GiNaC::ex &other) : GiNaC::ex(other) {
-
-    }
+    Expression(const GiNaC::ex &ex) : ex(ex) {}
+    Expression(int i): ex(i) {}
 
     /**
      * Applies a substitution. Like GiNaC::subs, but assigns the result to this expression.
      */
-    void applySubs(const GiNaC::exmap &subs);
+    void applySubs(const ExprMap &subs);
 
     /**
      * Version of ex::find() that searches also in subexpressions of a match
      */
-    bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;
+    bool findAll(const Expression &pattern, ExpressionSet &found) const;
 
     /**
      * Returns true iff this expression is the given variable (up to trivial arithmetic, which is resolved by GiNaC)
@@ -212,11 +221,79 @@ public:
      */
     std::string toString() const;
 
+    Expression lhs() const;
+    Expression rhs() const;
+    bool is_equal(const Expression &that) const;
+    int degree(const ExprSymbol &var) const;
+    int ldegree(const ExprSymbol &var) const;
+    Expression coeff(const ExprSymbol &var, uint degree = 1) const;
+    Expression lcoeff(const ExprSymbol &var, uint degree = 1) const;
+    Expression expand() const;
+    bool has(const Expression &pattern) const;
+    bool info(unsigned i) const;
+    bool is_zero() const;
+    bool isSymbol() const;
+    bool isNumeric() const;
+    bool isPower() const;
+    bool isMul() const;
+    bool isAdd() const;
+    bool isLess() const;
+    bool isRelation() const;
+    ExprSymbol toSymbol() const;
+    GiNaC::numeric toNumeric() const;
+    Expression op(uint i) const;
+    uint nops() const;
+    Expression subs(const ExprMap &map, uint options = 0) const;
+    Expression subs(const Expression &eq, uint options = 0) const;
+    void traverse(GiNaC::visitor & v) const;
+    void swap(Expression &that);
+    int compare(const Expression &that) const;
+    bool is_polynomial(const ExprSymbol &var) const;
+    Expression numer() const;
+    Expression denom() const;
+    bool match(const Expression &pattern) const;
+
+    friend Expression operator-(const Expression &x);
+    friend Expression operator-(const Expression &x, const Expression &y);
+    friend Expression operator+(const Expression &x, const Expression &y);
+    friend Expression operator*(const Expression &x, const Expression &y);
+    friend Expression operator/(const Expression &x, const Expression &y);
+    friend Expression operator<(const Expression &x, const Expression &y);
+    friend Expression operator>(const Expression &x, const Expression &y);
+    friend Expression operator<=(const Expression &x, const Expression &y);
+    friend Expression operator>=(const Expression &x, const Expression &y);
+    friend Expression operator!=(const Expression &x, const Expression &y);
+    friend Expression operator^(const Expression &x, const Expression &y);
+    friend std::ostream& operator<<(std::ostream &s, const Expression &e);
+    friend Expression operator==(const Expression &x, const Expression &y);
+
 private:
+    GiNaC::ex ex;
     /**
      * Helper for getComplexity that operates recursively on the given term
      */
-    static Complexity getComplexity(const GiNaC::ex &term);
+    static Complexity getComplexity(const Expression &term);
+
+};
+
+class ExprMap {
+    friend class Expression;
+public:
+    ExprMap();
+    ExprMap(const Expression &key, const Expression &val);
+    Expression operator[](const Expression &key) const;
+    void put(const Expression &key, const Expression &val);
+    std::map<Expression, Expression, Expression_is_less>::const_iterator begin() const;
+    std::map<Expression, Expression, Expression_is_less>::const_iterator end() const;
+    std::map<Expression, Expression, Expression_is_less>::const_iterator find(const Expression &e) const;
+    bool contains(const Expression &e) const;
+    bool empty() const;
+
+    friend bool operator<(const ExprMap &x, const ExprMap &y);
+
+private:
+    std::map<Expression, Expression, Expression_is_less> map;
+    std::map<GiNaC::ex, GiNaC::ex, GiNaC::ex_is_less> ginacMap;
 
 };
 

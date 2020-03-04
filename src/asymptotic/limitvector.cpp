@@ -113,21 +113,21 @@ bool LimitVector::makesSense(Expression l, Expression r) const {
         return false;
     }
 
-    if (l == r && first != second) {
+    if (l.is_equal(r) && first != second) {
         return false;
     }
 
     if ((first == NEG_CONS || first == NEG_INF)
-        && is_a<power>(l)
-        && is_a<numeric>(l.op(1))
-        && ex_to<numeric>(l.op(1)).is_even()) {
+        && l.isPower()
+        && l.op(1).isNumeric()
+        && l.op(1).toNumeric().is_even()) {
         return false;
     }
 
     if ((second == NEG_CONS || second == NEG_INF)
-        && is_a<power>(r)
-        && is_a<numeric>(r.op(1))
-        && ex_to<numeric>(r.op(1)).is_even()) {
+        && r.isPower()
+        && r.op(1).isNumeric()
+        && r.op(1).toNumeric().is_even()) {
         return false;
     }
 

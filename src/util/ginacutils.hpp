@@ -26,8 +26,8 @@ namespace util {
     class GiNaCUtils {
 
     public:
-        static GiNaC::exmap compose(const GiNaC::exmap &fst, const GiNaC::exmap &snd);
-        static GiNaC::exmap concat(const GiNaC::exmap &fst, const GiNaC::exmap &snd);
+        static ExprMap compose(const ExprMap &fst, const ExprMap &snd);
+        static ExprMap concat(const ExprMap &fst, const ExprMap &snd);
 
     };
 

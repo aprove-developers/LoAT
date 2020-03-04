@@ -20,7 +20,7 @@ private:
             : complexity(), upperBound(0), lowerBound(0), inftyVars(0) {
         }
 
-        GiNaC::exmap solution;
+        ExprMap solution;
         Complexity complexity;
         int upperBound;
         int lowerBound;
@@ -33,9 +33,9 @@ private:
     void normalizeGuard();
     void createInitialLimitProblem(VariableManager &varMan);
     void propagateBounds();
-    GiNaC::exmap calcSolution(const LimitProblem &limitProblem);
-    int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
-    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
+    ExprMap calcSolution(const LimitProblem &limitProblem);
+    int findUpperBoundforSolution(const LimitProblem &limitProblem, const ExprMap &solution);
+    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const ExprMap &solution);
     void removeUnsatProblems();
     bool solveViaSMT(Complexity currentRes);
     bool solveLimitProblem();
@@ -74,7 +74,7 @@ private:
     std::vector<LimitProblem> solvedLimitProblems;
     LimitProblem currentLP;
 
-    std::vector<GiNaC::exmap> substitutions;
+    std::vector<ExprMap> substitutions;
 
     std::vector<LimitVector> toApply;
 

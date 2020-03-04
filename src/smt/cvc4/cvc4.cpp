@@ -4,7 +4,7 @@
 #include "../../config.hpp"
 #include "../ginactosmt.hpp"
 
-Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), solver(&ctx) { }
+Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), ctx(manager), solver(&manager) { }
 
 void Cvc4::add(const BoolExpr &e) {
     solver.assertFormula(GinacToSmt<CVC4::Expr>::convert(e, ctx, varMan));

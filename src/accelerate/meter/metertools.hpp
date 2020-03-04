@@ -36,7 +36,7 @@ namespace MeteringToolbox {
     /**
      * Helper that applies a given substitution to all right-hand sides of all given updates.
      */
-    void applySubsToUpdates(const GiNaC::exmap &subs, MultiUpdate &update);
+    void applySubsToUpdates(const ExprMap &subs, MultiUpdate &update);
 
     /**
      * Checks if the given variable is affected by any of the given updates
@@ -112,7 +112,7 @@ namespace MeteringToolbox {
      * Creates all combinations of instantiating temporary variables by their bounds (i.e. free <= x --> set free=x)
      * @return list of all possible combinations (limited by FREEVAR_INSTANTIATE_MAXBOUNDS per variable).
      */
-    std::stack<GiNaC::exmap> findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard);
+    std::stack<ExprMap> findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard);
 
 };
 

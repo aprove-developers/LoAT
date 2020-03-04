@@ -56,11 +56,11 @@ void BoundExtractor::extractBounds() {
     }
 }
 
-const std::set<Expression> BoundExtractor::getConstantBounds() const {
+const ExpressionSet BoundExtractor::getConstantBounds() const {
     if (eq && eq.get().isIntegerConstant()) {
         return {eq.get()};
     }
-    std::set<Expression> res;
+    ExpressionSet res;
     for (const Expression &e: getLowerAndUpper()) {
         if (e.isIntegerConstant()) {
             res.insert(e);

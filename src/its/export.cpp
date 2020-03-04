@@ -262,7 +262,7 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             }
 
             //create copy of vars ("pre vars") to simulate parallel assignments
-            GiNaC::exmap t2subs;
+            ExprMap t2subs;
             for (const ExprSymbol &sym : vars) {
                 t2subs[sym] = GiNaC::symbol("pre_v" + sym.get_name());
                 if (its.isTempVar(its.getVarIdx(sym))) {

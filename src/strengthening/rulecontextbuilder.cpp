@@ -43,8 +43,8 @@ namespace strengthening {
         return predecessors;
     }
 
-    const std::vector<GiNaC::exmap> Self::computeUpdates() const {
-        std::vector<GiNaC::exmap> res;
+    const std::vector<ExprMap> Self::computeUpdates() const {
+        std::vector<ExprMap> res;
         for (const RuleRhs &rhs: rule.getRhss()) {
             res.push_back(rhs.getUpdate().toSubstitution(its));
         }
@@ -53,7 +53,7 @@ namespace strengthening {
 
     const std::vector<GuardList> Self::buildPreconditions(const std::vector<Rule> &predecessors) const {
         std::vector<GuardList> res;
-        GiNaC::exmap tmpVarRenaming;
+        ExprMap tmpVarRenaming;
         for (const VariableIdx &i: its.getTempVars()) {
             const ExprSymbol &x = its.getVarSymbol(i);
             tmpVarRenaming[x] = its.getVarSymbol(its.addFreshVariable(x.get_name()));
@@ -64,7 +64,7 @@ namespace strengthening {
             }
             for (const RuleRhs &rhs: pred.getRhss()) {
                 if (rhs.getLoc() == rule.getLhsLoc()) {
-                    const GiNaC::exmap &up = rhs.getUpdate().toSubstitution(its);
+                    const ExprMap &up = rhs.getUpdate().toSubstitution(its);
                     GuardList pre;
                     for (Expression g: pred.getGuard()) {
                         g.applySubs(up);
@@ -76,7 +76,7 @@ namespace strengthening {
                         const Expression &varUpdate = p.second;
                         Expression updatedVarUpdate = varUpdate;
                         updatedVarUpdate.applySubs(up);
-                        if (varUpdate == updatedVarUpdate) {
+                        if (varUpdate.is_equal(updatedVarUpdate)) {
                             updatedVarUpdate.applySubs(tmpVarRenaming);
                             pre.push_back(var == updatedVarUpdate);
                         }
@@ -89,7 +89,7 @@ namespace strengthening {
     }
 
     const RuleContext Self::build() const {
-        const std::vector<GiNaC::exmap> &updates = computeUpdates();
+        const std::vector<ExprMap> &updates = computeUpdates();
         const std::vector<Rule> &predecessors = computePredecessors();
         const std::vector<GuardList> preconditions = buildPreconditions(predecessors);
         return RuleContext(rule, updates, preconditions, its);

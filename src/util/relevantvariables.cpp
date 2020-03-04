@@ -22,7 +22,7 @@ namespace util {
 
     const ExprSymbolSet RelevantVariables::find(
             const GuardList &constraints,
-            const std::vector<GiNaC::exmap> &updates,
+            const std::vector<ExprMap> &updates,
             const GuardList &guard,
             const VariableManager &varMan) {
         std::set<VariableIdx> res;
@@ -41,7 +41,7 @@ namespace util {
             ExprSymbolSet next;
             for (const VariableIdx &var : todo) {
                 const ExprSymbol &x = varMan.getVarSymbol(var);
-                for (const GiNaC::exmap &up: updates) {
+                for (const ExprMap &up: updates) {
                     auto it = up.find(x);
                     if (it != up.end()) {
                         const ExprSymbolSet &rhsVars = Expression(it->second).getVariables();
@@ -77,7 +77,7 @@ namespace util {
             const std::vector<UpdateMap> &updateMaps,
             const GuardList &guard,
             const VariableManager &varMan) {
-        std::vector<GiNaC::exmap> updates;
+        std::vector<ExprMap> updates;
         for (const UpdateMap &up: updateMaps) {
             updates.push_back(up.toSubstitution(varMan));
         }
@@ -89,7 +89,7 @@ namespace util {
             const std::vector<RuleRhs> &rhss,
             const GuardList &guard,
             const VariableManager &varMan) {
-        std::vector<GiNaC::exmap> updates;
+        std::vector<ExprMap> updates;
         for (const RuleRhs &rhs: rhss) {
             updates.push_back(rhs.getUpdate().toSubstitution(varMan));
         }

@@ -21,18 +21,20 @@
 
 using namespace std;
 
+Z3Context::Z3Context(z3::context& ctx): ctx(ctx) { }
+
 Z3Context::~Z3Context() { }
 
 z3::expr Z3Context::buildVar(const std::string &name, Expression::Type type) {
-    return (type == Expression::Int) ? int_const(name.c_str()) : real_const(name.c_str());
+    return (type == Expression::Int) ? ctx.int_const(name.c_str()) : ctx.real_const(name.c_str());
 }
 
 z3::expr Z3Context::getInt(long val) {
-    return int_val(val);
+    return ctx.int_val(val);
 }
 
 z3::expr Z3Context::getReal(long num, long denom) {
-    return real_val(num, denom);
+    return ctx.real_val(num, denom);
 }
 
 z3::expr Z3Context::pow(const z3::expr &base, const z3::expr &exp) {
@@ -80,11 +82,11 @@ z3::expr Z3Context::bOr(const z3::expr &x, const z3::expr &y) {
 }
 
 z3::expr Z3Context::bTrue() {
-    return bool_val(true);
+    return ctx.bool_val(true);
 }
 
 z3::expr Z3Context::bFalse() {
-    return bool_val(false);
+    return ctx.bool_val(false);
 }
 
 #endif

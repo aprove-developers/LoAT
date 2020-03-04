@@ -151,31 +151,30 @@ bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
 }
 
 
-GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &monomials) {
-    using namespace GiNaC;
-
-    GiNaC::exmap res;
+ExprMap Linearize::buildSubstitution(const ExpressionSet &monomials) {
+    ExprMap res;
     for (const Expression &term: monomials) {
-        if (is_a<symbol>(term)) {
+        if (term.isSymbol()) {
             continue;
 
-        } else if (is_a<power>(term)) {
-            symbol base = ex_to<symbol>(term.op(0));
-            int exponent = ex_to<numeric>(term.op(1)).to_int();
+        } else if (term.isPower()) {
+            ExprSymbol base = term.op(0).toSymbol();
+            assert(term.op(1).isIntegerConstant());
+            GiNaC::numeric exponent = term.op(1).toNumeric();
 
-            VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent));
+            VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent.to_int()));
             ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
             res[term] = fresh;
 
             // Remember that e.g. x^2 is always nonnegative
-            if (exponent % 2 == 0) {
+            if (exponent.is_even()) {
                 additionalGuard.push_back(fresh >= 0);
             }
 
         } else {
-            assert(term.nops() == 2 && is_a<mul>(term)); // form x*y
-            symbol x = ex_to<symbol>(term.op(0));
-            symbol y = ex_to<symbol>(term.op(1));
+            assert(term.nops() == 2 && term.isMul()); // form x*y
+            ExprSymbol x = term.op(0).toSymbol();
+            ExprSymbol y = term.op(1).toSymbol();
 
             VariableIdx freshIdx = varMan.addFreshVariable(x.get_name() + y.get_name());
             ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
@@ -186,7 +185,7 @@ GiNaC::exmap Linearize::buildSubstitution(const ExpressionSet &monomials) {
 }
 
 
-void Linearize::applySubstitution(const GiNaC::exmap &subs) {
+void Linearize::applySubstitution(const ExprMap &subs) {
     // We have to enable algebraic substitutions, as otherwise x*y*z stays x*y*z
     // if we apply the exmap x*y/xy (since x*y only matches a part of the GiNaC::mul).
     // See the GiNaC documentation/tutorial on subs() for more details.
@@ -204,8 +203,8 @@ void Linearize::applySubstitution(const GiNaC::exmap &subs) {
 }
 
 
-GiNaC::exmap Linearize::reverseSubstitution(const GiNaC::exmap &subs) {
-    GiNaC::exmap reverseSubs;
+ExprMap Linearize::reverseSubstitution(const ExprMap &subs) {
+    ExprMap reverseSubs;
     for (auto it : subs) {
         assert(it.second.info(GiNaC::info_flags::symbol));
         reverseSubs[it.second] = it.first;
@@ -214,7 +213,7 @@ GiNaC::exmap Linearize::reverseSubstitution(const GiNaC::exmap &subs) {
 }
 
 
-option<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+option<ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
 
     Linearize lin(guard, updates, varMan);
 
@@ -229,7 +228,7 @@ option<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList 
 
     // If everything is linear, there is nothing to do
     if (!lin.needsLinearization(monomials)) {
-        return GiNaC::exmap(); // empty substitution
+        return ExprMap(); // empty substitution
     }
 
     // Check if we are allowed to perform substitutions
@@ -243,7 +242,7 @@ option<GiNaC::exmap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList 
     }
 
     // Construct the replacement and apply it
-    GiNaC::exmap subs = lin.buildSubstitution(monomials);
+    ExprMap subs = lin.buildSubstitution(monomials);
     lin.applySubstitution(subs);
 
     // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)

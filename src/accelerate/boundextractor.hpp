@@ -18,7 +18,7 @@ public:
     const std::vector<Expression> getLower() const;
     const std::vector<Expression> getUpper() const;
     const std::vector<Expression> getLowerAndUpper() const;
-    const std::set<Expression> getConstantBounds() const;
+    const ExpressionSet getConstantBounds() const;
 
 private:
 

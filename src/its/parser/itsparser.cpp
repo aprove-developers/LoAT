@@ -445,7 +445,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
 
     // Ensure that a function symbol always occurs with the same lhs arguments,
     // e.g. if we have "f(x) -> ..." and "f(y) -> ..." we rename the variables in the second rule to get "f(x) -> ..."
-    GiNaC::exmap subsLhs = computeSubstitutionToUnifyLhs(rule);
+    ExprMap subsLhs = computeSubstitutionToUnifyLhs(rule);
     newRule.applySubstitution(subsLhs);
 
     // Replace unbounded variables (which do not occur in lhs) by fresh temporary variables
@@ -527,8 +527,8 @@ set<VariableIdx> ITSParser::getVariables(const ParsedRule &rule) {
 }
 
 
-GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
-    GiNaC::exmap subs;
+ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
+    ExprMap subs;
     const LocationData &loc = getLocationData(rule.lhs);
     const TermFunApp *funapp = static_cast<TermFunApp*>(rule.lhs.get());
 
@@ -551,12 +551,12 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 
     // Make sure that different variables never coincide after applying the substitution.
     // e.g. if we replace "x/y" in "f(x) -> g(y)", the result "f(y) -> g(y)" is incorrect! Instead rename "y".
-    GiNaC::exmap subsMore;
+    ExprMap subsMore;
     for (const auto &it : subs) {
-        ExprSymbol newSym = GiNaC::ex_to<GiNaC::symbol>(it.second);
+        ExprSymbol newSym = it.second.toSymbol();
 
         // If newSym is already replaced, everything is fine
-        if (subs.count(newSym) > 0 || subsMore.count(newSym) > 0) continue;
+        if (subs.contains(newSym) || subsMore.contains(newSym)) continue;
 
         // Otherwise, if newSym occurs in rule, add it to the substitution
         VariableIdx newVar = itsProblem.getVarIdx(newSym);
@@ -569,7 +569,7 @@ GiNaC::exmap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 
     // Combine subs and subsMore (such that they are executed in parallel, do *not* compose them)
     for (const auto &it : subsMore) {
-        assert(subs.count(it.first) == 0);
+        assert(!subs.contains(it.first));
         subs[it.first] = it.second;
     }
 
@@ -587,7 +587,7 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
     }
 
     // Substitute all variables that do not occur on the lhs by temporary ones
-    GiNaC::exmap subs;
+    ExprMap subs;
     for (ExprSymbol var : ruleVars) {
         if (lhsVars.count(var) == 0) {
             // Create a fresh temporary variable

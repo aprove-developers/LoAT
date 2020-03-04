@@ -184,7 +184,7 @@ const BoolExpr operator !(const BoolExpr a) {
 }
 
 bool operator ==(const BoolExpression &a, const BoolExpression &b) {
-    if (a.getLit() != b.getLit()) {
+    if (!a.getLit()->is_equal(b.getLit().get())) {
         return false;
     }
     if (a.getLit()) {

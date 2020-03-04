@@ -21,7 +21,7 @@
 namespace Relation {
 
     bool isRelation(const Expression &ex) {
-        return GiNaC::is_a<GiNaC::relational>(ex)
+        return ex.isRelation()
                && ex.nops() == 2
                && !ex.info(GiNaC::info_flags::relation_not_equal);
     }
@@ -134,12 +134,12 @@ namespace Relation {
         assert(isInequality(rel));
 
         //move everything to lhs
-        GiNaC::ex newLhs = rel.lhs() - rel.rhs();
-        GiNaC::ex newRhs = 0;
+        Expression newLhs = rel.lhs() - rel.rhs();
+        Expression newRhs = 0;
 
         //move all numerical constants back to rhs
         newLhs = newLhs.expand();
-        if (GiNaC::is_a<GiNaC::add>(newLhs)) {
+        if (newLhs.isAdd()) {
             for (size_t i=0; i < newLhs.nops(); ++i) {
                 bool isConstant = true;
                 ExprSymbolSet vars = Expression(newLhs.op(i)).getVariables();
@@ -150,7 +150,7 @@ namespace Relation {
                     }
                 }
                 if (isConstant) {
-                    newRhs -= newLhs.op(i);
+                    newRhs = newRhs - newLhs.op(i);
                 }
             }
         } else {
@@ -163,12 +163,12 @@ namespace Relation {
                 }
             }
             if (isConstant) {
-                newRhs -= newLhs;
+                newRhs = newRhs - newLhs;
             }
         }
         //other cases (mul, pow, sym) should not include numerical constants (only numerical coefficients)
 
-        newLhs += newRhs;
+        newLhs = newLhs + newRhs;
         return replaceLhsRhs(rel, newLhs, newRhs);
     }
 
@@ -185,13 +185,14 @@ namespace Relation {
         Expression diff = (rel.lhs() - rel.rhs()).expand();
 
         if (diff.isRationalConstant()) {
-            relational relZero = ex_to<relational>(replaceLhsRhs(rel, diff, Expression(0)));
-            // cast to relZero to bool to evaluate it
-            if (relZero) {
-                return true;
-            } else {
-                return false;
-            }
+            if (rel.info(info_flags::relation_equal)) return diff.is_zero();
+            if (rel.info(info_flags::relation_not_equal)) return !diff.is_zero();
+            if (rel.info(info_flags::relation_less)) return diff.toNumeric().is_negative();
+            if (rel.info(info_flags::relation_less_or_equal)) return !diff.toNumeric().is_positive();
+            if (rel.info(info_flags::relation_greater)) return diff.toNumeric().is_positive();
+            if (rel.info(info_flags::relation_greater_or_equal)) return !diff.toNumeric().is_negative();
+            else std::cerr << "unknown relation " << rel << std::endl;
+            return false;
         }
 
         return {};

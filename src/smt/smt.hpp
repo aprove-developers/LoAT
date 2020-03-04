@@ -40,16 +40,16 @@ public:
 private:
     static bool isLinear(const std::vector<Expression> &guard);
     static bool isLinear(const UpdateMap &up);
-    static bool isLinear(const GiNaC::exmap &up);
+    static bool isLinear(const ExprMap &up);
     static bool isLinear(const std::vector<std::vector<Expression>> &gs);
     static bool isLinear(const std::vector<UpdateMap> &up);
-    static bool isLinear(const std::vector<GiNaC::exmap> &up);
+    static bool isLinear(const std::vector<ExprMap> &up);
     static bool isPolynomial(const std::vector<Expression> &guard);
     static bool isPolynomial(const UpdateMap &up);
-    static bool isPolynomial(const GiNaC::exmap &up);
+    static bool isPolynomial(const ExprMap &up);
     static bool isPolynomial(const std::vector<std::vector<Expression>> &gs);
     static bool isPolynomial(const std::vector<UpdateMap> &up);
-    static bool isPolynomial(const std::vector<GiNaC::exmap> &up);
+    static bool isPolynomial(const std::vector<ExprMap> &up);
 };
 
 #endif // SMT_H

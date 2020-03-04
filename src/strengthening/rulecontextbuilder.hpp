@@ -41,7 +41,7 @@ namespace strengthening {
 
         const std::vector<Rule> computePredecessors() const;
 
-        const std::vector<GiNaC::exmap> computeUpdates() const;
+        const std::vector<ExprMap> computeUpdates() const;
 
         const std::vector<GuardList> buildPreconditions(const std::vector<Rule> &predecessors) const;
 

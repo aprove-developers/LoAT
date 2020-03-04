@@ -29,7 +29,7 @@ namespace strengthening {
 
         RuleContext(
                 const Rule &rule,
-                const std::vector<GiNaC::exmap> &updates,
+                const std::vector<ExprMap> &updates,
                 const std::vector<GuardList> &preconditions,
                 VariableManager &varMan):
                 rule(rule),
@@ -38,7 +38,7 @@ namespace strengthening {
                 varMan(varMan) { }
 
         const Rule &rule;
-        const std::vector<GiNaC::exmap> updates;
+        const std::vector<ExprMap> updates;
         const std::vector<GuardList> preconditions;
         VariableManager &varMan;
     };

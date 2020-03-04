@@ -15,11 +15,12 @@ struct AccelerationProblem {
     GuardList res;
     GuardList done;
     GuardList todo;
-    GiNaC::exmap up;
-    option<GiNaC::exmap> closed;
+    ExprMap up;
+    option<ExprMap> closed;
     Expression cost;
     ExprSymbol n;
     GuardList guard;
+    uint validityBound;
     bool equivalent = true;
     bool nonterm = true;
     ProofOutput proof;
@@ -30,16 +31,17 @@ struct AccelerationProblem {
             const GuardList &res,
             const GuardList &done,
             const GuardList &todo,
-            const GiNaC::exmap &up,
-            const option<GiNaC::exmap> &closed,
+            const ExprMap &up,
+            const option<ExprMap> &closed,
             const Expression &cost,
             const ExprSymbol &n,
-            const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), varMan(varMan) {
-        this->res.push_back(n > 0);
+            const uint validityBound,
+            const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), validityBound(validityBound), varMan(varMan) {
+        this->res.push_back(n >= validityBound);
         if (closed) {
-            this->solver = SmtFactory::solver(Smt::chooseLogic<GiNaC::exmap>({todo}, {up, closed.get()}), varMan);
+            this->solver = SmtFactory::solver(Smt::chooseLogic<ExprMap>({todo}, {up, closed.get()}), varMan);
         } else {
-            this->solver = SmtFactory::solver(Smt::chooseLogic<GiNaC::exmap>({todo}, {up}), varMan);
+            this->solver = SmtFactory::solver(Smt::chooseLogic<ExprMap>({todo}, {up}), varMan);
         }
     }
 
@@ -49,16 +51,17 @@ struct AccelerationProblem {
             const VariableManager &varMan,
             const option<UpdateMap> &closed,
             const Expression &cost,
-            const ExprSymbol &n) {
-        const GiNaC::exmap &up = update.toSubstitution(varMan);
-        option<GiNaC::exmap> closedSubs;
+            const ExprSymbol &n,
+            const uint validityBound) {
+        const ExprMap &up = update.toSubstitution(varMan);
+        option<ExprMap> closedSubs;
         if (closed){
             closedSubs = closed.get().toSubstitution(varMan);
         } else {
             closedSubs = {};
         }
         const GuardList &todo = normalize(guard);
-        AccelerationProblem res({}, {}, todo, up, closedSubs, cost, n, varMan);
+        AccelerationProblem res({}, {}, todo, up, closedSubs, cost, n, validityBound, varMan);
         while (res.recurrence());
         return res;
     }
@@ -93,7 +96,7 @@ struct AccelerationProblem {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
                 done.push_back(e);
-                res.push_back(e.subs(closed.get()).subs({{n, n-1}}));
+                res.push_back(e.subs(closed.get()).subs(ExprMap(n, n-1)));
                 print();
                 nonterm = false;
                 solver->pop();
@@ -139,7 +142,7 @@ struct AccelerationProblem {
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
             solver->push();
-            const GiNaC::ex &updated = e.lhs().subs(up);
+            const Expression &updated = e.lhs().subs(up);
             solver->add(e.lhs() >= updated);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
@@ -149,7 +152,7 @@ struct AccelerationProblem {
             if (solver->check() == Smt::Unsat) {
                 solver->pop();
                 solver->push();
-                const Expression &newCond = e.subs(closed.get()).subs({{n, n-1}});
+                const Expression &newCond = e.subs(closed.get()).subs(ExprMap(n, n-1));
                 solver->add(e);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {
@@ -195,7 +198,7 @@ struct AccelerationProblem {
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Expression &e = *it;
             solver->push();
-            const GiNaC::ex &updated = e.lhs().subs(up);
+            const Expression &updated = e.lhs().subs(up);
             solver->add(e.lhs() <= updated);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
@@ -250,15 +253,10 @@ struct AccelerationCalculus {
 
     static AccelerationProblem init(const LinearRule &r, VariableManager &varMan) {
         const ExprSymbol &n = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
-        UpdateMap closed = r.getUpdate();
-        Expression cost = r.getCost();
-        GuardList guard = r.getGuard();
-        const option<unsigned int> &validityBound = Recurrence::iterateUpdateAndCost(varMan, closed, cost, guard, n);
-        if (!validityBound) {
-            return AccelerationProblem::init(r.getUpdate(), guard, varMan, {}, cost, n);
-        } else {
-            return AccelerationProblem::init(r.getUpdate(), guard, varMan, closed, cost, n);
-        }
+        const option<Recurrence::Result> &res = Recurrence::iterateRule(varMan, r, n);
+        const option<UpdateMap> &closed = res ? option<UpdateMap>(res.get().update) : option<UpdateMap>();
+        uint validityBound = res ? res->validityBound : 0;
+        return AccelerationProblem::init(r.getUpdate(), r.getGuard(), varMan, closed, r.getCost(), n, validityBound);
     }
 
 };

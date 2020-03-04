@@ -32,14 +32,14 @@ namespace nonterm {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
-            const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
+            const ExprMap &up = r.getUpdate(i).toSubstitution(its);
             if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
                 return {{Rule(r.getLhsLoc(), r.getGuard(), Expression::NontermSymbol, sink, {}), Success}};
             }
         }
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
-            const GiNaC::exmap &up = chained.getUpdate(0).toSubstitution(its);
+            const ExprMap &up = chained.getUpdate(0).toSubstitution(its);
             if (Smt::check(buildAnd(chained.getGuard()), its) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
                 return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }
@@ -57,10 +57,11 @@ namespace nonterm {
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             solver->push();
-            const GiNaC::exmap &up = r.getUpdate(i).toSubstitution(its);
+            const ExprMap &up = r.getUpdate(i).toSubstitution(its);
             const ExprSymbolSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
             for (const ExprSymbol &var: vars) {
-                solver->add(Expression(var == var.subs(up)));
+                const auto &it = up.find(var);
+                solver->add(Expression(var == (it == up.end() ? var : it->second)));
             }
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {
@@ -70,7 +71,8 @@ namespace nonterm {
                 }
                 GuardList newGuard(r.getGuard());
                 for (const ExprSymbol &var: vars) {
-                    newGuard.emplace_back(var == var.subs(up));
+                    const auto &it = up.find(var);
+                    newGuard.emplace_back(var == (it == up.end() ? var : it->second));
                 }
                 return {{Rule(r.getLhsLoc(), newGuard, Expression::NontermSymbol, sink, {}), PartialSuccess}};
             }

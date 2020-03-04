@@ -21,9 +21,11 @@
 
 using namespace std;
 
+bool Expression_is_less::operator()(const Expression &lh, const Expression &rh) const {
+     return lh.compare(rh) < 0;
+}
 
 const ExprSymbol Expression::NontermSymbol = GiNaC::symbol("NONTERM");
-
 
 Expression Expression::fromString(const string &s, const GiNaC::lst &variables) {
     auto containsRelations = [](const string &s) -> bool {
@@ -61,11 +63,11 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
     assert(false && "unreachable");
 }
 
-void Expression::applySubs(const GiNaC::exmap &subs) {
-    *this = this->subs(subs);
+void Expression::applySubs(const ExprMap &subs) {
+    this->ex = this->ex.subs(subs.ginacMap);
 }
 
-bool Expression::findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const {
+bool Expression::findAll(const Expression &pattern, ExpressionSet &found) const {
     bool anyFound = false;
 
     if (match(pattern)) {
@@ -150,16 +152,16 @@ bool Expression::isProperRational() const {
 
 
 bool Expression::isProperNaturalPower() const {
-    if (!GiNaC::is_a<GiNaC::power>(*this)) {
+    if (!this->isPower()) {
         return false;
     }
 
-    GiNaC::ex power = this->op(1);
+    Expression power = this->op(1);
     if (!power.info(GiNaC::info_flags::integer)) {
         return false;
     }
 
-    return GiNaC::ex_to<GiNaC::numeric>(power) > GiNaC::numeric(1);
+    return power.toNumeric() > 1;
 }
 
 
@@ -293,22 +295,21 @@ bool Expression::hasAtLeastTwoVariables() const {
 }
 
 
-Complexity Expression::getComplexity(const GiNaC::ex &term) {
-    using namespace GiNaC;
+Complexity Expression::getComplexity(const Expression &term) {
 
     //traverse the expression
-    if (is_a<numeric>(term)) {
-        numeric num = ex_to<numeric>(term);
+    if (term.isNumeric()) {
+        GiNaC::numeric num = term.toNumeric();
         assert(num.is_integer() || num.is_real());
         //both for positive and negative constants, as we want to over-approximate the complexity! (e.g. A-B is O(n))
         return Complexity::Const;
 
-    } else if (is_a<power>(term)) {
+    } else if (term.isPower()) {
         assert(term.nops() == 2);
 
         // If the exponent is at least polynomial (non-constant), complexity might be exponential
         if (getComplexity(term.op(1)) > Complexity::Const) {
-            const ex &base = term.op(0);
+            const Expression &base = term.op(0);
             if (base.is_zero() || base.compare(1) == 0 || base.compare(-1) == 0) {
                 return Complexity::Const;
             }
@@ -316,10 +317,10 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
 
         // Otherwise the complexity is polynomial, if the exponent is nonnegative
         } else {
-            if (!is_a<numeric>(term.op(1))) {
+            if (!term.op(1).isNumeric()) {
                 return Complexity::Unknown;
             }
-            numeric numexp = ex_to<numeric>(term.op(1));
+            GiNaC::numeric numexp = term.op(1).toNumeric();
             if (!numexp.is_nonneg_integer()) {
                 return Complexity::Unknown;
             }
@@ -329,7 +330,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
             return base ^ exp;
         }
 
-    } else if (is_a<mul>(term)) {
+    } else if (term.isMul()) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
         for (unsigned int i=1; i < term.nops(); ++i) {
@@ -337,7 +338,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
         }
         return cpx;
 
-    } else if (is_a<add>(term)) {
+    } else if (term.isAdd()) {
         assert(term.nops() > 0);
         Complexity cpx = getComplexity(term.op(0));
         for (unsigned int i=1; i < term.nops(); ++i) {
@@ -345,7 +346,7 @@ Complexity Expression::getComplexity(const GiNaC::ex &term) {
         }
         return cpx;
 
-    } else if (is_a<symbol>(term)) {
+    } else if (term.isSymbol()) {
         return (term.compare(Expression::NontermSymbol) == 0) ? Complexity::Nonterm : Complexity::Poly(1);
     }
 

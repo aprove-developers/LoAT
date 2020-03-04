@@ -7,11 +7,12 @@
 #include "../smtcontext.hpp"
 #include "../../its/types.hpp"
 
-class Cvc4Context: public CVC4::ExprManager, public SmtContext<CVC4::Expr>
+class Cvc4Context: public SmtContext<CVC4::Expr>
 {
 
 public:
 
+    Cvc4Context(CVC4::ExprManager &manager);
     ~Cvc4Context() override;
     CVC4::Expr getInt(long val) override;
     CVC4::Expr getReal(long num, long denom) override;
@@ -29,8 +30,8 @@ public:
     CVC4::Expr bTrue() override;
     CVC4::Expr bFalse() override;
 
-protected:
-
+private:
+    CVC4::ExprManager &manager;
     CVC4::Expr buildVar(const std::string &basename, Expression::Type type) override;
 
 };

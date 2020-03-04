@@ -48,7 +48,7 @@ public:
 
     bool isParametric(const Expression &e) const;
 
-    const std::vector<Expression> subs(const GiNaC::exmap &sigma) const;
+    const std::vector<Expression> subs(const ExprMap &sigma) const;
 
     iterator begin() const;
 

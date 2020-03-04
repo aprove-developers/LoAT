@@ -214,7 +214,7 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
         if (upVars.find(var) != upVars.end()) {
             if (up.isPolynomial() && up.degree(var) == 1) {
                 const Expression &coeff = up.coeff(var);
-                if (coeff.isRationalConstant() && coeff < 0) {
+                if (coeff.isRationalConstant() && coeff.toNumeric().is_negative()) {
                     res = Chaining::chainRules(its, res, res, false).get();
                     changed = true;
                     break;

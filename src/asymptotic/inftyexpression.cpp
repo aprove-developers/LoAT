@@ -1,15 +1,12 @@
 #include "inftyexpression.hpp"
 
 #include <iostream>
-#include <ginac/ginac.h>
-
-using namespace GiNaC;
 
 const int DirectionSize = 5;
 const char* DirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
 
-InftyExpression::InftyExpression(const GiNaC::ex &other, Direction dir)
+InftyExpression::InftyExpression(const Expression &other, Direction dir)
     : Expression(other) {
     setDirection(dir);
 }
@@ -26,15 +23,15 @@ Direction InftyExpression::getDirection() const {
 
 
 bool InftyExpression::isTriviallyUnsatisfiable() const {
-    if (is_a<numeric>(*this)) {
+    if (this->isNumeric()) {
         if (direction == POS_INF || direction == NEG_INF) {
             return true;
 
         } else if ((direction == POS_CONS || direction == POS)
-                   && (info(info_flags::negative) || is_zero())) {
+                   && (info(GiNaC::info_flags::negative) || is_zero())) {
             return true;
 
-        } else if (direction == NEG_CONS && info(info_flags::nonnegative)) {
+        } else if (direction == NEG_CONS && info(GiNaC::info_flags::nonnegative)) {
             return true;
         }
     }

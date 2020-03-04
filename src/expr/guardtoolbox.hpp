@@ -140,7 +140,7 @@ namespace GuardToolbox {
     /**
      * Compose two substitutions, i.e. compute f ∘ g ("f after g")
      */
-    GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
+    ExprMap composeSubs(const ExprMap &f, const ExprMap &g);
 
 }
 

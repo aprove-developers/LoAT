@@ -24,8 +24,9 @@ public:
 
 private:
     uint timeout;
-    Cvc4Context ctx;
     const VariableManager &varMan;
+    CVC4::ExprManager manager;
+    Cvc4Context ctx;
     CVC4::SmtEngine solver;
     bool models = false;
 

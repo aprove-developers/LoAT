@@ -84,7 +84,7 @@ namespace sexpressionparser {
                             // make sure that the temporary variables are unique
                             ExprSymbolSet currTmpVars(tmpVars);
                             guard.collectVariables(currTmpVars);
-                            GiNaC::exmap subs;
+                            ExprMap subs;
                             for (const ExprSymbol &var: currTmpVars) {
                                 if (res.isTempVar(var)) {
                                     subs[var] = res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name()));

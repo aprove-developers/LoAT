@@ -37,9 +37,10 @@
  * For convenience, it is also possible to create z3 symbols not associated to any GiNaC symbol,
  * but these symbols cannot be looked up later (as they are not associated to any GiNaC symbol).
  */
-class Z3Context : public z3::context, public SmtContext<z3::expr> {
+class Z3Context : public SmtContext<z3::expr> {
 
 public:
+    Z3Context(z3::context& ctx);
     ~Z3Context() override;
     z3::expr getInt(long val) override;
     z3::expr getReal(long num, long denom) override;
@@ -57,8 +58,9 @@ public:
     z3::expr bTrue() override;
     z3::expr bFalse() override;
 
-protected:
+private:
     z3::expr buildVar(const std::string &basename, Expression::Type type) override;
+    z3::context &ctx;
 
 };
 

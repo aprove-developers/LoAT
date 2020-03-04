@@ -9,7 +9,7 @@ std::ostream& Z3::print(std::ostream& os) const {
 
 Z3::~Z3() {}
 
-Z3::Z3(const VariableManager &varMan): varMan(varMan), solver(z3::solver(ctx)) {
+Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx) {
     updateParams();
 }
 
@@ -54,7 +54,7 @@ void Z3::enableModels() {
 }
 
 void Z3::updateParams() {
-    z3::params params(ctx);
+    z3::params params(z3Ctx);
     params.set(":model", models);
     params.set(":timeout", timeout);
     solver.set(params);

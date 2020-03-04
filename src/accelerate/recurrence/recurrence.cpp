@@ -34,7 +34,7 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 
 option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
-    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last));
+    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last).ex);
     Purrs::Expr exact;
 
     const ExprSymbolSet &vars = updateRhs.getVariables();
@@ -68,7 +68,7 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
     cost = cost.subs(updatePreRecurrences); //replace variables by their recurrence equations
 
     //Example: if cost = y, the result is x(n) = x(n-1) + y(n-1), with x(0) = 0
-    Purrs::Expr rhs = Purrs::x(Purrs::Recurrence::n - 1) + Purrs::Expr::fromGiNaC(cost);
+    Purrs::Expr rhs = Purrs::x(Purrs::Recurrence::n - 1) + Purrs::Expr::fromGiNaC(cost.ex);
     Purrs::Expr sol;
 
     try {
@@ -92,8 +92,7 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
         return {};
     }
 
-    Expression result = sol.toGiNaC();
-    return result;
+    return {Expression(sol.toGiNaC())};
 }
 
 
@@ -108,7 +107,6 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
         ExprSymbol target = varMan.getVarSymbol(vi);
 
         const Expression &rhs = update.at(vi);
-        const ExprSymbolSet &vars = rhs.getVariables();
         option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target, validityBounds);
         if (!updateRec) {
             return {};
@@ -134,13 +132,13 @@ option<Expression> Recurrence::iterateCost(const Expression &cost, const Express
     auto costRec = findCostRecurrence(cost);
     if (costRec) {
         Expression res = costRec.get().subs(ginacN == meterfunc);
-        return res;
+        return {res};
     }
     return {};
 }
 
 
-option<unsigned int> Recurrence::iterateAll(UpdateMap &update, Expression &cost, const Expression &metering) {
+option<Recurrence::Result> Recurrence::iterate(const UpdateMap &update, const Expression &cost, const Expression &metering) {
     auto newUpdate = iterateUpdate(update, metering);
     if (!newUpdate) {
         return {};
@@ -151,50 +149,22 @@ option<unsigned int> Recurrence::iterateAll(UpdateMap &update, Expression &cost,
         return {};
     }
 
-    update.swap(newUpdate.get().update);
-    cost.swap(newCost.get());
-    return newUpdate.get().validityBound;
+    Recurrence::Result res;
+    res.cost = newCost.get();
+    res.update = newUpdate.get().update;
+    res.validityBound = newUpdate.get().validityBound;
+    return {res};
 }
 
 
-option<unsigned int> Recurrence::iterateRule(const VarMan &varMan, LinearRule &rule, const Expression &metering) {
+option<Recurrence::Result> Recurrence::iterateRule(const VarMan &varMan, const LinearRule &rule, const Expression &metering) {
     // This may modify the rule's guard and update
-    auto order = DependencyOrder::findOrderWithHeuristic(varMan, rule.getUpdateMut(), rule.getGuardMut());
+    auto order = DependencyOrder::findOrder(varMan, rule.getUpdate());
     if (!order) {
         return {};
     }
 
     Recurrence rec(varMan, order.get());
-    return rec.iterateAll(rule.getUpdateMut(), rule.getCostMut(), metering);
+    return rec.iterate(rule.getUpdate(), rule.getCost(), metering);
 }
 
-
-option<unsigned int> Recurrence::iterateUpdateAndCost(const VarMan &varMan, UpdateMap &update, Expression &cost, GuardList &guard, const Expression &N) {
-    auto order = DependencyOrder::findOrderWithHeuristic(varMan, update, guard);
-    if (!order) {
-        return {};
-    }
-
-    Recurrence rec(varMan, order.get());
-    return rec.iterateAll(update, cost, N);
-}
-
-const option<Recurrence::IteratedUpdates> Recurrence::iterateUpdate(
-        const VariableManager &varMan,
-        const UpdateMap &update,
-        const ExprSymbol &n) {
-    GuardList refinement;
-    UpdateMap refinedUpdate = update;
-    auto order = DependencyOrder::findOrderWithHeuristic(varMan, refinedUpdate, refinement);
-    Recurrence rec(varMan, order.get());
-    const option<RecurrenceSystemSolution> &iteratedUpdate = rec.iterateUpdate(refinedUpdate, n);
-    if (iteratedUpdate) {
-        return {{
-            .updates={iteratedUpdate.get().update},
-            .refinement=std::move(refinement),
-            .validityBound=iteratedUpdate.get().validityBound
-        }};
-    } else {
-        return {};
-    }
-}

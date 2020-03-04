@@ -20,7 +20,7 @@ public:
     /**
      * Creates a new InftyExpression from the given ginac expression and direction.
      */
-    InftyExpression(const GiNaC::ex &other, Direction dir);
+    InftyExpression(const Expression &other, Direction dir);
 
     /**
      * Sets the direction of this InftyExpression.
@@ -45,6 +45,6 @@ private:
 
 std::ostream& operator<<(std::ostream &os, const InftyExpression &ie);
 
-typedef std::set<InftyExpression, GiNaC::ex_is_less> InftyExpressionSet;
+typedef std::set<InftyExpression, Expression_is_less> InftyExpressionSet;
 
 #endif // INFTYEXPRESSION_H

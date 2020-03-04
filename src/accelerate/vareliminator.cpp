@@ -44,7 +44,7 @@ void VarEliminator::findDependencies(const GuardList &guard) {
     dependencies.erase(N);
 }
 
-const std::set<std::pair<GiNaC::exmap, GuardList>> VarEliminator::eliminateDependency(const GiNaC::exmap &subs, const GuardList &guard) const {
+const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency(const ExprMap &subs, const GuardList &guard) const {
     ExprSymbolSet vars;
     guard.collectVariables(vars);
     for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
@@ -52,9 +52,9 @@ const std::set<std::pair<GiNaC::exmap, GuardList>> VarEliminator::eliminateDepen
             continue;
         }
         BoundExtractor be(guard, *it);
-        std::set<std::pair<GiNaC::exmap, GuardList>> res;
+        std::set<std::pair<ExprMap, GuardList>> res;
         for (const Expression &bound: be.getConstantBounds()) {
-            GiNaC::exmap newSubs{{*it, bound}};
+            ExprMap newSubs(*it, bound);
             res.insert({util::GiNaCUtils::compose(subs, newSubs), guard.subs(newSubs)});
         }
         if (!res.empty()) {
@@ -66,8 +66,8 @@ const std::set<std::pair<GiNaC::exmap, GuardList>> VarEliminator::eliminateDepen
 
 void VarEliminator::eliminateDependencies() {
     while (!todoDeps.empty()) {
-        const std::pair<GiNaC::exmap, GuardList> current = todoDeps.top();
-        const std::set<std::pair<GiNaC::exmap, GuardList>> &res = eliminateDependency(current.first, current.second);
+        const std::pair<ExprMap, GuardList> current = todoDeps.top();
+        const std::set<std::pair<ExprMap, GuardList>> &res = eliminateDependency(current.first, current.second);
         if (res.empty()) {
             todoN.insert(current);
         }
@@ -81,19 +81,19 @@ void VarEliminator::eliminateDependencies() {
 void VarEliminator::eliminate() {
     eliminateDependencies();
     for (const auto &p: todoN) {
-        const GiNaC::exmap &subs = p.first;
+        const ExprMap &subs = p.first;
         const GuardList &guard = p.second;
         BoundExtractor be(guard, N);
         if (be.getEq()) {
-            res.insert(util::GiNaCUtils::compose(subs, {{N, be.getEq().get()}}));
+            res.insert(util::GiNaCUtils::compose(subs, ExprMap(N, be.getEq().get())));
         } else {
             for (const Expression &b: be.getUpper()) {
-                res.insert(util::GiNaCUtils::compose(subs, {{N, b}}));
+                res.insert(util::GiNaCUtils::compose(subs, ExprMap(N, b)));
             }
         }
     }
 }
 
-const std::set<GiNaC::exmap> VarEliminator::getRes() const {
+const std::set<ExprMap> VarEliminator::getRes() const {
     return res;
 }

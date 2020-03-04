@@ -21,7 +21,7 @@ Expression TermBinOp::toGinacExpression(const ITSProblem &its) const {
         case Subtraction: return l - r;
         case Multiplication: return l * r;
         case Division: return l / r;
-        case Power: return GiNaC::pow(l, r);
+        case Power: return l ^ r;
     }
     assert(false && "unreachable");
 }

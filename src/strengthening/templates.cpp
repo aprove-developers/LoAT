@@ -43,7 +43,7 @@ bool Self::isParametric(const Expression &e) const {
     return false;
 }
 
-const std::vector<Expression> Self::subs(const GiNaC::exmap &sigma) const {
+const std::vector<Expression> Self::subs(const ExprMap &sigma) const {
     std::vector<Expression> res;
     for (Expression e: templates) {
         e.applySubs(sigma);

@@ -2,7 +2,6 @@
 
 #include <iterator>
 #include <vector>
-#include <ginac/ginac.h>
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
@@ -16,7 +15,6 @@
 #include "inftyexpression.hpp"
 #include "../util/proofoutput.hpp"
 
-using namespace GiNaC;
 using namespace std;
 
 
@@ -60,7 +58,7 @@ void AsymptoticBound::normalizeGuard() {
     for (const Expression &ex : guard) {
         assert(Relation::isRelation(ex));
 
-        if (ex.info(info_flags::relation_equal)) {
+        if (ex.info(GiNaC::info_flags::relation_equal)) {
             // Split equation
             Expression greaterEqual = Relation::normalizeInequality(ex.lhs() >= ex.rhs());
             Expression lessEqual = Relation::normalizeInequality(ex.lhs() <= ex.rhs());
@@ -93,8 +91,8 @@ void AsymptoticBound::propagateBounds() {
         assert(Relation::isRelation(ex));
 
         Expression target = ex.rhs() - ex.lhs();
-        if (ex.info(info_flags::relation_equal)
-            && target.info(info_flags::polynomial)) {
+        if (ex.info(GiNaC::info_flags::relation_equal)
+            && target.info(GiNaC::info_flags::polynomial)) {
 
             std::vector<ExprSymbol> vars;
             std::vector<ExprSymbol> tempVars;
@@ -114,10 +112,7 @@ void AsymptoticBound::propagateBounds() {
                 //solve target for var (result is in target)
                 auto optSolved = GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs);
                 if (optSolved) {
-                    exmap sub;
-                    sub.insert(std::make_pair(var, optSolved.get()));
-
-                    substitutions.push_back(std::move(sub));
+                    substitutions.push_back(ExprMap(var, optSolved.get()));
                     break;
                 }
             }
@@ -137,12 +132,12 @@ void AsymptoticBound::propagateBounds() {
 
     // build substitutions from inequalities
     for (const Expression &ex : guard) {
-        if (!ex.info(info_flags::relation_equal)) {
-            if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
+        if (!ex.info(GiNaC::info_flags::relation_equal)) {
+            if (ex.lhs().isSymbol() || ex.rhs().isSymbol()) {
                 Expression exT = Relation::toLessOrLessEq(ex);
 
                 Expression l, r;
-                bool swap = is_a<symbol>(exT.rhs());
+                bool swap = exT.rhs().isSymbol();
                 if (swap) {
                     l = exT.rhs();
                     r = exT.lhs();
@@ -162,17 +157,13 @@ void AsymptoticBound::propagateBounds() {
                     continue;
                 }
 
-                if (r.info(info_flags::polynomial) && !r.has(l)) {
-                    if (exT.info(info_flags::relation_less) && !swap) { // exT: x = l < r
+                if (r.info(GiNaC::info_flags::polynomial) && !r.has(l)) {
+                    if (exT.info(GiNaC::info_flags::relation_less) && !swap) { // exT: x = l < r
                         r = r - 1;
-                    } else if (exT.info(info_flags::relation_less) && swap) { // exT: r < l = x
+                    } else if (exT.info(GiNaC::info_flags::relation_less) && swap) { // exT: r < l = x
                         r = r + 1;
                     }
-
-                    exmap sub;
-                    sub.insert(std::make_pair(l, r));
-
-                    substitutions.push_back(std::move(sub));
+                    substitutions.push_back(ExprMap(l, r));
                 }
             }
         }
@@ -222,27 +213,24 @@ void AsymptoticBound::propagateBounds() {
     }
 }
 
-GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
+ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     assert(limitProblem.isSolved());
 
-    exmap solution;
+    ExprMap solution;
     for (int index : limitProblem.getSubstitutions()) {
-        const exmap &sub = substitutions[index];
+        const ExprMap &sub = substitutions[index];
 
-        solution = std::move(GuardToolbox::composeSubs(sub, solution));
+        solution = GuardToolbox::composeSubs(sub, solution);
     }
 
-    solution = std::move(GuardToolbox::composeSubs(limitProblem.getSolution(), solution));
+    solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
 
     GuardList guardCopy = guard;
     guardCopy.push_back(cost);
     for (const Expression &ex : guardCopy) {
         for (const ExprSymbol &var : ex.getVariables()) {
-            if (solution.count(var) == 0) {
-                exmap sub;
-                sub.insert(std::make_pair(var, numeric(0)));
-
-                solution = std::move(GuardToolbox::composeSubs(sub, solution));
+            if (!solution.contains(var)) {
+                solution = GuardToolbox::composeSubs(ExprMap(var, 0), solution);
             }
         }
     }
@@ -252,13 +240,13 @@ GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
 
 
 int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
-                                               const GiNaC::exmap &solution) {
+                                               const ExprMap &solution) {
     ExprSymbol n = limitProblem.getN();
     int upperBound = 0;
     for (auto const &pair : solution) {
-        assert(is_a<symbol>(pair.first));
+        assert(pair.first.isSymbol());
 
-        if (!varMan.isTempVar(ex_to<symbol>(pair.first))) {
+        if (!varMan.isTempVar(pair.first.toSymbol())) {
             Expression sub = pair.second;
             assert(sub.is_polynomial(n));
             assert(sub.hasNoVariables()
@@ -278,13 +266,13 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
 
 
 int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProblem,
-                                                 const GiNaC::exmap &solution) {
+                                                 const ExprMap &solution) {
 
     Expression solvedCost = cost.subs(solution);
 
     int lowerBound;
     ExprSymbol n = limitProblem.getN();
-    if (solvedCost.info(info_flags::polynomial)) {
+    if (solvedCost.info(GiNaC::info_flags::polynomial)) {
         assert(solvedCost.is_polynomial(n));
         assert(solvedCost.hasAtMostOneVariable());
 
@@ -296,18 +284,18 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
         std::vector<Expression> nonPolynomial;
         Expression expanded = solvedCost.expand();
 
-        Expression powerPattern = pow(wild(1), wild(2));
-        std::set<ex, ex_is_less> powers;
+        Expression powerPattern = pow(GiNaC::wild(1), GiNaC::wild(2));
+        ExpressionSet powers;
         assert(expanded.findAll(powerPattern, powers));
 
         lowerBound = 1;
         for (const Expression &ex : powers) {
 
             if (ex.op(1).has(n) && ex.op(1).is_polynomial(n)) {
-                assert(ex.op(0).info(info_flags::integer));
-                assert(ex.op(0).info(info_flags::positive));
+                assert(ex.op(0).info(GiNaC::info_flags::integer));
+                assert(ex.op(0).info(GiNaC::info_flags::positive));
 
-                int base =  ex_to<numeric>(ex.op(0)).to_int();
+                int base =  ex.op(0).toNumeric().to_int();
                 if (base > lowerBound) {
                     lowerBound = base;
                 }
@@ -452,11 +440,11 @@ bool AsymptoticBound::solveLimitProblem() {
 AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProblem &limitProblem) {
     ComplexityResult res;
 
-    res.solution = std::move(calcSolution(limitProblem));
+    res.solution = calcSolution(limitProblem);
     res.upperBound = findUpperBoundforSolution(limitProblem, res.solution);
 
     for (auto const &pair : res.solution) {
-        if (!is_a<numeric>(pair.second)) {
+        if (!pair.second.isNumeric()) {
             ++res.inftyVars;
         }
     }
@@ -509,7 +497,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     ExprSymbol n = limitProblem.getN();
 
     if (solvedCost.is_polynomial(n)) {
-        if (!cost.info(info_flags::polynomial)) {
+        if (!cost.info(GiNaC::info_flags::polynomial)) {
             return false;
         }
 
@@ -520,7 +508,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     }
 
     for (const ExprSymbol &var : cost.getVariables()) {
-        if (varMan.isTempVar(ex_to<symbol>(var))) {
+        if (varMan.isTempVar(var)) {
             // we try to achieve ComplexInfty
             return false;
         }
@@ -602,44 +590,44 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 
         limitVectors = &division[it->getDirection()];
 
-    } else if (is_a<add>(*it)) {
-        l = numeric(0);
-        r = numeric(0);
+    } else if (it->isAdd()) {
+        l = 0;
+        r = 0;
         int pos = 0;
 
         for (int i = 0; i <= pos; ++i) {
-            l += it->op(i);
+            l = l + it->op(i);
         }
         for (unsigned int i = pos + 1; i < it->nops(); ++i) {
-            r += it->op(i);
+            r = r + it->op(i);
         }
 
         limitVectors = &addition[it->getDirection()];
 
-    } else if (is_a<mul>(*it)) {
-        l = numeric(1);
-        r = numeric(1);
+    } else if (it->isMul()) {
+        l = 1;
+        r = 1;
         int pos = 0;
 
         for (int i = 0; i <= pos; ++i) {
-            l *= it->op(i);
+            l = l * it->op(i);
         }
         for (unsigned int i = pos + 1; i < it->nops(); ++i) {
-            r *= it->op(i);
+            r = r * it->op(i);
         }
 
         limitVectors = &multiplication[it->getDirection()];
 
     } else if (it->isProperNaturalPower()) {
         Expression base = it->op(0);
-        numeric power = ex_to<numeric>(it->op(1));
+        GiNaC::numeric power = it->op(1).toNumeric();
 
         if (power.is_even()) {
-            l = pow(base, power / 2);
+            l = base ^ (power / 2);
             r = l;
         } else {
             l = base;
-            r = pow(base, power - 1);
+            r = base ^ (power - 1);
         }
 
         limitVectors = &multiplication[it->getDirection()];
@@ -655,9 +643,9 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
 bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it) {
     Expression l, r;
     std::vector<LimitVector> *limitVectors;
-    if (is_a<add>(*it)) {
-        l = numeric(0);
-        r = numeric(0);
+    if (it->isAdd()) {
+        l = 0;
+        r = 0;
 
         bool foundOneVar = false;
         ExprSymbol oneVar;
@@ -676,13 +664,13 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
                     l = ex;
 
                 } else if (oneVar == ex.getAVariable()) {
-                    l += ex;
+                    l = l + ex;
 
                 } else {
-                    r += ex;
+                    r = r + ex;
                 }
             } else {
-                r += ex;
+                r = r + ex;
             }
         }
 
@@ -691,9 +679,9 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
         }
 
         limitVectors = &addition[it->getDirection()];
-    } else if (is_a<mul>(*it)) {
-        l = numeric(1);
-        r = numeric(1);
+    } else if (it->isMul()) {
+        l = 1;
+        r = 1;
 
         bool foundOneVar = false;
         ExprSymbol oneVar;
@@ -712,17 +700,17 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
                     l = ex;
 
                 } else if (oneVar == ex.getAVariable()) {
-                    l *= ex;
+                    l = l * ex;
 
                 } else {
-                    r *= ex;
+                    r = r * ex;
                 }
             } else {
-                r *= ex;
+                r = r * ex;
             }
         }
 
-        if (l == numeric(1) || r == numeric(1)) {
+        if (l.is_equal(1) || r.is_equal(1)) {
             return false;
         }
 
@@ -800,10 +788,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
                 ExprSymbol var = it->getAVariable();
 
                 Expression rational = model.at(var);
-
-                exmap sub;
-                sub.insert(std::make_pair(var, rational));
-                substitutions.push_back(std::move(sub));
+                substitutions.push_back(ExprMap(var, rational));
 
                 createBacktrackingPoint(it, POS_INF);
                 currentLP.substitute(substitutions.back(), substitutions.size() - 1);
@@ -828,18 +813,17 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 bool AsymptoticBound::trySubstitutingVariable() {
     InftyExpressionSet::const_iterator it, it2;
     for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-        if (is_a<symbol>(*it)) {
+        if (it->isSymbol()) {
             for (it2 = std::next(it); it2 != currentLP.cend(); ++it2) {
-                if (is_a<symbol>(*it2)) {
+                if (it2->isSymbol()) {
                     Direction dir = it->getDirection();
                     Direction dir2 = it2->getDirection();
 
                     if (((dir == POS || dir == POS_INF) && (dir2 == POS || dir2 == POS_INF))
                         || (dir == NEG_INF && dir2 == NEG_INF)) {
-                        assert(*it != *it2);
+                        assert(!it->is_equal(*it2));
 
-                        exmap sub;
-                        sub.insert(std::make_pair(*it, *it2));
+                        ExprMap sub(*it, *it2);
                         substitutions.push_back(sub);
 
                         createBacktrackingPoint(it, POS_CONS);

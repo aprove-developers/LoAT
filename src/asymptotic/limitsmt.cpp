@@ -113,7 +113,7 @@ static map<int, Expression> getCoefficients(const Expression &ex, const ExprSymb
     return coefficients;
 }
 
-option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
+option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
@@ -126,7 +126,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     ExprSymbolSet vars = currentLP.getVariables();
 
     // create linear templates for all variables
-    GiNaC::exmap templateSubs;
+    ExprMap templateSubs;
     ExprSymbolMap<ExprSymbol> varCoeff, varCoeff0;
     for (const ExprSymbol &var : vars) {
         ExprSymbol c0 = varMan.getFreshUntrackedSymbol(var.get_name() + "_0", Expression::Int);
@@ -216,7 +216,7 @@ option<GiNaC::exmap> LimitSmtEncoding::applyEncoding(const LimitProblem &current
     }
 
     // we found a model -- create the corresponding solution of the limit problem
-    GiNaC::exmap smtSubs;
+    ExprMap smtSubs;
     ExprSymbolMap<GiNaC::numeric> model = solver->model();
     for (const ExprSymbol &var : vars) {
         auto c0 = model.find(varCoeff0.at(var));

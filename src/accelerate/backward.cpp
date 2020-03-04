@@ -59,7 +59,7 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
     if (ve.getRes().empty()) {
         res.push_back(rule);
     } else {
-        for (const GiNaC::exmap &subs : ve.getRes()) {
+        for (const ExprMap &subs : ve.getRes()) {
             Rule instantiated = rule;
             instantiated.applySubstitution(subs);
             res.push_back(instantiated);
