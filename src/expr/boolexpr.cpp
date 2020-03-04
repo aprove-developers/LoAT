@@ -1,5 +1,4 @@
 #include "boolexpr.hpp"
-#include "../expr/relation.hpp"
 
 BoolExpression::~BoolExpression() {}
 
@@ -22,7 +21,7 @@ std::set<BoolExpr> BoolLit::getChildren() const {
 }
 
 const BoolExpr BoolLit::negation() const {
-    return std::shared_ptr<BoolExpression>(new BoolLit(lit.negateLessEqInequality()));
+    return std::shared_ptr<BoolExpression>(new BoolLit(!lit));
 }
 
 bool BoolLit::isLinear() const {

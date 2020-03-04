@@ -23,7 +23,6 @@
 #include "recurrence/recurrence.hpp"
 #include "meter/metertools.hpp"
 #include "../expr/guardtoolbox.hpp"
-#include "../expr/relation.hpp"
 #include "forward.hpp"
 
 #include <purrs.hh>

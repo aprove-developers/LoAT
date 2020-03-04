@@ -18,7 +18,6 @@
 #include "metertools.hpp"
 
 #include "../../expr/guardtoolbox.hpp"
-#include "../../expr/relation.hpp"
 #include "../../smt/smt.hpp"
 #include "../../smt/smtfactory.hpp"
 #include "../../expr/boolexpr.hpp"

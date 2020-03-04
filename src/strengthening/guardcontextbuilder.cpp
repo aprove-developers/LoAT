@@ -15,7 +15,6 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../expr/relation.hpp"
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
 #include "guardcontextbuilder.hpp"
@@ -37,10 +36,10 @@ namespace strengthening {
     const GuardList Self::computeConstraints() const {
         GuardList constraints;
         for (const Rel &rel: guard) {
-            if (rel.isLinearEquality()) {
+            if (rel.isLinear() && rel.getOp() == Rel::eq) {
                 constraints.emplace_back(rel.lhs() <= rel.rhs());
                 constraints.emplace_back(rel.rhs() <= rel.lhs());
-            } else if (rel.isLinearInequality()) {
+            } else if (rel.isLinear() && rel.isInequality()) {
                 constraints.push_back(rel);
             }
         }

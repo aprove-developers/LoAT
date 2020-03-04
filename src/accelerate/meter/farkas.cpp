@@ -17,7 +17,6 @@
 
 #include "farkas.hpp"
 
-#include "../../expr/relation.hpp"
 #include "../../smt/smt.hpp"
 #include "../../its/variablemanager.hpp"
 
@@ -43,8 +42,8 @@ BoolExpr FarkasLemma::apply(
     vector<ExprSymbol> lambda;
     ExprSymbolSet varSet(vars.begin(), vars.end());
     for (const Rel &rel : constraints) {
-        assert(rel.isLinearInequality(varSet));
-        assert(rel.isLessOrEqual());
+        assert(rel.isLinear(varSet) && rel.isInequality());
+        assert(rel.getOp() == Rel::leq);
 
         ExprSymbol var = varMan.getFreshUntrackedSymbol("l", lambdaType);
         lambda.push_back(var);
@@ -116,9 +115,9 @@ const BoolExpr FarkasLemma::apply(
     BoolExpr res = True;
     std::vector<Rel> normalizedPremise;
     for (const Rel &p: premise) {
-        if (p.isLinearInequality(vars)) {
+        if (p.isLinear(vars) && p.isInequality()) {
             normalizedPremise.push_back(p.toLessEq().splitVariablesAndConstants(params));
-        } else if (p.isLinearEquality(vars)) {
+        } else if (p.isLinear(vars) && p.getOp() == Rel::eq) {
             normalizedPremise.push_back((p.lhs() <= p.rhs()).splitVariablesAndConstants(params));
             normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariablesAndConstants(params));
         }
@@ -126,9 +125,9 @@ const BoolExpr FarkasLemma::apply(
     vector<ExprSymbol> varList(vars.begin(), vars.end());
     vector<Rel> splitConclusion;
     for (const Rel &c: conclusion) {
-        if (c.isLinearInequality(vars)) {
+        if (c.isLinear(vars) && c.isInequality()) {
             splitConclusion.push_back(c);
-        } else if (c.isLinearEquality(vars)) {
+        } else if (c.isLinear(vars) && c.getOp() == Rel::eq) {
             splitConclusion.emplace_back(c.lhs() <= c.rhs());
             splitConclusion.emplace_back(c.rhs() <= c.lhs());
         } else {

@@ -15,7 +15,6 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../expr/relation.hpp"
 #include "strengthener.hpp"
 #include "templatebuilder.hpp"
 #include "constraintsolver.hpp"

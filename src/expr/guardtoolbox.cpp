@@ -16,12 +16,9 @@
  */
 
 #include "guardtoolbox.hpp"
-#include "relation.hpp"
 #include "../its/rule.hpp"
 
 using namespace std;
-using namespace Relation;
-
 
 bool GuardToolbox::isWellformedGuard(const GuardList &guard) {
     for (const Rel &rel : guard) {
@@ -60,8 +57,6 @@ bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
 
 
 option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level) {
-    assert(!term.isRelation());
-
     // expand is needed before using degree/coeff
     term = term.expand();
 

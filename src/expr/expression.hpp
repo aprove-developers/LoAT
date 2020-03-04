@@ -52,7 +52,7 @@ template <typename T>
 using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
 
 
-std::ostream& operator<<(std::ostream &s, const ExprMap &e);
+std::ostream& operator<<(std::ostream &s, const ExprMap &map);
 
 /**
  * Class for arithmetic expressions, can be converted to a z3 expression.
@@ -60,6 +60,7 @@ std::ostream& operator<<(std::ostream &s, const ExprMap &e);
  */
 class Expression {
     friend class Recurrence;
+    friend class ExprMap;
 public:
     enum Type {Int, Real};
 
@@ -229,8 +230,8 @@ public:
     bool is_equal(const Expression &that) const;
     int degree(const ExprSymbol &var) const;
     int ldegree(const ExprSymbol &var) const;
-    Expression coeff(const ExprSymbol &var, uint degree = 1) const;
-    Expression lcoeff(const ExprSymbol &var, uint degree = 1) const;
+    Expression coeff(const ExprSymbol &var, int degree = 1) const;
+    Expression lcoeff(const ExprSymbol &var) const;
     Expression expand() const;
     bool has(const Expression &pattern) const;
     bool is_zero() const;
@@ -244,14 +245,14 @@ public:
     ExprSymbol toSymbol() const;
     GiNaC::numeric toNumeric() const;
     Expression op(uint i) const;
-    uint nops() const;
+    size_t nops() const;
     Expression subs(const ExprMap &map, uint options = 0) const;
     void traverse(GiNaC::visitor & v) const;
     int compare(const Expression &that) const;
-    bool is_polynomial(const ExprSymbol &var) const;
     Expression numer() const;
     Expression denom() const;
     bool match(const Expression &pattern) const;
+    bool isPolynomial(const ExprSymbol &n) const;
 
     friend Expression operator-(const Expression &x);
     friend Expression operator-(const Expression &x, const Expression &y);
@@ -289,12 +290,9 @@ public:
     Expression rhs() const;
     Rel expand() const;
     bool isPolynomial() const;
-    bool isLinear() const;
+    bool isLinear(const option<ExprSymbolSet> &vars = option<ExprSymbolSet>()) const;
     bool isInequality() const;
-    bool isLinearInequality(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
-    bool isLinearEquality(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
     bool isGreaterThanZero() const;
-    bool isLessOrEqual() const;
     Rel toLessEq() const;
     Rel toGreater() const;
     Rel toLessOrLessEq() const;
@@ -318,27 +316,15 @@ public:
     }
 
     /**
-     * Given a relation, replaces lhs and rhs with the given arguments and keeps operator
-     * @return newly created Expression of the form lhs OP rhs (OP one of <,<=,=,>=,>).
-     */
-    Rel replaceLhsRhs(Expression lhs, Expression rhs) const;
-
-    /**
      * Given an inequality, transforms it into one of the form lhs > 0
      * @note assumes integer arithmetic to translate e.g. >= to >
      */
     Rel normalizeInequality() const;
 
-    /**
-     * Given a <= inequality, returns a <= inequality that represents the negated expression
-     * (i.e. for lhs <= rhs, this is -lhs <= -rhs-1)
-     * @note this assumes that lhs, rhs are integer valued (so lhs > rhs can be rewritten as lhs >= rhs+1)
-     */
-    Rel negateLessEqInequality() const;
-
     friend Rel operator!(const Rel &x);
     friend bool operator==(const Rel &x, const Rel &y);
     friend bool operator!=(const Rel &x, const Rel &y);
+    friend bool operator<(const Rel &x, const Rel &y);
     friend std::ostream& operator<<(std::ostream &s, const Rel &e);
 
 private:
@@ -352,14 +338,15 @@ private:
 
     Expression l;
     Expression r;
+    Operator op;
 
 };
 
 Rel operator<(const ExprSymbol &x, const Expression &y);
 Rel operator<(const Expression &x, const ExprSymbol &y);
 Rel operator<(const ExprSymbol &x, const ExprSymbol &y);
-Rel operator>(const Expression &x, const Expression &y);
 Rel operator>(const ExprSymbol &x, const Expression &y);
+Rel operator>(const Expression &x, const ExprSymbol &y);
 Rel operator>(const ExprSymbol &x, const ExprSymbol &y);
 Rel operator<=(const ExprSymbol &x, const Expression &y);
 Rel operator<=(const Expression &x, const ExprSymbol &y);
@@ -370,6 +357,7 @@ Rel operator>=(const ExprSymbol &x, const ExprSymbol &y);
 
 class ExprMap {
     friend class Expression;
+
 public:
     ExprMap();
     ExprMap(const Expression &key, const Expression &val);

@@ -17,7 +17,6 @@
 
 #include "linearize.hpp"
 
-#include "../../expr/relation.hpp"
 #include "metertools.hpp"
 #include "../../config.hpp"
 

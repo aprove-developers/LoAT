@@ -39,6 +39,8 @@ void GuardList::applySubstitution(const ExprMap &sigma) {
     }
 }
 
+bool operator<(const GuardList &m1, const GuardList &m2);
+
 bool UpdateMap::isUpdated(VariableIdx var) const {
     return find(var) != end();
 }
@@ -55,4 +57,17 @@ ExprMap UpdateMap::toSubstitution(const VariableManager &varMan) const {
         subs[varMan.getVarSymbol(it.first)] = it.second;
     }
     return subs;
+}
+
+bool operator==(const UpdateMap &m1, const UpdateMap &m2) {
+    if (m1.size() != m2.size()) {
+        return false;
+    }
+    auto it1 = m1.begin();
+    auto it2 = m1.begin();
+    while (it1 != m1.end() && it2 != m2.end()) {
+        if (it1->first != it2->first) return false;
+        if (!it1->second.is_equal(it2->second)) return false;
+    }
+    return true;
 }

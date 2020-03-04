@@ -22,7 +22,6 @@
 #include "metertools.hpp"
 
 #include "../../expr/guardtoolbox.hpp"
-#include "../../expr/relation.hpp"
 #include "../../expr/expression.hpp"
 #include "../../smt/smt.hpp"
 #include "../../smt/smtfactory.hpp"
@@ -130,7 +129,7 @@ void MeteringFinder::buildLinearConstraints() {
 
     // helper lambda to transform the given inequality into the required form
     auto makeConstraint = [&](const Rel &rel, vector<Rel> &vec) {
-        assert(rel.isLinearInequality());
+        assert(rel.isLinear() && rel.isInequality());
 
         Rel res = rel.toLessEq().splitVariablesAndConstants();
         if (!res.isTriviallyTrue()) {
@@ -181,7 +180,7 @@ BoolExpr MeteringFinder::genNotGuardImplication() const {
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Rel &rel : linearConstraints.reducedGuard) {
-        lhs.push_back(rel.negateLessEqInequality());
+        lhs.push_back(!rel);
         res = res & FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan);
         lhs.pop_back();
     }

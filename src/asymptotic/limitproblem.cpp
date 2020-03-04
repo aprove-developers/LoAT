@@ -3,7 +3,6 @@
 #include <sstream>
 #include <utility>
 
-#include "../expr/relation.hpp"
 #include "../smt/smt.hpp"
 
 using namespace GiNaC;
@@ -21,7 +20,6 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
         addExpression(InftyExpression(rel.lhs(), POS));
     }
 
-    assert(!cost.isRelation());
     addExpression(InftyExpression(cost, POS_INF));
 
     (*log) << "Created initial limit problem:" << std::endl
@@ -241,13 +239,13 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     assert(powerInExp.isPower());
 
     Expression b = *it - powerInExp;
-    assert(b.is_polynomial(x));
+    assert(b.isPolynomial(x));
 
     Expression a = powerInExp.op(0);
     Expression e = powerInExp.op(1);
 
-    assert(a.is_polynomial(x));
-    assert(e.is_polynomial(x));
+    assert(a.isPolynomial(x));
+    assert(e.isPolynomial(x));
     assert(e.has(x));
 
     InftyExpression firstIE(a - 1, POS);
@@ -492,14 +490,14 @@ bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterato
 
     Expression b = *it - powerInExp;
 
-    if (!b.is_polynomial(x)) {
+    if (!b.isPolynomial(x)) {
         return false;
     }
 
     Expression a = powerInExp.op(0);
     Expression e = powerInExp.op(1);
 
-    if (!(a.is_polynomial(x) && e.is_polynomial(x))) {
+    if (!(a.isPolynomial(x) && e.isPolynomial(x))) {
         return false;
     }
 

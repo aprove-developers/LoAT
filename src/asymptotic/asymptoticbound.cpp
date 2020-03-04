@@ -5,7 +5,6 @@
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
-#include "../expr/relation.hpp"
 #include "../util/timeout.hpp"
 
 #include "../smt/smt.hpp"
@@ -243,7 +242,7 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
 
         if (!varMan.isTempVar(pair.first.toSymbol())) {
             Expression sub = pair.second;
-            assert(sub.is_polynomial(n));
+            assert(sub.isPolynomial(n));
             assert(sub.hasNoVariables()
                    || (sub.hasExactlyOneVariable() && sub.has(n)));
 
@@ -268,7 +267,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
     int lowerBound;
     ExprSymbol n = limitProblem.getN();
     if (solvedCost.isPolynomial()) {
-        assert(solvedCost.is_polynomial(n));
+        assert(solvedCost.isPolynomial(n));
         assert(solvedCost.hasAtMostOneVariable());
 
         Expression expanded = solvedCost.expand();
@@ -286,7 +285,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
         lowerBound = 1;
         for (const Expression &ex : powers) {
 
-            if (ex.op(1).has(n) && ex.op(1).is_polynomial(n)) {
+            if (ex.op(1).has(n) && ex.op(1).isPolynomial(n)) {
                 assert(ex.op(0).isIntegerConstant());
                 assert(ex.op(0).toNumeric().is_positive());
 
@@ -491,7 +490,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     Expression solvedCost = cost.subs(result.solution).expand();
     ExprSymbol n = limitProblem.getN();
 
-    if (solvedCost.is_polynomial(n)) {
+    if (solvedCost.isPolynomial(n)) {
         if (!cost.isPolynomial()) {
             return false;
         }

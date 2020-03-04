@@ -3,7 +3,6 @@
 
 #include <vector>
 #include "../its/itsproblem.hpp"
-#include "../expr/relation.hpp"
 #include "../expr/guardtoolbox.hpp"
 
 /**

@@ -18,7 +18,6 @@
 #include "preprocess.hpp"
 
 #include "../expr/guardtoolbox.hpp"
-#include "../expr/relation.hpp"
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
 #include "../util/timeout.hpp"

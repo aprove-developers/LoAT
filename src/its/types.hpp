@@ -39,8 +39,6 @@ public:
     void collectVariables(ExprSymbolSet &res) const;
     GuardList subs(const ExprMap &sigma) const;
     void applySubstitution(const ExprMap &sigma);
-    friend bool operator==(const GuardList &m1, const GuardList &m2);
-    friend bool operator<(const GuardList &m1, const GuardList &m2);
 };
 
 

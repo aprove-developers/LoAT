@@ -2,7 +2,6 @@
 #include "../its/types.hpp"
 #include "../its/rule.hpp"
 #include "../util/option.hpp"
-#include "../expr/relation.hpp"
 #include "../its/variablemanager.hpp"
 #include "../accelerate/recurrence/recurrence.hpp"
 #include "../smt/smt.hpp"
