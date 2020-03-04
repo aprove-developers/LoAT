@@ -54,7 +54,7 @@ Expression UpdateMap::getUpdate(VariableIdx var) const {
 ExprMap UpdateMap::toSubstitution(const VariableManager &varMan) const {
     ExprMap subs;
     for (const auto &it : *this) {
-        subs[varMan.getVarSymbol(it.first)] = it.second;
+        subs.put(varMan.getVarSymbol(it.first), it.second);
     }
     return subs;
 }

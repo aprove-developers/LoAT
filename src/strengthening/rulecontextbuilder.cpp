@@ -56,7 +56,7 @@ namespace strengthening {
         ExprMap tmpVarRenaming;
         for (const VariableIdx &i: its.getTempVars()) {
             const ExprSymbol &x = its.getVarSymbol(i);
-            tmpVarRenaming[x] = its.getVarSymbol(its.addFreshVariable(x.get_name()));
+            tmpVarRenaming.put(x, its.getVarSymbol(its.addFreshVariable(x.get_name())));
         }
         for (const Rule &pred: predecessors) {
             if (pred.getGuard() == rule.getGuard()) {

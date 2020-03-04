@@ -87,7 +87,7 @@ namespace sexpressionparser {
                             ExprMap subs;
                             for (const ExprSymbol &var: currTmpVars) {
                                 if (res.isTempVar(var)) {
-                                    subs[var] = res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name()));
+                                    subs.put(var, res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name())));
                                 }
                             }
                             rule.applySubstitution(subs);

@@ -125,7 +125,7 @@ namespace strengthening {
             // TODO Why is this variable renaming needed?
             ExprMap varRenaming;
             for (const ExprSymbol &x: allVars) {
-                varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
+                varRenaming.put(x, ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name())));
             }
             std::vector<Rel> renamed;
             for (Rel rel: pre) {

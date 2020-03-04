@@ -163,7 +163,7 @@ ExprMap Linearize::buildSubstitution(const ExpressionSet &monomials) {
 
             VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent.to_int()));
             ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
-            res[term] = fresh;
+            res.put(term, fresh);
 
             // Remember that e.g. x^2 is always nonnegative
             if (exponent.is_even()) {
@@ -177,7 +177,7 @@ ExprMap Linearize::buildSubstitution(const ExpressionSet &monomials) {
 
             VariableIdx freshIdx = varMan.addFreshVariable(x.get_name() + y.get_name());
             ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
-            res[term] = fresh;
+            res.put(term, fresh);
         }
     }
     return res;
@@ -206,7 +206,7 @@ ExprMap Linearize::reverseSubstitution(const ExprMap &subs) {
     ExprMap reverseSubs;
     for (auto it : subs) {
         assert(it.second.isSymbol());
-        reverseSubs[it.second] = it.first;
+        reverseSubs.put(it.second, it.first);
     }
     return reverseSubs;
 }

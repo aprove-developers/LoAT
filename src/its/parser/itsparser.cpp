@@ -545,7 +545,7 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
             // Add substitution
             ExprSymbol oldSym = itsProblem.getVarSymbol(lhsVars[i]);
             ExprSymbol newSym = itsProblem.getVarSymbol(loc.lhsVars[i]);
-            subs[oldSym] = newSym;
+            subs.put(oldSym, newSym);
         }
     }
 
@@ -563,14 +563,14 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
         if (ruleVars.count(newVar) > 0) {
             VariableIdx freshVar = itsProblem.addFreshVariable(newSym.get_name());
             ExprSymbol freshSym = itsProblem.getVarSymbol(freshVar);
-            subsMore[newSym] = freshSym;
+            subsMore.put(newSym, freshSym);
         }
     }
 
     // Combine subs and subsMore (such that they are executed in parallel, do *not* compose them)
     for (const auto &it : subsMore) {
         assert(!subs.contains(it.first));
-        subs[it.first] = it.second;
+        subs.put(it.first, it.second);
     }
 
     return subs;
@@ -592,7 +592,7 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
         if (lhsVars.count(var) == 0) {
             // Create a fresh temporary variable
             VariableIdx tv = itsProblem.addFreshTemporaryVariable("free");
-            subs[var] = itsProblem.getVarSymbol(tv);
+            subs.put(var, itsProblem.getVarSymbol(tv));
         }
     }
 

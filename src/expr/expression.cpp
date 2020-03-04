@@ -860,7 +860,7 @@ ExprMap::ExprMap(const Expression &key, const Expression &val) {
     put(key, val);
 }
 
-Expression ExprMap::operator[](const Expression &key) const {
+Expression ExprMap::get(const Expression &key) const {
     return map.at(key);
 }
 

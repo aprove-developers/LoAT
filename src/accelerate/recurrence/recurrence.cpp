@@ -117,7 +117,7 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
 
         //remember this recurrence to replace vi in the updates depending on vi
         //note that updates need the value at n-1, e.g. x(n) = x(n-1) + vi(n-1) for the update x=x+vi
-        updatePreRecurrences[target] = updateRec.get().res.subs(ExprMap(ginacN, ginacN-1));
+        updatePreRecurrences.put(target, updateRec.get().res.subs(ExprMap(ginacN, ginacN-1)));
 
         //calculate the final update using the loop's runtime
         newUpdate[vi] = updateRec.get().res.subs(ExprMap(ginacN, meterfunc));

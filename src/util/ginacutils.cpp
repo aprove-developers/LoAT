@@ -25,11 +25,11 @@ namespace util {
     ExprMap Self::compose(const ExprMap &fst, const ExprMap &snd) {
         ExprMap res;
         for (const auto &p: fst) {
-            res[p.first] = p.second.subs(snd);
+            res.put(p.first, p.second.subs(snd));
         }
         for (const auto &p: snd) {
             if (!res.contains(p.first)) {
-                res[p.first] = p.second;
+                res.put(p.first, p.second);
             }
         }
         return res;
@@ -38,7 +38,7 @@ namespace util {
     ExprMap Self::concat(const ExprMap &fst, const ExprMap &snd) {
         ExprMap res;
         for (const auto &p: fst) {
-            res[p.first] = p.second.subs(snd);
+            res.put(p.first, p.second.subs(snd));
         }
         return res;
     }

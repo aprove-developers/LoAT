@@ -133,7 +133,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
         ExprSymbol c = varMan.getFreshUntrackedSymbol(var.get_name() + "_c", Expression::Int);
         varCoeff.emplace(var, c);
         varCoeff0.emplace(var, c0);
-        templateSubs[var] = c0 + (n * c);
+        templateSubs.put(var, c0 + (n * c));
     }
 
     // replace variables in the cost function with their linear templates
@@ -221,7 +221,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
     for (const ExprSymbol &var : vars) {
         auto c0 = model.find(varCoeff0.at(var));
         Expression c = model.at(varCoeff.at(var));
-        smtSubs[var] = c0 == model.end() ? (c * n) : (c0->second + c * n);
+        smtSubs.put(var, c0 == model.end() ? (c * n) : (c0->second + c * n));
     }
 
     return {smtSubs};

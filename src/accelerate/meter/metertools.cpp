@@ -227,7 +227,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             ExprSymbol lhsVar = varMan.getVarSymbol(it.first);
 
             ExprMap subs;
-            subs[varMan.getVarSymbol(it.first)] = it.second;
+            subs.put(varMan.getVarSymbol(it.first), it.second);
 
             for (const Rel &rel : reducedGuard) {
                 if (rel.has(lhsVar)) {
@@ -292,11 +292,11 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
                 if (subs.contains(sym)) {
                     //keep old bound, add a new substitution for the new bound
                     ExprMap newsubs = subs;
-                    newsubs[sym] = bound;
+                    newsubs.put(sym, bound);
                     next.push(subs);
                     next.push(newsubs);
                 } else {
-                    subs[sym] = bound;
+                    subs.put(sym, bound);
                     next.push(subs);
                 }
             }

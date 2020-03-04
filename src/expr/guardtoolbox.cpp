@@ -123,7 +123,7 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
                 i--;
 
                 //extend the substitution, use compose in case var occurs on some rhs of varSubs
-                varSubs[var] = solved;
+                varSubs.put(var, solved);
                 varSubs = composeSubs(varSubs, varSubs);
                 goto next;
             }

@@ -361,7 +361,7 @@ class ExprMap {
 public:
     ExprMap();
     ExprMap(const Expression &key, const Expression &val);
-    Expression operator[](const Expression &key) const;
+    Expression get(const Expression &key) const;
     void put(const Expression &key, const Expression &val);
     std::map<Expression, Expression, Expression_is_less>::const_iterator begin() const;
     std::map<Expression, Expression, Expression_is_less>::const_iterator end() const;
