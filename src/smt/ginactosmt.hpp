@@ -24,11 +24,8 @@
 #include "../config.hpp"
 #include "../expr/boolexpr.hpp"
 
-#include <ginac/ginac.h>
 #include <map>
 #include <sstream>
-
-using namespace GiNaC;
 
 template<typename EXPR> class GinacToSmt {
 public:
@@ -111,7 +108,7 @@ protected:
 
         //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
         if (e.op(1).isNumeric()) {
-            numeric num = e.op(1).toNumeric();
+            GiNaC::numeric num = e.op(1).toNumeric();
             if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Z3::MaxExponentWithoutPow) {
                 int exp = num.to_int();
                 EXPR base = convert_ex(e.op(0));

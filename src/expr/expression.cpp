@@ -25,14 +25,6 @@ bool Expression_is_less::operator()(const Expression &lh, const Expression &rh) 
      return lh.compare(rh) < 0;
 }
 
-bool Relation_is_less::operator()(const Rel &lh, const Rel &rh) const {
-    int fst = lh.lhs().compare(rh.lhs());
-    if (fst != 0) {
-        return fst < 0;
-    }
-    return lh.rhs().compare(rh.rhs()) < 0;
-}
-
 std::ostream& operator<<(std::ostream &s, const ExprMap &map) {
     if (map.empty()) {
         s << "{}";
@@ -918,6 +910,8 @@ bool operator<(const ExprMap &x, const ExprMap &y) {
         if (snd != 0) {
             return snd < 0;
         }
+        ++it1;
+        ++it2;
     }
     return it1 == x.end() && it2 != y.end();
 }

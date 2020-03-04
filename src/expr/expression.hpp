@@ -39,15 +39,11 @@ struct Expression_is_less {
     bool operator() (const Expression &lh, const Expression &rh) const;
 };
 
-struct Relation_is_less {
-    bool operator() (const Rel &lh, const Rel &rh) const;
-};
-
 //Useful typedefs for readability
 using ExprSymbol = GiNaC::symbol;
 using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
 using ExpressionSet = std::set<Expression, Expression_is_less>;
-using RelationSet = std::set<Rel, Relation_is_less>;
+using RelationSet = std::set<Rel>;
 template <typename T>
 using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
 
