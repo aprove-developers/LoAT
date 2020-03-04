@@ -65,7 +65,7 @@ public:
 
         // Additional constraint that has to be added to the rule's guard to ensure correctness.
         // Only relevant if result is Success (and real coefficients are used).
-        option<Expression> integralConstraint;
+        option<Rel> integralConstraint;
 
         ProofOutput proof;
     };

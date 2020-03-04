@@ -55,21 +55,18 @@ void AsymptoticBound::initLimitVectors() {
 
 void AsymptoticBound::normalizeGuard() {
 
-    for (const Expression &ex : guard) {
-        assert(Relation::isRelation(ex));
+    for (const Rel &rel : guard) {
 
-        if (ex.info(GiNaC::info_flags::relation_equal)) {
+        if (rel.getOp() == Rel::eq) {
             // Split equation
-            Expression greaterEqual = Relation::normalizeInequality(ex.lhs() >= ex.rhs());
-            Expression lessEqual = Relation::normalizeInequality(ex.lhs() <= ex.rhs());
+            Rel greaterEqual = (rel.lhs() >= rel.rhs()).normalizeInequality();
+            Rel lessEqual = (rel.lhs() <= rel.rhs()).normalizeInequality();
 
             normalizedGuard.push_back(greaterEqual);
             normalizedGuard.push_back(lessEqual);
 
         } else {
-            Expression normalized = Relation::normalizeInequality(ex);
-
-            normalizedGuard.push_back(normalized);
+            normalizedGuard.push_back(rel.normalizeInequality());
         }
     }
 
@@ -87,12 +84,10 @@ void AsymptoticBound::propagateBounds() {
     }
 
     // build substitutions from equations
-    for (const Expression &ex : guard) {
-        assert(Relation::isRelation(ex));
-
-        Expression target = ex.rhs() - ex.lhs();
-        if (ex.info(GiNaC::info_flags::relation_equal)
-            && target.info(GiNaC::info_flags::polynomial)) {
+    for (const Rel &rel : guard) {
+        Expression target = rel.rhs() - rel.lhs();
+        if (rel.getOp() == Rel::eq
+            && rel.isPolynomial()) {
 
             std::vector<ExprSymbol> vars;
             std::vector<ExprSymbol> tempVars;
@@ -131,19 +126,19 @@ void AsymptoticBound::propagateBounds() {
     int numOfEquations = substitutions.size();
 
     // build substitutions from inequalities
-    for (const Expression &ex : guard) {
-        if (!ex.info(GiNaC::info_flags::relation_equal)) {
-            if (ex.lhs().isSymbol() || ex.rhs().isSymbol()) {
-                Expression exT = Relation::toLessOrLessEq(ex);
+    for (const Rel &rel : guard) {
+        if (rel.getOp() != Rel::eq) {
+            if (rel.lhs().isSymbol() || rel.rhs().isSymbol()) {
+                Rel relT = rel.toLessOrLessEq();
 
                 Expression l, r;
-                bool swap = exT.rhs().isSymbol();
+                bool swap = relT.rhs().isSymbol();
                 if (swap) {
-                    l = exT.rhs();
-                    r = exT.lhs();
+                    l = relT.rhs();
+                    r = relT.lhs();
                 } else {
-                    l = exT.lhs();
-                    r = exT.rhs();
+                    l = relT.lhs();
+                    r = relT.rhs();
                 }
 
                 bool isInLimitProblem = false;
@@ -157,10 +152,10 @@ void AsymptoticBound::propagateBounds() {
                     continue;
                 }
 
-                if (r.info(GiNaC::info_flags::polynomial) && !r.has(l)) {
-                    if (exT.info(GiNaC::info_flags::relation_less) && !swap) { // exT: x = l < r
+                if (r.isPolynomial() && !r.has(l)) {
+                    if (relT.getOp() == Rel::lt && !swap) { // exT: x = l < r
                         r = r - 1;
-                    } else if (exT.info(GiNaC::info_flags::relation_less) && swap) { // exT: r < l = x
+                    } else if (relT.getOp() == Rel::lt && swap) { // exT: r < l = x
                         r = r + 1;
                     }
                     substitutions.push_back(ExprMap(l, r));
@@ -226,9 +221,9 @@ ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
 
     GuardList guardCopy = guard;
-    guardCopy.push_back(cost);
-    for (const Expression &ex : guardCopy) {
-        for (const ExprSymbol &var : ex.getVariables()) {
+    guardCopy.push_back(cost > 0);
+    for (const Rel &rel : guardCopy) {
+        for (const ExprSymbol &var : rel.getVariables()) {
             if (!solution.contains(var)) {
                 solution = GuardToolbox::composeSubs(ExprMap(var, 0), solution);
             }
@@ -272,7 +267,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
     int lowerBound;
     ExprSymbol n = limitProblem.getN();
-    if (solvedCost.info(GiNaC::info_flags::polynomial)) {
+    if (solvedCost.isPolynomial()) {
         assert(solvedCost.is_polynomial(n));
         assert(solvedCost.hasAtMostOneVariable());
 
@@ -292,8 +287,8 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
         for (const Expression &ex : powers) {
 
             if (ex.op(1).has(n) && ex.op(1).is_polynomial(n)) {
-                assert(ex.op(0).info(GiNaC::info_flags::integer));
-                assert(ex.op(0).info(GiNaC::info_flags::positive));
+                assert(ex.op(0).isIntegerConstant());
+                assert(ex.op(0).toNumeric().is_positive());
 
                 int base =  ex.op(0).toNumeric().to_int();
                 if (base > lowerBound) {
@@ -497,7 +492,7 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
     ExprSymbol n = limitProblem.getN();
 
     if (solvedCost.is_polynomial(n)) {
-        if (!cost.info(GiNaC::info_flags::polynomial)) {
+        if (!cost.isPolynomial()) {
             return false;
         }
 
@@ -775,7 +770,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
         Direction dir = it->getDirection();
 
         if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-            const std::vector<Expression> &query = currentLP.getQuery();
+            const std::vector<Rel> &query = currentLP.getQuery();
             std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({query}, {}), varMan);
             solver->add(buildAnd(query));
             Smt::Result result = solver->check();

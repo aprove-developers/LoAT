@@ -12,7 +12,7 @@ public:
     enum Logic {LA, NA, ENA};
 
     virtual void add(const BoolExpr &e) = 0;
-    void add(const Expression &e);
+    void add(const Rel &e);
     virtual void push() = 0;
     virtual void pop() = 0;
     virtual Result check() = 0;
@@ -27,7 +27,7 @@ public:
     static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs);
 
-    template<class T> static Logic chooseLogic(const std::vector<std::vector<Expression>> &g, const std::vector<T> &up) {
+    template<class T> static Logic chooseLogic(const std::vector<std::vector<Rel>> &g, const std::vector<T> &up) {
         if (isLinear(g) && isLinear(up)) {
             return Smt::LA;
         }
@@ -38,16 +38,16 @@ public:
     }
 
 private:
-    static bool isLinear(const std::vector<Expression> &guard);
+    static bool isLinear(const std::vector<Rel> &guard);
     static bool isLinear(const UpdateMap &up);
     static bool isLinear(const ExprMap &up);
-    static bool isLinear(const std::vector<std::vector<Expression>> &gs);
+    static bool isLinear(const std::vector<std::vector<Rel>> &gs);
     static bool isLinear(const std::vector<UpdateMap> &up);
     static bool isLinear(const std::vector<ExprMap> &up);
-    static bool isPolynomial(const std::vector<Expression> &guard);
+    static bool isPolynomial(const std::vector<Rel> &guard);
     static bool isPolynomial(const UpdateMap &up);
     static bool isPolynomial(const ExprMap &up);
-    static bool isPolynomial(const std::vector<std::vector<Expression>> &gs);
+    static bool isPolynomial(const std::vector<std::vector<Rel>> &gs);
     static bool isPolynomial(const std::vector<UpdateMap> &up);
     static bool isPolynomial(const std::vector<ExprMap> &up);
 };

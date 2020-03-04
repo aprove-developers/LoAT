@@ -24,48 +24,38 @@ using namespace Relation;
 
 
 bool GuardToolbox::isWellformedGuard(const GuardList &guard) {
-    for (const Expression &ex : guard) {
-        if (!ex.isRelation() || ex.nops() != 2) return false;
-        if (ex.info(GiNaC::info_flags::relation_not_equal)) return false;
+    for (const Rel &rel : guard) {
+        if (rel.getOp() == Rel::neq) return false;
     }
     return true;
 }
 
 
 bool GuardToolbox::isPolynomialGuard(const GuardList &guard) {
-    return std::all_of(guard.begin(), guard.end(), isPolynomial);
+    return std::all_of(guard.begin(), guard.end(), [](const Rel &x){return x.isPolynomial();});
 }
 
-
-bool GuardToolbox::containsTempVar(const VarMan &varMan, const Expression &term) {
-    return term.hasVariableWith([&varMan](const ExprSymbol &sym) {
-        return varMan.isTempVar(sym);
-    });
-}
-
-
-bool GuardToolbox::isTrivialImplication(const Expression &a, const Expression &b) {
-    assert(isRelation(a) && isRelation(b));
+bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
 
     // an equality can only be implied by an equality
-    if (isEquality(b)) {
-        if (!isEquality(a)) return false;
+    if (b.getOp() == Rel::eq) {
+        if (a.getOp() != Rel::eq) return false;
 
         Expression aDiff = a.rhs() - a.lhs();
         Expression bDiff = b.rhs() - b.lhs();
         return (aDiff - bDiff).expand().is_zero();
     }
 
-    Expression bLhs = normalizeInequality(b).lhs(); // b is of the form bLhs > 0
-    if (!isEquality(a)) {
-        Expression aLhs = normalizeInequality(a).lhs(); // a is of the form aLhs > 0
-        return isTriviallyTrue(aLhs <= bLhs); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
+    Expression bLhs = b.normalizeInequality().lhs(); // b is of the form bLhs > 0
+    if (a.getOp() != Rel::eq) {
+        Expression aLhs = a.normalizeInequality().lhs(); // a is of the form aLhs > 0
+        return (aLhs <= bLhs).isTriviallyTrue(); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
     }
 
     // if a is an equality, we can use aDiff >= 0 or aDiff <= 0, so we check both
     // note that we need a strict check below, as we want to show bLhs > 0
     Expression aDiff = a.rhs() - a.lhs();
-    return isTriviallyTrue(aDiff < bLhs) || isTriviallyTrue((-aDiff) < bLhs);
+    return (aDiff < bLhs).isTriviallyTrue() || ((-aDiff) < bLhs).isTriviallyTrue();
 }
 
 
@@ -111,10 +101,10 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
     GuardList &guard = rule.getGuardMut();
 
     for (unsigned int i=0; i < guard.size(); ++i) {
-        Expression ex = guard[i].subs(varSubs);
-        if (!ex.info(GiNaC::info_flags::relation_equal)) continue;
+        Rel rel = guard[i].subs(varSubs);
+        if (rel.getOp() != Rel::eq) continue;
 
-        Expression target = ex.rhs() - ex.lhs();
+        Expression target = rel.rhs() - rel.lhs();
         if (!target.isPolynomial()) continue;
 
         // Check if equation can be solved for any single variable.
@@ -155,9 +145,9 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
 bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow) {
     //get all variables that appear in an inequality
     ExprSymbolSet tryVars;
-    for (const Expression &ex : guard) {
-        if (!isInequality(ex) || !isPolynomial(ex)) continue;
-        ex.collectVariables(tryVars);
+    for (const Rel &rel : guard) {
+        if (!rel.isInequality() || !rel.isPolynomial()) continue;
+        rel.collectVariables(tryVars);
     }
 
     //for each variable, try if we can eliminate every occurrence. Otherwise do nothing.
@@ -170,13 +160,13 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
 
         for (unsigned int i=0; i < guard.size(); ++i) {
             //check if this guard must be used for var
-            const Expression &ex = guard[i];
-            if (!ex.has(var)) continue;
-            if (!isInequality(ex) || !isPolynomial(ex)) goto abort; // contains var, but cannot be handled
+            const Rel &rel = guard[i];
+            if (!rel.has(var)) continue;
+            if (!rel.isInequality() || !rel.isPolynomial()) goto abort; // contains var, but cannot be handled
 
             //make less equal
-            Expression target = toLessEq(ex);
-            target = target.lhs() - target.rhs();
+            Rel leq = rel.toLessEq();
+            Expression target = leq.lhs() - leq.rhs();
             if (!target.has(var)) continue; // might have changed, e.h. x <= x
 
             //check coefficient and direction
@@ -220,9 +210,9 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
 
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
     for (unsigned int i=0; i < guard.size(); ++i) {
-        if (isEquality(guard[i])) continue;
-        Expression term = toLessEq(guard[i]);
-        term = term.lhs() - term.rhs();
+        if (guard[i].getOp() == Rel::eq) continue;
+        Rel leq = guard[i].toLessEq();
+        Expression term = leq.lhs() - leq.rhs();
         for (const auto &prev : terms) {
             if ((prev.second + term).is_zero()) {
                 matches.emplace(prev.first, make_pair(i,prev.second));

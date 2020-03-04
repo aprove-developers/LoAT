@@ -3,7 +3,7 @@
 
 BoolExpression::~BoolExpression() {}
 
-BoolLit::BoolLit(const Expression &lit): lit(Relation::toLessEq(lit)) { }
+BoolLit::BoolLit(const Rel &lit): lit(lit.toLessEq()) { }
 
 bool BoolLit::isAnd() const {
     return false;
@@ -13,7 +13,7 @@ bool BoolLit::isOr() const {
     return false;
 }
 
-option<Expression> BoolLit::getLit() const {
+option<Rel> BoolLit::getLit() const {
     return {lit};
 }
 
@@ -22,7 +22,7 @@ std::set<BoolExpr> BoolLit::getChildren() const {
 }
 
 const BoolExpr BoolLit::negation() const {
-    return std::shared_ptr<BoolExpression>(new BoolLit(Relation::negateLessEqInequality(lit)));
+    return std::shared_ptr<BoolExpression>(new BoolLit(lit.negateLessEqInequality()));
 }
 
 bool BoolLit::isLinear() const {
@@ -46,7 +46,7 @@ bool BoolJunction::isOr() const {
     return op == ConcatOr;
 }
 
-option<Expression> BoolJunction::getLit() const {
+option<Rel> BoolJunction::getLit() const {
     return {};
 }
 
@@ -109,15 +109,15 @@ BoolExpr build(std::set<BoolExpr> xs, ConcatOperator op) {
     return std::shared_ptr<BoolExpression>(new BoolJunction(children, op));
 }
 
-BoolExpr build(const ExpressionSet &xs, ConcatOperator op) {
+BoolExpr build(const RelationSet &xs, ConcatOperator op) {
     std::set<BoolExpr> children;
-    for (const Expression &x: xs) {
+    for (const Rel &x: xs) {
         children.insert(buildLit(x));
     }
     return build(children, op);
 }
 
-const BoolExpr buildAnd(const ExpressionSet &xs) {
+const BoolExpr buildAnd(const RelationSet &xs) {
     return build(xs, ConcatAnd);
 }
 
@@ -125,7 +125,7 @@ const BoolExpr buildAnd(const std::set<BoolExpr> &xs) {
     return build(xs, ConcatAnd);
 }
 
-const BoolExpr buildOr(const ExpressionSet &xs) {
+const BoolExpr buildOr(const RelationSet &xs) {
     return build(xs, ConcatOr);
 }
 
@@ -133,27 +133,27 @@ const BoolExpr buildOr(const std::set<BoolExpr> &xs) {
     return build(xs, ConcatOr);
 }
 
-const BoolExpr buildAnd(const std::vector<Expression> &xs) {
-    return build(ExpressionSet(xs.begin(), xs.end()), ConcatAnd);
+const BoolExpr buildAnd(const std::vector<Rel> &xs) {
+    return build(RelationSet(xs.begin(), xs.end()), ConcatAnd);
 }
 
 const BoolExpr buildAnd(const std::vector<BoolExpr> &xs) {
     return build(std::set<BoolExpr>(xs.begin(), xs.end()), ConcatAnd);
 }
 
-const BoolExpr buildOr(const std::vector<Expression> &xs) {
-    return build(ExpressionSet(xs.begin(), xs.end()), ConcatOr);
+const BoolExpr buildOr(const std::vector<Rel> &xs) {
+    return build(RelationSet(xs.begin(), xs.end()), ConcatOr);
 }
 
 const BoolExpr buildOr(const std::vector<BoolExpr> &xs) {
     return build(std::set<BoolExpr>(xs.begin(), xs.end()), ConcatOr);
 }
 
-const BoolExpr buildLit(const Expression &lit) {
-    if (Relation::isInequality(lit)) {
+const BoolExpr buildLit(const Rel &lit) {
+    if (lit.isInequality()) {
         return std::shared_ptr<BoolExpression>(new BoolLit(lit));
     } else {
-        assert(Relation::isEquality(lit));
+        assert(lit.getOp() == Rel::eq);
         return buildLit(lit.lhs() <= lit.rhs()) & (lit.lhs() >= lit.rhs());
     }
 }
@@ -166,7 +166,7 @@ const BoolExpr operator &(const BoolExpr a, const BoolExpr b) {
     return buildAnd(std::set<BoolExpr>(children));
 }
 
-const BoolExpr operator &(const BoolExpr a, const Expression &b) {
+const BoolExpr operator &(const BoolExpr a, const Rel &b) {
     return a & buildLit(b);
 }
 
@@ -175,7 +175,7 @@ const BoolExpr operator |(const BoolExpr a, const BoolExpr b) {
     return buildOr(children);
 }
 
-const BoolExpr operator |(const BoolExpr a, const Expression b) {
+const BoolExpr operator |(const BoolExpr a, const Rel b) {
     return a | buildLit(b);
 }
 
@@ -184,7 +184,7 @@ const BoolExpr operator !(const BoolExpr a) {
 }
 
 bool operator ==(const BoolExpression &a, const BoolExpression &b) {
-    if (!a.getLit()->is_equal(b.getLit().get())) {
+    if (a.getLit() != b.getLit()) {
         return false;
     }
     if (a.getLit()) {

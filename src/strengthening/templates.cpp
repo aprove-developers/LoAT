@@ -33,21 +33,21 @@ const ExprSymbolSet& Self::vars() const {
     return vars_;
 }
 
-bool Self::isParametric(const Expression &e) const {
-    ExprSymbolSet eVars = e.getVariables();
+bool Self::isParametric(const Rel &rel) const {
+    ExprSymbolSet relVars = rel.getVariables();
     for (const ExprSymbol &x: params()) {
-        if (eVars.count(x) > 0) {
+        if (relVars.count(x) > 0) {
             return true;
         }
     }
     return false;
 }
 
-const std::vector<Expression> Self::subs(const ExprMap &sigma) const {
-    std::vector<Expression> res;
-    for (Expression e: templates) {
-        e.applySubs(sigma);
-        res.push_back(e);
+const std::vector<Rel> Self::subs(const ExprMap &sigma) const {
+    std::vector<Rel> res;
+    for (Rel rel: templates) {
+        rel.applySubs(sigma);
+        res.push_back(rel);
     }
     return res;
 }

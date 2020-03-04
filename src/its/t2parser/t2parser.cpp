@@ -80,7 +80,7 @@ namespace t2parser {
         }
     }
 
-    Expression T2Parser::parseConstraint(const std::string &str) {
+    Rel T2Parser::parseConstraint(const std::string &str) {
         if (str.find(">=") != std::string::npos) {
             unsigned int pos = str.find(">=");
             Expression lhs = parseExpression(str.substr(0, pos));

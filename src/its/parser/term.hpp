@@ -167,7 +167,7 @@ public:
     TermPtr getRhs() const { return rhs; }
     Operator getOperator() const { return op; }
 
-    Expression toGinacExpression(const ITSProblem &its) const;
+    Rel toGinacExpression(const ITSProblem &its) const;
 
 private:
     TermPtr lhs, rhs;

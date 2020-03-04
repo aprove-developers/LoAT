@@ -181,7 +181,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
     // a model witnesses unbounded complexity
     for (const ExprSymbol &var : vars) {
         if (!varMan.isTempVar(var)) {
-            solver->add(varCoeff.at(var) == 0);
+            solver->add(Rel(varCoeff.at(var), Rel::eq, 0));
         }
     }
 

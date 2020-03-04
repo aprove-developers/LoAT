@@ -29,16 +29,16 @@ public:
 
     struct Template {
 
-        Template(Expression t, ExprSymbolSet vars, ExprSymbolSet params) :
+        Template(Rel t, ExprSymbolSet vars, ExprSymbolSet params) :
                 t(std::move(t)), vars(std::move(vars)), params(std::move(params)) {}
 
-        const Expression t;
+        const Rel t;
         const ExprSymbolSet vars;
         const ExprSymbolSet params;
 
     };
 
-    typedef std::vector<Expression>::const_iterator iterator;
+    typedef std::vector<Rel>::const_iterator iterator;
 
     void add(const Template &t);
 
@@ -46,9 +46,9 @@ public:
 
     const ExprSymbolSet& vars() const;
 
-    bool isParametric(const Expression &e) const;
+    bool isParametric(const Rel &rel) const;
 
-    const std::vector<Expression> subs(const ExprMap &sigma) const;
+    const std::vector<Rel> subs(const ExprMap &sigma) const;
 
     iterator begin() const;
 
@@ -56,7 +56,7 @@ public:
 
 private:
 
-    std::vector<Expression> templates;
+    std::vector<Rel> templates;
     ExprSymbolSet params_;
     ExprSymbolSet vars_;
 

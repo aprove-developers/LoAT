@@ -605,8 +605,8 @@ ExprSymbolSet ITSParser::getSymbols(const Rule &rule) {
 
     // lhs
     rule.getCost().collectVariables(res);
-    for (const Expression &ex : rule.getGuard()) {
-        ex.collectVariables(res);
+    for (const Rel &rel: rule.getGuard()) {
+        rel.collectVariables(res);
     }
 
     // rhs

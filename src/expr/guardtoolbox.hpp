@@ -97,7 +97,7 @@ namespace GuardToolbox {
      * For example, A > 0 or A == 0 both imply A+1 > 0
      * @return true if lhsConstraint implies rhsConstraint, false has no meaning.
      */
-    bool isTrivialImplication(const Expression &lhsConstraint, const Expression &rhsConstraint);
+    bool isTrivialImplication(const Rel &lhsConstraint, const Rel &rhsConstraint);
 
 
     /**
@@ -125,7 +125,12 @@ namespace GuardToolbox {
     /**
      * Returns true iff term contains a temporary variable
      */
-    bool containsTempVar(const VarMan &varMan, const Expression &term);
+    template<class T>
+    bool containsTempVar(const VarMan &varMan, const T &x) {
+        return x.hasVariableWith([&varMan](const ExprSymbol &sym) {
+            return varMan.isTempVar(sym);
+        });
+    }
 
 
     /**

@@ -16,7 +16,7 @@ void VarEliminator::findDependencies(const GuardList &guard) {
         // compute dependencies of var
         for (const ExprSymbol &var: dependencies) {
             option<ExprSymbol> dep;
-            for (const Expression &rel: guard) {
+            for (const Rel &rel: guard) {
                 const Expression &ex = (rel.lhs() - rel.rhs()).expand();
                 if (ex.degree(var) == 1) {
                     // we found a constraint which is linear in var, check all variables in var's coefficient

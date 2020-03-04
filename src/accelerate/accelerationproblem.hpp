@@ -68,12 +68,12 @@ struct AccelerationProblem {
 
     static GuardList normalize(const GuardList &g) {
         GuardList res;
-        for (const Expression &e: g) {
-            if (Relation::isEquality(e)) {
-                res.push_back(Relation::normalizeInequality(e.lhs() >= e.rhs()));
-                res.push_back(Relation::normalizeInequality(e.lhs() <= e.rhs()));
+        for (const Rel &rel: g) {
+            if (rel.getOp() == Rel::eq) {
+                res.push_back((rel.lhs() >= rel.rhs()).normalizeInequality());
+                res.push_back((rel.lhs() <= rel.rhs()).normalizeInequality());
             } else {
-                res.push_back(Relation::normalizeInequality(e));
+                res.push_back(rel.normalizeInequality());
             }
         }
         return res;
@@ -84,23 +84,23 @@ struct AccelerationProblem {
             return false;
         }
         for (auto it = todo.begin(); it != todo.end(); it++) {
-            const Expression &e = *it;
+            const Rel &rel = *it;
             solver->push();
-            solver->add(e.subs(up));
+            solver->add(rel.subs(up));
             if (solver->check() != Smt::Sat) {
                 solver->pop();
                 return false;
             }
-            solver->add(e.lhs() <= 0);
+            solver->add(rel.lhs() <= 0);
             if (solver->check() == Smt::Unsat) {
                 proof.newline();
-                proof.append(std::stringstream() << "handled " << e.toString() << " via monotonic decrease");
-                done.push_back(e);
-                res.push_back(e.subs(closed.get()).subs(ExprMap(n, n-1)));
+                proof.append(std::stringstream() << "handled " << rel << " via monotonic decrease");
+                done.push_back(rel);
+                res.push_back(rel.subs(closed.get()).subs(ExprMap(n, n-1)));
                 print();
                 nonterm = false;
                 solver->pop();
-                solver->add(e);
+                solver->add(rel);
                 todo.erase(it);
                 return true;
             }
@@ -111,22 +111,22 @@ struct AccelerationProblem {
 
     bool recurrence() {
         for (auto it = todo.begin(); it != todo.end(); it++) {
-            const Expression &e = *it;
+            const Rel &rel = *it;
             solver->push();
-            solver->add(e);
+            solver->add(rel);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
                 return false;
             }
-            solver->add(e.subs(up).lhs() <= 0);
+            solver->add(rel.subs(up).lhs() <= 0);
             if (solver->check() == Smt::Unsat) {
                 proof.newline();
-                proof.append(std::stringstream() << "handled " << e << " via monotonic increase");
-                done.push_back(e);
-                res.push_back(e);
+                proof.append(std::stringstream() << "handled " << rel << " via monotonic increase");
+                done.push_back(rel);
+                res.push_back(rel);
                 print();
                 solver->pop();
-                solver->add(e);
+                solver->add(rel);
                 todo.erase(it);
                 return true;
             }
@@ -140,10 +140,10 @@ struct AccelerationProblem {
             return false;
         }
         for (auto it = todo.begin(); it != todo.end(); it++) {
-            const Expression &e = *it;
+            const Rel &rel = *it;
             solver->push();
-            const Expression &updated = e.lhs().subs(up);
-            solver->add(e.lhs() >= updated);
+            const Expression &updated = rel.lhs().subs(up);
+            solver->add(rel.lhs() >= updated);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
                 return false;
@@ -152,19 +152,19 @@ struct AccelerationProblem {
             if (solver->check() == Smt::Unsat) {
                 solver->pop();
                 solver->push();
-                const Expression &newCond = e.subs(closed.get()).subs(ExprMap(n, n-1));
-                solver->add(e);
+                const Rel &newCond = rel.subs(closed.get()).subs(ExprMap(n, n-1));
+                solver->add(rel);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {
                     proof.newline();
-                    proof.append(std::stringstream() << "handled " << e << " via eventual decrease");
-                    done.push_back(e);
-                    res.push_back(e);
+                    proof.append(std::stringstream() << "handled " << rel << " via eventual decrease");
+                    done.push_back(rel);
+                    res.push_back(rel);
                     res.push_back(newCond);
                     print();
                     nonterm = false;
                     solver->pop();
-                    solver->add(e);
+                    solver->add(rel);
                     todo.erase(it);
                     return true;
                 }
@@ -196,10 +196,10 @@ struct AccelerationProblem {
 
     bool eventualWeakIncrease() {
         for (auto it = todo.begin(); it != todo.end(); it++) {
-            const Expression &e = *it;
+            const Rel &rel = *it;
             solver->push();
-            const Expression &updated = e.lhs().subs(up);
-            solver->add(e.lhs() <= updated);
+            const Expression &updated = rel.lhs().subs(up);
+            solver->add(rel.lhs() <= updated);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
                 return false;
@@ -208,19 +208,19 @@ struct AccelerationProblem {
             if (solver->check() == Smt::Unsat) {
                 solver->pop();
                 solver->push();
-                const Expression &newCond = Relation::normalizeInequality(e.lhs() <= updated);
-                solver->add(e);
+                const Rel &newCond = (rel.lhs() <= updated).normalizeInequality();
+                solver->add(rel);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {
                     proof.newline();
-                    proof.append(std::stringstream() << "handled " << e << " via eventual increase");
-                    done.push_back(e);
+                    proof.append(std::stringstream() << "handled " << rel << " via eventual increase");
+                    done.push_back(rel);
                     res.push_back(newCond);
-                    res.push_back(e);
+                    res.push_back(rel);
                     this->equivalent = false;
                     print();
                     solver->pop();
-                    solver->add(e);
+                    solver->add(rel);
                     todo.erase(it);
                     return true;
                 }

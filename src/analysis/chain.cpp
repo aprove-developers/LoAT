@@ -58,8 +58,8 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
 
     // Concatenate both guards, but apply the first rule's update to second guard
     GuardList newGuard = firstLhs.getGuard();
-    for (const Expression &ex : secondLhs.getGuard()) {
-        newGuard.push_back(ex.subs(updateSubs));
+    for (const Rel &rel : secondLhs.getGuard()) {
+        newGuard.push_back(rel.subs(updateSubs));
     }
 
     // Add the costs, but apply first rule's update to second cost

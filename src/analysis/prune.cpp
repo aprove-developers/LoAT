@@ -61,7 +61,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
 
     // Guard has to be fully equal (including the ordering)
     for (unsigned int i=0; i < guardA.size(); ++i) {
-        if (!guardA[i].is_equal(guardB[i])) return false;
+        if (guardA[i] != guardB[i]) return false;
     }
     return true;
 }

@@ -52,9 +52,9 @@ public:
         return res;
     }
 
-    static EXPR convert(const Expression &expr, SmtContext<EXPR> &context, const VariableManager &varMan) {
+    static EXPR convert(const Rel &rel, SmtContext<EXPR> &context, const VariableManager &varMan) {
         GinacToSmt<EXPR> converter(context, varMan);
-        EXPR res = converter.convert_ex(expr);
+        EXPR res = converter.convert_relational(rel);
         return res;
     }
 
@@ -77,8 +77,6 @@ protected:
         } else if (e.isSymbol()) {
             return convert_symbol(e.toSymbol());
 
-        } else if (e.isRelation()) {
-            return convert_relational(e);
         }
 
         std::stringstream ss;
@@ -159,18 +157,19 @@ protected:
         return context.addNewVariable(e, varMan.getType(e));
     }
 
-    EXPR convert_relational(const Expression &e) {
-        assert(e.nops() == 2);
+    EXPR convert_relational(const Rel &rel) {
 
-        EXPR a = convert_ex(e.op(0));
-        EXPR b = convert_ex(e.op(1));
+        EXPR a = convert_ex(rel.lhs());
+        EXPR b = convert_ex(rel.rhs());
 
-        if (e.info(info_flags::relation_equal)) return context.eq(a, b);
-        if (e.info(info_flags::relation_not_equal)) return context.neq(a, b);
-        if (e.info(info_flags::relation_less)) return context.lt(a, b);
-        if (e.info(info_flags::relation_less_or_equal)) return context.le(a, b);
-        if (e.info(info_flags::relation_greater)) return context.gt(a, b);
-        if (e.info(info_flags::relation_greater_or_equal)) return context.ge(a, b);
+        switch (rel.getOp()) {
+        case Rel::eq: return context.eq(a, b);
+        case Rel::neq: return context.neq(a, b);
+        case Rel::lt: return context.lt(a, b);
+        case Rel::leq: return context.le(a, b);
+        case Rel::gt: return context.gt(a, b);
+        case Rel::geq: return context.ge(a, b);
+        }
 
         assert(false && "unreachable");
     }

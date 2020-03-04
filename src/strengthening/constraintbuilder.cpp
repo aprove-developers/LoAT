@@ -60,9 +60,9 @@ namespace strengthening {
                 templatesInvariantImplication.premise.begin(),
                 templatesInvariantImplication.premise.end());
         BoolExpr conclusionInvariant = True;
-        for (const Expression &e: guardCtx.todo) {
+        for (const Rel &rel: guardCtx.todo) {
             for (const ExprMap &up: ruleCtx.updates) {
-                Expression updated = e;
+                Rel updated = rel;
                 updated.applySubs(up);
                 const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, updated);
                 conclusionInvariant = conclusionInvariant & invariant;
@@ -77,10 +77,10 @@ namespace strengthening {
 
     const GuardList ConstraintBuilder::findRelevantConstraints() const {
         GuardList relevantConstraints;
-        for (const Expression &e: guardCtx.guard) {
+        for (const Rel &rel: guardCtx.guard) {
             for (const ExprSymbol &var: templates.vars()) {
-                if (e.getVariables().count(var) > 0) {
-                    relevantConstraints.push_back(e);
+                if (rel.getVariables().count(var) > 0) {
+                    relevantConstraints.push_back(rel);
                     break;
                 }
             }
@@ -90,20 +90,20 @@ namespace strengthening {
 
     const Implication ConstraintBuilder::buildTemplatesInvariantImplication() const {
         Implication res;
-        for (const Expression &invTemplate: templates) {
+        for (const Rel &invTemplate: templates) {
             GuardList updatedTemplates;
             for (const ExprMap &up: ruleCtx.updates) {
-                Expression updated = invTemplate;
+                Rel updated = invTemplate;
                 updated.applySubs(up);
                 updatedTemplates.push_back(updated);
             }
             res.premise.push_back(invTemplate);
-            for (const Expression &t: updatedTemplates) {
-                res.conclusion.push_back(t);
+            for (const Rel &rel: updatedTemplates) {
+                res.conclusion.push_back(rel);
             }
         }
-        for (const Expression &g: guardCtx.guard) {
-            res.premise.push_back(g);
+        for (const Rel &rel: guardCtx.guard) {
+            res.premise.push_back(rel);
         }
         return res;
     }
@@ -112,34 +112,34 @@ namespace strengthening {
         Initiation res;
         res.valid = True;
         for (const GuardList &pre: ruleCtx.preconditions) {
-            for (const Expression &t: templates) {
+            for (const Rel &t: templates) {
                 res.valid = res.valid & constructImplicationConstraints(pre, t);
             }
             ExprSymbolSet allVars;
             pre.collectVariables(allVars);
-            for (const Expression &e: relevantConstraints) {
-                e.collectVariables(allVars);
+            for (const Rel &rel: relevantConstraints) {
+                rel.collectVariables(allVars);
             }
-            for (const Expression &e: pre) {
-                e.collectVariables(allVars);
+            for (const Rel &rel: pre) {
+                rel.collectVariables(allVars);
             }
             // TODO Why is this variable renaming needed?
             ExprMap varRenaming;
             for (const ExprSymbol &x: allVars) {
                 varRenaming[x] = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name()));
             }
-            std::vector<Expression> renamed;
-            for (Expression e: pre) {
-                e.applySubs(varRenaming);
+            std::vector<Rel> renamed;
+            for (Rel rel: pre) {
+                rel.applySubs(varRenaming);
+                renamed.push_back(rel);
+            }
+            const std::vector<Rel> &updatedTemplates = templates.subs(varRenaming);
+            for (const Rel &e: updatedTemplates) {
                 renamed.push_back(e);
             }
-            const std::vector<Expression> &updatedTemplates = templates.subs(varRenaming);
-            for (const Expression &e: updatedTemplates) {
-                renamed.push_back(e);
-            }
-            for (Expression e: relevantConstraints) {
-                e.applySubs(varRenaming);
-                renamed.push_back(e);
+            for (Rel rel: relevantConstraints) {
+                rel.applySubs(varRenaming);
+                renamed.push_back(rel);
             }
             const BoolExpr &expr = buildAnd(renamed);
             res.satisfiable.push_back(expr);
@@ -161,7 +161,7 @@ namespace strengthening {
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(
             const GuardList &premise,
-            const Expression &conclusion) const {
+            const Rel &conclusion) const {
         return FarkasLemma::apply(
                 premise,
                 conclusion,

@@ -75,14 +75,13 @@ bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
 bool Preprocess::simplifyGuard(GuardList &guard) {
     GuardList newGuard;
 
-    for (const Expression &ex : guard) {
+    for (const Rel &rel : guard) {
         // Skip trivially true constraints
-        auto optTrivial = Relation::checkTrivial(ex);
-        if (optTrivial && optTrivial.get()) continue;
+        if (rel.isTriviallyTrue()) continue;
 
         // If a constraint is trivially false, we drop all other constraints
-        if (optTrivial && !optTrivial.get()) {
-            newGuard = {ex};
+        if (rel.isTriviallyFalse()) {
+            newGuard = {rel};
             break;
         }
 
@@ -90,10 +89,10 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
         // Also check if one of the others is implied by the new constraint.
         bool implied = false;
         for (unsigned int i=0; i < newGuard.size(); ++i) {
-            if (GuardToolbox::isTrivialImplication(newGuard.at(i), ex)) {
+            if (GuardToolbox::isTrivialImplication(newGuard.at(i), rel)) {
                 implied = true;
 
-            } else if (GuardToolbox::isTrivialImplication(ex, newGuard.at(i))) {
+            } else if (GuardToolbox::isTrivialImplication(rel, newGuard.at(i))) {
                 // remove old constraint from newGuard, but preserve order
                 newGuard.erase(newGuard.begin() + i);
                 i--;
@@ -101,7 +100,7 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
         }
 
         if (!implied) {
-            newGuard.push_back(ex);
+            newGuard.push_back(rel);
         }
     }
 
@@ -116,16 +115,16 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &var
 
     // iterates once over guard and drops constraints that are implied by previous constraints
     auto dropImplied = [&]() {
-        for (const Expression &ex : guard) {
+        for (const Rel &rel : guard) {
             solver->push();
-            solver->add(!buildLit(ex));
+            solver->add(!buildLit(rel));
             auto smtRes = solver->check();
             solver->pop();
 
             // unsat means that ex is implied by the previous constraints
             if (smtRes != Smt::Unsat) {
-                newGuard.push_back(ex);
-                solver->add(ex);
+                newGuard.push_back(rel);
+                solver->add(rel);
             }
         }
     };

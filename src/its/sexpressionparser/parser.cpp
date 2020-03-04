@@ -102,7 +102,7 @@ namespace sexpressionparser {
     void Self::parseCond(sexpresso::Sexp &sexp, GuardList &guard) {
         if (sexp.isString()) {
             if (sexp.str() == "false") {
-                guard.push_back(Expression(0 < 0));
+                guard.push_back(Rel(0, Rel::lt, 0));
             } else {
                 assert(sexp.str() == "true");
                 return;
@@ -126,15 +126,15 @@ namespace sexpressionparser {
 
     }
 
-    GiNaC::ex Self::parseConstraint(sexpresso::Sexp &sexp, bool negate) {
+    Rel Self::parseConstraint(sexpresso::Sexp &sexp, bool negate) {
         if (sexp.childCount() == 2) {
             assert(sexp[0].str() == "not");
             return parseConstraint(sexp[1], !negate);
         }
         assert(sexp.childCount() == 3);
         const std::string &op = sexp[0].str();
-        const GiNaC::ex &fst = parseExpression(sexp[1]);
-        const GiNaC::ex &snd = parseExpression(sexp[2]);
+        const Expression &fst = parseExpression(sexp[1]);
+        const Expression &snd = parseExpression(sexp[2]);
         if (op == "<=") {
             return negate ? fst > snd : fst <= snd;
         } else if (sexp[0].str() == "<") {
@@ -150,7 +150,7 @@ namespace sexpressionparser {
         assert(false);
     }
 
-    GiNaC::ex Self::parseExpression(sexpresso::Sexp &sexp) {
+    Expression Self::parseExpression(sexpresso::Sexp &sexp) {
         if (sexp.childCount() == 1) {
             const std::string &str = sexp.str();
             if (std::isdigit(str[0]) || str[0] == '-') {
@@ -163,9 +163,9 @@ namespace sexpressionparser {
             }
         }
         const std::string &op = sexp[0].str();
-        const GiNaC::ex &fst = parseExpression(sexp[1]);
+        const Expression &fst = parseExpression(sexp[1]);
         if (sexp.childCount() == 3) {
-            const GiNaC::ex &snd = parseExpression(sexp[2]);
+            const Expression &snd = parseExpression(sexp[2]);
             if (op == "+") {
                 return fst + snd;
             } else if (op == "-") {

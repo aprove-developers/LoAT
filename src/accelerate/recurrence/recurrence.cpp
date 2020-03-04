@@ -34,7 +34,7 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 
 option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
     Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
-    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(updateLhs == last).ex);
+    Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(ExprMap(updateLhs, last)).ex);
     Purrs::Expr exact;
 
     const ExprSymbolSet &vars = updateRhs.getVariables();
@@ -117,10 +117,10 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
 
         //remember this recurrence to replace vi in the updates depending on vi
         //note that updates need the value at n-1, e.g. x(n) = x(n-1) + vi(n-1) for the update x=x+vi
-        updatePreRecurrences[target] = updateRec.get().res.subs(ginacN == ginacN-1);
+        updatePreRecurrences[target] = updateRec.get().res.subs(ExprMap(ginacN, ginacN-1));
 
         //calculate the final update using the loop's runtime
-        newUpdate[vi] = updateRec.get().res.subs(ginacN == meterfunc);
+        newUpdate[vi] = updateRec.get().res.subs(ExprMap(ginacN, meterfunc));
     }
 
     return {{.update=newUpdate, .validityBound=validityBound}};
@@ -131,7 +131,7 @@ option<Expression> Recurrence::iterateCost(const Expression &cost, const Express
     //calculate the new cost sum
     auto costRec = findCostRecurrence(cost);
     if (costRec) {
-        Expression res = costRec.get().subs(ginacN == meterfunc);
+        Expression res = costRec.get().subs(ExprMap(ginacN, meterfunc));
         return {res};
     }
     return {};

@@ -49,14 +49,12 @@ bool MeteringToolbox::isUpdatedByAny(VariableIdx var, const MultiUpdate &updates
 GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
     GuardList newGuard;
 
-    for (const Expression &ex : guard) {
-        assert(Relation::isRelation(ex));
-
-        if (Relation::isEquality(ex)) {
-            newGuard.push_back(ex.lhs() <= ex.rhs());
-            newGuard.push_back(ex.lhs() >= ex.rhs());
+    for (const Rel &rel : guard) {
+        if (rel.getOp() == Rel::eq) {
+            newGuard.push_back(rel.lhs() <= rel.rhs());
+            newGuard.push_back(rel.lhs() >= rel.rhs());
         } else {
-            newGuard.push_back(ex);
+            newGuard.push_back(rel);
         }
     }
 
@@ -83,20 +81,20 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 
     // create Z3 solver with the guard here to use push/pop for efficiency
     unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
-    for (const Expression &ex : guard) {
-        solver->add(ex);
+    for (const Rel &rel : guard) {
+        solver->add(rel);
     }
 
-    for (const Expression &ex : guard) {
+    for (const Rel &rel : guard) {
         // only keep constraints that contain updated variables (otherwise they still hold after the update)
-        bool add = ex.hasVariableWith(isUpdated);
+        bool add = rel.hasVariableWith(isUpdated);
 
         // and only if they are not implied after each update (so they may cause the loop to terminate)
         if (add) {
             bool implied = true;
             for (const UpdateMap &update : updates) {
                 solver->push();
-                solver->add(!buildLit(ex.subs(update.toSubstitution(varMan))));
+                solver->add(!buildLit(rel.subs(update.toSubstitution(varMan))));
                 auto smtRes = solver->check();
                 solver->pop();
 
@@ -114,9 +112,9 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 
         // add the constraint, or remember it as being irrelevant
         if (add) {
-            reducedGuard.push_back(ex);
+            reducedGuard.push_back(rel);
         } else {
-            if (irrelevantGuard) irrelevantGuard->push_back(ex);
+            if (irrelevantGuard) irrelevantGuard->push_back(rel);
         }
     }
 
@@ -129,8 +127,8 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
 
     // Add all variables appearing in the guard
     ExprSymbolSet guardVariables;
-    for (const Expression &ex : guard) {
-        ex.collectVariables(guardVariables);
+    for (const Rel &rel : guard) {
+        rel.collectVariables(guardVariables);
     }
     for (const ExprSymbol &sym : guardVariables) {
         res.insert(varMan.getVarIdx(sym));
@@ -190,8 +188,8 @@ void MeteringToolbox::restrictGuardToVariables(const VarMan &varMan, GuardList &
         return vars.count(varMan.getVarIdx(sym)) > 0;
     };
 
-    auto containsNoVars = [&](const Expression &ex) {
-        ExprSymbolSet syms = ex.getVariables();
+    auto containsNoVars = [&](const Rel &rel) {
+        ExprSymbolSet syms = rel.getVariables();
         return !std::any_of(syms.begin(), syms.end(), isContainedInVars);
     };
 
@@ -232,17 +230,16 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             ExprMap subs;
             subs[varMan.getVarSymbol(it.first)] = it.second;
 
-            for (const Expression &ex : reducedGuard) {
-                if (ex.has(lhsVar)) {
+            for (const Rel &rel : reducedGuard) {
+                if (rel.has(lhsVar)) {
 
                     // We want to make sure that all constraints with lhsVar hold after the update.
                     // E.g. if x := 4, y := y+1 and the guard is x > y, we add 4 > y+1.
                     // Note that only updating x (i.e., adding 4 > y) might not be sufficient.
-                    Expression add = ex.subs(updateSubs);
+                    Rel add = rel.subs(updateSubs);
 
                     // Adding trivial constraints does not make sense (no matter if they are true/false).
-                    bool isTrivial = Relation::checkTrivial(add).is_initialized();
-                    if (!isTrivial) {
+                    if (!add.isTriviallyTrue() && !add.isTriviallyFalse()) {
                         guard.push_back(add);
                         changed = true;
                     }
@@ -264,15 +261,15 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
 
     //find all bounds for every free variable
     map<VariableIdx,ExpressionSet> freeBounds;
-    for (const Expression &ex : guard) {
+    for (const Rel &rel : guard) {
         for (VariableIdx freeIdx : freeVar) {
             auto it = freeBounds.find(freeIdx);
             if (it != freeBounds.end() && it->second.size() >= Config::TempVarInstantiationMaxBounds) continue;
 
             ExprSymbol free = varMan.getVarSymbol(freeIdx);
-            if (!ex.has(free)) continue;
+            if (!rel.has(free)) continue;
 
-            Expression term = Relation::toLessEq(ex);
+            Rel term = rel.toLessEq();
             auto optSolved = GuardToolbox::solveTermFor(term.lhs()-term.rhs(), free, GuardToolbox::ResultMapsToInt);
             if (!optSolved) continue;
 

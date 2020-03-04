@@ -37,7 +37,7 @@ namespace t2parser {
 
         VariableIdx addVar(const std::string &str);
 
-        Expression parseConstraint(const std::string &str);
+        Rel parseConstraint(const std::string &str);
 
         Expression parseExpression(std::string str);
 

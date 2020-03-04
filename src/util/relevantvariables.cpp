@@ -28,9 +28,9 @@ namespace util {
         std::set<VariableIdx> res;
         // Add all variables appearing in the guard
         ExprSymbolSet guardVariables;
-        for (const Expression &c: constraints) {
-            const ExprSymbolSet &cVariables = c.getVariables();
-            guardVariables.insert(cVariables.begin(), cVariables.end());
+        for (const Rel &rel: constraints) {
+            const ExprSymbolSet &relVars = rel.getVariables();
+            guardVariables.insert(relVars.begin(), relVars.end());
         }
         for (const ExprSymbol &sym : guardVariables) {
             res.insert(varMan.getVarIdx(sym));
@@ -48,10 +48,10 @@ namespace util {
                         next.insert(rhsVars.begin(), rhsVars.end());
                     }
                 }
-                for (const Expression &g: guard) {
-                    const ExprSymbolSet &gVars = g.getVariables();
-                    if (gVars.find(varMan.getVarSymbol(var)) != gVars.end()) {
-                        next.insert(gVars.begin(), gVars.end());
+                for (const Rel &rel: guard) {
+                    const ExprSymbolSet &relVars = rel.getVariables();
+                    if (relVars.find(varMan.getVarSymbol(var)) != relVars.end()) {
+                        next.insert(relVars.begin(), relVars.end());
                     }
                 }
             }

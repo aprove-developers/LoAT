@@ -268,8 +268,8 @@ bool Analysis::ensureNonnegativeCosts() {
         Rule &rule = its.getRuleMut(trans);
 
         // Add the constraint unless it is trivial (e.g. if the cost is 1).
-        Expression costConstraint = rule.getCost() >= 0;
-        if (!Relation::isTriviallyTrue(costConstraint)) {
+        Rel costConstraint = rule.getCost() >= 0;
+        if (!costConstraint.isTriviallyTrue()) {
             rule.getGuardMut().push_back(costConstraint);
             changed = true;
         }
@@ -462,8 +462,8 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
         option<AsymptoticBound::Result> checkRes;
         bool isPolynomial = rule.getCost().isPolynomial() && !rule.getCost().isNontermSymbol();
         if (isPolynomial) {
-            for (const Expression &e: rule.getGuard()) {
-                if (!Expression(e.lhs()).isPolynomial() || !Expression(e.rhs()).isPolynomial()) {
+            for (const Rel &rel: rule.getGuard()) {
+                if (!rel.isPolynomial()) {
                     isPolynomial = false;
                     break;
                 }

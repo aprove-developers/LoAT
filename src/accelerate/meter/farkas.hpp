@@ -63,7 +63,7 @@ namespace FarkasLemma {
      *
      * @return the resulting z3 expression (without quantifiers, as all variables are existentially quantified)
      */
-    BoolExpr apply(const std::vector<Expression> &constraints,
+    BoolExpr apply(const std::vector<Rel> &constraints,
                    const std::vector<ExprSymbol> &vars,
                    const std::vector<Expression> &coeffs,
                    Expression c0,
@@ -72,7 +72,7 @@ namespace FarkasLemma {
                    const ExprSymbolSet &params = ExprSymbolSet(),
                    Expression::Type lambdaType = Expression::Real);
 
-    BoolExpr apply(const std::vector<Expression> &constraints,
+    BoolExpr apply(const std::vector<Rel> &constraints,
                    const std::vector<ExprSymbol> &vars,
                    const std::vector<ExprSymbol> &coeffs,
                    ExprSymbol c0,
@@ -82,16 +82,16 @@ namespace FarkasLemma {
                    Expression::Type lambdaType = Expression::Real);
 
     const BoolExpr apply(
-            const std::vector<Expression> &premise,
-            const std::vector<Expression> &conclusion,
+            const std::vector<Rel> &premise,
+            const std::vector<Rel> &conclusion,
             const ExprSymbolSet &vars,
             const ExprSymbolSet &params,
             VariableManager &varMan,
             Expression::Type lambdaType = Expression::Real);
 
     const BoolExpr apply(
-            const std::vector<Expression> &premise,
-            const Expression &conclusion,
+            const std::vector<Rel> &premise,
+            const Rel &conclusion,
             const ExprSymbolSet &vars,
             const ExprSymbolSet &params,
             VariableManager &varMan,

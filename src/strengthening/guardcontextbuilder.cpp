@@ -36,12 +36,12 @@ namespace strengthening {
 
     const GuardList Self::computeConstraints() const {
         GuardList constraints;
-        for (const Expression &e: guard) {
-            if (Relation::isLinearEquality(e)) {
-                constraints.emplace_back(e.lhs() <= e.rhs());
-                constraints.emplace_back(e.rhs() <= e.lhs());
-            } else if (Relation::isLinearInequality(e)) {
-                constraints.push_back(e);
+        for (const Rel &rel: guard) {
+            if (rel.isLinearEquality()) {
+                constraints.emplace_back(rel.lhs() <= rel.rhs());
+                constraints.emplace_back(rel.rhs() <= rel.lhs());
+            } else if (rel.isLinearInequality()) {
+                constraints.push_back(rel);
             }
         }
         return constraints;
@@ -49,14 +49,14 @@ namespace strengthening {
 
     const Result Self::splitInvariants(const GuardList &constraints) const {
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
-        for (const Expression &g: guard) {
-            solver->add(g);
+        for (const Rel &rel: guard) {
+            solver->add(rel);
         }
         Result res;
-        for (const Expression &g: constraints) {
+        for (const Rel &rel: constraints) {
             bool isInvariant = true;
             for (const ExprMap &up: updates) {
-                Expression conclusionExp = g;
+                Rel conclusionExp = rel;
                 conclusionExp.applySubs(up);
                 const BoolExpr &conclusion = buildLit(conclusionExp);
                 solver->push();
@@ -69,9 +69,9 @@ namespace strengthening {
                 }
             }
             if (isInvariant) {
-                res.solved.push_back(g);
+                res.solved.push_back(rel);
             } else {
-                res.failed.push_back(g);
+                res.failed.push_back(rel);
             }
         }
         return res;

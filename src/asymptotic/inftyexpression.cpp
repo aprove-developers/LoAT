@@ -28,10 +28,10 @@ bool InftyExpression::isTriviallyUnsatisfiable() const {
             return true;
 
         } else if ((direction == POS_CONS || direction == POS)
-                   && (info(GiNaC::info_flags::negative) || is_zero())) {
+                   && isNumeric() && !toNumeric().is_positive()) {
             return true;
 
-        } else if (direction == NEG_CONS && info(GiNaC::info_flags::nonnegative)) {
+        } else if (direction == NEG_CONS && isNumeric() && toNumeric().is_nonneg_integer()) {
             return true;
         }
     }

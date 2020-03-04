@@ -25,9 +25,9 @@ const std::vector<Expression> BoundExtractor::getLowerAndUpper() const {
 
 void BoundExtractor::extractBounds() {
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
-    for (const Expression &ex : guard) {
-        if (Relation::isEquality(ex) && ex.has(N)) {
-            auto optSolved = GuardToolbox::solveTermFor(ex.lhs() - ex.rhs(), N, GuardToolbox::ResultMapsToInt);
+    for (const Rel &rel : guard) {
+        if (rel.getOp() == Rel::eq && rel.has(N)) {
+            auto optSolved = GuardToolbox::solveTermFor(rel.lhs() - rel.rhs(), N, GuardToolbox::ResultMapsToInt);
             if (optSolved) {
                 // One equality is enough, as all other bounds must also satisfy this equality
                 eq = optSolved.get();
@@ -37,17 +37,18 @@ void BoundExtractor::extractBounds() {
     }
 
     // Otherwise, collect all bounds
-    for (const Expression &ex : guard) {
-        if (Relation::isEquality(ex) || !ex.has(N)) continue;
+    for (const Rel &rel : guard) {
+        if (rel.getOp() == Rel::eq || !rel.has(N)) continue;
 
-        Expression term = Relation::toLessEq(ex);
-        term = (term.lhs() - term.rhs()).expand();
+        Rel leq = rel.toLessEq();
+        Expression term = (leq.lhs() - leq.rhs()).expand();
         if (term.degree(N) != 1) continue;
 
         // compute the upper bound represented by N and check that it is integral
         auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
         if (optSolved) {
-            if (term.coeff(N, 1).info(GiNaC::info_flags::negative)) {
+            const Expression &coeff = term.coeff(N, 1);
+            if (coeff.isNumeric() && coeff.toNumeric().is_negative()) {
                 lower.push_back(optSolved.get());
             } else {
                 upper.push_back(optSolved.get());

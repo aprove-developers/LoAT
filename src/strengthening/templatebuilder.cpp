@@ -30,9 +30,9 @@ namespace strengthening {
 
     const Templates TemplateBuilder::build() const {
         Templates res = Templates();
-        for (const Expression &g: guardCtx.todo) {
+        for (const Rel &rel: guardCtx.todo) {
             const ExprSymbolSet &varSymbols = util::RelevantVariables::find(
-                    {g},
+                    {rel},
                     ruleCtx.updates,
                     guardCtx.guard,
                     ruleCtx.varMan);

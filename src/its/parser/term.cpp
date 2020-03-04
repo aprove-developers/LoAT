@@ -42,17 +42,17 @@ Expression TermFunApp::toGinacExpression(const ITSProblem &) const {
 }
 
 
-Expression Relation::toGinacExpression(const ITSProblem &its) const {
+Rel Relation::toGinacExpression(const ITSProblem &its) const {
     Expression l = lhs->toGinacExpression(its);
     Expression r = rhs->toGinacExpression(its);
 
     switch (op) {
-        case RelationEqual: return l == r;
-        case RelationNotEqual: return l != r;
-        case RelationGreater: return l > r;
-        case RelationGreaterEqual: return l >= r;
-        case RelationLess: return l < r;
-        case RelationLessEqual: return l <= r;
+    case RelationEqual: return Rel(l, Rel::eq, r);
+    case RelationNotEqual: return Rel(l, Rel::neq, r);
+    case RelationGreater: return l > r;
+    case RelationGreaterEqual: return l >= r;
+    case RelationLess: return l < r;
+    case RelationLessEqual: return l <= r;
     }
     assert(false && "unreachable");
 }

@@ -50,7 +50,7 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
         if (deg > 1) {
             // Substitute powers of x, e.g. 4*x^2 should later become 4*z.
             // We don't handle cases like y*x^2 to keep linearization simple.
-            if (!ex.coeff(var, deg).info(GiNaC::info_flags::numeric)) {
+            if (!ex.coeff(var, deg).isNumeric()) {
                 return false; // too complicated
             }
             monomials.insert(GiNaC::pow(var, deg));
@@ -86,14 +86,14 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
 
 
 bool Linearize::collectMonomialsInGuard(ExpressionSet &monomials) const {
-    for (const Expression &ex : guard) {
-        assert(Relation::isInequality(ex));
+    for (const Rel &rel : guard) {
+        assert(rel.isInequality());
 
-        if (!collectMonomials(ex.lhs().expand(), monomials)) {
+        if (!collectMonomials(rel.lhs().expand(), monomials)) {
             return false;
         }
 
-        if (!collectMonomials(ex.rhs().expand(), monomials)) {
+        if (!collectMonomials(rel.rhs().expand(), monomials)) {
             return false;
         }
     }
@@ -191,8 +191,8 @@ void Linearize::applySubstitution(const ExprMap &subs) {
     // See the GiNaC documentation/tutorial on subs() for more details.
     auto subsOptions = GiNaC::subs_options::algebraic;
 
-    for (Expression &term : guard) {
-        term = term.expand().subs(subs, subsOptions);
+    for (Rel &rel : guard) {
+        rel = rel.expand().subs(subs, subsOptions);
     }
 
     for (UpdateMap &update : updates) {
@@ -206,7 +206,7 @@ void Linearize::applySubstitution(const ExprMap &subs) {
 ExprMap Linearize::reverseSubstitution(const ExprMap &subs) {
     ExprMap reverseSubs;
     for (auto it : subs) {
-        assert(it.second.info(GiNaC::info_flags::symbol));
+        assert(it.second.isSymbol());
         reverseSubs[it.second] = it.first;
     }
     return reverseSubs;
@@ -246,8 +246,8 @@ option<ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guar
     lin.applySubstitution(subs);
 
     // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)
-    for (Expression ex : lin.additionalGuard) {
-        guard.push_back(ex);
+    for (Rel rel : lin.additionalGuard) {
+        guard.push_back(rel);
     }
 
     return lin.reverseSubstitution(subs);

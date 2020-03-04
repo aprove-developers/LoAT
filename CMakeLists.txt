@@ -80,8 +80,6 @@ add_executable(${EXECUTABLE}
         src/expr/expression.hpp
         src/expr/guardtoolbox.cpp
         src/expr/guardtoolbox.hpp
-        src/expr/relation.cpp
-        src/expr/relation.hpp
         src/expr/boolexpr.cpp
         src/expr/boolexpr.hpp
         src/its/parser/itsparser.cpp

@@ -64,14 +64,14 @@ namespace strengthening {
             }
         }
         const ExprMap &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
-        const std::vector<Expression> instantiatedTemplates = templates.subs(subs);
+        const std::vector<Rel> instantiatedTemplates = templates.subs(subs);
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({instantiatedTemplates}, {}), ruleCtx.varMan);
-        for (const Expression &e: instantiatedTemplates) {
-            if (!templates.isParametric(e)) {
+        for (const Rel &rel: instantiatedTemplates) {
+            if (!templates.isParametric(rel)) {
                 solver->push();
-                solver->add(!buildLit(e));
+                solver->add(!buildLit(rel));
                 if (solver->check() != Smt::Unsat) {
-                    res.push_back(e);
+                    res.push_back(rel);
                 }
                 solver->pop();
             }
@@ -84,19 +84,19 @@ namespace strengthening {
         BoolExpr preconditionVec = False;
         for (const GuardList &pre: ruleCtx.preconditions) {
             BoolExpr preVec = True;
-            for (const Expression &e: pre) {
-                preVec = preVec & e;
+            for (const Rel &rel: pre) {
+                preVec = preVec & rel;
             }
             preconditionVec = preconditionVec | preVec;
         }
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({invariants}, {}), ruleCtx.varMan);
-        for (const Expression &i: invariants) {
+        for (const Rel &rel: invariants) {
             solver->push();
-            solver->add(!buildLit(i));
+            solver->add(!rel);
             if (solver->check() == Smt::Unsat) {
-                res.invariants.push_back(i);
+                res.invariants.push_back(rel);
             } else {
-                res.pseudoInvariants.push_back(i);
+                res.pseudoInvariants.push_back(rel);
             }
             solver->pop();
         }

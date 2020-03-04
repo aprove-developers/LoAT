@@ -31,36 +31,8 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
     auto containsRelations = [](const string &s) -> bool {
         return s.find_first_of("<>=") != string::npos;
     };
-
-    if (!containsRelations(s)) {
-        return Expression(GiNaC::ex(s,variables));
-    }
-
-    // The order is important to avoid parsing e.g. <= as <
-    string ops[] = { "==", "!=", "<=", ">=", "<", ">", "=" };
-
-    for (string op : ops) {
-        string::size_type pos;
-        if ((pos = s.find(op)) != string::npos) {
-            string lhs = s.substr(0,pos);
-            string rhs = s.substr(pos+op.length());
-
-            if (containsRelations(lhs) || containsRelations(rhs)) {
-                throw InvalidRelationalExpression("Multiple relational operators: "+s);
-            }
-
-            Expression lhsExpr = GiNaC::ex(lhs,variables);
-            Expression rhsExpr = GiNaC::ex(rhs,variables);
-
-            if (op == "<") return Expression(lhsExpr < rhsExpr);
-            else if (op == ">") return Expression(lhsExpr > rhsExpr);
-            else if (op == "<=") return Expression(lhsExpr <= rhsExpr);
-            else if (op == ">=") return Expression(lhsExpr >= rhsExpr);
-            else if (op == "!=") return Expression(lhsExpr != rhsExpr);
-            else return Expression(lhsExpr == rhsExpr);
-        }
-    }
-    assert(false && "unreachable");
+    assert(!containsRelations(s));
+    return Expression(GiNaC::ex(s,variables));
 }
 
 void Expression::applySubs(const ExprMap &subs) {
@@ -126,28 +98,28 @@ bool Expression::isLinear(const option<ExprSymbolSet> &vars) const {
 
 
 bool Expression::isPolynomial() const {
-    return this->info(GiNaC::info_flags::polynomial);
+    return ex.info(GiNaC::info_flags::polynomial);
 }
 
 
 bool Expression::isPolynomialWithIntegerCoeffs() const {
-    return this->info(GiNaC::info_flags::integer_polynomial);
+    return ex.info(GiNaC::info_flags::integer_polynomial);
 }
 
 
 bool Expression::isIntegerConstant() const {
-    return this->info(GiNaC::info_flags::integer);
+    return ex.info(GiNaC::info_flags::integer);
 }
 
 
 bool Expression::isRationalConstant() const {
-    return this->info(GiNaC::info_flags::rational);
+    return ex.info(GiNaC::info_flags::rational);
 }
 
 
 bool Expression::isProperRational() const {
-    return this->info(GiNaC::info_flags::rational)
-           && !this->info(GiNaC::info_flags::integer);
+    return ex.info(GiNaC::info_flags::rational)
+           && !ex.info(GiNaC::info_flags::integer);
 }
 
 
@@ -157,7 +129,7 @@ bool Expression::isProperNaturalPower() const {
     }
 
     Expression power = this->op(1);
-    if (!power.info(GiNaC::info_flags::integer)) {
+    if (!power.isIntegerConstant()) {
         return false;
     }
 
@@ -369,4 +341,38 @@ string Expression::toString() const {
     stringstream ss;
     ss << *this;
     return ss.str();
+}
+
+Rel Rel::fromString(const string &s, const GiNaC::lst &variables) {
+    auto containsRelations = [](const string &s) -> bool {
+        return s.find_first_of("<>=") != string::npos;
+    };
+
+    assert(containsRelations(s));
+
+    // The order is important to avoid parsing e.g. <= as <
+    string ops[] = { "==", "!=", "<=", ">=", "<", ">", "=" };
+
+    for (string op : ops) {
+        string::size_type pos;
+        if ((pos = s.find(op)) != string::npos) {
+            string lhs = s.substr(0,pos);
+            string rhs = s.substr(pos+op.length());
+
+            if (containsRelations(lhs) || containsRelations(rhs)) {
+                throw InvalidRelationalExpression("Multiple relational operators: "+s);
+            }
+
+            Expression lhsExpr = GiNaC::ex(lhs,variables);
+            Expression rhsExpr = GiNaC::ex(rhs,variables);
+
+            if (op == "<") return lhsExpr < rhsExpr;
+            else if (op == ">") return lhsExpr > rhsExpr;
+            else if (op == "<=") return lhsExpr <= rhsExpr;
+            else if (op == ">=") return lhsExpr >= rhsExpr;
+            else if (op == "!=") return lhsExpr != rhsExpr;
+            else return lhsExpr == rhsExpr;
+        }
+    }
+    assert(false && "unreachable");
 }

@@ -4,7 +4,7 @@
 
 Smt::~Smt() {}
 
-void Smt::add(const Expression &e) {
+void Smt::add(const Rel &e) {
     this->add(buildLit(e));
 }
 
@@ -55,9 +55,9 @@ Smt::Logic Smt::chooseLogic(const std::vector<BoolExpr> &xs) {
     return res;
 }
 
-bool Smt::isLinear(const std::vector<Expression> &guard) {
-    for (const Expression &e: guard) {
-        if (!Expression(e.lhs()).isLinear() || !Expression(e.rhs()).isLinear()) {
+bool Smt::isLinear(const std::vector<Rel> &guard) {
+    for (const Rel &rel: guard) {
+        if (!rel.isLinear()) {
             return false;
         }
     }
@@ -100,8 +100,8 @@ bool Smt::isLinear(const std::vector<ExprMap> &up) {
     return true;
 }
 
-bool Smt::isLinear(const std::vector<std::vector<Expression>> &gs) {
-    for (const std::vector<Expression> &g: gs) {
+bool Smt::isLinear(const std::vector<std::vector<Rel>> &gs) {
+    for (const std::vector<Rel> &g: gs) {
         if (!isLinear(g)) {
             return false;
         }
@@ -109,9 +109,9 @@ bool Smt::isLinear(const std::vector<std::vector<Expression>> &gs) {
     return true;
 }
 
-bool Smt::isPolynomial(const std::vector<Expression> &guard) {
-    for (const Expression &e: guard) {
-        if (!Expression(e.lhs()).isPolynomial() || !Expression(e.rhs()).isPolynomial()) {
+bool Smt::isPolynomial(const std::vector<Rel> &guard) {
+    for (const Rel &rel: guard) {
+        if (!rel.isPolynomial()) {
             return false;
         }
     }
@@ -154,8 +154,8 @@ bool Smt::isPolynomial(const std::vector<ExprMap> &up) {
     return true;
 }
 
-bool Smt::isPolynomial(const std::vector<std::vector<Expression>> &gs) {
-    for (const std::vector<Expression> &g: gs) {
+bool Smt::isPolynomial(const std::vector<std::vector<Rel>> &gs) {
+    for (const std::vector<Rel> &g: gs) {
         if (!isPolynomial(g)) {
             return false;
         }

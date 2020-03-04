@@ -33,15 +33,21 @@ class Z3Context;
 class Expression;
 class Recurrence;
 class ExprMap;
+class Rel;
 
 struct Expression_is_less {
     bool operator() (const Expression &lh, const Expression &rh) const;
+};
+
+struct Relation_is_less {
+    bool operator() (const Rel &lh, const Rel &rh) const;
 };
 
 //Useful typedefs for readability
 using ExprSymbol = GiNaC::symbol;
 using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
 using ExpressionSet = std::set<Expression, Expression_is_less>;
+using RelationSet = std::set<Rel, Relation_is_less>;
 template <typename T>
 using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
 
@@ -66,7 +72,6 @@ public:
      * @param variables a list of GiNaC symbols that may occur as variables in s
      */
     static Expression fromString(const std::string &s, const GiNaC::lst &variables);
-    EXCEPTION(InvalidRelationalExpression,CustomException);
 
     /**
      * static helper to cast a ginac expression (which must be a symbol) to a ginac symbol
@@ -221,8 +226,6 @@ public:
      */
     std::string toString() const;
 
-    Expression lhs() const;
-    Expression rhs() const;
     bool is_equal(const Expression &that) const;
     int degree(const ExprSymbol &var) const;
     int ldegree(const ExprSymbol &var) const;
@@ -230,7 +233,6 @@ public:
     Expression lcoeff(const ExprSymbol &var, uint degree = 1) const;
     Expression expand() const;
     bool has(const Expression &pattern) const;
-    bool info(unsigned i) const;
     bool is_zero() const;
     bool isSymbol() const;
     bool isNumeric() const;
@@ -244,9 +246,7 @@ public:
     Expression op(uint i) const;
     uint nops() const;
     Expression subs(const ExprMap &map, uint options = 0) const;
-    Expression subs(const Expression &eq, uint options = 0) const;
     void traverse(GiNaC::visitor & v) const;
-    void swap(Expression &that);
     int compare(const Expression &that) const;
     bool is_polynomial(const ExprSymbol &var) const;
     Expression numer() const;
@@ -258,14 +258,14 @@ public:
     friend Expression operator+(const Expression &x, const Expression &y);
     friend Expression operator*(const Expression &x, const Expression &y);
     friend Expression operator/(const Expression &x, const Expression &y);
-    friend Expression operator<(const Expression &x, const Expression &y);
-    friend Expression operator>(const Expression &x, const Expression &y);
-    friend Expression operator<=(const Expression &x, const Expression &y);
-    friend Expression operator>=(const Expression &x, const Expression &y);
-    friend Expression operator!=(const Expression &x, const Expression &y);
     friend Expression operator^(const Expression &x, const Expression &y);
+    friend Rel operator<(const Expression &x, const Expression &y);
+    friend Rel operator>(const Expression &x, const Expression &y);
+    friend Rel operator<=(const Expression &x, const Expression &y);
+    friend Rel operator>=(const Expression &x, const Expression &y);
+    friend Rel operator!=(const Expression &x, const Expression &y);
+    friend Rel operator==(const Expression &x, const Expression &y);
     friend std::ostream& operator<<(std::ostream &s, const Expression &e);
-    friend Expression operator==(const Expression &x, const Expression &y);
 
 private:
     GiNaC::ex ex;
@@ -275,6 +275,98 @@ private:
     static Complexity getComplexity(const Expression &term);
 
 };
+
+class Rel {
+public:
+
+    EXCEPTION(InvalidRelationalExpression,CustomException);
+
+    enum Operator {lt, leq, gt, geq, eq, neq};
+
+    Rel(const Expression &lhs, Operator op, const Expression &rhs);
+
+    Expression lhs() const;
+    Expression rhs() const;
+    Rel expand() const;
+    bool isPolynomial() const;
+    bool isLinear() const;
+    bool isInequality() const;
+    bool isLinearInequality(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
+    bool isLinearEquality(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
+    bool isGreaterThanZero() const;
+    bool isLessOrEqual() const;
+    Rel toLessEq() const;
+    Rel toGreater() const;
+    Rel toLessOrLessEq() const;
+    Rel splitVariablesAndConstants(const ExprSymbolSet &params = ExprSymbolSet()) const;
+    bool isTriviallyTrue() const;
+    bool isTriviallyFalse() const;
+    void collectVariables(ExprSymbolSet &res) const;
+    bool has(const Expression &pattern) const;
+    Rel subs(const ExprMap &map, uint options = 0) const;
+    void applySubs(const ExprMap &subs);
+    std::string toString() const;
+    Operator getOp() const;
+    ExprSymbolSet getVariables() const;
+    int compare(const Rel &that) const;
+
+    static Rel fromString(const std::string &s, const GiNaC::lst &variables);
+
+    template <typename P>
+    bool hasVariableWith(P predicate) const {
+        return l.hasVariableWith(predicate) || r.hasVariableWith(predicate);
+    }
+
+    /**
+     * Given a relation, replaces lhs and rhs with the given arguments and keeps operator
+     * @return newly created Expression of the form lhs OP rhs (OP one of <,<=,=,>=,>).
+     */
+    Rel replaceLhsRhs(Expression lhs, Expression rhs) const;
+
+    /**
+     * Given an inequality, transforms it into one of the form lhs > 0
+     * @note assumes integer arithmetic to translate e.g. >= to >
+     */
+    Rel normalizeInequality() const;
+
+    /**
+     * Given a <= inequality, returns a <= inequality that represents the negated expression
+     * (i.e. for lhs <= rhs, this is -lhs <= -rhs-1)
+     * @note this assumes that lhs, rhs are integer valued (so lhs > rhs can be rewritten as lhs >= rhs+1)
+     */
+    Rel negateLessEqInequality() const;
+
+    friend Rel operator!(const Rel &x);
+    friend bool operator==(const Rel &x, const Rel &y);
+    friend bool operator!=(const Rel &x, const Rel &y);
+    friend std::ostream& operator<<(std::ostream &s, const Rel &e);
+
+private:
+
+    /**
+     * Given any relation, checks if the relation is trivially true or false,
+     * by checking if rhs-lhs is a numeric value. If unsure, returns none.
+     * @return true/false if the relation is trivially valid/invalid
+     */
+    option<bool> checkTrivial() const;
+
+    Expression l;
+    Expression r;
+
+};
+
+Rel operator<(const ExprSymbol &x, const Expression &y);
+Rel operator<(const Expression &x, const ExprSymbol &y);
+Rel operator<(const ExprSymbol &x, const ExprSymbol &y);
+Rel operator>(const Expression &x, const Expression &y);
+Rel operator>(const ExprSymbol &x, const Expression &y);
+Rel operator>(const ExprSymbol &x, const ExprSymbol &y);
+Rel operator<=(const ExprSymbol &x, const Expression &y);
+Rel operator<=(const Expression &x, const ExprSymbol &y);
+Rel operator<=(const ExprSymbol &x, const ExprSymbol &y);
+Rel operator>=(const ExprSymbol &x, const Expression &y);
+Rel operator>=(const Expression &x, const ExprSymbol &y);
+Rel operator>=(const ExprSymbol &x, const ExprSymbol &y);
 
 class ExprMap {
     friend class Expression;

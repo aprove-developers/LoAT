@@ -32,10 +32,10 @@ using VariablePair = std::pair<VariableIdx, VariableIdx>;
 
 
 // GuardList is a list of expressions with some additional methods for convenience
-class GuardList : public std::vector<Expression> {
+class GuardList : public std::vector<Rel> {
 public:
     // inherit constructors of base class
-    using std::vector<Expression>::vector;
+    using std::vector<Rel>::vector;
     void collectVariables(ExprSymbolSet &res) const;
     GuardList subs(const ExprMap &sigma) const;
     void applySubstitution(const ExprMap &sigma);

@@ -52,8 +52,8 @@ namespace nonterm {
             return {};
         }
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its, Config::Z3::DefaultTimeout);
-        for (const Expression &e: r.getGuard()) {
-            solver->add(e);
+        for (const Rel &rel: r.getGuard()) {
+            solver->add(rel);
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             solver->push();
@@ -61,7 +61,7 @@ namespace nonterm {
             const ExprSymbolSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
             for (const ExprSymbol &var: vars) {
                 const auto &it = up.find(var);
-                solver->add(Expression(var == (it == up.end() ? var : it->second)));
+                solver->add(Rel(var, Rel::eq, it == up.end() ? var : it->second));
             }
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {

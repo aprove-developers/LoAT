@@ -20,22 +20,22 @@
 
 
 void GuardList::collectVariables(ExprSymbolSet &res) const {
-    for (const Expression &ex : *this) {
-        ex.collectVariables(res);
+    for (const Rel &rel : *this) {
+        rel.collectVariables(res);
     }
 }
 
 GuardList GuardList::subs(const ExprMap &sigma) const {
     GuardList res;
-    for (const Expression &e: *this) {
-        res.push_back(e.subs(sigma));
+    for (const Rel &rel: *this) {
+        res.push_back(rel.subs(sigma));
     }
     return res;
 }
 
 void GuardList::applySubstitution(const ExprMap &sigma) {
-    for (Expression &e: *this) {
-        e.applySubs(sigma);
+    for (Rel &rel: *this) {
+        rel.applySubs(sigma);
     }
 }
 

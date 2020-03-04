@@ -25,7 +25,7 @@ using namespace std;
 
 
 BoolExpr FarkasLemma::apply(
-        const vector<Expression> &constraints,
+        const vector<Rel> &constraints,
         const vector<ExprSymbol> &vars,
         const vector<Expression> &coeffs,
         Expression c0,
@@ -42,9 +42,9 @@ BoolExpr FarkasLemma::apply(
     // Create lambda variables, add the constraint "lambda >= 0"
     vector<ExprSymbol> lambda;
     ExprSymbolSet varSet(vars.begin(), vars.end());
-    for (const Expression &ex : constraints) {
-        assert(Relation::isLinearInequality(ex, varSet));
-        assert(Relation::isLessOrEqual(ex));
+    for (const Rel &rel : constraints) {
+        assert(rel.isLinearInequality(varSet));
+        assert(rel.isLessOrEqual());
 
         ExprSymbol var = varMan.getFreshUntrackedSymbol("l", lambdaType);
         lambda.push_back(var);
@@ -61,8 +61,8 @@ BoolExpr FarkasLemma::apply(
     // This is neccessary, since these variables appear in the A*x part and thus also have to appear in the c*x part.
     // The coefficients of additional variables are simply set to 0 (so they won't occur in the metering function).
     ExprSymbolSet constraintSymbols;
-    for (const Expression &ex : constraints) {
-        ex.collectVariables(constraintSymbols);
+    for (const Rel &rel : constraints) {
+        rel.collectVariables(constraintSymbols);
     }
     for (const ExprSymbol &sym : constraintSymbols) {
         if (varToCoeff.find(sym) == varToCoeff.end() && std::find(params.begin(), params.end(), sym) == params.end()) {
@@ -90,7 +90,7 @@ BoolExpr FarkasLemma::apply(
 }
 
 BoolExpr FarkasLemma::apply(
-        const vector<Expression> &constraints,
+        const vector<Rel> &constraints,
         const vector<ExprSymbol> &vars,
         const vector<ExprSymbol> &coeffs,
         ExprSymbol c0,
@@ -107,36 +107,36 @@ BoolExpr FarkasLemma::apply(
 }
 
 const BoolExpr FarkasLemma::apply(
-        const vector<Expression> &premise,
-        const vector<Expression> &conclusion,
+        const vector<Rel> &premise,
+        const vector<Rel> &conclusion,
         const ExprSymbolSet &vars,
         const ExprSymbolSet &params,
         VariableManager &varMan,
         Expression::Type lambdaType) {
     BoolExpr res = True;
-    std::vector<Expression> normalizedPremise;
-    for (const Expression &p: premise) {
-        if (Relation::isLinearInequality(p, vars)) {
-            normalizedPremise.push_back(Relation::splitVariablesAndConstants(Relation::toLessEq(p), params));
-        } else if (Relation::isLinearEquality(p, vars)) {
-            normalizedPremise.push_back(Relation::splitVariablesAndConstants(p.lhs() <= p.rhs(), params));
-            normalizedPremise.push_back(Relation::splitVariablesAndConstants(p.rhs() <= p.lhs(), params));
+    std::vector<Rel> normalizedPremise;
+    for (const Rel &p: premise) {
+        if (p.isLinearInequality(vars)) {
+            normalizedPremise.push_back(p.toLessEq().splitVariablesAndConstants(params));
+        } else if (p.isLinearEquality(vars)) {
+            normalizedPremise.push_back((p.lhs() <= p.rhs()).splitVariablesAndConstants(params));
+            normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariablesAndConstants(params));
         }
     }
     vector<ExprSymbol> varList(vars.begin(), vars.end());
-    vector<Expression> splitConclusion;
-    for (const Expression &c: conclusion) {
-        if (Relation::isLinearInequality(c, vars)) {
+    vector<Rel> splitConclusion;
+    for (const Rel &c: conclusion) {
+        if (c.isLinearInequality(vars)) {
             splitConclusion.push_back(c);
-        } else if (Relation::isLinearEquality(c, vars)) {
+        } else if (c.isLinearEquality(vars)) {
             splitConclusion.emplace_back(c.lhs() <= c.rhs());
             splitConclusion.emplace_back(c.rhs() <= c.lhs());
         } else {
             assert(false);
         }
     }
-    for (const Expression &c: splitConclusion) {
-        Expression normalized = Relation::splitVariablesAndConstants(Relation::toLessEq(c), params);
+    for (const Rel &c: splitConclusion) {
+        Rel normalized = c.toLessEq().splitVariablesAndConstants(params);
         vector<Expression> coefficients;
         for (ExprSymbol &x : varList) {
             coefficients.push_back(Expression(normalized.lhs().coeff(x, 1)));
@@ -148,12 +148,12 @@ const BoolExpr FarkasLemma::apply(
 }
 
 const BoolExpr FarkasLemma::apply(
-        const vector<Expression> &premise,
-        const Expression &conclusion,
+        const vector<Rel> &premise,
+        const Rel &conclusion,
         const ExprSymbolSet &vars,
         const ExprSymbolSet &params,
         VariableManager &varMan,
         Expression::Type lambdaType) {
-    const vector<Expression> &conclusions = {conclusion};
+    const vector<Rel> &conclusions = {conclusion};
     return apply(premise, conclusions, vars, params, varMan, lambdaType);
 }

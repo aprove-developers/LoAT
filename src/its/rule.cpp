@@ -64,8 +64,8 @@ bool Rule::isSimpleLoop() const {
 
 void Rule::applySubstitution(const ExprMap &subs) {
     getCostMut().applySubs(subs);
-    for (Expression &ex : getGuardMut()) {
-        ex.applySubs(subs);
+    for (Rel &rel: getGuardMut()) {
+        rel.applySubs(subs);
     }
     for (RuleRhs &rhs : rhss) {
         for (auto &it : rhs.getUpdateMut()) {

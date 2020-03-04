@@ -55,7 +55,7 @@ namespace strengthening {
 
         const BoolExpr constructImplicationConstraints(
                 const GuardList &premise,
-                const Expression &conclusion) const;
+                const Rel &conclusion) const;
 
         const GuardList findRelevantConstraints() const;
 

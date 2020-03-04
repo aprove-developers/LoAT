@@ -254,8 +254,8 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             const LinearRule rule = its.getLinearRule(idx);
             s << "FROM: " << start << ";" << endl;
             ExprSymbolSet vars = rule.getCost().getVariables();
-            for (const Expression &ex : rule.getGuard()) {
-                ex.collectVariables(vars);
+            for (const Rel &rel : rule.getGuard()) {
+                rel.collectVariables(vars);
             }
             for (auto it : rule.getUpdate()) {
                 it.second.collectVariables(vars);

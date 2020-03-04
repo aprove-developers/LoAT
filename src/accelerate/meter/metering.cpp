@@ -129,30 +129,29 @@ void MeteringFinder::buildLinearConstraints() {
     linearConstraints.guardUpdate.resize(updates.size());
 
     // helper lambda to transform the given inequality into the required form
-    auto makeConstraint = [&](const Expression &rel, vector<Expression> &vec) {
-        using namespace Relation;
-        assert(isLinearInequality(rel));
+    auto makeConstraint = [&](const Rel &rel, vector<Rel> &vec) {
+        assert(rel.isLinearInequality());
 
-        Expression res = splitVariablesAndConstants(toLessEq(rel));
-        if (!isTriviallyTrue(res)) {
+        Rel res = rel.toLessEq().splitVariablesAndConstants();
+        if (!res.isTriviallyTrue()) {
             vec.push_back(res);
         }
     };
 
-    for (Expression ex : reducedGuard) {
-        makeConstraint(ex, linearConstraints.reducedGuard);
+    for (Rel rel : reducedGuard) {
+        makeConstraint(rel, linearConstraints.reducedGuard);
     }
 
-    for (Expression ex : irrelevantGuard) {
-        makeConstraint(ex, linearConstraints.irrelevantGuard);
+    for (Rel rel : irrelevantGuard) {
+        makeConstraint(rel, linearConstraints.irrelevantGuard);
     }
 
-    for (Expression ex : guard) {
-        makeConstraint(ex, linearConstraints.guard);
+    for (Rel rel : guard) {
+        makeConstraint(rel, linearConstraints.guard);
 
         // all of the guardUpdate constraints need to include the guard
         for (GuardList &vec : linearConstraints.guardUpdate) {
-            makeConstraint(ex, vec);
+            makeConstraint(rel, vec);
         }
     }
 
@@ -173,7 +172,7 @@ void MeteringFinder::buildLinearConstraints() {
 
 BoolExpr MeteringFinder::genNotGuardImplication() const {
     BoolExpr res;
-    vector<Expression> lhs;
+    vector<Rel> lhs;
 
     // We can add the irrelevant guard to the lhs ("conditional metering function")
     if (Config::ForwardAccel::ConditionalMetering) {
@@ -181,8 +180,8 @@ BoolExpr MeteringFinder::genNotGuardImplication() const {
     }
 
     // split into one implication for every guard constraint, apply Farkas for each implication
-    for (const Expression &g : linearConstraints.reducedGuard) {
-        lhs.push_back(Relation::negateLessEqInequality(g));
+    for (const Rel &rel : linearConstraints.reducedGuard) {
+        lhs.push_back(rel.negateLessEqInequality());
         res = res & FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan);
         lhs.pop_back();
     }
@@ -240,7 +239,7 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
 BoolExpr MeteringFinder::genNonTrivial() const {
     BoolExpr res;
     for (const ExprSymbol &c : meterVars.coeffs) {
-        res = res | (c != 0);
+        res = res | Rel(c, Rel::neq, 0);
     }
     return res;
 }
@@ -301,8 +300,8 @@ option<VariablePair> MeteringFinder::findConflictVars() const {
             if (rhsVars.size() != 1 || rhsVars.count(lhsVar) == 0) continue;
 
             // and there must be a guard term limiting the execution of this counting
-            for (const Expression &ex : reducedGuard) {
-                if (ex.has(lhsVar)) {
+            for (const Rel &rel : reducedGuard) {
+                if (rel.has(lhsVar)) {
                     conflictingVars.insert(it.first);
                     break;
                 }
@@ -415,7 +414,7 @@ bool MeteringFinder::strengthenGuard(VarMan &varMan, Rule &rule) {
 
 option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule) {
     // Quick check whether there are any bounds on temp vars we can use to instantiate them.
-    auto hasTempVar = [&](const Expression &ex) { return GuardToolbox::containsTempVar(its, ex); };
+    auto hasTempVar = [&](const Rel &rel) { return GuardToolbox::containsTempVar(its, rel); };
     if (std::none_of(rule.getGuard().begin(), rule.getGuard().end(), hasTempVar)) {
         return {};
     }
@@ -445,7 +444,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
 
         //apply current substitution (and forget the previous one)
         meter.guard = oldGuard; // copy
-        for (Expression &ex : meter.guard) ex.applySubs(sub);
+        for (Rel &rel : meter.guard) rel.applySubs(sub);
 
         meter.updates = oldUpdates; // copy
         MT::applySubsToUpdates(sub, meter.updates);

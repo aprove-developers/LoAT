@@ -66,10 +66,10 @@ namespace strengthening {
                 if (rhs.getLoc() == rule.getLhsLoc()) {
                     const ExprMap &up = rhs.getUpdate().toSubstitution(its);
                     GuardList pre;
-                    for (Expression g: pred.getGuard()) {
-                        g.applySubs(up);
-                        g.applySubs(tmpVarRenaming);
-                        pre.push_back(g);
+                    for (Rel rel: pred.getGuard()) {
+                        rel.applySubs(up);
+                        rel.applySubs(tmpVarRenaming);
+                        pre.push_back(rel);
                     }
                     for (const auto &p: rhs.getUpdate()) {
                         const ExprSymbol &var = its.getVarSymbol(p.first);

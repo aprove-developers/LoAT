@@ -34,9 +34,9 @@ namespace sexpressionparser {
 
         void parseCond(sexpresso::Sexp &sexp, GuardList &guard);
 
-        GiNaC::ex parseConstraint(sexpresso::Sexp &sexp, bool negate);
+        Rel parseConstraint(sexpresso::Sexp &sexp, bool negate);
 
-        GiNaC::ex parseExpression(sexpresso::Sexp &sexp);
+        Expression parseExpression(sexpresso::Sexp &sexp);
 
         std::vector<std::string> preVars;
         std::vector<std::string> postVars;
