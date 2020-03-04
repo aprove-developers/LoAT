@@ -1,5 +1,4 @@
 #include "vareliminator.hpp"
-#include "../util/ginacutils.hpp"
 
 VarEliminator::VarEliminator(const GuardList &guard, const ExprSymbol &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
@@ -55,7 +54,7 @@ const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency
         std::set<std::pair<ExprMap, GuardList>> res;
         for (const Expression &bound: be.getConstantBounds()) {
             ExprMap newSubs(*it, bound);
-            res.insert({util::GiNaCUtils::compose(subs, newSubs), guard.subs(newSubs)});
+            res.insert({subs.compose(newSubs), guard.subs(newSubs)});
         }
         if (!res.empty()) {
             return res;
@@ -85,10 +84,10 @@ void VarEliminator::eliminate() {
         const GuardList &guard = p.second;
         BoundExtractor be(guard, N);
         if (be.getEq()) {
-            res.insert(util::GiNaCUtils::compose(subs, ExprMap(N, be.getEq().get())));
+            res.insert(subs.compose(ExprMap(N, be.getEq().get())));
         } else {
             for (const Expression &b: be.getUpper()) {
-                res.insert(util::GiNaCUtils::compose(subs, ExprMap(N, b)));
+                res.insert(subs.compose(ExprMap(N, b)));
             }
         }
     }

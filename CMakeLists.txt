@@ -126,8 +126,6 @@ add_executable(${EXECUTABLE}
         src/strengthening/guardcontextbuilder.hpp
         src/util/relevantvariables.cpp
         src/util/relevantvariables.hpp
-        src/util/ginacutils.cpp
-        src/util/ginacutils.hpp
         src/sexpresso/sexpresso.cpp
         src/sexpresso/sexpresso.hpp
         src/its/sexpressionparser/parser.cpp

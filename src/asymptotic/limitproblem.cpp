@@ -5,8 +5,6 @@
 
 #include "../smt/smt.hpp"
 
-using namespace GiNaC;
-
 LimitProblem::LimitProblem(VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
 }

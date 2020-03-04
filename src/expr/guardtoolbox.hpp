@@ -141,12 +141,6 @@ namespace GuardToolbox {
      */
     bool mapsToInt(const Expression &e);
 
-
-    /**
-     * Compose two substitutions, i.e. compute f ∘ g ("f after g")
-     */
-    ExprMap composeSubs(const ExprMap &f, const ExprMap &g);
-
 }
 
 

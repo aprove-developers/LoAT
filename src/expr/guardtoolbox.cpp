@@ -124,7 +124,7 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
 
                 //extend the substitution, use compose in case var occurs on some rhs of varSubs
                 varSubs.put(var, solved);
-                varSubs = composeSubs(varSubs, varSubs);
+                varSubs = varSubs.compose(varSubs);
                 goto next;
             }
         }
@@ -291,21 +291,4 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
             return true;
         }
     }
-}
-
-
-ExprMap GuardToolbox::composeSubs(const ExprMap &f, const ExprMap &g) {
-    ExprMap substitution;
-
-    for (auto const &pair : g) {
-        substitution.put(pair.first, pair.second.subs(f));
-    }
-
-    for (auto const &pair : f) {
-        if (!substitution.contains(pair.first)) {
-            substitution.put(pair.first, pair.second);
-        }
-    }
-
-    return substitution;
 }

@@ -489,6 +489,10 @@ Expression operator^(const Expression &x, const Expression &y) {
     return GiNaC::pow(x.ex, y.ex);
 }
 
+Expression Expression::wildcard(uint label) {
+    return GiNaC::wild(label);
+}
+
 
 Rel::Rel(const Expression &lhs, Operator op, const Expression &rhs): l(lhs), r(rhs), op(op) { }
 
@@ -887,6 +891,19 @@ bool ExprMap::contains(const Expression &e) const {
 
 bool ExprMap::empty() const {
     return map.empty();
+}
+
+ExprMap ExprMap::compose(const ExprMap &that) const {
+    ExprMap res;
+    for (const auto &p: *this) {
+        res.put(p.first, p.second.subs(that));
+    }
+    for (const auto &p: that) {
+        if (!res.contains(p.first)) {
+            res.put(p.first, p.second);
+        }
+    }
+    return res;
 }
 
 bool operator<(const ExprMap &x, const ExprMap &y) {

@@ -214,17 +214,17 @@ ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     for (int index : limitProblem.getSubstitutions()) {
         const ExprMap &sub = substitutions[index];
 
-        solution = GuardToolbox::composeSubs(sub, solution);
+        solution = sub.compose(solution);
     }
 
-    solution = GuardToolbox::composeSubs(limitProblem.getSolution(), solution);
+    solution = limitProblem.getSolution().compose(solution);
 
     GuardList guardCopy = guard;
     guardCopy.push_back(cost > 0);
     for (const Rel &rel : guardCopy) {
         for (const ExprSymbol &var : rel.getVariables()) {
             if (!solution.contains(var)) {
-                solution = GuardToolbox::composeSubs(ExprMap(var, 0), solution);
+                solution = ExprMap(var, 0).compose(solution);
             }
         }
     }
@@ -278,7 +278,7 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
         std::vector<Expression> nonPolynomial;
         Expression expanded = solvedCost.expand();
 
-        Expression powerPattern = pow(GiNaC::wild(1), GiNaC::wild(2));
+        Expression powerPattern = Expression::wildcard(1) ^ Expression::wildcard(2);
         ExpressionSet powers;
         assert(expanded.findAll(powerPattern, powers));
 

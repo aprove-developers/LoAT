@@ -1,9 +1,6 @@
 #include "limitvector.hpp"
 
 #include <cassert>
-#include <ginac/ginac.h>
-
-using namespace GiNaC;
 
 const std::vector<LimitVector> LimitVector::Addition = {
     // increasing limit vectors

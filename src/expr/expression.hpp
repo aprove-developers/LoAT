@@ -254,6 +254,8 @@ public:
     bool match(const Expression &pattern) const;
     bool isPolynomial(const ExprSymbol &n) const;
 
+    static Expression wildcard(uint label);
+
     friend Expression operator-(const Expression &x);
     friend Expression operator-(const Expression &x, const Expression &y);
     friend Expression operator+(const Expression &x, const Expression &y);
@@ -368,6 +370,7 @@ public:
     std::map<Expression, Expression, Expression_is_less>::const_iterator find(const Expression &e) const;
     bool contains(const Expression &e) const;
     bool empty() const;
+    ExprMap compose(const ExprMap &that) const;
 
     friend bool operator<(const ExprMap &x, const ExprMap &y);
 

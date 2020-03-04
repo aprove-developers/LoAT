@@ -71,7 +71,7 @@ VariableIdx VariableManager::addVariable(string name) {
     VariableIdx idx = variables.size();
 
     //convert to ginac
-    auto sym = GiNaC::symbol(name);
+    auto sym = ExprSymbol(name);
 
     // remember variable
     variables.push_back({name, sym});

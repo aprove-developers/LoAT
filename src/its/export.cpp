@@ -158,7 +158,6 @@ void ITSExport::printForProof(const ITSProblem &its, std::ostream &s) {
 
 
 void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
-    using namespace GiNaC;
     auto printNode = [&](LocationIdx n) {
         auto optName = its.getLocationName(n);
         if (optName) {
@@ -264,7 +263,7 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             //create copy of vars ("pre vars") to simulate parallel assignments
             ExprMap t2subs;
             for (const ExprSymbol &sym : vars) {
-                t2subs.put(sym, GiNaC::symbol("pre_v" + sym.get_name()));
+                t2subs.put(sym, ExprSymbol("pre_v" + sym.get_name()));
                 if (its.isTempVar(its.getVarIdx(sym))) {
                     s << t2subs.get(sym) << " := nondet();" << endl;
                 } else {
