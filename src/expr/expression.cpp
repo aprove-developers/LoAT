@@ -58,7 +58,7 @@ Expression Expression::fromString(const string &s, const GiNaC::lst &variables) 
         return s.find_first_of("<>=") != string::npos;
     };
     assert(!containsRelations(s));
-    return Expression(GiNaC::ex(s,variables));
+    return GiNaC::ex(s,variables);
 }
 
 void Expression::applySubs(const ExprMap &subs) {
@@ -74,7 +74,7 @@ bool Expression::findAll(const Expression &pattern, ExpressionSet &found) const 
     }
 
     for (size_t i = 0; i < nops(); i++) {
-        if (Expression(op(i)).findAll(pattern, found)) {
+        if (op(i).findAll(pattern, found)) {
             anyFound = true;
         }
     }
@@ -111,7 +111,7 @@ bool Expression::isLinear(const option<ExprSymbolSet> &vars) const {
         }
 
         if (deg == 1) {
-            ExprSymbolSet coefficientVars = Expression(expanded.coeff(var,deg)).getVariables();
+            ExprSymbolSet coefficientVars = expanded.coeff(var,deg).getVariables();
             for (const ExprSymbol &e: coefficientVars) {
                 if (theVars.find(e) != theVars.end()) {
                     return false;

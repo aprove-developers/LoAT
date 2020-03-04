@@ -25,11 +25,11 @@ const BoolExpr BoolLit::negation() const {
 }
 
 bool BoolLit::isLinear() const {
-    return Expression(lit.lhs()).isLinear() && Expression(lit.rhs()).isLinear();
+    return lit.isLinear();
 }
 
 bool BoolLit::isPolynomial() const {
-    return Expression(lit.lhs()).isPolynomial() && Expression(lit.rhs()).isPolynomial();
+    return lit.isPolynomial();
 }
 
 BoolLit::~BoolLit() {}

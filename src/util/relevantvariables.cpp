@@ -44,7 +44,7 @@ namespace util {
                 for (const ExprMap &up: updates) {
                     auto it = up.find(x);
                     if (it != up.end()) {
-                        const ExprSymbolSet &rhsVars = Expression(it->second).getVariables();
+                        const ExprSymbolSet &rhsVars = it->second.getVariables();
                         next.insert(rhsVars.begin(), rhsVars.end());
                     }
                 }

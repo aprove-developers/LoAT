@@ -42,7 +42,7 @@ Rule::Rule(RuleLhs lhs, RuleRhs rhs)
 }
 
 LinearRule Rule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
-    return LinearRule(lhsLoc, {}, Expression(0), rhsLoc, {});
+    return LinearRule(lhsLoc, {}, 0, rhsLoc, {});
 }
 
 bool Rule::isDummyRule() const {

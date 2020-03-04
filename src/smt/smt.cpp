@@ -75,7 +75,7 @@ bool Smt::isLinear(const UpdateMap &up) {
 
 bool Smt::isLinear(const ExprMap &up) {
     for (const auto &p: up) {
-        if (!Expression(p.second).isLinear()) {
+        if (!p.second.isLinear()) {
             return false;
         }
     }
@@ -129,7 +129,7 @@ bool Smt::isPolynomial(const UpdateMap &up) {
 
 bool Smt::isPolynomial(const ExprMap &up) {
     for (const auto &p: up) {
-        if (!Expression(p.second).isPolynomial()) {
+        if (!p.second.isPolynomial()) {
             return false;
         }
     }

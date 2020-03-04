@@ -71,7 +71,7 @@ BoolExpr FarkasLemma::apply(
 
     // Build the constraints "lambda^T * A = c^T"
     for (auto varIt : varToCoeff) {
-        Expression lambdaA = Expression(0);
+        Expression lambdaA = 0;
         for (unsigned int j=0; j < constraints.size(); ++j) {
             Expression a = constraints[j].lhs().expand().coeff(varIt.first);
             Expression add = lambda[j] * a;
@@ -138,9 +138,9 @@ const BoolExpr FarkasLemma::apply(
         Rel normalized = c.toLessEq().splitVariablesAndConstants(params);
         vector<Expression> coefficients;
         for (ExprSymbol &x : varList) {
-            coefficients.push_back(Expression(normalized.lhs().coeff(x, 1)));
+            coefficients.push_back(normalized.lhs().coeff(x, 1));
         }
-        Expression c0 = -Expression(normalized.rhs());
+        Expression c0 = -normalized.rhs();
         res = res & FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, varMan, params, lambdaType);
     }
     return res;

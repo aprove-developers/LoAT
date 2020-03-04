@@ -32,7 +32,7 @@ class RuleLhs {
     Expression cost;
 
 public:
-    RuleLhs(LocationIdx loc, GuardList guard) : RuleLhs(loc, guard, Expression(1)) {}
+    RuleLhs(LocationIdx loc, GuardList guard) : RuleLhs(loc, guard, 1) {}
     RuleLhs(LocationIdx loc, GuardList guard, Expression cost) : loc(loc), guard(guard), cost(cost) {}
 
     LocationIdx getLoc() const { return loc; }

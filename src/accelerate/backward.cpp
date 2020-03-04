@@ -88,7 +88,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
                 } else {
                     UpdateMap up;
                     for (auto p: ap->closed) {
-                        up[its.getVarIdx(Expression(p.first).getAVariable())] = p.second;
+                        up[its.getVarIdx(p.first.getAVariable())] = p.second;
                     }
                     LinearRule accel(rule.getLhsLoc(), ap->res, ap->cost, rule.getRhsLoc(), up);
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);

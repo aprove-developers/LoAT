@@ -228,7 +228,7 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
         }
 
         // the absolute coefficient also cancels out, so we set it to 0
-        Expression zeroAbsCoeff = Expression(0);
+        Expression zeroAbsCoeff = 0;
         res = res & FarkasLemma::apply(linearConstraints.guardUpdate[updateIdx], vars, coeffs, zeroAbsCoeff, 1, varMan);
     }
 

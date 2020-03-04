@@ -413,7 +413,7 @@ void ITSParser::convertRules() {
 void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert lhs to Ginac expressions
     LocationIdx lhsLoc = getLocationData(rule.lhs).index;
-    Expression cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : Expression(1);
+    Expression cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : 1;
     RuleLhs lhs(lhsLoc, {}, cost);
 
     if (!cost.isPolynomial()) {
