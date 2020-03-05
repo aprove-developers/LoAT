@@ -24,6 +24,7 @@ Smt::Result Cvc4::check() {
     case CVC4::Result::UNSAT: return Smt::Unsat;
     case CVC4::Result::SAT_UNKNOWN: return Smt::Unknown;
     }
+    assert(false && "unknown result");
 }
 
 GiNaC::numeric Cvc4::getRealFromModel(const CVC4::Expr &symbol) {

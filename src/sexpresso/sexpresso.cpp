@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <sstream>
 #include <array>
+#include <assert.h>
 
 namespace sexpresso {
     Sexp::Sexp() {
@@ -61,6 +62,7 @@ namespace sexpresso {
             case SexpValueKind::STRING:
                 return 1;
         }
+        assert(false && "unknown SexpValueKind");
     }
 
     static auto splitPathString(std::string const& path) -> std::vector<std::string> {
@@ -125,10 +127,12 @@ namespace sexpresso {
                         case SexpValueKind::STRING:
                             return hd.str() == name;
                     }
+                    break;
                 }
                 case SexpValueKind::STRING:
                     return s.str() == name;
             }
+            assert(false && "unknown SexpValueKind");
         };
         auto loc = std::find_if(sexp.value.sexp.begin(), sexp.value.sexp.end(), findPred);
         if(loc == sexp.value.sexp.end()) return nullptr;
@@ -255,6 +259,7 @@ namespace sexpresso {
             case SexpValueKind::STRING:
                 return this->value.str == other.value.str;
         }
+        assert(false && "unknown SexpValueKind");
     }
 
     auto Sexp::arguments() -> SexpArgumentIterator {

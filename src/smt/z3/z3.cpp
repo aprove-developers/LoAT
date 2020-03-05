@@ -29,6 +29,7 @@ Smt::Result Z3::check() {
     case z3::unsat: return Unsat;
     case z3::unknown: return Unknown;
     }
+    assert(false && "unknown result");
 }
 
 ExprSymbolMap<GiNaC::numeric> Z3::model() {
