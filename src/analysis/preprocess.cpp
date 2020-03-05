@@ -20,7 +20,6 @@
 #include "../expr/guardtoolbox.hpp"
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
-#include "../util/timeout.hpp"
 
 using namespace std;
 

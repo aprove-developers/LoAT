@@ -18,7 +18,6 @@
 #include "../util/option.hpp"
 #include "constraintsolver.hpp"
 #include "../its/variablemanager.hpp"
-#include "../util/timeout.hpp"
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
 #include "../config.hpp"

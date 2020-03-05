@@ -21,8 +21,6 @@
 #include "meter/metering.hpp"
 #include "../smt/smt.hpp"
 
-#include "../util/timeout.hpp"
-
 
 using namespace std;
 using ForwardAcceleration::Result;

@@ -1,4 +1,3 @@
-#include <ginac/ex.h>
 #include "../its/types.hpp"
 #include "../its/rule.hpp"
 #include "../util/option.hpp"
@@ -8,7 +7,6 @@
 #include "../smt/smtfactory.hpp"
 #include "../analysis/preprocess.hpp"
 #include "../util/proofoutput.hpp"
-#include "../util/timeout.hpp"
 
 struct AccelerationProblem {
     GuardList res;

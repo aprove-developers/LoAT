@@ -17,7 +17,6 @@
 
 #include "prune.hpp"
 
-#include "../util/timeout.hpp"
 #include "../config.hpp"
 #include "../its/itsproblem.hpp"
 #include "../expr/boolexpr.hpp"

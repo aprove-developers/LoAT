@@ -4,7 +4,6 @@
 #include "../smt/smtfactory.hpp"
 #include "inftyexpression.hpp"
 #include "../config.hpp"
-#include "../util/timeout.hpp"
 
 using namespace std;
 

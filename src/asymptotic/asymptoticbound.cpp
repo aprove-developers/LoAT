@@ -5,7 +5,6 @@
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
-#include "../util/timeout.hpp"
 
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"

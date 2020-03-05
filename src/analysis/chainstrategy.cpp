@@ -20,7 +20,6 @@
 #include "chain.hpp"
 #include "preprocess.hpp"
 #include "../util/proofoutput.hpp"
-#include "../util/timeout.hpp"
 
 
 using namespace std;

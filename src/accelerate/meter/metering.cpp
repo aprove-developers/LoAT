@@ -26,7 +26,6 @@
 #include "../../smt/smt.hpp"
 #include "../../smt/smtfactory.hpp"
 #include "../../expr/boolexpr.hpp"
-#include "../../util/timeout.hpp"
 #include "../../util/proofoutput.hpp"
 
 #include <boost/integer/common_factor.hpp> // for lcm

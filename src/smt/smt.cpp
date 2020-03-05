@@ -1,5 +1,4 @@
 #include "smt.hpp"
-#include "../util/timeout.hpp"
 #include "smtfactory.hpp"
 
 Smt::~Smt() {}
