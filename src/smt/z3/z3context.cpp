@@ -1,5 +1,3 @@
-#ifdef HAS_Z3
-
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -88,5 +86,3 @@ z3::expr Z3Context::bTrue() {
 z3::expr Z3Context::bFalse() {
     return ctx.bool_val(false);
 }
-
-#endif

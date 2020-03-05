@@ -1,11 +1,9 @@
 #include "smtfactory.hpp"
 #include "../config.hpp"
+#include "z3/z3.hpp"
 
 #ifdef HAS_CVC4
 #include "cvc4/cvc4.hpp"
-#endif
-#ifdef HAS_Z3
-#include "z3/z3.hpp"
 #endif
 #ifdef HAS_YICES
 #include "yices/yices.hpp"
@@ -16,30 +14,16 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
     switch (logic) {
     case Smt::LA:
 #if HAS_YICES
-            res = std::unique_ptr<Smt>(new Yices(varMan, logic));
-#elif HAS_Z3
-            res = std::unique_ptr<Smt>(new Z3(varMan));
+        res = std::unique_ptr<Smt>(new Yices(varMan, logic));
 #else
-            res = std::unique_ptr<Smt>(new Cvc4(varMan));
+        res = std::unique_ptr<Smt>(new Z3(varMan));
 #endif
         break;
     case Smt::NA:
-#if HAS_Z3
-            res = std::unique_ptr<Smt>(new Z3(varMan));
-#elif HAS_CVC4
-            res = std::unique_ptr<Smt>(new Cvc4(varMan));
-#else
-            res = std::unique_ptr<Smt>(new Yices(varMan, logic));
-#endif
+        res = std::unique_ptr<Smt>(new Z3(varMan));
         break;
     case Smt::ENA:
-#if HAS_Z3
         res = std::unique_ptr<Smt>(new Z3(varMan));
-#elif HAS_YICES
-        res = std::unique_ptr<Smt>(new Yices(varMan));
-#else
-        res = std::unique_ptr<Smt>(new Cvc4(varMan));
-#endif
     }
     res->setTimeout(timeout);
     return res;

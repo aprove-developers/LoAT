@@ -1,5 +1,3 @@
-#ifdef HAS_Z3
-
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -65,5 +63,3 @@ private:
 };
 
 #endif // Z3CONTEXT_H
-
-#endif

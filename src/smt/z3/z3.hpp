@@ -1,5 +1,3 @@
-#ifdef HAS_Z3
-
 #ifndef Z3_HPP
 #define Z3_HPP
 
@@ -38,5 +36,3 @@ private:
 };
 
 #endif // Z3_HPP
-
-#endif

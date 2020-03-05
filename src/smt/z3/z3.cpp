@@ -1,5 +1,3 @@
-#ifdef HAS_Z3
-
 #include "z3.hpp"
 #include "../ginactosmt.hpp"
 
@@ -75,5 +73,3 @@ void Z3::resetSolver() {
     solver.reset();
     updateParams();
 }
-
-#endif
