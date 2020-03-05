@@ -77,7 +77,7 @@ namespace strengthening {
     const GuardList ConstraintBuilder::findRelevantConstraints() const {
         GuardList relevantConstraints;
         for (const Rel &rel: guardCtx.guard) {
-            for (const ExprSymbol &var: templates.vars()) {
+            for (const Var &var: templates.vars()) {
                 if (rel.getVariables().count(var) > 0) {
                     relevantConstraints.push_back(rel);
                     break;
@@ -114,7 +114,7 @@ namespace strengthening {
             for (const Rel &t: templates) {
                 res.valid = res.valid & constructImplicationConstraints(pre, t);
             }
-            ExprSymbolSet allVars;
+            VarSet allVars;
             pre.collectVariables(allVars);
             for (const Rel &rel: relevantConstraints) {
                 rel.collectVariables(allVars);
@@ -124,7 +124,7 @@ namespace strengthening {
             }
             // TODO Why is this variable renaming needed?
             ExprMap varRenaming;
-            for (const ExprSymbol &x: allVars) {
+            for (const Var &x: allVars) {
                 varRenaming.put(x, ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name())));
             }
             std::vector<Rel> renamed;
@@ -155,7 +155,7 @@ namespace strengthening {
                 templates.vars(),
                 templates.params(),
                 ruleCtx.varMan,
-                Expression::Int);
+                Expr::Int);
     }
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(
@@ -167,7 +167,7 @@ namespace strengthening {
                 templates.vars(),
                 templates.params(),
                 ruleCtx.varMan,
-                Expression::Int);
+                Expr::Int);
     }
 
 }

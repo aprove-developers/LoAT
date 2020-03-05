@@ -99,7 +99,7 @@ bool LimitVector::isApplicable(Direction dir) const {
 }
 
 
-bool LimitVector::makesSense(Expression l, Expression r) const {
+bool LimitVector::makesSense(Expr l, Expr r) const {
     InftyExpression inftyL(l, first);
     if (inftyL.isTriviallyUnsatisfiable()) {
         return false;
@@ -110,21 +110,21 @@ bool LimitVector::makesSense(Expression l, Expression r) const {
         return false;
     }
 
-    if (l.is_equal(r) && first != second) {
+    if (l.equals(r) && first != second) {
         return false;
     }
 
     if ((first == NEG_CONS || first == NEG_INF)
-        && l.isPower()
-        && l.op(1).isNumeric()
-        && l.op(1).toNumeric().is_even()) {
+        && l.isPow()
+        && l.op(1).isRationalConstant()
+        && l.op(1).toNum().is_even()) {
         return false;
     }
 
     if ((second == NEG_CONS || second == NEG_INF)
-        && r.isPower()
-        && r.op(1).isNumeric()
-        && r.op(1).toNumeric().is_even()) {
+        && r.isPow()
+        && r.op(1).isRationalConstant()
+        && r.op(1).toNum().is_even()) {
         return false;
     }
 

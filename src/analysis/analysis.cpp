@@ -392,7 +392,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, ProofOutput &proof) c
 
 
 void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
-    auto isTempVar = [&](const ExprSymbol &var){ return its.isTempVar(var); };
+    auto isTempVar = [&](const Var &var){ return its.isTempVar(var); };
 
     // Only search for runtimes that improve upon the current runtime
     vector<TransIdx> todo(rules.begin(), rules.end());
@@ -406,21 +406,21 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
     auto comp = [this, isTempVar](const TransIdx &fst, const TransIdx &snd) {
         Rule fstRule = its.getRule(fst);
         Rule sndRule = its.getRule(snd);
-        Expression fstCpxExp = fstRule.getCost().expand();
-        Expression sndCpxExp = sndRule.getCost().expand();
-        if (!fstCpxExp.is_equal(sndCpxExp)) {
+        Expr fstCpxExp = fstRule.getCost().expand();
+        Expr sndCpxExp = sndRule.getCost().expand();
+        if (!fstCpxExp.equals(sndCpxExp)) {
             if (fstCpxExp.isNontermSymbol()) return true;
             if (sndCpxExp.isNontermSymbol()) return false;
-            bool fstIsNonPoly = !fstCpxExp.isPolynomial();
-            bool sndIsNonPoly = !sndCpxExp.isPolynomial();
+            bool fstIsNonPoly = !fstCpxExp.isPoly();
+            bool sndIsNonPoly = !sndCpxExp.isPoly();
             if (fstIsNonPoly > sndIsNonPoly) return true;
             if (fstIsNonPoly < sndIsNonPoly) return false;
-            bool fstHasTmpVar = fstCpxExp.hasVariableWith(isTempVar);
-            bool sndHasTmpVar = sndCpxExp.hasVariableWith(isTempVar);
+            bool fstHasTmpVar = fstCpxExp.hasVarWith(isTempVar);
+            bool sndHasTmpVar = sndCpxExp.hasVarWith(isTempVar);
             if (fstHasTmpVar > sndHasTmpVar) return true;
             if (fstHasTmpVar < sndHasTmpVar) return false;
-            Complexity fstCpx = fstCpxExp.getComplexity();
-            Complexity sndCpx = sndCpxExp.getComplexity();
+            Complexity fstCpx = fstCpxExp.toComplexity();
+            Complexity sndCpx = sndCpxExp.toComplexity();
             if (fstCpx > sndCpx) return true;
             if (fstCpx < sndCpx) return false;
         }
@@ -437,10 +437,10 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
         // We have to be careful with temp variables, since they can lead to unbounded cost.
-        const Expression &cost = rule.getCost();
-        bool hasTempVar = !cost.isNontermSymbol() && cost.hasVariableWith(isTempVar);
+        const Expr &cost = rule.getCost();
+        bool hasTempVar = !cost.isNontermSymbol() && cost.hasVarWith(isTempVar);
 
-        if (cost.getComplexity() <= max(res.getCpx(), Complexity::Const) && !hasTempVar) {
+        if (cost.toComplexity() <= max(res.getCpx(), Complexity::Const) && !hasTempVar) {
             continue;
         }
 
@@ -459,10 +459,10 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         option<AsymptoticBound::Result> checkRes;
-        bool isPolynomial = rule.getCost().isPolynomial() && !rule.getCost().isNontermSymbol();
+        bool isPolynomial = rule.getCost().isPoly() && !rule.getCost().isNontermSymbol();
         if (isPolynomial) {
             for (const Rel &rel: rule.getGuard()) {
-                if (!rel.isPolynomial()) {
+                if (!rel.isPoly()) {
                     isPolynomial = false;
                     break;
                 }
@@ -527,7 +527,7 @@ static bool removeConstantPathsImpl(ITSProblem &its, LocationIdx curr, set<Locat
         // In this case, all constant rules leading to next are not interesting and can be removed.
         if (removeConstantPathsImpl(its, next, visited)) {
             for (TransIdx rule : its.getTransitionsFromTo(curr, next)) {
-                if (its.getRule(rule).getCost().getComplexity() <= Complexity::Const) {
+                if (its.getRule(rule).getCost().toComplexity() <= Complexity::Const) {
                     its.removeRule(rule);
                 }
             }

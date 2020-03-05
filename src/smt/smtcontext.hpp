@@ -44,7 +44,7 @@ public:
     virtual EXPR bTrue() = 0;
     virtual EXPR bFalse() = 0;
 
-    option<EXPR> getVariable(const ExprSymbol &symbol) const {
+    option<EXPR> getVariable(const Var &symbol) const {
         auto it = symbolMap.find(symbol);
         if (it != symbolMap.end()) {
             return it->second;
@@ -52,14 +52,14 @@ public:
         return {};
     }
 
-    EXPR addNewVariable(const ExprSymbol &symbol, Expression::Type type = Expression::Int) {
+    EXPR addNewVariable(const Var &symbol, Expr::Type type = Expr::Int) {
         assert(symbolMap.count(symbol) == 0);
         EXPR res = generateFreshVar(symbol.get_name(), type);
         symbolMap.emplace(symbol, res);
         return res;
     }
 
-    ExprSymbolMap<EXPR> getSymbolMap() const {
+    VarMap<EXPR> getSymbolMap() const {
         return symbolMap;
     }
 
@@ -67,7 +67,7 @@ public:
 
 protected:
 
-    EXPR generateFreshVar(const std::string &basename, Expression::Type type) {
+    EXPR generateFreshVar(const std::string &basename, Expr::Type type) {
         std::string newname = basename;
 
         while (usedNames.find(newname) != usedNames.end()) {
@@ -79,10 +79,10 @@ protected:
         return buildVar(newname, type);
     }
 
-    virtual EXPR buildVar(const std::string &basename, Expression::Type type) = 0;
+    virtual EXPR buildVar(const std::string &basename, Expr::Type type) = 0;
 
 protected:
-    ExprSymbolMap<EXPR> symbolMap;
+    VarMap<EXPR> symbolMap;
     std::map<std::string,int> usedNames;
 };
 

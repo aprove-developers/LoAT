@@ -11,7 +11,7 @@ class VarEliminator
 {
 public:
 
-    VarEliminator(const GuardList &guard, const ExprSymbol &N, VariableManager &varMan);
+    VarEliminator(const GuardList &guard, const Var &N, VariableManager &varMan);
 
     const std::set<ExprMap> getRes() const;
 
@@ -42,7 +42,7 @@ private:
 
     VariableManager &varMan;
 
-    ExprSymbol N;
+    Var N;
 
     /**
      * Each entry represents one branch in the search for suitable instantiations of dependencies.
@@ -61,7 +61,7 @@ private:
      */
     std::set<ExprMap> res;
 
-    ExprSymbolSet dependencies;
+    VarSet dependencies;
 
 };
 

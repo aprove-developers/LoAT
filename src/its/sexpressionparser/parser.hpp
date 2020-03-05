@@ -36,7 +36,7 @@ namespace sexpressionparser {
 
         Rel parseConstraint(sexpresso::Sexp &sexp, bool negate);
 
-        Expression parseExpression(sexpresso::Sexp &sexp);
+        Expr parseExpression(sexpresso::Sexp &sexp);
 
         std::vector<std::string> preVars;
         std::vector<std::string> postVars;

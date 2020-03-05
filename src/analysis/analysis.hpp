@@ -37,10 +37,10 @@ private:
     Complexity cpx;
 
     // The final cost expression, after solving by asymptotic check
-    Expression solvedCost;
+    Expr solvedCost;
 
     // The final cost, before solving
-    Expression cost;
+    Expr cost;
 
     // The final guard
     GuardList guard;
@@ -53,7 +53,7 @@ public:
     // Default constructor yields unknown complexity
     RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0) {}
 
-    void update(const GuardList &guard, const Expression &cost, const Expression &solvedCost, const Complexity &cpx) {
+    void update(const GuardList &guard, const Expr &cost, const Expr &solvedCost, const Complexity &cpx) {
         try_lock();
         this->guard = guard;
         this->cost = cost;

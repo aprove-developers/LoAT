@@ -25,13 +25,13 @@ using namespace std;
 
 BoolExpr FarkasLemma::apply(
         const vector<Rel> &constraints,
-        const vector<ExprSymbol> &vars,
-        const vector<Expression> &coeffs,
-        Expression c0,
+        const vector<Var> &vars,
+        const vector<Expr> &coeffs,
+        Expr c0,
         int delta,
         VariableManager &varMan,
-        const ExprSymbolSet &params,
-        Expression::Type lambdaType)
+        const VarSet &params,
+        Expr::Type lambdaType)
 {
     assert(vars.size() == coeffs.size());
 
@@ -39,19 +39,19 @@ BoolExpr FarkasLemma::apply(
     BoolExpr res = True;
 
     // Create lambda variables, add the constraint "lambda >= 0"
-    vector<ExprSymbol> lambda;
-    ExprSymbolSet varSet(vars.begin(), vars.end());
+    vector<Var> lambda;
+    VarSet varSet(vars.begin(), vars.end());
     for (const Rel &rel : constraints) {
         assert(rel.isLinear(varSet) && rel.isInequality());
         assert(rel.getOp() == Rel::leq);
 
-        ExprSymbol var = varMan.getFreshUntrackedSymbol("l", lambdaType);
+        Var var = varMan.getFreshUntrackedSymbol("l", lambdaType);
         lambda.push_back(var);
         res = res & (var >= 0);
     }
 
     // Create mapping from every variable to its coefficient
-    ExprSymbolMap<Expression> varToCoeff;
+    VarMap<Expr> varToCoeff;
     for (unsigned int i=0; i < vars.size(); ++i) {
         varToCoeff.emplace(vars[i], coeffs[i]);
     }
@@ -59,11 +59,11 @@ BoolExpr FarkasLemma::apply(
     // Search for additional variables that are not contained in vars, but appear in constraints.
     // This is neccessary, since these variables appear in the A*x part and thus also have to appear in the c*x part.
     // The coefficients of additional variables are simply set to 0 (so they won't occur in the metering function).
-    ExprSymbolSet constraintSymbols;
+    VarSet constraintSymbols;
     for (const Rel &rel : constraints) {
         rel.collectVariables(constraintSymbols);
     }
-    for (const ExprSymbol &sym : constraintSymbols) {
+    for (const Var &sym : constraintSymbols) {
         if (varToCoeff.find(sym) == varToCoeff.end() && std::find(params.begin(), params.end(), sym) == params.end()) {
             varToCoeff.emplace(sym, 0);
         }
@@ -71,17 +71,17 @@ BoolExpr FarkasLemma::apply(
 
     // Build the constraints "lambda^T * A = c^T"
     for (auto varIt : varToCoeff) {
-        Expression lambdaA = 0;
+        Expr lambdaA = 0;
         for (unsigned int j=0; j < constraints.size(); ++j) {
-            Expression a = constraints[j].lhs().expand().coeff(varIt.first);
-            Expression add = lambda[j] * a;
+            Expr a = constraints[j].lhs().expand().coeff(varIt.first);
+            Expr add = lambda[j] * a;
             lambdaA = (j==0) ? add : lambdaA + add; // avoid superflous +0
         }
         res = res & (lambdaA == varIt.second);
     }
 
     // Build the constraints "lambda^T * b + c0 <= delta"
-    Expression sum = c0;
+    Expr sum = c0;
     for (unsigned int i=0; i < constraints.size(); ++i) {
         sum = sum + lambda[i] * constraints[i].rhs();
     }
@@ -90,16 +90,16 @@ BoolExpr FarkasLemma::apply(
 
 BoolExpr FarkasLemma::apply(
         const vector<Rel> &constraints,
-        const vector<ExprSymbol> &vars,
-        const vector<ExprSymbol> &coeffs,
-        ExprSymbol c0,
+        const vector<Var> &vars,
+        const vector<Var> &coeffs,
+        Var c0,
         int delta,
         VariableManager &varMan,
-        const ExprSymbolSet &params,
-        Expression::Type lambdaType)
+        const VarSet &params,
+        Expr::Type lambdaType)
 {
-    std::vector<Expression> theCoeffs;
-    for (const ExprSymbol &x: coeffs) {
+    std::vector<Expr> theCoeffs;
+    for (const Var &x: coeffs) {
         theCoeffs.push_back(x);
     }
     return apply(constraints, vars, theCoeffs, c0, delta, varMan, params, lambdaType);
@@ -108,10 +108,10 @@ BoolExpr FarkasLemma::apply(
 const BoolExpr FarkasLemma::apply(
         const vector<Rel> &premise,
         const vector<Rel> &conclusion,
-        const ExprSymbolSet &vars,
-        const ExprSymbolSet &params,
+        const VarSet &vars,
+        const VarSet &params,
         VariableManager &varMan,
-        Expression::Type lambdaType) {
+        Expr::Type lambdaType) {
     BoolExpr res = True;
     std::vector<Rel> normalizedPremise;
     for (const Rel &p: premise) {
@@ -122,7 +122,7 @@ const BoolExpr FarkasLemma::apply(
             normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariablesAndConstants(params));
         }
     }
-    vector<ExprSymbol> varList(vars.begin(), vars.end());
+    vector<Var> varList(vars.begin(), vars.end());
     vector<Rel> splitConclusion;
     for (const Rel &c: conclusion) {
         if (c.isLinear(vars) && c.isInequality()) {
@@ -136,11 +136,11 @@ const BoolExpr FarkasLemma::apply(
     }
     for (const Rel &c: splitConclusion) {
         Rel normalized = c.toLessEq().splitVariablesAndConstants(params);
-        vector<Expression> coefficients;
-        for (ExprSymbol &x : varList) {
+        vector<Expr> coefficients;
+        for (Var &x : varList) {
             coefficients.push_back(normalized.lhs().coeff(x, 1));
         }
-        Expression c0 = -normalized.rhs();
+        Expr c0 = -normalized.rhs();
         res = res & FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, varMan, params, lambdaType);
     }
     return res;
@@ -149,10 +149,10 @@ const BoolExpr FarkasLemma::apply(
 const BoolExpr FarkasLemma::apply(
         const vector<Rel> &premise,
         const Rel &conclusion,
-        const ExprSymbolSet &vars,
-        const ExprSymbolSet &params,
+        const VarSet &vars,
+        const VarSet &params,
         VariableManager &varMan,
-        Expression::Type lambdaType) {
+        Expr::Type lambdaType) {
     const vector<Rel> &conclusions = {conclusion};
     return apply(premise, conclusions, vars, params, varMan, lambdaType);
 }

@@ -20,43 +20,43 @@
 
 namespace util {
 
-    const ExprSymbolSet RelevantVariables::find(
+    const VarSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<ExprMap> &updates,
             const GuardList &guard,
             const VariableManager &varMan) {
         std::set<VariableIdx> res;
         // Add all variables appearing in the guard
-        ExprSymbolSet guardVariables;
+        VarSet guardVariables;
         for (const Rel &rel: constraints) {
-            const ExprSymbolSet &relVars = rel.getVariables();
+            const VarSet &relVars = rel.getVariables();
             guardVariables.insert(relVars.begin(), relVars.end());
         }
-        for (const ExprSymbol &sym : guardVariables) {
+        for (const Var &sym : guardVariables) {
             res.insert(varMan.getVarIdx(sym));
         }
         // Compute the closure of res under all updates and the guard
         std::set<VariableIdx> todo = res;
         while (!todo.empty()) {
-            ExprSymbolSet next;
+            VarSet next;
             for (const VariableIdx &var : todo) {
-                const ExprSymbol &x = varMan.getVarSymbol(var);
+                const Var &x = varMan.getVarSymbol(var);
                 for (const ExprMap &up: updates) {
                     auto it = up.find(x);
                     if (it != up.end()) {
-                        const ExprSymbolSet &rhsVars = it->second.getVariables();
+                        const VarSet &rhsVars = it->second.vars();
                         next.insert(rhsVars.begin(), rhsVars.end());
                     }
                 }
                 for (const Rel &rel: guard) {
-                    const ExprSymbolSet &relVars = rel.getVariables();
+                    const VarSet &relVars = rel.getVariables();
                     if (relVars.find(varMan.getVarSymbol(var)) != relVars.end()) {
                         next.insert(relVars.begin(), relVars.end());
                     }
                 }
             }
             todo.clear();
-            for (const ExprSymbol &sym : next) {
+            for (const Var &sym : next) {
                 const VariableIdx &var = varMan.getVarIdx(sym);
                 if (res.count(var) == 0) {
                     todo.insert(var);
@@ -65,14 +65,14 @@ namespace util {
             // collect all variables from every iteration
             res.insert(todo.begin(), todo.end());
         }
-        ExprSymbolSet symbols;
+        VarSet symbols;
         for (const VariableIdx &x: res) {
             symbols.insert(varMan.getVarSymbol(x));
         }
         return symbols;
     }
 
-    const ExprSymbolSet RelevantVariables::find(
+    const VarSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<UpdateMap> &updateMaps,
             const GuardList &guard,
@@ -84,7 +84,7 @@ namespace util {
         return RelevantVariables::find(constraints, updates, guard, varMan);
     }
 
-    const ExprSymbolSet RelevantVariables::find(
+    const VarSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<RuleRhs> &rhss,
             const GuardList &guard,

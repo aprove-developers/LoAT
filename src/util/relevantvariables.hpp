@@ -28,19 +28,19 @@ namespace util {
 
     public:
 
-        static const ExprSymbolSet find(
+        static const VarSet find(
                 const GuardList &constraints,
                 const std::vector<ExprMap> &updates,
                 const GuardList &guard,
                 const VariableManager &varMan);
 
-        static const ExprSymbolSet find(
+        static const VarSet find(
                 const GuardList &constraints,
                 const std::vector<UpdateMap> &updates,
                 const GuardList &guard,
                 const VariableManager &varMan);
 
-        static const ExprSymbolSet find(
+        static const VarSet find(
                 const GuardList &constraints,
                 const std::vector<RuleRhs> &rhss,
                 const GuardList &guard,

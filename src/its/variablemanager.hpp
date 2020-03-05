@@ -24,13 +24,13 @@ public:
     std::string getVarName(VariableIdx idx) const;
 
     // Mapping between indices and ginac symbols
-    VariableIdx getVarIdx(const ExprSymbol &var) const;
-    ExprSymbol getVarSymbol(VariableIdx idx) const;
+    VariableIdx getVarIdx(const Var &var) const;
+    Var getVarSymbol(VariableIdx idx) const;
 
     // Handling of temporary variables
     const std::set<VariableIdx>& getTempVars() const;
     bool isTempVar(VariableIdx idx) const;
-    bool isTempVar(const ExprSymbol &var) const;
+    bool isTempVar(const Var &var) const;
 
     // Useful to iterate over all variables (for printing/debugging)
     size_t getVariableCount() const;
@@ -51,9 +51,9 @@ public:
      *
      * @return The newly created symbol (_not_ associated with a variable index!)
      */
-    ExprSymbol getFreshUntrackedSymbol(std::string basename, Expression::Type type);
+    Var getFreshUntrackedSymbol(std::string basename, Expr::Type type);
 
-    Expression::Type getType(const ExprSymbol &x) const;
+    Expr::Type getType(const Var &x) const;
 
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
@@ -66,13 +66,13 @@ private:
     // Data stored for each variable
     struct Variable {
         std::string name;
-        ExprSymbol symbol;
+        Var symbol;
     };
 
     // List of all variables (VariableIdx is an index in this list; a Variable is a name and a ginac symbol)
     // Note: Variables are never removed, so this list is appended, but otherwise not modified
     std::vector<Variable> variables;
-    ExprSymbolMap<Expression::Type> untrackedVariables;
+    VarMap<Expr::Type> untrackedVariables;
 
     // The set of variables (identified by their index) that are used as temporary variables (not bound by lhs)
     std::set<VariableIdx> temporaryVariables;

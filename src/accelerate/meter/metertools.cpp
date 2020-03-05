@@ -70,13 +70,13 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
     GuardList reducedGuard;
 
     // Collect all updated variables (updated by any of the updates)
-    ExprSymbolSet updatedVars;
+    VarSet updatedVars;
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
             updatedVars.insert(varMan.getVarSymbol(it.first));
         }
     }
-    auto isUpdated = [&](const ExprSymbol &var){ return updatedVars.count(var) > 0; };
+    auto isUpdated = [&](const Var &var){ return updatedVars.count(var) > 0; };
 
     // create Z3 solver with the guard here to use push/pop for efficiency
     unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
@@ -86,7 +86,7 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 
     for (const Rel &rel : guard) {
         // only keep constraints that contain updated variables (otherwise they still hold after the update)
-        bool add = rel.hasVariableWith(isUpdated);
+        bool add = rel.hasVarWith(isUpdated);
 
         // and only if they are not implied after each update (so they may cause the loop to terminate)
         if (add) {
@@ -125,11 +125,11 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
     set<VariableIdx> res;
 
     // Add all variables appearing in the guard
-    ExprSymbolSet guardVariables;
+    VarSet guardVariables;
     for (const Rel &rel : guard) {
         rel.collectVariables(guardVariables);
     }
-    for (const ExprSymbol &sym : guardVariables) {
+    for (const Var &sym : guardVariables) {
         res.insert(varMan.getVarIdx(sym));
     }
 
@@ -137,20 +137,20 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
     // so if an updated variable is in res, also add all variables of the update's rhs
     set<VariableIdx> todo = res;
     while (!todo.empty()) {
-        ExprSymbolSet next;
+        VarSet next;
 
         for (VariableIdx var : todo) {
             for (const UpdateMap &update : updates) {
                 auto it = update.find(var);
                 if (it != update.end()) {
-                    ExprSymbolSet rhsVars = it->second.getVariables();
+                    VarSet rhsVars = it->second.vars();
                     next.insert(rhsVars.begin(), rhsVars.end());
                 }
             }
         }
 
         todo.clear();
-        for (const ExprSymbol &sym : next) {
+        for (const Var &sym : next) {
             VariableIdx var = varMan.getVarIdx(sym);
             if (res.count(var) == 0) {
                 todo.insert(var);
@@ -183,12 +183,12 @@ void MeteringToolbox::restrictUpdatesToVariables(MultiUpdate &updates, const set
 
 
 void MeteringToolbox::restrictGuardToVariables(const VarMan &varMan, GuardList &guard, const set<VariableIdx> &vars) {
-    auto isContainedInVars = [&](const ExprSymbol &sym) {
+    auto isContainedInVars = [&](const Var &sym) {
         return vars.count(varMan.getVarIdx(sym)) > 0;
     };
 
     auto containsNoVars = [&](const Rel &rel) {
-        ExprSymbolSet syms = rel.getVariables();
+        VarSet syms = rel.getVariables();
         return !std::any_of(syms.begin(), syms.end(), isContainedInVars);
     };
 
@@ -209,7 +209,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
     // consider each update independently of the others
     for (const UpdateMap &update : updates) {
         // helper lambda to pass as argument
-        auto isUpdated = [&](const ExprSymbol &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
+        auto isUpdated = [&](const Var &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
         ExprMap updateSubs = update.toSubstitution(varMan);
 
         for (const auto &it : update) {
@@ -217,14 +217,14 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             if (relevantVars.count(it.first) == 0) continue;
 
             // only proceed if the update's rhs contains no updated variables
-            ExprSymbolSet rhsVars = it.second.getVariables();
+            VarSet rhsVars = it.second.vars();
             if (std::any_of(rhsVars.begin(), rhsVars.end(), isUpdated)) continue;
 
             // for every constraint containing it.first,
             // add a new constraint with it.first replaced by the update's rhs
             // (e.g. if x := 4 and the guard is x > 0, we also add 4 > 0)
             // (this makes the guard stronger and might thus help to find a metering function)
-            ExprSymbol lhsVar = varMan.getVarSymbol(it.first);
+            Var lhsVar = varMan.getVarSymbol(it.first);
 
             ExprMap subs;
             subs.put(varMan.getVarSymbol(it.first), it.second);
@@ -259,13 +259,13 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
     if (freeVar.empty()) return stack<ExprMap>();
 
     //find all bounds for every free variable
-    map<VariableIdx,ExpressionSet> freeBounds;
+    map<VariableIdx,ExprSet> freeBounds;
     for (const Rel &rel : guard) {
         for (VariableIdx freeIdx : freeVar) {
             auto it = freeBounds.find(freeIdx);
             if (it != freeBounds.end() && it->second.size() >= Config::TempVarInstantiationMaxBounds) continue;
 
-            ExprSymbol free = varMan.getVarSymbol(freeIdx);
+            Var free = varMan.getVarSymbol(freeIdx);
             if (!rel.has(free)) continue;
 
             Rel term = rel.toLessEq();
@@ -283,8 +283,8 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
     stack<ExprMap> allSubs;
     allSubs.push(ExprMap());
     for (auto const &it : freeBounds) {
-        ExprSymbol sym = varMan.getVarSymbol(it.first);
-        for (const Expression &bound : it.second) {
+        Var sym = varMan.getVarSymbol(it.first);
+        for (const Expr &bound : it.second) {
             stack<ExprMap> next;
             while (!allSubs.empty()) {
                 ExprMap subs = allSubs.top();

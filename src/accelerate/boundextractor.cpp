@@ -1,23 +1,23 @@
 #include "boundextractor.hpp"
 
-BoundExtractor::BoundExtractor(const GuardList &guard, const ExprSymbol &N): guard(guard), N(N) {
+BoundExtractor::BoundExtractor(const GuardList &guard, const Var &N): guard(guard), N(N) {
     extractBounds();
 }
 
-const option<Expression> BoundExtractor::getEq() const {
+const option<Expr> BoundExtractor::getEq() const {
     return eq;
 }
 
-const std::vector<Expression> BoundExtractor::getLower() const {
+const std::vector<Expr> BoundExtractor::getLower() const {
     return lower;
 }
 
-const std::vector<Expression> BoundExtractor::getUpper() const {
+const std::vector<Expr> BoundExtractor::getUpper() const {
     return upper;
 }
 
-const std::vector<Expression> BoundExtractor::getLowerAndUpper() const {
-    std::vector<Expression> res;
+const std::vector<Expr> BoundExtractor::getLowerAndUpper() const {
+    std::vector<Expr> res;
     res.insert(res.end(), lower.begin(), lower.end());
     res.insert(res.end(), upper.begin(), upper.end());
     return res;
@@ -41,14 +41,14 @@ void BoundExtractor::extractBounds() {
         if (rel.getOp() == Rel::eq || !rel.has(N)) continue;
 
         Rel leq = rel.toLessEq();
-        Expression term = (leq.lhs() - leq.rhs()).expand();
+        Expr term = (leq.lhs() - leq.rhs()).expand();
         if (term.degree(N) != 1) continue;
 
         // compute the upper bound represented by N and check that it is integral
         auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
         if (optSolved) {
-            const Expression &coeff = term.coeff(N, 1);
-            if (coeff.isNumeric() && coeff.toNumeric().is_negative()) {
+            const Expr &coeff = term.coeff(N, 1);
+            if (coeff.isRationalConstant() && coeff.toNum().is_negative()) {
                 lower.push_back(optSolved.get());
             } else {
                 upper.push_back(optSolved.get());
@@ -57,13 +57,13 @@ void BoundExtractor::extractBounds() {
     }
 }
 
-const ExpressionSet BoundExtractor::getConstantBounds() const {
-    if (eq && eq.get().isIntegerConstant()) {
+const ExprSet BoundExtractor::getConstantBounds() const {
+    if (eq && eq.get().isInt()) {
         return {eq.get()};
     }
-    ExpressionSet res;
-    for (const Expression &e: getLowerAndUpper()) {
-        if (e.isIntegerConstant()) {
+    ExprSet res;
+    for (const Expr &e: getLowerAndUpper()) {
+        if (e.isInt()) {
             res.insert(e);
         }
     }

@@ -67,9 +67,9 @@ const BoolExpr buildAnd(const std::vector<Rel> &xs);
 const BoolExpr buildAnd(const std::vector<BoolExpr> &xs);
 const BoolExpr buildOr(const std::vector<Rel> &xs);
 const BoolExpr buildOr(const std::vector<BoolExpr> &xs);
-const BoolExpr buildAnd(const RelationSet &xs);
+const BoolExpr buildAnd(const RelSet &xs);
 const BoolExpr buildAnd(const std::set<BoolExpr> &xs);
-const BoolExpr buildOr(const RelationSet &xs);
+const BoolExpr buildOr(const RelSet &xs);
 const BoolExpr buildOr(const std::set<BoolExpr> &xs);
 const BoolExpr buildLit(const Rel &lit);
 

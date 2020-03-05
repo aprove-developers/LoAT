@@ -6,8 +6,8 @@ const int DirectionSize = 5;
 const char* DirectionNames[] = { "+", "-", "+!", "-!", "+/+!"};
 
 
-InftyExpression::InftyExpression(const Expression &other, Direction dir)
-    : Expression(other) {
+InftyExpression::InftyExpression(const Expr &other, Direction dir)
+    : Expr(other) {
     setDirection(dir);
 }
 
@@ -23,15 +23,15 @@ Direction InftyExpression::getDirection() const {
 
 
 bool InftyExpression::isTriviallyUnsatisfiable() const {
-    if (this->isNumeric()) {
+    if (this->isRationalConstant()) {
         if (direction == POS_INF || direction == NEG_INF) {
             return true;
 
         } else if ((direction == POS_CONS || direction == POS)
-                   && isNumeric() && !toNumeric().is_positive()) {
+                   && isRationalConstant() && !toNum().is_positive()) {
             return true;
 
-        } else if (direction == NEG_CONS && isNumeric() && toNumeric().is_nonneg_integer()) {
+        } else if (direction == NEG_CONS && isRationalConstant() && toNum().is_nonneg_integer()) {
             return true;
         }
     }
@@ -40,7 +40,7 @@ bool InftyExpression::isTriviallyUnsatisfiable() const {
 }
 
 std::ostream& operator<<(std::ostream &os, const InftyExpression &ie) {
-    os << static_cast<const Expression &>(ie) << " ("
+    os << static_cast<const Expr &>(ie) << " ("
        << DirectionNames[ie.getDirection()] << ")";
 
     return os;

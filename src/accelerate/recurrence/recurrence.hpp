@@ -34,7 +34,7 @@ private:
 public:
 
     struct Result {
-        Expression cost;
+        Expr cost;
         UpdateMap update;
         unsigned int validityBound;
     };
@@ -44,12 +44,12 @@ public:
      * In addition to iterateUpdateCost, an additional heuristic is used if no dependency order is found.
      * This heuristic adds new constraints to the rule's guard and is thus only used in this method.
      */
-    static option<Result> iterateRule(const VarMan &varMan, const LinearRule &rule, const Expression &metering);
+    static option<Result> iterateRule(const VarMan &varMan, const LinearRule &rule, const Expr &metering);
 
 private:
 
     struct RecurrenceSolution {
-        Expression res;
+        Expr res;
         const unsigned int validityBound;
     };
 
@@ -63,35 +63,35 @@ private:
     /**
      * Main implementation
      */
-    option<Result> iterate(const UpdateMap &update, const Expression &cost, const Expression &metering);
+    option<Result> iterate(const UpdateMap &update, const Expr &cost, const Expr &metering);
 
     /**
      * Computes the iterated update, with meterfunc as iteration step (if possible).
      * @note dependencyOrder must be set before
      * @note sets updatePreRecurrences
      */
-    option<RecurrenceSystemSolution> iterateUpdate(const UpdateMap &update, const Expression &meterfunc);
+    option<RecurrenceSystemSolution> iterateUpdate(const UpdateMap &update, const Expr &meterfunc);
 
     /**
      * Computes the iterated cost, with meterfunc as iteration step (if possible).
      * @note updatePreRecurrences must be set before (so iterateUpdate() needs to be called before)
      */
-    option<Expression> iterateCost(const Expression &cost, const Expression &meterfunc);
+    option<Expr> iterateCost(const Expr &cost, const Expr &meterfunc);
 
     /**
      * Helper for iterateUpdate.
      * Tries to find a recurrence for the given single update.
      * Note that all variables occurring in update must have been solved before (and added to updatePreRecurrences).
      */
-    option<RecurrenceSolution> findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds);
+    option<RecurrenceSolution> findUpdateRecurrence(const Expr &updateRhs, Var updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds);
 
     /**
      * Tries to find a recurrence for the given cost term.
      * Note that all variables occuring in update must have been solved before (and added to updatePreRecurrences).
      */
-    option<Expression> findCostRecurrence(Expression cost);
+    option<Expr> findCostRecurrence(Expr cost);
 
-    static const option<RecurrenceSystemSolution> iterateUpdate(const VariableManager&, const UpdateMap&, const ExprSymbol&);
+    static const option<RecurrenceSystemSolution> iterateUpdate(const VariableManager&, const UpdateMap&, const Var&);
 
 private:
     /**
@@ -102,7 +102,7 @@ private:
     /**
      * Purrs::Recurrence::n converted to a ginac expression, for convenience only
      */
-    const Expression ginacN;
+    const Expr ginacN;
 
     /**
      * Order in which recurrences for updated variables can be computed

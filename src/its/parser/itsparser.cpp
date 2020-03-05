@@ -413,10 +413,10 @@ void ITSParser::convertRules() {
 void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert lhs to Ginac expressions
     LocationIdx lhsLoc = getLocationData(rule.lhs).index;
-    Expression cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : 1;
+    Expr cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : 1;
     RuleLhs lhs(lhsLoc, {}, cost);
 
-    if (!cost.isPolynomial()) {
+    if (!cost.isPoly()) {
         throw FileError("Non-polynomial cost in the input");
     }
 
@@ -434,7 +434,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
         UpdateMap rhsUpdate;
         for (int i=0; i < loc.arity; ++i) {
             VariableIdx var = loc.lhsVars[i];
-            Expression update = args[i]->toGinacExpression(itsProblem);
+            Expr update = args[i]->toGinacExpression(itsProblem);
             rhsUpdate.emplace(var, std::move(update));
         }
 
@@ -543,8 +543,8 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
     for (int i=0; i < loc.arity; ++i) {
         if (lhsVars[i] != loc.lhsVars[i]) {
             // Add substitution
-            ExprSymbol oldSym = itsProblem.getVarSymbol(lhsVars[i]);
-            ExprSymbol newSym = itsProblem.getVarSymbol(loc.lhsVars[i]);
+            Var oldSym = itsProblem.getVarSymbol(lhsVars[i]);
+            Var newSym = itsProblem.getVarSymbol(loc.lhsVars[i]);
             subs.put(oldSym, newSym);
         }
     }
@@ -553,7 +553,7 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
     // e.g. if we replace "x/y" in "f(x) -> g(y)", the result "f(y) -> g(y)" is incorrect! Instead rename "y".
     ExprMap subsMore;
     for (const auto &it : subs) {
-        ExprSymbol newSym = it.second.toSymbol();
+        Var newSym = it.second.toVar();
 
         // If newSym is already replaced, everything is fine
         if (subs.contains(newSym) || subsMore.contains(newSym)) continue;
@@ -562,7 +562,7 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
         VariableIdx newVar = itsProblem.getVarIdx(newSym);
         if (ruleVars.count(newVar) > 0) {
             VariableIdx freshVar = itsProblem.addFreshVariable(newSym.get_name());
-            ExprSymbol freshSym = itsProblem.getVarSymbol(freshVar);
+            Var freshSym = itsProblem.getVarSymbol(freshVar);
             subsMore.put(newSym, freshSym);
         }
     }
@@ -579,16 +579,16 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 
 void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationData &lhsData) {
     // Gather variables
-    ExprSymbolSet ruleVars = getSymbols(rule);
+    VarSet ruleVars = getSymbols(rule);
 
-    ExprSymbolSet lhsVars;
+    VarSet lhsVars;
     for (VariableIdx var : lhsData.lhsVars) {
         lhsVars.insert(itsProblem.getVarSymbol(var));
     }
 
     // Substitute all variables that do not occur on the lhs by temporary ones
     ExprMap subs;
-    for (ExprSymbol var : ruleVars) {
+    for (Var var : ruleVars) {
         if (lhsVars.count(var) == 0) {
             // Create a fresh temporary variable
             VariableIdx tv = itsProblem.addFreshTemporaryVariable("free");
@@ -600,11 +600,11 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
 }
 
 
-ExprSymbolSet ITSParser::getSymbols(const Rule &rule) {
-    ExprSymbolSet res;
+VarSet ITSParser::getSymbols(const Rule &rule) {
+    VarSet res;
 
     // lhs
-    rule.getCost().collectVariables(res);
+    rule.getCost().collectVars(res);
     for (const Rel &rel: rule.getGuard()) {
         rel.collectVariables(res);
     }
@@ -613,7 +613,7 @@ ExprSymbolSet ITSParser::getSymbols(const Rule &rule) {
     // Note: For an update like x/y, only y is counted, since x is not part of this rule (but of a different lhs)
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
-            it.second.collectVariables(res);
+            it.second.collectVars(res);
         }
     }
 
@@ -625,10 +625,10 @@ void ITSParser::stripTrivialUpdates(UpdateMap &update) const {
     set<VariableIdx> toRemove;
 
     for (const auto &it : update) {
-        ExprSymbol lhs = itsProblem.getVarSymbol(it.first);
-        const Expression &rhs = it.second;
+        Var lhs = itsProblem.getVarSymbol(it.first);
+        const Expr &rhs = it.second;
 
-        if (rhs.equalsVariable(lhs)) {
+        if (rhs.equals(lhs)) {
             toRemove.insert(it.first);
         }
     }

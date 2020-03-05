@@ -59,9 +59,9 @@ Smt::Result Yices::check() {
     }
 }
 
-ExprSymbolMap<GiNaC::numeric> Yices::model() {
+VarMap<GiNaC::numeric> Yices::model() {
     model_t *m = yices_get_model(solver, true);
-    ExprSymbolMap<GiNaC::numeric> res;
+    VarMap<GiNaC::numeric> res;
     for (const auto &p: ctx.getSymbolMap()) {
         res[p.first] = getRealFromModel(m, p.second);
     }

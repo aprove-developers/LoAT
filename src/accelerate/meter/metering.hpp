@@ -58,7 +58,7 @@ public:
         ResultKind result;
 
         // The metering function (only relevant if result is Success)
-        Expression metering;
+        Expr metering;
 
         // The pair of conflicting variables (only relevant if result is ConflictVar)
         VariablePair conflictVar;
@@ -161,7 +161,7 @@ private:
     /**
      * Given the z3 model, builds the corresponding linear metering function and applies the reverse substitution nonlinearSubs
      */
-    Expression buildResult(const ExprSymbolMap<GiNaC::numeric> &model) const;
+    Expr buildResult(const VarMap<GiNaC::numeric> &model) const;
 
     /**
      * Tries to find a pair conflicting variables A, B.
@@ -178,7 +178,7 @@ private:
      *
      * Note: Only required if FARKAS_ALLOW_REAL_COEFFS is set.
      */
-    void ensureIntegralMetering(Result &result, const ExprSymbolMap<GiNaC::numeric> &model) const;
+    void ensureIntegralMetering(Result &result, const VarMap<GiNaC::numeric> &model) const;
 
 
     void dump(const std::string &msg) const;
@@ -233,15 +233,15 @@ private:
      * primedSymbols maps updated variables to a primed version of the variable's symbol.
      */
     struct {
-        std::vector<ExprSymbol> symbols;
-        std::vector<ExprSymbol> coeffs;
-        std::map<VariableIdx, ExprSymbol> primedSymbols;
+        std::vector<Var> symbols;
+        std::vector<Var> coeffs;
+        std::map<VariableIdx, Var> primedSymbols;
     } meterVars;
 
     /**
      * The absolute coefficient for the metering function template.
      */
-    ExprSymbol absCoeff;
+    Var absCoeff;
 
 };
 

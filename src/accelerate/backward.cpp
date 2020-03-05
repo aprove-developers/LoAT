@@ -41,10 +41,10 @@ BackwardAcceleration::BackwardAcceleration(ITSProblem &its, const LinearRule &ru
         : its(its), rule(rule), sink(sink) {}
 
 bool BackwardAcceleration::shouldAccelerate() const {
-    return !rule.getCost().isNontermSymbol() && rule.getCost().isPolynomial();
+    return !rule.getCost().isNontermSymbol() && rule.getCost().isPoly();
 }
 
-vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, const Rule &rule) {
+vector<Rule> BackwardAcceleration::replaceByUpperbounds(const Var &N, const Rule &rule) {
     // gather all upper bounds (if possible)
     VarEliminator ve(rule.getGuard(), N, its);
 
@@ -68,7 +68,7 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const ExprSymbol &N, con
 }
 
 LinearRule BackwardAcceleration::buildNontermRule(const GuardList &guard) const {
-    return LinearRule(rule.getLhsLoc(), guard, Expression::NontermSymbol, sink, {});
+    return LinearRule(rule.getLhsLoc(), guard, Expr::NontermSymbol, sink, {});
 }
 
 Self::AccelerationResult BackwardAcceleration::run() {
@@ -88,7 +88,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
                 } else {
                     UpdateMap up;
                     for (auto p: ap->closed) {
-                        up[its.getVarIdx(p.first.getAVariable())] = p.second;
+                        up[its.getVarIdx(p.first.someVar())] = p.second;
                     }
                     LinearRule accel(rule.getLhsLoc(), ap->res, ap->cost, rule.getRhsLoc(), up);
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);

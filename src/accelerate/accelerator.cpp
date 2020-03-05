@@ -207,13 +207,13 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
     LinearRule res = rule;
     bool changed = false;
     for (const auto &p: rule.getUpdate()) {
-        const ExprSymbol &var = its.getVarSymbol(p.first);
-        const Expression &up = p.second.expand();
-        const ExprSymbolSet &upVars = up.getVariables();
+        const Var &var = its.getVarSymbol(p.first);
+        const Expr &up = p.second.expand();
+        const VarSet &upVars = up.vars();
         if (upVars.find(var) != upVars.end()) {
-            if (up.isPolynomial() && up.degree(var) == 1) {
-                const Expression &coeff = up.coeff(var);
-                if (coeff.isRationalConstant() && coeff.toNumeric().is_negative()) {
+            if (up.isPoly() && up.degree(var) == 1) {
+                const Expr &coeff = up.coeff(var);
+                if (coeff.isRationalConstant() && coeff.toNum().is_negative()) {
                     res = Chaining::chainRules(its, res, res, false).get();
                     changed = true;
                     break;
@@ -240,8 +240,8 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
 unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
     unsigned int res = 0;
     for (auto const &p: up) {
-        const ExprSymbol &x = its.getVarSymbol(p.first);
-        const ExprSymbolSet &vars = p.second.getVariables();
+        const Var &x = its.getVarSymbol(p.first);
+        const VarSet &vars = p.second.vars();
         if (!vars.empty() && vars.find(x) == vars.end()) {
             res++;
         }
@@ -294,7 +294,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
                     if (sat) {
                         if (nonterm::NonTerm::universal(sr, its, sinkLoc)) {
                             nonterm = true;
-                            const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expression::NontermSymbol, sinkLoc, {});
+                            const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expr::NontermSymbol, sinkLoc, {});
                             res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
                             res.rules.emplace_back(nontermRule);
                         }

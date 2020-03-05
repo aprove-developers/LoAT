@@ -32,7 +32,7 @@ public:
 
 private:
     CVC4::ExprManager &manager;
-    CVC4::Expr buildVar(const std::string &basename, Expression::Type type) override;
+    CVC4::Expr buildVar(const std::string &basename, Expr::Type type) override;
 
 };
 

@@ -39,7 +39,7 @@ namespace t2parser {
 
         Rel parseConstraint(const std::string &str);
 
-        Expression parseExpression(std::string str);
+        Expr parseExpression(std::string str);
 
         std::string trim(std::string toTrim, std::string prefix, std::string suffix);
 

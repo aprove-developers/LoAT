@@ -29,7 +29,7 @@ namespace ITSExport {
      * Prints the given cost expression (does not do much except for colors)
      * Note that colors are only used if colors is true and Config::Output::ColorInIts is true
      */
-    void printCost(const Expression &cost, std::ostream &s, bool colors = true);
+    void printCost(const Expr &cost, std::ostream &s, bool colors = true);
 
     /**
      * Prints the ITS problem in a readable but ugly format for debugging

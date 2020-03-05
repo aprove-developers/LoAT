@@ -29,17 +29,17 @@
 class RuleLhs {
     LocationIdx loc;
     GuardList guard;
-    Expression cost;
+    Expr cost;
 
 public:
     RuleLhs(LocationIdx loc, GuardList guard) : RuleLhs(loc, guard, 1) {}
-    RuleLhs(LocationIdx loc, GuardList guard, Expression cost) : loc(loc), guard(guard), cost(cost) {}
+    RuleLhs(LocationIdx loc, GuardList guard, Expr cost) : loc(loc), guard(guard), cost(cost) {}
 
     LocationIdx getLoc() const { return loc; }
     const GuardList& getGuard() const { return guard; }
     GuardList& getGuardMut() { return guard; }
-    const Expression& getCost() const { return cost; }
-    Expression& getCostMut() { return cost; }
+    const Expr& getCost() const { return cost; }
+    Expr& getCostMut() { return cost; }
 };
 
 
@@ -77,7 +77,7 @@ public:
 
     // constructors for linear rules
     Rule(RuleLhs lhs, RuleRhs rhs);
-    Rule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
+    Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, UpdateMap update);
 
     // constructs an empty rule (guard/update empty, cost 0)
     static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
@@ -89,11 +89,11 @@ public:
     // query lhs data
     LocationIdx getLhsLoc() const { return lhs.getLoc(); }
     const GuardList& getGuard() const { return lhs.getGuard(); }
-    const Expression& getCost() const { return lhs.getCost(); }
+    const Expr& getCost() const { return lhs.getCost(); }
 
     // lhs mutation
     GuardList& getGuardMut() { return lhs.getGuardMut(); }
-    Expression& getCostMut() { return lhs.getCostMut(); }
+    Expr& getCostMut() { return lhs.getCostMut(); }
 
     // iteration over right-hand sides
     const RuleRhs* rhsBegin() const { return &rhss.front(); }
@@ -149,7 +149,7 @@ public:
 class LinearRule : public Rule {
 public:
     LinearRule(RuleLhs lhs, RuleRhs rhs) : Rule(lhs, rhs) {}
-    LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
+    LinearRule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, UpdateMap update)
             : Rule(lhsLoc, guard, cost, rhsLoc, update) {}
 
     // special shorthands for linear rules, overwriting the general ones

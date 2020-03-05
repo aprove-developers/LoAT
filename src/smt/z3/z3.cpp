@@ -32,10 +32,10 @@ Smt::Result Z3::check() {
     assert(false && "unknown result");
 }
 
-ExprSymbolMap<GiNaC::numeric> Z3::model() {
+VarMap<GiNaC::numeric> Z3::model() {
     assert(models);
     const z3::model &m = solver.get_model();
-    ExprSymbolMap<GiNaC::numeric> res;
+    VarMap<GiNaC::numeric> res;
     for (const auto &p: ctx.getSymbolMap()) {
         res[p.first] = getRealFromModel(m, p.second);
     }

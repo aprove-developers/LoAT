@@ -40,7 +40,7 @@ namespace strengthening {
 
         const Templates build() const;
 
-        const Templates::Template buildTemplate(const ExprSymbolSet &vars) const;
+        const Templates::Template buildTemplate(const VarSet &vars) const;
 
     };
 

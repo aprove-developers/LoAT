@@ -1,6 +1,6 @@
 #include "vareliminator.hpp"
 
-VarEliminator::VarEliminator(const GuardList &guard, const ExprSymbol &N, VariableManager &varMan): varMan(varMan), N(N) {
+VarEliminator::VarEliminator(const GuardList &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
     todoDeps.push({{}, guard});
     findDependencies(guard);
@@ -13,14 +13,14 @@ void VarEliminator::findDependencies(const GuardList &guard) {
     do {
         changed = false;
         // compute dependencies of var
-        for (const ExprSymbol &var: dependencies) {
-            option<ExprSymbol> dep;
+        for (const Var &var: dependencies) {
+            option<Var> dep;
             for (const Rel &rel: guard) {
-                const Expression &ex = (rel.lhs() - rel.rhs()).expand();
+                const Expr &ex = (rel.lhs() - rel.rhs()).expand();
                 if (ex.degree(var) == 1) {
                     // we found a constraint which is linear in var, check all variables in var's coefficient
-                    const Expression &coeff = ex.coeff(var, 1);
-                    for (const ExprSymbol &x: coeff.getVariables()) {
+                    const Expr &coeff = ex.coeff(var, 1);
+                    for (const Var &x: coeff.vars()) {
                         if (varMan.isTempVar(x)) {
                             if (dependencies.find(x) == dependencies.end()) {
                                 // we found a tmp variable in coeff which has not yet been marked as dependency
@@ -44,7 +44,7 @@ void VarEliminator::findDependencies(const GuardList &guard) {
 }
 
 const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency(const ExprMap &subs, const GuardList &guard) const {
-    ExprSymbolSet vars;
+    VarSet vars;
     guard.collectVariables(vars);
     for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
         if (vars.find(*it) == vars.end()) {
@@ -52,7 +52,7 @@ const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency
         }
         BoundExtractor be(guard, *it);
         std::set<std::pair<ExprMap, GuardList>> res;
-        for (const Expression &bound: be.getConstantBounds()) {
+        for (const Expr &bound: be.getConstantBounds()) {
             ExprMap newSubs(*it, bound);
             res.insert({subs.compose(newSubs), guard.subs(newSubs)});
         }
@@ -86,7 +86,7 @@ void VarEliminator::eliminate() {
         if (be.getEq()) {
             res.insert(subs.compose(ExprMap(N, be.getEq().get())));
         } else {
-            for (const Expression &b: be.getUpper()) {
+            for (const Expr &b: be.getUpper()) {
                 res.insert(subs.compose(ExprMap(N, b)));
             }
         }

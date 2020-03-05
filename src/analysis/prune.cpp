@@ -38,7 +38,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     if (compareRhss && a.rhsCount() != b.rhsCount()) return false;
 
     // Costs have to be equal up to a numeric constant
-    if (!(a.getCost() - b.getCost()).isNumeric()) return false;
+    if (!(a.getCost() - b.getCost()).isRationalConstant()) return false;
 
     // All right-hand sides have to match exactly
     if (compareRhss) {
@@ -53,7 +53,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
             for (const auto &itA : updateA) {
                 auto itB = updateB.find(itA.first);
                 if (itB == updateB.end()) return false;
-                if (!itB->second.is_equal(itA.second)) return false;
+                if (!itB->second.equals(itA.second)) return false;
             }
         }
     }
@@ -80,7 +80,7 @@ bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool
 
             // if rules are identical up to cost, keep the one with the higher cost
             if (compareRules(ruleA, ruleB, compareRhss)) {
-                if ((ruleA.getCost() - ruleB.getCost()).toNumeric().is_positive() > 0) {
+                if ((ruleA.getCost() - ruleB.getCost()).toNum().is_positive() > 0) {
                     toRemove.insert(idxB);
                 } else {
                     toRemove.insert(idxA);
@@ -216,10 +216,10 @@ static bool removeIrrelevantLeafs(ITSProblem &its, LocationIdx node, set<Locatio
                 const Rule &rule = its.getRule(ruleIdx);
 
                 // only remove irrelevant rules
-                const Complexity &c = rule.getCost().getComplexity();
+                const Complexity &c = rule.getCost().toComplexity();
                 if (c == Complexity::Nonterm) {
                     continue;
-                } else if (!Config::Analysis::NonTermMode && rule.getCost().getComplexity() > Complexity::Const) {
+                } else if (!Config::Analysis::NonTermMode && rule.getCost().toComplexity() > Complexity::Const) {
                     continue;
                 }
 
@@ -284,7 +284,7 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
 
     // If all rhss would be deleted, we still keep the rule if it has an interesting complexity.
     if (!optRule) {
-        if (rule.getCost().getComplexity() > Complexity::Const) {
+        if (rule.getCost().toComplexity() > Complexity::Const) {
             // Note that it is only sound to add a dummy transition to loc if loc is a sink location.
             // This should be the case when partialDeletion is called, at least for the current implementation.
             assert(!its.hasTransitionsFrom(loc));

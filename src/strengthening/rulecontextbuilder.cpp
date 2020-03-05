@@ -55,7 +55,7 @@ namespace strengthening {
         std::vector<GuardList> res;
         ExprMap tmpVarRenaming;
         for (const VariableIdx &i: its.getTempVars()) {
-            const ExprSymbol &x = its.getVarSymbol(i);
+            const Var &x = its.getVarSymbol(i);
             tmpVarRenaming.put(x, its.getVarSymbol(its.addFreshVariable(x.get_name())));
         }
         for (const Rule &pred: predecessors) {
@@ -72,11 +72,11 @@ namespace strengthening {
                         pre.push_back(rel);
                     }
                     for (const auto &p: rhs.getUpdate()) {
-                        const ExprSymbol &var = its.getVarSymbol(p.first);
-                        const Expression &varUpdate = p.second;
-                        Expression updatedVarUpdate = varUpdate;
+                        const Var &var = its.getVarSymbol(p.first);
+                        const Expr &varUpdate = p.second;
+                        Expr updatedVarUpdate = varUpdate;
                         updatedVarUpdate.applySubs(up);
-                        if (varUpdate.is_equal(updatedVarUpdate)) {
+                        if (varUpdate.equals(updatedVarUpdate)) {
                             updatedVarUpdate.applySubs(tmpVarRenaming);
                             pre.push_back(var == updatedVarUpdate);
                         }

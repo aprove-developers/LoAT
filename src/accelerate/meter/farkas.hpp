@@ -64,38 +64,38 @@ namespace FarkasLemma {
      * @return the resulting z3 expression (without quantifiers, as all variables are existentially quantified)
      */
     BoolExpr apply(const std::vector<Rel> &constraints,
-                   const std::vector<ExprSymbol> &vars,
-                   const std::vector<Expression> &coeffs,
-                   Expression c0,
+                   const std::vector<Var> &vars,
+                   const std::vector<Expr> &coeffs,
+                   Expr c0,
                    int delta,
                    VariableManager &varMan,
-                   const ExprSymbolSet &params = ExprSymbolSet(),
-                   Expression::Type lambdaType = Expression::Real);
+                   const VarSet &params = VarSet(),
+                   Expr::Type lambdaType = Expr::Rational);
 
     BoolExpr apply(const std::vector<Rel> &constraints,
-                   const std::vector<ExprSymbol> &vars,
-                   const std::vector<ExprSymbol> &coeffs,
-                   ExprSymbol c0,
+                   const std::vector<Var> &vars,
+                   const std::vector<Var> &coeffs,
+                   Var c0,
                    int delta,
                    VariableManager &varMan,
-                   const ExprSymbolSet &params = ExprSymbolSet(),
-                   Expression::Type lambdaType = Expression::Real);
+                   const VarSet &params = VarSet(),
+                   Expr::Type lambdaType = Expr::Rational);
 
     const BoolExpr apply(
             const std::vector<Rel> &premise,
             const std::vector<Rel> &conclusion,
-            const ExprSymbolSet &vars,
-            const ExprSymbolSet &params,
+            const VarSet &vars,
+            const VarSet &params,
             VariableManager &varMan,
-            Expression::Type lambdaType = Expression::Real);
+            Expr::Type lambdaType = Expr::Rational);
 
     const BoolExpr apply(
             const std::vector<Rel> &premise,
             const Rel &conclusion,
-            const ExprSymbolSet &vars,
-            const ExprSymbolSet &params,
+            const VarSet &vars,
+            const VarSet &params,
             VariableManager &varMan,
-            Expression::Type lambdaType = Expression::Real);
+            Expr::Type lambdaType = Expr::Rational);
 
 };
 

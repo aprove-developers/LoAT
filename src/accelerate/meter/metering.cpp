@@ -38,7 +38,7 @@ MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vec
     : varMan(varMan),
       updates(updates),
       guard(guard),
-      absCoeff(varMan.getFreshUntrackedSymbol("c", Expression::Real))
+      absCoeff(varMan.getFreshUntrackedSymbol("c", Expr::Rational))
 {}
 
 
@@ -96,7 +96,7 @@ void MeteringFinder::buildMeteringVariables() {
     meterVars.coeffs.clear();
     meterVars.primedSymbols.clear();
 
-    auto coeffType = (Config::ForwardAccel::AllowRealCoeffs) ? Expression::Real : Expression::Int;
+    auto coeffType = (Config::ForwardAccel::AllowRealCoeffs) ? Expr::Rational : Expr::Int;
 
     for (VariableIdx var : relevantVars) {
         meterVars.symbols.push_back(varMan.getVarSymbol(var));
@@ -109,7 +109,7 @@ void MeteringFinder::buildMeteringVariables() {
 
             if (meterVars.primedSymbols.count(it.first) == 0) {
                 string primedName = varMan.getVarName(it.first)+"'";
-                ExprSymbol primed = varMan.getFreshUntrackedSymbol(primedName, Expression::Int);
+                Var primed = varMan.getFreshUntrackedSymbol(primedName, Expr::Int);
                 meterVars.primedSymbols.emplace(it.first, primed);
             }
         }
@@ -156,7 +156,7 @@ void MeteringFinder::buildLinearConstraints() {
     for (unsigned int i=0; i < updates.size(); ++i) {
         for (const auto &it : updates[i]) {
             assert(meterVars.primedSymbols.count(it.first) > 0);
-            ExprSymbol primed = meterVars.primedSymbols.at(it.first);
+            Var primed = meterVars.primedSymbols.at(it.first);
 
             makeConstraint(primed <= it.second, linearConstraints.guardUpdate[i]);
             makeConstraint(primed >= it.second, linearConstraints.guardUpdate[i]);
@@ -189,8 +189,8 @@ BoolExpr MeteringFinder::genNotGuardImplication() const {
 
 BoolExpr MeteringFinder::genGuardPositiveImplication(bool strict) const {
     //G ==> f(x) > 0, which is equivalent to -f(x) < 0  ==  -f(x) <= -1 (on integers)
-    vector<Expression> negCoeff;
-    for (const ExprSymbol &coeff : meterVars.coeffs) {
+    vector<Expr> negCoeff;
+    for (const Var &coeff : meterVars.coeffs) {
         negCoeff.push_back(-coeff);
     }
 
@@ -205,20 +205,20 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
 
     BoolExpr res;
     for (unsigned int updateIdx=0; updateIdx < updates.size(); ++updateIdx) {
-        vector<ExprSymbol> vars;
-        vector<Expression> coeffs;
+        vector<Var> vars;
+        vector<Expr> coeffs;
 
         for (unsigned int i=0; i < meterVars.symbols.size(); ++i) {
-            ExprSymbol sym = meterVars.symbols[i];
+            Var sym = meterVars.symbols[i];
             VariableIdx var = varMan.getVarIdx(sym);
-            Expression coeff = meterVars.coeffs[i];
+            Expr coeff = meterVars.coeffs[i];
 
             // ignore variables not affected by the current update
             if (!updates[updateIdx].isUpdated(var)) continue;
 
             // find the primed version of sym
             assert(meterVars.primedSymbols.count(var) > 0);
-            ExprSymbol primed = meterVars.primedSymbols.at(var);
+            Var primed = meterVars.primedSymbols.at(var);
 
             vars.push_back(sym);      //x
             vars.push_back(primed);   //x'
@@ -227,7 +227,7 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
         }
 
         // the absolute coefficient also cancels out, so we set it to 0
-        Expression zeroAbsCoeff = 0;
+        Expr zeroAbsCoeff = 0;
         res = res & FarkasLemma::apply(linearConstraints.guardUpdate[updateIdx], vars, coeffs, zeroAbsCoeff, 1, varMan);
     }
 
@@ -236,7 +236,7 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
 
 BoolExpr MeteringFinder::genNonTrivial() const {
     BoolExpr res;
-    for (const ExprSymbol &c : meterVars.coeffs) {
+    for (const Var &c : meterVars.coeffs) {
         res = res | Rel(c, Rel::neq, 0);
     }
     return res;
@@ -245,12 +245,12 @@ BoolExpr MeteringFinder::genNonTrivial() const {
 
 /* ### Step 4: Result and model interpretation ### */
 
-Expression MeteringFinder::buildResult(const ExprSymbolMap<GiNaC::numeric> &model) const {
+Expr MeteringFinder::buildResult(const VarMap<GiNaC::numeric> &model) const {
     const auto &coeffs = meterVars.coeffs;
     const auto &symbols = meterVars.symbols;
 
     // read off the coefficients of the metering function
-    Expression result = model.at(absCoeff);
+    Expr result = model.at(absCoeff);
     for (unsigned int i=0; i < coeffs.size(); ++i) {
         result = result + model.at(coeffs[i]) * symbols[i];
     }
@@ -259,11 +259,11 @@ Expression MeteringFinder::buildResult(const ExprSymbolMap<GiNaC::numeric> &mode
     return result;
 }
 
-void MeteringFinder::ensureIntegralMetering(Result &result, const ExprSymbolMap<GiNaC::numeric> &model) const {
+void MeteringFinder::ensureIntegralMetering(Result &result, const VarMap<GiNaC::numeric> &model) const {
     bool has_reals = false;
     int mult = 1;
 
-    for (const ExprSymbol &theCoeff : meterVars.coeffs) {
+    for (const Var &theCoeff : meterVars.coeffs) {
         GiNaC::numeric coeff = model.at(theCoeff);
         if (coeff.denom().to_int() != 1) {
             has_reals = true;
@@ -275,7 +275,7 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const ExprSymbolMap<
     // then add a fresh variable that corresponds to the original value of the metering function
     if (has_reals) {
         VariableIdx tempIdx = varMan.addFreshTemporaryVariable("meter");
-        ExprSymbol tempVar = varMan.getVarSymbol(tempIdx);
+        Var tempVar = varMan.getVarSymbol(tempIdx);
 
         // create a new guard constraint relating tempVar and the metering function
         result.integralConstraint = (tempVar*mult == result.metering*mult);
@@ -291,8 +291,8 @@ option<VariablePair> MeteringFinder::findConflictVars() const {
     // find variables on which the loop's runtime might depend (simple heuristic)
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
-            ExprSymbol lhsVar = varMan.getVarSymbol(it.first);
-            ExprSymbolSet rhsVars = it.second.getVariables();
+            Var lhsVar = varMan.getVarSymbol(it.first);
+            VarSet rhsVars = it.second.vars();
 
             // the update must be some sort of simple counting, e.g. A = A+2
             if (rhsVars.size() != 1 || rhsVars.count(lhsVar) == 0) continue;
@@ -384,7 +384,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     }
 
     // If we succeed, extract the metering function from the model
-    ExprSymbolMap<GiNaC::numeric> model = solver->model();
+    VarMap<GiNaC::numeric> model = solver->model();
     result.metering = meter.buildResult(model);
     result.result = Success;
 

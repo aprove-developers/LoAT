@@ -6,24 +6,24 @@ namespace Color = Config::Color;
 
 
 // collects all variables appearing in the given rule
-static void collectAllVariables(const Rule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
+static void collectAllVariables(const Rule &rule, const VarMan &varMan, VarSet &vars) {
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
             vars.insert(varMan.getVarSymbol(it.first));
-            it.second.collectVariables(vars);
+            it.second.collectVars(vars);
         }
     }
     rule.getGuard().collectVariables(vars);
-    rule.getCost().collectVariables(vars);
+    rule.getCost().collectVars(vars);
 }
 
 
 // collects all non-temporary variables of the given rule
-static void collectBoundVariables(const Rule &rule, const VarMan &varMan, ExprSymbolSet &vars) {
-    ExprSymbolSet allVars;
+static void collectBoundVariables(const Rule &rule, const VarMan &varMan, VarSet &vars) {
+    VarSet allVars;
     collectAllVariables(rule, varMan, allVars);
 
-    for (const ExprSymbol &var : allVars) {
+    for (const Var &var : allVars) {
         if (!varMan.isTempVar(var)) {
             vars.insert(var);
         }
@@ -68,7 +68,7 @@ void ITSExport::printGuard(const GuardList &guard, std::ostream &s, bool colors)
 }
 
 
-void ITSExport::printCost(const Expression &cost, std::ostream &s, bool colors) {
+void ITSExport::printCost(const Expr &cost, std::ostream &s, bool colors) {
     if (colors) printColor(s, Color::Cost);
     s << cost;
     if (colors) printColor(s, Color::None);
@@ -172,11 +172,11 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
     s << "(VAR";
 
     // collect variables that actually appear in the rules
-    ExprSymbolSet vars;
+    VarSet vars;
     for (TransIdx rule : its.getAllTransitions()) {
         collectAllVariables(its.getRule(rule), its, vars);
     }
-    for (const ExprSymbol &var : vars) {
+    for (const Var &var : vars) {
         s << " " << var;
     }
 
@@ -184,7 +184,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
 
     for (LocationIdx n : its.getLocations()) {
         // figure out which variables appear on the lhs of the given location
-        ExprSymbolSet relevantVars;
+        VarSet relevantVars;
         for (TransIdx trans : its.getTransitionsFrom(n)) {
             collectBoundVariables(its.getRule(trans), its, relevantVars);
         }
@@ -196,7 +196,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
             //lhs
             printNode(n);
             bool first = true;
-            for (const ExprSymbol &var : relevantVars) {
+            for (const Var &var : relevantVars) {
                 s << ((first) ? "(" : ",");
                 s << var;
                 first = false;
@@ -215,7 +215,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
                 printNode(rhs->getLoc());
 
                 first = true;
-                for (const ExprSymbol &var : relevantVars) {
+                for (const Var &var : relevantVars) {
                     s << ((first) ? "(" : ",");
                     auto it = rhs->getUpdate().find(its.getVarIdx(var));
                     if (it != rhs->getUpdate().end()) {
@@ -252,18 +252,18 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
         for (TransIdx idx : its.getTransitionsFrom(start)) {
             const LinearRule rule = its.getLinearRule(idx);
             s << "FROM: " << start << ";" << endl;
-            ExprSymbolSet vars = rule.getCost().getVariables();
+            VarSet vars = rule.getCost().vars();
             for (const Rel &rel : rule.getGuard()) {
                 rel.collectVariables(vars);
             }
             for (auto it : rule.getUpdate()) {
-                it.second.collectVariables(vars);
+                it.second.collectVars(vars);
             }
 
             //create copy of vars ("pre vars") to simulate parallel assignments
             ExprMap t2subs;
-            for (const ExprSymbol &sym : vars) {
-                t2subs.put(sym, ExprSymbol("pre_v" + sym.get_name()));
+            for (const Var &sym : vars) {
+                t2subs.put(sym, Var("pre_v" + sym.get_name()));
                 if (its.isTempVar(its.getVarIdx(sym))) {
                     s << t2subs.get(sym) << " := nondet();" << endl;
                 } else {

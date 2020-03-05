@@ -6,8 +6,8 @@ Cvc4Context::Cvc4Context(CVC4::ExprManager &manager): manager(manager) { }
 
 Cvc4Context::~Cvc4Context() { }
 
-CVC4::Expr Cvc4Context::buildVar(const std::string &name, Expression::Type type) {
-    return (type == Expression::Int) ? manager.mkVar(name, manager.integerType()) : manager.mkVar(name, manager.realType());
+CVC4::Expr Cvc4Context::buildVar(const std::string &name, Expr::Type type) {
+    return (type == Expr::Int) ? manager.mkVar(name, manager.integerType()) : manager.mkVar(name, manager.realType());
 }
 
 CVC4::Expr Cvc4Context::getInt(long val) {

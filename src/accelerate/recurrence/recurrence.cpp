@@ -32,15 +32,15 @@ Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dep
 {}
 
 
-option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expression &updateRhs, ExprSymbol updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
-    Expression last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
+option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expr &updateRhs, Var updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
+    Expr last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
     Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(ExprMap(updateLhs, last)).ex);
     Purrs::Expr exact;
 
-    const ExprSymbolSet &vars = updateRhs.getVariables();
+    const VarSet &vars = updateRhs.vars();
     if (vars.find(updateLhs) == vars.end()) {
         unsigned int validitybound = 1;
-        for (const ExprSymbol &ex: vars) {
+        for (const Var &ex: vars) {
             VariableIdx vi = varMan.getVarIdx(ex);
             if (validitybounds.find(vi) != validitybounds.end() && validitybounds.at(vi) + 1 > validitybound) {
                 validitybound = validitybounds.at(vi) + 1;
@@ -64,7 +64,7 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
 }
 
 
-option<Expression> Recurrence::findCostRecurrence(Expression cost) {
+option<Expr> Recurrence::findCostRecurrence(Expr cost) {
     cost = cost.subs(updatePreRecurrences); //replace variables by their recurrence equations
 
     //Example: if cost = y, the result is x(n) = x(n-1) + y(n-1), with x(0) = 0
@@ -92,11 +92,11 @@ option<Expression> Recurrence::findCostRecurrence(Expression cost) {
         return {};
     }
 
-    return {Expression(sol.toGiNaC())};
+    return {Expr(sol.toGiNaC())};
 }
 
 
-option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const UpdateMap &update, const Expression &meterfunc) {
+option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const UpdateMap &update, const Expr &meterfunc) {
     assert(dependencyOrder.size() == update.size());
     UpdateMap newUpdate;
 
@@ -104,9 +104,9 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
     unsigned int validityBound = 0;
     std::map<VariableIdx, unsigned int> validityBounds;
     for (VariableIdx vi : dependencyOrder) {
-        ExprSymbol target = varMan.getVarSymbol(vi);
+        Var target = varMan.getVarSymbol(vi);
 
-        const Expression &rhs = update.at(vi);
+        const Expr &rhs = update.at(vi);
         option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target, validityBounds);
         if (!updateRec) {
             return {};
@@ -127,18 +127,18 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
 }
 
 
-option<Expression> Recurrence::iterateCost(const Expression &cost, const Expression &meterfunc) {
+option<Expr> Recurrence::iterateCost(const Expr &cost, const Expr &meterfunc) {
     //calculate the new cost sum
     auto costRec = findCostRecurrence(cost);
     if (costRec) {
-        Expression res = costRec.get().subs(ExprMap(ginacN, meterfunc));
+        Expr res = costRec.get().subs(ExprMap(ginacN, meterfunc));
         return {res};
     }
     return {};
 }
 
 
-option<Recurrence::Result> Recurrence::iterate(const UpdateMap &update, const Expression &cost, const Expression &metering) {
+option<Recurrence::Result> Recurrence::iterate(const UpdateMap &update, const Expr &cost, const Expr &metering) {
     auto newUpdate = iterateUpdate(update, metering);
     if (!newUpdate) {
         return {};
@@ -157,7 +157,7 @@ option<Recurrence::Result> Recurrence::iterate(const UpdateMap &update, const Ex
 }
 
 
-option<Recurrence::Result> Recurrence::iterateRule(const VarMan &varMan, const LinearRule &rule, const Expression &metering) {
+option<Recurrence::Result> Recurrence::iterateRule(const VarMan &varMan, const LinearRule &rule, const Expr &metering) {
     // This may modify the rule's guard and update
     auto order = DependencyOrder::findOrder(varMan, rule.getUpdate());
     if (!order) {

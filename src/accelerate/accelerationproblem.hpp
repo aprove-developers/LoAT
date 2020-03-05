@@ -14,8 +14,8 @@ struct AccelerationProblem {
     GuardList todo;
     ExprMap up;
     ExprMap closed;
-    Expression cost;
-    ExprSymbol n;
+    Expr cost;
+    Var n;
     GuardList guard;
     uint validityBound;
     bool equivalent = true;
@@ -30,8 +30,8 @@ struct AccelerationProblem {
             const GuardList &todo,
             const ExprMap &up,
             const ExprMap &closed,
-            const Expression &cost,
-            const ExprSymbol &n,
+            const Expr &cost,
+            const Var &n,
             const uint validityBound,
             const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), validityBound(validityBound), varMan(varMan) {
         this->solver = SmtFactory::solver(Smt::chooseLogic<ExprMap>({todo}, {up, closed}), varMan);
@@ -42,8 +42,8 @@ struct AccelerationProblem {
             const GuardList &guard,
             const VariableManager &varMan,
             const option<UpdateMap> &closed,
-            const Expression &cost,
-            const ExprSymbol &n,
+            const Expr &cost,
+            const Var &n,
             const uint validityBound) {
         const ExprMap &up = update.toSubstitution(varMan);
         ExprMap closedSubs = closed.get().toSubstitution(varMan);
@@ -123,7 +123,7 @@ struct AccelerationProblem {
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Rel &rel = *it;
             solver->push();
-            const Expression &updated = rel.lhs().subs(up);
+            const Expr &updated = rel.lhs().subs(up);
             solver->add(rel.lhs() >= updated);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
@@ -170,7 +170,7 @@ struct AccelerationProblem {
         for (auto it = todo.begin(); it != todo.end(); it++) {
             const Rel &rel = *it;
             solver->push();
-            const Expression &updated = rel.lhs().subs(up);
+            const Expr &updated = rel.lhs().subs(up);
             solver->add(rel.lhs() <= updated);
             if (solver->check() != Smt::Sat) {
                 solver->pop();
@@ -224,7 +224,7 @@ struct AccelerationProblem {
 struct AccelerationCalculus {
 
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan) {
-        const ExprSymbol &n = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
+        const Var &n = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
         const option<Recurrence::Result> &res = Recurrence::iterateRule(varMan, r, n);
         if (res) {
             return {AccelerationProblem::init(r.getUpdate(), r.getGuard(), varMan, res->update, res->cost, n, res->validityBound)};

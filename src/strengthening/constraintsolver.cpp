@@ -42,7 +42,7 @@ namespace strengthening {
             templates(templates) { }
 
     const option<Invariants> Self::solve() const {
-        const option<ExprSymbolMap<GiNaC::numeric>> &model = Smt::maxSmt(constraints.hard, constraints.soft, Config::Z3::StrengtheningTimeout, ruleCtx.varMan);
+        const option<VarMap<GiNaC::numeric>> &model = Smt::maxSmt(constraints.hard, constraints.soft, Config::Z3::StrengtheningTimeout, ruleCtx.varMan);
         if (model) {
             const GuardList &newInvariants = instantiateTemplates(model.get());
             if (!newInvariants.empty()) {
@@ -52,13 +52,13 @@ namespace strengthening {
         return {};
     }
 
-    const GuardList Self::instantiateTemplates(const ExprSymbolMap<GiNaC::numeric> &model) const {
+    const GuardList Self::instantiateTemplates(const VarMap<GiNaC::numeric> &model) const {
         GuardList res;
         UpdateMap parameterInstantiation;
-        for (const ExprSymbol &p: templates.params()) {
+        for (const Var &p: templates.params()) {
             auto it = model.find(p);
             if (it != model.end()) {
-                const Expression &pi = it->second;
+                const Expr &pi = it->second;
                 parameterInstantiation.emplace(ruleCtx.varMan.getVarIdx(p), pi);
             }
         }

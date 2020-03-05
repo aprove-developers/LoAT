@@ -42,7 +42,7 @@ static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &upd
 
             //check if all variables on update rhs are already processed
             bool ready = true;
-            for (const ExprSymbol &sym : up.second.getVariables()) {
+            for (const Var &sym : up.second.vars()) {
                 VariableIdx var = varMan.getVarIdx(sym);
                 if (var != up.first && update.count(var) > 0 && res.ordered.count(var) == 0) {
                     ready = false;

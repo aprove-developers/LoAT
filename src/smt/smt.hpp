@@ -16,13 +16,13 @@ public:
     virtual void push() = 0;
     virtual void pop() = 0;
     virtual Result check() = 0;
-    virtual ExprSymbolMap<GiNaC::numeric> model() = 0;
+    virtual VarMap<GiNaC::numeric> model() = 0;
     virtual void setTimeout(unsigned int timeout) = 0;
     virtual void enableModels() = 0;
     virtual void resetSolver() = 0;
     virtual ~Smt();
 
-    static option<ExprSymbolMap<GiNaC::numeric>> maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan);
+    static option<VarMap<GiNaC::numeric>> maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan);
     static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
     static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs);

@@ -29,7 +29,7 @@ string VariableManager::getVarName(VariableIdx idx) const {
     return variables[idx].name;
 }
 
-VariableIdx VariableManager::getVarIdx(const ExprSymbol &var) const {
+VariableIdx VariableManager::getVarIdx(const Var &var) const {
     return variableNameLookup.at(var.get_name());
 }
 
@@ -41,12 +41,12 @@ bool VariableManager::isTempVar(VariableIdx idx) const {
     return temporaryVariables.count(idx) > 0;
 }
 
-bool VariableManager::isTempVar(const ExprSymbol &var) const {
+bool VariableManager::isTempVar(const Var &var) const {
     VariableIdx idx = getVarIdx(var);
     return temporaryVariables.count(idx) > 0;
 }
 
-ExprSymbol VariableManager::getVarSymbol(VariableIdx idx) const {
+Var VariableManager::getVarSymbol(VariableIdx idx) const {
     return variables[idx].symbol;
 }
 
@@ -60,8 +60,8 @@ VariableIdx VariableManager::addFreshTemporaryVariable(string basename) {
     return idx;
 }
 
-ExprSymbol VariableManager::getFreshUntrackedSymbol(string basename, Expression::Type type) {
-    const ExprSymbol &res = ExprSymbol(getFreshName(basename));
+Var VariableManager::getFreshUntrackedSymbol(string basename, Expr::Type type) {
+    const Var &res = Var(getFreshName(basename));
     untrackedVariables[res] = type;
     return res;
 }
@@ -71,7 +71,7 @@ VariableIdx VariableManager::addVariable(string name) {
     VariableIdx idx = variables.size();
 
     //convert to ginac
-    auto sym = ExprSymbol(name);
+    auto sym = Var(name);
 
     // remember variable
     variables.push_back({name, sym});
@@ -96,10 +96,10 @@ size_t VariableManager::getVariableCount() const {
     return variables.size();
 }
 
-Expression::Type VariableManager::getType(const ExprSymbol &x) const {
+Expr::Type VariableManager::getType(const Var &x) const {
     if (variableNameLookup.find(x.get_name()) == variableNameLookup.end()) {
         return untrackedVariables.at(x);
     } else {
-        return Expression::Int;
+        return Expr::Int;
     }
 }

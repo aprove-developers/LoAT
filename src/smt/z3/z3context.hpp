@@ -57,7 +57,7 @@ public:
     z3::expr bFalse() override;
 
 private:
-    z3::expr buildVar(const std::string &basename, Expression::Type type) override;
+    z3::expr buildVar(const std::string &basename, Expr::Type type) override;
     z3::context &ctx;
 
 };

@@ -60,23 +60,23 @@ private:
      *
      * @return true if successful (all nonlinear subterms have been added to the set)
      */
-    static bool collectMonomials(const Expression &ex, ExpressionSet &monomials);
+    static bool collectMonomials(const Expr &ex, ExprSet &monomials);
 
     /**
      * Collects all monomials of the guard via collectMonomials
      */
-    bool collectMonomialsInGuard(ExpressionSet &monomials) const;
+    bool collectMonomialsInGuard(ExprSet &monomials) const;
 
     /**
      * Collects all monomials of all updates via collectMonomials
      */
-    bool collectMonomialsInUpdates(ExpressionSet &monomials) const;
+    bool collectMonomialsInUpdates(ExprSet &monomials) const;
 
     /**
      * Checks if any substitutions need to be performed,
      * i.e., if there is any nonlinear monomial in the given set.
      */
-    bool needsLinearization(const ExpressionSet &monomials) const;
+    bool needsLinearization(const ExprSet &monomials) const;
 
     /**
      * Checks if it is safe to replace all nonlinear monomials of the given set.
@@ -87,7 +87,7 @@ private:
      *
      * @return true if the replacement is safe
      */
-    bool checkForConflicts(const ExpressionSet &monomials) const;
+    bool checkForConflicts(const ExprSet &monomials) const;
 
     /**
      * Constructs a substitution (on terms, not on variables, e.g., x^2/z)
@@ -101,7 +101,7 @@ private:
      *
      * @return The constructed substitution (map from terms to variables)
      */
-    ExprMap buildSubstitution(const ExpressionSet &nonlinearTerms);
+    ExprMap buildSubstitution(const ExprSet &nonlinearTerms);
 
     /**
      * Applies the given substitution to the entire guard and update.

@@ -27,7 +27,7 @@ Rule::Rule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     }
 }
 
-Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
+Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, UpdateMap update)
         : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)}) {
     if (getCost().isNontermSymbol()) {
         rhss = {RuleRhs(rhss[0].getLoc(), {})};
@@ -46,7 +46,7 @@ LinearRule Rule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
 }
 
 bool Rule::isDummyRule() const {
-    return isLinear() && getCost().is_zero() && getGuard().empty() && getUpdate(0).empty();
+    return isLinear() && getCost().isZero() && getGuard().empty() && getUpdate(0).empty();
 }
 
 bool Rule::isLinear() const {

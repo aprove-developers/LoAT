@@ -29,12 +29,12 @@ public:
 
     struct Template {
 
-        Template(Rel t, ExprSymbolSet vars, ExprSymbolSet params) :
+        Template(Rel t, VarSet vars, VarSet params) :
                 t(std::move(t)), vars(std::move(vars)), params(std::move(params)) {}
 
         const Rel t;
-        const ExprSymbolSet vars;
-        const ExprSymbolSet params;
+        const VarSet vars;
+        const VarSet params;
 
     };
 
@@ -42,9 +42,9 @@ public:
 
     void add(const Template &t);
 
-    const ExprSymbolSet& params() const;
+    const VarSet& params() const;
 
-    const ExprSymbolSet& vars() const;
+    const VarSet& vars() const;
 
     bool isParametric(const Rel &rel) const;
 
@@ -57,8 +57,8 @@ public:
 private:
 
     std::vector<Rel> templates;
-    ExprSymbolSet params_;
-    ExprSymbolSet vars_;
+    VarSet params_;
+    VarSet vars_;
 
 };
 

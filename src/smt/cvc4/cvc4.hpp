@@ -16,7 +16,7 @@ public:
     void push() override;
     void pop() override;
     Result check() override;
-    ExprSymbolMap<GiNaC::numeric> model() override;
+    VarMap<GiNaC::numeric> model() override;
     void setTimeout(unsigned int timeout) override;
     void enableModels() override;
     void resetSolver() override;

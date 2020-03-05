@@ -36,7 +36,7 @@ class GuardList : public std::vector<Rel> {
 public:
     // inherit constructors of base class
     using std::vector<Rel>::vector;
-    void collectVariables(ExprSymbolSet &res) const;
+    void collectVariables(VarSet &res) const;
     GuardList subs(const ExprMap &sigma) const;
     void applySubstitution(const ExprMap &sigma);
 
@@ -50,10 +50,10 @@ public:
 
 // UpdateMap is a map from variables (as indices) to an expression (with which the variable is updated),
 // with some additional methods for convenience
-class UpdateMap : public std::map<VariableIdx,Expression> {
+class UpdateMap : public std::map<VariableIdx,Expr> {
 public:
     bool isUpdated(VariableIdx var) const;
-    Expression getUpdate(VariableIdx var) const;
+    Expr getUpdate(VariableIdx var) const;
     ExprMap toSubstitution(const VariableManager &varMan) const;
     friend bool operator==(const UpdateMap &m1, const UpdateMap &m2);
 };

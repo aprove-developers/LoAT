@@ -31,7 +31,7 @@ namespace strengthening {
     const Templates TemplateBuilder::build() const {
         Templates res = Templates();
         for (const Rel &rel: guardCtx.todo) {
-            const ExprSymbolSet &varSymbols = util::RelevantVariables::find(
+            const VarSet &varSymbols = util::RelevantVariables::find(
                     {rel},
                     ruleCtx.updates,
                     guardCtx.guard,
@@ -41,13 +41,13 @@ namespace strengthening {
         return res;
     }
 
-    const Templates::Template TemplateBuilder::buildTemplate(const ExprSymbolSet &vars) const {
-        ExprSymbolSet params;
-        const ExprSymbol &c0 = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c0"));
+    const Templates::Template TemplateBuilder::buildTemplate(const VarSet &vars) const {
+        VarSet params;
+        const Var &c0 = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c0"));
         params.insert(c0);
-        Expression res = c0;
-        for (const ExprSymbol &x: vars) {
-            const ExprSymbol &param = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c"));
+        Expr res = c0;
+        for (const Var &x: vars) {
+            const Var &param = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c"));
             params.insert(param);
             res = res + (x * param);
         }

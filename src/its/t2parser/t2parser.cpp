@@ -83,35 +83,35 @@ namespace t2parser {
     Rel T2Parser::parseConstraint(const std::string &str) {
         if (str.find(">=") != std::string::npos) {
             unsigned int pos = str.find(">=");
-            Expression lhs = parseExpression(str.substr(0, pos));
-            Expression rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
+            Expr lhs = parseExpression(str.substr(0, pos));
+            Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
             return lhs >= rhs;
         } else if (str.find("<=") != std::string::npos) {
             unsigned int pos = str.find("<=");
-            Expression lhs = parseExpression(str.substr(0, pos));
-            Expression rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
+            Expr lhs = parseExpression(str.substr(0, pos));
+            Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
             return lhs <= rhs;
         } else if (str.find("==") != std::string::npos) {
             unsigned int pos = str.find("==");
-            Expression lhs = parseExpression(str.substr(0, pos));
-            Expression rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
+            Expr lhs = parseExpression(str.substr(0, pos));
+            Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
             return lhs == rhs;
         } else if (str.find("<") != std::string::npos) {
             unsigned int pos = str.find("<");
-            Expression lhs = parseExpression(str.substr(0, pos));
-            Expression rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
+            Expr lhs = parseExpression(str.substr(0, pos));
+            Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
             return lhs < rhs;
         } else if (str.find(">") != std::string::npos) {
             unsigned int pos = str.find(">");
-            Expression lhs = parseExpression(str.substr(0, pos));
-            Expression rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
+            Expr lhs = parseExpression(str.substr(0, pos));
+            Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
             return lhs > rhs;
         } else {
             assert(false);
         }
     }
 
-    Expression T2Parser::parseExpression(std::string str) {
+    Expr T2Parser::parseExpression(std::string str) {
         boost::algorithm::trim(str);
         if (str == NONDET) {
             return res.getVarSymbol(res.addFreshTemporaryVariable("nondet"));

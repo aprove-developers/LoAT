@@ -50,7 +50,7 @@ public:
     term_t bFalse() override;
 
 protected:
-    term_t buildVar(const std::string &basename, Expression::Type type) override;
+    term_t buildVar(const std::string &basename, Expr::Type type) override;
 
 };
 

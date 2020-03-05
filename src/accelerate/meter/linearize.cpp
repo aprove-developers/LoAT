@@ -23,21 +23,21 @@
 using namespace std;
 
 
-bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials) {
+bool Linearize::collectMonomials(const Expr &ex, ExprSet &monomials) {
     // We can only handle polynomials
-    if (!ex.isPolynomial()) {
+    if (!ex.isPoly()) {
         return false;
     }
 
     // Check if we are linear in every variable
-    for (const ExprSymbol &var : ex.getVariables()) {
+    for (const Var &var : ex.vars()) {
         int deg = ex.degree(var);
         assert(deg >= 0); // since ex is a polynomial
 
         // If x occurs with different degrees, we cannot substitute both (e.g. x^2 + x)
         if (deg > 1) {
             // remove the absolute coeff to exclude degree 0 when calling ldegree
-            Expression shifted = (ex - ex.coeff(var,0)).expand(); // expand appears to be needed for ldegree
+            Expr shifted = (ex - ex.coeff(var,0)).expand(); // expand appears to be needed for ldegree
             int lowdeg = shifted.ldegree(var);
             assert(lowdeg > 0);
 
@@ -49,7 +49,7 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
         if (deg > 1) {
             // Substitute powers of x, e.g. 4*x^2 should later become 4*z.
             // We don't handle cases like y*x^2 to keep linearization simple.
-            if (!ex.coeff(var, deg).isNumeric()) {
+            if (!ex.coeff(var, deg).isRationalConstant()) {
                 return false; // too complicated
             }
             monomials.insert(GiNaC::pow(var, deg));
@@ -57,20 +57,20 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
         } else {
             // If deg == 1, we can still have a nonlinear term like x*y, so we have to check the coefficient.
             // We don't handle more complicated cases like x*y*z or (y+z)*x.
-            Expression coeff = ex.coeff(var, deg);
-            ExprSymbolSet coeffVars = coeff.getVariables();
+            Expr coeff = ex.coeff(var, deg);
+            VarSet coeffVars = coeff.vars();
 
             if (coeffVars.size() > 1) {
                 return false; // too complicated
             }
 
             if (coeffVars.size() == 1) {
-                ExprSymbol coeffVar = *coeffVars.begin();
+                Var coeffVar = *coeffVars.begin();
                 monomials.insert(coeffVar * var);
 
                 // Check if var also occurs alone, e.g. for (1+y)*x, we also have 1*x.
                 // So we are interested in the absolute coefficient of the coeff (1+y).
-                if (!coeff.coeff(coeffVar, 0).is_zero()) {
+                if (!coeff.coeff(coeffVar, 0).isZero()) {
                     monomials.insert(var);
                 }
 
@@ -84,7 +84,7 @@ bool Linearize::collectMonomials(const Expression &ex, ExpressionSet &monomials)
 }
 
 
-bool Linearize::collectMonomialsInGuard(ExpressionSet &monomials) const {
+bool Linearize::collectMonomialsInGuard(ExprSet &monomials) const {
     for (const Rel &rel : guard) {
         assert(rel.isInequality());
 
@@ -100,7 +100,7 @@ bool Linearize::collectMonomialsInGuard(ExpressionSet &monomials) const {
 }
 
 
-bool Linearize::collectMonomialsInUpdates(ExpressionSet &monomials) const {
+bool Linearize::collectMonomialsInUpdates(ExprSet &monomials) const {
     for (const UpdateMap &update : updates) {
         for (const auto &it : update) {
             if (!collectMonomials(it.second.expand(), monomials)) {
@@ -112,16 +112,16 @@ bool Linearize::collectMonomialsInUpdates(ExpressionSet &monomials) const {
 }
 
 
-bool Linearize::needsLinearization(const ExpressionSet &monomials) const {
-    auto isNonlinear = [](const Expression &term) { return !term.isLinear(); };
+bool Linearize::needsLinearization(const ExprSet &monomials) const {
+    auto isNonlinear = [](const Expr &term) { return !term.isLinear(); };
     return std::any_of(monomials.begin(), monomials.end(), isNonlinear);
 }
 
 
-bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
-    ExprSymbolSet vars;
-    for (const Expression &term : monomials) {
-        for (ExprSymbol var : term.getVariables()) {
+bool Linearize::checkForConflicts(const ExprSet &monomials) const {
+    VarSet vars;
+    for (const Expr &term : monomials) {
+        for (Var var : term.vars()) {
             // If we already know this variable, we have a conflict,
             // since we cannot replace a variable in two different ways
             // (or replace a variable which also occurs linearly).
@@ -150,19 +150,19 @@ bool Linearize::checkForConflicts(const ExpressionSet &monomials) const {
 }
 
 
-ExprMap Linearize::buildSubstitution(const ExpressionSet &monomials) {
+ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
     ExprMap res;
-    for (const Expression &term: monomials) {
-        if (term.isSymbol()) {
+    for (const Expr &term: monomials) {
+        if (term.isVar()) {
             continue;
 
-        } else if (term.isPower()) {
-            ExprSymbol base = term.op(0).toSymbol();
-            assert(term.op(1).isIntegerConstant());
-            GiNaC::numeric exponent = term.op(1).toNumeric();
+        } else if (term.isPow()) {
+            Var base = term.op(0).toVar();
+            assert(term.op(1).isInt());
+            GiNaC::numeric exponent = term.op(1).toNum();
 
             VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent.to_int()));
-            ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
+            Var fresh = varMan.getVarSymbol(freshIdx);
             res.put(term, fresh);
 
             // Remember that e.g. x^2 is always nonnegative
@@ -171,12 +171,12 @@ ExprMap Linearize::buildSubstitution(const ExpressionSet &monomials) {
             }
 
         } else {
-            assert(term.nops() == 2 && term.isMul()); // form x*y
-            ExprSymbol x = term.op(0).toSymbol();
-            ExprSymbol y = term.op(1).toSymbol();
+            assert(term.arity() == 2 && term.isMul()); // form x*y
+            Var x = term.op(0).toVar();
+            Var y = term.op(1).toVar();
 
             VariableIdx freshIdx = varMan.addFreshVariable(x.get_name() + y.get_name());
-            ExprSymbol fresh = varMan.getVarSymbol(freshIdx);
+            Var fresh = varMan.getVarSymbol(freshIdx);
             res.put(term, fresh);
         }
     }
@@ -205,7 +205,7 @@ void Linearize::applySubstitution(const ExprMap &subs) {
 ExprMap Linearize::reverseSubstitution(const ExprMap &subs) {
     ExprMap reverseSubs;
     for (auto it : subs) {
-        assert(it.second.isSymbol());
+        assert(it.second.isVar());
         reverseSubs.put(it.second, it.first);
     }
     return reverseSubs;
@@ -217,7 +217,7 @@ option<ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guar
     Linearize lin(guard, updates, varMan);
 
     // Collect all nonlinear terms that have to be replaced (if possible)
-    ExpressionSet monomials;
+    ExprSet monomials;
     if (!lin.collectMonomialsInGuard(monomials)) {
         return {};
     }

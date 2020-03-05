@@ -27,7 +27,7 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(VarMan &varMan, GuardList guard, Expression cost, bool finalCheck, uint timeout);
+    AsymptoticBound(VarMan &varMan, GuardList guard, Expr cost, bool finalCheck, uint timeout);
 
     void initLimitVectors();
     void normalizeGuard();
@@ -50,7 +50,7 @@ private:
     bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it);
     bool applyLimitVectorsThatMakeSense(const InftyExpressionSet::const_iterator &it,
-                                        const Expression &l, const Expression &r,
+                                        const Expr &l, const Expr &r,
                                         const std::vector<LimitVector> &limitVectors);
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
@@ -59,7 +59,7 @@ private:
 private:
     VariableManager &varMan;
     const GuardList guard;
-    const Expression cost;
+    const Expr cost;
     bool finalCheck;
     GuardList normalizedGuard;
     ComplexityResult bestComplexity;
@@ -87,7 +87,7 @@ public:
         Complexity cpx;
 
         // The resulting cost, after expressing variables in terms of n.
-        Expression solvedCost;
+        Expr solvedCost;
 
         // The number of non-constant variables (i.e., which grow with n).
         int inftyVars;
@@ -95,7 +95,7 @@ public:
         ProofOutput proof;
 
         explicit Result(Complexity c) : cpx(c), solvedCost(0), inftyVars(0) {}
-        Result(Complexity c, Expression x, int v, ProofOutput proof) : cpx(c), solvedCost(x), inftyVars(v), proof(proof) {}
+        Result(Complexity c, Expr x, int v, ProofOutput proof) : cpx(c), solvedCost(x), inftyVars(v), proof(proof) {}
     };
 
     /**
@@ -105,14 +105,14 @@ public:
      */
     static Result determineComplexity(VarMan &varMan,
                                       const GuardList &guard,
-                                      const Expression &cost,
+                                      const Expr &cost,
                                       bool finalCheck,
                                       const Complexity &currentRes,
                                       uint timeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
                                             const GuardList &guard,
-                                            const Expression &cost,
+                                            const Expr &cost,
                                             bool finalCheck,
                                             Complexity currentRes,
                                             uint timeout);

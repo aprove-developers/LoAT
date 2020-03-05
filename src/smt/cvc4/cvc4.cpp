@@ -33,9 +33,9 @@ GiNaC::numeric Cvc4::getRealFromModel(const CVC4::Expr &symbol) {
     return res / rat.getDenominator().getLong();
 }
 
-ExprSymbolMap<GiNaC::numeric> Cvc4::model() {
+VarMap<GiNaC::numeric> Cvc4::model() {
     assert(models);
-    ExprSymbolMap<GiNaC::numeric> res;
+    VarMap<GiNaC::numeric> res;
     for (const auto &p: ctx.getSymbolMap()) {
         res[p.first] = getRealFromModel(p.second);
     }

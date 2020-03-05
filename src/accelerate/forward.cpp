@@ -100,7 +100,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
         case MeteringFinder::Nonterm:
         {
             // Since the loop is non-terminating, the right-hand sides are of no interest.
-            rule.getCostMut() = Expression::NontermSymbol;
+            rule.getCostMut() = Expr::NontermSymbol;
             const Rule &nontermRule = rule.replaceRhssBySink(sink);
             res.proof.concat(meter.proof);
             res.proof.ruleTransformationProof(rule, "Proved universal non-termiation while searching metering function", nontermRule, its);
@@ -128,7 +128,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
                 // Compute iterated cost/update by recurrence solving (modifies newRule).
                 // Note that we usually assume that the maximal number of iterations is taken, so
                 // instead of adding 0 < tv < meter+1 as in the paper, we instantiate tv by meter.
-                Expression iterationCount = meter.metering;
+                Expr iterationCount = meter.metering;
                 if (Config::ForwardAccel::UseTempVarForIterationCount) {
                     iterationCount = its.getVarSymbol(its.addFreshTemporaryVariable("tv"));
                 }
@@ -156,7 +156,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
             } else {
                 // Compute the "iterated costs" by just assuming every step has cost 1
                 size_t degree = newRule.rhsCount();
-                Expression newCost = degree ^ meter.metering;
+                Expr newCost = degree ^ meter.metering;
                 newRule.getCostMut() = (newCost - 1) / (degree - 1); // resulting cost is (d^meter-1)/(d-1)
 
                 // We don't know to what result the rule evaluates (multiple rhss, so no single result).
@@ -192,8 +192,8 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
     Result res;
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
     if (Config::ForwardAccel::ConflictVarHeuristic && conflictVar) {
-        ExprSymbol A = its.getVarSymbol(conflictVar->first);
-        ExprSymbol B = its.getVarSymbol(conflictVar->second);
+        Var A = its.getVarSymbol(conflictVar->first);
+        Var B = its.getVarSymbol(conflictVar->second);
         Rule newRule = rule;
 
         // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)

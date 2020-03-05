@@ -25,17 +25,17 @@ void Self::add(const Self::Template &t) {
     params_.insert(t.params.begin(), t.params.end());
 }
 
-const ExprSymbolSet& Self::params() const {
+const VarSet& Self::params() const {
     return params_;
 }
 
-const ExprSymbolSet& Self::vars() const {
+const VarSet& Self::vars() const {
     return vars_;
 }
 
 bool Self::isParametric(const Rel &rel) const {
-    ExprSymbolSet relVars = rel.getVariables();
-    for (const ExprSymbol &x: params()) {
+    VarSet relVars = rel.getVariables();
+    for (const Var &x: params()) {
         if (relVars.count(x) > 0) {
             return true;
         }

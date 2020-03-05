@@ -21,7 +21,7 @@
 
 using namespace std;
 
-bool Expression_is_less::operator()(const Expression &lh, const Expression &rh) const {
+bool Expr_is_less::operator()(const Expr &lh, const Expr &rh) const {
      return lh.compare(rh) < 0;
 }
 
@@ -43,21 +43,13 @@ std::ostream& operator<<(std::ostream &s, const ExprMap &map) {
     return s;
 }
 
-const ExprSymbol Expression::NontermSymbol = GiNaC::symbol("NONTERM");
+const Var Expr::NontermSymbol = GiNaC::symbol("NONTERM");
 
-Expression Expression::fromString(const string &s, const GiNaC::lst &variables) {
-    auto containsRelations = [](const string &s) -> bool {
-        return s.find_first_of("<>=") != string::npos;
-    };
-    assert(!containsRelations(s));
-    return GiNaC::ex(s,variables);
-}
-
-void Expression::applySubs(const ExprMap &subs) {
+void Expr::applySubs(const ExprMap &subs) {
     this->ex = this->ex.subs(subs.ginacMap);
 }
 
-bool Expression::findAll(const Expression &pattern, ExpressionSet &found) const {
+bool Expr::findAll(const Expr &pattern, ExprSet &found) const {
     bool anyFound = false;
 
     if (match(pattern)) {
@@ -65,7 +57,7 @@ bool Expression::findAll(const Expression &pattern, ExpressionSet &found) const 
         anyFound = true;
     }
 
-    for (size_t i = 0; i < nops(); i++) {
+    for (size_t i = 0; i < arity(); i++) {
         if (op(i).findAll(pattern, found)) {
             anyFound = true;
         }
@@ -75,36 +67,36 @@ bool Expression::findAll(const Expression &pattern, ExpressionSet &found) const 
 }
 
 
-bool Expression::equalsVariable(const GiNaC::symbol &var) const {
+bool Expr::equals(const Var &var) const {
     return this->compare(var) == 0;
 }
 
 
-bool Expression::isNontermSymbol() const {
-    return equalsVariable(NontermSymbol);
+bool Expr::isNontermSymbol() const {
+    return equals(NontermSymbol);
 }
 
 
-bool Expression::isLinear(const option<ExprSymbolSet> &vars) const {
-    ExprSymbolSet theVars = vars ? vars.get() : getVariables();
+bool Expr::isLinear(const option<VarSet> &vars) const {
+    VarSet theVars = vars ? vars.get() : this->vars();
     // linear expressions are always polynomials
-    if (!isPolynomial()) return false;
+    if (!isPoly()) return false;
 
     // degree only works reliable on expanded expressions (despite the tutorial stating otherwise)
-    Expression expanded = expand();
+    Expr expanded = expand();
 
     // GiNaC does not provide an info flag for this, so we check the degree of every variable.
     // We also have to check if the coefficient contains variables,
     // e.g. y has degree 1 in x*y, but we don't consider x*y to be linear.
-    for (const ExprSymbol &var : theVars) {
+    for (const Var &var : theVars) {
         int deg = expanded.degree(var);
         if (deg > 1 || deg < 0) {
             return false;
         }
 
         if (deg == 1) {
-            ExprSymbolSet coefficientVars = expanded.coeff(var,deg).getVariables();
-            for (const ExprSymbol &e: coefficientVars) {
+            VarSet coefficientVars = expanded.coeff(var,deg).vars();
+            for (const Var &e: coefficientVars) {
                 if (theVars.find(e) != theVars.end()) {
                     return false;
                 }
@@ -115,70 +107,70 @@ bool Expression::isLinear(const option<ExprSymbolSet> &vars) const {
 }
 
 
-bool Expression::isPolynomial() const {
+bool Expr::isPoly() const {
     return ex.info(GiNaC::info_flags::polynomial);
 }
 
-bool Expression::isPolynomial(const ExprSymbol &n) const {
+bool Expr::isPoly(const Var &n) const {
     return ex.is_polynomial(n);
 }
 
 
-bool Expression::isPolynomialWithIntegerCoeffs() const {
+bool Expr::isIntPoly() const {
     return ex.info(GiNaC::info_flags::integer_polynomial);
 }
 
 
-bool Expression::isIntegerConstant() const {
+bool Expr::isInt() const {
     return ex.info(GiNaC::info_flags::integer);
 }
 
 
-bool Expression::isRationalConstant() const {
+bool Expr::isRationalConstant() const {
     return ex.info(GiNaC::info_flags::rational);
 }
 
 
-bool Expression::isProperRational() const {
+bool Expr::isNonIntConstant() const {
     return ex.info(GiNaC::info_flags::rational)
            && !ex.info(GiNaC::info_flags::integer);
 }
 
 
-bool Expression::isProperNaturalPower() const {
-    if (!this->isPower()) {
+bool Expr::isNaturalPow() const {
+    if (!this->isPow()) {
         return false;
     }
 
-    Expression power = this->op(1);
-    if (!power.isIntegerConstant()) {
+    Expr power = this->op(1);
+    if (!power.isInt()) {
         return false;
     }
 
-    return power.toNumeric() > 1;
+    return power.toNum() > 1;
 }
 
 
-int Expression::getMaxDegree() const {
-    assert(isPolynomial());
-    Expression expanded = expand();
+int Expr::maxDegree() const {
+    assert(isPoly());
+    Expr expanded = expand();
 
     int res = 0;
-    for (const auto &var : getVariables()) {
+    for (const auto &var : vars()) {
         res = std::max(res, expanded.degree(var));
     }
     return res;
 }
 
 
-void Expression::collectVariables(ExprSymbolSet &res) const {
+void Expr::collectVars(VarSet &res) const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
-        SymbolVisitor(ExprSymbolSet &t) : target(t) {}
+        SymbolVisitor(VarSet &t) : target(t) {}
         void visit(const GiNaC::symbol &sym) {
             if (sym != NontermSymbol) target.insert(sym);
         }
     private:
-        ExprSymbolSet &target;
+        VarSet &target;
     };
 
     SymbolVisitor v(res);
@@ -186,19 +178,19 @@ void Expression::collectVariables(ExprSymbolSet &res) const {
 }
 
 
-ExprSymbolSet Expression::getVariables() const {
-    ExprSymbolSet res;
-    collectVariables(res);
+VarSet Expr::vars() const {
+    VarSet res;
+    collectVars(res);
     return res;
 }
 
 
-bool Expression::hasNoVariables() const {
-    return !hasVariableWith([](const ExprSymbol &) { return true; });
+bool Expr::isGround() const {
+    return !hasVarWith([](const Var &) { return true; });
 }
 
 
-bool Expression::hasExactlyOneVariable() const {
+bool Expr::isUnivariate() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         void visit(const GiNaC::symbol &var) {
             if (foundVar == nullptr) {
@@ -223,16 +215,16 @@ bool Expression::hasExactlyOneVariable() const {
 }
 
 
-ExprSymbol Expression::getAVariable() const {
+Var Expr::someVar() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         void visit(const GiNaC::symbol &var) {
             variable = var;
         }
-        ExprSymbol result() const {
+        Var result() const {
             return variable;
         }
     private:
-        ExprSymbol variable;
+        Var variable;
     };
 
     SymbolVisitor visitor;
@@ -241,7 +233,7 @@ ExprSymbol Expression::getAVariable() const {
 }
 
 
-bool Expression::hasAtMostOneVariable() const {
+bool Expr::isNotMultivariate() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         void visit(const GiNaC::symbol &var) {
             if (foundVar == nullptr) {
@@ -265,7 +257,7 @@ bool Expression::hasAtMostOneVariable() const {
 }
 
 
-bool Expression::hasAtLeastTwoVariables() const {
+bool Expr::isMultivariate() const {
     struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
         void visit(const GiNaC::symbol &var) {
             if (foundVar == nullptr) {
@@ -289,59 +281,59 @@ bool Expression::hasAtLeastTwoVariables() const {
 }
 
 
-Complexity Expression::getComplexity(const Expression &term) {
+Complexity Expr::toComplexity(const Expr &term) {
 
     //traverse the expression
-    if (term.isNumeric()) {
-        GiNaC::numeric num = term.toNumeric();
+    if (term.isRationalConstant()) {
+        GiNaC::numeric num = term.toNum();
         assert(num.is_integer() || num.is_real());
         //both for positive and negative constants, as we want to over-approximate the complexity! (e.g. A-B is O(n))
         return Complexity::Const;
 
-    } else if (term.isPower()) {
-        assert(term.nops() == 2);
+    } else if (term.isPow()) {
+        assert(term.arity() == 2);
 
         // If the exponent is at least polynomial (non-constant), complexity might be exponential
-        if (getComplexity(term.op(1)) > Complexity::Const) {
-            const Expression &base = term.op(0);
-            if (base.is_zero() || base.compare(1) == 0 || base.compare(-1) == 0) {
+        if (toComplexity(term.op(1)) > Complexity::Const) {
+            const Expr &base = term.op(0);
+            if (base.isZero() || base.compare(1) == 0 || base.compare(-1) == 0) {
                 return Complexity::Const;
             }
             return Complexity::Exp;
 
         // Otherwise the complexity is polynomial, if the exponent is nonnegative
         } else {
-            if (!term.op(1).isNumeric()) {
+            if (!term.op(1).isRationalConstant()) {
                 return Complexity::Unknown;
             }
-            GiNaC::numeric numexp = term.op(1).toNumeric();
+            GiNaC::numeric numexp = term.op(1).toNum();
             if (!numexp.is_nonneg_integer()) {
                 return Complexity::Unknown;
             }
 
-            Complexity base = getComplexity(term.op(0));
+            Complexity base = toComplexity(term.op(0));
             int exp = numexp.to_int();
             return base ^ exp;
         }
 
     } else if (term.isMul()) {
-        assert(term.nops() > 0);
-        Complexity cpx = getComplexity(term.op(0));
-        for (unsigned int i=1; i < term.nops(); ++i) {
-            cpx = cpx * getComplexity(term.op(i));
+        assert(term.arity() > 0);
+        Complexity cpx = toComplexity(term.op(0));
+        for (unsigned int i=1; i < term.arity(); ++i) {
+            cpx = cpx * toComplexity(term.op(i));
         }
         return cpx;
 
     } else if (term.isAdd()) {
-        assert(term.nops() > 0);
-        Complexity cpx = getComplexity(term.op(0));
-        for (unsigned int i=1; i < term.nops(); ++i) {
-            cpx = cpx + getComplexity(term.op(i));
+        assert(term.arity() > 0);
+        Complexity cpx = toComplexity(term.op(0));
+        for (unsigned int i=1; i < term.arity(); ++i) {
+            cpx = cpx + toComplexity(term.op(i));
         }
         return cpx;
 
-    } else if (term.isSymbol()) {
-        return (term.compare(Expression::NontermSymbol) == 0) ? Complexity::Nonterm : Complexity::Poly(1);
+    } else if (term.isVar()) {
+        return (term.compare(Expr::NontermSymbol) == 0) ? Complexity::Nonterm : Complexity::Poly(1);
     }
 
     //unknown expression type (e.g. relational)
@@ -349,180 +341,176 @@ Complexity Expression::getComplexity(const Expression &term) {
 }
 
 
-Complexity Expression::getComplexity() const {
+Complexity Expr::toComplexity() const {
     if (isNontermSymbol()) {
         return Complexity::Nonterm;
     }
 
-    Expression simple = expand(); // multiply out
-    return getComplexity(simple);
+    Expr simple = expand(); // multiply out
+    return toComplexity(simple);
 }
 
 
-string Expression::toString() const {
+string Expr::toString() const {
     stringstream ss;
     ss << *this;
     return ss.str();
 }
 
-bool Expression::is_equal(const Expression &that) const {
+bool Expr::equals(const Expr &that) const {
     return ex.is_equal(that.ex);
 }
 
-int Expression::degree(const ExprSymbol &var) const {
+int Expr::degree(const Var &var) const {
     return ex.degree(var);
 }
 
-int Expression::ldegree(const ExprSymbol &var) const {
+int Expr::ldegree(const Var &var) const {
     return ex.ldegree(var);
 }
 
-Expression Expression::coeff(const ExprSymbol &var, int degree) const {
+Expr Expr::coeff(const Var &var, int degree) const {
     return ex.coeff(var, degree);
 }
 
-Expression Expression::lcoeff(const ExprSymbol &var) const {
+Expr Expr::lcoeff(const Var &var) const {
     return ex.lcoeff(var);
 }
 
-Expression Expression::expand() const {
+Expr Expr::expand() const {
     return ex.expand();
 }
 
-bool Expression::has(const Expression &pattern) const {
+bool Expr::has(const Expr &pattern) const {
     return ex.has(pattern.ex);
 }
 
-bool Expression::is_zero() const {
+bool Expr::isZero() const {
     return ex.is_zero();
 }
 
-bool Expression::isSymbol() const {
+bool Expr::isVar() const {
     return ex.info(GiNaC::info_flags::symbol);
 }
 
-bool Expression::isNumeric() const {
-    return ex.info(GiNaC::info_flags::numeric);
-}
-
-bool Expression::isPower() const {
+bool Expr::isPow() const {
     return GiNaC::is_a<GiNaC::power>(ex);
 }
 
-bool Expression::isMul() const {
+bool Expr::isMul() const {
     return GiNaC::is_a<GiNaC::mul>(ex);
 };
 
-bool Expression::isAdd() const {
+bool Expr::isAdd() const {
     return GiNaC::is_a<GiNaC::add>(ex);
 }
 
-ExprSymbol Expression::toSymbol() const {
+Var Expr::toVar() const {
     return GiNaC::ex_to<GiNaC::symbol>(ex);
 }
 
-GiNaC::numeric Expression::toNumeric() const {
+GiNaC::numeric Expr::toNum() const {
     return GiNaC::ex_to<GiNaC::numeric>(ex);
 }
 
-Expression Expression::op(uint i) const {
+Expr Expr::op(uint i) const {
     return ex.op(i);
 }
 
-size_t Expression::nops() const {
+size_t Expr::arity() const {
     return ex.nops();
 }
 
-Expression Expression::subs(const ExprMap &map, uint options) const {
+Expr Expr::subs(const ExprMap &map, uint options) const {
     return ex.subs(map.ginacMap, options);
 }
 
-void Expression::traverse(GiNaC::visitor &v) const {
+void Expr::traverse(GiNaC::visitor &v) const {
     ex.traverse(v);
 }
 
-int Expression::compare(const Expression &that) const {
+int Expr::compare(const Expr &that) const {
     return ex.compare(that.ex);
 }
 
-Expression Expression::numer() const {
+Expr Expr::numerator() const {
     return ex.numer();
 }
 
-Expression Expression::denom() const {
+Expr Expr::denominator() const {
     return ex.denom();
 }
 
-bool Expression::match(const Expression &pattern) const {
+bool Expr::match(const Expr &pattern) const {
     return ex.match(pattern.ex);
 }
 
-Expression operator-(const Expression &x) {
+Expr operator-(const Expr &x) {
     return -x.ex;
 }
 
-Expression operator-(const Expression &x, const Expression &y) {
+Expr operator-(const Expr &x, const Expr &y) {
     return x.ex - y.ex;
 }
 
-Expression operator+(const Expression &x, const Expression &y) {
+Expr operator+(const Expr &x, const Expr &y) {
     return x.ex + y.ex;
 }
 
-Expression operator*(const Expression &x, const Expression &y) {
+Expr operator*(const Expr &x, const Expr &y) {
     return x.ex * y.ex;
 }
 
-Expression operator/(const Expression &x, const Expression &y) {
+Expr operator/(const Expr &x, const Expr &y) {
     return x.ex / y.ex;
 }
 
-Expression operator^(const Expression &x, const Expression &y) {
+Expr operator^(const Expr &x, const Expr &y) {
     return GiNaC::pow(x.ex, y.ex);
 }
 
-Expression Expression::wildcard(uint label) {
+Expr Expr::wildcard(uint label) {
     return GiNaC::wild(label);
 }
 
 
-Rel::Rel(const Expression &lhs, Operator op, const Expression &rhs): l(lhs), r(rhs), op(op) { }
+Rel::Rel(const Expr &lhs, Operator op, const Expr &rhs): l(lhs), r(rhs), op(op) { }
 
-Rel operator<(const Expression &x, const Expression &y) {
+Rel operator<(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::lt, y.ex);
 }
 
-Rel operator>(const Expression &x, const Expression &y) {
+Rel operator>(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::gt, y.ex);
 }
 
-Rel operator<=(const Expression &x, const Expression &y) {
+Rel operator<=(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::leq, y.ex);
 }
 
-Rel operator>=(const Expression &x, const Expression &y) {
+Rel operator>=(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::geq, y.ex);
 }
 
-Rel operator!=(const Expression &x, const Expression &y) {
+Rel operator!=(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::neq, y.ex);
 }
 
-Rel operator==(const Expression &x, const Expression &y) {
+Rel operator==(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::eq, y.ex);
 }
 
-std::ostream& operator<<(std::ostream &s, const Expression &e) {
+std::ostream& operator<<(std::ostream &s, const Expr &e) {
     s << e.ex;
     return s;
 }
 
 
-Expression Rel::lhs() const {
+Expr Rel::lhs() const {
     return l;
 }
 
-Expression Rel::rhs() const {
+Expr Rel::rhs() const {
     return r;
 }
 
@@ -530,11 +518,11 @@ Rel Rel::expand() const {
     return Rel(l.expand(), op, r.expand());
 }
 
-bool Rel::isPolynomial() const {
-    return l.isPolynomial() && r.isPolynomial();
+bool Rel::isPoly() const {
+    return l.isPoly() && r.isPoly();
 }
 
-bool Rel::isLinear(const option<ExprSymbolSet> &vars) const {
+bool Rel::isLinear(const option<VarSet> &vars) const {
     return l.isLinear(vars) && r.isLinear(vars);
 }
 
@@ -543,7 +531,7 @@ bool Rel::isInequality() const {
 }
 
 bool Rel::isGreaterThanZero() const {
-    return op == Rel::gt && r.is_zero();
+    return op == Rel::gt && r.isZero();
 }
 
 Rel Rel::toLessEq() const {
@@ -598,20 +586,20 @@ Rel Rel::toLessOrLessEq() const {
     return *this;
 }
 
-Rel Rel::splitVariablesAndConstants(const ExprSymbolSet &params) const {
+Rel Rel::splitVariablesAndConstants(const VarSet &params) const {
     assert(isInequality());
 
     //move everything to lhs
-    Expression newLhs = l - r;
-    Expression newRhs = 0;
+    Expr newLhs = l - r;
+    Expr newRhs = 0;
 
     //move all numerical constants back to rhs
     newLhs = newLhs.expand();
     if (newLhs.isAdd()) {
-        for (size_t i=0; i < newLhs.nops(); ++i) {
+        for (size_t i=0; i < newLhs.arity(); ++i) {
             bool isConstant = true;
-            ExprSymbolSet vars = newLhs.op(i).getVariables();
-            for (const ExprSymbol &var: vars) {
+            VarSet vars = newLhs.op(i).vars();
+            for (const Var &var: vars) {
                 if (params.find(var) == params.end()) {
                     isConstant = false;
                     break;
@@ -622,9 +610,9 @@ Rel Rel::splitVariablesAndConstants(const ExprSymbolSet &params) const {
             }
         }
     } else {
-        ExprSymbolSet vars = newLhs.getVariables();
+        VarSet vars = newLhs.vars();
         bool isConstant = true;
-        for (const ExprSymbol &var: vars) {
+        for (const Var &var: vars) {
             if (params.find(var) == params.end()) {
                 isConstant = false;
                 break;
@@ -651,27 +639,27 @@ bool Rel::isTriviallyFalse() const {
 }
 
 option<bool> Rel::checkTrivial() const {
-    Expression diff = (l - r).expand();
+    Expr diff = (l - r).expand();
     if (diff.isRationalConstant()) {
         switch (op) {
-        case Rel::eq: return diff.is_zero();
-        case Rel::neq: return !diff.is_zero();
-        case Rel::lt: return diff.toNumeric().is_negative();
-        case Rel::leq: return !diff.toNumeric().is_positive();
-        case Rel::gt: return diff.toNumeric().is_positive();
-        case Rel::geq: return !diff.toNumeric().is_negative();
+        case Rel::eq: return diff.isZero();
+        case Rel::neq: return !diff.isZero();
+        case Rel::lt: return diff.toNum().is_negative();
+        case Rel::leq: return !diff.toNum().is_positive();
+        case Rel::gt: return diff.toNum().is_positive();
+        case Rel::geq: return !diff.toNum().is_negative();
         }
         assert(false && "unknown relation");
     }
     return {};
 }
 
-void Rel::collectVariables(ExprSymbolSet &res) const {
-    l.collectVariables(res);
-    r.collectVariables(res);
+void Rel::collectVariables(VarSet &res) const {
+    l.collectVars(res);
+    r.collectVars(res);
 }
 
-bool Rel::has(const Expression &pattern) const {
+bool Rel::has(const Expr &pattern) const {
     return l.has(pattern) || r.has(pattern);
 }
 
@@ -694,8 +682,8 @@ Rel::Operator Rel::getOp() const {
     return op;
 }
 
-ExprSymbolSet Rel::getVariables() const {
-    ExprSymbolSet res;
+VarSet Rel::getVariables() const {
+    VarSet res;
     collectVariables(res);
     return res;
 }
@@ -728,8 +716,8 @@ Rel Rel::fromString(const string &s, const GiNaC::lst &variables) {
                 throw InvalidRelationalExpression("Multiple relational operators: "+s);
             }
 
-            Expression lhsExpr = GiNaC::ex(lhs,variables);
-            Expression rhsExpr = GiNaC::ex(rhs,variables);
+            Expr lhsExpr = GiNaC::ex(lhs,variables);
+            Expr rhsExpr = GiNaC::ex(rhs,variables);
 
             if (op == "<") return lhsExpr < rhsExpr;
             else if (op == ">") return lhsExpr > rhsExpr;
@@ -763,7 +751,7 @@ Rel operator!(const Rel &x) {
 }
 
 bool operator==(const Rel &x, const Rel &y) {
-    return x.l.is_equal(y.l) && x.op == y.op && x.r.is_equal(y.r);
+    return x.l.equals(y.l) && x.op == y.op && x.r.equals(y.r);
 }
 
 bool operator!=(const Rel &x, const Rel &y) {
@@ -781,52 +769,52 @@ bool operator<(const Rel &x, const Rel &y) {
     return x.rhs().compare(y.rhs()) < 0;
 }
 
-Rel operator<(const ExprSymbol &x, const Expression &y) {
-    return Expression(x) < y;
+Rel operator<(const Var &x, const Expr &y) {
+    return Expr(x) < y;
 }
 
-Rel operator<(const Expression &x, const ExprSymbol &y) {
-    return x < Expression(y);
+Rel operator<(const Expr &x, const Var &y) {
+    return x < Expr(y);
 }
 
-Rel operator<(const ExprSymbol &x, const ExprSymbol &y) {
-    return Expression(x) < Expression(y);
+Rel operator<(const Var &x, const Var &y) {
+    return Expr(x) < Expr(y);
 }
 
-Rel operator>(const ExprSymbol &x, const Expression &y) {
-    return Expression(x) > y;
+Rel operator>(const Var &x, const Expr &y) {
+    return Expr(x) > y;
 }
 
-Rel operator>(const Expression &x, const ExprSymbol &y) {
-    return x > Expression(y);
+Rel operator>(const Expr &x, const Var &y) {
+    return x > Expr(y);
 }
 
-Rel operator>(const ExprSymbol &x, const ExprSymbol &y) {
-    return Expression(x) > Expression(y);
+Rel operator>(const Var &x, const Var &y) {
+    return Expr(x) > Expr(y);
 }
 
-Rel operator<=(const ExprSymbol &x, const Expression &y) {
-    return Expression(x) <= y;
+Rel operator<=(const Var &x, const Expr &y) {
+    return Expr(x) <= y;
 }
 
-Rel operator<=(const Expression &x, const ExprSymbol &y) {
-    return x <= Expression(y);
+Rel operator<=(const Expr &x, const Var &y) {
+    return x <= Expr(y);
 }
 
-Rel operator<=(const ExprSymbol &x, const ExprSymbol &y) {
-    return Expression(x) <= Expression(y);
+Rel operator<=(const Var &x, const Var &y) {
+    return Expr(x) <= Expr(y);
 }
 
-Rel operator>=(const ExprSymbol &x, const Expression &y) {
-    return Expression(x) >= y;
+Rel operator>=(const Var &x, const Expr &y) {
+    return Expr(x) >= y;
 }
 
-Rel operator>=(const Expression &x, const ExprSymbol &y) {
-    return x >= Expression(y);
+Rel operator>=(const Expr &x, const Var &y) {
+    return x >= Expr(y);
 }
 
-Rel operator>=(const ExprSymbol &x, const ExprSymbol &y) {
-    return Expression(x) >= Expression(y);
+Rel operator>=(const Var &x, const Var &y) {
+    return Expr(x) >= Expr(y);
 }
 
 std::ostream& operator<<(std::ostream &s, const Rel &rel) {
@@ -852,32 +840,32 @@ std::ostream& operator<<(std::ostream &s, const Rel &rel) {
 
 ExprMap::ExprMap() { }
 
-ExprMap::ExprMap(const Expression &key, const Expression &val) {
+ExprMap::ExprMap(const Expr &key, const Expr &val) {
     put(key, val);
 }
 
-Expression ExprMap::get(const Expression &key) const {
+Expr ExprMap::get(const Expr &key) const {
     return map.at(key);
 }
 
-void ExprMap::put(const Expression &key, const Expression &val) {
+void ExprMap::put(const Expr &key, const Expr &val) {
     map[key] = val;
     ginacMap[key.ex] = val.ex;
 }
 
-std::map<Expression, Expression, Expression_is_less>::const_iterator ExprMap::begin() const {
+std::map<Expr, Expr, Expr_is_less>::const_iterator ExprMap::begin() const {
     return map.begin();
 }
 
-std::map<Expression, Expression, Expression_is_less>::const_iterator ExprMap::end() const {
+std::map<Expr, Expr, Expr_is_less>::const_iterator ExprMap::end() const {
     return map.end();
 }
 
-std::map<Expression, Expression, Expression_is_less>::const_iterator ExprMap::find(const Expression &e) const {
+std::map<Expr, Expr, Expr_is_less>::const_iterator ExprMap::find(const Expr &e) const {
     return map.find(e);
 }
 
-bool ExprMap::contains(const Expression &e) const {
+bool ExprMap::contains(const Expr &e) const {
     return map.count(e) > 0;
 }
 

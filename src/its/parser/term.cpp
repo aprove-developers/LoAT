@@ -12,9 +12,9 @@ void TermBinOp::collectVariables(std::set<VariableIdx> &set) const {
     rhs->collectVariables(set);
 }
 
-Expression TermBinOp::toGinacExpression(const ITSProblem &its) const {
-    Expression l = lhs->toGinacExpression(its);
-    Expression r = rhs->toGinacExpression(its);
+Expr TermBinOp::toGinacExpression(const ITSProblem &its) const {
+    Expr l = lhs->toGinacExpression(its);
+    Expr r = rhs->toGinacExpression(its);
 
     switch (op) {
         case Addition: return l + r;
@@ -37,14 +37,14 @@ void TermFunApp::collectVariables(std::set<VariableIdx> &set) const {
     }
 }
 
-Expression TermFunApp::toGinacExpression(const ITSProblem &) const {
+Expr TermFunApp::toGinacExpression(const ITSProblem &) const {
     throw CannotConvertToGinacException("Cannot convert function symbol to GiNaC: "+name);
 }
 
 
 Rel Relation::toGinacExpression(const ITSProblem &its) const {
-    Expression l = lhs->toGinacExpression(its);
-    Expression r = rhs->toGinacExpression(its);
+    Expr l = lhs->toGinacExpression(its);
+    Expr r = rhs->toGinacExpression(its);
 
     switch (op) {
     case RelationEqual: return Rel(l, Rel::eq, r);

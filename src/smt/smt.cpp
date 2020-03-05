@@ -20,7 +20,7 @@ bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const Variable
     return s->check() == Smt::Unsat;
 }
 
-option<ExprSymbolMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan) {
+option<VarMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan) {
     BoolExpr all = hard & buildAnd(soft);
     std::unique_ptr<Smt> s = SmtFactory::modelBuildingSolver(chooseLogic({all}), varMan);
     s->setTimeout(timeout);
@@ -28,7 +28,7 @@ option<ExprSymbolMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<Boo
     if (s->check() != Sat) {
         return {};
     }
-    ExprSymbolMap<GiNaC::numeric> model = s->model();
+    VarMap<GiNaC::numeric> model = s->model();
     for (const BoolExpr &e: soft) {
         s->push();
         s->add(e);
@@ -110,7 +110,7 @@ bool Smt::isLinear(const std::vector<std::vector<Rel>> &gs) {
 
 bool Smt::isPolynomial(const std::vector<Rel> &guard) {
     for (const Rel &rel: guard) {
-        if (!rel.isPolynomial()) {
+        if (!rel.isPoly()) {
             return false;
         }
     }
@@ -119,7 +119,7 @@ bool Smt::isPolynomial(const std::vector<Rel> &guard) {
 
 bool Smt::isPolynomial(const UpdateMap &up) {
     for (const auto &p: up) {
-        if (!p.second.isPolynomial()) {
+        if (!p.second.isPoly()) {
             return false;
         }
     }
@@ -128,7 +128,7 @@ bool Smt::isPolynomial(const UpdateMap &up) {
 
 bool Smt::isPolynomial(const ExprMap &up) {
     for (const auto &p: up) {
-        if (!p.second.isPolynomial()) {
+        if (!p.second.isPoly()) {
             return false;
         }
     }

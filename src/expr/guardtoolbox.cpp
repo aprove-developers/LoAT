@@ -27,25 +27,25 @@ bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
     if (b.getOp() == Rel::eq) {
         if (a.getOp() != Rel::eq) return false;
 
-        Expression aDiff = a.rhs() - a.lhs();
-        Expression bDiff = b.rhs() - b.lhs();
-        return (aDiff - bDiff).expand().is_zero();
+        Expr aDiff = a.rhs() - a.lhs();
+        Expr bDiff = b.rhs() - b.lhs();
+        return (aDiff - bDiff).expand().isZero();
     }
 
-    Expression bLhs = b.normalizeInequality().lhs(); // b is of the form bLhs > 0
+    Expr bLhs = b.normalizeInequality().lhs(); // b is of the form bLhs > 0
     if (a.getOp() != Rel::eq) {
-        Expression aLhs = a.normalizeInequality().lhs(); // a is of the form aLhs > 0
+        Expr aLhs = a.normalizeInequality().lhs(); // a is of the form aLhs > 0
         return (aLhs <= bLhs).isTriviallyTrue(); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
     }
 
     // if a is an equality, we can use aDiff >= 0 or aDiff <= 0, so we check both
     // note that we need a strict check below, as we want to show bLhs > 0
-    Expression aDiff = a.rhs() - a.lhs();
+    Expr aDiff = a.rhs() - a.lhs();
     return (aDiff < bLhs).isTriviallyTrue() || ((-aDiff) < bLhs).isTriviallyTrue();
 }
 
 
-option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level) {
+option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel level) {
     // expand is needed before using degree/coeff
     term = term.expand();
 
@@ -53,7 +53,7 @@ option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol 
     if (term.degree(var) != 1) return {};
 
     // ...with rational coefficients
-    Expression c = term.coeff(var);
+    Expr c = term.coeff(var);
     if (!c.isRationalConstant()) return {};
 
     bool trivialCoeff = (c.compare(1) == 0 || c.compare(-1) == 0);
@@ -68,12 +68,12 @@ option<Expression> GuardToolbox::solveTermFor(Expression term, const ExprSymbol 
     // since we assume that all constraints in the guard map to int.
     // So if c is trivial, we can also handle non-polynomial terms.
     if (level == ResultMapsToInt && !trivialCoeff) {
-        if (!term.isPolynomial() || !mapsToInt(term)) return {};
+        if (!term.isPoly() || !mapsToInt(term)) return {};
     }
 
     // we assume that terms in the guard map to int, make sure this is the case
     if (trivialCoeff) {
-        assert(!term.isPolynomial() || mapsToInt(term));
+        assert(!term.isPoly() || mapsToInt(term));
     }
 
     return term;
@@ -88,20 +88,20 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
         Rel rel = guard[i].subs(varSubs);
         if (rel.getOp() != Rel::eq) continue;
 
-        Expression target = rel.rhs() - rel.lhs();
-        if (!target.isPolynomial()) continue;
+        Expr target = rel.rhs() - rel.lhs();
+        if (!target.isPoly()) continue;
 
         // Check if equation can be solved for any single variable.
         // We prefer to solve for variables where this is easy,
         // e.g. in x+2*y = 0 we prefer x since x has only the trivial coefficient 1.
         for (int level=TrivialCoeffs; level <= (int)maxlevel; ++level) {
-            for (const ExprSymbol &var : target.getVariables()) {
+            for (const Var &var : target.vars()) {
                 if (!allow(var)) continue;
 
                 //solve target for var (result is in target)
                 auto optSolved = solveTermFor(target,var,(SolvingLevel)level);
                 if (!optSolved) continue;
-                Expression solved = optSolved.get();
+                Expr solved = optSolved.get();
 
                 //disallow replacing non-free vars by a term containing free vars
                 //could be unsound, as free vars can lead to unbounded complexity
@@ -128,33 +128,33 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
 
 bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow) {
     //get all variables that appear in an inequality
-    ExprSymbolSet tryVars;
+    VarSet tryVars;
     for (const Rel &rel : guard) {
-        if (!rel.isInequality() || !rel.isPolynomial()) continue;
+        if (!rel.isInequality() || !rel.isPoly()) continue;
         rel.collectVariables(tryVars);
     }
 
     //for each variable, try if we can eliminate every occurrence. Otherwise do nothing.
     bool changed = false;
-    for (const ExprSymbol &var : tryVars) {
+    for (const Var &var : tryVars) {
         if (!allow(var)) continue;
 
-        vector<Expression> varLessThan, varGreaterThan; //var <= expr and var >= expr
+        vector<Expr> varLessThan, varGreaterThan; //var <= expr and var >= expr
         vector<int> guardTerms; //indices of guard terms that can be removed if successful
 
         for (unsigned int i=0; i < guard.size(); ++i) {
             //check if this guard must be used for var
             const Rel &rel = guard[i];
             if (!rel.has(var)) continue;
-            if (!rel.isInequality() || !rel.isPolynomial()) goto abort; // contains var, but cannot be handled
+            if (!rel.isInequality() || !rel.isPoly()) goto abort; // contains var, but cannot be handled
 
             //make less equal
             Rel leq = rel.toLessEq();
-            Expression target = leq.lhs() - leq.rhs();
+            Expr target = leq.lhs() - leq.rhs();
             if (!target.has(var)) continue; // might have changed, e.h. x <= x
 
             //check coefficient and direction
-            Expression c = target.expand().coeff(var);
+            Expr c = target.expand().coeff(var);
             if (c.compare(1) != 0 && c.compare(-1) != 0) goto abort;
             if (c.compare(1) == 0) {
                 varLessThan.push_back( -(target-var) );
@@ -175,8 +175,8 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
         }
 
         //add new transitive guard terms lower <= upper
-        for (const Expression &upper : varLessThan) {
-            for (const Expression &lower : varGreaterThan) {
+        for (const Expr &upper : varLessThan) {
+            for (const Expr &lower : varGreaterThan) {
                 guard.push_back(lower <= upper);
             }
         }
@@ -189,16 +189,16 @@ abort:  ; //this symbol could not be eliminated, try the next one
 
 
 bool GuardToolbox::makeEqualities(GuardList &guard) {
-    vector<pair<int,Expression>> terms; //inequalities from the guard, with the associated index in guard
-    map<int,pair<int,Expression>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
+    vector<pair<int,Expr>> terms; //inequalities from the guard, with the associated index in guard
+    map<int,pair<int,Expr>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
 
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
     for (unsigned int i=0; i < guard.size(); ++i) {
         if (guard[i].getOp() == Rel::eq) continue;
         Rel leq = guard[i].toLessEq();
-        Expression term = leq.lhs() - leq.rhs();
+        Expr term = leq.lhs() - leq.rhs();
         for (const auto &prev : terms) {
-            if ((prev.second + term).is_zero()) {
+            if ((prev.second + term).isZero()) {
                 matches.emplace(prev.first, make_pair(i,prev.second));
             }
         }
@@ -229,25 +229,25 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
 }
 
 
-bool GuardToolbox::mapsToInt(const Expression &e) {
-    assert(e.isPolynomial());
+bool GuardToolbox::mapsToInt(const Expr &e) {
+    assert(e.isPoly());
 
     // shortcut for the common case
-    if (e.isPolynomialWithIntegerCoeffs()) {
+    if (e.isIntPoly()) {
         return true;
     }
 
     // collect variables from e into a vector
-    vector<ExprSymbol> vars;
-    for (ExprSymbol sym : e.getVariables()) {
+    vector<Var> vars;
+    for (Var sym : e.vars()) {
         vars.push_back(sym);
     }
 
     // degrees, subs share indices with vars
     vector<int> degrees;
     vector<int> subs;
-    Expression expanded = e.expand();
-    for (const ExprSymbol &x: vars) {
+    Expr expanded = e.expand();
+    for (const Var &x: vars) {
         degrees.push_back(expanded.degree(x));
         subs.push_back(0);
     }
@@ -258,8 +258,8 @@ bool GuardToolbox::mapsToInt(const Expression &e) {
         for (unsigned int i = 0; i < degrees.size(); i++) {
             currSubs.put(vars[i], subs[i]);
         }
-        Expression res = e.subs(currSubs).expand();
-        if (!res.isIntegerConstant()) {
+        Expr res = e.subs(currSubs).expand();
+        if (!res.isInt()) {
             return false;
         }
 

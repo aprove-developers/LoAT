@@ -23,8 +23,8 @@ using namespace std;
 
 YicesContext::~YicesContext() { }
 
-term_t YicesContext::buildVar(const std::string &name, Expression::Type type) {
-    term_t res = (type == Expression::Int) ? yices_new_uninterpreted_term(yices_int_type()) : yices_new_uninterpreted_term(yices_real_type());
+term_t YicesContext::buildVar(const std::string &name, Expr::Type type) {
+    term_t res = (type == Expr::Int) ? yices_new_uninterpreted_term(yices_int_type()) : yices_new_uninterpreted_term(yices_real_type());
     yices_set_term_name(res, name.c_str());
     return res;
 }

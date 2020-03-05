@@ -45,7 +45,7 @@ namespace strengthening {
 
         const option<Invariants> solve() const;
 
-        const GuardList instantiateTemplates(const ExprSymbolMap<GiNaC::numeric> &model) const;
+        const GuardList instantiateTemplates(const VarMap<GiNaC::numeric> &model) const;
 
         const option<Invariants> splitInitiallyValid(const GuardList &invariants) const;
 

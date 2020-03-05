@@ -63,11 +63,11 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
     }
 
     // Add the costs, but apply first rule's update to second cost
-    Expression newCost = firstLhs.getCost() + secondLhs.getCost().subs(updateSubs);
+    Expr newCost = firstLhs.getCost() + secondLhs.getCost().subs(updateSubs);
 
     // As a small optimization: Keep a NONTERM symbol (easier to identify NONTERM cost later on)
     if (firstLhs.getCost().isNontermSymbol() || secondLhs.getCost().isNontermSymbol()) {
-        newCost = Expression::NontermSymbol;
+        newCost = Expr::NontermSymbol;
     }
 
     if (Config::Chain::CheckSat) {

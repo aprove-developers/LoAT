@@ -42,7 +42,7 @@ namespace GuardToolbox {
     };
 
     // Shorthand for lambdas that check if a given symbol is accepted/allowed (depending on the context)
-    using SymbolAcceptor = std::function<bool(const ExprSymbol &)>;
+    using SymbolAcceptor = std::function<bool(const Var &)>;
 
 
     /**
@@ -89,7 +89,7 @@ namespace GuardToolbox {
      * Tries to solve the equation term == 0 for the given variable, using the given level of restrictiveness
      * @return if possible, the term t such that "var == t" is equivalent to "term == 0"
      */
-    option<Expression> solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level);
+    option<Expr> solveTermFor(Expr term, const Var &var, SolvingLevel level);
 
 
     /**
@@ -114,7 +114,7 @@ namespace GuardToolbox {
      */
     template<class T>
     bool containsTempVar(const VarMan &varMan, const T &x) {
-        return x.hasVariableWith([&varMan](const ExprSymbol &sym) {
+        return x.hasVarWith([&varMan](const Var &sym) {
             return varMan.isTempVar(sym);
         });
     }
@@ -126,7 +126,7 @@ namespace GuardToolbox {
      * @note expensive for large polynomials (roughly d^n for degree d and n variables)
      * @note the given expression must be a polynomial!
      */
-    bool mapsToInt(const Expression &e);
+    bool mapsToInt(const Expr &e);
 
 }
 

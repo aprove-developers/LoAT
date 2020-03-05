@@ -63,7 +63,7 @@ private:
     // Helpers
     static std::string escapeVariableName(const std::string &name);
     static std::set<VariableIdx> getVariables(const ParsedRule &rule);
-    static ExprSymbolSet getSymbols(const Rule &rule);
+    static VarSet getSymbols(const Rule &rule);
 
 private:
     // Instance of TermParser, created after knownVariables has been set

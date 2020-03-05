@@ -66,7 +66,7 @@ namespace sexpressionparser {
                     }
                     assert(preVars.size() == postVars.size());
                     sexpresso::Sexp ruleExps = ex[4];
-                    ExprSymbolSet tmpVars;
+                    VarSet tmpVars;
                     for (const std::string &str: postVars) {
                         tmpVars.insert(res.getVarSymbol(vars[str]));
                     }
@@ -82,10 +82,10 @@ namespace sexpressionparser {
                             }
                             Rule rule(from, guard, 1, to, update);
                             // make sure that the temporary variables are unique
-                            ExprSymbolSet currTmpVars(tmpVars);
+                            VarSet currTmpVars(tmpVars);
                             guard.collectVariables(currTmpVars);
                             ExprMap subs;
-                            for (const ExprSymbol &var: currTmpVars) {
+                            for (const Var &var: currTmpVars) {
                                 if (res.isTempVar(var)) {
                                     subs.put(var, res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name())));
                                 }
@@ -133,8 +133,8 @@ namespace sexpressionparser {
         }
         assert(sexp.childCount() == 3);
         const std::string &op = sexp[0].str();
-        const Expression &fst = parseExpression(sexp[1]);
-        const Expression &snd = parseExpression(sexp[2]);
+        const Expr &fst = parseExpression(sexp[1]);
+        const Expr &snd = parseExpression(sexp[2]);
         if (op == "<=") {
             return negate ? fst > snd : fst <= snd;
         } else if (sexp[0].str() == "<") {
@@ -150,7 +150,7 @@ namespace sexpressionparser {
         assert(false);
     }
 
-    Expression Self::parseExpression(sexpresso::Sexp &sexp) {
+    Expr Self::parseExpression(sexpresso::Sexp &sexp) {
         if (sexp.childCount() == 1) {
             const std::string &str = sexp.str();
             if (std::isdigit(str[0]) || str[0] == '-') {
@@ -163,9 +163,9 @@ namespace sexpressionparser {
             }
         }
         const std::string &op = sexp[0].str();
-        const Expression &fst = parseExpression(sexp[1]);
+        const Expr &fst = parseExpression(sexp[1]);
         if (sexp.childCount() == 3) {
-            const Expression &snd = parseExpression(sexp[2]);
+            const Expr &snd = parseExpression(sexp[2]);
             if (op == "+") {
                 return fst + snd;
             } else if (op == "-") {

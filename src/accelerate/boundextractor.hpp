@@ -11,23 +11,23 @@
 class BoundExtractor
 {
 public:
-    BoundExtractor(const GuardList &guard, const ExprSymbol &N);
+    BoundExtractor(const GuardList &guard, const Var &N);
 
-    const option<Expression> getEq() const;
-    const std::vector<Expression> getLower() const;
-    const std::vector<Expression> getUpper() const;
-    const std::vector<Expression> getLowerAndUpper() const;
-    const ExpressionSet getConstantBounds() const;
+    const option<Expr> getEq() const;
+    const std::vector<Expr> getLower() const;
+    const std::vector<Expr> getUpper() const;
+    const std::vector<Expr> getLowerAndUpper() const;
+    const ExprSet getConstantBounds() const;
 
 private:
 
     void extractBounds();
 
     GuardList guard;
-    ExprSymbol N;
-    option<Expression> eq;
-    std::vector<Expression> lower;
-    std::vector<Expression> upper;
+    Var N;
+    option<Expr> eq;
+    std::vector<Expr> lower;
+    std::vector<Expr> upper;
 
 };
 

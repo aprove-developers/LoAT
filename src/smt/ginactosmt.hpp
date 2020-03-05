@@ -58,21 +58,21 @@ public:
 protected:
     GinacToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
 
-    EXPR convert_ex(const Expression &e){
+    EXPR convert_ex(const Expr &e){
         if (e.isAdd()) {
             return convert_add(e);
 
         } else if (e.isMul()) {
             return convert_mul(e);
 
-        } else if (e.isPower()) {
+        } else if (e.isPow()) {
             return convert_power(e);
 
-        } else if (e.isNumeric()) {
-            return convert_numeric(e.toNumeric());
+        } else if (e.isRationalConstant()) {
+            return convert_numeric(e.toNum());
 
-        } else if (e.isSymbol()) {
-            return convert_symbol(e.toSymbol());
+        } else if (e.isVar()) {
+            return convert_symbol(e.toVar());
 
         }
 
@@ -81,34 +81,34 @@ protected:
         throw GinacConversionError(ss.str());
     }
 
-    EXPR convert_add(const Expression &e){
-        assert(e.nops() > 0);
+    EXPR convert_add(const Expr &e){
+        assert(e.arity() > 0);
 
         EXPR res = convert_ex(e.op(0));
-        for (unsigned int i=1; i < e.nops(); ++i) {
+        for (unsigned int i=1; i < e.arity(); ++i) {
             res = context.plus(res, convert_ex(e.op(i)));
         }
 
         return res;
     }
 
-    EXPR convert_mul(const Expression &e) {
-        assert(e.nops() > 0);
+    EXPR convert_mul(const Expr &e) {
+        assert(e.arity() > 0);
 
         EXPR res = convert_ex(e.op(0));
-        for (unsigned int i=1; i < e.nops(); ++i) {
+        for (unsigned int i=1; i < e.arity(); ++i) {
             res = context.times(res, convert_ex(e.op(i)));
         }
 
         return res;
     }
 
-    EXPR convert_power(const Expression &e) {
-        assert(e.nops() == 2);
+    EXPR convert_power(const Expr &e) {
+        assert(e.arity() == 2);
 
         //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
-        if (e.op(1).isNumeric()) {
-            GiNaC::numeric num = e.op(1).toNumeric();
+        if (e.op(1).isRationalConstant()) {
+            GiNaC::numeric num = e.op(1).toNum();
             if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Z3::MaxExponentWithoutPow) {
                 int exp = num.to_int();
                 EXPR base = convert_ex(e.op(0));

@@ -13,11 +13,11 @@ using namespace std;
  * degree of the respective monomial), builds an expression which implies that
  * lim_{n->\infty} p is a positive constant
  */
-static BoolExpr posConstraint(const map<int, Expression>& coefficients) {
+static BoolExpr posConstraint(const map<int, Expr>& coefficients) {
     BoolExpr conjunction = True;
-    for (pair<int, Expression> p : coefficients) {
+    for (pair<int, Expr> p : coefficients) {
         int degree = p.first;
-        Expression c = p.second;
+        Expr c = p.second;
         if (degree > 0) {
             conjunction = conjunction & (c == 0);
         } else {
@@ -32,11 +32,11 @@ static BoolExpr posConstraint(const map<int, Expression>& coefficients) {
  * degree of the respective monomial), builds an expression which implies that
  * lim_{n->\infty} p is a negative constant
  */
-static BoolExpr negConstraint(const map<int, Expression>& coefficients) {
+static BoolExpr negConstraint(const map<int, Expr>& coefficients) {
     BoolExpr conjunction = True;
-    for (pair<int, Expression> p : coefficients) {
+    for (pair<int, Expr> p : coefficients) {
         int degree = p.first;
-        Expression c = p.second;
+        Expr c = p.second;
         if (degree > 0) {
             conjunction = conjunction & (c == 0);
         } else {
@@ -51,17 +51,17 @@ static BoolExpr negConstraint(const map<int, Expression>& coefficients) {
  * degree of the respective monomial), builds an expression which implies
  * lim_{n->\infty} p = -\infty
  */
-static BoolExpr negInfConstraint(const map<int, Expression>& coefficients) {
+static BoolExpr negInfConstraint(const map<int, Expr>& coefficients) {
     int maxDegree = 0;
-    for (pair<int, Expression> p: coefficients) {
+    for (pair<int, Expr> p: coefficients) {
         maxDegree = p.first > maxDegree ? p.first : maxDegree;
     }
     BoolExpr disjunction = False;
     for (int i = 1; i <= maxDegree; i++) {
         BoolExpr conjunction = True;
-        for (pair<int, Expression> p: coefficients) {
+        for (pair<int, Expr> p: coefficients) {
             int degree = p.first;
-            Expression c = p.second;
+            Expr c = p.second;
             if (degree > i) {
                 conjunction = conjunction & (c == 0);
             } else if (degree == i) {
@@ -78,17 +78,17 @@ static BoolExpr negInfConstraint(const map<int, Expression>& coefficients) {
  * degree of the respective monomial), builds an expression which implies
  * lim_{n->\infty} p = \infty
  */
-static BoolExpr posInfConstraint(const map<int, Expression>& coefficients) {
+static BoolExpr posInfConstraint(const map<int, Expr>& coefficients) {
     int maxDegree = 0;
-    for (pair<int, Expression> p: coefficients) {
+    for (pair<int, Expr> p: coefficients) {
         maxDegree = p.first > maxDegree ? p.first : maxDegree;
     }
     BoolExpr disjunction = False;
     for (int i = 1; i <= maxDegree; i++) {
         BoolExpr conjunction = True;
-        for (pair<int, Expression> p: coefficients) {
+        for (pair<int, Expr> p: coefficients) {
             int degree = p.first;
-            Expression c = p.second;
+            Expr c = p.second;
             if (degree > i) {
                 conjunction = conjunction & (c == 0);
             } else if (degree == i) {
@@ -103,43 +103,43 @@ static BoolExpr posInfConstraint(const map<int, Expression>& coefficients) {
 /**
  * @return the (abstract) coefficients of 'n' in 'ex', where the key is the degree of the respective monomial
  */
-static map<int, Expression> getCoefficients(const Expression &ex, const ExprSymbol &n) {
+static map<int, Expr> getCoefficients(const Expr &ex, const Var &n) {
     int maxDegree = ex.degree(n);
-    map<int, Expression> coefficients;
+    map<int, Expr> coefficients;
     for (int i = 0; i <= maxDegree; i++) {
         coefficients.emplace(i, ex.coeff(n, i));
     }
     return coefficients;
 }
 
-option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expression &cost,
+option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expr &cost,
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
     unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({currentLP.getQuery()}, {}), varMan, timeout);
 
     // the parameter of the desired family of solutions
-    ExprSymbol n = currentLP.getN();
+    Var n = currentLP.getN();
 
     // get all relevant variables
-    ExprSymbolSet vars = currentLP.getVariables();
+    VarSet vars = currentLP.getVariables();
 
     // create linear templates for all variables
     ExprMap templateSubs;
-    ExprSymbolMap<ExprSymbol> varCoeff, varCoeff0;
-    for (const ExprSymbol &var : vars) {
-        ExprSymbol c0 = varMan.getFreshUntrackedSymbol(var.get_name() + "_0", Expression::Int);
-        ExprSymbol c = varMan.getFreshUntrackedSymbol(var.get_name() + "_c", Expression::Int);
+    VarMap<Var> varCoeff, varCoeff0;
+    for (const Var &var : vars) {
+        Var c0 = varMan.getFreshUntrackedSymbol(var.get_name() + "_0", Expr::Int);
+        Var c = varMan.getFreshUntrackedSymbol(var.get_name() + "_c", Expr::Int);
         varCoeff.emplace(var, c);
         varCoeff0.emplace(var, c0);
         templateSubs.put(var, c0 + (n * c));
     }
 
     // replace variables in the cost function with their linear templates
-    Expression templateCost = cost.subs(templateSubs).expand();
+    Expr templateCost = cost.subs(templateSubs).expand();
 
     // if the cost function is a constant, then we are bound to fail
-    Complexity maxPossibleFiniteRes = templateCost.isPolynomial() ?
+    Complexity maxPossibleFiniteRes = templateCost.isPoly() ?
             Complexity::Poly(templateCost.degree(n)) :
             Complexity::NestedExp;
     if (maxPossibleFiniteRes == Complexity::Const) {
@@ -149,8 +149,8 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
     // encode every entry of the limit problem
     for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
         // replace variables with their linear templates
-        Expression ex = it->subs(templateSubs).expand();
-        map<int, Expression> coefficients = getCoefficients(ex, n);
+        Expr ex = it->subs(templateSubs).expand();
+        map<int, Expr> coefficients = getCoefficients(ex, n);
         Direction direction = it->getDirection();
         // add the required constraints (depending on the direction-label from the limit problem)
         if (direction == POS) {
@@ -178,7 +178,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
 
     // first fix that all program variables have to be constants
     // a model witnesses unbounded complexity
-    for (const ExprSymbol &var : vars) {
+    for (const Var &var : vars) {
         if (!varMan.isTempVar(var)) {
             solver->add(Rel(varCoeff.at(var), Rel::eq, 0));
         }
@@ -193,9 +193,9 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
         if (maxPossibleFiniteRes.getType() == Complexity::CpxPolynomial && maxPossibleFiniteRes.getPolynomialDegree().isInteger()) {
             int maxPossibleDegree = maxPossibleFiniteRes.getPolynomialDegree().asInteger();
             // try to find a witness for polynomial complexity with degree maxDeg,...,1
-            map<int, Expression> coefficients = getCoefficients(templateCost, n);
+            map<int, Expr> coefficients = getCoefficients(templateCost, n);
             for (int i = maxPossibleDegree; i > 0 && Complexity::Poly(i) > currentRes; i--) {
-                Expression c = coefficients.find(i)->second;
+                Expr c = coefficients.find(i)->second;
                 // remember the current state for backtracking
                 solver->push();
                 solver->add(c > 0);
@@ -216,10 +216,10 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
 
     // we found a model -- create the corresponding solution of the limit problem
     ExprMap smtSubs;
-    ExprSymbolMap<GiNaC::numeric> model = solver->model();
-    for (const ExprSymbol &var : vars) {
+    VarMap<GiNaC::numeric> model = solver->model();
+    for (const Var &var : vars) {
         auto c0 = model.find(varCoeff0.at(var));
-        Expression c = model.at(varCoeff.at(var));
+        Expr c = model.at(varCoeff.at(var));
         smtSubs.put(var, c0 == model.end() ? (c * n) : (c0->second + c * n));
     }
 

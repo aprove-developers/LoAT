@@ -29,7 +29,7 @@ bool BoolLit::isLinear() const {
 }
 
 bool BoolLit::isPolynomial() const {
-    return lit.isPolynomial();
+    return lit.isPoly();
 }
 
 BoolLit::~BoolLit() {}
@@ -109,7 +109,7 @@ BoolExpr build(std::set<BoolExpr> xs, ConcatOperator op) {
     return std::shared_ptr<BoolExpression>(new BoolJunction(children, op));
 }
 
-BoolExpr build(const RelationSet &xs, ConcatOperator op) {
+BoolExpr build(const RelSet &xs, ConcatOperator op) {
     std::set<BoolExpr> children;
     for (const Rel &x: xs) {
         children.insert(buildLit(x));
@@ -117,7 +117,7 @@ BoolExpr build(const RelationSet &xs, ConcatOperator op) {
     return build(children, op);
 }
 
-const BoolExpr buildAnd(const RelationSet &xs) {
+const BoolExpr buildAnd(const RelSet &xs) {
     return build(xs, ConcatAnd);
 }
 
@@ -125,7 +125,7 @@ const BoolExpr buildAnd(const std::set<BoolExpr> &xs) {
     return build(xs, ConcatAnd);
 }
 
-const BoolExpr buildOr(const RelationSet &xs) {
+const BoolExpr buildOr(const RelSet &xs) {
     return build(xs, ConcatOr);
 }
 
@@ -134,7 +134,7 @@ const BoolExpr buildOr(const std::set<BoolExpr> &xs) {
 }
 
 const BoolExpr buildAnd(const std::vector<Rel> &xs) {
-    return build(RelationSet(xs.begin(), xs.end()), ConcatAnd);
+    return build(RelSet(xs.begin(), xs.end()), ConcatAnd);
 }
 
 const BoolExpr buildAnd(const std::vector<BoolExpr> &xs) {
@@ -142,7 +142,7 @@ const BoolExpr buildAnd(const std::vector<BoolExpr> &xs) {
 }
 
 const BoolExpr buildOr(const std::vector<Rel> &xs) {
-    return build(RelationSet(xs.begin(), xs.end()), ConcatOr);
+    return build(RelSet(xs.begin(), xs.end()), ConcatOr);
 }
 
 const BoolExpr buildOr(const std::vector<BoolExpr> &xs) {

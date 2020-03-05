@@ -150,7 +150,7 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &var
 bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
     stack<VariableIdx> remove;
     for (auto it : update) {
-        if (it.second.equalsVariable(varMan.getVarSymbol(it.first))) {
+        if (it.second.equals(varMan.getVarSymbol(it.first))) {
             remove.push(it.first);
         }
     }
@@ -167,11 +167,11 @@ bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
  * Returns the set of all variables that appear in the rhs of some update.
  * For an update x := a and x := x+a, this is {a} and {x,a}, respectively.
  */
-static ExprSymbolSet collectVarsInUpdateRhs(const Rule &rule) {
-    ExprSymbolSet varsInUpdate;
+static VarSet collectVarsInUpdateRhs(const Rule &rule) {
+    VarSet varsInUpdate;
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
-            it.second.collectVariables(varsInUpdate);
+            it.second.collectVars(varsInUpdate);
         }
     }
     return varsInUpdate;
@@ -182,16 +182,16 @@ bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
     bool changed = false;
 
     //collect all variables that appear in the rhs of any update
-    ExprSymbolSet varsInUpdate = collectVarsInUpdateRhs(rule);
+    VarSet varsInUpdate = collectVarsInUpdateRhs(rule);
 
     //declare helper lambdas to filter variables, to be passed as arguments
-    auto isTemp = [&](const ExprSymbol &sym) {
+    auto isTemp = [&](const Var &sym) {
         return varMan.isTempVar(sym);
     };
-    auto isTempInUpdate = [&](const ExprSymbol &sym) {
+    auto isTempInUpdate = [&](const Var &sym) {
         return isTemp(sym) && varsInUpdate.count(sym) > 0;
     };
-    auto isTempOnlyInGuard = [&](const ExprSymbol &sym) {
+    auto isTempOnlyInGuard = [&](const Var &sym) {
         return isTemp(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym);
     };
 

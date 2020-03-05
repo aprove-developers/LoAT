@@ -19,7 +19,7 @@
 #include "variablemanager.hpp"
 
 
-void GuardList::collectVariables(ExprSymbolSet &res) const {
+void GuardList::collectVariables(VarSet &res) const {
     for (const Rel &rel : *this) {
         rel.collectVariables(res);
     }
@@ -52,7 +52,7 @@ bool UpdateMap::isUpdated(VariableIdx var) const {
     return find(var) != end();
 }
 
-Expression UpdateMap::getUpdate(VariableIdx var) const {
+Expr UpdateMap::getUpdate(VariableIdx var) const {
     auto it = find(var);
     assert(it != end());
     return it->second;
@@ -74,7 +74,7 @@ bool operator==(const UpdateMap &m1, const UpdateMap &m2) {
     auto it2 = m1.begin();
     while (it1 != m1.end() && it2 != m2.end()) {
         if (it1->first != it2->first) return false;
-        if (!it1->second.is_equal(it2->second)) return false;
+        if (!it1->second.equals(it2->second)) return false;
     }
     return true;
 }
