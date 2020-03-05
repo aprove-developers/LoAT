@@ -110,19 +110,6 @@ namespace GuardToolbox {
 
 
     /**
-     * Returns true iff all guard terms are relational without the use of !=
-     */
-    bool isWellformedGuard(const GuardList &guard);
-
-
-    /**
-     * Returns true iff all guard terms have polynomial rhs and lhs
-     * @note guard must be a well-formed guard
-     */
-    bool isPolynomialGuard(const GuardList &guard);
-
-
-    /**
      * Returns true iff term contains a temporary variable
      */
     template<class T>

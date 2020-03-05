@@ -39,6 +39,12 @@ public:
     void collectVariables(ExprSymbolSet &res) const;
     GuardList subs(const ExprMap &sigma) const;
     void applySubstitution(const ExprMap &sigma);
+
+    /**
+     * Returns true iff all guard terms are relational without the use of !=
+     */
+    bool isWellformed() const;
+
 };
 
 

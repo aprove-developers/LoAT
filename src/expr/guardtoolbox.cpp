@@ -20,17 +20,6 @@
 
 using namespace std;
 
-bool GuardToolbox::isWellformedGuard(const GuardList &guard) {
-    for (const Rel &rel : guard) {
-        if (rel.getOp() == Rel::neq) return false;
-    }
-    return true;
-}
-
-
-bool GuardToolbox::isPolynomialGuard(const GuardList &guard) {
-    return std::all_of(guard.begin(), guard.end(), [](const Rel &x){return x.isPolynomial();});
-}
 
 bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
 

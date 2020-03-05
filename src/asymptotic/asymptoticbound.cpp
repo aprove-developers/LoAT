@@ -20,7 +20,7 @@ AsymptoticBound::AsymptoticBound(VarMan &varMan, GuardList guard,
                                  Expression cost, bool finalCheck, uint timeout)
     : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck), timeout(timeout),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize), currentLP(varMan) {
-    assert(GuardToolbox::isWellformedGuard(guard));
+    assert(guard.isWellformed());
 }
 
 

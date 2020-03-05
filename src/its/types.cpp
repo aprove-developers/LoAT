@@ -39,6 +39,13 @@ void GuardList::applySubstitution(const ExprMap &sigma) {
     }
 }
 
+bool GuardList::isWellformed() const {
+    for (const Rel &rel : *this) {
+        if (rel.getOp() == Rel::neq) return false;
+    }
+    return true;
+}
+
 bool operator<(const GuardList &m1, const GuardList &m2);
 
 bool UpdateMap::isUpdated(VariableIdx var) const {
