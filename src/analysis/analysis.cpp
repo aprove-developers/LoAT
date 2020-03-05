@@ -209,7 +209,7 @@ void Analysis::run() {
     RuntimeResult *res = new RuntimeResult();
     auto simp = std::async([this, res, proof]{this->simplify(*res, *proof);});
     if (Timeout::enabled()) {
-        if (simp.wait_for(std::chrono::seconds(Timeout::remainingSoft())) == std::future_status::timeout) {
+        if (simp.wait_for(Timeout::remainingSoft()) == std::future_status::timeout) {
             std::cerr << "Aborted simplification due to soft timeout" << std::endl;
         }
     } else {
@@ -217,9 +217,9 @@ void Analysis::run() {
     }
     auto finalize = std::async([this, res]{this->finalize(*res);});
     if (Timeout::enabled()) {
-        long remaining = Timeout::remainingHard();
-        if (remaining > 0) {
-            if (finalize.wait_for(std::chrono::seconds(remaining)) == std::future_status::timeout) {
+        std::chrono::seconds remaining = Timeout::remainingHard();
+        if (remaining.count() > 0) {
+            if (finalize.wait_for(remaining) == std::future_status::timeout) {
                 std::cerr << "Aborted analysis of simplified ITS due to timeout" << std::endl;
             }
         }

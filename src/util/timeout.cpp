@@ -43,24 +43,22 @@ void Timeout::setTimeouts(uint seconds) {
 
 bool Timeout::hard() {
     if (!timeout_enable || Config::Analysis::NonTermMode) return false;
-    TimePoint now = chrono::steady_clock::now();
-    return now >= timeout_hard;
+    return remainingHard().count() <= 0;
 }
 
 bool Timeout::soft() {
-    if (!timeout_enable || Config::Analysis::NonTermMode) return false;
-    TimePoint now = chrono::steady_clock::now();
-    return now >= timeout_soft;
+    if (!timeout_enable) return false;
+    return remainingSoft().count() <= 0;
 }
 
 bool Timeout::enabled() {
     return timeout_enable;
 }
 
-long Timeout::remainingSoft() {
-    return std::chrono::duration_cast<std::chrono::seconds>(timeout_soft - chrono::steady_clock::now()).count();
+std::chrono::seconds Timeout::remainingSoft() {
+    return std::chrono::duration_cast<std::chrono::seconds>(timeout_soft - chrono::steady_clock::now());
 }
 
-long Timeout::remainingHard() {
-    return std::chrono::duration_cast<std::chrono::seconds>(timeout_hard - chrono::steady_clock::now()).count();
+std::chrono::seconds Timeout::remainingHard() {
+    return std::chrono::duration_cast<std::chrono::seconds>(timeout_hard - chrono::steady_clock::now());
 }

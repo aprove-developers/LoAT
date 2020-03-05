@@ -43,6 +43,6 @@ namespace Timeout {
     bool soft();
     bool enabled();
 
-    long remainingSoft();
-    long remainingHard();
+    std::chrono::seconds remainingSoft();
+    std::chrono::seconds remainingHard();
 }
