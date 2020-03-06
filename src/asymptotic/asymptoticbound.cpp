@@ -55,16 +55,16 @@ void AsymptoticBound::normalizeGuard() {
 
     for (const Rel &rel : guard) {
 
-        if (rel.getOp() == Rel::eq) {
+        if (rel.relOp() == Rel::eq) {
             // Split equation
-            Rel greaterEqual = (rel.lhs() >= rel.rhs()).normalizeInequality();
-            Rel lessEqual = (rel.lhs() <= rel.rhs()).normalizeInequality();
+            Rel greaterEqual = (rel.lhs() >= rel.rhs()).toPositivityConstraint();
+            Rel lessEqual = (rel.lhs() <= rel.rhs()).toPositivityConstraint();
 
             normalizedGuard.push_back(greaterEqual);
             normalizedGuard.push_back(lessEqual);
 
         } else {
-            normalizedGuard.push_back(rel.normalizeInequality());
+            normalizedGuard.push_back(rel.toPositivityConstraint());
         }
     }
 
@@ -84,7 +84,7 @@ void AsymptoticBound::propagateBounds() {
     // build substitutions from equations
     for (const Rel &rel : guard) {
         Expr target = rel.rhs() - rel.lhs();
-        if (rel.getOp() == Rel::eq
+        if (rel.relOp() == Rel::eq
             && rel.isPoly()) {
 
             std::vector<Var> vars;
@@ -125,9 +125,9 @@ void AsymptoticBound::propagateBounds() {
 
     // build substitutions from inequalities
     for (const Rel &rel : guard) {
-        if (rel.getOp() != Rel::eq) {
+        if (rel.relOp() != Rel::eq) {
             if (rel.lhs().isVar() || rel.rhs().isVar()) {
-                Rel relT = rel.toLessOrLessEq();
+                Rel relT = rel.toLeq();
 
                 Expr l, r;
                 bool swap = relT.rhs().isVar();
@@ -151,9 +151,9 @@ void AsymptoticBound::propagateBounds() {
                 }
 
                 if (r.isPoly() && !r.has(l)) {
-                    if (relT.getOp() == Rel::lt && !swap) { // exT: x = l < r
+                    if (relT.relOp() == Rel::lt && !swap) { // exT: x = l < r
                         r = r - 1;
-                    } else if (relT.getOp() == Rel::lt && swap) { // exT: r < l = x
+                    } else if (relT.relOp() == Rel::lt && swap) { // exT: r < l = x
                         r = r + 1;
                     }
                     substitutions.push_back(ExprMap(l, r));
@@ -221,7 +221,7 @@ ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     GuardList guardCopy = guard;
     guardCopy.push_back(cost > 0);
     for (const Rel &rel : guardCopy) {
-        for (const Var &var : rel.getVariables()) {
+        for (const Var &var : rel.vars()) {
             if (!solution.contains(var)) {
                 solution = ExprMap(var, 0).compose(solution);
             }

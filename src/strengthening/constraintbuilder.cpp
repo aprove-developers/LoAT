@@ -66,7 +66,7 @@ namespace strengthening {
         GuardList relevantConstraints;
         for (const Rel &rel: guardCtx.guard) {
             for (const Var &var: templates.vars()) {
-                if (rel.getVariables().count(var) > 0) {
+                if (rel.vars().count(var) > 0) {
                     relevantConstraints.push_back(rel);
                     break;
                 }

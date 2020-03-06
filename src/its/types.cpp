@@ -41,7 +41,7 @@ void GuardList::applySubstitution(const ExprMap &sigma) {
 
 bool GuardList::isWellformed() const {
     for (const Rel &rel : *this) {
-        if (rel.getOp() == Rel::neq) return false;
+        if (rel.relOp() == Rel::neq) return false;
     }
     return true;
 }

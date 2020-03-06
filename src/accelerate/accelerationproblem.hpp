@@ -56,11 +56,11 @@ struct AccelerationProblem {
     static GuardList normalize(const GuardList &g) {
         GuardList res;
         for (const Rel &rel: g) {
-            if (rel.getOp() == Rel::eq) {
-                res.push_back((rel.lhs() >= rel.rhs()).normalizeInequality());
-                res.push_back((rel.lhs() <= rel.rhs()).normalizeInequality());
+            if (rel.relOp() == Rel::eq) {
+                res.push_back((rel.lhs() >= rel.rhs()).toPositivityConstraint());
+                res.push_back((rel.lhs() <= rel.rhs()).toPositivityConstraint());
             } else {
-                res.push_back(rel.normalizeInequality());
+                res.push_back(rel.toPositivityConstraint());
             }
         }
         return res;
@@ -180,7 +180,7 @@ struct AccelerationProblem {
             if (solver->check() == Smt::Unsat) {
                 solver->pop();
                 solver->push();
-                const Rel &newCond = (rel.lhs() <= updated).normalizeInequality();
+                const Rel &newCond = (rel.lhs() <= updated).toPositivityConstraint();
                 solver->add(rel);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {

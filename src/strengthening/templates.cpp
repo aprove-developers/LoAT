@@ -34,7 +34,7 @@ const VarSet& Self::vars() const {
 }
 
 bool Self::isParametric(const Rel &rel) const {
-    VarSet relVars = rel.getVariables();
+    VarSet relVars = rel.vars();
     for (const Var &x: params()) {
         if (relVars.count(x) > 0) {
             return true;

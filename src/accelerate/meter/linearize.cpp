@@ -86,7 +86,7 @@ bool Linearize::collectMonomials(const Expr &ex, ExprSet &monomials) {
 
 bool Linearize::collectMonomialsInGuard(ExprSet &monomials) const {
     for (const Rel &rel : guard) {
-        assert(rel.isInequality());
+        assert(rel.isIneq());
 
         if (!collectMonomials(rel.lhs().expand(), monomials)) {
             return false;

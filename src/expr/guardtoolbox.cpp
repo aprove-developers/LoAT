@@ -24,17 +24,17 @@ using namespace std;
 bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
 
     // an equality can only be implied by an equality
-    if (b.getOp() == Rel::eq) {
-        if (a.getOp() != Rel::eq) return false;
+    if (b.relOp() == Rel::eq) {
+        if (a.relOp() != Rel::eq) return false;
 
         Expr aDiff = a.rhs() - a.lhs();
         Expr bDiff = b.rhs() - b.lhs();
         return (aDiff - bDiff).expand().isZero();
     }
 
-    Expr bLhs = b.normalizeInequality().lhs(); // b is of the form bLhs > 0
-    if (a.getOp() != Rel::eq) {
-        Expr aLhs = a.normalizeInequality().lhs(); // a is of the form aLhs > 0
+    Expr bLhs = b.toPositivityConstraint().lhs(); // b is of the form bLhs > 0
+    if (a.relOp() != Rel::eq) {
+        Expr aLhs = a.toPositivityConstraint().lhs(); // a is of the form aLhs > 0
         return (aLhs <= bLhs).isTriviallyTrue(); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
     }
 
@@ -86,7 +86,7 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
 
     for (unsigned int i=0; i < guard.size(); ++i) {
         Rel rel = guard[i].subs(varSubs);
-        if (rel.getOp() != Rel::eq) continue;
+        if (rel.relOp() != Rel::eq) continue;
 
         Expr target = rel.rhs() - rel.lhs();
         if (!target.isPoly()) continue;
@@ -130,7 +130,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
     //get all variables that appear in an inequality
     VarSet tryVars;
     for (const Rel &rel : guard) {
-        if (!rel.isInequality() || !rel.isPoly()) continue;
+        if (!rel.isIneq() || !rel.isPoly()) continue;
         rel.collectVariables(tryVars);
     }
 
@@ -146,10 +146,10 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
             //check if this guard must be used for var
             const Rel &rel = guard[i];
             if (!rel.has(var)) continue;
-            if (!rel.isInequality() || !rel.isPoly()) goto abort; // contains var, but cannot be handled
+            if (!rel.isIneq() || !rel.isPoly()) goto abort; // contains var, but cannot be handled
 
             //make less equal
-            Rel leq = rel.toLessEq();
+            Rel leq = rel.toLeq();
             Expr target = leq.lhs() - leq.rhs();
             if (!target.has(var)) continue; // might have changed, e.h. x <= x
 
@@ -194,8 +194,8 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
 
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
     for (unsigned int i=0; i < guard.size(); ++i) {
-        if (guard[i].getOp() == Rel::eq) continue;
-        Rel leq = guard[i].toLessEq();
+        if (guard[i].relOp() == Rel::eq) continue;
+        Rel leq = guard[i].toLeq();
         Expr term = leq.lhs() - leq.rhs();
         for (const auto &prev : terms) {
             if ((prev.second + term).isZero()) {

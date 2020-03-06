@@ -26,7 +26,7 @@ const std::vector<Expr> BoundExtractor::getLowerAndUpper() const {
 void BoundExtractor::extractBounds() {
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
     for (const Rel &rel : guard) {
-        if (rel.getOp() == Rel::eq && rel.has(N)) {
+        if (rel.relOp() == Rel::eq && rel.has(N)) {
             auto optSolved = GuardToolbox::solveTermFor(rel.lhs() - rel.rhs(), N, GuardToolbox::ResultMapsToInt);
             if (optSolved) {
                 // One equality is enough, as all other bounds must also satisfy this equality
@@ -38,9 +38,9 @@ void BoundExtractor::extractBounds() {
 
     // Otherwise, collect all bounds
     for (const Rel &rel : guard) {
-        if (rel.getOp() == Rel::eq || !rel.has(N)) continue;
+        if (rel.relOp() == Rel::eq || !rel.has(N)) continue;
 
-        Rel leq = rel.toLessEq();
+        Rel leq = rel.toLeq();
         Expr term = (leq.lhs() - leq.rhs()).expand();
         if (term.degree(N) != 1) continue;
 

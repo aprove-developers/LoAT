@@ -29,7 +29,7 @@ namespace util {
         // Add all variables appearing in the guard
         VarSet guardVariables;
         for (const Rel &rel: constraints) {
-            const VarSet &relVars = rel.getVariables();
+            const VarSet &relVars = rel.vars();
             guardVariables.insert(relVars.begin(), relVars.end());
         }
         for (const Var &sym : guardVariables) {
@@ -49,7 +49,7 @@ namespace util {
                     }
                 }
                 for (const Rel &rel: guard) {
-                    const VarSet &relVars = rel.getVariables();
+                    const VarSet &relVars = rel.vars();
                     if (relVars.find(varMan.getVarSymbol(var)) != relVars.end()) {
                         next.insert(relVars.begin(), relVars.end());
                     }

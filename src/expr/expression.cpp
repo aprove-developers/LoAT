@@ -478,7 +478,7 @@ Expr Expr::wildcard(uint label) {
 }
 
 
-Rel::Rel(const Expr &lhs, Operator op, const Expr &rhs): l(lhs), r(rhs), op(op) { }
+Rel::Rel(const Expr &lhs, RelOp op, const Expr &rhs): l(lhs), r(rhs), op(op) { }
 
 Rel operator<(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::lt, y.ex);
@@ -530,16 +530,16 @@ bool Rel::isLinear(const option<VarSet> &vars) const {
     return l.isLinear(vars) && r.isLinear(vars);
 }
 
-bool Rel::isInequality() const {
+bool Rel::isIneq() const {
     return op != Rel::eq && op != Rel::neq;
 }
 
-bool Rel::isGreaterThanZero() const {
+bool Rel::isPositivityConstraint() const {
     return op == Rel::gt && r.isZero();
 }
 
-Rel Rel::toLessEq() const {
-    assert(isInequality());
+Rel Rel::toLeq() const {
+    assert(isIneq());
 
     Rel res = *this;
     //flip > or >=
@@ -558,8 +558,8 @@ Rel Rel::toLessEq() const {
     return res;
 }
 
-Rel Rel::toGreater() const {
-    assert(isInequality());
+Rel Rel::toGt() const {
+    assert(isIneq());
 
     Rel res = *this;
     //flip < or <=
@@ -578,20 +578,8 @@ Rel Rel::toGreater() const {
     return res;
 }
 
-Rel Rel::toLessOrLessEq() const {
-    assert(isInequality());
-
-    if (op == Rel::gt) {
-        return r < l;
-    } else if (op == Rel::geq) {
-        return r <= l;
-    }
-
-    return *this;
-}
-
-Rel Rel::splitVariablesAndConstants(const VarSet &params) const {
-    assert(isInequality());
+Rel Rel::splitVariableAndConstantAddends(const VarSet &params) const {
+    assert(isIneq());
 
     //move everything to lhs
     Expr newLhs = l - r;
@@ -686,63 +674,21 @@ std::string Rel::toString() const {
     return s.str();
 }
 
-Rel::Operator Rel::getOp() const {
+Rel::RelOp Rel::relOp() const {
     return op;
 }
 
-VarSet Rel::getVariables() const {
+VarSet Rel::vars() const {
     VarSet res;
     collectVariables(res);
     return res;
 }
 
-int Rel::compare(const Rel &that) const {
-    int fst = l.compare(that.l);
-    if (fst != 0) {
-        return fst < 0;
-    }
-    return r.compare(that.r);
-}
-
-Rel Rel::fromString(const string &s, const GiNaC::lst &variables) {
-    auto containsRelations = [](const string &s) -> bool {
-        return s.find_first_of("<>=") != string::npos;
-    };
-
-    assert(containsRelations(s));
-
-    // The order is important to avoid parsing e.g. <= as <
-    string ops[] = { "==", "!=", "<=", ">=", "<", ">", "=" };
-
-    for (string op : ops) {
-        string::size_type pos;
-        if ((pos = s.find(op)) != string::npos) {
-            string lhs = s.substr(0,pos);
-            string rhs = s.substr(pos+op.length());
-
-            if (containsRelations(lhs) || containsRelations(rhs)) {
-                throw InvalidRelationalExpression("Multiple relational operators: "+s);
-            }
-
-            Expr lhsExpr = GiNaC::ex(lhs,variables);
-            Expr rhsExpr = GiNaC::ex(rhs,variables);
-
-            if (op == "<") return lhsExpr < rhsExpr;
-            else if (op == ">") return lhsExpr > rhsExpr;
-            else if (op == "<=") return lhsExpr <= rhsExpr;
-            else if (op == ">=") return lhsExpr >= rhsExpr;
-            else if (op == "!=") return lhsExpr != rhsExpr;
-            else return lhsExpr == rhsExpr;
-        }
-    }
-    assert(false && "unreachable");
-}
-
-Rel Rel::normalizeInequality() const {
-    assert(isInequality());
-    Rel greater = toGreater();
+Rel Rel::toPositivityConstraint() const {
+    assert(isIneq());
+    Rel greater = toGt();
     Rel normalized = (greater.lhs() - greater.rhs()) > 0;
-    assert(normalized.isGreaterThanZero());
+    assert(normalized.isPositivityConstraint());
     return normalized;
 }
 
@@ -771,8 +717,8 @@ bool operator<(const Rel &x, const Rel &y) {
     if (fst != 0) {
         return fst < 0;
     }
-    if (x.getOp() != y.getOp()) {
-        return x.getOp() < y.getOp();
+    if (x.relOp() != y.relOp()) {
+        return x.relOp() < y.relOp();
     }
     return x.rhs().compare(y.rhs()) < 0;
 }

@@ -128,9 +128,9 @@ void MeteringFinder::buildLinearConstraints() {
 
     // helper lambda to transform the given inequality into the required form
     auto makeConstraint = [&](const Rel &rel, vector<Rel> &vec) {
-        assert(rel.isLinear() && rel.isInequality());
+        assert(rel.isLinear() && rel.isIneq());
 
-        Rel res = rel.toLessEq().splitVariablesAndConstants();
+        Rel res = rel.toLeq().splitVariableAndConstantAddends();
         if (!res.isTriviallyTrue()) {
             vec.push_back(res);
         }

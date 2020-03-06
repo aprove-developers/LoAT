@@ -42,8 +42,8 @@ BoolExpr FarkasLemma::apply(
     vector<Var> lambda;
     VarSet varSet(vars.begin(), vars.end());
     for (const Rel &rel : constraints) {
-        assert(rel.isLinear(varSet) && rel.isInequality());
-        assert(rel.getOp() == Rel::leq);
+        assert(rel.isLinear(varSet) && rel.isIneq());
+        assert(rel.relOp() == Rel::leq);
 
         Var var = varMan.getFreshUntrackedSymbol("l", lambdaType);
         lambda.push_back(var);
@@ -115,19 +115,19 @@ const BoolExpr FarkasLemma::apply(
     BoolExpr res = True;
     std::vector<Rel> normalizedPremise;
     for (const Rel &p: premise) {
-        if (p.isLinear(vars) && p.isInequality()) {
-            normalizedPremise.push_back(p.toLessEq().splitVariablesAndConstants(params));
-        } else if (p.isLinear(vars) && p.getOp() == Rel::eq) {
-            normalizedPremise.push_back((p.lhs() <= p.rhs()).splitVariablesAndConstants(params));
-            normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariablesAndConstants(params));
+        if (p.isLinear(vars) && p.isIneq()) {
+            normalizedPremise.push_back(p.toLeq().splitVariableAndConstantAddends(params));
+        } else if (p.isLinear(vars) && p.relOp() == Rel::eq) {
+            normalizedPremise.push_back((p.lhs() <= p.rhs()).splitVariableAndConstantAddends(params));
+            normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariableAndConstantAddends(params));
         }
     }
     vector<Var> varList(vars.begin(), vars.end());
     vector<Rel> splitConclusion;
     for (const Rel &c: conclusion) {
-        if (c.isLinear(vars) && c.isInequality()) {
+        if (c.isLinear(vars) && c.isIneq()) {
             splitConclusion.push_back(c);
-        } else if (c.isLinear(vars) && c.getOp() == Rel::eq) {
+        } else if (c.isLinear(vars) && c.relOp() == Rel::eq) {
             splitConclusion.emplace_back(c.lhs() <= c.rhs());
             splitConclusion.emplace_back(c.rhs() <= c.lhs());
         } else {
@@ -135,7 +135,7 @@ const BoolExpr FarkasLemma::apply(
         }
     }
     for (const Rel &c: splitConclusion) {
-        Rel normalized = c.toLessEq().splitVariablesAndConstants(params);
+        Rel normalized = c.toLeq().splitVariableAndConstantAddends(params);
         vector<Expr> coefficients;
         for (Var &x : varList) {
             coefficients.push_back(normalized.lhs().coeff(x, 1));

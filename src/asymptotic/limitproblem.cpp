@@ -13,7 +13,7 @@ LimitProblem::LimitProblem(VariableManager &varMan)
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expr &cost, VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Rel &rel : normalizedGuard) {
-        assert(rel.isGreaterThanZero());
+        assert(rel.isPositivityConstraint());
 
         addExpression(InftyExpression(rel.lhs(), POS));
     }
@@ -28,7 +28,7 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expr &cost, V
 LimitProblem::LimitProblem(const GuardList &normalizedGuard, VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Rel &rel : normalizedGuard) {
-        assert(rel.isGreaterThanZero());
+        assert(rel.isPositivityConstraint());
         addExpression(InftyExpression(rel.lhs(), POS));
     }
 

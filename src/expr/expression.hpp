@@ -19,15 +19,9 @@
 #define EXPRESSION_H
 
 #include <ginac/ginac.h>
-#include <string>
-#include <vector>
-#include <purrs.hh>
 
-#include "../util/exceptions.hpp"
 #include "complexity.hpp"
 #include "../util/option.hpp"
-
-namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 class Expr;
 class Recurrence;
@@ -49,6 +43,7 @@ std::ostream& operator<<(std::ostream &s, const ExprMap &map);
 
 /**
  * Class for arithmetic expressions.
+ * Just a wrapper for GiNaC expressions.
  */
 class Expr {
 
@@ -369,23 +364,26 @@ private:
 class Rel {
 public:
 
-    EXCEPTION(InvalidRelationalExpression,CustomException);
+    class InvalidRelationalExpression: std::exception { };
 
-    enum Operator {lt, leq, gt, geq, eq, neq};
+    enum RelOp {lt, leq, gt, geq, eq, neq};
 
-    Rel(const Expr &lhs, Operator op, const Expr &rhs);
+    Rel(const Expr &lhs, RelOp op, const Expr &rhs);
 
     Expr lhs() const;
     Expr rhs() const;
     Rel expand() const;
     bool isPoly() const;
     bool isLinear(const option<VarSet> &vars = option<VarSet>()) const;
-    bool isInequality() const;
-    bool isGreaterThanZero() const;
-    Rel toLessEq() const;
-    Rel toGreater() const;
-    Rel toLessOrLessEq() const;
-    Rel splitVariablesAndConstants(const VarSet &params = VarSet()) const;
+    bool isIneq() const;
+    bool isPositivityConstraint() const;
+    Rel toLeq() const;
+    Rel toGt() const;
+
+    /**
+     * @return Moves all addends containing variables to the lhs and all other addends to the rhs, where the given parameters are consiedered to be constants.
+     */
+    Rel splitVariableAndConstantAddends(const VarSet &params = VarSet()) const;
     bool isTriviallyTrue() const;
     bool isTriviallyFalse() const;
     void collectVariables(VarSet &res) const;
@@ -394,11 +392,8 @@ public:
     Rel replace(const ExprMap &patternMap) const;
     void applySubs(const ExprMap &subs);
     std::string toString() const;
-    Operator getOp() const;
-    VarSet getVariables() const;
-    int compare(const Rel &that) const;
-
-    static Rel fromString(const std::string &s, const GiNaC::lst &variables);
+    RelOp relOp() const;
+    VarSet vars() const;
 
     template <typename P>
     bool hasVarWith(P predicate) const {
@@ -409,11 +404,17 @@ public:
      * Given an inequality, transforms it into one of the form lhs > 0
      * @note assumes integer arithmetic to translate e.g. >= to >
      */
-    Rel normalizeInequality() const;
+    Rel toPositivityConstraint() const;
 
     friend Rel operator!(const Rel &x);
     friend bool operator==(const Rel &x, const Rel &y);
     friend bool operator!=(const Rel &x, const Rel &y);
+    /**
+     *
+     * @param x
+     * @param y
+     * @return
+     */
     friend bool operator<(const Rel &x, const Rel &y);
     friend std::ostream& operator<<(std::ostream &s, const Rel &e);
 
@@ -428,7 +429,7 @@ private:
 
     Expr l;
     Expr r;
-    Operator op;
+    RelOp op;
 
 };
 

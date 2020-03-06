@@ -2,7 +2,7 @@
 
 BoolExpression::~BoolExpression() {}
 
-BoolLit::BoolLit(const Rel &lit): lit(lit.toLessEq()) { }
+BoolLit::BoolLit(const Rel &lit): lit(lit.toLeq()) { }
 
 bool BoolLit::isAnd() const {
     return false;
@@ -150,10 +150,10 @@ const BoolExpr buildOr(const std::vector<BoolExpr> &xs) {
 }
 
 const BoolExpr buildLit(const Rel &lit) {
-    if (lit.isInequality()) {
+    if (lit.isIneq()) {
         return std::shared_ptr<BoolExpression>(new BoolLit(lit));
     } else {
-        assert(lit.getOp() == Rel::eq);
+        assert(lit.relOp() == Rel::eq);
         return buildLit(lit.lhs() <= lit.rhs()) & (lit.lhs() >= lit.rhs());
     }
 }
@@ -201,7 +201,7 @@ bool operator <(const BoolExpression &a, const BoolExpression &b) {
         if (!b.getLit()) {
             return true;
         } else {
-            return a.getLit().get().compare(b.getLit().get()) < 0;
+            return a.getLit().get() < b.getLit().get();
         }
     }
     if (a.isAnd() && !b.isAnd()) {

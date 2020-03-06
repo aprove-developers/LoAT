@@ -159,7 +159,7 @@ protected:
         EXPR a = convert_ex(rel.lhs());
         EXPR b = convert_ex(rel.rhs());
 
-        switch (rel.getOp()) {
+        switch (rel.relOp()) {
         case Rel::eq: return context.eq(a, b);
         case Rel::neq: return context.neq(a, b);
         case Rel::lt: return context.lt(a, b);

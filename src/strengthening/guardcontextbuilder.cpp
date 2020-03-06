@@ -36,10 +36,10 @@ namespace strengthening {
     const GuardList Self::computeConstraints() const {
         GuardList constraints;
         for (const Rel &rel: guard) {
-            if (rel.isLinear() && rel.getOp() == Rel::eq) {
+            if (rel.isLinear() && rel.relOp() == Rel::eq) {
                 constraints.emplace_back(rel.lhs() <= rel.rhs());
                 constraints.emplace_back(rel.rhs() <= rel.lhs());
-            } else if (rel.isLinear() && rel.isInequality()) {
+            } else if (rel.isLinear() && rel.isIneq()) {
                 constraints.push_back(rel);
             }
         }

@@ -49,7 +49,7 @@ GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
     GuardList newGuard;
 
     for (const Rel &rel : guard) {
-        if (rel.getOp() == Rel::eq) {
+        if (rel.relOp() == Rel::eq) {
             newGuard.push_back(rel.lhs() <= rel.rhs());
             newGuard.push_back(rel.lhs() >= rel.rhs());
         } else {
@@ -188,7 +188,7 @@ void MeteringToolbox::restrictGuardToVariables(const VarMan &varMan, GuardList &
     };
 
     auto containsNoVars = [&](const Rel &rel) {
-        VarSet syms = rel.getVariables();
+        VarSet syms = rel.vars();
         return !std::any_of(syms.begin(), syms.end(), isContainedInVars);
     };
 
@@ -268,7 +268,7 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
             Var free = varMan.getVarSymbol(freeIdx);
             if (!rel.has(free)) continue;
 
-            Rel term = rel.toLessEq();
+            Rel term = rel.toLeq();
             auto optSolved = GuardToolbox::solveTermFor(term.lhs()-term.rhs(), free, GuardToolbox::ResultMapsToInt);
             if (!optSolved) continue;
 
