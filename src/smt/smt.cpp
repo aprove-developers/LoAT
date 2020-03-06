@@ -20,27 +20,6 @@ bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const Variable
     return s->check() == Smt::Unsat;
 }
 
-option<VarMap<GiNaC::numeric>> Smt::maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan) {
-    BoolExpr all = hard & buildAnd(soft);
-    std::unique_ptr<Smt> s = SmtFactory::modelBuildingSolver(chooseLogic({all}), varMan);
-    s->setTimeout(timeout);
-    s->add(hard);
-    if (s->check() != Sat) {
-        return {};
-    }
-    VarMap<GiNaC::numeric> model = s->model();
-    for (const BoolExpr &e: soft) {
-        s->push();
-        s->add(e);
-        if (s->check() == Sat) {
-            model = s->model();
-        } else {
-            s->pop();
-        }
-    }
-    return {model};
-}
-
 Smt::Logic Smt::chooseLogic(const std::vector<BoolExpr> &xs) {
     Smt::Logic res = Smt::LA;
     for (const BoolExpr &x: xs) {

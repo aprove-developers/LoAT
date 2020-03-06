@@ -27,27 +27,25 @@ namespace strengthening {
 
     public:
 
-        static const option<Invariants> solve(
+        static const option<GuardList> solve(
                 const RuleContext &ruleCtx,
-                const MaxSmtConstraints &constraints,
+                const SmtConstraints &constraints,
                 const Templates &templates);
 
     private:
 
         const RuleContext &ruleCtx;
-        const MaxSmtConstraints &constraints;
+        const SmtConstraints &constraints;
         const Templates &templates;
 
         ConstraintSolver(
                 const RuleContext &ruleCtx,
-                const MaxSmtConstraints &constraints,
+                const SmtConstraints &constraints,
                 const Templates &templates);
 
-        const option<Invariants> solve() const;
+        const option<GuardList> solve() const;
 
         const GuardList instantiateTemplates(const VarMap<GiNaC::numeric> &model) const;
-
-        const option<Invariants> splitInitiallyValid(const GuardList &invariants) const;
 
     };
 

@@ -185,18 +185,13 @@ ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
 
 
 void Linearize::applySubstitution(const ExprMap &subs) {
-    // We have to enable algebraic substitutions, as otherwise x*y*z stays x*y*z
-    // if we apply the exmap x*y/xy (since x*y only matches a part of the GiNaC::mul).
-    // See the GiNaC documentation/tutorial on subs() for more details.
-    auto subsOptions = GiNaC::subs_options::algebraic;
-
     for (Rel &rel : guard) {
-        rel = rel.expand().subs(subs, subsOptions);
+        rel = rel.expand().replace(subs);
     }
 
     for (UpdateMap &update : updates) {
         for (auto &it : update) {
-            it.second = it.second.expand().subs(subs, subsOptions);
+            it.second = it.second.expand().replace(subs);
         }
     }
 }

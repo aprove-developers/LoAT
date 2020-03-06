@@ -23,7 +23,7 @@
 
 namespace strengthening {
 
-    const std::vector<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its) {
+    const option<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its) {
         for (const Rel &rel: rule.getGuard()) {
             if (!rel.isLinear()) {
                 return {};
@@ -36,43 +36,37 @@ namespace strengthening {
         }
         const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
         const Strengthener strengthener(ruleCtx);
-        const std::vector<GuardList> &strengthened = strengthener.apply(rule.getGuard());
+        const option<GuardList> &strengthened = strengthener.apply(rule.getGuard());
         std::vector<LinearRule> rules;
-        for (const GuardList &g: strengthened) {
-            const RuleLhs newLhs(rule.getLhsLoc(), g, rule.getCost());
-            rules.emplace_back(LinearRule(newLhs, rule.getRhss()[0]));
+        if (strengthened) {
+            const RuleLhs newLhs(rule.getLhsLoc(), strengthened.get(), rule.getCost());
+            return {LinearRule(newLhs, rule.getRhss()[0])};
         }
-        return rules;
+        return {};
     }
 
     Strengthener::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
 
-    const std::vector<GuardList> Strengthener::apply(const GuardList &guard) const {
-        std::vector<GuardList> res;
+    const option<GuardList> Strengthener::apply(const GuardList &guard) const {
         const option<GuardContext> &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates, ruleCtx.varMan);
         if (!guardCtx) {
-            return res;
-        }
-        const Templates &templates = TemplateBuilder::build(guardCtx.get(), ruleCtx);
-        const MaxSmtConstraints &maxSmtConstraints = ConstraintBuilder::buildMaxSmtConstraints(templates, ruleCtx, guardCtx.get());
-        if (maxSmtConstraints.hard == True) {
             return {};
         }
-        const option<Invariants> &newInv = ConstraintSolver::solve(ruleCtx, maxSmtConstraints, templates);
+        const Templates &templates = TemplateBuilder::build(guardCtx.get(), ruleCtx);
+        const SmtConstraints &constraints = ConstraintBuilder::buildSmtConstraints(templates, ruleCtx, guardCtx.get());
+        if (constraints.conclusionsInvariant == True) {
+            return {};
+        }
+        const option<GuardList> &newInv = ConstraintSolver::solve(ruleCtx, constraints, templates);
         if (newInv) {
             GuardList newGuard(guardCtx->guard);
             newGuard.insert(
                     newGuard.end(),
-                    newInv.get().invariants.begin(),
-                    newInv.get().invariants.end());
-            GuardList pseudoInvariantsValid(newGuard);
-            pseudoInvariantsValid.insert(
-                    pseudoInvariantsValid.end(),
-                    newInv.get().pseudoInvariants.begin(),
-                    newInv.get().pseudoInvariants.end());
-            res.emplace_back(pseudoInvariantsValid);
+                    newInv.get().begin(),
+                    newInv.get().end());
+            return {newInv};
         }
-        return res;
+        return {};
     }
 
 }

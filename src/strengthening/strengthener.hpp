@@ -32,7 +32,7 @@ namespace strengthening {
 
     public:
 
-        static const std::vector<LinearRule> apply(const LinearRule &r, ITSProblem &its);
+        static const option<LinearRule> apply(const LinearRule &r, ITSProblem &its);
 
     private:
 
@@ -40,7 +40,7 @@ namespace strengthening {
 
         explicit Strengthener(const RuleContext &ruleCtx);
 
-        const std::vector<GuardList> apply(const GuardList &guard) const;
+        const option<GuardList> apply(const GuardList &guard) const;
 
     };
 

@@ -31,18 +31,6 @@ namespace strengthening {
 
     Self::RuleContextBuilder(const Rule &rule, ITSProblem &its): rule(rule), its(its) { }
 
-    const std::vector<Rule> Self::computePredecessors() const {
-        std::set<TransIdx> predecessorIndices = its.getTransitionsTo(rule.getLhsLoc());
-        std::set<TransIdx> successorIndices = its.getTransitionsFrom(rule.getLhsLoc());
-        std::vector<Rule> predecessors;
-        for (const TransIdx &i: predecessorIndices) {
-            if (successorIndices.count(i) == 0) {
-                predecessors.push_back(its.getRule(i));
-            }
-        }
-        return predecessors;
-    }
-
     const std::vector<ExprMap> Self::computeUpdates() const {
         std::vector<ExprMap> res;
         for (const RuleRhs &rhs: rule.getRhss()) {
@@ -51,48 +39,9 @@ namespace strengthening {
         return res;
     }
 
-    const std::vector<GuardList> Self::buildPreconditions(const std::vector<Rule> &predecessors) const {
-        std::vector<GuardList> res;
-        ExprMap tmpVarRenaming;
-        for (const VariableIdx &i: its.getTempVars()) {
-            const Var &x = its.getVarSymbol(i);
-            tmpVarRenaming.put(x, its.getVarSymbol(its.addFreshVariable(x.get_name())));
-        }
-        for (const Rule &pred: predecessors) {
-            if (pred.getGuard() == rule.getGuard()) {
-                continue;
-            }
-            for (const RuleRhs &rhs: pred.getRhss()) {
-                if (rhs.getLoc() == rule.getLhsLoc()) {
-                    const ExprMap &up = rhs.getUpdate().toSubstitution(its);
-                    GuardList pre;
-                    for (Rel rel: pred.getGuard()) {
-                        rel.applySubs(up);
-                        rel.applySubs(tmpVarRenaming);
-                        pre.push_back(rel);
-                    }
-                    for (const auto &p: rhs.getUpdate()) {
-                        const Var &var = its.getVarSymbol(p.first);
-                        const Expr &varUpdate = p.second;
-                        Expr updatedVarUpdate = varUpdate;
-                        updatedVarUpdate.applySubs(up);
-                        if (varUpdate.equals(updatedVarUpdate)) {
-                            updatedVarUpdate.applySubs(tmpVarRenaming);
-                            pre.push_back(var == updatedVarUpdate);
-                        }
-                    }
-                    res.push_back(pre);
-                }
-            }
-        }
-        return res;
-    }
-
     const RuleContext Self::build() const {
         const std::vector<ExprMap> &updates = computeUpdates();
-        const std::vector<Rule> &predecessors = computePredecessors();
-        const std::vector<GuardList> preconditions = buildPreconditions(predecessors);
-        return RuleContext(rule, updates, preconditions, its);
+        return RuleContext(rule, updates, its);
     }
 
 }

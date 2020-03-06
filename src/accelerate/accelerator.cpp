@@ -286,18 +286,16 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             }
         }
         if (!nonterm) {
-            vector<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-            if (!strengthened.empty()) {
-                for (const LinearRule &sr: strengthened) {
-                    bool sat = Smt::check(buildAnd(sr.getGuard()), its) == Smt::Sat;
-                    // only proceed if the guard is sat
-                    if (sat) {
-                        if (nonterm::NonTerm::universal(sr, its, sinkLoc)) {
-                            nonterm = true;
-                            const Rule &nontermRule = LinearRule(sr.getLhsLoc(), sr.getGuard(), Expr::NontermSymbol, sinkLoc, {});
-                            res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
-                            res.rules.emplace_back(nontermRule);
-                        }
+            option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
+            if (strengthened) {
+                bool sat = Smt::check(buildAnd(strengthened.get().getGuard()), its) == Smt::Sat;
+                // only proceed if the guard is sat
+                if (sat) {
+                    if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
+                        nonterm = true;
+                        const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
+                        res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
+                        res.rules.emplace_back(nontermRule);
                     }
                 }
             }

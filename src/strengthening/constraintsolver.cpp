@@ -26,27 +26,29 @@ namespace strengthening {
 
     typedef ConstraintSolver Self;
 
-    const option<Invariants> Self::solve(
+    const option<GuardList> Self::solve(
             const RuleContext &ruleCtx,
-            const MaxSmtConstraints &constraints,
+            const SmtConstraints &constraints,
             const Templates &templates) {
         return ConstraintSolver(ruleCtx, constraints, templates).solve();
     }
 
     Self::ConstraintSolver(
             const RuleContext &ruleCtx,
-            const MaxSmtConstraints &constraints,
+            const SmtConstraints &constraints,
             const Templates &templates):
             ruleCtx(ruleCtx),
             constraints(constraints),
             templates(templates) { }
 
-    const option<Invariants> Self::solve() const {
-        const option<VarMap<GiNaC::numeric>> &model = Smt::maxSmt(constraints.hard, constraints.soft, Config::Z3::StrengtheningTimeout, ruleCtx.varMan);
-        if (model) {
-            const GuardList &newInvariants = instantiateTemplates(model.get());
+    const option<GuardList> Self::solve() const {
+        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints.templatesInvariant, constraints.conclusionsInvariant}), ruleCtx.varMan);
+        solver->add(constraints.templatesInvariant);
+        solver->add(constraints.conclusionsInvariant);
+        if (solver->check() == Smt::Sat) {
+            const GuardList &newInvariants = instantiateTemplates(solver->model());
             if (!newInvariants.empty()) {
-                return splitInitiallyValid(newInvariants);
+                return {newInvariants};
             }
         }
         return {};
@@ -76,30 +78,6 @@ namespace strengthening {
             }
         }
         return res;
-    }
-
-    const option<Invariants> Self::splitInitiallyValid(const GuardList &invariants) const {
-        Invariants res;
-        BoolExpr preconditionVec = False;
-        for (const GuardList &pre: ruleCtx.preconditions) {
-            BoolExpr preVec = True;
-            for (const Rel &rel: pre) {
-                preVec = preVec & rel;
-            }
-            preconditionVec = preconditionVec | preVec;
-        }
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({invariants}, {}), ruleCtx.varMan);
-        for (const Rel &rel: invariants) {
-            solver->push();
-            solver->add(!rel);
-            if (solver->check() == Smt::Unsat) {
-                res.invariants.push_back(rel);
-            } else {
-                res.pseudoInvariants.push_back(rel);
-            }
-            solver->pop();
-        }
-        return {res};
     }
 
 }

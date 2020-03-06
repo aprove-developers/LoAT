@@ -22,7 +22,6 @@ public:
     virtual void resetSolver() = 0;
     virtual ~Smt();
 
-    static option<VarMap<GiNaC::numeric>> maxSmt(BoolExpr hard, std::vector<BoolExpr> soft, uint timeout, const VariableManager &varMan);
     static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
     static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs);

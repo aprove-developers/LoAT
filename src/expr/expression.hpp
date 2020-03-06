@@ -222,7 +222,15 @@ public:
      */
     std::string toString() const;
 
+    /**
+     * @return True iff this and that are equal.
+     */
     bool equals(const Expr &that) const;
+
+    /**
+     * @return The degree wrt. var.
+     * @note For polynomials only.
+     */
     int degree(const Var &var) const;
 
     /**
@@ -230,6 +238,9 @@ public:
      */
     int ldegree(const Var &var) const;
 
+    /**
+     * @return The coefficient of the monomial where var occurs with the given degree (which defaults to 1).
+     */
     Expr coeff(const Var &var, int degree = 1) const;
 
     /**
@@ -301,7 +312,9 @@ public:
      * @return The result of applying the given substitution to this expression.
      * @note The second argument is deprecated.
      */
-    Expr subs(const ExprMap &map, uint options = 0) const;
+    Expr subs(const ExprMap &map) const;
+
+    Expr replace(const ExprMap &patternMap) const;
 
     /**
      * @brief Provides a total order for expressions.
@@ -377,7 +390,8 @@ public:
     bool isTriviallyFalse() const;
     void collectVariables(VarSet &res) const;
     bool has(const Expr &pattern) const;
-    Rel subs(const ExprMap &map, uint options = 0) const;
+    Rel subs(const ExprMap &map) const;
+    Rel replace(const ExprMap &patternMap) const;
     void applySubs(const ExprMap &subs);
     std::string toString() const;
     Operator getOp() const;

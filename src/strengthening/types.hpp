@@ -30,16 +30,13 @@ namespace strengthening {
         RuleContext(
                 const Rule &rule,
                 const std::vector<ExprMap> &updates,
-                const std::vector<GuardList> &preconditions,
                 VariableManager &varMan):
                 rule(rule),
                 updates(std::move(updates)),
-                preconditions(std::move(preconditions)),
                 varMan(varMan) { }
 
         const Rule &rule;
         const std::vector<ExprMap> updates;
-        const std::vector<GuardList> preconditions;
         VariableManager &varMan;
     };
 
@@ -67,38 +64,18 @@ namespace strengthening {
         GuardList failed;
     };
 
-    struct Invariants {
-        GuardList invariants;
-        GuardList pseudoInvariants;
-    };
-
-    struct MaxSmtConstraints {
-        BoolExpr hard = True;
-        std::vector<BoolExpr> soft;
-    };
-
-    struct Initiation {
-        BoolExpr valid;
-        std::vector<BoolExpr> satisfiable;
-    };
-
     struct SmtConstraints {
 
         SmtConstraints(
-                const Initiation &initiation,
                 const BoolExpr &templatesInvariant,
                 const BoolExpr &conclusionsInvariant) :
-                initiation(std::move(initiation)),
                 templatesInvariant(std::move(templatesInvariant)),
                 conclusionsInvariant(std::move(conclusionsInvariant)) {}
 
-        const Initiation initiation;
         const BoolExpr templatesInvariant;
         const BoolExpr conclusionsInvariant;
 
     };
-
-    typedef std::function<const MaxSmtConstraints(const SmtConstraints &)> Mode;
 
 }
 

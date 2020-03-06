@@ -421,8 +421,12 @@ size_t Expr::arity() const {
     return ex.nops();
 }
 
-Expr Expr::subs(const ExprMap &map, uint options) const {
-    return ex.subs(map.ginacMap, options);
+Expr Expr::subs(const ExprMap &map) const {
+    return ex.subs(map.ginacMap);
+}
+
+Expr Expr::replace(const ExprMap &patternMap) const {
+    return ex.subs(patternMap.ginacMap, GiNaC::subs_options::algebraic);
 }
 
 void Expr::traverse(GiNaC::visitor &v) const {
@@ -663,8 +667,12 @@ bool Rel::has(const Expr &pattern) const {
     return l.has(pattern) || r.has(pattern);
 }
 
-Rel Rel::subs(const ExprMap &map, uint options) const {
-    return Rel(l.subs(map, options), op, r.subs(map, options));
+Rel Rel::subs(const ExprMap &map) const {
+    return Rel(l.subs(map), op, r.subs(map));
+}
+
+Rel Rel::replace(const ExprMap &patternMap) const {
+    return Rel(l.subs(patternMap), op, r.subs(patternMap));
 }
 
 void Rel::applySubs(const ExprMap &subs) {

@@ -20,6 +20,12 @@
 
 namespace strengthening {
 
+    const SmtConstraints ConstraintBuilder::buildSmtConstraints(const Templates &templates,
+                                             const RuleContext &ruleCtx,
+                                             const GuardContext &guardCtx) {
+        return ConstraintBuilder(templates, ruleCtx, guardCtx).buildSmtConstraints();
+    }
+
     ConstraintBuilder::ConstraintBuilder(
             const Templates &templates,
             const RuleContext &ruleCtx,
@@ -27,23 +33,6 @@ namespace strengthening {
     ) : templates(templates),
         ruleCtx(ruleCtx),
         guardCtx(guardCtx) {
-    }
-
-    const MaxSmtConstraints ConstraintBuilder::buildMaxSmtConstraints(const Templates &templates,
-                                                                      const RuleContext &ruleCtx,
-                                                                      const GuardContext &guardCtx) {
-        ConstraintBuilder builder(templates, ruleCtx, guardCtx);
-        const SmtConstraints &constraints = builder.buildSmtConstraints();
-        MaxSmtConstraints res;
-        res.soft.push_back(constraints.initiation.valid);
-        BoolExpr sat = False;
-        for (const BoolExpr &e: constraints.initiation.satisfiable) {
-            sat = sat | e;
-        }
-        res.hard = res.hard & sat;
-        res.hard = res.hard & constraints.conclusionsInvariant;
-        res.hard = res.hard & constraints.templatesInvariant;
-        return res;
     }
 
     const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
@@ -67,11 +56,10 @@ namespace strengthening {
                 conclusionInvariant = conclusionInvariant & invariant;
             }
         }
-        const Initiation &initiation = constructInitiationConstraints(relevantConstraints);
         const BoolExpr &templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
-        return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
+        return SmtConstraints(templatesInvariant, conclusionInvariant);
     }
 
     const GuardList ConstraintBuilder::findRelevantConstraints() const {
@@ -103,45 +91,6 @@ namespace strengthening {
         }
         for (const Rel &rel: guardCtx.guard) {
             res.premise.push_back(rel);
-        }
-        return res;
-    }
-
-    const Initiation ConstraintBuilder::constructInitiationConstraints(const GuardList &relevantConstraints) const {
-        Initiation res;
-        res.valid = True;
-        for (const GuardList &pre: ruleCtx.preconditions) {
-            for (const Rel &t: templates) {
-                res.valid = res.valid & constructImplicationConstraints(pre, t);
-            }
-            VarSet allVars;
-            pre.collectVariables(allVars);
-            for (const Rel &rel: relevantConstraints) {
-                rel.collectVariables(allVars);
-            }
-            for (const Rel &rel: pre) {
-                rel.collectVariables(allVars);
-            }
-            // TODO Why is this variable renaming needed?
-            ExprMap varRenaming;
-            for (const Var &x: allVars) {
-                varRenaming.put(x, ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name())));
-            }
-            std::vector<Rel> renamed;
-            for (Rel rel: pre) {
-                rel.applySubs(varRenaming);
-                renamed.push_back(rel);
-            }
-            const std::vector<Rel> &updatedTemplates = templates.subs(varRenaming);
-            for (const Rel &e: updatedTemplates) {
-                renamed.push_back(e);
-            }
-            for (Rel rel: relevantConstraints) {
-                rel.applySubs(varRenaming);
-                renamed.push_back(rel);
-            }
-            const BoolExpr &expr = buildAnd(renamed);
-            res.satisfiable.push_back(expr);
         }
         return res;
     }
