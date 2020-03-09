@@ -16,7 +16,7 @@ option<Rel> BoolLit::getLit() const {
     return {lit};
 }
 
-std::set<BoolExpr> BoolLit::getChildren() const {
+BoolExprSet BoolLit::getChildren() const {
     return {};
 }
 
@@ -35,7 +35,7 @@ bool BoolLit::isPolynomial() const {
 BoolLit::~BoolLit() {}
 
 
-BoolJunction::BoolJunction(const std::set<BoolExpr> &children, ConcatOperator op): children(children), op(op) { }
+BoolJunction::BoolJunction(const BoolExprSet &children, ConcatOperator op): children(children), op(op) { }
 
 bool BoolJunction::isAnd() const {
     return op == ConcatAnd;
@@ -49,12 +49,12 @@ option<Rel> BoolJunction::getLit() const {
     return {};
 }
 
-std::set<BoolExpr> BoolJunction::getChildren() const {
+BoolExprSet BoolJunction::getChildren() const {
     return children;
 }
 
 const BoolExpr BoolJunction::negation() const {
-    std::set<BoolExpr> newChildren;
+    BoolExprSet newChildren;
     for (const BoolExpr &c: children) {
         newChildren.insert(!c);
     }
@@ -87,16 +87,16 @@ bool BoolJunction::isPolynomial() const {
 BoolJunction::~BoolJunction() {}
 
 
-BoolExpr build(std::set<BoolExpr> xs, ConcatOperator op) {
+BoolExpr build(BoolExprSet xs, ConcatOperator op) {
     std::stack<BoolExpr> todo;
     for (const BoolExpr &x: xs) {
         todo.push(x);
     }
-    std::set<BoolExpr> children;
+    BoolExprSet children;
     while (!todo.empty()) {
         BoolExpr current = todo.top();
         if ((op == ConcatAnd && current->isAnd()) || (op == ConcatOr && current->isOr())) {
-            const std::set<BoolExpr> &currentChildren = current->getChildren();
+            const BoolExprSet &currentChildren = current->getChildren();
             todo.pop();
             for (const BoolExpr &c: currentChildren) {
                 todo.push(c);
@@ -106,11 +106,14 @@ BoolExpr build(std::set<BoolExpr> xs, ConcatOperator op) {
             todo.pop();
         }
     }
+    if (children.size() == 1) {
+        return *children.begin();
+    }
     return std::shared_ptr<BoolExpression>(new BoolJunction(children, op));
 }
 
 BoolExpr build(const RelSet &xs, ConcatOperator op) {
-    std::set<BoolExpr> children;
+    BoolExprSet children;
     for (const Rel &x: xs) {
         children.insert(buildLit(x));
     }
@@ -121,7 +124,7 @@ const BoolExpr buildAnd(const RelSet &xs) {
     return build(xs, ConcatAnd);
 }
 
-const BoolExpr buildAnd(const std::set<BoolExpr> &xs) {
+const BoolExpr buildAnd(const BoolExprSet &xs) {
     return build(xs, ConcatAnd);
 }
 
@@ -129,7 +132,7 @@ const BoolExpr buildOr(const RelSet &xs) {
     return build(xs, ConcatOr);
 }
 
-const BoolExpr buildOr(const std::set<BoolExpr> &xs) {
+const BoolExpr buildOr(const BoolExprSet &xs) {
     return build(xs, ConcatOr);
 }
 
@@ -138,7 +141,7 @@ const BoolExpr buildAnd(const std::vector<Rel> &xs) {
 }
 
 const BoolExpr buildAnd(const std::vector<BoolExpr> &xs) {
-    return build(std::set<BoolExpr>(xs.begin(), xs.end()), ConcatAnd);
+    return build(BoolExprSet(xs.begin(), xs.end()), ConcatAnd);
 }
 
 const BoolExpr buildOr(const std::vector<Rel> &xs) {
@@ -146,7 +149,7 @@ const BoolExpr buildOr(const std::vector<Rel> &xs) {
 }
 
 const BoolExpr buildOr(const std::vector<BoolExpr> &xs) {
-    return build(std::set<BoolExpr>(xs.begin(), xs.end()), ConcatOr);
+    return build(BoolExprSet(xs.begin(), xs.end()), ConcatOr);
 }
 
 const BoolExpr buildLit(const Rel &lit) {
@@ -161,9 +164,13 @@ const BoolExpr buildLit(const Rel &lit) {
 const BoolExpr True = buildAnd(std::vector<BoolExpr>());
 const BoolExpr False = buildOr(std::vector<BoolExpr>());
 
+bool BoolExpr_is_less::operator()(const BoolExpr a, const BoolExpr b) const {
+    return *a < *b;
+}
+
 const BoolExpr operator &(const BoolExpr a, const BoolExpr b) {
-    const std::set<BoolExpr> &children = {a, b};
-    return buildAnd(std::set<BoolExpr>(children));
+    const BoolExprSet &children = {a, b};
+    return buildAnd(children);
 }
 
 const BoolExpr operator &(const BoolExpr a, const Rel &b) {
@@ -171,7 +178,7 @@ const BoolExpr operator &(const BoolExpr a, const Rel &b) {
 }
 
 const BoolExpr operator |(const BoolExpr a, const BoolExpr b) {
-    const std::set<BoolExpr> &children = {a, b};
+    const BoolExprSet &children = {a, b};
     return buildOr(children);
 }
 
@@ -213,7 +220,7 @@ bool operator <(const BoolExpression &a, const BoolExpression &b) {
     return a.getChildren() < b.getChildren();
 }
 
-std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
+std::ostream& operator<<(std::ostream &s, const BoolExpr e) {
     if (e->getLit()) {
         s << e->getLit().get();
     } else if (e->getChildren().empty()) {
@@ -224,6 +231,7 @@ std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
         }
     } else {
         bool first = true;
+        s << "(";
         for (const BoolExpr &c: e->getChildren()) {
             if (first) {
                 s << c;
@@ -237,6 +245,7 @@ std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
                 s << c;
             }
         }
+        s << ")";
     }
     return s;
 }

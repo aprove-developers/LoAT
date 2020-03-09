@@ -8,12 +8,18 @@ class BoolJunction;
 class BoolExpression;
 typedef std::shared_ptr<BoolExpression> BoolExpr;
 
+struct BoolExpr_is_less {
+    bool operator() (const BoolExpr lh, const BoolExpr rh) const;
+};
+
+typedef std::set<BoolExpr> BoolExprSet;
+
 class BoolExpression {
 public:
     virtual option<Rel> getLit() const = 0;
     virtual bool isAnd() const = 0;
     virtual bool isOr() const = 0;
-    virtual std::set<BoolExpr> getChildren() const = 0;
+    virtual BoolExprSet getChildren() const = 0;
     virtual const BoolExpr negation() const = 0;
     virtual bool isLinear() const = 0;
     virtual bool isPolynomial() const = 0;
@@ -32,7 +38,7 @@ public:
     bool isAnd() const override;
     bool isOr() const override;
     option<Rel> getLit() const override;
-    std::set<BoolExpr> getChildren() const override;
+    BoolExprSet getChildren() const override;
     const BoolExpr negation() const override;
     bool isLinear() const override;
     bool isPolynomial() const override;
@@ -46,16 +52,16 @@ class BoolJunction: public BoolExpression {
 
 private:
 
-    std::set<BoolExpr> children;
+    BoolExprSet children;
     ConcatOperator op;
 
 public:
 
-    BoolJunction(const std::set<BoolExpr> &children, ConcatOperator op);
+    BoolJunction(const BoolExprSet &children, ConcatOperator op);
     bool isAnd() const override;
     bool isOr() const override;
     option<Rel> getLit() const override;
-    std::set<BoolExpr> getChildren() const override;
+    BoolExprSet getChildren() const override;
     const BoolExpr negation() const override;
     bool isLinear() const override;
     bool isPolynomial() const override;
@@ -68,9 +74,9 @@ const BoolExpr buildAnd(const std::vector<BoolExpr> &xs);
 const BoolExpr buildOr(const std::vector<Rel> &xs);
 const BoolExpr buildOr(const std::vector<BoolExpr> &xs);
 const BoolExpr buildAnd(const RelSet &xs);
-const BoolExpr buildAnd(const std::set<BoolExpr> &xs);
+const BoolExpr buildAnd(const BoolExprSet &xs);
 const BoolExpr buildOr(const RelSet &xs);
-const BoolExpr buildOr(const std::set<BoolExpr> &xs);
+const BoolExpr buildOr(const BoolExprSet &xs);
 const BoolExpr buildLit(const Rel &lit);
 
 extern const BoolExpr True;
@@ -84,6 +90,6 @@ const BoolExpr operator !(const BoolExpr);
 
 bool operator ==(const BoolExpression &a, const BoolExpression &b);
 bool operator <(const BoolExpression &a, const BoolExpression &b);
-std::ostream& operator<<(std::ostream &s, const BoolExpr &e);
+std::ostream& operator<<(std::ostream &s, const BoolExpr e);
 
 #endif // BOOLEXPR_HPP

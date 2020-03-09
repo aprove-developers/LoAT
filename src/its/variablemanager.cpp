@@ -61,7 +61,8 @@ VariableIdx VariableManager::addFreshTemporaryVariable(string basename) {
 }
 
 Var VariableManager::getFreshUntrackedSymbol(string basename, Expr::Type type) {
-    const Var &res = Var(getFreshName(basename));
+    Var res(getFreshName(basename));
+    variableNameLookup.emplace(res.get_name(), -1);
     untrackedVariables[res] = type;
     return res;
 }
@@ -97,7 +98,7 @@ size_t VariableManager::getVariableCount() const {
 }
 
 Expr::Type VariableManager::getType(const Var &x) const {
-    if (variableNameLookup.find(x.get_name()) == variableNameLookup.end()) {
+    if (untrackedVariables.find(x) != untrackedVariables.end()) {
         return untrackedVariables.at(x);
     } else {
         return Expr::Int;
