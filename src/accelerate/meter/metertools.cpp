@@ -18,8 +18,7 @@
 #include "metertools.hpp"
 
 #include "../../expr/guardtoolbox.hpp"
-#include "../../smt/smt.hpp"
-#include "../../smt/smtfactory.hpp"
+#include "../../smt/solver.hpp"
 #include "../../expr/boolexpr.hpp"
 #include "../../config.hpp"
 
@@ -79,9 +78,9 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
     auto isUpdated = [&](const Var &var){ return updatedVars.count(var) > 0; };
 
     // create Z3 solver with the guard here to use push/pop for efficiency
-    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
+    Solver solver(varMan);
     for (const Rel &rel : guard) {
-        solver->add(rel);
+        solver.add(rel);
     }
 
     for (const Rel &rel : guard) {
@@ -92,13 +91,13 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
         if (add) {
             bool implied = true;
             for (const UpdateMap &update : updates) {
-                solver->push();
-                solver->add(!buildLit(rel.subs(update.toSubstitution(varMan))));
-                auto smtRes = solver->check();
-                solver->pop();
+                solver.push();
+                solver.add(!buildLit(rel.subs(update.toSubstitution(varMan))));
+                auto smtRes = solver.check();
+                solver.pop();
 
                 // unsat means that the updated `ex` must always hold (i.e., is implied after the update)
-                if (smtRes != Smt::Unsat) {
+                if (smtRes != smt::Unsat) {
                     implied = false;
                     break;
                 }

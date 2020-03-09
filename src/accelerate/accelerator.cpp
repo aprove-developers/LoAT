@@ -20,7 +20,7 @@
 #include "../analysis/preprocess.hpp"
 #include "recurrence/recurrence.hpp"
 #include "meter/metering.hpp"
-#include "../smt/smt.hpp"
+#include "../smt/solver.hpp"
 
 #include "../its/rule.hpp"
 #include "../its/export.hpp"
@@ -262,7 +262,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
         res.proof.ruleTransformationProof(rule, "unrolling", optR.get(), its);
     }
     LinearRule r = optR ? optR.get() : rule;
-    bool sat = Smt::check(buildAnd(r.getGuard()), its) == Smt::Sat;
+    bool sat = Solver::check(buildAnd(r.getGuard()), its) == smt::Sat;
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
@@ -288,7 +288,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
         if (!nonterm) {
             option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
             if (strengthened) {
-                bool sat = Smt::check(buildAnd(strengthened.get().getGuard()), its) == Smt::Sat;
+                bool sat = Solver::check(buildAnd(strengthened.get().getGuard()), its) == smt::Sat;
                 // only proceed if the guard is sat
                 if (sat) {
                     if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {

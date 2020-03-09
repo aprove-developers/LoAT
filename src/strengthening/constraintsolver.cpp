@@ -18,8 +18,7 @@
 #include "../util/option.hpp"
 #include "constraintsolver.hpp"
 #include "../its/variablemanager.hpp"
-#include "../smt/smt.hpp"
-#include "../smt/smtfactory.hpp"
+#include "../smt/solver.hpp"
 #include "../config.hpp"
 
 namespace strengthening {
@@ -65,15 +64,15 @@ namespace strengthening {
         }
         const ExprMap &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
         const std::vector<Rel> instantiatedTemplates = templates.subs(subs);
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({instantiatedTemplates}, {}), ruleCtx.varMan);
+        Solver solver(ruleCtx.varMan);
         for (const Rel &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
-                solver->push();
-                solver->add(!buildLit(rel));
-                if (solver->check() != Smt::Unsat) {
+                solver.push();
+                solver.add(!buildLit(rel));
+                if (solver.check() != smt::Unsat) {
                     res.push_back(rel);
                 }
-                solver->pop();
+                solver.pop();
             }
         }
         return res;

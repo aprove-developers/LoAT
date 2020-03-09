@@ -1,7 +1,6 @@
 #include "limitsmt.hpp"
 
-#include "../smt/smt.hpp"
-#include "../smt/smtfactory.hpp"
+#include "../smt/solver.hpp"
 #include "inftyexpression.hpp"
 #include "../config.hpp"
 
@@ -116,7 +115,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
-    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({currentLP.getQuery()}, {}), varMan, timeout);
+    Solver solver(varMan, timeout);
 
     // the parameter of the desired family of solutions
     Var n = currentLP.getN();
@@ -155,32 +154,32 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
         // add the required constraints (depending on the direction-label from the limit problem)
         if (direction == POS) {
             BoolExpr disjunction = posConstraint(coefficients) | posInfConstraint(coefficients);
-            solver->add(disjunction);
+            solver.add(disjunction);
         } else if (direction == POS_CONS) {
-            solver->add(posConstraint(coefficients));
+            solver.add(posConstraint(coefficients));
         } else if (direction == POS_INF) {
-            solver->add(posInfConstraint(coefficients));
+            solver.add(posInfConstraint(coefficients));
         } else if (direction == NEG_CONS) {
-            solver->add(negConstraint(coefficients));
+            solver.add(negConstraint(coefficients));
         } else if (direction == NEG_INF) {
-            solver->add(negInfConstraint(coefficients));
+            solver.add(negInfConstraint(coefficients));
         }
     }
 
     // auxiliary function that checks satisfiability wrt. the current state of the solver
     auto checkSolver = [&]() -> bool {
-        Smt::Result res = solver->check();
-        return res == Smt::Sat;
+        smt::Result res = solver.check();
+        return res == smt::Sat;
     };
 
     // remember the current state for backtracking before trying several variations
-    solver->push();
+    solver.push();
 
     // first fix that all program variables have to be constants
     // a model witnesses unbounded complexity
     for (const Var &var : vars) {
         if (!varMan.isTempVar(var)) {
-            solver->add(Rel(varCoeff.at(var), Rel::eq, 0));
+            solver.add(Rel(varCoeff.at(var), Rel::eq, 0));
         }
     }
 
@@ -189,7 +188,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
             return {};
         }
         // we failed to find a model -- drop all non-mandatory constraints
-        solver->pop();
+        solver.pop();
         if (maxPossibleFiniteRes.getType() == Complexity::CpxPolynomial && maxPossibleFiniteRes.getPolynomialDegree().isInteger()) {
             int maxPossibleDegree = maxPossibleFiniteRes.getPolynomialDegree().asInteger();
             // try to find a witness for polynomial complexity with degree maxDeg,...,1
@@ -197,8 +196,8 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
             for (int i = maxPossibleDegree; i > 0 && Complexity::Poly(i) > currentRes; i--) {
                 Expr c = coefficients.find(i)->second;
                 // remember the current state for backtracking
-                solver->push();
-                solver->add(c > 0);
+                solver.push();
+                solver.add(c > 0);
                 if (checkSolver()) {
                     break;
                 } else if (i == 1 || Complexity::Poly(i - 1) <= currentRes) {
@@ -206,7 +205,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
                     return {};
                 } else {
                     // remove all non-mandatory constraints and retry with degree i-1
-                    solver->pop();
+                    solver.pop();
                 }
             }
         } else if (!checkSolver()) {
@@ -216,7 +215,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
 
     // we found a model -- create the corresponding solution of the limit problem
     ExprMap smtSubs;
-    VarMap<GiNaC::numeric> model = solver->model();
+    VarMap<GiNaC::numeric> model = solver.model();
     for (const Var &var : vars) {
         auto c0 = model.find(varCoeff0.at(var));
         Expr c = model.at(varCoeff.at(var));

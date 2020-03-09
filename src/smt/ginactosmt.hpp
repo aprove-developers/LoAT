@@ -19,7 +19,7 @@
 #define GINACTOSMT_H
 
 #include "../util/exceptions.hpp"
-#include "smtcontext.hpp"
+#include "smt.hpp"
 #include "../its/itsproblem.hpp"
 #include "../config.hpp"
 #include "../expr/boolexpr.hpp"
@@ -32,7 +32,7 @@ public:
     EXCEPTION(GinacConversionError,CustomException);
     EXCEPTION(GinacLargeConstantError,CustomException);
 
-    static EXPR convert(const BoolExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
+    static EXPR convert(const BoolExpr &e, Smt<EXPR> &ctx, const VariableManager &varMan) {
         if (e->getLit()) {
             return convert(e->getLit().get(), ctx, varMan);
         }
@@ -49,14 +49,14 @@ public:
         return res;
     }
 
-    static EXPR convert(const Rel &rel, SmtContext<EXPR> &context, const VariableManager &varMan) {
+    static EXPR convert(const Rel &rel, Smt<EXPR> &context, const VariableManager &varMan) {
         GinacToSmt<EXPR> converter(context, varMan);
         EXPR res = converter.convert_relational(rel);
         return res;
     }
 
 protected:
-    GinacToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
+    GinacToSmt<EXPR>(Smt<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
 
     EXPR convert_ex(const Expr &e){
         if (e.isAdd()) {
@@ -172,7 +172,7 @@ protected:
     }
 
 private:
-    SmtContext<EXPR> &context;
+    Smt<EXPR> &context;
     const VariableManager &varMan;
 };
 

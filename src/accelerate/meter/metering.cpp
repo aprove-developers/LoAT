@@ -23,8 +23,7 @@
 
 #include "../../expr/guardtoolbox.hpp"
 #include "../../expr/expression.hpp"
-#include "../../smt/smt.hpp"
-#include "../../smt/smtfactory.hpp"
+#include "../../smt/solver.hpp"
 #include "../../expr/boolexpr.hpp"
 #include "../../util/proofoutput.hpp"
 
@@ -343,14 +342,14 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     meter.buildLinearConstraints();
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::LA, varMan, Config::Z3::MeterTimeout);
-    solver->add(meter.genNotGuardImplication());
-    solver->add(meter.genUpdateImplications());
-    solver->add(meter.genNonTrivial());
-    Smt::Result smtRes = solver->check();
+    Solver solver(varMan, Config::Z3::MeterTimeout);
+    solver.add(meter.genNotGuardImplication());
+    solver.add(meter.genUpdateImplications());
+    solver.add(meter.genNonTrivial());
+    smt::Result smtRes = solver.check();
 
     // the problem is already unsat (even without "GuardPositiveImplication")
-    if (smtRes == Smt::Unsat) {
+    if (smtRes == smt::Unsat) {
 
         if (Config::ForwardAccel::ConflictVarHeuristic) {
             auto conflictVar = meter.findConflictVars();
@@ -366,25 +365,25 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     }
 
     // Add the "GuardPositiveImplication" to the party (first the strict version)
-    solver->push();
-    solver->add(meter.genGuardPositiveImplication(true));
-    smtRes = solver->check();
+    solver.push();
+    solver.add(meter.genGuardPositiveImplication(true));
+    smtRes = solver.check();
 
     // If we fail, try the relaxed version instead (f(x) >= 0 instead of f(x) > 0)
-    if (smtRes != Smt::Sat) {
-        solver->pop();
-        solver->add(meter.genGuardPositiveImplication(false));
-        smtRes = solver->check();
+    if (smtRes != smt::Sat) {
+        solver.pop();
+        solver.add(meter.genGuardPositiveImplication(false));
+        smtRes = solver.check();
     }
 
     // If we still fail, we have to give up
-    if (smtRes != Smt::Sat) {
+    if (smtRes != smt::Sat) {
         result.result = Unsat;
         return result;
     }
 
     // If we succeed, extract the metering function from the model
-    VarMap<GiNaC::numeric> model = solver->model();
+    VarMap<GiNaC::numeric> model = solver.model();
     result.metering = meter.buildResult(model);
     result.result = Success;
 
@@ -426,8 +425,8 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Z3::MeterTimeout);
-    Smt::Result smtRes = Smt::Unsat; // this method should only be called if generate() fails
+    Solver solver(its, Config::Z3::MeterTimeout);
+    smt::Result smtRes = smt::Unsat; // this method should only be called if generate() fails
 
     GuardList oldGuard = meter.guard;
     vector<UpdateMap> oldUpdates = meter.updates;
@@ -452,14 +451,14 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
         meter.buildMeteringVariables();
         meter.buildLinearConstraints();
 
-        solver->resetSolver();
-        solver->add(meter.genNotGuardImplication());
-        solver->add(meter.genUpdateImplications());
-        solver->add(meter.genNonTrivial());
-        solver->add(meter.genGuardPositiveImplication(false));
-        smtRes = solver->check();
+        solver.resetSolver();
+        solver.add(meter.genNotGuardImplication());
+        solver.add(meter.genUpdateImplications());
+        solver.add(meter.genNonTrivial());
+        solver.add(meter.genGuardPositiveImplication(false));
+        smtRes = solver.check();
 
-        if (smtRes == Smt::Sat) {
+        if (smtRes == smt::Sat) {
             successfulSubs = sub;
             break;
         }
@@ -468,7 +467,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     }
 
     // If we found a successful instantiation, z3res is sat
-    if (smtRes != Smt::Sat) {
+    if (smtRes != smt::Sat) {
         return {};
     }
 

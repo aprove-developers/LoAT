@@ -17,7 +17,7 @@
 
 #include "analysis.hpp"
 
-#include "../smt/smt.hpp"
+#include "../smt/solver.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
 
 #include "../util/timeout.hpp"
@@ -282,7 +282,7 @@ bool Analysis::removeUnsatRules() {
     bool changed = false;
 
     for (TransIdx rule : its.getAllTransitions()) {
-        if (Smt::check(buildAnd(its.getRule(rule).getGuard()), its) == Smt::Unsat) {
+        if (Solver::check(buildAnd(its.getRule(rule).getGuard()), its) == smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }
@@ -379,7 +379,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, ProofOutput &proof) c
         GuardList guard = rule.getGuard();
         guard.push_back(rule.getCost() >= 1);
 
-        if (Smt::check(buildAnd(guard), its) == Smt::Sat) {
+        if (Solver::check(buildAnd(guard), its) == smt::Sat) {
             proof.newline();
             proof.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;

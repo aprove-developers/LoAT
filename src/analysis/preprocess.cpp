@@ -18,8 +18,7 @@
 #include "preprocess.hpp"
 
 #include "../expr/guardtoolbox.hpp"
-#include "../smt/smt.hpp"
-#include "../smt/smtfactory.hpp"
+#include "../smt/solver.hpp"
 
 using namespace std;
 
@@ -109,20 +108,20 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
 
 bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &varMan) {
     GuardList newGuard;
-    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({guard}, {}), varMan);
+    Solver solver(varMan);
 
     // iterates once over guard and drops constraints that are implied by previous constraints
     auto dropImplied = [&]() {
         for (const Rel &rel : guard) {
-            solver->push();
-            solver->add(!buildLit(rel));
-            auto smtRes = solver->check();
-            solver->pop();
+            solver.push();
+            solver.add(!buildLit(rel));
+            auto smtRes = solver.check();
+            solver.pop();
 
             // unsat means that ex is implied by the previous constraints
-            if (smtRes != Smt::Unsat) {
+            if (smtRes != smt::Unsat) {
                 newGuard.push_back(rel);
-                solver->add(rel);
+                solver.add(rel);
             }
         }
     };
@@ -137,7 +136,7 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &var
     // iterate over the reversed guard, drop more implied constraints,
     // e.g. for "A > 0, A > 1" only the reverse iteration can remove "A > 0".
     newGuard.clear();
-    solver->resetSolver();
+    solver.resetSolver();
     dropImplied();
 
     // reverse again to preserve original order

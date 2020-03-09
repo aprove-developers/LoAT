@@ -15,8 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../smt/smt.hpp"
-#include "../smt/smtfactory.hpp"
+#include "../smt/solver.hpp"
 #include "guardcontextbuilder.hpp"
 
 namespace strengthening {
@@ -47,9 +46,9 @@ namespace strengthening {
     }
 
     const Result Self::splitInvariants(const GuardList &constraints) const {
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
+        Solver solver(varMan);
         for (const Rel &rel: guard) {
-            solver->add(rel);
+            solver.add(rel);
         }
         Result res;
         for (const Rel &rel: constraints) {
@@ -58,11 +57,11 @@ namespace strengthening {
                 Rel conclusionExp = rel;
                 conclusionExp.applySubs(up);
                 const BoolExpr &conclusion = buildLit(conclusionExp);
-                solver->push();
-                solver->add(!conclusion);
-                const Smt::Result &smtRes = solver->check();
-                solver->pop();
-                if (smtRes != Smt::Unsat) {
+                solver.push();
+                solver.add(!conclusion);
+                const smt::Result &smtRes = solver.check();
+                solver.pop();
+                if (smtRes != smt::Unsat) {
                     isInvariant = false;
                     break;
                 }
