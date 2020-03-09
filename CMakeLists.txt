@@ -135,15 +135,23 @@ add_executable(${EXECUTABLE}
         src/its/t2parser/t2parser.cpp
         src/its/t2parser/t2parser.hpp
         src/smt/smt.hpp
+        src/smt/smt.cpp
+        src/smt/smtcontext.hpp
         src/smt/ginactosmt.hpp
         src/smt/z3/z3.cpp
         src/smt/z3/z3.hpp
+        src/smt/z3/z3context.cpp
+        src/smt/z3/z3context.hpp
         src/smt/cvc4/cvc4.cpp
         src/smt/cvc4/cvc4.hpp
+        src/smt/cvc4/cvc4context.cpp
+        src/smt/cvc4/cvc4context.hpp
         src/smt/yices/yices.cpp
         src/smt/yices/yices.hpp
-        src/smt/solver.cpp
-        src/smt/solver.hpp)
+        src/smt/yices/yicescontext.cpp
+        src/smt/yices/yicescontext.hpp
+        src/smt/smtfactory.cpp
+        src/smt/smtfactory.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

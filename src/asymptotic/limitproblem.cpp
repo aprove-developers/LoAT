@@ -3,7 +3,7 @@
 #include <sstream>
 #include <utility>
 
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
 
 LimitProblem::LimitProblem(VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
@@ -402,7 +402,7 @@ std::vector<Rel> LimitProblem::getQuery() const {
 
 
 bool LimitProblem::isUnsat() const {
-    return Solver::check(buildAnd(getQuery()), varMan) == smt::Unsat;
+    return Smt::check(buildAnd(getQuery()), varMan) == Smt::Unsat;
 }
 
 

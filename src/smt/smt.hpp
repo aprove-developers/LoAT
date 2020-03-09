@@ -4,86 +4,51 @@
 #include "../its/types.hpp"
 #include "../expr/boolexpr.hpp"
 
-namespace smt {
-
-    enum Result {Sat, Unknown, Unsat};
-    enum Logic {LA, NA, ENA};
-
-}
-
-template<class EXPR>
 class Smt
 {
 public:
 
-    virtual bool add(const BoolExpr &e) = 0;
+    enum Result {Sat, Unknown, Unsat};
+    enum Logic {LA, NA, ENA};
 
-    bool add(const Rel &e) {
-        return this->add(buildLit(e));
-    }
-
+    virtual void add(const BoolExpr &e) = 0;
+    void add(const Rel &e);
     virtual void push() = 0;
     virtual void pop() = 0;
-    virtual smt::Result check() = 0;
+    virtual Result check() = 0;
     virtual VarMap<GiNaC::numeric> model() = 0;
     virtual void setTimeout(unsigned int timeout) = 0;
     virtual void enableModels() = 0;
     virtual void resetSolver() = 0;
+    virtual ~Smt();
 
-    virtual ~Smt() {}
+    static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
+    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
+    static Logic chooseLogic(const std::vector<BoolExpr> &xs);
 
-    virtual EXPR getInt(long val) = 0;
-    virtual EXPR getReal(long num, long denom) = 0;
-    virtual EXPR pow(const EXPR &base, const EXPR &exp) = 0;
-    virtual EXPR plus(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR times(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR eq(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR lt(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR le(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR gt(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR ge(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR neq(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR bAnd(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR bOr(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR bTrue() = 0;
-    virtual EXPR bFalse() = 0;
-    virtual EXPR var(const std::string &basename, Expr::Type type) = 0;
-
-    option<EXPR> getVariable(const Var &symbol) const {
-        auto it = symbolMap.find(symbol);
-        if (it != symbolMap.end()) {
-            return it->second;
+    template<class T> static Logic chooseLogic(const std::vector<std::vector<Rel>> &g, const std::vector<T> &up) {
+        if (isLinear(g) && isLinear(up)) {
+            return Smt::LA;
         }
-        return {};
-    }
-
-    EXPR addNewVariable(const Var &symbol, Expr::Type type = Expr::Int) {
-        assert(symbolMap.count(symbol) == 0);
-        EXPR res = generateFreshVar(symbol.get_name(), type);
-        symbolMap.emplace(symbol, res);
-        return res;
-    }
-
-protected:
-    VarMap<EXPR> getSymbolMap() const {
-        return symbolMap;
-    }
-
-    VarMap<EXPR> symbolMap;
-    std::map<std::string, int> usedNames;
-
-    EXPR generateFreshVar(const std::string &basename, Expr::Type type) {
-        std::string newname = basename;
-
-        while (usedNames.find(newname) != usedNames.end()) {
-            int cnt = usedNames[basename]++;
-            newname = basename + "_" + std::to_string(cnt);
+        if (isPolynomial(g) && isPolynomial(up)) {
+            return Smt::NA;
         }
-
-        usedNames.emplace(newname, 1); // newname is now used once
-        return var(newname, type);
+        return Smt::ENA;
     }
 
+private:
+    static bool isLinear(const std::vector<Rel> &guard);
+    static bool isLinear(const UpdateMap &up);
+    static bool isLinear(const ExprMap &up);
+    static bool isLinear(const std::vector<std::vector<Rel>> &gs);
+    static bool isLinear(const std::vector<UpdateMap> &up);
+    static bool isLinear(const std::vector<ExprMap> &up);
+    static bool isPolynomial(const std::vector<Rel> &guard);
+    static bool isPolynomial(const UpdateMap &up);
+    static bool isPolynomial(const ExprMap &up);
+    static bool isPolynomial(const std::vector<std::vector<Rel>> &gs);
+    static bool isPolynomial(const std::vector<UpdateMap> &up);
+    static bool isPolynomial(const std::vector<ExprMap> &up);
 };
 
 #endif // SMT_H

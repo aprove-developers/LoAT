@@ -18,7 +18,8 @@
 #include "../util/option.hpp"
 #include "constraintsolver.hpp"
 #include "../its/variablemanager.hpp"
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 #include "../config.hpp"
 
 namespace strengthening {
@@ -41,10 +42,10 @@ namespace strengthening {
             templates(templates) { }
 
     const option<GuardList> Self::solve() const {
-        Solver solver(ruleCtx.varMan);
-        solver.add(constraints);
-        if (solver.check() == smt::Sat) {
-            const GuardList &newInvariants = instantiateTemplates(solver.model());
+        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), ruleCtx.varMan);
+        solver->add(constraints);
+        if (solver->check() == Smt::Sat) {
+            const GuardList &newInvariants = instantiateTemplates(solver->model());
             if (!newInvariants.empty()) {
                 return {newInvariants};
             }
@@ -64,15 +65,15 @@ namespace strengthening {
         }
         const ExprMap &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
         const std::vector<Rel> instantiatedTemplates = templates.subs(subs);
-        Solver solver(ruleCtx.varMan);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({instantiatedTemplates}, {}), ruleCtx.varMan);
         for (const Rel &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
-                solver.push();
-                solver.add(!buildLit(rel));
-                if (solver.check() != smt::Unsat) {
+                solver->push();
+                solver->add(!buildLit(rel));
+                if (solver->check() != Smt::Unsat) {
                     res.push_back(rel);
                 }
-                solver.pop();
+                solver->pop();
             }
         }
         return res;

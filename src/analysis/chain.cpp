@@ -17,7 +17,7 @@
 
 #include "chain.hpp"
 
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
 #include "../config.hpp"
 #include "../expr/boolexpr.hpp"
 
@@ -32,13 +32,13 @@ using namespace std;
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
 static bool checkSatisfiability(const GuardList &newGuard, const VariableManager &varMan) {
-    auto smtRes = Solver::check(buildAnd(newGuard), varMan);
+    auto smtRes = Smt::check(buildAnd(newGuard), varMan);
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
-    return smtRes != smt::Unsat;
+    return smtRes != Smt::Unsat;
 }
-#include <yices.h>
+
 
 // ########################
 // ##  Chaining Helpers  ##

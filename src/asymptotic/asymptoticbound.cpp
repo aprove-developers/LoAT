@@ -6,7 +6,8 @@
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
 
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 
 #include "limitsmt.hpp"
 #include "inftyexpression.hpp"
@@ -304,11 +305,11 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
-        auto result = Solver::check(buildAnd(limitProblems[i].getQuery()), varMan);
+        auto result = Smt::check(buildAnd(limitProblems[i].getQuery()), varMan);
 
-        if (result == smt::Unsat) {
+        if (result == Smt::Unsat) {
             limitProblems.erase(limitProblems.begin() + i);
-        } else if (result == smt::Unknown
+        } else if (result == Smt::Unknown
                    && !finalCheck
                    && limitProblems[i].getSize() >= Config::Limit::ProblemDiscardSize) {
             limitProblems.erase(limitProblems.begin() + i);
@@ -768,15 +769,15 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 
         if (it->isUnivariate() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
             const std::vector<Rel> &query = currentLP.getQuery();
-            Solver solver(varMan);
-            solver.add(buildAnd(query));
-            smt::Result result = solver.check();
+            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({query}, {}), varMan);
+            solver->add(buildAnd(query));
+            Smt::Result result = solver->check();
 
-            if (result == smt::Unsat) {
+            if (result == Smt::Unsat) {
                 currentLP.setUnsolvable();
 
-            } else if (result == smt::Sat) {
-                const VarMap<GiNaC::numeric> &model = solver.model();
+            } else if (result == Smt::Sat) {
+                const VarMap<GiNaC::numeric> &model = solver->model();
                 Var var = it->someVar();
 
                 Expr rational = model.at(var);
@@ -857,8 +858,8 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto smtRes = Solver::check(buildAnd(guard), varMan);
-        if (smtRes == smt::Sat) {
+        auto smtRes = Smt::check(buildAnd(guard), varMan);
+        if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("Guard is satisfiable, yielding nontermination");
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
@@ -923,8 +924,8 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     Expr expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto smtRes = Solver::check(buildAnd(guard), varMan);
-        if (smtRes == smt::Sat) {
+        auto smtRes = Smt::check(buildAnd(guard), varMan);
+        if (smtRes == Smt::Sat) {
             ProofOutput proof;
             proof.append("proved non-termination via SMT");
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);

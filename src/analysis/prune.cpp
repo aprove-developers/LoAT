@@ -20,7 +20,7 @@
 #include "../config.hpp"
 #include "../its/itsproblem.hpp"
 #include "../expr/boolexpr.hpp"
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
 
 #include <queue>
@@ -104,7 +104,7 @@ bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
     bool changed = false;
 
     for (TransIdx rule : trans) {
-        if (Solver::check(buildAnd(its.getRule(rule).getGuard()), its) == smt::Unsat) {
+        if (Smt::check(buildAnd(its.getRule(rule).getGuard()), its) == Smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }

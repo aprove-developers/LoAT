@@ -17,7 +17,8 @@
 
 #include "backward.hpp"
 
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 
 #include "recurrence/recurrence.hpp"
 #include "meter/metertools.hpp"
@@ -74,7 +75,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
     AccelerationResult res;
     res.status = Failure;
     if (shouldAccelerate()) {
-        std::unique_ptr<AccelerationProblem> ap = AccelerationCalculus::init(rule, its);
+        option<AccelerationProblem> ap = AccelerationCalculus::init(rule, its);
         if (ap) {
             ap->simplifyEquivalently();
             if (ap->solved()) {

@@ -17,7 +17,8 @@
 
 #include "nonterm.hpp"
 #include "../accelerate/meter/metertools.hpp"
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 #include "../accelerate/forward.hpp"
 #include "../accelerate/recurrence/dependencyorder.hpp"
 #include "../analysis/chain.hpp"
@@ -27,19 +28,19 @@
 namespace nonterm {
 
     option<std::pair<Rule, Status>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Config::Analysis::NonTermMode && !Solver::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
+        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const ExprMap &up = r.getUpdate(i).toSubstitution(its);
-            if (Solver::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
+            if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
                 return {{Rule(r.getLhsLoc(), r.getGuard(), Expr::NontermSymbol, sink, {}), Success}};
             }
         }
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const ExprMap &up = chained.getUpdate(0).toSubstitution(its);
-            if (Solver::check(buildAnd(chained.getGuard()), its) == smt::Sat && Solver::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
+            if (Smt::check(buildAnd(chained.getGuard()), its) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
                 return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expr::NontermSymbol, sink, {}), PartialSuccess}};
             }
         }
@@ -47,23 +48,23 @@ namespace nonterm {
     }
 
     option<std::pair<Rule, Status>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Config::Analysis::NonTermMode && !Solver::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
+        if (!Config::Analysis::NonTermMode && !Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
-        Solver solver(its);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its, Config::Z3::DefaultTimeout);
         for (const Rel &rel: r.getGuard()) {
-            solver.add(rel);
+            solver->add(rel);
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
-            solver.push();
+            solver->push();
             const ExprMap &up = r.getUpdate(i).toSubstitution(its);
             const VarSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
             for (const Var &var: vars) {
                 const auto &it = up.find(var);
-                solver.add(Rel(var, Rel::eq, it == up.end() ? var : it->second));
+                solver->add(Rel(var, Rel::eq, it == up.end() ? var : it->second));
             }
-            smt::Result smtRes = solver.check();
-            if (smtRes == smt::Sat) {
+            Smt::Result smtRes = solver->check();
+            if (smtRes == Smt::Sat) {
                 GuardList newGuard(r.getGuard());
                 for (const Var &var: vars) {
                     const auto &it = up.find(var);
@@ -71,7 +72,7 @@ namespace nonterm {
                 }
                 return {{Rule(r.getLhsLoc(), newGuard, Expr::NontermSymbol, sink, {}), PartialSuccess}};
             }
-            solver.pop();
+            solver->pop();
         }
         return {};
     }

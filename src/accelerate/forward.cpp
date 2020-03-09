@@ -19,7 +19,7 @@
 
 #include "recurrence/recurrence.hpp"
 #include "meter/metering.hpp"
-#include "../smt/solver.hpp"
+#include "../smt/smt.hpp"
 
 
 using namespace std;
@@ -198,7 +198,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
 
         // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().push_back(A >= B);
-        if (Solver::check(buildAnd(newRule.getGuard()), its) != smt::Unsat) {
+        if (Smt::check(buildAnd(newRule.getGuard()), its) != Smt::Unsat) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
                 res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);
@@ -210,7 +210,7 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
         // Add A <= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)
         newRule.getGuardMut().pop_back();
         newRule.getGuardMut().push_back(A <= B);
-        if (Solver::check(buildAnd(newRule.getGuard()), its) != smt::Unsat) {
+        if (Smt::check(buildAnd(newRule.getGuard()), its) != Smt::Unsat) {
             const Result &accel = accelerateFast(its, newRule, sink);
             if (accel.status != Failure) {
                 res.proof.ruleTransformationProof(rule, "strengthening", newRule, its);
