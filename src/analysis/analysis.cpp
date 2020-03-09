@@ -239,7 +239,7 @@ void Analysis::run() {
     Yices::exit();
 #endif
     if (simp.wait_for(std::chrono::seconds(0)) != std::future_status::ready || finalize.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-        std::cerr << "some tasks are still running, calling std::terminte" << std::endl;
+        std::cerr << "some tasks are still running, calling std::terminate" << std::endl;
         std::terminate();
     }
 }
