@@ -67,11 +67,14 @@ namespace strengthening {
     struct SmtConstraints {
 
         SmtConstraints(
+                const BoolExpr &initiation,
                 const BoolExpr &templatesInvariant,
                 const BoolExpr &conclusionsInvariant) :
+                initiation(std::move(initiation)),
                 templatesInvariant(std::move(templatesInvariant)),
                 conclusionsInvariant(std::move(conclusionsInvariant)) {}
 
+        const BoolExpr initiation;
         const BoolExpr templatesInvariant;
         const BoolExpr conclusionsInvariant;
 

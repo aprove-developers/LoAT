@@ -28,25 +28,24 @@ namespace strengthening {
 
     const option<GuardList> Self::solve(
             const RuleContext &ruleCtx,
-            const SmtConstraints &constraints,
+            const BoolExpr &constraints,
             const Templates &templates) {
         return ConstraintSolver(ruleCtx, constraints, templates).solve();
     }
 
     Self::ConstraintSolver(
             const RuleContext &ruleCtx,
-            const SmtConstraints &constraints,
+            const BoolExpr &constraints,
             const Templates &templates):
             ruleCtx(ruleCtx),
             constraints(constraints),
             templates(templates) { }
 
     const option<GuardList> Self::solve() const {
-        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints.templatesInvariant, constraints.conclusionsInvariant}), ruleCtx.varMan);
-        solver->add(constraints.templatesInvariant);
-        solver->add(constraints.conclusionsInvariant);
-        if (solver->check() == Smt::Sat) {
-            const GuardList &newInvariants = instantiateTemplates(solver->model());
+        Solver solver(ruleCtx.varMan);
+        solver.add(constraints);
+        if (solver.check() == smt::Sat) {
+            const GuardList &newInvariants = instantiateTemplates(solver.model());
             if (!newInvariants.empty()) {
                 return {newInvariants};
             }

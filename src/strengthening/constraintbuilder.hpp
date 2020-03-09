@@ -30,9 +30,9 @@ namespace strengthening {
 
     public:
 
-        static const SmtConstraints buildSmtConstraints(const Templates &templates,
-                                                        const RuleContext &ruleCtx,
-                                                        const GuardContext &guardCtx);
+        static const BoolExpr buildSmtConstraints(const Templates &templates,
+                                                  const RuleContext &ruleCtx,
+                                                  const GuardContext &guardCtx);
 
     private:
 
@@ -46,6 +46,8 @@ namespace strengthening {
                 const GuardContext &guardCtx);
 
         const Implication buildTemplatesInvariantImplication() const;
+
+        const BoolExpr constructInitiationConstraints(const GuardList &relevantConstraints) const;
 
         const BoolExpr constructImplicationConstraints(
                 const GuardList &premise,

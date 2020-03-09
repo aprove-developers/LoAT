@@ -29,18 +29,18 @@ namespace strengthening {
 
         static const option<GuardList> solve(
                 const RuleContext &ruleCtx,
-                const SmtConstraints &constraints,
+                const BoolExpr &constraints,
                 const Templates &templates);
 
     private:
 
         const RuleContext &ruleCtx;
-        const SmtConstraints &constraints;
+        const BoolExpr &constraints;
         const Templates &templates;
 
         ConstraintSolver(
                 const RuleContext &ruleCtx,
-                const SmtConstraints &constraints,
+                const BoolExpr &constraints,
                 const Templates &templates);
 
         const option<GuardList> solve() const;

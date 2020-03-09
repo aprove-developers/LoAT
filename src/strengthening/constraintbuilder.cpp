@@ -20,12 +20,6 @@
 
 namespace strengthening {
 
-    const SmtConstraints ConstraintBuilder::buildSmtConstraints(const Templates &templates,
-                                             const RuleContext &ruleCtx,
-                                             const GuardContext &guardCtx) {
-        return ConstraintBuilder(templates, ruleCtx, guardCtx).buildSmtConstraints();
-    }
-
     ConstraintBuilder::ConstraintBuilder(
             const Templates &templates,
             const RuleContext &ruleCtx,
@@ -33,6 +27,17 @@ namespace strengthening {
     ) : templates(templates),
         ruleCtx(ruleCtx),
         guardCtx(guardCtx) {
+    }
+
+    const BoolExpr ConstraintBuilder::buildSmtConstraints(const Templates &templates,
+                                                          const RuleContext &ruleCtx,
+                                                          const GuardContext &guardCtx) {
+        ConstraintBuilder builder(templates, ruleCtx, guardCtx);
+        const SmtConstraints &constraints = builder.buildSmtConstraints();
+        BoolExpr res = constraints.initiation;
+        res = res & constraints.conclusionsInvariant;
+        res = res & constraints.templatesInvariant;
+        return res;
     }
 
     const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
@@ -56,10 +61,11 @@ namespace strengthening {
                 conclusionInvariant = conclusionInvariant & invariant;
             }
         }
+        const BoolExpr &initiation = constructInitiationConstraints(relevantConstraints);
         const BoolExpr &templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
-        return SmtConstraints(templatesInvariant, conclusionInvariant);
+        return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
     }
 
     const GuardList ConstraintBuilder::findRelevantConstraints() const {
@@ -92,6 +98,31 @@ namespace strengthening {
         for (const Rel &rel: guardCtx.guard) {
             res.premise.push_back(rel);
         }
+        return res;
+    }
+
+    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const GuardList &relevantConstraints) const {
+        BoolExpr res = False;
+        VarSet allVars;
+        for (const Rel &rel: relevantConstraints) {
+            rel.collectVariables(allVars);
+        }
+        // TODO Why is this variable renaming needed?
+        ExprMap varRenaming;
+        for (const Var &x: allVars) {
+            varRenaming.put(x, ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name())));
+        }
+        std::vector<Rel> renamed;
+        const std::vector<Rel> &updatedTemplates = templates.subs(varRenaming);
+        for (const Rel &e: updatedTemplates) {
+            renamed.push_back(e);
+        }
+        for (Rel rel: relevantConstraints) {
+            rel.applySubs(varRenaming);
+            renamed.push_back(rel);
+        }
+        const BoolExpr &expr = buildAnd(renamed);
+        res = res | expr;
         return res;
     }
 
