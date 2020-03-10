@@ -19,7 +19,7 @@ static BoolExpr posConstraint(const map<int, Expr>& coefficients) {
         int degree = p.first;
         Expr c = p.second;
         if (degree > 0) {
-            conjunction = conjunction & (c == 0);
+            conjunction = conjunction & Rel::buildEq(c, 0);
         } else {
             conjunction = conjunction & (c > 0);
         }
@@ -38,7 +38,7 @@ static BoolExpr negConstraint(const map<int, Expr>& coefficients) {
         int degree = p.first;
         Expr c = p.second;
         if (degree > 0) {
-            conjunction = conjunction & (c == 0);
+            conjunction = conjunction & Rel::buildEq(c, 0);
         } else {
             conjunction = conjunction & (c < 0);
         }
@@ -63,7 +63,7 @@ static BoolExpr negInfConstraint(const map<int, Expr>& coefficients) {
             int degree = p.first;
             Expr c = p.second;
             if (degree > i) {
-                conjunction = conjunction & (c == 0);
+                conjunction = conjunction & Rel::buildEq(c, 0);
             } else if (degree == i) {
                 conjunction = conjunction & (c < 0);
             }
@@ -90,7 +90,7 @@ static BoolExpr posInfConstraint(const map<int, Expr>& coefficients) {
             int degree = p.first;
             Expr c = p.second;
             if (degree > i) {
-                conjunction = conjunction & (c == 0);
+                conjunction = conjunction & Rel::buildEq(c, 0);
             } else if (degree == i) {
                 conjunction = conjunction & (c > 0);
             }
@@ -180,7 +180,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
     // a model witnesses unbounded complexity
     for (const Var &var : vars) {
         if (!varMan.isTempVar(var)) {
-            solver->add(Rel(varCoeff.at(var), Rel::eq, 0));
+            solver->add(Rel::buildEq(varCoeff.at(var), 0));
         }
     }
 

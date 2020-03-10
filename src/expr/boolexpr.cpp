@@ -155,9 +155,11 @@ const BoolExpr buildOr(const std::vector<BoolExpr> &xs) {
 const BoolExpr buildLit(const Rel &lit) {
     if (lit.isIneq()) {
         return std::shared_ptr<BoolExpression>(new BoolLit(lit));
-    } else {
-        assert(lit.relOp() == Rel::eq);
+    } else if (lit.isEq()) {
         return buildLit(lit.lhs() <= lit.rhs()) & (lit.lhs() >= lit.rhs());
+    } else {
+        assert(lit.isNeq());
+        return buildLit(lit.lhs() < lit.rhs()) | (lit.lhs() > lit.rhs());
     }
 }
 

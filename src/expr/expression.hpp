@@ -376,6 +376,8 @@ public:
     bool isPoly() const;
     bool isLinear(const option<VarSet> &vars = option<VarSet>()) const;
     bool isIneq() const;
+    bool isEq() const;
+    bool isNeq() const;
     bool isPositivityConstraint() const;
     Rel toLeq() const;
     Rel toGt() const;
@@ -406,15 +408,12 @@ public:
      */
     Rel toPositivityConstraint() const;
 
+    static Rel buildEq(const Expr &x, const Expr &y);
+    static Rel buildNeq(const Expr &x, const Expr &y);
+
     friend Rel operator!(const Rel &x);
     friend bool operator==(const Rel &x, const Rel &y);
     friend bool operator!=(const Rel &x, const Rel &y);
-    /**
-     *
-     * @param x
-     * @param y
-     * @return
-     */
     friend bool operator<(const Rel &x, const Rel &y);
     friend std::ostream& operator<<(std::ostream &s, const Rel &e);
 

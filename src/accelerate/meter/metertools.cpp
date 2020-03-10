@@ -49,7 +49,7 @@ GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
     GuardList newGuard;
 
     for (const Rel &rel : guard) {
-        if (rel.relOp() == Rel::eq) {
+        if (rel.isEq()) {
             newGuard.push_back(rel.lhs() <= rel.rhs());
             newGuard.push_back(rel.lhs() >= rel.rhs());
         } else {

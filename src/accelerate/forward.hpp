@@ -33,7 +33,7 @@
 namespace ForwardAcceleration {
 
     struct Result {
-        Status status;
+        Status status = Failure;
         ProofOutput proof;
         std::vector<Rule> rules;
     };

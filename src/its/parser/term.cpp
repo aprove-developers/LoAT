@@ -47,8 +47,8 @@ Rel Relation::toGinacExpression(const ITSProblem &its) const {
     Expr r = rhs->toGinacExpression(its);
 
     switch (op) {
-    case RelationEqual: return Rel(l, Rel::eq, r);
-    case RelationNotEqual: return Rel(l, Rel::neq, r);
+    case RelationEqual: return Rel::buildEq(l, r);
+    case RelationNotEqual: return Rel::buildNeq(l, r);
     case RelationGreater: return l > r;
     case RelationGreaterEqual: return l >= r;
     case RelationLess: return l < r;

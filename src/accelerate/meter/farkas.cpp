@@ -77,7 +77,7 @@ BoolExpr FarkasLemma::apply(
             Expr add = lambda[j] * a;
             lambdaA = (j==0) ? add : lambdaA + add; // avoid superflous +0
         }
-        res = res & (lambdaA == varIt.second);
+        res = res & Rel::buildEq(lambdaA, varIt.second);
     }
 
     // Build the constraints "lambda^T * b + c0 <= delta"
@@ -117,7 +117,7 @@ const BoolExpr FarkasLemma::apply(
     for (const Rel &p: premise) {
         if (p.isLinear(vars) && p.isIneq()) {
             normalizedPremise.push_back(p.toLeq().splitVariableAndConstantAddends(params));
-        } else if (p.isLinear(vars) && p.relOp() == Rel::eq) {
+        } else if (p.isLinear(vars) && p.isEq()) {
             normalizedPremise.push_back((p.lhs() <= p.rhs()).splitVariableAndConstantAddends(params));
             normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariableAndConstantAddends(params));
         }
@@ -127,7 +127,7 @@ const BoolExpr FarkasLemma::apply(
     for (const Rel &c: conclusion) {
         if (c.isLinear(vars) && c.isIneq()) {
             splitConclusion.push_back(c);
-        } else if (c.isLinear(vars) && c.relOp() == Rel::eq) {
+        } else if (c.isLinear(vars) && c.isEq()) {
             splitConclusion.emplace_back(c.lhs() <= c.rhs());
             splitConclusion.emplace_back(c.rhs() <= c.lhs());
         } else {

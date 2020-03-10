@@ -496,12 +496,12 @@ Rel operator>=(const Expr &x, const Expr &y) {
     return Rel(x.ex, Rel::geq, y.ex);
 }
 
-Rel operator!=(const Expr &x, const Expr &y) {
-    return Rel(x.ex, Rel::neq, y.ex);
+Rel Rel::buildNeq(const Expr &x, const Expr &y) {
+    return Rel(x, Rel::neq, y);
 }
 
-Rel operator==(const Expr &x, const Expr &y) {
-    return Rel(x.ex, Rel::eq, y.ex);
+Rel Rel::buildEq(const Expr &x, const Expr &y) {
+    return Rel(x, Rel::eq, y);
 }
 
 std::ostream& operator<<(std::ostream &s, const Expr &e) {
@@ -532,6 +532,14 @@ bool Rel::isLinear(const option<VarSet> &vars) const {
 
 bool Rel::isIneq() const {
     return op != Rel::eq && op != Rel::neq;
+}
+
+bool Rel::isEq() const {
+    return op == Rel::eq;
+}
+
+bool Rel::isNeq() const {
+    return op == Rel::neq;
 }
 
 bool Rel::isPositivityConstraint() const {

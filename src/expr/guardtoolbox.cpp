@@ -24,8 +24,8 @@ using namespace std;
 bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
 
     // an equality can only be implied by an equality
-    if (b.relOp() == Rel::eq) {
-        if (a.relOp() != Rel::eq) return false;
+    if (b.isEq()) {
+        if (!a.isEq()) return false;
 
         Expr aDiff = a.rhs() - a.lhs();
         Expr bDiff = b.rhs() - b.lhs();
@@ -33,7 +33,7 @@ bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
     }
 
     Expr bLhs = b.toPositivityConstraint().lhs(); // b is of the form bLhs > 0
-    if (a.relOp() != Rel::eq) {
+    if (!a.isEq()) {
         Expr aLhs = a.toPositivityConstraint().lhs(); // a is of the form aLhs > 0
         return (aLhs <= bLhs).isTriviallyTrue(); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
     }
@@ -86,7 +86,7 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
 
     for (unsigned int i=0; i < guard.size(); ++i) {
         Rel rel = guard[i].subs(varSubs);
-        if (rel.relOp() != Rel::eq) continue;
+        if (!rel.isEq()) continue;
 
         Expr target = rel.rhs() - rel.lhs();
         if (!target.isPoly()) continue;
@@ -194,7 +194,7 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
 
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
     for (unsigned int i=0; i < guard.size(); ++i) {
-        if (guard[i].relOp() == Rel::eq) continue;
+        if (guard[i].isEq()) continue;
         Rel leq = guard[i].toLeq();
         Expr term = leq.lhs() - leq.rhs();
         for (const auto &prev : terms) {
@@ -218,7 +218,7 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
 
         auto it = matches.find(i);
         if (it != matches.end()) {
-            res.push_back(it->second.second == 0);
+            res.push_back(Rel::buildEq(it->second.second, 0));
             ignore.insert(it->second.first);
         } else {
             res.push_back(guard[i]);

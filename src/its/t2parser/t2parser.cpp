@@ -95,7 +95,7 @@ namespace t2parser {
             unsigned int pos = str.find("==");
             Expr lhs = parseExpression(str.substr(0, pos));
             Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
-            return lhs == rhs;
+            return Rel::buildEq(lhs, rhs);
         } else if (str.find("<") != std::string::npos) {
             unsigned int pos = str.find("<");
             Expr lhs = parseExpression(str.substr(0, pos));

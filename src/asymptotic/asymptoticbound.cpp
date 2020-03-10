@@ -55,7 +55,7 @@ void AsymptoticBound::normalizeGuard() {
 
     for (const Rel &rel : guard) {
 
-        if (rel.relOp() == Rel::eq) {
+        if (rel.isEq()) {
             // Split equation
             Rel greaterEqual = (rel.lhs() >= rel.rhs()).toPositivityConstraint();
             Rel lessEqual = (rel.lhs() <= rel.rhs()).toPositivityConstraint();
@@ -84,8 +84,7 @@ void AsymptoticBound::propagateBounds() {
     // build substitutions from equations
     for (const Rel &rel : guard) {
         Expr target = rel.rhs() - rel.lhs();
-        if (rel.relOp() == Rel::eq
-            && rel.isPoly()) {
+        if (rel.isEq() && rel.isPoly()) {
 
             std::vector<Var> vars;
             std::vector<Var> tempVars;
@@ -125,7 +124,7 @@ void AsymptoticBound::propagateBounds() {
 
     // build substitutions from inequalities
     for (const Rel &rel : guard) {
-        if (rel.relOp() != Rel::eq) {
+        if (!rel.isEq()) {
             if (rel.lhs().isVar() || rel.rhs().isVar()) {
                 Rel relT = rel.toLeq();
 

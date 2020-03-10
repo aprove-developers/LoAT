@@ -169,7 +169,7 @@ void MeteringFinder::buildLinearConstraints() {
 /* ### Step 3: Construction of the final constraints for the metering function using Farkas lemma ### */
 
 BoolExpr MeteringFinder::genNotGuardImplication() const {
-    BoolExpr res;
+    BoolExpr res = True;
     vector<Rel> lhs;
 
     // We can add the irrelevant guard to the lhs ("conditional metering function")
@@ -179,7 +179,7 @@ BoolExpr MeteringFinder::genNotGuardImplication() const {
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Rel &rel : linearConstraints.reducedGuard) {
-        lhs.push_back(!rel);
+        lhs.push_back((!rel).toLeq());
         res = res & FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan);
         lhs.pop_back();
     }
@@ -203,7 +203,7 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
     // Note that we only include the (primed) variables actually affected by the update.
     // The other variables can be left out to simplify the z3 query (since they cancel out)
 
-    BoolExpr res;
+    BoolExpr res = True;
     for (unsigned int updateIdx=0; updateIdx < updates.size(); ++updateIdx) {
         vector<Var> vars;
         vector<Expr> coeffs;
@@ -235,9 +235,9 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
 }
 
 BoolExpr MeteringFinder::genNonTrivial() const {
-    BoolExpr res;
+    BoolExpr res = False;
     for (const Var &c : meterVars.coeffs) {
-        res = res | Rel(c, Rel::neq, 0);
+        res = res | Rel::buildNeq(c, 0);
     }
     return res;
 }
@@ -278,7 +278,7 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const VarMap<GiNaC::
         Var tempVar = varMan.getVarSymbol(tempIdx);
 
         // create a new guard constraint relating tempVar and the metering function
-        result.integralConstraint = (tempVar*mult == result.metering*mult);
+        result.integralConstraint = Rel::buildEq(tempVar*mult, result.metering*mult);
 
         // replace the metering function by tempVar
         result.metering = tempVar;
@@ -343,10 +343,9 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     meter.buildLinearConstraints();
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::LA, varMan, Config::Z3::MeterTimeout);
-    solver->add(meter.genNotGuardImplication());
-    solver->add(meter.genUpdateImplications());
-    solver->add(meter.genNonTrivial());
+    const BoolExpr &query = meter.genNotGuardImplication() & meter.genUpdateImplications() & meter.genNonTrivial();
+    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({query}), varMan, Config::Z3::MeterTimeout);
+    solver->add(query);
     Smt::Result smtRes = solver->check();
 
     // the problem is already unsat (even without "GuardPositiveImplication")

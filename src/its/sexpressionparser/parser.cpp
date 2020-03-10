@@ -145,7 +145,7 @@ namespace sexpressionparser {
             return negate ? fst <= snd : fst > snd;
         } else if (sexp[0].str() == "=") {
             assert(!negate);
-            return fst == snd;
+            return Rel::buildEq(fst, snd);
         }
         assert(false);
     }

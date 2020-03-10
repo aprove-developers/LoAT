@@ -349,8 +349,10 @@ Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
         res = tryAccelerate(newRule);
         if (res.status != Failure) {
             for (const Rule &r : res.rules) {
-                res.proof.ruleTransformationProof(rule, "partial deletion", newRule, its);
-                res.proof.ruleTransformationProof(newRule, "acceleration", r, its);
+                ProofOutput proof;
+                proof.ruleTransformationProof(rule, "partial deletion", newRule, its);
+                proof.concat(res.proof);
+                res.proof = proof;
             }
             return true;
         }

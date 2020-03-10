@@ -56,7 +56,7 @@ struct AccelerationProblem {
     static GuardList normalize(const GuardList &g) {
         GuardList res;
         for (const Rel &rel: g) {
-            if (rel.relOp() == Rel::eq) {
+            if (rel.isEq()) {
                 res.push_back((rel.lhs() >= rel.rhs()).toPositivityConstraint());
                 res.push_back((rel.lhs() <= rel.rhs()).toPositivityConstraint());
             } else {
