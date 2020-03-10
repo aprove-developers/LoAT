@@ -179,7 +179,7 @@ BoolExpr MeteringFinder::genNotGuardImplication() const {
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Rel &rel : linearConstraints.reducedGuard) {
-        lhs.push_back((!rel).toLeq());
+        lhs.push_back((!rel).toLeq().splitVariableAndConstantAddends());
         res = res & FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan);
         lhs.pop_back();
     }
