@@ -343,9 +343,10 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     meter.buildLinearConstraints();
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    const BoolExpr &query = meter.genNonTrivial() & meter.genUpdateImplications() & meter.genNotGuardImplication();
-    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({query}), varMan, Config::Z3::MeterTimeout);
-    solver->add(query);
+    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::LA, varMan, Config::Z3::MeterTimeout);
+    solver->add(meter.genNotGuardImplication());
+    solver->add(meter.genUpdateImplications());
+    solver->add(meter.genNonTrivial());
     Smt::Result smtRes = solver->check();
 
     // the problem is already unsat (even without "GuardPositiveImplication")
