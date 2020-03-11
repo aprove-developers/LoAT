@@ -268,14 +268,12 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
             Var free = varMan.getVarSymbol(freeIdx);
             if (!rel.has(free)) continue;
 
-            Rel term = rel.isPoly() ? rel.toIntPoly().toL() : rel.toL();
-            auto optSolved = GuardToolbox::solveTermFor(term.lhs()-term.rhs(), free, GuardToolbox::ResultMapsToInt);
-            if (!optSolved) continue;
-
-            if (rel.isStrict()) {
-                freeBounds[freeIdx].insert(optSolved.get() - 1);
-            } else {
-                freeBounds[freeIdx].insert(optSolved.get());
+            std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, free);
+            if (bounds.first) {
+                freeBounds[freeIdx].insert(bounds.first.get());
+            }
+            if (bounds.second) {
+                freeBounds[freeIdx].insert(bounds.second.get());
             }
 
         }

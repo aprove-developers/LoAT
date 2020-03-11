@@ -18,7 +18,6 @@
 #include "expression.hpp"
 #include "complexity.hpp"
 #include <sstream>
-#include <boost/math/common_factor.hpp>
 
 using namespace std;
 
@@ -41,7 +40,7 @@ std::ostream& operator<<(std::ostream &s, const ExprMap &map) {
             s << p.first << ": " << p.second;
         }
     }
-    return s;
+    return s << "}";
 }
 
 const Var Expr::NontermSymbol = GiNaC::symbol("NONTERM");
@@ -478,7 +477,7 @@ Expr Expr::wildcard(uint label) {
     return GiNaC::wild(label);
 }
 
-Expr Expr::toIntPoly() const {
+GiNaC::numeric Expr::denomLcm() const {
     const Expr &denom = Expr::wildcard(0);
     const Expr &num = Expr::wildcard(1);
     const Expr &pattern = denom / num;
@@ -488,6 +487,11 @@ Expr Expr::toIntPoly() const {
     for (const Expr &e: matches) {
         lcm = GiNaC::lcm(lcm, e.denominator().toNum());
     }
+    return lcm;
+}
+
+Expr Expr::toIntPoly() const {
+    GiNaC::numeric lcm = denomLcm();
     return lcm == 1 ? *this : *this * lcm;
 }
 
@@ -617,7 +621,8 @@ Rel Rel::toLeq() const {
     assert(isIneq());
     assert(isPoly());
 
-    Rel res = this->toIntPoly();
+    GiNaC::numeric lcm = GiNaC::lcm(l.denomLcm(), r.denomLcm());
+    Rel res = lcm == 1 ? *this : Rel(l * lcm, op, r * lcm);
     //flip > or >=
     if (res.op == Rel::gt) {
         res = res.rhs() < res.lhs();
@@ -637,7 +642,8 @@ Rel Rel::toGt() const {
     assert(isIneq());
     assert(isPoly());
 
-    Rel res = this->toIntPoly();
+    GiNaC::numeric lcm = GiNaC::lcm(l.denomLcm(), r.denomLcm());
+    Rel res = lcm == 1 ? *this : Rel(l * lcm, op, r * lcm);
     //flip < or <=
     if (res.op == Rel::lt) {
         res = res.rhs() > res.lhs();

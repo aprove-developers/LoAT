@@ -61,7 +61,7 @@ void AsymptoticBound::normalizeGuard() {
             ineqs.push_back(rel.lhs() - rel.rhs() >= 0);
             ineqs.push_back(rel.rhs() - rel.lhs() >= 0);
         } else {
-            ineqs.push_back(rel.toG());
+            ineqs.push_back(rel.toG().makeRhsZero());
         }
     }
     for (const Rel &rel: ineqs) {
@@ -129,21 +129,11 @@ void AsymptoticBound::propagateBounds() {
     for (const Rel &rel : guard) {
         if (!rel.isEq()) {
             if (rel.lhs().isVar() || rel.rhs().isVar()) {
-                Rel relT = rel.isPoly() ? rel.toIntPoly().toL() : rel.toL();
-
-                Expr l, r;
-                bool swap = relT.rhs().isVar();
-                if (swap) {
-                    l = relT.rhs();
-                    r = relT.lhs();
-                } else {
-                    l = relT.lhs();
-                    r = relT.rhs();
-                }
+                Var var = rel.lhs().isVar() ? rel.lhs().toVar() : rel.rhs().toVar();
 
                 bool isInLimitProblem = false;
                 for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-                    if (it->has(l)) {
+                    if (it->has(var)) {
                         isInLimitProblem = true;
                     }
                 }
@@ -152,11 +142,12 @@ void AsymptoticBound::propagateBounds() {
                     continue;
                 }
 
-                if (r.isPoly() && !r.has(l)) {
-                    if (relT.isStrict()) {
-                        r = swap ? r + 1 : r - 1;
-                    }
-                    substitutions.push_back(ExprMap(l, r));
+                std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, var);
+                if (bounds.first) {
+                    substitutions.push_back(ExprMap(var, bounds.first.get()));
+                }
+                if (bounds.second) {
+                    substitutions.push_back(ExprMap(var, bounds.second.get()));
                 }
             }
         }
@@ -213,17 +204,17 @@ ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     for (int index : limitProblem.getSubstitutions()) {
         const ExprMap &sub = substitutions[index];
 
-        solution = sub.compose(solution);
+        solution = solution.compose(sub);
     }
 
-    solution = limitProblem.getSolution().compose(solution);
+    solution = solution.compose(limitProblem.getSolution());
 
     GuardList guardCopy = guard;
     guardCopy.push_back(cost > 0);
     for (const Rel &rel : guardCopy) {
         for (const Var &var : rel.vars()) {
             if (!solution.contains(var)) {
-                solution = ExprMap(var, 0).compose(solution);
+                solution = solution.compose(ExprMap(var, 0));
             }
         }
     }

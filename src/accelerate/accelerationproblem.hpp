@@ -75,7 +75,7 @@ struct AccelerationProblem {
                 solver->pop();
                 return false;
             }
-            solver->add(rel.lhs() <= 0);
+            solver->add(!rel);
             if (solver->check() == Smt::Unsat) {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic decrease");
@@ -102,7 +102,7 @@ struct AccelerationProblem {
                 solver->pop();
                 return false;
             }
-            solver->add(rel.subs(up).lhs() <= 0);
+            solver->add(!rel.subs(up));
             if (solver->check() == Smt::Unsat) {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic increase");

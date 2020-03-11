@@ -337,6 +337,8 @@ public:
 
     Expr toIntPoly() const;
 
+    GiNaC::numeric denomLcm() const;
+
     /**
      * @brief exponentiation
      */
@@ -412,7 +414,6 @@ public:
     Rel makeRhsZero() const;
     Rel toLeq() const;
     Rel toGt() const;
-    Rel toIntPoly() const;
 
     Rel toL() const;
     Rel toG() const;
@@ -434,6 +435,7 @@ private:
      * @return true/false if the relation is trivially valid/invalid
      */
     option<bool> checkTrivial() const;
+    Rel toIntPoly() const;
 
     Expr l;
     Expr r;

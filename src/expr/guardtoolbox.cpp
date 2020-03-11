@@ -56,6 +56,24 @@ bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
     return false;
 }
 
+std::pair<option<Expr>, option<Expr>> GuardToolbox::getBoundFromIneq(const Rel &rel, const Var &N) {
+    Rel l = rel.isPoly() ? rel.toLeq() : rel.toL();
+    Expr term = (l.lhs() - l.rhs()).expand();
+    if (term.degree(N) != 1) return {};
+
+    // compute the upper bound represented by N and check that it is integral
+    auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
+    if (optSolved) {
+        const Expr &coeff = term.coeff(N, 1);
+        assert(coeff.isRationalConstant());
+        if (coeff.toNum().is_negative()) {
+            return {{l.isStrict() ? optSolved.get() + 1 : optSolved.get()}, {}};
+        } else {
+            return {{}, {l.isStrict() ? optSolved.get() - 1 : optSolved.get()}};
+        }
+    }
+    return {};
+}
 
 option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel level) {
     // expand is needed before using degree/coeff

@@ -84,6 +84,7 @@ namespace GuardToolbox {
      */
     bool eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow);
 
+    std::pair<option<Expr>, option<Expr>> getBoundFromIneq(const Rel &rel, const Var &N);
 
     /**
      * Tries to solve the equation term == 0 for the given variable, using the given level of restrictiveness

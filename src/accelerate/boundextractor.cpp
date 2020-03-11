@@ -39,21 +39,12 @@ void BoundExtractor::extractBounds() {
     // Otherwise, collect all bounds
     for (const Rel &rel : guard) {
         if (rel.isEq() || !rel.has(N)) continue;
-
-        Rel l = rel.isPoly() ? rel.toIntPoly().toL() : rel.toL();
-        Expr term = (l.lhs() - l.rhs()).expand();
-        if (term.degree(N) != 1) continue;
-
-        // compute the upper bound represented by N and check that it is integral
-        auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
-        if (optSolved) {
-            auto solved = l.isStrict() ? optSolved.get() - 1 : optSolved.get();
-            const Expr &coeff = term.coeff(N, 1);
-            if (coeff.isRationalConstant() && coeff.toNum().is_negative()) {
-                lower.push_back(solved);
-            } else {
-                upper.push_back(solved);
-            }
+        std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, N);
+        if (bounds.first) {
+            lower.push_back(bounds.first.get());
+        }
+        if (bounds.second) {
+            upper.push_back(bounds.second.get());
         }
     }
 }
