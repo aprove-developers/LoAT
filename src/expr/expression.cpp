@@ -619,44 +619,53 @@ bool Rel::isGZeroConstraint() const {
 
 Rel Rel::toLeq() const {
     assert(isIneq());
-    assert(isPoly());
+    assert(isPoly() || !isStrict());
 
-    GiNaC::numeric lcm = GiNaC::lcm(l.denomLcm(), r.denomLcm());
-    Rel res = lcm == 1 ? *this : Rel(l * lcm, op, r * lcm);
+    option<Rel> res;
+    if (isStrict()) {
+        GiNaC::numeric lcm = GiNaC::lcm(l.denomLcm(), r.denomLcm());
+        res = lcm == 1 ? *this : Rel(l * lcm, op, r * lcm);
+    } else {
+        res = *this;
+    }
     //flip > or >=
-    if (res.op == Rel::gt) {
-        res = res.rhs() < res.lhs();
+    if (res->op == Rel::gt) {
+        res = res->rhs() < res->lhs();
     } else if (op == Rel::geq) {
-        res = res.rhs() <= res.lhs();
+        res = res->rhs() <= res->lhs();
     }
 
-    if (res.op == Rel::lt) {
-        res = res.lhs() <= (res.rhs() - 1);
+    if (res->op == Rel::lt) {
+        res = res->lhs() <= (res->rhs() - 1);
     }
 
-    assert(res.op == Rel::leq);
-    return res;
+    assert(res->op == Rel::leq);
+    return res.get();
 }
 
 Rel Rel::toGt() const {
     assert(isIneq());
-    assert(isPoly());
+    assert(isPoly() || isStrict());
 
-    GiNaC::numeric lcm = GiNaC::lcm(l.denomLcm(), r.denomLcm());
-    Rel res = lcm == 1 ? *this : Rel(l * lcm, op, r * lcm);
-    //flip < or <=
-    if (res.op == Rel::lt) {
-        res = res.rhs() > res.lhs();
+    option<Rel> res;
+    if (!isStrict()) {
+        GiNaC::numeric lcm = GiNaC::lcm(l.denomLcm(), r.denomLcm());
+        res = lcm == 1 ? *this : Rel(l * lcm, op, r * lcm);
+    } else {
+        res = *this;
+    }
+    if (res->op == Rel::lt) {
+        res = res->rhs() > res->lhs();
     } else if (op == Rel::leq) {
-        res = res.rhs() >= res.lhs();
+        res = res->rhs() >= res->lhs();
     }
 
-    if (res.op == Rel::geq) {
-        res = res.lhs() + 1 > res.rhs();
+    if (res->op == Rel::geq) {
+        res = res->lhs() + 1 > res->rhs();
     }
 
-    assert(res.op == Rel::gt);
-    return res;
+    assert(res->op == Rel::gt);
+    return res.get();
 }
 
 Rel Rel::toL() const {
