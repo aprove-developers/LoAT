@@ -333,6 +333,10 @@ public:
      */
     bool isPoly(const Var &n) const;
 
+    bool isIntegral() const;
+
+    Expr toIntPoly() const;
+
     /**
      * @brief exponentiation
      */
@@ -378,9 +382,8 @@ public:
     bool isIneq() const;
     bool isEq() const;
     bool isNeq() const;
-    bool isPositivityConstraint() const;
-    Rel toLeq() const;
-    Rel toGt() const;
+    bool isGZeroConstraint() const;
+    bool isStrict() const;
 
     /**
      * @return Moves all addends containing variables to the lhs and all other addends to the rhs, where the given parameters are consiedered to be constants.
@@ -406,7 +409,13 @@ public:
      * Given an inequality, transforms it into one of the form lhs > 0
      * @note assumes integer arithmetic to translate e.g. >= to >
      */
-    Rel toPositivityConstraint() const;
+    Rel makeRhsZero() const;
+    Rel toLeq() const;
+    Rel toGt() const;
+    Rel toIntPoly() const;
+
+    Rel toL() const;
+    Rel toG() const;
 
     static Rel buildEq(const Expr &x, const Expr &y);
     static Rel buildNeq(const Expr &x, const Expr &y);

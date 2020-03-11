@@ -57,10 +57,10 @@ struct AccelerationProblem {
         GuardList res;
         for (const Rel &rel: g) {
             if (rel.isEq()) {
-                res.push_back((rel.lhs() >= rel.rhs()).toPositivityConstraint());
-                res.push_back((rel.lhs() <= rel.rhs()).toPositivityConstraint());
+                res.push_back(rel.lhs() - rel.rhs() >= 0);
+                res.push_back(rel.rhs() - rel.lhs() >= 0);
             } else {
-                res.push_back(rel.toPositivityConstraint());
+                res.push_back(rel.toG().makeRhsZero());
             }
         }
         return res;
@@ -180,7 +180,7 @@ struct AccelerationProblem {
             if (solver->check() == Smt::Unsat) {
                 solver->pop();
                 solver->push();
-                const Rel &newCond = (rel.lhs() <= updated).toPositivityConstraint();
+                const Rel &newCond = updated - rel.lhs() >= 0;
                 solver->add(rel);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {

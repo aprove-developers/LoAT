@@ -268,11 +268,16 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
             Var free = varMan.getVarSymbol(freeIdx);
             if (!rel.has(free)) continue;
 
-            Rel term = rel.toLeq();
+            Rel term = rel.isPoly() ? rel.toIntPoly().toL() : rel.toL();
             auto optSolved = GuardToolbox::solveTermFor(term.lhs()-term.rhs(), free, GuardToolbox::ResultMapsToInt);
             if (!optSolved) continue;
 
-            freeBounds[freeIdx].insert(optSolved.get());
+            if (rel.isStrict()) {
+                freeBounds[freeIdx].insert(optSolved.get() - 1);
+            } else {
+                freeBounds[freeIdx].insert(optSolved.get());
+            }
+
         }
     }
 

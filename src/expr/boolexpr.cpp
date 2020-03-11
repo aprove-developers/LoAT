@@ -2,7 +2,7 @@
 
 BoolExpression::~BoolExpression() {}
 
-BoolLit::BoolLit(const Rel &lit): lit(lit.toLeq()) { }
+BoolLit::BoolLit(const Rel &lit): lit(lit.toG().makeRhsZero()) { }
 
 bool BoolLit::isAnd() const {
     return false;

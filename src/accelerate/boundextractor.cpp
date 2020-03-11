@@ -40,18 +40,19 @@ void BoundExtractor::extractBounds() {
     for (const Rel &rel : guard) {
         if (rel.isEq() || !rel.has(N)) continue;
 
-        Rel leq = rel.toLeq();
-        Expr term = (leq.lhs() - leq.rhs()).expand();
+        Rel l = rel.isPoly() ? rel.toIntPoly().toL() : rel.toL();
+        Expr term = (l.lhs() - l.rhs()).expand();
         if (term.degree(N) != 1) continue;
 
         // compute the upper bound represented by N and check that it is integral
         auto optSolved = GuardToolbox::solveTermFor(term, N, GuardToolbox::ResultMapsToInt);
         if (optSolved) {
+            auto solved = l.isStrict() ? optSolved.get() - 1 : optSolved.get();
             const Expr &coeff = term.coeff(N, 1);
             if (coeff.isRationalConstant() && coeff.toNum().is_negative()) {
-                lower.push_back(optSolved.get());
+                lower.push_back(solved);
             } else {
-                upper.push_back(optSolved.get());
+                upper.push_back(solved);
             }
         }
     }

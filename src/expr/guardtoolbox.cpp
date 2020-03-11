@@ -30,18 +30,30 @@ bool GuardToolbox::isTrivialImplication(const Rel &a, const Rel &b) {
         Expr aDiff = a.rhs() - a.lhs();
         Expr bDiff = b.rhs() - b.lhs();
         return (aDiff - bDiff).expand().isZero();
+    } else if (a.isIneq()) {
+        if (a.isStrict() == b.isStrict()) {
+            if ((a.toG().makeRhsZero().lhs() <= b.toG().makeRhsZero().lhs()).isTriviallyTrue()) {
+                return true;
+            }
+        } else if (!a.isStrict() && a.isPoly()) {
+            if ((a.toGt().makeRhsZero().lhs() <= b.toG().makeRhsZero().lhs()).isTriviallyTrue()) {
+                return true;
+            }
+        } else if (b.isPoly()) {
+            if ((a.toG().makeRhsZero().lhs() <= b.toGt().makeRhsZero().lhs()).isTriviallyTrue()) {
+                return true;
+            }
+        }
+    } else if (a.isEq()) {
+        Expr aDiff = a.rhs() - a.lhs();
+        Expr bLhs = b.toG().lhs() - b.toG().rhs();
+        if (b.isStrict()) {
+            return (aDiff < bLhs).isTriviallyTrue() || ((-aDiff) < bLhs).isTriviallyTrue();
+        } else {
+            return (aDiff <= bLhs).isTriviallyTrue() || ((-aDiff) <= bLhs).isTriviallyTrue();
+        }
     }
-
-    Expr bLhs = b.toPositivityConstraint().lhs(); // b is of the form bLhs > 0
-    if (!a.isEq()) {
-        Expr aLhs = a.toPositivityConstraint().lhs(); // a is of the form aLhs > 0
-        return (aLhs <= bLhs).isTriviallyTrue(); // then 0 < aLhs <= bLhs, so 0 < bLhs holds
-    }
-
-    // if a is an equality, we can use aDiff >= 0 or aDiff <= 0, so we check both
-    // note that we need a strict check below, as we want to show bLhs > 0
-    Expr aDiff = a.rhs() - a.lhs();
-    return (aDiff < bLhs).isTriviallyTrue() || ((-aDiff) < bLhs).isTriviallyTrue();
+    return false;
 }
 
 
@@ -68,12 +80,12 @@ option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel 
     // since we assume that all constraints in the guard map to int.
     // So if c is trivial, we can also handle non-polynomial terms.
     if (level == ResultMapsToInt && !trivialCoeff) {
-        if (!term.isPoly() || !mapsToInt(term)) return {};
+        if (!term.isPoly() || !term.isIntegral()) return {};
     }
 
     // we assume that terms in the guard map to int, make sure this is the case
     if (trivialCoeff) {
-        assert(!term.isPoly() || mapsToInt(term));
+        assert(!term.isPoly() || term.isIntegral());
     }
 
     return term;
@@ -148,9 +160,7 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
             if (!rel.has(var)) continue;
             if (!rel.isIneq() || !rel.isPoly()) goto abort; // contains var, but cannot be handled
 
-            //make less equal
-            Rel leq = rel.toLeq();
-            Expr target = leq.lhs() - leq.rhs();
+            Expr target = rel.toLeq().makeRhsZero().lhs();
             if (!target.has(var)) continue; // might have changed, e.h. x <= x
 
             //check coefficient and direction
@@ -195,8 +205,8 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
     for (unsigned int i=0; i < guard.size(); ++i) {
         if (guard[i].isEq()) continue;
-        Rel leq = guard[i].toLeq();
-        Expr term = leq.lhs() - leq.rhs();
+        if (!guard[i].isPoly() && guard[i].isStrict()) continue;
+        Expr term = guard[i].toLeq().makeRhsZero().lhs();
         for (const auto &prev : terms) {
             if ((prev.second + term).isZero()) {
                 matches.emplace(prev.first, make_pair(i,prev.second));
@@ -226,58 +236,4 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
     }
     res.swap(guard);
     return true;
-}
-
-
-bool GuardToolbox::mapsToInt(const Expr &e) {
-    assert(e.isPoly());
-
-    // shortcut for the common case
-    if (e.isIntPoly()) {
-        return true;
-    }
-
-    // collect variables from e into a vector
-    vector<Var> vars;
-    for (Var sym : e.vars()) {
-        vars.push_back(sym);
-    }
-
-    // degrees, subs share indices with vars
-    vector<int> degrees;
-    vector<int> subs;
-    Expr expanded = e.expand();
-    for (const Var &x: vars) {
-        degrees.push_back(expanded.degree(x));
-        subs.push_back(0);
-    }
-
-    while (true) {
-        // substitute every variable x_i by the integer subs[i] and check if the result is an integer
-        ExprMap currSubs;
-        for (unsigned int i = 0; i < degrees.size(); i++) {
-            currSubs.put(vars[i], subs[i]);
-        }
-        Expr res = e.subs(currSubs).expand();
-        if (!res.isInt()) {
-            return false;
-        }
-
-        // increase subs (lexicographically) if possible
-        // (the idea is that subs takes all possible combinations of 0,...,degree[i]+1 for every entry i)
-        bool foundNext = false;
-        for (unsigned int i = 0; i < degrees.size(); i++) {
-            if (subs[i] >= degrees[i]+1) {
-                subs[i] = 0;
-            } else {
-                subs[i] += 1;
-                foundNext = true;
-                break;
-            }
-        }
-
-        if (!foundNext) {
-            return true;
-        }
-    }
 }

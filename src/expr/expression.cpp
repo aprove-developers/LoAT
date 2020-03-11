@@ -18,6 +18,7 @@
 #include "expression.hpp"
 #include "complexity.hpp"
 #include <sstream>
+#include <boost/math/common_factor.hpp>
 
 using namespace std;
 
@@ -477,6 +478,72 @@ Expr Expr::wildcard(uint label) {
     return GiNaC::wild(label);
 }
 
+Expr Expr::toIntPoly() const {
+    const Expr &denom = Expr::wildcard(0);
+    const Expr &num = Expr::wildcard(1);
+    const Expr &pattern = denom / num;
+    ExprSet matches;
+    GiNaC::numeric lcm = 1;
+    findAll(pattern, matches);
+    for (const Expr &e: matches) {
+        lcm = GiNaC::lcm(lcm, e.denominator().toNum());
+    }
+    return lcm == 1 ? *this : *this * lcm;
+}
+
+bool Expr::isIntegral() const {
+    assert(isPoly());
+
+    // shortcut for the common case
+    if (isIntPoly()) {
+        return true;
+    }
+
+    // collect variables from e into a vector
+    vector<Var> vars;
+    for (Var sym : this->vars()) {
+        vars.push_back(sym);
+    }
+
+    // degrees, subs share indices with vars
+    vector<int> degrees;
+    vector<int> subs;
+    Expr expanded = expand();
+    for (const Var &x: vars) {
+        degrees.push_back(expanded.degree(x));
+        subs.push_back(0);
+    }
+
+    while (true) {
+        // substitute every variable x_i by the integer subs[i] and check if the result is an integer
+        ExprMap currSubs;
+        for (unsigned int i = 0; i < degrees.size(); i++) {
+            currSubs.put(vars[i], subs[i]);
+        }
+        Expr res = this->subs(currSubs).expand();
+        if (!res.isInt()) {
+            return false;
+        }
+
+        // increase subs (lexicographically) if possible
+        // (the idea is that subs takes all possible combinations of 0,...,degree[i]+1 for every entry i)
+        bool foundNext = false;
+        for (unsigned int i = 0; i < degrees.size(); i++) {
+            if (subs[i] >= degrees[i]+1) {
+                subs[i] = 0;
+            } else {
+                subs[i] += 1;
+                foundNext = true;
+                break;
+            }
+        }
+
+        if (!foundNext) {
+            return true;
+        }
+    }
+}
+
 
 Rel::Rel(const Expr &lhs, RelOp op, const Expr &rhs): l(lhs), r(rhs), op(op) { }
 
@@ -542,14 +609,15 @@ bool Rel::isNeq() const {
     return op == Rel::neq;
 }
 
-bool Rel::isPositivityConstraint() const {
-    return op == Rel::gt && r.isZero();
+bool Rel::isGZeroConstraint() const {
+    return (op == Rel::gt || op == Rel::geq) && r.isZero();
 }
 
 Rel Rel::toLeq() const {
     assert(isIneq());
+    assert(isPoly());
 
-    Rel res = *this;
+    Rel res = this->toIntPoly();
     //flip > or >=
     if (res.op == Rel::gt) {
         res = res.rhs() < res.lhs();
@@ -557,7 +625,6 @@ Rel Rel::toLeq() const {
         res = res.rhs() <= res.lhs();
     }
 
-    //change < to <=, assuming integer arithmetic
     if (res.op == Rel::lt) {
         res = res.lhs() <= (res.rhs() - 1);
     }
@@ -568,8 +635,9 @@ Rel Rel::toLeq() const {
 
 Rel Rel::toGt() const {
     assert(isIneq());
+    assert(isPoly());
 
-    Rel res = *this;
+    Rel res = this->toIntPoly();
     //flip < or <=
     if (res.op == Rel::lt) {
         res = res.rhs() > res.lhs();
@@ -577,13 +645,44 @@ Rel Rel::toGt() const {
         res = res.rhs() >= res.lhs();
     }
 
-    //change >= to >, assuming integer arithmetic
     if (res.op == Rel::geq) {
-        res = (res.lhs() + 1) > res.rhs();
+        res = res.lhs() + 1 > res.rhs();
     }
 
     assert(res.op == Rel::gt);
     return res;
+}
+
+Rel Rel::toL() const {
+    assert(isIneq());
+    if (op == Rel::gt) {
+        return r < l;
+    } else if (op == Rel::geq) {
+        return r <= l;
+    } else {
+        return *this;
+    }
+}
+
+Rel Rel::toG() const {
+    assert(isIneq());
+    if (op == Rel::lt) {
+        return r > l;
+    } else if (op == Rel::leq) {
+        return r >= l;
+    } else {
+        return *this;
+    }
+}
+
+bool Rel::isStrict() const {
+    assert(isIneq());
+    return op == lt || op == gt;
+}
+
+Rel Rel::toIntPoly() const {
+    assert(isPoly());
+    return Rel((l-r).toIntPoly(), op, 0);
 }
 
 Rel Rel::splitVariableAndConstantAddends(const VarSet &params) const {
@@ -692,12 +791,8 @@ VarSet Rel::vars() const {
     return res;
 }
 
-Rel Rel::toPositivityConstraint() const {
-    assert(isIneq());
-    Rel greater = toGt();
-    Rel normalized = (greater.lhs() - greater.rhs()) > 0;
-    assert(normalized.isPositivityConstraint());
-    return normalized;
+Rel Rel::makeRhsZero() const {
+    return Rel(l - r, op, 0);
 }
 
 Rel operator!(const Rel &x) {

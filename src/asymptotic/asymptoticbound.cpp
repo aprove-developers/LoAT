@@ -53,21 +53,24 @@ void AsymptoticBound::initLimitVectors() {
 
 void AsymptoticBound::normalizeGuard() {
 
+    GuardList ineqs;
     for (const Rel &rel : guard) {
 
         if (rel.isEq()) {
             // Split equation
-            Rel greaterEqual = (rel.lhs() >= rel.rhs()).toPositivityConstraint();
-            Rel lessEqual = (rel.lhs() <= rel.rhs()).toPositivityConstraint();
-
-            normalizedGuard.push_back(greaterEqual);
-            normalizedGuard.push_back(lessEqual);
-
+            ineqs.push_back(rel.lhs() - rel.rhs() >= 0);
+            ineqs.push_back(rel.rhs() - rel.lhs() >= 0);
         } else {
-            normalizedGuard.push_back(rel.toPositivityConstraint());
+            ineqs.push_back(rel.toG());
         }
     }
-
+    for (const Rel &rel: ineqs) {
+        if (rel.isPoly() && !rel.isStrict()) {
+            normalizedGuard.push_back(rel.toGt());
+        } else {
+            normalizedGuard.push_back(rel);
+        }
+    }
 }
 
 void AsymptoticBound::createInitialLimitProblem(VariableManager &varMan) {
@@ -126,7 +129,7 @@ void AsymptoticBound::propagateBounds() {
     for (const Rel &rel : guard) {
         if (!rel.isEq()) {
             if (rel.lhs().isVar() || rel.rhs().isVar()) {
-                Rel relT = rel.toLeq();
+                Rel relT = rel.isPoly() ? rel.toIntPoly().toL() : rel.toL();
 
                 Expr l, r;
                 bool swap = relT.rhs().isVar();
@@ -150,10 +153,8 @@ void AsymptoticBound::propagateBounds() {
                 }
 
                 if (r.isPoly() && !r.has(l)) {
-                    if (relT.relOp() == Rel::lt && !swap) { // exT: x = l < r
-                        r = r - 1;
-                    } else if (relT.relOp() == Rel::lt && swap) { // exT: r < l = x
-                        r = r + 1;
+                    if (relT.isStrict()) {
+                        r = swap ? r + 1 : r - 1;
                     }
                     substitutions.push_back(ExprMap(l, r));
                 }
