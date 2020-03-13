@@ -54,7 +54,7 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
                                  const RuleLhs &secondLhs, bool checkSat)
 {
     // Build a substitution corresponding to the first rule's update
-    ExprMap updateSubs = firstUpdate.toSubstitution(varMan);
+    Subs updateSubs = firstUpdate.toSubstitution(varMan);
 
     // Concatenate both guards, but apply the first rule's update to second guard
     GuardList newGuard = firstLhs.getGuard();
@@ -88,7 +88,7 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
 static UpdateMap chainUpdates(const VarMan &varMan, const UpdateMap &first, const UpdateMap &second) {
     // Start with the first update
     UpdateMap newUpdate = first;
-    const ExprMap firstSubs = first.toSubstitution(varMan);
+    const Subs firstSubs = first.toSubstitution(varMan);
 
     // Then add the second update (possibly overwriting the first updates).
     // Note that we apply the first update to the second update's right-hand sides.

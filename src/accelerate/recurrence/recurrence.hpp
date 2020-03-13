@@ -114,7 +114,7 @@ private:
      * @note the recurrence equations are valid *before* the transition is taken,
      * i.e. these are the terms for r(n-1) and _not_ for r(n) where r is the recurrence equation.
      */
-    ExprMap updatePreRecurrences;
+    Subs updatePreRecurrences;
 };
 
 #endif // RECURRENCE_H

@@ -43,7 +43,7 @@ bool Self::isParametric(const Rel &rel) const {
     return false;
 }
 
-const std::vector<Rel> Self::subs(const ExprMap &sigma) const {
+const std::vector<Rel> Self::subs(const Subs &sigma) const {
     std::vector<Rel> res;
     for (Rel rel: templates) {
         rel.applySubs(sigma);

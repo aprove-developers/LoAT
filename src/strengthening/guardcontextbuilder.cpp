@@ -23,13 +23,13 @@ namespace strengthening {
 
     typedef GuardContextBuilder Self;
 
-    const GuardContext Self::build(const GuardList &guard, const std::vector<ExprMap> &updates, const VariableManager &varMan) {
+    const GuardContext Self::build(const GuardList &guard, const std::vector<Subs> &updates, const VariableManager &varMan) {
         return GuardContextBuilder(guard, updates, varMan).build();
     }
 
     Self::GuardContextBuilder(
             const GuardList &guard,
-            const std::vector<ExprMap> &updates,
+            const std::vector<Subs> &updates,
             const VariableManager &varMan
     ): guard(guard), updates(updates), varMan(varMan) { }
 
@@ -54,7 +54,7 @@ namespace strengthening {
         Result res;
         for (const Rel &rel: constraints) {
             bool isInvariant = true;
-            for (const ExprMap &up: updates) {
+            for (const Subs &up: updates) {
                 Rel conclusionExp = rel;
                 conclusionExp.applySubs(up);
                 const BoolExpr &conclusion = buildLit(conclusionExp);

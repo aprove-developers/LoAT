@@ -261,7 +261,7 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             }
 
             //create copy of vars ("pre vars") to simulate parallel assignments
-            ExprMap t2subs;
+            Subs t2subs;
             for (const Var &sym : vars) {
                 t2subs.put(sym, Var("pre_v" + sym.get_name()));
                 if (its.isTempVar(its.getVarIdx(sym))) {

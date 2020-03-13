@@ -112,7 +112,7 @@ static map<int, Expr> getCoefficients(const Expr &ex, const Var &n) {
     return coefficients;
 }
 
-option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expr &cost,
+option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expr &cost,
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
@@ -125,7 +125,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
     VarSet vars = currentLP.getVariables();
 
     // create linear templates for all variables
-    ExprMap templateSubs;
+    Subs templateSubs;
     VarMap<Var> varCoeff, varCoeff0;
     for (const Var &var : vars) {
         Var c0 = varMan.getFreshUntrackedSymbol(var.get_name() + "_0", Expr::Int);
@@ -215,7 +215,7 @@ option<ExprMap> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, c
     }
 
     // we found a model -- create the corresponding solution of the limit problem
-    ExprMap smtSubs;
+    Subs smtSubs;
     VarMap<GiNaC::numeric> model = solver->model();
     for (const Var &var : vars) {
         auto c0 = model.find(varCoeff0.at(var));

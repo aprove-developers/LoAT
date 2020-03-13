@@ -111,7 +111,7 @@ option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel 
 
 
 bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
-    ExprMap varSubs;
+    Subs varSubs;
     GuardList &guard = rule.getGuardMut();
 
     for (unsigned int i=0; i < guard.size(); ++i) {

@@ -37,8 +37,8 @@ public:
     // inherit constructors of base class
     using std::vector<Rel>::vector;
     void collectVariables(VarSet &res) const;
-    GuardList subs(const ExprMap &sigma) const;
-    void applySubstitution(const ExprMap &sigma);
+    GuardList subs(const Subs &sigma) const;
+    void applySubstitution(const Subs &sigma);
 
     /**
      * Returns true iff all guard terms are relational without the use of !=
@@ -54,7 +54,7 @@ class UpdateMap : public std::map<VariableIdx,Expr> {
 public:
     bool isUpdated(VariableIdx var) const;
     Expr getUpdate(VariableIdx var) const;
-    ExprMap toSubstitution(const VariableManager &varMan) const;
+    Subs toSubstitution(const VariableManager &varMan) const;
     friend bool operator==(const UpdateMap &m1, const UpdateMap &m2);
 };
 

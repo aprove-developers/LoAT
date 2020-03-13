@@ -31,8 +31,8 @@ namespace strengthening {
 
     Self::RuleContextBuilder(const Rule &rule, ITSProblem &its): rule(rule), its(its) { }
 
-    const std::vector<ExprMap> Self::computeUpdates() const {
-        std::vector<ExprMap> res;
+    const std::vector<Subs> Self::computeUpdates() const {
+        std::vector<Subs> res;
         for (const RuleRhs &rhs: rule.getRhss()) {
             res.push_back(rhs.getUpdate().toSubstitution(its));
         }
@@ -40,7 +40,7 @@ namespace strengthening {
     }
 
     const RuleContext Self::build() const {
-        const std::vector<ExprMap> &updates = computeUpdates();
+        const std::vector<Subs> &updates = computeUpdates();
         return RuleContext(rule, updates, its);
     }
 

@@ -434,11 +434,11 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
 
     // Now try all possible instantiations until the solver is satisfied
 
-    ExprMap successfulSubs;
-    stack<ExprMap> freeSubs = MT::findInstantiationsForTempVars(its, meter.guard);
+    Subs successfulSubs;
+    stack<Subs> freeSubs = MT::findInstantiationsForTempVars(its, meter.guard);
 
     while (!freeSubs.empty()) {
-        const ExprMap &sub = freeSubs.top();
+        const Subs &sub = freeSubs.top();
 
         //apply current substitution (and forget the previous one)
         meter.guard = oldGuard; // copy

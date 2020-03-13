@@ -25,7 +25,7 @@ void GuardList::collectVariables(VarSet &res) const {
     }
 }
 
-GuardList GuardList::subs(const ExprMap &sigma) const {
+GuardList GuardList::subs(const Subs &sigma) const {
     GuardList res;
     for (const Rel &rel: *this) {
         res.push_back(rel.subs(sigma));
@@ -33,7 +33,7 @@ GuardList GuardList::subs(const ExprMap &sigma) const {
     return res;
 }
 
-void GuardList::applySubstitution(const ExprMap &sigma) {
+void GuardList::applySubstitution(const Subs &sigma) {
     for (Rel &rel: *this) {
         rel.applySubs(sigma);
     }
@@ -58,8 +58,8 @@ Expr UpdateMap::getUpdate(VariableIdx var) const {
     return it->second;
 }
 
-ExprMap UpdateMap::toSubstitution(const VariableManager &varMan) const {
-    ExprMap subs;
+Subs UpdateMap::toSubstitution(const VariableManager &varMan) const {
+    Subs subs;
     for (const auto &it : *this) {
         subs.put(varMan.getVarSymbol(it.first), it.second);
     }

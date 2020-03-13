@@ -84,7 +84,7 @@ namespace sexpressionparser {
                             // make sure that the temporary variables are unique
                             VarSet currTmpVars(tmpVars);
                             guard.collectVariables(currTmpVars);
-                            ExprMap subs;
+                            Subs subs;
                             for (const Var &var: currTmpVars) {
                                 if (res.isTempVar(var)) {
                                     subs.put(var, res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name())));

@@ -107,7 +107,7 @@ void AsymptoticBound::propagateBounds() {
                 //solve target for var (result is in target)
                 auto optSolved = GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs);
                 if (optSolved) {
-                    substitutions.push_back(ExprMap(var, optSolved.get()));
+                    substitutions.push_back(Subs(var, optSolved.get()));
                     break;
                 }
             }
@@ -144,10 +144,10 @@ void AsymptoticBound::propagateBounds() {
 
                 std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, var);
                 if (bounds.first) {
-                    substitutions.push_back(ExprMap(var, bounds.first.get()));
+                    substitutions.push_back(Subs(var, bounds.first.get()));
                 }
                 if (bounds.second) {
-                    substitutions.push_back(ExprMap(var, bounds.second.get()));
+                    substitutions.push_back(Subs(var, bounds.second.get()));
                 }
             }
         }
@@ -197,12 +197,12 @@ void AsymptoticBound::propagateBounds() {
     }
 }
 
-ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
+Subs AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     assert(limitProblem.isSolved());
 
-    ExprMap solution;
+    Subs solution;
     for (int index : limitProblem.getSubstitutions()) {
-        const ExprMap &sub = substitutions[index];
+        const Subs &sub = substitutions[index];
 
         solution = solution.compose(sub);
     }
@@ -214,7 +214,7 @@ ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     for (const Rel &rel : guardCopy) {
         for (const Var &var : rel.vars()) {
             if (!solution.contains(var)) {
-                solution = solution.compose(ExprMap(var, 0));
+                solution = solution.compose(Subs(var, 0));
             }
         }
     }
@@ -224,7 +224,7 @@ ExprMap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
 
 
 int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
-                                               const ExprMap &solution) {
+                                               const Subs &solution) {
     Var n = limitProblem.getN();
     int upperBound = 0;
     for (auto const &pair : solution) {
@@ -248,7 +248,7 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
 
 
 int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProblem,
-                                                 const ExprMap &solution) {
+                                                 const Subs &solution) {
 
     Expr solvedCost = cost.subs(solution);
 
@@ -770,7 +770,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
                 Var var = it->someVar();
 
                 Expr rational = model.at(var);
-                substitutions.push_back(ExprMap(var, rational));
+                substitutions.push_back(Subs(var, rational));
 
                 createBacktrackingPoint(it, POS_INF);
                 currentLP.substitute(substitutions.back(), substitutions.size() - 1);
@@ -805,7 +805,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
                         || (dir == NEG_INF && dir2 == NEG_INF)) {
                         assert(!it->equals(*it2));
 
-                        ExprMap sub(it->toVar(), *it2);
+                        Subs sub(it->toVar(), *it2);
                         substitutions.push_back(sub);
 
                         createBacktrackingPoint(it, POS_CONS);

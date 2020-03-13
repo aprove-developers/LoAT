@@ -43,7 +43,7 @@ void VarEliminator::findDependencies(const GuardList &guard) {
     dependencies.erase(N);
 }
 
-const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency(const ExprMap &subs, const GuardList &guard) const {
+const std::set<std::pair<Subs, GuardList>> VarEliminator::eliminateDependency(const Subs &subs, const GuardList &guard) const {
     VarSet vars;
     guard.collectVariables(vars);
     for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
@@ -51,9 +51,9 @@ const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency
             continue;
         }
         BoundExtractor be(guard, *it);
-        std::set<std::pair<ExprMap, GuardList>> res;
+        std::set<std::pair<Subs, GuardList>> res;
         for (const Expr &bound: be.getConstantBounds()) {
-            ExprMap newSubs(*it, bound);
+            Subs newSubs(*it, bound);
             res.insert({subs.compose(newSubs), guard.subs(newSubs)});
         }
         if (!res.empty()) {
@@ -65,8 +65,8 @@ const std::set<std::pair<ExprMap, GuardList>> VarEliminator::eliminateDependency
 
 void VarEliminator::eliminateDependencies() {
     while (!todoDeps.empty()) {
-        const std::pair<ExprMap, GuardList> current = todoDeps.top();
-        const std::set<std::pair<ExprMap, GuardList>> &res = eliminateDependency(current.first, current.second);
+        const std::pair<Subs, GuardList> current = todoDeps.top();
+        const std::set<std::pair<Subs, GuardList>> &res = eliminateDependency(current.first, current.second);
         if (res.empty()) {
             todoN.insert(current);
         }
@@ -80,19 +80,19 @@ void VarEliminator::eliminateDependencies() {
 void VarEliminator::eliminate() {
     eliminateDependencies();
     for (const auto &p: todoN) {
-        const ExprMap &subs = p.first;
+        const Subs &subs = p.first;
         const GuardList &guard = p.second;
         BoundExtractor be(guard, N);
         if (be.getEq()) {
-            res.insert(subs.compose(ExprMap(N, be.getEq().get())));
+            res.insert(subs.compose(Subs(N, be.getEq().get())));
         } else {
             for (const Expr &b: be.getUpper()) {
-                res.insert(subs.compose(ExprMap(N, b)));
+                res.insert(subs.compose(Subs(N, b)));
             }
         }
     }
 }
 
-const std::set<ExprMap> VarEliminator::getRes() const {
+const std::set<Subs> VarEliminator::getRes() const {
     return res;
 }

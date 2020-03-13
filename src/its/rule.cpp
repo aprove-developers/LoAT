@@ -62,7 +62,7 @@ bool Rule::isSimpleLoop() const {
     return std::all_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.getLoc(); });
 }
 
-void Rule::applySubstitution(const ExprMap &subs) {
+void Rule::applySubstitution(const Subs &subs) {
     getCostMut().applySubs(subs);
     for (Rel &rel: getGuardMut()) {
         rel.applySubs(subs);

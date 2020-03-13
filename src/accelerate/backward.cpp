@@ -58,7 +58,7 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const Var &N, const Rule
     if (ve.getRes().empty()) {
         res.push_back(rule);
     } else {
-        for (const ExprMap &subs : ve.getRes()) {
+        for (const Subs &subs : ve.getRes()) {
             Rule instantiated = rule;
             instantiated.applySubstitution(subs);
             res.push_back(instantiated);

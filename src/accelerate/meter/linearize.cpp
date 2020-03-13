@@ -150,8 +150,8 @@ bool Linearize::checkForConflicts(const ExprSet &monomials) const {
 }
 
 
-_ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
-    _ExprMap res;
+ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
+    ExprMap res;
     for (const Expr &term: monomials) {
         if (term.isVar()) {
             continue;
@@ -184,7 +184,7 @@ _ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
 }
 
 
-void Linearize::applySubstitution(const _ExprMap &subs) {
+void Linearize::applySubstitution(const ExprMap &subs) {
     for (Rel &rel : guard) {
         rel = rel.expand().replace(subs);
     }
@@ -197,8 +197,8 @@ void Linearize::applySubstitution(const _ExprMap &subs) {
 }
 
 
-_ExprMap Linearize::reverseSubstitution(const _ExprMap &subs) {
-    _ExprMap reverseSubs;
+ExprMap Linearize::reverseSubstitution(const ExprMap &subs) {
+    ExprMap reverseSubs;
     for (auto it : subs) {
         assert(it.second.isVar());
         reverseSubs.put(it.second, it.first);
@@ -207,7 +207,7 @@ _ExprMap Linearize::reverseSubstitution(const _ExprMap &subs) {
 }
 
 
-option<_ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+option<ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
 
     Linearize lin(guard, updates, varMan);
 
@@ -222,7 +222,7 @@ option<_ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &gua
 
     // If everything is linear, there is nothing to do
     if (!lin.needsLinearization(monomials)) {
-        return _ExprMap(); // empty substitution
+        return ExprMap(); // empty substitution
     }
 
     // Check if we are allowed to perform substitutions
@@ -236,7 +236,7 @@ option<_ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &gua
     }
 
     // Construct the replacement and apply it
-    _ExprMap subs = lin.buildSubstitution(monomials);
+    ExprMap subs = lin.buildSubstitution(monomials);
     lin.applySubstitution(subs);
 
     // Add the additional guard (to retain the information that e.g. x^2 is nonnegative)

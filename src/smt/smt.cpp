@@ -51,7 +51,7 @@ bool Smt::isLinear(const UpdateMap &up) {
     return true;
 }
 
-bool Smt::isLinear(const ExprMap &up) {
+bool Smt::isLinear(const Subs &up) {
     for (const auto &p: up) {
         if (!p.second.isLinear()) {
             return false;
@@ -69,8 +69,8 @@ bool Smt::isLinear(const std::vector<UpdateMap> &up) {
     return true;
 }
 
-bool Smt::isLinear(const std::vector<ExprMap> &up) {
-    for (const ExprMap &m: up) {
+bool Smt::isLinear(const std::vector<Subs> &up) {
+    for (const Subs &m: up) {
         if (!isLinear(m)) {
             return false;
         }
@@ -105,7 +105,7 @@ bool Smt::isPolynomial(const UpdateMap &up) {
     return true;
 }
 
-bool Smt::isPolynomial(const ExprMap &up) {
+bool Smt::isPolynomial(const Subs &up) {
     for (const auto &p: up) {
         if (!p.second.isPoly()) {
             return false;
@@ -123,8 +123,8 @@ bool Smt::isPolynomial(const std::vector<UpdateMap> &up) {
     return true;
 }
 
-bool Smt::isPolynomial(const std::vector<ExprMap> &up) {
-    for (const ExprMap &m: up) {
+bool Smt::isPolynomial(const std::vector<Subs> &up) {
+    for (const Subs &m: up) {
         if (!isPolynomial(m)) {
             return false;
         }

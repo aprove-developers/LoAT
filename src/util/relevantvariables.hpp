@@ -30,7 +30,7 @@ namespace util {
 
         static const VarSet find(
                 const GuardList &constraints,
-                const std::vector<ExprMap> &updates,
+                const std::vector<Subs> &updates,
                 const GuardList &guard,
                 const VariableManager &varMan);
 

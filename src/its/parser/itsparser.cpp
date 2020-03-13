@@ -445,7 +445,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
 
     // Ensure that a function symbol always occurs with the same lhs arguments,
     // e.g. if we have "f(x) -> ..." and "f(y) -> ..." we rename the variables in the second rule to get "f(x) -> ..."
-    ExprMap subsLhs = computeSubstitutionToUnifyLhs(rule);
+    Subs subsLhs = computeSubstitutionToUnifyLhs(rule);
     newRule.applySubstitution(subsLhs);
 
     // Replace unbounded variables (which do not occur in lhs) by fresh temporary variables
@@ -527,8 +527,8 @@ set<VariableIdx> ITSParser::getVariables(const ParsedRule &rule) {
 }
 
 
-ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
-    ExprMap subs;
+Subs ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
+    Subs subs;
     const LocationData &loc = getLocationData(rule.lhs);
     const TermFunApp *funapp = static_cast<TermFunApp*>(rule.lhs.get());
 
@@ -551,7 +551,7 @@ ExprMap ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 
     // Make sure that different variables never coincide after applying the substitution.
     // e.g. if we replace "x/y" in "f(x) -> g(y)", the result "f(y) -> g(y)" is incorrect! Instead rename "y".
-    ExprMap subsMore;
+    Subs subsMore;
     for (const auto &it : subs) {
         Var newSym = it.second.toVar();
 
@@ -587,7 +587,7 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
     }
 
     // Substitute all variables that do not occur on the lhs by temporary ones
-    ExprMap subs;
+    Subs subs;
     for (Var var : ruleVars) {
         if (lhsVars.count(var) == 0) {
             // Create a fresh temporary variable

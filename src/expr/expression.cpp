@@ -27,7 +27,7 @@ bool Expr_is_less::operator()(const Expr &lh, const Expr &rh) const {
 
 const Var Expr::NontermSymbol = GiNaC::symbol("NONTERM");
 
-void Expr::applySubs(const ExprMap &subs) {
+void Expr::applySubs(const Subs &subs) {
     this->ex = this->ex.subs(subs.ginacMap);
 }
 
@@ -403,11 +403,11 @@ size_t Expr::arity() const {
     return ex.nops();
 }
 
-Expr Expr::subs(const ExprMap &map) const {
+Expr Expr::subs(const Subs &map) const {
     return ex.subs(map.ginacMap);
 }
 
-Expr Expr::replace(const _ExprMap &patternMap) const {
+Expr Expr::replace(const ExprMap &patternMap) const {
     return ex.subs(patternMap.ginacMap, GiNaC::subs_options::algebraic);
 }
 
@@ -502,7 +502,7 @@ bool Expr::isIntegral() const {
 
     while (true) {
         // substitute every variable x_i by the integer subs[i] and check if the result is an integer
-        ExprMap currSubs;
+        Subs currSubs;
         for (unsigned int i = 0; i < degrees.size(); i++) {
             currSubs.put(vars[i], subs[i]);
         }
@@ -759,15 +759,15 @@ bool Rel::has(const Expr &pattern) const {
     return l.has(pattern) || r.has(pattern);
 }
 
-Rel Rel::subs(const ExprMap &map) const {
+Rel Rel::subs(const Subs &map) const {
     return Rel(l.subs(map), op, r.subs(map));
 }
 
-Rel Rel::replace(const _ExprMap &patternMap) const {
+Rel Rel::replace(const ExprMap &patternMap) const {
     return Rel(l.replace(patternMap), op, r.replace(patternMap));
 }
 
-void Rel::applySubs(const ExprMap &subs) {
+void Rel::applySubs(const Subs &subs) {
     l.applySubs(subs);
     r.applySubs(subs);
 }
@@ -891,12 +891,12 @@ std::ostream& operator<<(std::ostream &s, const Rel &rel) {
     return s;
 }
 
-ExprMap::ExprMap(): ExprMapT<Var>() {}
+Subs::Subs(): KeyToExprMap<Var>() {}
 
-ExprMap::ExprMap(const Var &key, const Expr &val): ExprMapT<Var>(key, val) {}
+Subs::Subs(const Var &key, const Expr &val): KeyToExprMap<Var>(key, val) {}
 
-ExprMap ExprMap::compose(const ExprMap &that) const {
-    ExprMap res;
+Subs Subs::compose(const Subs &that) const {
+    Subs res;
     for (const auto &p: *this) {
         res.put(p.first, p.second.subs(that));
     }
@@ -908,14 +908,14 @@ ExprMap ExprMap::compose(const ExprMap &that) const {
     return res;
 }
 
-void ExprMap::putGinac(const Var &key, const Expr &val) {
+void Subs::putGinac(const Var &key, const Expr &val) {
     ginacMap[key] = val.ex;
 }
 
-_ExprMap::_ExprMap(): ExprMapT<Expr>() {}
+ExprMap::ExprMap(): KeyToExprMap<Expr>() {}
 
-_ExprMap::_ExprMap(const Expr &key, const Expr &val): ExprMapT<Expr>(key, val) {}
+ExprMap::ExprMap(const Expr &key, const Expr &val): KeyToExprMap<Expr>(key, val) {}
 
-void _ExprMap::putGinac(const Expr &key, const Expr &val) {
+void ExprMap::putGinac(const Expr &key, const Expr &val) {
     ginacMap[key.ex] = val.ex;
 }

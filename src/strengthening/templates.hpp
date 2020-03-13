@@ -48,7 +48,7 @@ public:
 
     bool isParametric(const Rel &rel) const;
 
-    const std::vector<Rel> subs(const ExprMap &sigma) const;
+    const std::vector<Rel> subs(const Subs &sigma) const;
 
     iterator begin() const;
 

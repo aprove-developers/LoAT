@@ -12,8 +12,8 @@ struct AccelerationProblem {
     GuardList res;
     GuardList done;
     GuardList todo;
-    ExprMap up;
-    ExprMap closed;
+    Subs up;
+    Subs closed;
     Expr cost;
     Var n;
     GuardList guard;
@@ -28,13 +28,13 @@ struct AccelerationProblem {
             const GuardList &res,
             const GuardList &done,
             const GuardList &todo,
-            const ExprMap &up,
-            const ExprMap &closed,
+            const Subs &up,
+            const Subs &closed,
             const Expr &cost,
             const Var &n,
             const uint validityBound,
             const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), validityBound(validityBound), varMan(varMan) {
-        this->solver = SmtFactory::solver(Smt::chooseLogic<ExprMap>({todo}, {up, closed}), varMan);
+        this->solver = SmtFactory::solver(Smt::chooseLogic<Subs>({todo}, {up, closed}), varMan);
     }
 
     static AccelerationProblem init(
@@ -45,8 +45,8 @@ struct AccelerationProblem {
             const Expr &cost,
             const Var &n,
             const uint validityBound) {
-        const ExprMap &up = update.toSubstitution(varMan);
-        ExprMap closedSubs = closed.get().toSubstitution(varMan);
+        const Subs &up = update.toSubstitution(varMan);
+        Subs closedSubs = closed.get().toSubstitution(varMan);
         const GuardList &todo = normalize(guard);
         AccelerationProblem res({}, {}, todo, up, closedSubs, cost, n, validityBound, varMan);
         while (res.recurrence());
@@ -80,7 +80,7 @@ struct AccelerationProblem {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic decrease");
                 done.push_back(rel);
-                res.push_back(rel.subs(closed).subs(ExprMap(n, n-1)));
+                res.push_back(rel.subs(closed).subs(Subs(n, n-1)));
                 print();
                 nonterm = false;
                 solver->pop();
@@ -133,7 +133,7 @@ struct AccelerationProblem {
             if (solver->check() == Smt::Unsat) {
                 solver->pop();
                 solver->push();
-                const Rel &newCond = rel.subs(closed).subs(ExprMap(n, n-1));
+                const Rel &newCond = rel.subs(closed).subs(Subs(n, n-1));
                 solver->add(rel);
                 solver->add(newCond);
                 if (solver->check() == Smt::Sat) {

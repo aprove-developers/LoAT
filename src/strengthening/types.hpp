@@ -29,14 +29,14 @@ namespace strengthening {
 
         RuleContext(
                 const Rule &rule,
-                const std::vector<ExprMap> &updates,
+                const std::vector<Subs> &updates,
                 VariableManager &varMan):
                 rule(rule),
                 updates(std::move(updates)),
                 varMan(varMan) { }
 
         const Rule &rule;
-        const std::vector<ExprMap> updates;
+        const std::vector<Subs> updates;
         VariableManager &varMan;
     };
 

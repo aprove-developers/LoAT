@@ -28,7 +28,7 @@ using namespace std;
 
 /* ### Helpers ### */
 
-void MeteringToolbox::applySubsToUpdates(const ExprMap &subs, MultiUpdate &updates) {
+void MeteringToolbox::applySubsToUpdates(const Subs &subs, MultiUpdate &updates) {
     for (UpdateMap &update : updates) {
         for (auto &it : update) {
             it.second.applySubs(subs);
@@ -210,7 +210,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
     for (const UpdateMap &update : updates) {
         // helper lambda to pass as argument
         auto isUpdated = [&](const Var &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
-        ExprMap updateSubs = update.toSubstitution(varMan);
+        Subs updateSubs = update.toSubstitution(varMan);
 
         for (const auto &it : update) {
             // only consider relevant variables
@@ -226,7 +226,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             // (this makes the guard stronger and might thus help to find a metering function)
             Var lhsVar = varMan.getVarSymbol(it.first);
 
-            ExprMap subs;
+            Subs subs;
             subs.put(varMan.getVarSymbol(it.first), it.second);
 
             for (const Rel &rel : reducedGuard) {
@@ -250,13 +250,13 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
 }
 
 
-stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
+stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
     namespace Config = Config::ForwardAccel;
     assert(Config::TempVarInstantiationMaxBounds > 0);
 
     //find free variables
     const set<VariableIdx> &freeVar = varMan.getTempVars();
-    if (freeVar.empty()) return stack<ExprMap>();
+    if (freeVar.empty()) return stack<Subs>();
 
     //find all bounds for every free variable
     map<VariableIdx,ExprSet> freeBounds;
@@ -280,21 +280,21 @@ stack<ExprMap> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varM
     }
 
     //check if there are any bounds at all
-    if (freeBounds.empty()) return stack<ExprMap>();
+    if (freeBounds.empty()) return stack<Subs>();
 
     //combine all bounds in all possible ways
-    stack<ExprMap> allSubs;
-    allSubs.push(ExprMap());
+    stack<Subs> allSubs;
+    allSubs.push(Subs());
     for (auto const &it : freeBounds) {
         Var sym = varMan.getVarSymbol(it.first);
         for (const Expr &bound : it.second) {
-            stack<ExprMap> next;
+            stack<Subs> next;
             while (!allSubs.empty()) {
-                ExprMap subs = allSubs.top();
+                Subs subs = allSubs.top();
                 allSubs.pop();
                 if (subs.contains(sym)) {
                     //keep old bound, add a new substitution for the new bound
-                    ExprMap newsubs = subs;
+                    Subs newsubs = subs;
                     newsubs.put(sym, bound);
                     next.push(subs);
                     next.push(newsubs);

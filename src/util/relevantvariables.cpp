@@ -22,7 +22,7 @@ namespace util {
 
     const VarSet RelevantVariables::find(
             const GuardList &constraints,
-            const std::vector<ExprMap> &updates,
+            const std::vector<Subs> &updates,
             const GuardList &guard,
             const VariableManager &varMan) {
         std::set<VariableIdx> res;
@@ -41,7 +41,7 @@ namespace util {
             VarSet next;
             for (const VariableIdx &var : todo) {
                 const Var &x = varMan.getVarSymbol(var);
-                for (const ExprMap &up: updates) {
+                for (const Subs &up: updates) {
                     auto it = up.find(x);
                     if (it != up.end()) {
                         const VarSet &rhsVars = it->second.vars();
@@ -77,7 +77,7 @@ namespace util {
             const std::vector<UpdateMap> &updateMaps,
             const GuardList &guard,
             const VariableManager &varMan) {
-        std::vector<ExprMap> updates;
+        std::vector<Subs> updates;
         for (const UpdateMap &up: updateMaps) {
             updates.push_back(up.toSubstitution(varMan));
         }
@@ -89,7 +89,7 @@ namespace util {
             const std::vector<RuleRhs> &rhss,
             const GuardList &guard,
             const VariableManager &varMan) {
-        std::vector<ExprMap> updates;
+        std::vector<Subs> updates;
         for (const RuleRhs &rhs: rhss) {
             updates.push_back(rhs.getUpdate().toSubstitution(varMan));
         }

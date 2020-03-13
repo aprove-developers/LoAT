@@ -55,7 +55,7 @@ private:
     // Step 2: Converting ParsedRules to ITSProblem
     void addAndCheckLocationData(TermPtr term, bool lhs);
     const LocationData& getLocationData(TermPtr term) const;
-    ExprMap computeSubstitutionToUnifyLhs(const ParsedRule &rule);
+    Subs computeSubstitutionToUnifyLhs(const ParsedRule &rule);
     void replaceUnboundedByTemporaryVariables(Rule &rule, const LocationData &lhsData);
     void stripTrivialUpdates(UpdateMap &update) const;
     void addParsedRule(const ParsedRule &rule);

@@ -24,11 +24,11 @@
 #include "../util/option.hpp"
 
 class Expr;
-template<class Key> class ExprMapT;
+template<class Key> class KeyToExprMap;
 class Recurrence;
 class Rel;
+class Subs;
 class ExprMap;
-class _ExprMap;
 
 struct Expr_is_less {
     bool operator() (const Expr &lh, const Expr &rh) const;
@@ -56,8 +56,8 @@ class Expr {
     /*
      * An ExprMap encapsulates a GiNaC::exmap, which can directly be applied to the encapsulated GiNaC::ex.
      */
+    friend class Subs;
     friend class ExprMap;
-    friend class _ExprMap;
 
 public:
 
@@ -85,7 +85,7 @@ public:
      * @brief Applies a substitution via side-effects.
      * @deprecated use subs instead
      */
-    void applySubs(const ExprMap &subs);
+    void applySubs(const Subs &subs);
 
     /**
      * @brief Computes all matches of the given pattern.
@@ -308,9 +308,9 @@ public:
      * @return The result of applying the given substitution to this expression.
      * @note The second argument is deprecated.
      */
-    Expr subs(const ExprMap &map) const;
+    Expr subs(const Subs &map) const;
 
-    Expr replace(const _ExprMap &patternMap) const;
+    Expr replace(const ExprMap &patternMap) const;
 
     /**
      * @brief Provides a total order for expressions.
@@ -396,9 +396,9 @@ public:
     bool isTriviallyFalse() const;
     void collectVariables(VarSet &res) const;
     bool has(const Expr &pattern) const;
-    Rel subs(const ExprMap &map) const;
-    Rel replace(const _ExprMap &patternMap) const;
-    void applySubs(const ExprMap &subs);
+    Rel subs(const Subs &map) const;
+    Rel replace(const ExprMap &patternMap) const;
+    void applySubs(const Subs &subs);
     std::string toString() const;
     RelOp relOp() const;
     VarSet vars() const;
@@ -458,19 +458,19 @@ Rel operator>=(const Expr &x, const Var &y);
 Rel operator>=(const Var &x, const Var &y);
 
 template<class Key>
-class ExprMapT {
+class KeyToExprMap {
     friend class Expr;
     using It = typename std::map<Key, Expr, Expr_is_less>::const_iterator;
 
 public:
 
-    ExprMapT() {}
+    KeyToExprMap() {}
 
-    ExprMapT(const Key &key, const Expr &val) {
+    KeyToExprMap(const Key &key, const Expr &val) {
         put(key, val);
     }
 
-    virtual ~ExprMapT() {}
+    virtual ~KeyToExprMap() {}
 
     Expr get(const Key &key) const {
         return map.at(key);
@@ -510,7 +510,7 @@ private:
 
 };
 
-template<class T> bool operator<(const ExprMapT<T> &x, const ExprMapT<T> &y) {
+template<class T> bool operator<(const KeyToExprMap<T> &x, const KeyToExprMap<T> &y) {
     auto it1 = x.begin();
     auto it2 = y.begin();
     while (it1 != x.end() && it2 != y.end()) {
@@ -528,7 +528,7 @@ template<class T> bool operator<(const ExprMapT<T> &x, const ExprMapT<T> &y) {
     return it1 == x.end() && it2 != y.end();
 }
 
-template<class T> std::ostream& operator<<(std::ostream &s, const ExprMapT<T> &map) {
+template<class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<T> &map) {
     if (map.empty()) {
         s << "{}";
     } else {
@@ -546,27 +546,27 @@ template<class T> std::ostream& operator<<(std::ostream &s, const ExprMapT<T> &m
     return s << "}";
 }
 
-class ExprMap: public ExprMapT<Var> {
+class Subs: public KeyToExprMap<Var> {
 
 public:
 
-    ExprMap();
+    Subs();
 
-    ExprMap(const Var &key, const Expr &val);
+    Subs(const Var &key, const Expr &val);
 
-    ExprMap compose(const ExprMap &that) const ;
+    Subs compose(const Subs &that) const ;
 
 private:
     void putGinac(const Var &key, const Expr &val) override;
 
 };
 
-class _ExprMap: public ExprMapT<Expr> {
+class ExprMap: public KeyToExprMap<Expr> {
 
 public:
-    _ExprMap();
+    ExprMap();
 
-    _ExprMap(const Expr &key, const Expr &val);
+    ExprMap(const Expr &key, const Expr &val);
 
 private:
     void putGinac(const Expr &key, const Expr &val) override;

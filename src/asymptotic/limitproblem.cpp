@@ -163,7 +163,7 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
 }
 
 
-void LimitProblem::substitute(const ExprMap &sub, int substitutionIndex) {
+void LimitProblem::substitute(const Subs &sub, int substitutionIndex) {
     for (auto const &s : sub) {
         assert(!s.second.has(s.first));
     }
@@ -335,10 +335,10 @@ bool LimitProblem::isSolved() const {
 }
 
 
-ExprMap LimitProblem::getSolution() const {
+Subs LimitProblem::getSolution() const {
     assert(isSolved());
 
-    ExprMap solution;
+    Subs solution;
     for (const InftyExpression &ex : set) {
         assert(ex.isVar());
         switch (ex.getDirection()) {

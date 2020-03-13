@@ -54,7 +54,7 @@ namespace strengthening {
                 templatesInvariantImplication.premise.end());
         BoolExpr conclusionInvariant = True;
         for (const Rel &rel: guardCtx.todo) {
-            for (const ExprMap &up: ruleCtx.updates) {
+            for (const Subs &up: ruleCtx.updates) {
                 Rel updated = rel;
                 updated.applySubs(up);
                 const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, updated);
@@ -85,7 +85,7 @@ namespace strengthening {
         Implication res;
         for (const Rel &invTemplate: templates) {
             GuardList updatedTemplates;
-            for (const ExprMap &up: ruleCtx.updates) {
+            for (const Subs &up: ruleCtx.updates) {
                 Rel updated = invTemplate;
                 updated.applySubs(up);
                 updatedTemplates.push_back(updated);
@@ -108,7 +108,7 @@ namespace strengthening {
             rel.collectVariables(allVars);
         }
         // TODO Why is this variable renaming needed?
-        ExprMap varRenaming;
+        Subs varRenaming;
         for (const Var &x: allVars) {
             varRenaming.put(x, ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name())));
         }

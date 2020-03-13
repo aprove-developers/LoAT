@@ -20,7 +20,7 @@ private:
             : complexity(), upperBound(0), lowerBound(0), inftyVars(0) {
         }
 
-        ExprMap solution;
+        Subs solution;
         Complexity complexity;
         int upperBound;
         int lowerBound;
@@ -33,9 +33,9 @@ private:
     void normalizeGuard();
     void createInitialLimitProblem(VariableManager &varMan);
     void propagateBounds();
-    ExprMap calcSolution(const LimitProblem &limitProblem);
-    int findUpperBoundforSolution(const LimitProblem &limitProblem, const ExprMap &solution);
-    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const ExprMap &solution);
+    Subs calcSolution(const LimitProblem &limitProblem);
+    int findUpperBoundforSolution(const LimitProblem &limitProblem, const Subs &solution);
+    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const Subs &solution);
     void removeUnsatProblems();
     bool solveViaSMT(Complexity currentRes);
     bool solveLimitProblem();
@@ -74,7 +74,7 @@ private:
     std::vector<LimitProblem> solvedLimitProblems;
     LimitProblem currentLP;
 
-    std::vector<ExprMap> substitutions;
+    std::vector<Subs> substitutions;
 
     std::vector<LimitVector> toApply;
 
