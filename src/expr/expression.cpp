@@ -25,24 +25,6 @@ bool Expr_is_less::operator()(const Expr &lh, const Expr &rh) const {
      return lh.compare(rh) < 0;
 }
 
-std::ostream& operator<<(std::ostream &s, const ExprMap &map) {
-    if (map.empty()) {
-        s << "{}";
-    } else {
-        s << "{";
-        bool fst = true;
-        for (const auto &p: map) {
-            if (!fst) {
-                s << ", ";
-            } else {
-                fst = false;
-            }
-            s << p.first << ": " << p.second;
-        }
-    }
-    return s << "}";
-}
-
 const Var Expr::NontermSymbol = GiNaC::symbol("NONTERM");
 
 void Expr::applySubs(const ExprMap &subs) {
@@ -425,7 +407,7 @@ Expr Expr::subs(const ExprMap &map) const {
     return ex.subs(map.ginacMap);
 }
 
-Expr Expr::replace(const ExprMap &patternMap) const {
+Expr Expr::replace(const _ExprMap &patternMap) const {
     return ex.subs(patternMap.ginacMap, GiNaC::subs_options::algebraic);
 }
 
@@ -781,8 +763,8 @@ Rel Rel::subs(const ExprMap &map) const {
     return Rel(l.subs(map), op, r.subs(map));
 }
 
-Rel Rel::replace(const ExprMap &patternMap) const {
-    return Rel(l.subs(patternMap), op, r.subs(patternMap));
+Rel Rel::replace(const _ExprMap &patternMap) const {
+    return Rel(l.replace(patternMap), op, r.replace(patternMap));
 }
 
 void Rel::applySubs(const ExprMap &subs) {
@@ -909,41 +891,9 @@ std::ostream& operator<<(std::ostream &s, const Rel &rel) {
     return s;
 }
 
+ExprMap::ExprMap(): ExprMapT<Var>() {}
 
-ExprMap::ExprMap() { }
-
-ExprMap::ExprMap(const Expr &key, const Expr &val) {
-    put(key, val);
-}
-
-Expr ExprMap::get(const Expr &key) const {
-    return map.at(key);
-}
-
-void ExprMap::put(const Expr &key, const Expr &val) {
-    map[key] = val;
-    ginacMap[key.ex] = val.ex;
-}
-
-std::map<Expr, Expr, Expr_is_less>::const_iterator ExprMap::begin() const {
-    return map.begin();
-}
-
-std::map<Expr, Expr, Expr_is_less>::const_iterator ExprMap::end() const {
-    return map.end();
-}
-
-std::map<Expr, Expr, Expr_is_less>::const_iterator ExprMap::find(const Expr &e) const {
-    return map.find(e);
-}
-
-bool ExprMap::contains(const Expr &e) const {
-    return map.count(e) > 0;
-}
-
-bool ExprMap::empty() const {
-    return map.empty();
-}
+ExprMap::ExprMap(const Var &key, const Expr &val): ExprMapT<Var>(key, val) {}
 
 ExprMap ExprMap::compose(const ExprMap &that) const {
     ExprMap res;
@@ -958,20 +908,14 @@ ExprMap ExprMap::compose(const ExprMap &that) const {
     return res;
 }
 
-bool operator<(const ExprMap &x, const ExprMap &y) {
-    auto it1 = x.begin();
-    auto it2 = y.begin();
-    while (it1 != x.end() && it2 != y.end()) {
-        int fst = it1->first.compare(it2->first);
-        if (fst != 0) {
-            return fst < 0;
-        }
-        int snd = it1->second.compare(it2->second);
-        if (snd != 0) {
-            return snd < 0;
-        }
-        ++it1;
-        ++it2;
-    }
-    return it1 == x.end() && it2 != y.end();
+void ExprMap::putGinac(const Var &key, const Expr &val) {
+    ginacMap[key] = val.ex;
+}
+
+_ExprMap::_ExprMap(): ExprMapT<Expr>() {}
+
+_ExprMap::_ExprMap(const Expr &key, const Expr &val): ExprMapT<Expr>(key, val) {}
+
+void _ExprMap::putGinac(const Expr &key, const Expr &val) {
+    ginacMap[key.ex] = val.ex;
 }

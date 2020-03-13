@@ -102,7 +102,7 @@ private:
     /**
      * Purrs::Recurrence::n converted to a ginac expression, for convenience only
      */
-    const Expr ginacN;
+    const Var ginacN;
 
     /**
      * Order in which recurrences for updated variables can be computed

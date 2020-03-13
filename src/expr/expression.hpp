@@ -24,9 +24,11 @@
 #include "../util/option.hpp"
 
 class Expr;
+template<class Key> class ExprMapT;
 class Recurrence;
-class ExprMap;
 class Rel;
+class ExprMap;
+class _ExprMap;
 
 struct Expr_is_less {
     bool operator() (const Expr &lh, const Expr &rh) const;
@@ -38,8 +40,6 @@ using ExprSet = std::set<Expr, Expr_is_less>;
 using RelSet = std::set<Rel>;
 template <typename T>
 using VarMap = std::map<Var, T, GiNaC::ex_is_less>;
-
-std::ostream& operator<<(std::ostream &s, const ExprMap &map);
 
 /**
  * Class for arithmetic expressions.
@@ -57,6 +57,7 @@ class Expr {
      * An ExprMap encapsulates a GiNaC::exmap, which can directly be applied to the encapsulated GiNaC::ex.
      */
     friend class ExprMap;
+    friend class _ExprMap;
 
 public:
 
@@ -309,7 +310,7 @@ public:
      */
     Expr subs(const ExprMap &map) const;
 
-    Expr replace(const ExprMap &patternMap) const;
+    Expr replace(const _ExprMap &patternMap) const;
 
     /**
      * @brief Provides a total order for expressions.
@@ -396,7 +397,7 @@ public:
     void collectVariables(VarSet &res) const;
     bool has(const Expr &pattern) const;
     Rel subs(const ExprMap &map) const;
-    Rel replace(const ExprMap &patternMap) const;
+    Rel replace(const _ExprMap &patternMap) const;
     void applySubs(const ExprMap &subs);
     std::string toString() const;
     RelOp relOp() const;
@@ -456,26 +457,119 @@ Rel operator>=(const Var &x, const Expr &y);
 Rel operator>=(const Expr &x, const Var &y);
 Rel operator>=(const Var &x, const Var &y);
 
-class ExprMap {
+template<class Key>
+class ExprMapT {
     friend class Expr;
+    using It = typename std::map<Key, Expr, Expr_is_less>::const_iterator;
 
 public:
-    ExprMap();
-    ExprMap(const Expr &key, const Expr &val);
-    Expr get(const Expr &key) const;
-    void put(const Expr &key, const Expr &val);
-    std::map<Expr, Expr, Expr_is_less>::const_iterator begin() const;
-    std::map<Expr, Expr, Expr_is_less>::const_iterator end() const;
-    std::map<Expr, Expr, Expr_is_less>::const_iterator find(const Expr &e) const;
-    bool contains(const Expr &e) const;
-    bool empty() const;
-    ExprMap compose(const ExprMap &that) const;
 
-    friend bool operator<(const ExprMap &x, const ExprMap &y);
+    ExprMapT() {}
+
+    ExprMapT(const Key &key, const Expr &val) {
+        put(key, val);
+    }
+
+    virtual ~ExprMapT() {}
+
+    Expr get(const Key &key) const {
+        return map.at(key);
+    }
+
+    void put(const Key &key, const Expr &val) {
+        map[key] = val;
+        putGinac(key, val);
+    }
+
+    It begin() const {
+        return map.begin();
+    }
+
+    It end() const {
+        return map.end();
+    }
+
+    It find(const Key &e) const {
+        return map.find(e);
+    }
+
+    bool contains(const Key &e) const {
+        return map.count(e) > 0;
+    }
+
+    bool empty() const {
+        return map.empty();
+    }
+
+protected:
+    std::map<GiNaC::ex, GiNaC::ex, GiNaC::ex_is_less> ginacMap;
+    void virtual putGinac(const Key &key, const Expr &val) = 0;
 
 private:
-    std::map<Expr, Expr, Expr_is_less> map;
-    std::map<GiNaC::ex, GiNaC::ex, GiNaC::ex_is_less> ginacMap;
+    std::map<Key, Expr, Expr_is_less> map;
+
+};
+
+template<class T> bool operator<(const ExprMapT<T> &x, const ExprMapT<T> &y) {
+    auto it1 = x.begin();
+    auto it2 = y.begin();
+    while (it1 != x.end() && it2 != y.end()) {
+        int fst = it1->first.compare(it2->first);
+        if (fst != 0) {
+            return fst < 0;
+        }
+        int snd = it1->second.compare(it2->second);
+        if (snd != 0) {
+            return snd < 0;
+        }
+        ++it1;
+        ++it2;
+    }
+    return it1 == x.end() && it2 != y.end();
+}
+
+template<class T> std::ostream& operator<<(std::ostream &s, const ExprMapT<T> &map) {
+    if (map.empty()) {
+        s << "{}";
+    } else {
+        s << "{";
+        bool fst = true;
+        for (const auto &p: map) {
+            if (!fst) {
+                s << ", ";
+            } else {
+                fst = false;
+            }
+            s << p.first << ": " << p.second;
+        }
+    }
+    return s << "}";
+}
+
+class ExprMap: public ExprMapT<Var> {
+
+public:
+
+    ExprMap();
+
+    ExprMap(const Var &key, const Expr &val);
+
+    ExprMap compose(const ExprMap &that) const ;
+
+private:
+    void putGinac(const Var &key, const Expr &val) override;
+
+};
+
+class _ExprMap: public ExprMapT<Expr> {
+
+public:
+    _ExprMap();
+
+    _ExprMap(const Expr &key, const Expr &val);
+
+private:
+    void putGinac(const Expr &key, const Expr &val) override;
 
 };
 

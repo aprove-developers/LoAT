@@ -45,7 +45,7 @@ public:
      * Requires guard to only contain inequalities.
      * Returns the reverse substitution, if linearization was successful.
      */
-    static option<ExprMap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
+    static option<_ExprMap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
 
 private:
     Linearize(GuardList &guard, std::vector<UpdateMap> &updates, VarMan &varMan)
@@ -101,18 +101,18 @@ private:
      *
      * @return The constructed substitution (map from terms to variables)
      */
-    ExprMap buildSubstitution(const ExprSet &nonlinearTerms);
+    _ExprMap buildSubstitution(const ExprSet &nonlinearTerms);
 
     /**
      * Applies the given substitution to the entire guard and update.
      * Takes care of the unintuitive behaviour of GiNaC::subs
      */
-    void applySubstitution(const ExprMap &subs);
+    void applySubstitution(const _ExprMap &subs);
 
     /**
      * Computes the reverse substitution of the given mapping.
      */
-    static ExprMap reverseSubstitution(const ExprMap &subs);
+    static _ExprMap reverseSubstitution(const _ExprMap &subs);
 
 
 private:

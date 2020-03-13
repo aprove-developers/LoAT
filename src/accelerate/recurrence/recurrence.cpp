@@ -27,7 +27,7 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dependencyOrder)
     : varMan(varMan),
-      ginacN(Purrs::Expr(Purrs::Recurrence::n).toGiNaC()),
+      ginacN(GiNaC::ex_to<GiNaC::symbol>(Purrs::Expr(Purrs::Recurrence::n).toGiNaC())),
       dependencyOrder(dependencyOrder)
 {}
 

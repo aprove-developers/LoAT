@@ -213,7 +213,7 @@ private:
     /**
      * Reverse substitution from linearization
      */
-    ExprMap nonlinearSubs;
+    _ExprMap nonlinearSubs;
 
 
 

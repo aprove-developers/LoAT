@@ -228,9 +228,7 @@ int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
     Var n = limitProblem.getN();
     int upperBound = 0;
     for (auto const &pair : solution) {
-        assert(pair.first.isVar());
-
-        if (!varMan.isTempVar(pair.first.toVar())) {
+        if (!varMan.isTempVar(pair.first)) {
             Expr sub = pair.second;
             assert(sub.isPoly(n));
             assert(sub.isGround()
@@ -807,7 +805,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
                         || (dir == NEG_INF && dir2 == NEG_INF)) {
                         assert(!it->equals(*it2));
 
-                        ExprMap sub(*it, *it2);
+                        ExprMap sub(it->toVar(), *it2);
                         substitutions.push_back(sub);
 
                         createBacktrackingPoint(it, POS_CONS);

@@ -255,7 +255,7 @@ Expr MeteringFinder::buildResult(const VarMap<GiNaC::numeric> &model) const {
         result = result + model.at(coeffs[i]) * symbols[i];
     }
     // reverse linearization
-    result.applySubs(nonlinearSubs);
+    result.replace(nonlinearSubs);
     return result;
 }
 

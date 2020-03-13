@@ -340,19 +340,20 @@ ExprMap LimitProblem::getSolution() const {
 
     ExprMap solution;
     for (const InftyExpression &ex : set) {
+        assert(ex.isVar());
         switch (ex.getDirection()) {
             case POS:
             case POS_INF:
-                solution.put(ex, variableN);
+                solution.put(ex.toVar(), variableN);
                 break;
             case NEG_INF:
-                solution.put(ex, -variableN);
+                solution.put(ex.toVar(), -variableN);
                 break;
             case POS_CONS:
-                solution.put(ex, 1);
+                solution.put(ex.toVar(), 1);
                 break;
             case NEG_CONS:
-                solution.put(ex, -1);
+                solution.put(ex.toVar(), -1);
                 break;
         }
     }
