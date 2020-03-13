@@ -43,8 +43,8 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     // All right-hand sides have to match exactly
     if (compareRhss) {
         for (unsigned int i=0; i < a.rhsCount(); ++i) {
-            const UpdateMap &updateA = a.getUpdate(i);
-            const UpdateMap &updateB = b.getUpdate(i);
+            const Subs &updateA = a.getUpdate(i);
+            const Subs &updateB = b.getUpdate(i);
 
             if (a.getRhsLoc(i) != b.getRhsLoc(i)) return false;
             if (updateA.size() != updateB.size()) return false;

@@ -27,8 +27,6 @@ class VariableManager;
 // some typedefs for clarity
 using TransIdx = unsigned int;
 using LocationIdx = unsigned int;
-using VariableIdx = unsigned int;
-using VariablePair = std::pair<VariableIdx, VariableIdx>;
 
 
 // GuardList is a list of expressions with some additional methods for convenience
@@ -47,16 +45,6 @@ public:
 
 };
 
-
-// UpdateMap is a map from variables (as indices) to an expression (with which the variable is updated),
-// with some additional methods for convenience
-class UpdateMap : public std::map<VariableIdx,Expr> {
-public:
-    bool isUpdated(VariableIdx var) const;
-    Expr getUpdate(VariableIdx var) const;
-    Subs toSubstitution(const VariableManager &varMan) const;
-    friend bool operator==(const UpdateMap &m1, const UpdateMap &m2);
-};
-
+std::ostream& operator<<(std::ostream &s, const GuardList &l);
 
 #endif // TYPES_H

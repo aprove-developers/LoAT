@@ -207,7 +207,7 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
     LinearRule res = rule;
     bool changed = false;
     for (const auto &p: rule.getUpdate()) {
-        const Var &var = its.getVarSymbol(p.first);
+        const Var &var = p.first;
         const Expr &up = p.second.expand();
         const VarSet &upVars = up.vars();
         if (upVars.find(var) != upVars.end()) {
@@ -237,10 +237,10 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
     else return {};
 }
 
-unsigned int Accelerator::numNotInUpdate(const UpdateMap &up) const {
+unsigned int Accelerator::numNotInUpdate(const Subs &up) const {
     unsigned int res = 0;
     for (auto const &p: up) {
-        const Var &x = its.getVarSymbol(p.first);
+        const Var &x = p.first;
         const VarSet &vars = p.second.vars();
         if (!vars.empty() && vars.find(x) == vars.end()) {
             res++;

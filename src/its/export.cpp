@@ -6,10 +6,10 @@ namespace Color = Config::Color;
 
 
 // collects all variables appearing in the given rule
-static void collectAllVariables(const Rule &rule, const VarMan &varMan, VarSet &vars) {
+static void collectAllVariables(const Rule &rule, VarSet &vars) {
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         for (const auto &it : rhs->getUpdate()) {
-            vars.insert(varMan.getVarSymbol(it.first));
+            vars.insert(it.first);
             it.second.collectVars(vars);
         }
     }
@@ -21,7 +21,7 @@ static void collectAllVariables(const Rule &rule, const VarMan &varMan, VarSet &
 // collects all non-temporary variables of the given rule
 static void collectBoundVariables(const Rule &rule, const VarMan &varMan, VarSet &vars) {
     VarSet allVars;
-    collectAllVariables(rule, varMan, allVars);
+    collectAllVariables(rule, allVars);
 
     for (const Var &var : allVars) {
         if (!varMan.isTempVar(var)) {
@@ -86,7 +86,7 @@ void ITSExport::printRule(const Rule &rule, const ITSProblem &its, std::ostream 
 
         for (auto upit : it->getUpdate()) {
             if (colors) printColor(s, Color::Update);
-            s << its.getVarName(upit.first) << "'";
+            s << upit.first << "'";
             s << "=" << upit.second;
             if (colors) printColor(s, Color::None);
             s << ", ";
@@ -107,9 +107,9 @@ void ITSExport::printLabeledRule(TransIdx rule, const ITSProblem &its, std::ostr
 
 void ITSExport::printDebug(const ITSProblem &its, std::ostream &s) {
     s << "Variables:";
-    for (VariableIdx i=0; i < its.getVariableCount(); ++i) {
-        s << " " << its.getVarName(i);
-        if (its.isTempVar(i)) {
+    for (const Var &x: its.getVars()) {
+        s << " " << x;
+        if (its.isTempVar(x)) {
             s << "*";
         }
     }
@@ -174,7 +174,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
     // collect variables that actually appear in the rules
     VarSet vars;
     for (TransIdx rule : its.getAllTransitions()) {
-        collectAllVariables(its.getRule(rule), its, vars);
+        collectAllVariables(its.getRule(rule), vars);
     }
     for (const Var &var : vars) {
         s << " " << var;
@@ -217,7 +217,7 @@ void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
                 first = true;
                 for (const Var &var : relevantVars) {
                     s << ((first) ? "(" : ",");
-                    auto it = rhs->getUpdate().find(its.getVarIdx(var));
+                    auto it = rhs->getUpdate().find(var);
                     if (it != rhs->getUpdate().end()) {
                         s << it->second.expand();
                     } else {
@@ -264,10 +264,10 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             Subs t2subs;
             for (const Var &sym : vars) {
                 t2subs.put(sym, Var("pre_v" + sym.get_name()));
-                if (its.isTempVar(its.getVarIdx(sym))) {
+                if (its.isTempVar(sym)) {
                     s << t2subs.get(sym) << " := nondet();" << endl;
                 } else {
-                    s << t2subs.get(sym) << " := v" << sym.get_name() << ";" << endl;
+                    s << t2subs.get(sym) << " := v" << sym << ";" << endl;
                 }
             }
 
@@ -281,7 +281,7 @@ void LinearITSExport::printT2(const ITSProblem &its, std::ostream &s) {
             }
 
             for (auto it : rule.getUpdate()) {
-                s << "v" << its.getVarSymbol(it.first) << " := ";
+                s << "v" << it.first << " := ";
                 s << it.second.subs(t2subs) << ";" << endl;
             }
 

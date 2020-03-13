@@ -32,14 +32,14 @@ namespace nonterm {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
-            const Subs &up = r.getUpdate(i).toSubstitution(its);
+            const Subs &up = r.getUpdate(i);
             if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
                 return {{Rule(r.getLhsLoc(), r.getGuard(), Expr::NontermSymbol, sink, {}), Success}};
             }
         }
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
-            const Subs &up = chained.getUpdate(0).toSubstitution(its);
+            const Subs &up = chained.getUpdate(0);
             if (Smt::check(buildAnd(chained.getGuard()), its) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
                 return {{Rule(chained.getLhsLoc(), chained.getGuard(), Expr::NontermSymbol, sink, {}), PartialSuccess}};
             }
@@ -57,8 +57,8 @@ namespace nonterm {
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             solver->push();
-            const Subs &up = r.getUpdate(i).toSubstitution(its);
-            const VarSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard(), its);
+            const Subs &up = r.getUpdate(i);
+            const VarSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard());
             for (const Var &var: vars) {
                 const auto &it = up.find(var);
                 solver->add(Rel::buildEq(var, it == up.end() ? var : it->second));

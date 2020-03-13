@@ -46,7 +46,7 @@ bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
         }
 
         for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-            changed |= removeTrivialUpdates(varMan, rhs->getUpdateMut());
+            changed |= removeTrivialUpdates(rhs->getUpdateMut());
         }
 
         result = result || changed;
@@ -63,7 +63,7 @@ bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
     changed |= simplifyGuard(rule.getGuardMut());
 
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        changed = removeTrivialUpdates(varMan, rhs->getUpdateMut()) || changed;
+        changed = removeTrivialUpdates(rhs->getUpdateMut()) || changed;
     }
 
     return changed;
@@ -109,7 +109,7 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
 
 bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &varMan) {
     GuardList newGuard;
-    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({guard}, {}), varMan);
+    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({guard}, {}), varMan);
 
     // iterates once over guard and drops constraints that are implied by previous constraints
     auto dropImplied = [&]() {
@@ -147,10 +147,10 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &var
 }
 
 
-bool Preprocess::removeTrivialUpdates(const VarMan &varMan, UpdateMap &update) {
-    stack<VariableIdx> remove;
+bool Preprocess::removeTrivialUpdates(Subs &update) {
+    stack<Var> remove;
     for (auto it : update) {
-        if (it.second.equals(varMan.getVarSymbol(it.first))) {
+        if (it.second.equals(it.first)) {
             remove.push(it.first);
         }
     }

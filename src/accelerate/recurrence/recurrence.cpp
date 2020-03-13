@@ -25,14 +25,14 @@ namespace Purrs = Parma_Recurrence_Relation_Solver;
 
 
 
-Recurrence::Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dependencyOrder)
+Recurrence::Recurrence(const VarMan &varMan, const std::vector<Var> &dependencyOrder)
     : varMan(varMan),
       ginacN(GiNaC::ex_to<GiNaC::symbol>(Purrs::Expr(Purrs::Recurrence::n).toGiNaC())),
       dependencyOrder(dependencyOrder)
 {}
 
 
-option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expr &updateRhs, Var updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds) {
+option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Expr &updateRhs, Var updateLhs, const VarMap<unsigned int> &validitybounds) {
     Expr last = Purrs::x(Purrs::Recurrence::n - 1).toGiNaC();
     Purrs::Expr rhs = Purrs::Expr::fromGiNaC(updateRhs.subs(updatePreRecurrences).subs(Subs(updateLhs, last)).ex);
     Purrs::Expr exact;
@@ -40,10 +40,9 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
     const VarSet &vars = updateRhs.vars();
     if (vars.find(updateLhs) == vars.end()) {
         unsigned int validitybound = 1;
-        for (const Var &ex: vars) {
-            VariableIdx vi = varMan.getVarIdx(ex);
-            if (validitybounds.find(vi) != validitybounds.end() && validitybounds.at(vi) + 1 > validitybound) {
-                validitybound = validitybounds.at(vi) + 1;
+        for (const Var &x: vars) {
+            if (validitybounds.find(x) != validitybounds.end() && validitybounds.at(x) + 1 > validitybound) {
+                validitybound = validitybounds.at(x) + 1;
             }
         }
         return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=validitybound}};
@@ -96,23 +95,21 @@ option<Expr> Recurrence::findCostRecurrence(Expr cost) {
 }
 
 
-option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const UpdateMap &update, const Expr &meterfunc) {
+option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Subs &update, const Expr &meterfunc) {
     assert(dependencyOrder.size() == update.size());
-    UpdateMap newUpdate;
+    Subs newUpdate;
 
     //in the given order try to solve the recurrence for every updated variable
     unsigned int validityBound = 0;
-    std::map<VariableIdx, unsigned int> validityBounds;
-    for (VariableIdx vi : dependencyOrder) {
-        Var target = varMan.getVarSymbol(vi);
-
-        const Expr &rhs = update.at(vi);
+    VarMap<unsigned int> validityBounds;
+    for (Var target : dependencyOrder) {
+        const Expr &rhs = update.get(target);
         option<Recurrence::RecurrenceSolution> updateRec = findUpdateRecurrence(rhs, target, validityBounds);
         if (!updateRec) {
             return {};
         }
 
-        validityBounds[vi] = updateRec.get().validityBound;
+        validityBounds[target] = updateRec.get().validityBound;
         validityBound = max(validityBound, updateRec.get().validityBound);
 
         //remember this recurrence to replace vi in the updates depending on vi
@@ -120,7 +117,7 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Upd
         updatePreRecurrences.put(target, updateRec.get().res.subs(Subs(ginacN, ginacN-1)));
 
         //calculate the final update using the loop's runtime
-        newUpdate[vi] = updateRec.get().res.subs(Subs(ginacN, meterfunc));
+        newUpdate.put(target, updateRec.get().res.subs(Subs(ginacN, meterfunc)));
     }
 
     return {{.update=newUpdate, .validityBound=validityBound}};
@@ -138,7 +135,7 @@ option<Expr> Recurrence::iterateCost(const Expr &cost, const Expr &meterfunc) {
 }
 
 
-option<Recurrence::Result> Recurrence::iterate(const UpdateMap &update, const Expr &cost, const Expr &metering) {
+option<Recurrence::Result> Recurrence::iterate(const Subs &update, const Expr &cost, const Expr &metering) {
     auto newUpdate = iterateUpdate(update, metering);
     if (!newUpdate) {
         return {};
@@ -159,7 +156,7 @@ option<Recurrence::Result> Recurrence::iterate(const UpdateMap &update, const Ex
 
 option<Recurrence::Result> Recurrence::iterateRule(const VarMan &varMan, const LinearRule &rule, const Expr &metering) {
     // This may modify the rule's guard and update
-    auto order = DependencyOrder::findOrder(varMan, rule.getUpdate());
+    auto order = DependencyOrder::findOrder(rule.getUpdate());
     if (!order) {
         return {};
     }

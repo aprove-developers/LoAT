@@ -34,8 +34,7 @@ namespace strengthening {
             const VarSet &varSymbols = util::RelevantVariables::find(
                     {rel},
                     ruleCtx.updates,
-                    guardCtx.guard,
-                    ruleCtx.varMan);
+                    guardCtx.guard);
             res.add(buildTemplate(varSymbols));
         }
         return res;
@@ -43,11 +42,11 @@ namespace strengthening {
 
     const Templates::Template TemplateBuilder::buildTemplate(const VarSet &vars) const {
         VarSet params;
-        const Var &c0 = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c0"));
+        const Var &c0 = ruleCtx.varMan.addFreshVariable("c0");
         params.insert(c0);
         Expr res = c0;
         for (const Var &x: vars) {
-            const Var &param = ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable("c"));
+            const Var &param = ruleCtx.varMan.addFreshVariable("c");
             params.insert(param);
             res = res + (x * param);
         }

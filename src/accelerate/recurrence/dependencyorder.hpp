@@ -39,7 +39,7 @@ namespace DependencyOrder {
      * Fails if there is a nontrivial set of variables whose updates depend on each other.
      * @return list indicating the order (if successful)
      */
-    option<std::vector<VariableIdx>> findOrder(const VarMan &varMan, const UpdateMap &update);
+    option<std::vector<Var>> findOrder(const Subs &update);
 
 };
 

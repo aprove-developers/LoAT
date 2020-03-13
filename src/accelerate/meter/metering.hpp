@@ -61,7 +61,7 @@ public:
         Expr metering;
 
         // The pair of conflicting variables (only relevant if result is ConflictVar)
-        VariablePair conflictVar;
+        std::pair<Var, Var> conflictVar;
 
         // Additional constraint that has to be added to the rule's guard to ensure correctness.
         // Only relevant if result is Success (and real coefficients are used).
@@ -99,12 +99,12 @@ public:
     static bool strengthenGuard(VarMan &varMan, Rule &rule);
 
 private:
-    MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<UpdateMap> &update);
+    MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<Subs> &update);
 
     /**
      * Helper for convenience, collects all updates of the given rule into a vector.
      */
-    static std::vector<UpdateMap> getUpdateList(const Rule &rule);
+    static std::vector<Subs> getUpdateList(const Rule &rule);
 
     /**
      * Simplifies guard/update by removing constraints that do not affect the metering function.
@@ -169,7 +169,7 @@ private:
      * (which we can currently not express). Example: A++, B++ [ A < X, B < Y ].
      * Note that this is just a heuristic that only handles simple cases.
      */
-    option<VariablePair> findConflictVars() const;
+    option<std::pair<Var, Var>> findConflictVars() const;
 
     /**
      * Modifies the current result to ensure that the metering function evaluates to an integer.
@@ -194,7 +194,7 @@ private:
     /**
      * The rule's data, is modified by linearization and when restricting to relevant variables
      */
-    std::vector<UpdateMap> updates;
+    std::vector<Subs> updates;
     GuardList guard;
 
     /**
@@ -208,7 +208,7 @@ private:
      * The set of variables that might occur in the metering function.
      * These variables are used to build the template for the metering function.
      */
-    std::set<VariableIdx> relevantVars;
+    VarSet relevantVars;
 
     /**
      * Reverse substitution from linearization
@@ -235,7 +235,7 @@ private:
     struct {
         std::vector<Var> symbols;
         std::vector<Var> coeffs;
-        std::map<VariableIdx, Var> primedSymbols;
+        VarMap<Var> primedSymbols;
     } meterVars;
 
     /**

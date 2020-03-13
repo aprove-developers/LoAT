@@ -34,7 +34,7 @@ namespace strengthening {
     const std::vector<Subs> Self::computeUpdates() const {
         std::vector<Subs> res;
         for (const RuleRhs &rhs: rule.getRhss()) {
-            res.push_back(rhs.getUpdate().toSubstitution(its));
+            res.push_back(rhs.getUpdate());
         }
         return res;
     }

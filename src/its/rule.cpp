@@ -27,7 +27,7 @@ Rule::Rule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     }
 }
 
-Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, UpdateMap update)
+Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, Subs update)
         : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)}) {
     if (getCost().isNontermSymbol()) {
         rhss = {RuleRhs(rhss[0].getLoc(), {})};

@@ -122,7 +122,7 @@ private:
 
     const option<LinearRule> chain(const LinearRule &rule) const;
 
-    unsigned int numNotInUpdate(const UpdateMap &up) const;
+    unsigned int numNotInUpdate(const Subs &up) const;
 
 private:
     // The ITS problem. Accelerated rules are added to the ITS immediately,

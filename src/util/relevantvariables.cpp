@@ -23,9 +23,8 @@ namespace util {
     const VarSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<Subs> &updates,
-            const GuardList &guard,
-            const VariableManager &varMan) {
-        std::set<VariableIdx> res;
+            const GuardList &guard) {
+        VarSet res;
         // Add all variables appearing in the guard
         VarSet guardVariables;
         for (const Rel &rel: constraints) {
@@ -33,14 +32,13 @@ namespace util {
             guardVariables.insert(relVars.begin(), relVars.end());
         }
         for (const Var &sym : guardVariables) {
-            res.insert(varMan.getVarIdx(sym));
+            res.insert(sym);
         }
         // Compute the closure of res under all updates and the guard
-        std::set<VariableIdx> todo = res;
+        VarSet todo = res;
         while (!todo.empty()) {
             VarSet next;
-            for (const VariableIdx &var : todo) {
-                const Var &x = varMan.getVarSymbol(var);
+            for (const Var &x : todo) {
                 for (const Subs &up: updates) {
                     auto it = up.find(x);
                     if (it != up.end()) {
@@ -50,14 +48,13 @@ namespace util {
                 }
                 for (const Rel &rel: guard) {
                     const VarSet &relVars = rel.vars();
-                    if (relVars.find(varMan.getVarSymbol(var)) != relVars.end()) {
+                    if (relVars.find(x) != relVars.end()) {
                         next.insert(relVars.begin(), relVars.end());
                     }
                 }
             }
             todo.clear();
-            for (const Var &sym : next) {
-                const VariableIdx &var = varMan.getVarIdx(sym);
+            for (const Var &var : next) {
                 if (res.count(var) == 0) {
                     todo.insert(var);
                 }
@@ -66,34 +63,22 @@ namespace util {
             res.insert(todo.begin(), todo.end());
         }
         VarSet symbols;
-        for (const VariableIdx &x: res) {
-            symbols.insert(varMan.getVarSymbol(x));
+        for (const Var &x: res) {
+            symbols.insert(x);
         }
         return symbols;
     }
 
-    const VarSet RelevantVariables::find(
-            const GuardList &constraints,
-            const std::vector<UpdateMap> &updateMaps,
-            const GuardList &guard,
-            const VariableManager &varMan) {
-        std::vector<Subs> updates;
-        for (const UpdateMap &up: updateMaps) {
-            updates.push_back(up.toSubstitution(varMan));
-        }
-        return RelevantVariables::find(constraints, updates, guard, varMan);
-    }
 
     const VarSet RelevantVariables::find(
             const GuardList &constraints,
             const std::vector<RuleRhs> &rhss,
-            const GuardList &guard,
-            const VariableManager &varMan) {
+            const GuardList &guard) {
         std::vector<Subs> updates;
         for (const RuleRhs &rhs: rhss) {
-            updates.push_back(rhs.getUpdate().toSubstitution(varMan));
+            updates.push_back(rhs.getUpdate());
         }
-        return RelevantVariables::find(constraints, updates, guard, varMan);
+        return RelevantVariables::find(constraints, updates, guard);
     }
 
 }

@@ -29,7 +29,7 @@ using namespace std;
 /* ### Helpers ### */
 
 void MeteringToolbox::applySubsToUpdates(const Subs &subs, MultiUpdate &updates) {
-    for (UpdateMap &update : updates) {
+    for (Subs &update : updates) {
         for (auto &it : update) {
             it.second.applySubs(subs);
         }
@@ -37,8 +37,8 @@ void MeteringToolbox::applySubsToUpdates(const Subs &subs, MultiUpdate &updates)
 }
 
 
-bool MeteringToolbox::isUpdatedByAny(VariableIdx var, const MultiUpdate &updates) {
-    auto updatesVar = [&](const UpdateMap &update) { return update.isUpdated(var); };
+bool MeteringToolbox::isUpdatedByAny(Var var, const MultiUpdate &updates) {
+    auto updatesVar = [&](const Subs &update) { return update.changes(var); };
     return std::any_of(updates.begin(), updates.end(), updatesVar);
 }
 
@@ -71,9 +71,9 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 
     // Collect all updated variables (updated by any of the updates)
     VarSet updatedVars;
-    for (const UpdateMap &update : updates) {
+    for (const Subs &update : updates) {
         for (const auto &it : update) {
-            updatedVars.insert(varMan.getVarSymbol(it.first));
+            updatedVars.insert(it.first);
         }
     }
     auto isUpdated = [&](const Var &var){ return updatedVars.count(var) > 0; };
@@ -91,9 +91,9 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
         // and only if they are not implied after each update (so they may cause the loop to terminate)
         if (add) {
             bool implied = true;
-            for (const UpdateMap &update : updates) {
+            for (const Subs &update : updates) {
                 solver->push();
-                solver->add(!buildLit(rel.subs(update.toSubstitution(varMan))));
+                solver->add(!buildLit(rel.subs(update)));
                 auto smtRes = solver->check();
                 solver->pop();
 
@@ -121,8 +121,8 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 }
 
 
-set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates) {
-    set<VariableIdx> res;
+VarSet MeteringToolbox::findRelevantVariables(const GuardList &guard, const MultiUpdate &updates) {
+    VarSet res;
 
     // Add all variables appearing in the guard
     VarSet guardVariables;
@@ -130,17 +130,17 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
         rel.collectVariables(guardVariables);
     }
     for (const Var &sym : guardVariables) {
-        res.insert(varMan.getVarIdx(sym));
+        res.insert(sym);
     }
 
     // Compute the closure of res under ALL updates
     // so if an updated variable is in res, also add all variables of the update's rhs
-    set<VariableIdx> todo = res;
+    VarSet todo = res;
     while (!todo.empty()) {
         VarSet next;
 
-        for (VariableIdx var : todo) {
-            for (const UpdateMap &update : updates) {
+        for (Var var : todo) {
+            for (const Subs &update : updates) {
                 auto it = update.find(var);
                 if (it != update.end()) {
                     VarSet rhsVars = it->second.vars();
@@ -150,8 +150,7 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
         }
 
         todo.clear();
-        for (const Var &sym : next) {
-            VariableIdx var = varMan.getVarIdx(sym);
+        for (const Var &var : next) {
             if (res.count(var) == 0) {
                 todo.insert(var);
             }
@@ -165,9 +164,9 @@ set<VariableIdx> MeteringToolbox::findRelevantVariables(const VarMan &varMan, co
 }
 
 
-void MeteringToolbox::restrictUpdatesToVariables(MultiUpdate &updates, const set<VariableIdx> &vars) {
-    for (UpdateMap &update : updates) {
-        set<VariableIdx> toRemove;
+void MeteringToolbox::restrictUpdatesToVariables(MultiUpdate &updates, const VarSet &vars) {
+    for (Subs &update : updates) {
+        VarSet toRemove;
 
         for (auto it : update) {
             if (vars.count(it.first) == 0) {
@@ -175,16 +174,16 @@ void MeteringToolbox::restrictUpdatesToVariables(MultiUpdate &updates, const set
             }
         }
 
-        for (VariableIdx var : toRemove) {
+        for (Var var : toRemove) {
             update.erase(var);
         }
     }
 }
 
 
-void MeteringToolbox::restrictGuardToVariables(const VarMan &varMan, GuardList &guard, const set<VariableIdx> &vars) {
+void MeteringToolbox::restrictGuardToVariables(GuardList &guard, const VarSet &vars) {
     auto isContainedInVars = [&](const Var &sym) {
-        return vars.count(varMan.getVarIdx(sym)) > 0;
+        return vars.count(sym) > 0;
     };
 
     auto containsNoVars = [&](const Rel &rel) {
@@ -204,13 +203,12 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
 
     // first remove irrelevant constraints from the guard
     GuardList reducedGuard = reduceGuard(varMan, guard, updates);
-    set<VariableIdx> relevantVars = findRelevantVariables(varMan, reducedGuard, updates);
+    VarSet relevantVars = findRelevantVariables(reducedGuard, updates);
 
     // consider each update independently of the others
-    for (const UpdateMap &update : updates) {
+    for (const Subs &update : updates) {
         // helper lambda to pass as argument
-        auto isUpdated = [&](const Var &sym){ return update.isUpdated(varMan.getVarIdx(sym)); };
-        Subs updateSubs = update.toSubstitution(varMan);
+        auto isUpdated = [&](const Var &sym){ return update.changes(sym); };
 
         for (const auto &it : update) {
             // only consider relevant variables
@@ -224,10 +222,10 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
             // add a new constraint with it.first replaced by the update's rhs
             // (e.g. if x := 4 and the guard is x > 0, we also add 4 > 0)
             // (this makes the guard stronger and might thus help to find a metering function)
-            Var lhsVar = varMan.getVarSymbol(it.first);
+            Var lhsVar = it.first;
 
             Subs subs;
-            subs.put(varMan.getVarSymbol(it.first), it.second);
+            subs.put(lhsVar, it.second);
 
             for (const Rel &rel : reducedGuard) {
                 if (rel.has(lhsVar)) {
@@ -235,7 +233,7 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
                     // We want to make sure that all constraints with lhsVar hold after the update.
                     // E.g. if x := 4, y := y+1 and the guard is x > y, we add 4 > y+1.
                     // Note that only updating x (i.e., adding 4 > y) might not be sufficient.
-                    Rel add = rel.subs(updateSubs);
+                    Rel add = rel.subs(update);
 
                     // Adding trivial constraints does not make sense (no matter if they are true/false).
                     if (!add.isTriviallyTrue() && !add.isTriviallyFalse()) {
@@ -255,25 +253,24 @@ stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan,
     assert(Config::TempVarInstantiationMaxBounds > 0);
 
     //find free variables
-    const set<VariableIdx> &freeVar = varMan.getTempVars();
+    const VarSet &freeVar = varMan.getTempVars();
     if (freeVar.empty()) return stack<Subs>();
 
     //find all bounds for every free variable
-    map<VariableIdx,ExprSet> freeBounds;
+    VarMap<ExprSet> freeBounds;
     for (const Rel &rel : guard) {
-        for (VariableIdx freeIdx : freeVar) {
-            auto it = freeBounds.find(freeIdx);
+        for (Var free : freeVar) {
+            auto it = freeBounds.find(free);
             if (it != freeBounds.end() && it->second.size() >= Config::TempVarInstantiationMaxBounds) continue;
 
-            Var free = varMan.getVarSymbol(freeIdx);
             if (!rel.has(free)) continue;
 
             std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, free);
             if (bounds.first) {
-                freeBounds[freeIdx].insert(bounds.first.get());
+                freeBounds[free].insert(bounds.first.get());
             }
             if (bounds.second) {
-                freeBounds[freeIdx].insert(bounds.second.get());
+                freeBounds[free].insert(bounds.second.get());
             }
 
         }
@@ -286,7 +283,7 @@ stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan,
     stack<Subs> allSubs;
     allSubs.push(Subs());
     for (auto const &it : freeBounds) {
-        Var sym = varMan.getVarSymbol(it.first);
+        Var sym = it.first;
         for (const Expr &bound : it.second) {
             stack<Subs> next;
             while (!allSubs.empty()) {

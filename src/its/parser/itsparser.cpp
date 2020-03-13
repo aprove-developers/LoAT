@@ -156,7 +156,7 @@ void ITSParser::parseFile(ifstream &file) {
                 // on the order in which the variables were declared (which happened in the past)
                 std::sort(varnames.begin(), varnames.end());
                 for (string varname: varnames) {
-                    VariableIdx var = itsProblem.addFreshVariable(escapeVariableName(varname));
+                    Var var = itsProblem.addFreshVariable(escapeVariableName(varname));
                     knownVariables.emplace(varname, var);
                 }
 
@@ -246,7 +246,7 @@ TermPtr ITSParser::parseLeftHandSide(const std::string &lhs) const {
     }
 
     // check that all arguments are variables and no variable occurs twice
-    set<VariableIdx> vars;
+    VarSet vars;
     const TermFunApp *funapp = static_cast<TermFunApp*>(res.get());
 
     for (TermPtr arg : funapp->getArguments()) {
@@ -254,7 +254,7 @@ TermPtr ITSParser::parseLeftHandSide(const std::string &lhs) const {
             throw FileError("Invalid left-hand side, argument is not a variable: "+lhs);
         }
 
-        VariableIdx var = static_cast<TermVariable*>(arg.get())->getVariableIdx();
+        Var var = static_cast<TermVariable*>(arg.get())->getVar();
         if (vars.count(var) != 0) {
             throw FileError("Invalid left-hand side, variables are not distinct: "+lhs);
         }
@@ -413,7 +413,7 @@ void ITSParser::convertRules() {
 void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert lhs to Ginac expressions
     LocationIdx lhsLoc = getLocationData(rule.lhs).index;
-    Expr cost = rule.cost ? rule.cost.get()->toGinacExpression(itsProblem) : 1;
+    Expr cost = rule.cost ? rule.cost.get()->toGinacExpression() : 1;
     RuleLhs lhs(lhsLoc, {}, cost);
 
     if (!cost.isPoly()) {
@@ -421,7 +421,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     }
 
     for (const Relation &rel : rule.guard) {
-        lhs.getGuardMut().push_back(rel.toGinacExpression(itsProblem));
+        lhs.getGuardMut().push_back(rel.toGinacExpression());
     }
 
     // Convert rhs, compute update
@@ -431,11 +431,11 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
         const vector<TermPtr> args = static_cast<TermFunApp*>(rhs.get())->getArguments();
 
         LocationIdx rhsLoc = loc.index;
-        UpdateMap rhsUpdate;
+        Subs rhsUpdate;
         for (int i=0; i < loc.arity; ++i) {
-            VariableIdx var = loc.lhsVars[i];
-            Expr update = args[i]->toGinacExpression(itsProblem);
-            rhsUpdate.emplace(var, std::move(update));
+            Var var = loc.lhsVars[i];
+            Expr update = args[i]->toGinacExpression();
+            rhsUpdate.put(var, std::move(update));
         }
 
         rhss.push_back(RuleRhs(rhsLoc, rhsUpdate));
@@ -476,16 +476,19 @@ void ITSParser::addAndCheckLocationData(TermPtr term, bool lhs) {
 
         if (lhs) {
             for (TermPtr arg : funapp->getArguments()) {
-                loc.lhsVars.push_back(static_cast<TermVariable*>(arg.get())->getVariableIdx());
+                loc.lhsVars.push_back(static_cast<TermVariable*>(arg.get())->getVar());
             }
         } else {
             // Since we add all lhs locations before adding any rhs location,
             // this case only occurs if a location occurs only on rhs (never on any lhs).
             // We still have to set lhsVars, since they are needed for computing the update.
             // But since there is no lhs for this location, we just use arbitrary variables.
+            VarSet vars = itsProblem.getVars();
+            auto it = vars.begin(), end = vars.end();
             for (int i=0; i < loc.arity; ++i) {
-                if (itsProblem.hasVarIdx(i)) {
-                    loc.lhsVars.push_back(i);
+                if (it != end) {
+                    loc.lhsVars.push_back(*it);
+                    ++it;
                 } else {
                     loc.lhsVars.push_back(itsProblem.addFreshVariable("dummy"));
                 }
@@ -510,8 +513,8 @@ const ITSParser::LocationData& ITSParser::getLocationData(TermPtr term) const {
 }
 
 
-set<VariableIdx> ITSParser::getVariables(const ParsedRule &rule) {
-    set<VariableIdx> vars;
+VarSet ITSParser::getVariables(const ParsedRule &rule) {
+    VarSet vars;
     rule.lhs->collectVariables(vars);
     if (rule.cost) {
         rule.cost.get()->collectVariables(vars);
@@ -533,18 +536,18 @@ Subs ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
     const TermFunApp *funapp = static_cast<TermFunApp*>(rule.lhs.get());
 
     // Gather variables from rule
-    set<VariableIdx> ruleVars = getVariables(rule);
-    vector<VariableIdx> lhsVars;
+    VarSet ruleVars = getVariables(rule);
+    vector<Var> lhsVars;
     for (TermPtr arg : funapp->getArguments()) {
-        lhsVars.push_back(static_cast<TermVariable*>(arg.get())->getVariableIdx());
+        lhsVars.push_back(static_cast<TermVariable*>(arg.get())->getVar());
     }
 
     // Replace variables in this rule such that lhsVars matches loc.lhsVars
     for (int i=0; i < loc.arity; ++i) {
         if (lhsVars[i] != loc.lhsVars[i]) {
             // Add substitution
-            Var oldSym = itsProblem.getVarSymbol(lhsVars[i]);
-            Var newSym = itsProblem.getVarSymbol(loc.lhsVars[i]);
+            Var oldSym = lhsVars[i];
+            Var newSym = loc.lhsVars[i];
             subs.put(oldSym, newSym);
         }
     }
@@ -559,11 +562,9 @@ Subs ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
         if (subs.contains(newSym) || subsMore.contains(newSym)) continue;
 
         // Otherwise, if newSym occurs in rule, add it to the substitution
-        VariableIdx newVar = itsProblem.getVarIdx(newSym);
-        if (ruleVars.count(newVar) > 0) {
-            VariableIdx freshVar = itsProblem.addFreshVariable(newSym.get_name());
-            Var freshSym = itsProblem.getVarSymbol(freshVar);
-            subsMore.put(newSym, freshSym);
+        if (ruleVars.count(newSym) > 0) {
+            Var freshVar = itsProblem.addFreshVariable(newSym.get_name());
+            subsMore.put(newSym, freshVar);
         }
     }
 
@@ -581,18 +582,13 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
     // Gather variables
     VarSet ruleVars = getSymbols(rule);
 
-    VarSet lhsVars;
-    for (VariableIdx var : lhsData.lhsVars) {
-        lhsVars.insert(itsProblem.getVarSymbol(var));
-    }
-
     // Substitute all variables that do not occur on the lhs by temporary ones
     Subs subs;
     for (Var var : ruleVars) {
-        if (lhsVars.count(var) == 0) {
+        if (std::find(lhsData.lhsVars.begin(), lhsData.lhsVars.end(), var) == lhsData.lhsVars.end()) {
             // Create a fresh temporary variable
-            VariableIdx tv = itsProblem.addFreshTemporaryVariable("free");
-            subs.put(var, itsProblem.getVarSymbol(tv));
+            Var tv = itsProblem.addFreshTemporaryVariable("free");
+            subs.put(var, tv);
         }
     }
 
@@ -621,11 +617,11 @@ VarSet ITSParser::getSymbols(const Rule &rule) {
 }
 
 
-void ITSParser::stripTrivialUpdates(UpdateMap &update) const {
-    set<VariableIdx> toRemove;
+void ITSParser::stripTrivialUpdates(Subs &update) const {
+    VarSet toRemove;
 
     for (const auto &it : update) {
-        Var lhs = itsProblem.getVarSymbol(it.first);
+        Var lhs = it.first;
         const Expr &rhs = it.second;
 
         if (rhs.equals(lhs)) {
@@ -633,7 +629,7 @@ void ITSParser::stripTrivialUpdates(UpdateMap &update) const {
         }
     }
 
-    for (VariableIdx var : toRemove) {
+    for (Var var : toRemove) {
         update.erase(var);
     }
 }

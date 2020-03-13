@@ -466,10 +466,6 @@ public:
 
     KeyToExprMap() {}
 
-    KeyToExprMap(const Key &key, const Expr &val) {
-        put(key, val);
-    }
-
     virtual ~KeyToExprMap() {}
 
     Expr get(const Key &key) const {
@@ -501,9 +497,19 @@ public:
         return map.empty();
     }
 
+    uint size() const {
+        return map.size();
+    }
+
+    size_t erase(const Key &key) {
+        eraseGinac(key);
+        return map.erase(key);
+    }
+
 protected:
     std::map<GiNaC::ex, GiNaC::ex, GiNaC::ex_is_less> ginacMap;
     void virtual putGinac(const Key &key, const Expr &val) = 0;
+    void virtual eraseGinac(const Key &key) = 0;
 
 private:
     std::map<Key, Expr, Expr_is_less> map;
@@ -546,6 +552,19 @@ template<class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<T
     return s << "}";
 }
 
+template<class T> bool operator==(const KeyToExprMap<T> &m1, const KeyToExprMap<T> &m2) {
+    if (m1.size() != m2.size()) {
+        return false;
+    }
+    auto it1 = m1.begin();
+    auto it2 = m1.begin();
+    while (it1 != m1.end() && it2 != m2.end()) {
+        if (it1->first != it2->first) return false;
+        if (!it1->second.equals(it2->second)) return false;
+    }
+    return true;
+}
+
 class Subs: public KeyToExprMap<Var> {
 
 public:
@@ -554,10 +573,15 @@ public:
 
     Subs(const Var &key, const Expr &val);
 
-    Subs compose(const Subs &that) const ;
+    Subs compose(const Subs &that) const;
+
+    Subs concat(const Subs &that) const;
+
+    bool changes(const Var &key) const;
 
 private:
     void putGinac(const Var &key, const Expr &val) override;
+    void eraseGinac(const Var &key) override;
 
 };
 
@@ -570,6 +594,7 @@ public:
 
 private:
     void putGinac(const Expr &key, const Expr &val) override;
+    void eraseGinac(const Expr &key) override;
 
 };
 

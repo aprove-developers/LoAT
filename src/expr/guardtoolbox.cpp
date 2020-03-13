@@ -106,13 +106,13 @@ option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel 
         assert(!term.isPoly() || term.isIntegral());
     }
 
-    return term;
+    return {term};
 }
 
 
-bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
+option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
     Subs varSubs;
-    GuardList &guard = rule.getGuardMut();
+    GuardList guard = rule.getGuard();
 
     for (unsigned int i=0; i < guard.size(); ++i) {
         Rel rel = guard[i].subs(varSubs);
@@ -151,12 +151,17 @@ bool GuardToolbox::propagateEqualities(const VarMan &varMan, Rule &rule, Solving
     }
 
     //apply substitution to the entire rule
-    rule.applySubstitution(varSubs);
-    return !varSubs.empty();
+    if (varSubs.empty()) {
+        return {};
+    } else {
+        Rule substituted = rule.subs(varSubs);
+        return {substituted.withGuard(guard)};
+    }
 }
 
 
-bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow) {
+option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool removeHalfBounds, SymbolAcceptor allow) {
+    GuardList guard = rule.getGuard();
     //get all variables that appear in an inequality
     VarSet tryVars;
     for (const Rel &rel : guard) {
@@ -212,11 +217,16 @@ bool GuardToolbox::eliminateByTransitiveClosure(GuardList &guard, bool removeHal
 
 abort:  ; //this symbol could not be eliminated, try the next one
     }
-    return changed;
+    if (changed) {
+        return {rule.withGuard(guard)};
+    } else {
+        return {};
+    }
 }
 
 
-bool GuardToolbox::makeEqualities(GuardList &guard) {
+option<Rule> GuardToolbox::makeEqualities(const Rule &rule) {
+    const GuardList &guard = rule.getGuard();
     vector<pair<int,Expr>> terms; //inequalities from the guard, with the associated index in guard
     map<int,pair<int,Expr>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
 
@@ -233,7 +243,7 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
         terms.push_back(make_pair(i,term));
     }
 
-    if (matches.empty()) return false;
+    if (matches.empty()) return {};
 
     // Construct the new guard by keeping unmatched constraint
     // and replacing matched pairs by an equality constraint.
@@ -252,6 +262,5 @@ bool GuardToolbox::makeEqualities(GuardList &guard) {
             res.push_back(guard[i]);
         }
     }
-    res.swap(guard);
-    return true;
+    return {rule.withGuard(res)};
 }

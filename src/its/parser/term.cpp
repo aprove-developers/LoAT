@@ -7,14 +7,14 @@ bool TermBinOp::isArithmeticExpression() const {
     return lhs->isArithmeticExpression() && rhs->isArithmeticExpression();
 }
 
-void TermBinOp::collectVariables(std::set<VariableIdx> &set) const {
+void TermBinOp::collectVariables(VarSet &set) const {
     lhs->collectVariables(set);
     rhs->collectVariables(set);
 }
 
-Expr TermBinOp::toGinacExpression(const ITSProblem &its) const {
-    Expr l = lhs->toGinacExpression(its);
-    Expr r = rhs->toGinacExpression(its);
+Expr TermBinOp::toGinacExpression() const {
+    Expr l = lhs->toGinacExpression();
+    Expr r = rhs->toGinacExpression();
 
     switch (op) {
         case Addition: return l + r;
@@ -31,20 +31,20 @@ bool TermFunApp::isFunappOnArithmeticExpressions() const {
     return std::all_of(args.cbegin(), args.cend(), [](const TermPtr &t){ return t->isArithmeticExpression(); });
 }
 
-void TermFunApp::collectVariables(std::set<VariableIdx> &set) const {
+void TermFunApp::collectVariables(VarSet &set) const {
     for (const TermPtr &arg : args) {
         arg->collectVariables(set);
     }
 }
 
-Expr TermFunApp::toGinacExpression(const ITSProblem &) const {
+Expr TermFunApp::toGinacExpression() const {
     throw CannotConvertToGinacException("Cannot convert function symbol to GiNaC: "+name);
 }
 
 
-Rel Relation::toGinacExpression(const ITSProblem &its) const {
-    Expr l = lhs->toGinacExpression(its);
-    Expr r = rhs->toGinacExpression(its);
+Rel Relation::toGinacExpression() const {
+    Expr l = lhs->toGinacExpression();
+    Expr r = rhs->toGinacExpression();
 
     switch (op) {
     case RelationEqual: return Rel::buildEq(l, r);

@@ -31,7 +31,7 @@
 namespace MeteringToolbox {
 
     // just a shorthand
-    using MultiUpdate = std::vector<UpdateMap>;
+    using MultiUpdate = std::vector<Subs>;
 
     /**
      * Helper that applies a given substitution to all right-hand sides of all given updates.
@@ -41,7 +41,7 @@ namespace MeteringToolbox {
     /**
      * Checks if the given variable is affected by any of the given updates
      */
-    bool isUpdatedByAny(VariableIdx var, const MultiUpdate &updates);
+    bool isUpdatedByAny(Var var, const MultiUpdate &updates);
 
 
 
@@ -80,17 +80,17 @@ namespace MeteringToolbox {
      *
      * Note: The result of this method is important to find metering functions, but does not affect soundness
      */
-    std::set<VariableIdx> findRelevantVariables(const VarMan &varMan, const GuardList &reducedGuard, const MultiUpdate &updates);
+    VarSet findRelevantVariables(const GuardList &reducedGuard, const MultiUpdate &updates);
 
     /**
      * Removes updates that do not update a variable from vars.
      */
-    void restrictUpdatesToVariables(MultiUpdate &updates, const std::set<VariableIdx> &vars);
+    void restrictUpdatesToVariables(MultiUpdate &updates, const VarSet &vars);
 
     /**
      * Removes constraints that do not contain a variable from vars.
      */
-    void restrictGuardToVariables(const VarMan &varMan, GuardList &guard, const std::set<VariableIdx> &vars);
+    void restrictGuardToVariables(GuardList &guard, const VarSet &vars);
 
 
 

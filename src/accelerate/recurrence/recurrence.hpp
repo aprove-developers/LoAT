@@ -35,7 +35,7 @@ public:
 
     struct Result {
         Expr cost;
-        UpdateMap update;
+        Subs update;
         unsigned int validityBound;
     };
 
@@ -54,23 +54,23 @@ private:
     };
 
     struct RecurrenceSystemSolution {
-        UpdateMap update;
+        Subs update;
         const unsigned int validityBound;
     };
 
-    Recurrence(const VarMan &varMan, const std::vector<VariableIdx> &dependencyOrder);
+    Recurrence(const VarMan &varMan, const std::vector<Var> &dependencyOrder);
 
     /**
      * Main implementation
      */
-    option<Result> iterate(const UpdateMap &update, const Expr &cost, const Expr &metering);
+    option<Result> iterate(const Subs &update, const Expr &cost, const Expr &metering);
 
     /**
      * Computes the iterated update, with meterfunc as iteration step (if possible).
      * @note dependencyOrder must be set before
      * @note sets updatePreRecurrences
      */
-    option<RecurrenceSystemSolution> iterateUpdate(const UpdateMap &update, const Expr &meterfunc);
+    option<RecurrenceSystemSolution> iterateUpdate(const Subs &update, const Expr &meterfunc);
 
     /**
      * Computes the iterated cost, with meterfunc as iteration step (if possible).
@@ -83,7 +83,7 @@ private:
      * Tries to find a recurrence for the given single update.
      * Note that all variables occurring in update must have been solved before (and added to updatePreRecurrences).
      */
-    option<RecurrenceSolution> findUpdateRecurrence(const Expr &updateRhs, Var updateLhs, const std::map<VariableIdx, unsigned int> &validitybounds);
+    option<RecurrenceSolution> findUpdateRecurrence(const Expr &updateRhs, Var updateLhs, const VarMap<unsigned int> &validitybounds);
 
     /**
      * Tries to find a recurrence for the given cost term.
@@ -91,7 +91,7 @@ private:
      */
     option<Expr> findCostRecurrence(Expr cost);
 
-    static const option<RecurrenceSystemSolution> iterateUpdate(const VariableManager&, const UpdateMap&, const Var&);
+    static const option<RecurrenceSystemSolution> iterateUpdate(const VariableManager&, const Subs&, const Var&);
 
 private:
     /**
@@ -107,7 +107,7 @@ private:
     /**
      * Order in which recurrences for updated variables can be computed
      */
-    std::vector<VariableIdx> dependencyOrder;
+    std::vector<Var> dependencyOrder;
 
     /**
      * Substitution map, mapping variables to their recurrence equations

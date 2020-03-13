@@ -33,7 +33,7 @@ private:
     struct LocationData {
         LocationIdx index;
         int arity;
-        std::vector<VariableIdx> lhsVars;
+        std::vector<Var> lhsVars;
     };
 
 
@@ -56,13 +56,13 @@ private:
     void addAndCheckLocationData(TermPtr term, bool lhs);
     const LocationData& getLocationData(TermPtr term) const;
     Subs computeSubstitutionToUnifyLhs(const ParsedRule &rule);
-    void replaceUnboundedByTemporaryVariables(Rule &rule, const LocationData &lhsData);
-    void stripTrivialUpdates(UpdateMap &update) const;
+    Rule replaceUnboundedByTemporaryVariables(const Rule &rule, const LocationData &lhsData);
+    void stripTrivialUpdates(Subs &update) const;
     void addParsedRule(const ParsedRule &rule);
 
     // Helpers
     static std::string escapeVariableName(const std::string &name);
-    static std::set<VariableIdx> getVariables(const ParsedRule &rule);
+    static VarSet getVariables(const ParsedRule &rule);
     static VarSet getSymbols(const Rule &rule);
 
 private:
@@ -71,7 +71,7 @@ private:
 
     // Step 1: Parsing into ParsedRule
     std::string initialLocation;
-    std::map<std::string, VariableIdx> knownVariables;
+    std::map<std::string, Var> knownVariables;
     std::vector<ParsedRule> parsedRules;
 
     // Step 2: Converting ParsedRules to ITSProblem

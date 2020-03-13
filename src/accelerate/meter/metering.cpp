@@ -34,7 +34,7 @@ using namespace std;
 namespace MT = MeteringToolbox;
 
 
-MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vector<UpdateMap> &updates)
+MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vector<Subs> &updates)
     : varMan(varMan),
       updates(updates),
       guard(guard),
@@ -44,8 +44,8 @@ MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vec
 
 /* ### Helpers ### */
 
-vector<UpdateMap> MeteringFinder::getUpdateList(const Rule &rule) {
-    vector<UpdateMap> res;
+vector<Subs> MeteringFinder::getUpdateList(const Rule &rule) {
+    vector<Subs> res;
     res.reserve(rule.rhsCount());
     for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
         res.push_back(rhs->getUpdate());
@@ -59,11 +59,11 @@ vector<UpdateMap> MeteringFinder::getUpdateList(const Rule &rule) {
 void MeteringFinder::simplifyAndFindVariables() {
     irrelevantGuard.clear(); // clear in case this method is called twice
     reducedGuard = MT::reduceGuard(varMan, guard, updates, &irrelevantGuard);
-    relevantVars = MT::findRelevantVariables(varMan, reducedGuard, updates);
+    relevantVars = MT::findRelevantVariables(reducedGuard, updates);
 
     // Note that reducedGuard is already restricted by definition of relevantVars
-    MT::restrictGuardToVariables(varMan, guard, relevantVars);
-    MT::restrictGuardToVariables(varMan, irrelevantGuard, relevantVars);
+    MT::restrictGuardToVariables(guard, relevantVars);
+    MT::restrictGuardToVariables(irrelevantGuard, relevantVars);
     MT::restrictUpdatesToVariables(updates, relevantVars);
 }
 
@@ -98,17 +98,17 @@ void MeteringFinder::buildMeteringVariables() {
 
     auto coeffType = (Config::ForwardAccel::AllowRealCoeffs) ? Expr::Rational : Expr::Int;
 
-    for (VariableIdx var : relevantVars) {
-        meterVars.symbols.push_back(varMan.getVarSymbol(var));
+    for (const Var &var : relevantVars) {
+        meterVars.symbols.push_back(var);
         meterVars.coeffs.push_back(varMan.getFreshUntrackedSymbol("c", coeffType));
     }
 
-    for (const UpdateMap &update : updates) {
+    for (const Subs &update : updates) {
         for (const auto &it : update) {
             assert(relevantVars.count(it.first) > 0); // update should have been restricted to relevant variables
 
             if (meterVars.primedSymbols.count(it.first) == 0) {
-                string primedName = varMan.getVarName(it.first)+"'";
+                string primedName = it.first.get_name() + "'";
                 Var primed = varMan.getFreshUntrackedSymbol(primedName, Expr::Int);
                 meterVars.primedSymbols.emplace(it.first, primed);
             }
@@ -209,18 +209,17 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
         vector<Expr> coeffs;
 
         for (unsigned int i=0; i < meterVars.symbols.size(); ++i) {
-            Var sym = meterVars.symbols[i];
-            VariableIdx var = varMan.getVarIdx(sym);
+            Var var = meterVars.symbols[i];
             Expr coeff = meterVars.coeffs[i];
 
             // ignore variables not affected by the current update
-            if (!updates[updateIdx].isUpdated(var)) continue;
+            if (!updates[updateIdx].changes(var)) continue;
 
             // find the primed version of sym
             assert(meterVars.primedSymbols.count(var) > 0);
             Var primed = meterVars.primedSymbols.at(var);
 
-            vars.push_back(sym);      //x
+            vars.push_back(var);      //x
             vars.push_back(primed);   //x'
             coeffs.push_back( coeff); //coeff for x
             coeffs.push_back(-coeff); //coeff for x', i.e. negative coeff for x
@@ -274,8 +273,7 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const VarMap<GiNaC::
     // remove reals by multiplying metering function with "mult",
     // then add a fresh variable that corresponds to the original value of the metering function
     if (has_reals) {
-        VariableIdx tempIdx = varMan.addFreshTemporaryVariable("meter");
-        Var tempVar = varMan.getVarSymbol(tempIdx);
+        Var tempVar = varMan.addFreshTemporaryVariable("meter");
 
         // create a new guard constraint relating tempVar and the metering function
         result.integralConstraint = Rel::buildEq(tempVar*mult, result.metering*mult);
@@ -285,13 +283,13 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const VarMap<GiNaC::
     }
 }
 
-option<VariablePair> MeteringFinder::findConflictVars() const {
-    set<VariableIdx> conflictingVars;
+option<std::pair<Var, Var>> MeteringFinder::findConflictVars() const {
+    VarSet conflictingVars;
 
     // find variables on which the loop's runtime might depend (simple heuristic)
-    for (const UpdateMap &update : updates) {
+    for (const Subs &update : updates) {
         for (const auto &it : update) {
-            Var lhsVar = varMan.getVarSymbol(it.first);
+            Var lhsVar = it.first;
             VarSet rhsVars = it.second.vars();
 
             // the update must be some sort of simple counting, e.g. A = A+2
@@ -310,8 +308,8 @@ option<VariablePair> MeteringFinder::findConflictVars() const {
     // we limit the heuristic to only handle 2 variables
     if (conflictingVars.size() == 2) {
         auto it = conflictingVars.begin();
-        VariableIdx a = *(it++);
-        VariableIdx b = *it;
+        Var a = *(it++);
+        Var b = *it;
         return make_pair(a, b);
     }
 
@@ -430,7 +428,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     Smt::Result smtRes = Smt::Unsat; // this method should only be called if generate() fails
 
     GuardList oldGuard = meter.guard;
-    vector<UpdateMap> oldUpdates = meter.updates;
+    vector<Subs> oldUpdates = meter.updates;
 
     // Now try all possible instantiations until the solver is satisfied
 

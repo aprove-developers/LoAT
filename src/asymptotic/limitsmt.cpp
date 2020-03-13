@@ -116,7 +116,7 @@ option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, cons
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
-    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({currentLP.getQuery()}, {}), varMan, timeout);
+    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<Subs>({currentLP.getQuery()}, {}), varMan, timeout);
 
     // the parameter of the desired family of solutions
     Var n = currentLP.getN();

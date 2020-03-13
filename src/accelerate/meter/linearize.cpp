@@ -101,7 +101,7 @@ bool Linearize::collectMonomialsInGuard(ExprSet &monomials) const {
 
 
 bool Linearize::collectMonomialsInUpdates(ExprSet &monomials) const {
-    for (const UpdateMap &update : updates) {
+    for (const Subs &update : updates) {
         for (const auto &it : update) {
             if (!collectMonomials(it.second.expand(), monomials)) {
                 return false;
@@ -131,7 +131,7 @@ bool Linearize::checkForConflicts(const ExprSet &monomials) const {
 
             // If the variable is updated, we cannot replace it
             // (note that we must replace term whenever term is not linear, i.e., not a single variable)
-            if (!term.isLinear() && MeteringToolbox::isUpdatedByAny(varMan.getVarIdx(var), updates)) {
+            if (!term.isLinear() && MeteringToolbox::isUpdatedByAny(var, updates)) {
                 return false;
             }
 
@@ -161,8 +161,7 @@ ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
             assert(term.op(1).isInt());
             GiNaC::numeric exponent = term.op(1).toNum();
 
-            VariableIdx freshIdx = varMan.addFreshVariable(base.get_name() + to_string(exponent.to_int()));
-            Var fresh = varMan.getVarSymbol(freshIdx);
+            Var fresh = varMan.addFreshVariable(base.get_name() + to_string(exponent.to_int()));
             res.put(term, fresh);
 
             // Remember that e.g. x^2 is always nonnegative
@@ -175,8 +174,7 @@ ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
             Var x = term.op(0).toVar();
             Var y = term.op(1).toVar();
 
-            VariableIdx freshIdx = varMan.addFreshVariable(x.get_name() + y.get_name());
-            Var fresh = varMan.getVarSymbol(freshIdx);
+            Var fresh = varMan.addFreshVariable(x.get_name() + y.get_name());
             res.put(term, fresh);
         }
     }
@@ -189,7 +187,7 @@ void Linearize::applySubstitution(const ExprMap &subs) {
         rel = rel.expand().replace(subs);
     }
 
-    for (UpdateMap &update : updates) {
+    for (Subs &update : updates) {
         for (auto &it : update) {
             it.second = it.second.expand().replace(subs);
         }
@@ -207,7 +205,7 @@ ExprMap Linearize::reverseSubstitution(const ExprMap &subs) {
 }
 
 
-option<ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates) {
+option<ExprMap> Linearize::linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<Subs> &updates) {
 
     Linearize lin(guard, updates, varMan);
 

@@ -35,7 +35,7 @@ namespace t2parser {
 
         LocationIdx getLoc(const std::string &str);
 
-        VariableIdx addVar(const std::string &str);
+        Var addVar(const std::string &str);
 
         Rel parseConstraint(const std::string &str);
 
@@ -54,7 +54,7 @@ namespace t2parser {
         const std::string NONDET = "nondet()";
         const std::string ASSIGN = ":=";
         std::map<std::string, LocationIdx> locs;
-        std::map<std::string, VariableIdx> vars;
+        std::map<std::string, Var> vars;
         std::map<std::string, GiNaC::ex> symtab;
 
     };

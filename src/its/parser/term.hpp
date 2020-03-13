@@ -42,11 +42,11 @@ public:
     virtual bool isFunappOnArithmeticExpressions() const = 0;
 
     // Collects all variables that occur somewhere in this term to the given set
-    virtual void collectVariables(std::set<VariableIdx> &set) const = 0;
+    virtual void collectVariables(VarSet &set) const = 0;
 
     // Translates this term into a ginac expression
     // The ITSProblem instance is used to map VariableIdx to ginac symbols
-    virtual Expr toGinacExpression(const ITSProblem &its) const = 0;
+    virtual Expr toGinacExpression() const = 0;
 };
 
 
@@ -73,8 +73,8 @@ public:
     bool isArithmeticExpression() const override;
     bool isFunappOnArithmeticExpressions() const override { return false; }
 
-    void collectVariables(std::set<VariableIdx> &set) const override;
-    Expr toGinacExpression(const ITSProblem &its) const override;
+    void collectVariables(VarSet &set) const override;
+    Expr toGinacExpression() const override;
 
 private:
     TermPtr lhs, rhs;
@@ -96,8 +96,8 @@ public:
 
     bool isArithmeticExpression() const override { return false; }
     bool isFunappOnArithmeticExpressions() const override;
-    void collectVariables(std::set<VariableIdx> &set) const override;
-    Expr toGinacExpression(const ITSProblem &its) const override;
+    void collectVariables(VarSet &set) const override;
+    Expr toGinacExpression() const override;
 
 private:
     std::string name;
@@ -110,19 +110,19 @@ private:
  */
 class TermVariable : public Term {
 public:
-    TermVariable(VariableIdx variableIdx) : var(variableIdx) {}
+    TermVariable(Var var) : var(var) {}
     TermType getType() const override { return Term::Variable; }
 
-    VariableIdx getVariableIdx() const { return var; }
+    Var getVar() const { return var; }
 
     bool isArithmeticExpression() const override { return true; }
     bool isFunappOnArithmeticExpressions() const override { return false; }
 
-    void collectVariables(std::set<VariableIdx> &set) const override { set.insert(var); }
-    Expr toGinacExpression(const ITSProblem &its) const override { return its.getVarSymbol(var); }
+    void collectVariables(VarSet &set) const override { set.insert(var); }
+    Expr toGinacExpression() const override { return var; }
 
 private:
-    VariableIdx var;
+    Var var;
 };
 
 
@@ -139,8 +139,8 @@ public:
     bool isArithmeticExpression() const override { return true; }
     bool isFunappOnArithmeticExpressions() const override { return false; }
 
-    void collectVariables(std::set<VariableIdx> &) const override {}
-    Expr toGinacExpression(const ITSProblem &) const override { return num; }
+    void collectVariables(VarSet &) const override {}
+    Expr toGinacExpression() const override { return num; }
 
 private:
     GiNaC::numeric num;
@@ -167,7 +167,7 @@ public:
     TermPtr getRhs() const { return rhs; }
     Operator getOperator() const { return op; }
 
-    Rel toGinacExpression(const ITSProblem &its) const;
+    Rel toGinacExpression() const;
 
 private:
     TermPtr lhs, rhs;

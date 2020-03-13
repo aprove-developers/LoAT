@@ -63,7 +63,7 @@ static MeteringFinder::Result meterWithInstantiation(ITSProblem &its, Rule &rule
  * @param conflictVar If the metering result is ConflictVar, conflictVar is set to the conflicting variables,
  * otherwise it is not modified.
  */
-static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, option<VariablePair> &conflictVar) {
+static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, option<std::pair<Var, Var>> &conflictVar) {
     using namespace ForwardAcceleration;
     Result res;
 
@@ -130,7 +130,7 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
                 // instead of adding 0 < tv < meter+1 as in the paper, we instantiate tv by meter.
                 Expr iterationCount = meter.metering;
                 if (Config::ForwardAccel::UseTempVarForIterationCount) {
-                    iterationCount = its.getVarSymbol(its.addFreshTemporaryVariable("tv"));
+                    iterationCount = its.addFreshTemporaryVariable("tv");
                 }
 
                 // Iterate cost and update
@@ -176,14 +176,14 @@ static Result meterAndIterate(ITSProblem &its, Rule rule, LocationIdx sink, opti
 
 
 Result ForwardAcceleration::accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink) {
-    option<VariablePair> dummy;
+    option<std::pair<Var, Var>> dummy;
     return meterAndIterate(its, rule, sink, dummy);
 }
 
 
 Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink) {
     // Try to find a metering function without any heuristics
-    option<VariablePair> conflictVar;
+    option<std::pair<Var, Var>> conflictVar;
     Result accel = meterAndIterate(its, rule, sink, conflictVar);
     if (accel.status != Failure) {
         return accel;
@@ -192,8 +192,8 @@ Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, Locati
     Result res;
     // Apply the heuristic for conflicting variables (workaround as we don't support min(A,B) as metering function)
     if (Config::ForwardAccel::ConflictVarHeuristic && conflictVar) {
-        Var A = its.getVarSymbol(conflictVar->first);
-        Var B = its.getVarSymbol(conflictVar->second);
+        Var A = conflictVar->first;
+        Var B = conflictVar->second;
         Rule newRule = rule;
 
         // Add A >= B to the guard, try to accelerate (unless it becomes unsat due to the new constraint)

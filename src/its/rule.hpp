@@ -45,14 +45,14 @@ public:
 
 class RuleRhs {
     LocationIdx loc;
-    UpdateMap update;
+    Subs update;
 
 public:
-    RuleRhs(LocationIdx loc, UpdateMap update) : loc(loc), update(update) {}
+    RuleRhs(LocationIdx loc, Subs update) : loc(loc), update(update) {}
 
     LocationIdx getLoc() const { return loc; }
-    const UpdateMap& getUpdate() const { return update; }
-    UpdateMap& getUpdateMut() { return update; }
+    const Subs& getUpdate() const { return update; }
+    Subs& getUpdateMut() { return update; }
 
 };
 
@@ -77,7 +77,7 @@ public:
 
     // constructors for linear rules
     Rule(RuleLhs lhs, RuleRhs rhs);
-    Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, UpdateMap update);
+    Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, Subs update);
 
     // constructs an empty rule (guard/update empty, cost 0)
     static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
@@ -104,15 +104,15 @@ public:
 
     // special methods for nonlinear rules (idx is an index to rhss)
     LocationIdx getRhsLoc(uint idx) const { return rhss[idx].getLoc(); }
-    const std::vector<UpdateMap> getUpdates() const {
-        std::vector<UpdateMap> res;
+    const std::vector<Subs> getUpdates() const {
+        std::vector<Subs> res;
         for (const RuleRhs &rhs: rhss) {
             res.push_back(rhs.getUpdate());
         }
         return res;
     }
-    const UpdateMap& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
-    UpdateMap& getUpdateMut(uint idx) { return rhss[idx].getUpdateMut(); }
+    const Subs& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
+    Subs& getUpdateMut(uint idx) { return rhss[idx].getUpdateMut(); }
 
     // conversion to linear rule
     bool isLinear() const;
@@ -149,13 +149,13 @@ public:
 class LinearRule : public Rule {
 public:
     LinearRule(RuleLhs lhs, RuleRhs rhs) : Rule(lhs, rhs) {}
-    LinearRule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, UpdateMap update)
+    LinearRule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, Subs update)
             : Rule(lhsLoc, guard, cost, rhsLoc, update) {}
 
     // special shorthands for linear rules, overwriting the general ones
     LocationIdx getRhsLoc() const { return Rule::getRhsLoc(0); }
-    const UpdateMap& getUpdate() const { return Rule::getUpdate(0); }
-    UpdateMap& getUpdateMut() { return Rule::getUpdateMut(0); }
+    const Subs& getUpdate() const { return Rule::getUpdate(0); }
+    Subs& getUpdateMut() { return Rule::getUpdateMut(0); }
 };
 
 

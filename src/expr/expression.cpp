@@ -893,7 +893,9 @@ std::ostream& operator<<(std::ostream &s, const Rel &rel) {
 
 Subs::Subs(): KeyToExprMap<Var>() {}
 
-Subs::Subs(const Var &key, const Expr &val): KeyToExprMap<Var>(key, val) {}
+Subs::Subs(const Var &key, const Expr &val) {
+    put(key, val);
+}
 
 Subs Subs::compose(const Subs &that) const {
     Subs res;
@@ -908,14 +910,36 @@ Subs Subs::compose(const Subs &that) const {
     return res;
 }
 
+Subs Subs::concat(const Subs &that) const {
+    Subs res;
+    for (const auto &p: *this) {
+        res.put(p.first, p.second.subs(that));
+    }
+    return res;
+}
+
 void Subs::putGinac(const Var &key, const Expr &val) {
     ginacMap[key] = val.ex;
 }
 
+void Subs::eraseGinac(const Var &key) {
+    ginacMap.erase(key);
+}
+
+bool Subs::changes(const Var &key) const {
+    return contains(key) && !get(key).equals(key);
+}
+
 ExprMap::ExprMap(): KeyToExprMap<Expr>() {}
 
-ExprMap::ExprMap(const Expr &key, const Expr &val): KeyToExprMap<Expr>(key, val) {}
+ExprMap::ExprMap(const Expr &key, const Expr &val) {
+    put(key, val);
+}
 
 void ExprMap::putGinac(const Expr &key, const Expr &val) {
     ginacMap[key.ex] = val.ex;
+}
+
+void ExprMap::eraseGinac(const Expr &key) {
+    ginacMap.erase(key.ex);
 }

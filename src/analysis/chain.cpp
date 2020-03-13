@@ -50,20 +50,17 @@ static bool checkSatisfiability(const GuardList &newGuard, const VariableManager
  * by applying the first rule's update to the second rule's lhs (guard/cost).
  * Also checks whether the resulting guard is satisfiable (and returns none if not), unless checkSat is false.
  */
-static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, const UpdateMap &firstUpdate,
+static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, const Subs &firstUpdate,
                                  const RuleLhs &secondLhs, bool checkSat)
 {
-    // Build a substitution corresponding to the first rule's update
-    Subs updateSubs = firstUpdate.toSubstitution(varMan);
-
     // Concatenate both guards, but apply the first rule's update to second guard
     GuardList newGuard = firstLhs.getGuard();
     for (const Rel &rel : secondLhs.getGuard()) {
-        newGuard.push_back(rel.subs(updateSubs));
+        newGuard.push_back(rel.subs(firstUpdate));
     }
 
     // Add the costs, but apply first rule's update to second cost
-    Expr newCost = firstLhs.getCost() + secondLhs.getCost().subs(updateSubs);
+    Expr newCost = firstLhs.getCost() + secondLhs.getCost().subs(firstUpdate);
 
     // As a small optimization: Keep a NONTERM symbol (easier to identify NONTERM cost later on)
     if (firstLhs.getCost().isNontermSymbol() || secondLhs.getCost().isNontermSymbol()) {
@@ -78,24 +75,6 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
     }
 
     return RuleLhs(firstLhs.getLoc(), newGuard, newCost);
-}
-
-
-/**
- * Part of the main chaining algorithm.
- * Composes the two given updates (such that firstUpdate is applied before secondUpdate)
- */
-static UpdateMap chainUpdates(const VarMan &varMan, const UpdateMap &first, const UpdateMap &second) {
-    // Start with the first update
-    UpdateMap newUpdate = first;
-    const Subs firstSubs = first.toSubstitution(varMan);
-
-    // Then add the second update (possibly overwriting the first updates).
-    // Note that we apply the first update to the second update's right-hand sides.
-    for (const auto &it : second) {
-        newUpdate[it.first] = it.second.subs(firstSubs);
-    }
-    return newUpdate;
 }
 
 
@@ -117,8 +96,7 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
         return {};
     }
 
-    UpdateMap newUpdate = chainUpdates(varMan, first.getUpdate(), second.getUpdate());
-    return LinearRule(newLhs.get(), RuleRhs(second.getRhsLoc(), newUpdate));
+    return LinearRule(newLhs.get(), RuleRhs(second.getRhsLoc(), second.getUpdate().compose(first.getUpdate())));
 }
 
 
@@ -135,7 +113,7 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
 static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, unsigned int firstRhsIdx, const Rule &second,
                                     bool checkSat)
 {
-    const UpdateMap &firstUpdate = first.getUpdate(firstRhsIdx);
+    const Subs &firstUpdate = first.getUpdate(firstRhsIdx);
 
     auto newLhs = chainLhss(varMan, first.getLhs(), firstUpdate, second.getLhs(), checkSat);
     if (!newLhs) {
@@ -152,8 +130,7 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, uns
 
     // insert the rhss of second, chained with first's update
     for (const RuleRhs &secondRhs : second.getRhss()) {
-        UpdateMap newUpdate = chainUpdates(varMan, firstUpdate, secondRhs.getUpdate());
-        newRhss.push_back(RuleRhs(secondRhs.getLoc(), newUpdate));
+        newRhss.push_back(RuleRhs(secondRhs.getLoc(), secondRhs.getUpdate().compose(firstUpdate)));
     }
 
     // keep the last rhss of first (after the one we want to chain)
@@ -196,7 +173,7 @@ static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first,
         }
     }
 
-    return res;
+    return {res};
 }
 
 

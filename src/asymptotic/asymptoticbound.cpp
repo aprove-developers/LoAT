@@ -758,7 +758,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 
         if (it->isUnivariate() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
             const std::vector<Rel> &query = currentLP.getQuery();
-            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<UpdateMap>({query}, {}), varMan);
+            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<Subs>({query}, {}), varMan);
             solver->add(buildAnd(query));
             Smt::Result result = solver->check();
 
@@ -854,7 +854,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
         } else {
             // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
-            costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
+            costToCheck = varMan.addFreshVariable("x");
         }
     }
     if (finalCheck && Config::Analysis::NonTermMode) {

@@ -20,8 +20,8 @@
 using namespace std;
 
 struct PartialResult {
-    std::vector<VariableIdx> ordering; // might not contain all variables (hence partial)
-    std::set<VariableIdx> ordered; // set of all variables occurring in ordering
+    std::vector<Var> ordering; // might not contain all variables (hence partial)
+    VarSet ordered; // set of all variables occurring in ordering
 };
 
 
@@ -31,7 +31,7 @@ struct PartialResult {
  * already ordered. Stops if this is no longer possible (we are either done
  * or there are conflicting variables depending on each other).
  */
-static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &update, PartialResult &res) {
+static void findOrderUntilConflicting(const Subs &update, PartialResult &res) {
     bool changed = true;
 
     while (changed && res.ordering.size() < update.size()) {
@@ -42,9 +42,8 @@ static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &upd
 
             //check if all variables on update rhs are already processed
             bool ready = true;
-            for (const Var &sym : up.second.vars()) {
-                VariableIdx var = varMan.getVarIdx(sym);
-                if (var != up.first && update.count(var) > 0 && res.ordered.count(var) == 0) {
+            for (const Var &var : up.second.vars()) {
+                if (var != up.first && update.contains(var) && res.ordered.count(var) == 0) {
                     ready = false;
                     break;
                 }
@@ -59,9 +58,9 @@ static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &upd
     }
 }
 
-option<vector<VariableIdx>> DependencyOrder::findOrder(const VarMan &varMan, const UpdateMap &update) {
+option<vector<Var>> DependencyOrder::findOrder(const Subs &update) {
     PartialResult res;
-    findOrderUntilConflicting(varMan, update, res);
+    findOrderUntilConflicting(update, res);
 
     if (res.ordering.size() == update.size()) {
         return res.ordering;

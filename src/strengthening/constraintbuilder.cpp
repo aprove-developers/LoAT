@@ -110,7 +110,7 @@ namespace strengthening {
         // TODO Why is this variable renaming needed?
         Subs varRenaming;
         for (const Var &x: allVars) {
-            varRenaming.put(x, ruleCtx.varMan.getVarSymbol(ruleCtx.varMan.addFreshVariable(x.get_name())));
+            varRenaming.put(x, ruleCtx.varMan.addFreshVariable(x.get_name()));
         }
         std::vector<Rel> renamed;
         const std::vector<Rel> &updatedTemplates = templates.subs(varRenaming);

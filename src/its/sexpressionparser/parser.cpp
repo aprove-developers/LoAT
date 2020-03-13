@@ -68,17 +68,17 @@ namespace sexpressionparser {
                     sexpresso::Sexp ruleExps = ex[4];
                     VarSet tmpVars;
                     for (const std::string &str: postVars) {
-                        tmpVars.insert(res.getVarSymbol(vars[str]));
+                        tmpVars.insert(vars[str]);
                     }
                     for (auto &ruleExp: ruleExps.arguments()) {
                         if (ruleExp[0].str() == "cfg_trans2") {
                             LocationIdx from = locations[ruleExp[2].str()];
                             LocationIdx to = locations[ruleExp[4].str()];
-                            UpdateMap update;
+                            Subs update;
                             GuardList guard;
                             parseCond(ruleExp[5], guard);
                             for (unsigned int i = 0; i < preVars.size(); i++) {
-                                update[vars[preVars[i]]] = res.getVarSymbol(vars[postVars[i]]);
+                                update.put(vars[preVars[i]], vars[postVars[i]]);
                             }
                             Rule rule(from, guard, 1, to, update);
                             // make sure that the temporary variables are unique
@@ -87,7 +87,7 @@ namespace sexpressionparser {
                             Subs subs;
                             for (const Var &var: currTmpVars) {
                                 if (res.isTempVar(var)) {
-                                    subs.put(var, res.getVarSymbol(res.addFreshTemporaryVariable(var.get_name())));
+                                    subs.put(var, res.addFreshTemporaryVariable(var.get_name()));
                                 }
                             }
                             rule.applySubstitution(subs);
@@ -159,7 +159,7 @@ namespace sexpressionparser {
                 if (vars.find(str) == vars.end()) {
                     vars[str] = res.addFreshTemporaryVariable(str);
                 }
-                return res.getVarSymbol(vars[str]);
+                return vars[str];
             }
         }
         const std::string &op = sexp[0].str();

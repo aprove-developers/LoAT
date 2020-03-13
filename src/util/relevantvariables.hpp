@@ -31,20 +31,12 @@ namespace util {
         static const VarSet find(
                 const GuardList &constraints,
                 const std::vector<Subs> &updates,
-                const GuardList &guard,
-                const VariableManager &varMan);
-
-        static const VarSet find(
-                const GuardList &constraints,
-                const std::vector<UpdateMap> &updates,
-                const GuardList &guard,
-                const VariableManager &varMan);
+                const GuardList &guard);
 
         static const VarSet find(
                 const GuardList &constraints,
                 const std::vector<RuleRhs> &rhss,
-                const GuardList &guard,
-                const VariableManager &varMan);
+                const GuardList &guard);
 
     };
 

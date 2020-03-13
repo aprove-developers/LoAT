@@ -45,10 +45,10 @@ public:
      * Requires guard to only contain inequalities.
      * Returns the reverse substitution, if linearization was successful.
      */
-    static option<ExprMap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<UpdateMap> &updates);
+    static option<ExprMap> linearizeGuardUpdates(VarMan &varMan, GuardList &guard, std::vector<Subs> &updates);
 
 private:
-    Linearize(GuardList &guard, std::vector<UpdateMap> &updates, VarMan &varMan)
+    Linearize(GuardList &guard, std::vector<Subs> &updates, VarMan &varMan)
         : guard(guard), updates(updates), varMan(varMan) {}
 
     /**
@@ -118,7 +118,7 @@ private:
 private:
     // Guard and updates of the rule, only modified by applying substitutions.
     GuardList &guard;
-    std::vector<UpdateMap> &updates;
+    std::vector<Subs> &updates;
 
     // Additional constraints to be added to the resulting guard.
     // They retain information that is lost durng substitution, e.g. that x^2 is always nonnegative.

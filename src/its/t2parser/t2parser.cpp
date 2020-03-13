@@ -49,7 +49,7 @@ namespace t2parser {
     void T2Parser::parseTransition(LocationIdx start, std::ifstream &ifs) {
         std::string line;
         GuardList guard;
-        UpdateMap update;
+        Subs update;
         while (getline(ifs, line)) {
             line = removeComment(line);
             if (boost::starts_with(line, TO)) {
@@ -67,7 +67,7 @@ namespace t2parser {
                 boost::algorithm::trim(lhs);
                 addVar(lhs);
                 std::string rhs = line.substr(pos + ASSIGN.size(), line.size() - pos - ASSIGN.size() - 1);
-                update[vars[lhs]] = parseExpression(rhs);
+                update.put(vars[lhs], parseExpression(rhs));
             }
         }
     }
@@ -114,7 +114,7 @@ namespace t2parser {
     Expr T2Parser::parseExpression(std::string str) {
         boost::algorithm::trim(str);
         if (str == NONDET) {
-            return res.getVarSymbol(res.addFreshTemporaryVariable("nondet"));
+            return res.addFreshTemporaryVariable("nondet");
         }
         GiNaC::parser reader(symtab);
         const GiNaC::ex &ex = reader(str);
@@ -134,13 +134,13 @@ namespace t2parser {
         return res;
     }
 
-    VariableIdx T2Parser::addVar(const std::string &str) {
+    Var T2Parser::addVar(const std::string &str) {
         if (vars.find(str) != vars.end()) {
             return vars[str];
         }
-        VariableIdx var = res.addFreshVariable(str);
+        Var var = res.addFreshVariable(str);
         vars[str] = var;
-        symtab[str] = res.getVarSymbol(var);
+        symtab[str] = var;
         return var;
     }
 

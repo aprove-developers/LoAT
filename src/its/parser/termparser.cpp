@@ -29,7 +29,7 @@ using namespace boost::algorithm;
 const std::set<char> TermParser::specialCharsInVarNames = {'\'', '.', '_'};
 
 
-TermParser::TermParser(const std::map<std::string, VariableIdx> &knownVariables, bool allowDivision)
+TermParser::TermParser(const std::map<std::string, Var> &knownVariables, bool allowDivision)
  : knownVariables(knownVariables), allowDivision(allowDivision)
 {}
 
@@ -223,7 +223,7 @@ TermPtr TermParser::factor() {
             return make_shared<TermFunApp>(name, args);
         }
 
-        VariableIdx index = it->second;
+        Var index = it->second;
         return make_shared<TermVariable>(index);
 
     } else if (accept(NUMBER)) {

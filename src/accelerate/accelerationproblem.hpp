@@ -38,17 +38,15 @@ struct AccelerationProblem {
     }
 
     static AccelerationProblem init(
-            const UpdateMap &update,
+            const Subs &update,
             const GuardList &guard,
             const VariableManager &varMan,
-            const option<UpdateMap> &closed,
+            const Subs &closed,
             const Expr &cost,
             const Var &n,
             const uint validityBound) {
-        const Subs &up = update.toSubstitution(varMan);
-        Subs closedSubs = closed.get().toSubstitution(varMan);
         const GuardList &todo = normalize(guard);
-        AccelerationProblem res({}, {}, todo, up, closedSubs, cost, n, validityBound, varMan);
+        AccelerationProblem res({}, {}, todo, update, closed, cost, n, validityBound, varMan);
         while (res.recurrence());
         return res;
     }
@@ -224,7 +222,7 @@ struct AccelerationProblem {
 struct AccelerationCalculus {
 
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan) {
-        const Var &n = varMan.getVarSymbol(varMan.addFreshTemporaryVariable("n"));
+        const Var &n = varMan.addFreshTemporaryVariable("n");
         const option<Recurrence::Result> &res = Recurrence::iterateRule(varMan, r, n);
         if (res) {
             return {AccelerationProblem::init(r.getUpdate(), r.getGuard(), varMan, res->update, res->cost, n, res->validityBound)};

@@ -38,16 +38,12 @@ public:
 
 private:
     static bool isLinear(const std::vector<Rel> &guard);
-    static bool isLinear(const UpdateMap &up);
     static bool isLinear(const Subs &up);
     static bool isLinear(const std::vector<std::vector<Rel>> &gs);
-    static bool isLinear(const std::vector<UpdateMap> &up);
     static bool isLinear(const std::vector<Subs> &up);
     static bool isPolynomial(const std::vector<Rel> &guard);
-    static bool isPolynomial(const UpdateMap &up);
     static bool isPolynomial(const Subs &up);
     static bool isPolynomial(const std::vector<std::vector<Rel>> &gs);
-    static bool isPolynomial(const std::vector<UpdateMap> &up);
     static bool isPolynomial(const std::vector<Subs> &up);
 };
 

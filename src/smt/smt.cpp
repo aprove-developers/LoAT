@@ -42,27 +42,9 @@ bool Smt::isLinear(const std::vector<Rel> &guard) {
     return true;
 }
 
-bool Smt::isLinear(const UpdateMap &up) {
-    for (const auto &p: up) {
-        if (!p.second.isLinear()) {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool Smt::isLinear(const Subs &up) {
     for (const auto &p: up) {
         if (!p.second.isLinear()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Smt::isLinear(const std::vector<UpdateMap> &up) {
-    for (const UpdateMap &m: up) {
-        if (!isLinear(m)) {
             return false;
         }
     }
@@ -96,27 +78,9 @@ bool Smt::isPolynomial(const std::vector<Rel> &guard) {
     return true;
 }
 
-bool Smt::isPolynomial(const UpdateMap &up) {
-    for (const auto &p: up) {
-        if (!p.second.isPoly()) {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool Smt::isPolynomial(const Subs &up) {
     for (const auto &p: up) {
         if (!p.second.isPoly()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Smt::isPolynomial(const std::vector<UpdateMap> &up) {
-    for (const UpdateMap &m: up) {
-        if (!isPolynomial(m)) {
             return false;
         }
     }

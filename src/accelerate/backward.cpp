@@ -86,9 +86,9 @@ Self::AccelerationResult BackwardAcceleration::run() {
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->proof, "acceration calculus");
                 } else {
-                    UpdateMap up;
+                    Subs up;
                     for (auto p: ap->closed) {
-                        up[its.getVarIdx(p.first)] = p.second;
+                        up.put(p.first, p.second);
                     }
                     LinearRule accel(rule.getLhsLoc(), ap->res, ap->cost, rule.getRhsLoc(), up);
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);

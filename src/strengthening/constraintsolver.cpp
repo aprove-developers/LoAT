@@ -55,17 +55,16 @@ namespace strengthening {
 
     const GuardList Self::instantiateTemplates(const VarMap<GiNaC::numeric> &model) const {
         GuardList res;
-        UpdateMap parameterInstantiation;
+        Subs parameterInstantiation;
         for (const Var &p: templates.params()) {
             auto it = model.find(p);
             if (it != model.end()) {
                 const Expr &pi = it->second;
-                parameterInstantiation.emplace(ruleCtx.varMan.getVarIdx(p), pi);
+                parameterInstantiation.put(p, pi);
             }
         }
-        const Subs &subs = parameterInstantiation.toSubstitution(ruleCtx.varMan);
-        const std::vector<Rel> instantiatedTemplates = templates.subs(subs);
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<UpdateMap>({instantiatedTemplates}, {}), ruleCtx.varMan);
+        const std::vector<Rel> instantiatedTemplates = templates.subs(parameterInstantiation);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({instantiatedTemplates}, {}), ruleCtx.varMan);
         for (const Rel &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
                 solver->push();

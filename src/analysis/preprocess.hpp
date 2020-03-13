@@ -67,7 +67,7 @@ namespace Preprocess
      * Removes trivial updates of the form x <- x.
      * @return true iff update was modified
      */
-    bool removeTrivialUpdates(const VarMan &varMan, UpdateMap &update);
+    bool removeTrivialUpdates(Subs &update);
 
     /**
      * Tries to remove as many temporary variables from update right-hand sides

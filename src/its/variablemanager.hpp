@@ -19,29 +19,21 @@ typedef VariableManager VarMan;
  */
 class VariableManager {
 public:
-    // Mapping between indices and names
-    bool hasVarIdx(VariableIdx idx) const;
-    std::string getVarName(VariableIdx idx) const;
-
-    // Mapping between indices and ginac symbols
-    VariableIdx getVarIdx(const Var &var) const;
-    Var getVarSymbol(VariableIdx idx) const;
 
     // Handling of temporary variables
-    const std::set<VariableIdx>& getTempVars() const;
-    bool isTempVar(VariableIdx idx) const;
+    const VarSet& getTempVars() const;
     bool isTempVar(const Var &var) const;
 
     // Useful to iterate over all variables (for printing/debugging)
-    size_t getVariableCount() const;
+    VarSet getVars() const;
 
     /**
      * Adds a new fresh variable based on the given name
      * (the given name is used if it is still available, otherwise it is modified)
      * @return the VariableIdx of the newly added variable
      */
-    VariableIdx addFreshVariable(std::string basename);
-    VariableIdx addFreshTemporaryVariable(std::string basename);
+    Var addFreshVariable(std::string basename);
+    Var addFreshTemporaryVariable(std::string basename);
 
     /**
      * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the list of variables
@@ -57,7 +49,7 @@ public:
 
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
-    VariableIdx addVariable(std::string name);
+    Var addVariable(std::string name);
 
     // Generates a yet unused name starting with the given string
     std::string getFreshName(std::string basename) const;
@@ -71,14 +63,14 @@ private:
 
     // List of all variables (VariableIdx is an index in this list; a Variable is a name and a ginac symbol)
     // Note: Variables are never removed, so this list is appended, but otherwise not modified
-    std::vector<Variable> variables;
+    VarSet variables;
     VarMap<Expr::Type> untrackedVariables;
 
     // The set of variables (identified by their index) that are used as temporary variables (not bound by lhs)
-    std::set<VariableIdx> temporaryVariables;
+    VarSet temporaryVariables;
 
     // Reverse mapping for efficiency
-    std::map<std::string,VariableIdx> variableNameLookup;
+    std::map<std::string, Var> variableNameLookup;
 };
 
 
