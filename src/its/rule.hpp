@@ -124,13 +124,15 @@ public:
     // applies the given substitution to guard, cost, and the update's rhss (not to the update's lhss!)
     // Note: Result may be incorrect if an updated variable is updated (which is not checked!)
     // Note: It is always safe if only temporary variables are substituted.
-    void applySubstitution(const Subs &subs);
+    Rule subs(const Subs &subs) const;
 
     // Creates a new rule that only leads to the given location, the updates are cleared, guard/cost are kept
     LinearRule replaceRhssBySink(LocationIdx sink) const;
 
     // Removes all right-hand sides that lead to the given location, returns none if all rhss would be removed
     option<Rule> stripRhsLocation(LocationIdx toRemove) const;
+
+    Rule withGuard(const GuardList &guard) const;
 };
 
 

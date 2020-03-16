@@ -70,10 +70,15 @@ bool Accelerator::simplifySimpleLoops() {
     // Simplify all all simple loops.
     // This is especially useful to eliminate temporary variables before metering.
     if (Config::Accel::SimplifyRulesBefore) {
-        for (TransIdx loop : loops) {
-            its.lock();
-            res |= Preprocess::simplifyRule(its, its.getRuleMut(loop));
-            its.unlock();
+        for (auto it = loops.begin(), end = loops.end(); it != end; ++it) {
+            const Rule &rule = its.getRule(*it);
+            option<Rule> simplified = Preprocess::simplifyRule(its, rule);
+            if (simplified) {
+                this->proof.ruleTransformationProof(rule, "simplification", simplified.get(), its);
+                its.removeRule(*it);
+                *it = its.addRule(simplified.get());
+                res = true;
+            }
         }
     }
     if (res) {
@@ -109,6 +114,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
 
     auto optNested = Chaining::chainRules(its, first, second);
     if (optNested) {
+        Chaining::chainRules(its, first, second);
         LinearRule nestedRule = optNested.get();
 
         // Simplify the rule again (chaining can introduce many useless constraints)
@@ -460,11 +466,21 @@ option<ProofOutput> Accelerator::run() {
     // Simplify the guards of accelerated rules.
     // Especially backward acceleration and nesting can introduce superfluous constraints.
     bool changed = false;
-    for (TransIdx rule : resultingRules) {
-        its.lock();
-        changed = Preprocess::simplifyGuard(its.getRuleMut(rule).getGuardMut()) || changed;
-        its.unlock();
+    std::set<TransIdx> toAdd;
+    for (auto it = resultingRules.begin(); it != resultingRules.end();) {
+        const Rule &r = its.getRule(*it);
+        option<Rule> simplified = Preprocess::simplifyGuard(r);
+        if (simplified) {
+            this->proof.ruleTransformationProof(r, "simplification", simplified.get(), its);
+            its.removeRule(*it);
+            toAdd.insert(its.addRule(simplified.get()));
+            it = resultingRules.erase(it);
+        } else {
+            ++it;
+        }
     }
+
+    resultingRules.insert(toAdd.begin(), toAdd.end());
 
     // Keep rules for which acceleration failed (maybe these rules are in fact not loops).
     // We add them to resultingRules so they are chained just like accelerated rules.

@@ -442,8 +442,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
         meter.guard = oldGuard; // copy
         for (Rel &rel : meter.guard) rel.applySubs(sub);
 
-        meter.updates = oldUpdates; // copy
-        MT::applySubsToUpdates(sub, meter.updates);
+        meter.updates = MT::applySubsToUpdates(sub, oldUpdates); // copy
 
         // Perform the first steps from generate() again (guard/update have changed)
         meter.simplifyAndFindVariables();
@@ -471,8 +470,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     }
 
     // Apply the successful instantiation to the entire rule
-    Rule instantiatedRule = rule;
-    instantiatedRule.applySubstitution(successfulSubs);
+    Rule instantiatedRule = rule.subs(successfulSubs);
 
     // Proof output
     ProofOutput proof;

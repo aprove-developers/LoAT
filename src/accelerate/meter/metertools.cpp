@@ -28,12 +28,12 @@ using namespace std;
 
 /* ### Helpers ### */
 
-void MeteringToolbox::applySubsToUpdates(const Subs &subs, MultiUpdate &updates) {
-    for (Subs &update : updates) {
-        for (auto &it : update) {
-            it.second.applySubs(subs);
-        }
+std::vector<Subs> MeteringToolbox::applySubsToUpdates(const Subs &subs, const MultiUpdate &updates) {
+    MultiUpdate res;
+    for (const Subs &update : updates) {
+        res.push_back(update.concat(subs));
     }
+    return res;
 }
 
 

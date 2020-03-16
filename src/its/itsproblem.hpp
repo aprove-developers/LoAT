@@ -94,7 +94,7 @@ public:
     void removeOnlyLocation(LocationIdx loc);
 
     // Removes a location and all rules that visit loc
-    void removeLocationAndRules(LocationIdx loc);
+    std::set<TransIdx> removeLocationAndRules(LocationIdx loc);
 
     // Print the ITSProblem in a simple, but user-friendly format
     void print(std::ostream &s) const;

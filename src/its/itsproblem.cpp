@@ -54,6 +54,7 @@ bool ITSProblem::hasRule(TransIdx transition) const {
 
 const Rule& ITSProblem::getRule(TransIdx transition) const {
     try_lock();
+    assert(rules.count(transition) > 0);
     const Rule &res = rules.at(transition);
     unlock();
     return res;
@@ -201,7 +202,7 @@ void ITSProblem::removeOnlyLocation(LocationIdx loc) {
     assert(removed.empty());
 }
 
-void ITSProblem::removeLocationAndRules(LocationIdx loc) {
+std::set<TransIdx> ITSProblem::removeLocationAndRules(LocationIdx loc) {
     // The initial location must not be removed
     assert(loc != initialLocation);
 
@@ -213,6 +214,7 @@ void ITSProblem::removeLocationAndRules(LocationIdx loc) {
     for (TransIdx t : removed) {
         removeRule(t);
     }
+    return removed;
 }
 
 void ITSProblem::print(std::ostream &s) const {

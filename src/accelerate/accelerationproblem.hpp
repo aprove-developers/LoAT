@@ -19,7 +19,7 @@ struct AccelerationProblem {
     GuardList guard;
     uint validityBound;
     bool equivalent = true;
-    bool nonterm = true;
+    bool nonterm;
     ProofOutput proof;
     std::unique_ptr<Smt> solver;
     const VariableManager varMan;
@@ -35,6 +35,7 @@ struct AccelerationProblem {
             const uint validityBound,
             const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), validityBound(validityBound), varMan(varMan) {
         this->solver = SmtFactory::solver(Smt::chooseLogic<Subs>({todo}, {up, closed}), varMan);
+        this->nonterm = Smt::isImplication(buildAnd(todo), buildLit(cost > 0), varMan);
     }
 
     static AccelerationProblem init(
@@ -79,11 +80,11 @@ struct AccelerationProblem {
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic decrease");
                 done.push_back(rel);
                 res.push_back(rel.subs(closed).subs(Subs(n, n-1)));
-                print();
                 nonterm = false;
                 solver->pop();
                 solver->add(rel);
                 todo.erase(it);
+                print();
                 return true;
             }
             solver->pop();
@@ -106,10 +107,10 @@ struct AccelerationProblem {
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic increase");
                 done.push_back(rel);
                 res.push_back(rel);
-                print();
                 solver->pop();
                 solver->add(rel);
                 todo.erase(it);
+                print();
                 return true;
             }
             solver->pop();
@@ -140,11 +141,11 @@ struct AccelerationProblem {
                     done.push_back(rel);
                     res.push_back(rel);
                     res.push_back(newCond);
-                    print();
                     nonterm = false;
                     solver->pop();
                     solver->add(rel);
                     todo.erase(it);
+                    print();
                     return true;
                 }
             }
@@ -188,9 +189,9 @@ struct AccelerationProblem {
                     res.push_back(newCond);
                     res.push_back(rel);
                     this->equivalent = false;
-                    print();
                     solver->pop();
                     solver->add(rel);
+                    print();
                     todo.erase(it);
                     return true;
                 }

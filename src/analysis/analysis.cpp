@@ -432,7 +432,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
     sort(todo.begin(), todo.end(), comp);
 
     for (TransIdx ruleIdx : todo) {
-        Rule &rule = its.getRuleMut(ruleIdx);
+        Rule rule = its.getRule(ruleIdx);
         ProofOutput proof;
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
@@ -447,14 +447,21 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
         proof.section(stringstream() << "Computing asymptotic complexity for rule " << ruleIdx);
 
         // Simplify guard to speed up asymptotic check
-        bool simplified = false;
-        simplified |= Preprocess::simplifyGuard(rule.getGuardMut());
-        simplified |= Preprocess::simplifyGuardBySmt(rule.getGuardMut(), its);
-        if (simplified) {
-            proof.append("Simplified the guard:");
-            stringstream s;
-            ITSExport::printLabeledRule(ruleIdx, its, s);
-            proof.append(s);
+        option<Rule> simplifiedRule;
+        option<Rule> tmp = {rule};
+        tmp = Preprocess::simplifyGuard(tmp.get());
+        if (tmp) {
+            simplifiedRule = tmp;
+        } else {
+            tmp = rule;
+        }
+        tmp = Preprocess::simplifyGuardBySmt(tmp.get(), its);
+        if (tmp) {
+            simplifiedRule = tmp;
+        }
+        if (simplifiedRule) {
+            proof.ruleTransformationProof(rule, "simplification", simplifiedRule.get(), its);
+            rule = simplifiedRule.get();
         }
 
         // Perform the asymptotic check to verify that this rule's guard allows infinitely many models

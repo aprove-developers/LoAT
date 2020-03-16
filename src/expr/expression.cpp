@@ -407,8 +407,8 @@ Expr Expr::subs(const Subs &map) const {
     return ex.subs(map.ginacMap);
 }
 
-Expr Expr::replace(const ExprMap &patternMap) const {
-    return ex.subs(patternMap.ginacMap, GiNaC::subs_options::algebraic);
+Expr Expr::replace(const ExprMap &map) const {
+    return ex.subs(map.ginacMap, GiNaC::subs_options::algebraic);
 }
 
 void Expr::traverse(GiNaC::visitor &v) const {
@@ -763,8 +763,8 @@ Rel Rel::subs(const Subs &map) const {
     return Rel(l.subs(map), op, r.subs(map));
 }
 
-Rel Rel::replace(const ExprMap &patternMap) const {
-    return Rel(l.replace(patternMap), op, r.replace(patternMap));
+Rel Rel::replace(const ExprMap &map) const {
+    return Rel(l.replace(map), op, r.replace(map));
 }
 
 void Rel::applySubs(const Subs &subs) {

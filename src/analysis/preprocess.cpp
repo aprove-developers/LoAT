@@ -24,56 +24,102 @@
 using namespace std;
 
 
-bool Preprocess::preprocessRule(const VarMan &varMan, Rule &rule) {
-    bool changed;
+option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) {
     bool result = false;
+    Rule oldRule = rule;
+    option<Rule> newRule;
 
     // First try to find equalities (A <= B and B <= A become A == B).
     // We do this before simplifying by smt, as this might remove one of the two constraints
     // (if it is semantically implied) so we don't recognize the equality later on.
-    result |= GuardToolbox::makeEqualities(rule.getGuardMut());
+    newRule = GuardToolbox::makeEqualities(oldRule);
+    if (newRule) {
+        result = true;
+        oldRule = newRule.get();
+    }
 
     // Simplify with smt only once
-    result |= simplifyGuard(rule.getGuardMut());
-    result |= simplifyGuardBySmt(rule.getGuardMut(), varMan);
+    newRule = simplifyGuard(oldRule);
+    if (newRule) {
+        result = true;
+        oldRule = newRule.get();
+    }
+
+    newRule = simplifyGuardBySmt(oldRule, varMan);
+    if (newRule) {
+        result = true;
+        oldRule = newRule.get();
+    }
 
     // The other steps are repeated (might not help very often, but is probably cheap enough)
+    bool changed = false;
     do {
-        changed = eliminateTempVars(varMan,rule);
-
-        if (changed) {
-            changed |= simplifyGuard(rule.getGuardMut());
+        changed = false;
+        newRule = eliminateTempVars(varMan, oldRule);
+        if (newRule) {
+            changed = true;
+            oldRule = newRule.get();
         }
 
-        for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-            changed |= removeTrivialUpdates(rhs->getUpdateMut());
+        if (changed) {
+            newRule = simplifyGuard(oldRule);
+            if (newRule) {
+                oldRule = newRule.get();
+            }
+        }
+
+        newRule = removeTrivialUpdates(oldRule);
+        if (newRule) {
+            changed = true;
+            oldRule = newRule.get();
         }
 
         result = result || changed;
     } while (changed);
 
-    return result;
+    if (result) {
+        return {oldRule};
+    } else {
+        return {};
+    }
 }
 
 
-bool Preprocess::simplifyRule(const VarMan &varMan, Rule &rule) {
+option<Rule> Preprocess::simplifyRule(const VarMan &varMan, const Rule &rule) {
     bool changed = false;
+    Rule oldRule = rule;
+    option<Rule> newRule;
 
-    changed |= eliminateTempVars(varMan, rule);
-    changed |= simplifyGuard(rule.getGuardMut());
-
-    for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
-        changed = removeTrivialUpdates(rhs->getUpdateMut()) || changed;
+    newRule = eliminateTempVars(varMan, oldRule);
+    if (newRule) {
+        changed = true;
+        oldRule = newRule.get();
     }
 
-    return changed;
+    newRule = simplifyGuard(oldRule);
+    if (newRule) {
+        changed = true;
+        oldRule = newRule.get();
+    }
+
+    newRule = removeTrivialUpdates(oldRule);
+    if (newRule) {
+        changed = true;
+        oldRule = newRule.get();
+    }
+
+    if (changed) {
+        return {oldRule};
+    } else {
+        return {};
+    }
 }
 
 
-bool Preprocess::simplifyGuard(GuardList &guard) {
+option<Rule> Preprocess::simplifyGuard(const Rule &rule) {
     GuardList newGuard;
 
-    for (const Rel &rel : guard) {
+    for (const Rel &rel : rule.getGuard()) {
         // Skip trivially true constraints
         if (rel.isTriviallyTrue()) continue;
 
@@ -102,17 +148,20 @@ bool Preprocess::simplifyGuard(GuardList &guard) {
         }
     }
 
-    guard.swap(newGuard);
-    return guard.size() != newGuard.size();
+    if (rule.getGuard().size() == newGuard.size()) {
+        return {};
+    } else {
+        return {rule.withGuard(newGuard)};
+    }
 }
 
 
-bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &varMan) {
-    GuardList newGuard;
-    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({guard}, {}), varMan);
+option<Rule> Preprocess::simplifyGuardBySmt(const Rule &rule, const VariableManager &varMan) {
+    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({rule.getGuard()}, {}), varMan);
 
     // iterates once over guard and drops constraints that are implied by previous constraints
-    auto dropImplied = [&]() {
+    auto dropImplied = [&](const GuardList &guard) {
+        GuardList res;
         for (const Rel &rel : guard) {
             solver->push();
             solver->add(!buildLit(rel));
@@ -121,31 +170,47 @@ bool Preprocess::simplifyGuardBySmt(GuardList &guard, const VariableManager &var
 
             // unsat means that ex is implied by the previous constraints
             if (smtRes != Smt::Unsat) {
-                newGuard.push_back(rel);
+                res.push_back(rel);
                 solver->add(rel);
             }
         }
+        return res;
     };
 
     // iterated once, drop implied constraints
-    dropImplied();
+    GuardList newGuard = dropImplied(rule.getGuard());
 
     // reverse the guard
     std::reverse(newGuard.begin(), newGuard.end());
-    guard.swap(newGuard);
 
     // iterate over the reversed guard, drop more implied constraints,
     // e.g. for "A > 0, A > 1" only the reverse iteration can remove "A > 0".
-    newGuard.clear();
     solver->resetSolver();
-    dropImplied();
+    newGuard = dropImplied(newGuard);
 
     // reverse again to preserve original order
     std::reverse(newGuard.begin(), newGuard.end());
-    guard.swap(newGuard);
-    return guard.size() != newGuard.size();
+    if (rule.getGuard().size() == newGuard.size()) {
+        return {};
+    } else {
+        return {rule.withGuard(newGuard)};
+    }
 }
 
+option<Rule> Preprocess::removeTrivialUpdates(const Rule &rule) {
+    bool changed = false;
+    std::vector<RuleRhs> newRhss;
+    for (const RuleRhs &rhs: rule.getRhss()) {
+        Subs up = rhs.getUpdate();
+        changed |= removeTrivialUpdates(up);
+        newRhss.push_back(RuleRhs(rhs.getLoc(), up));
+    }
+    if (changed) {
+        return {Rule(rule.getLhs(), newRhss)};
+    } else {
+        return {};
+    }
+}
 
 bool Preprocess::removeTrivialUpdates(Subs &update) {
     stack<Var> remove;
@@ -178,9 +243,7 @@ static VarSet collectVarsInUpdateRhs(const Rule &rule) {
 }
 
 
-bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
-    bool changed = false;
-
+option<Rule> Preprocess::eliminateTempVars(const VarMan &varMan, const Rule &rule) {
     //collect all variables that appear in the rhs of any update
     VarSet varsInUpdate = collectVarsInUpdateRhs(rule);
 
@@ -195,14 +258,29 @@ bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
         return isTemp(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym);
     };
 
-    //equalities allow easy propagation, thus transform x <= y, x >= y into x == y
-    changed |= GuardToolbox::makeEqualities(rule.getGuardMut());
+    bool changed = false;
+    Rule oldRule = rule;
+    option<Rule> newRule;
 
+    //equalities allow easy propagation, thus transform x <= y, x >= y into x == y
+    newRule = GuardToolbox::makeEqualities(oldRule);
+    if (newRule) {
+        oldRule = newRule.get();
+        changed = true;
+    }
     //try to remove temp variables from the update by equality propagation (they are removed from guard and update)
-    changed |= GuardToolbox::propagateEqualities(varMan, rule, GuardToolbox::ResultMapsToInt, isTempInUpdate);
+    newRule = GuardToolbox::propagateEqualities(varMan, oldRule, GuardToolbox::ResultMapsToInt, isTempInUpdate);
+    if (newRule) {
+        oldRule = newRule.get();
+        changed = true;
+    }
 
     //try to remove all remaining temp variables (we do 2 steps to priorizie removing vars from the update)
-    changed |= GuardToolbox::propagateEqualities(varMan, rule, GuardToolbox::ResultMapsToInt, isTemp);
+    newRule = GuardToolbox::propagateEqualities(varMan, oldRule, GuardToolbox::ResultMapsToInt, isTemp);
+    if (newRule) {
+        oldRule = newRule.get();
+        changed = true;
+    }
 
     //note that propagation can alter the update, so we have to recompute
     //the variables that appear in the rhs of an update:
@@ -210,7 +288,15 @@ bool Preprocess::eliminateTempVars(const VarMan &varMan, Rule &rule) {
 
     //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
     //(not sound if x appears in update or cost, since we then need the value of x)
-    changed |= GuardToolbox::eliminateByTransitiveClosure(rule.getGuardMut(), true, isTempOnlyInGuard);
+    newRule = GuardToolbox::eliminateByTransitiveClosure(oldRule, true, isTempOnlyInGuard);
+    if (newRule) {
+        oldRule = newRule.get();
+        changed = true;
+    }
 
-    return changed;
+    if (changed) {
+        return {oldRule};
+    } else {
+        return {};
+    }
 }

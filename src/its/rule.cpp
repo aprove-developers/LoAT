@@ -62,16 +62,12 @@ bool Rule::isSimpleLoop() const {
     return std::all_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.getLoc(); });
 }
 
-void Rule::applySubstitution(const Subs &subs) {
-    getCostMut().applySubs(subs);
-    for (Rel &rel: getGuardMut()) {
-        rel.applySubs(subs);
+Rule Rule::subs(const Subs &subs) const {
+    std::vector<RuleRhs> newRhss;
+    for (const RuleRhs &rhs : rhss) {
+        newRhss.push_back(RuleRhs(rhs.getLoc(), rhs.getUpdate().concat(subs)));
     }
-    for (RuleRhs &rhs : rhss) {
-        for (auto &it : rhs.getUpdateMut()) {
-            it.second.applySubs(subs);
-        }
-    }
+    return Rule(RuleLhs(getLhsLoc(), getGuard().subs(subs), getCost().subs(subs)), newRhss);
 }
 
 LinearRule Rule::replaceRhssBySink(LocationIdx sink) const {
@@ -91,6 +87,10 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     } else {
         return Rule(lhs, newRhss);
     }
+}
+
+Rule Rule::withGuard(const GuardList &guard) const {
+    return Rule(RuleLhs(getLhsLoc(), guard, getCost()), getRhss());
 }
 
 bool operator ==(const RuleRhs &fst, const RuleRhs &snd) {

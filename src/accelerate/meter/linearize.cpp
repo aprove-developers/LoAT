@@ -183,15 +183,21 @@ ExprMap Linearize::buildSubstitution(const ExprSet &monomials) {
 
 
 void Linearize::applySubstitution(const ExprMap &subs) {
-    for (Rel &rel : guard) {
-        rel = rel.expand().replace(subs);
+    GuardList newGuard;
+    for (const Rel &rel : guard) {
+        newGuard.push_back(rel.expand().replace(subs));
     }
+    guard = newGuard;
 
-    for (Subs &update : updates) {
-        for (auto &it : update) {
-            it.second = it.second.expand().replace(subs);
+    std::vector<Subs> newUpdates;
+    for (const Subs &update : updates) {
+        Subs up;
+        for (const auto &it : update) {
+            up.put(it.first, it.second.expand().replace(subs));
         }
+        newUpdates.push_back(up);
     }
+    updates = newUpdates;
 }
 
 

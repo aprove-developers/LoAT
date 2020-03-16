@@ -76,10 +76,16 @@ static ProofOutput eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
 
                 // Simplify the guard (chaining often introduces trivial constraints)
                 Rule newRule = optRule.get();
-                Preprocess::simplifyGuard(newRule.getGuardMut());
+                proof.chainingProof(inRule, outRule, newRule, its);
+
+                option<Rule> simplified = Preprocess::simplifyGuard(newRule);
+                if (simplified) {
+                    proof.ruleTransformationProof(newRule, "simplification", simplified.get(), its);
+                    newRule = simplified.get();
+                }
 
                 its.addRule(newRule);
-                proof.chainingProof(inRule, outRule, newRule, its);
+
 
             } else {
                 wasChainedWithAll = false;
@@ -115,7 +121,8 @@ static ProofOutput eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
 
     // Remove loc and all incoming/outgoing rules.
     // Note that all rules have already been chained (or backed up), so removing these rules is ok.
-    its.removeLocationAndRules(loc);
+    const std::set<TransIdx> &removed = its.removeLocationAndRules(loc);
+    proof.deletionProof(removed);
     return proof;
 }
 

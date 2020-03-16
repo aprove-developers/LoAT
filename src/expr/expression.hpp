@@ -310,7 +310,7 @@ public:
      */
     Expr subs(const Subs &map) const;
 
-    Expr replace(const ExprMap &patternMap) const;
+    Expr replace(const ExprMap &map) const;
 
     /**
      * @brief Provides a total order for expressions.
@@ -397,7 +397,7 @@ public:
     void collectVariables(VarSet &res) const;
     bool has(const Expr &pattern) const;
     Rel subs(const Subs &map) const;
-    Rel replace(const ExprMap &patternMap) const;
+    Rel replace(const ExprMap &map) const;
     void applySubs(const Subs &subs);
     std::string toString() const;
     RelOp relOp() const;

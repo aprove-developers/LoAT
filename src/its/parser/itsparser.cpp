@@ -441,15 +441,13 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
         rhss.push_back(RuleRhs(rhsLoc, rhsUpdate));
     }
 
-    Rule newRule(std::move(lhs), std::move(rhss));
-
     // Ensure that a function symbol always occurs with the same lhs arguments,
     // e.g. if we have "f(x) -> ..." and "f(y) -> ..." we rename the variables in the second rule to get "f(x) -> ..."
     Subs subsLhs = computeSubstitutionToUnifyLhs(rule);
-    newRule.applySubstitution(subsLhs);
+    Rule newRule = Rule(std::move(lhs), std::move(rhss)).subs(subsLhs);
 
     // Replace unbounded variables (which do not occur in lhs) by fresh temporary variables
-    replaceUnboundedByTemporaryVariables(newRule, getLocationData(rule.lhs));
+    newRule = replaceUnboundedByTemporaryVariables(newRule, getLocationData(rule.lhs));
 
     // Remove trivial updates like "x := x" (to simplify rules)
     for (unsigned int i=0; i < newRule.rhsCount(); ++i) {
@@ -578,7 +576,7 @@ Subs ITSParser::computeSubstitutionToUnifyLhs(const ParsedRule &rule) {
 }
 
 
-void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationData &lhsData) {
+Rule ITSParser::replaceUnboundedByTemporaryVariables(const Rule &rule, const LocationData &lhsData) {
     // Gather variables
     VarSet ruleVars = getSymbols(rule);
 
@@ -592,7 +590,7 @@ void ITSParser::replaceUnboundedByTemporaryVariables(Rule &rule, const LocationD
         }
     }
 
-    rule.applySubstitution(subs);
+    return rule.subs(subs);
 }
 
 

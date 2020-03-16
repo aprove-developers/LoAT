@@ -36,7 +36,7 @@ namespace MeteringToolbox {
     /**
      * Helper that applies a given substitution to all right-hand sides of all given updates.
      */
-    void applySubsToUpdates(const Subs &subs, MultiUpdate &update);
+    MultiUpdate applySubsToUpdates(const Subs &subs, const MultiUpdate &update);
 
     /**
      * Checks if the given variable is affected by any of the given updates

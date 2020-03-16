@@ -66,7 +66,7 @@ namespace GuardToolbox {
      *
      * @return true if any progpagation was performed.
      */
-    bool propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel level, SymbolAcceptor allow);
+    option<Rule> propagateEqualities(const VarMan &varMan, const Rule &rule, SolvingLevel level, SymbolAcceptor allow);
 
 
     /**
@@ -82,7 +82,7 @@ namespace GuardToolbox {
      *
      * @return true if any changes have been made
      */
-    bool eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow);
+    option<Rule> eliminateByTransitiveClosure(const Rule &rule, bool removeHalfBounds, SymbolAcceptor allow);
 
     std::pair<option<Expr>, option<Expr>> getBoundFromIneq(const Rel &rel, const Var &N);
 
@@ -107,7 +107,7 @@ namespace GuardToolbox {
      * @note expensive for large guards
      * @return true iff guard was changed.
      */
-    bool makeEqualities(GuardList &guard);
+    option<Rule> makeEqualities(const Rule &rule);
 
 
     /**
