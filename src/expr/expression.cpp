@@ -774,7 +774,7 @@ void Rel::applySubs(const Subs &subs) {
 
 std::string Rel::toString() const {
     stringstream s;
-    s << this;
+    s << *this;
     return s.str();
 }
 

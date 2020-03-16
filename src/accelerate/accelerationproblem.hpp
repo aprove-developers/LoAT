@@ -31,23 +31,23 @@ struct AccelerationProblem {
             const Subs &up,
             const Subs &closed,
             const Expr &cost,
+            const Expr &iteratedCost,
             const Var &n,
             const uint validityBound,
-            const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(cost), n(n), validityBound(validityBound), varMan(varMan) {
+            const VariableManager &varMan): res(res), done(done), todo(todo), up(up), closed(closed), cost(iteratedCost), n(n), validityBound(validityBound), varMan(varMan) {
         this->solver = SmtFactory::solver(Smt::chooseLogic<Subs>({todo}, {up, closed}), varMan);
         this->nonterm = Smt::isImplication(buildAnd(todo), buildLit(cost > 0), varMan);
     }
 
     static AccelerationProblem init(
-            const Subs &update,
-            const GuardList &guard,
+            const LinearRule &r,
             const VariableManager &varMan,
             const Subs &closed,
-            const Expr &cost,
+            const Expr &iteratedCost,
             const Var &n,
             const uint validityBound) {
-        const GuardList &todo = normalize(guard);
-        AccelerationProblem res({}, {}, todo, update, closed, cost, n, validityBound, varMan);
+        const GuardList &todo = normalize(r.getGuard());
+        AccelerationProblem res({}, {}, todo, r.getUpdate(), closed, r.getCost(), iteratedCost, n, validityBound, varMan);
         while (res.recurrence());
         return res;
     }
@@ -226,7 +226,7 @@ struct AccelerationCalculus {
         const Var &n = varMan.addFreshTemporaryVariable("n");
         const option<Recurrence::Result> &res = Recurrence::iterateRule(varMan, r, n);
         if (res) {
-            return {AccelerationProblem::init(r.getUpdate(), r.getGuard(), varMan, res->update, res->cost, n, res->validityBound)};
+            return {AccelerationProblem::init(r, varMan, res->update, res->cost, n, res->validityBound)};
         } else {
             return {};
         }

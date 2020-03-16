@@ -283,11 +283,12 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             }
         }
         if (!nonterm) {
-            option<std::pair<Rule, Status>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+            option<std::pair<Rule, ProofOutput>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
             if (p) {
                 nonterm = true;
                 const Rule &nontermRule = p.get().first;
-                res.proof.ruleTransformationProof(r, "non-termination processor", nontermRule, its);
+                const ProofOutput &proof = p.get().second;
+                res.proof.concat(proof);
                 res.rules.emplace_back(nontermRule);
             }
         }
@@ -307,10 +308,11 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
             }
         }
         if (!nonterm) {
-            option<std::pair<Rule, Status>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
+            option<std::pair<Rule, ProofOutput>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
             if (p) {
                 const Rule &nontermRule = p.get().first;
-                res.proof.ruleTransformationProof(r, "fixed-point processor", nontermRule, its);
+                const ProofOutput &proof = p.get().second;
+                res.proof.concat(proof);
                 res.rules.emplace_back(nontermRule);
             }
         }
