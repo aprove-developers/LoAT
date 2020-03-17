@@ -50,7 +50,6 @@ public:
     // query the rule associated with a given transition
     bool hasRule(TransIdx transition) const;
     const Rule& getRule(TransIdx transition) const;
-    Rule& getRuleMut(TransIdx transition); // Note: the locations of the returned rule must not be changed!
 
     // the rule associated with the given index must be linear!
     LinearRule getLinearRule(TransIdx transition) const;

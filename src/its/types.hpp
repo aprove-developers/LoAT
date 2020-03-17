@@ -43,6 +43,9 @@ public:
      */
     bool isWellformed() const;
 
+    friend GuardList operator&(const GuardList &fst, const GuardList &snd);
+    friend GuardList operator&(const GuardList &fst, const Rel &snd);
+
 };
 
 std::ostream& operator<<(std::ostream &s, const GuardList &l);

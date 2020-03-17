@@ -57,8 +57,12 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
 
     proof.majorProofStep("Initial ITS", its);
 
-    if (Config::Analysis::EnsureNonnegativeCosts && ensureNonnegativeCosts()) {
-        proof.minorProofStep("Ensure Cost >= 0", its);
+    if (Config::Analysis::EnsureNonnegativeCosts) {
+        const option<ProofOutput> &subProof = ensureNonnegativeCosts();
+        if (subProof) {
+            proof.concat(subProof.get());
+            proof.minorProofStep("Ensure Cost >= 0", its);
+        }
     }
 
     if (ensureProperInitialLocation()) {
@@ -88,7 +92,9 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
             proof.minorProofStep("Removed unreachable rules and leafs", its);
         }
 
-        if (preprocessRules()) {
+        option<ProofOutput> subProof = preprocessRules();
+        if (subProof) {
+            proof.concat(subProof.get());
             proof.minorProofStep("Simplified rules", its);
         }
 
@@ -176,7 +182,8 @@ void Analysis::finalize(RuntimeResult &res) {
     its.lock();
     if (!Timeout::soft()) {
         // Remove duplicate rules (ignoring updates) to avoid wasting time on asymptotic bounds
-        if (Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false)) {
+        std::set<TransIdx> removed = Pruning::removeDuplicateRules(its, its.getTransitionsFrom(its.getInitialLocation()), false);
+        if (!removed.empty()) {
             res.majorProofStep("Removed duplicate rules (ignoring updates)", its);
         }
     }
@@ -259,22 +266,28 @@ bool Analysis::ensureProperInitialLocation() {
 }
 
 
-bool Analysis::ensureNonnegativeCosts() {
-    bool changed = false;
-
+option<ProofOutput> Analysis::ensureNonnegativeCosts() {
+    ProofOutput proof;
+    std::vector<TransIdx> del;
+    std::vector<Rule> add;
     for (TransIdx trans : its.getAllTransitions()) {
-        its.try_lock();
-        Rule &rule = its.getRuleMut(trans);
-
+        const Rule &rule = its.getRule(trans);
         // Add the constraint unless it is trivial (e.g. if the cost is 1).
         Rel costConstraint = rule.getCost() >= 0;
         if (!costConstraint.isTriviallyTrue()) {
-            rule.getGuardMut().push_back(costConstraint);
-            changed = true;
+            del.push_back(trans);
+            const Rule &r = rule.withGuard(rule.getGuard() & costConstraint);
+            add.push_back(r);
+            proof.ruleTransformationProof(rule, "strengthening", r, its);
         }
-        its.unlock();
     }
-    return changed;
+    for (TransIdx trans: del) {
+        its.removeRule(trans);
+    }
+    for (const Rule &r: add) {
+        its.addRule(r);
+    }
+    return proof.empty() ? option<ProofOutput>() : option<ProofOutput>(proof);
 }
 
 
@@ -292,25 +305,41 @@ bool Analysis::removeUnsatRules() {
 }
 
 
-bool Analysis::preprocessRules() {
-    bool changed = false;
-
+option<ProofOutput> Analysis::preprocessRules() {
+    ProofOutput proof;
+    std::vector<TransIdx> del;
+    std::vector<Rule> add;
     // update/guard preprocessing
     for (TransIdx idx : its.getAllTransitions()) {
-        its.try_lock();
-        Rule &rule = its.getRuleMut(idx);
-        changed = Preprocess::preprocessRule(its, rule) || changed;
-        its.unlock();
-    }
-
-    // remove duplicates
-    for (LocationIdx node : its.getLocations()) {
-        for (LocationIdx succ : its.getSuccessorLocations(node)) {
-            changed = Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, succ)) || changed;
+        const Rule &rule = its.getRule(idx);
+        const option<Rule> &newRule = Preprocess::preprocessRule(its, rule);
+        if (newRule) {
+            del.push_back(idx);
+            add.push_back(newRule.get());
+            proof.ruleTransformationProof(rule, "preprocessing", newRule.get(), its);
         }
     }
 
-    return changed;
+    for (TransIdx idx: del) {
+        its.removeRule(idx);
+    }
+    for (const Rule &r: add) {
+        its.addRule(r);
+    }
+
+    // remove duplicates
+    std::set<TransIdx> removed;
+    for (LocationIdx node : its.getLocations()) {
+        for (LocationIdx succ : its.getSuccessorLocations(node)) {
+            std::set<TransIdx> tmp = Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, succ));
+            removed.insert(tmp.begin(), tmp.end());
+        }
+    }
+    if (!removed.empty()) {
+        proof.deletionProof(removed);
+    }
+
+    return proof.empty() ? option<ProofOutput>() : option<ProofOutput>(proof);
 }
 
 

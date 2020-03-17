@@ -60,10 +60,6 @@ const Rule& ITSProblem::getRule(TransIdx transition) const {
     return res;
 }
 
-Rule& ITSProblem::getRuleMut(TransIdx transition) {
-    return rules.at(transition);
-}
-
 void ITSProblem::lock() {
     mutex.lock();
 }

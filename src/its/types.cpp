@@ -51,3 +51,15 @@ bool operator<(const GuardList &m1, const GuardList &m2);
 std::ostream& operator<<(std::ostream &s, const GuardList &l) {
     return s << buildAnd(l);
 }
+
+GuardList operator&(const GuardList &fst, const GuardList &snd) {
+    GuardList res(fst);
+    res.insert(res.end(), snd.begin(), snd.end());
+    return res;
+}
+
+GuardList operator&(const GuardList &fst, const Rel &snd) {
+    GuardList res(fst);
+    res.push_back(snd);
+    return res;
+}

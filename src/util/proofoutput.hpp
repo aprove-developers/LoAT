@@ -79,6 +79,8 @@ public:
 
     void concat(const ProofOutput &that);
 
+    bool empty() const;
+
 private:
 
     static bool enabled;

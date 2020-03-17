@@ -159,3 +159,7 @@ void ProofOutput::storeSubProof(const ProofOutput &subProof, const std::string &
     subProof.writeToFile(file + ".txt");
     append("Sub-proof via " + technique + " written to file://" + file + ".txt");
 }
+
+bool ProofOutput::empty() const {
+    return proof.empty();
+}

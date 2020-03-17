@@ -65,55 +65,6 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     return true;
 }
 
-
-template <typename Container>
-bool Pruning::removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareRhss) {
-    set<TransIdx> toRemove;
-
-    for (auto i = trans.begin(); i != trans.end(); ++i) {
-        for (auto j = i; ++j != trans.end(); /**/) {
-            TransIdx idxA = *i;
-            TransIdx idxB = *j;
-
-            const Rule &ruleA = its.getRule(idxA);
-            const Rule &ruleB = its.getRule(idxB);
-
-            // if rules are identical up to cost, keep the one with the higher cost
-            if (compareRules(ruleA, ruleB, compareRhss)) {
-                if ((ruleA.getCost() - ruleB.getCost()).toNum().is_positive() > 0) {
-                    toRemove.insert(idxB);
-                } else {
-                    toRemove.insert(idxA);
-                    break; // do not remove trans[i] again
-                }
-            }
-        }
-    }
-
-    for (TransIdx rule : toRemove) {
-        its.removeRule(rule);
-    }
-
-    return !toRemove.empty();
-}
-
-
-
-template <typename Container>
-bool Pruning::removeUnsatRules(ITSProblem &its, const Container &trans) {
-    bool changed = false;
-
-    for (TransIdx rule : trans) {
-        if (Smt::check(buildAnd(its.getRule(rule).getGuard()), its) == Smt::Unsat) {
-            its.removeRule(rule);
-            changed = true;
-        }
-    }
-
-    return changed;
-}
-
-
 bool Pruning::pruneParallelRules(ITSProblem &its) {
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
     // (see ComplexityResult for the latter). We first compare the complexity, then the number of inftyVars.
@@ -319,10 +270,3 @@ bool Pruning::removeSinkRhss(ITSProblem &its) {
 
     return changed;
 }
-
-
-// instantiate templates (since the implementation is not in the header file)
-template bool Pruning::removeDuplicateRules(ITSProblem &, const std::vector<TransIdx> &, bool);
-template bool Pruning::removeDuplicateRules(ITSProblem &, const std::set<TransIdx> &, bool);
-template bool Pruning::removeUnsatRules(ITSProblem &, const std::vector<TransIdx> &);
-template bool Pruning::removeUnsatRules(ITSProblem &, const std::set<TransIdx> &);
