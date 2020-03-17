@@ -67,6 +67,8 @@ public:
         // Only relevant if result is Success (and real coefficients are used).
         option<Rel> integralConstraint;
 
+        option<Rule> rule;
+
         ProofOutput proof;
     };
 
@@ -96,7 +98,7 @@ public:
      * @note modifies the given rule
      * @return true iff successful (i.e., iff rule was modified)
      */
-    static bool strengthenGuard(VarMan &varMan, Rule &rule);
+    static option<Rule> strengthenGuard(VarMan &varMan, const Rule &rule);
 
 private:
     MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<Subs> &update);

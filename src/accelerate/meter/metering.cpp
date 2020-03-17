@@ -404,8 +404,9 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
 /* ### Heuristics to help finding more metering functions ### */
 
-bool MeteringFinder::strengthenGuard(VarMan &varMan, Rule &rule) {
-    return MT::strengthenGuard(varMan, rule.getGuardMut(), getUpdateList(rule));
+option<Rule> MeteringFinder::strengthenGuard(VarMan &varMan, const Rule &rule) {
+    option<GuardList> guard = MT::strengthenGuard(varMan, rule.getGuard(), getUpdateList(rule));
+    return guard ? option<Rule>(rule.withGuard(guard.get())) : option<Rule>();
 }
 
 option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule) {

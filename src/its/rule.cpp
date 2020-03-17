@@ -93,6 +93,16 @@ Rule Rule::withGuard(const GuardList &guard) const {
     return Rule(RuleLhs(getLhsLoc(), guard, getCost()), getRhss());
 }
 
+Rule Rule::withCost(const Expr &cost) const {
+    return Rule(RuleLhs(getLhsLoc(), getGuard(), cost), getRhss());
+}
+
+Rule Rule::withUpdate(uint i, const Subs &up) const {
+    std::vector<RuleRhs> rhss = getRhss();
+    rhss[i] = RuleRhs(rhss[i].getLoc(), up);
+    return Rule(RuleLhs(getLhsLoc(), getGuard(), getCost()), rhss);
+}
+
 bool operator ==(const RuleRhs &fst, const RuleRhs &snd) {
     return fst.getLoc() == snd.getLoc() && fst.getUpdate() == snd.getUpdate();
 }

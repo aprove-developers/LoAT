@@ -37,9 +37,7 @@ public:
 
     LocationIdx getLoc() const { return loc; }
     const GuardList& getGuard() const { return guard; }
-    GuardList& getGuardMut() { return guard; }
     const Expr& getCost() const { return cost; }
-    Expr& getCostMut() { return cost; }
 };
 
 
@@ -52,7 +50,6 @@ public:
 
     LocationIdx getLoc() const { return loc; }
     const Subs& getUpdate() const { return update; }
-    Subs& getUpdateMut() { return update; }
 
 };
 
@@ -91,10 +88,6 @@ public:
     const GuardList& getGuard() const { return lhs.getGuard(); }
     const Expr& getCost() const { return lhs.getCost(); }
 
-    // lhs mutation
-    GuardList& getGuardMut() { return lhs.getGuardMut(); }
-    Expr& getCostMut() { return lhs.getCostMut(); }
-
     // iteration over right-hand sides
     const RuleRhs* rhsBegin() const { return &rhss.front(); }
     const RuleRhs* rhsEnd() const { return &rhss.back()+1; }
@@ -112,7 +105,6 @@ public:
         return res;
     }
     const Subs& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
-    Subs& getUpdateMut(uint idx) { return rhss[idx].getUpdateMut(); }
 
     // conversion to linear rule
     bool isLinear() const;
@@ -133,6 +125,8 @@ public:
     option<Rule> stripRhsLocation(LocationIdx toRemove) const;
 
     Rule withGuard(const GuardList &guard) const;
+    Rule withCost(const Expr &cost) const;
+    Rule withUpdate(uint i, const Subs &up) const;
 };
 
 
@@ -157,7 +151,6 @@ public:
     // special shorthands for linear rules, overwriting the general ones
     LocationIdx getRhsLoc() const { return Rule::getRhsLoc(0); }
     const Subs& getUpdate() const { return Rule::getUpdate(0); }
-    Subs& getUpdateMut() { return Rule::getUpdateMut(0); }
 };
 
 

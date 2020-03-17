@@ -20,6 +20,7 @@
 
 #include "../../expr/expression.hpp"
 #include "../../its/variablemanager.hpp"
+#include "../../its/rule.hpp"
 
 #include <vector>
 #include <map>
@@ -106,7 +107,7 @@ namespace MeteringToolbox {
      *
      * @return true iff the guard was modified (extended).
      */
-    bool strengthenGuard(const VarMan &varMan, GuardList &guard, const MultiUpdate &updates);
+    option<GuardList> strengthenGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates);
 
     /**
      * Creates all combinations of instantiating temporary variables by their bounds (i.e. free <= x --> set free=x)

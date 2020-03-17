@@ -57,7 +57,7 @@ private:
     const LocationData& getLocationData(TermPtr term) const;
     Subs computeSubstitutionToUnifyLhs(const ParsedRule &rule);
     Rule replaceUnboundedByTemporaryVariables(const Rule &rule, const LocationData &lhsData);
-    void stripTrivialUpdates(Subs &update) const;
+    option<Subs> stripTrivialUpdates(const Subs &update) const;
     void addParsedRule(const ParsedRule &rule);
 
     // Helpers

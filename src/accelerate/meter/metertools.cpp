@@ -198,11 +198,12 @@ void MeteringToolbox::restrictGuardToVariables(GuardList &guard, const VarSet &v
 
 /* ### Heuristics to improve metering results ### */
 
-bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, const MultiUpdate &updates) {
+option<GuardList> MeteringToolbox::strengthenGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates) {
     bool changed = false;
+    GuardList res(guard);
 
     // first remove irrelevant constraints from the guard
-    GuardList reducedGuard = reduceGuard(varMan, guard, updates);
+    GuardList reducedGuard = reduceGuard(varMan, res, updates);
     VarSet relevantVars = findRelevantVariables(reducedGuard, updates);
 
     // consider each update independently of the others
@@ -237,14 +238,14 @@ bool MeteringToolbox::strengthenGuard(const VarMan &varMan, GuardList &guard, co
 
                     // Adding trivial constraints does not make sense (no matter if they are true/false).
                     if (!add.isTriviallyTrue() && !add.isTriviallyFalse()) {
-                        guard.push_back(add);
+                        res.push_back(add);
                         changed = true;
                     }
                 }
             }
         }
     }
-    return changed;
+    return changed ? option<GuardList>(res) : option<GuardList>();
 }
 
 

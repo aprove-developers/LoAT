@@ -414,15 +414,16 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert lhs to Ginac expressions
     LocationIdx lhsLoc = getLocationData(rule.lhs).index;
     Expr cost = rule.cost ? rule.cost.get()->toGinacExpression() : 1;
-    RuleLhs lhs(lhsLoc, {}, cost);
+    GuardList guard;
 
     if (!cost.isPoly()) {
         throw FileError("Non-polynomial cost in the input");
     }
 
     for (const Relation &rel : rule.guard) {
-        lhs.getGuardMut().push_back(rel.toGinacExpression());
+        guard.push_back(rel.toGinacExpression());
     }
+    RuleLhs lhs(lhsLoc, guard, cost);
 
     // Convert rhs, compute update
     vector<RuleRhs> rhss;
@@ -451,7 +452,10 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
 
     // Remove trivial updates like "x := x" (to simplify rules)
     for (unsigned int i=0; i < newRule.rhsCount(); ++i) {
-        stripTrivialUpdates(newRule.getUpdateMut(i));
+        const option<Subs> &stripped = stripTrivialUpdates(newRule.getUpdate(i));
+        if (stripped) {
+            newRule = newRule.withUpdate(i, stripped.get());
+        }
     }
 
     itsProblem.addRule(newRule);
@@ -615,19 +619,17 @@ VarSet ITSParser::getSymbols(const Rule &rule) {
 }
 
 
-void ITSParser::stripTrivialUpdates(Subs &update) const {
-    VarSet toRemove;
-
+option<Subs> ITSParser::stripTrivialUpdates(const Subs &update) const {
+    Subs res;
+    bool changed = false;
     for (const auto &it : update) {
         Var lhs = it.first;
         const Expr &rhs = it.second;
 
         if (rhs.equals(lhs)) {
-            toRemove.insert(it.first);
+            res.put(lhs, rhs);
+            changed = true;
         }
     }
-
-    for (Var var : toRemove) {
-        update.erase(var);
-    }
+    return changed ? option<Subs>(res) : option<Subs>();
 }
