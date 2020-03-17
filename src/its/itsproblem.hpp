@@ -18,7 +18,6 @@
 #ifndef ITSPROBLEM_H
 #define ITSPROBLEM_H
 
-#include "../util/exceptions.hpp"
 #include "../util/option.hpp"
 
 #include "rule.hpp"
@@ -98,7 +97,6 @@ public:
     // Print the ITSProblem in a simple, but user-friendly format
     void print(std::ostream &s) const;
 
-    static void try_lock();
     static void lock();
     static void unlock();
 

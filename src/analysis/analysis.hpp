@@ -54,7 +54,7 @@ public:
     RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0) {}
 
     void update(const GuardList &guard, const Expr &cost, const Expr &solvedCost, const Complexity &cpx) {
-        try_lock();
+        lock();
         this->guard = guard;
         this->cost = cost;
         this->solvedCost = solvedCost;
@@ -63,33 +63,27 @@ public:
     }
 
     void majorProofStep(const std::string &step, const ITSProblem &its) {
-        try_lock();
+        lock();
         proof.majorProofStep(step, its);
         unlock();
     }
 
     void minorProofStep(const std::string &step, const ITSProblem &its) {
-        try_lock();
+        lock();
         proof.minorProofStep(step, its);
         unlock();
     }
 
     void headline(const std::string &s) {
-        try_lock();
+        lock();
         proof.headline(s);
         unlock();
     }
 
     void concat(const ProofOutput &p) {
-        try_lock();
+        lock();
         proof.concat(p);
         unlock();
-    }
-
-    void try_lock() {
-        if (!mutex.try_lock()) {
-            throw TimeoutException();
-        }
     }
 
     void lock() {

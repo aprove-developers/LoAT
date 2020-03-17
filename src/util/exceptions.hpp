@@ -49,9 +49,5 @@ public: \
     exceptionName() : exceptionName(#exceptionName) {} \
 }
 
-//example:
-EXCEPTION(TimeoutException, CustomException);
-
-
 #endif // EXCEPTIONS_H
 

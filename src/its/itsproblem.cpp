@@ -17,8 +17,6 @@
 
 #include "itsproblem.hpp"
 #include "export.hpp"
-#include "../util/exceptions.hpp"
-
 using namespace std;
 
 std::recursive_mutex ITSProblem::mutex;
@@ -53,7 +51,7 @@ bool ITSProblem::hasRule(TransIdx transition) const {
 }
 
 const Rule& ITSProblem::getRule(TransIdx transition) const {
-    try_lock();
+    lock();
     assert(rules.count(transition) > 0);
     const Rule &res = rules.at(transition);
     unlock();
@@ -64,18 +62,12 @@ void ITSProblem::lock() {
     mutex.lock();
 }
 
-void ITSProblem::try_lock() {
-    if (!mutex.try_lock()) {
-        throw TimeoutException();
-    }
-}
-
 void ITSProblem::unlock() {
     mutex.unlock();
 }
 
 LinearRule ITSProblem::getLinearRule(TransIdx transition) const {
-    try_lock();
+    lock();
     const LinearRule &res = rules.at(transition).toLinear();
     unlock();
     return res;
@@ -132,7 +124,7 @@ std::set<LocationIdx> ITSProblem::getPredecessorLocations(LocationIdx loc) const
 }
 
 void ITSProblem::removeRule(TransIdx transition) {
-    try_lock();
+    lock();
     graph.removeTrans(transition);
     rules.erase(transition);
     unlock();
@@ -146,7 +138,7 @@ TransIdx ITSProblem::addRule(Rule rule) {
     }
 
     // add transition and store mapping to rule
-    try_lock();
+    lock();
     TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
     rules.emplace(idx, rule);
     unlock();

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "../../util/exceptions.hpp"
 #include "../../expr/expression.hpp"
 #include "../../its/itsproblem.hpp"
 
