@@ -626,7 +626,7 @@ option<Subs> ITSParser::stripTrivialUpdates(const Subs &update) const {
         Var lhs = it.first;
         const Expr &rhs = it.second;
 
-        if (rhs.equals(lhs)) {
+        if (!rhs.equals(lhs)) {
             res.put(lhs, rhs);
             changed = true;
         }
