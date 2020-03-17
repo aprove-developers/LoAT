@@ -146,8 +146,8 @@ TransIdx ITSProblem::addRule(Rule rule) {
     }
 
     // add transition and store mapping to rule
-    TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
     try_lock();
+    TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
     rules.emplace(idx, rule);
     unlock();
     return idx;
