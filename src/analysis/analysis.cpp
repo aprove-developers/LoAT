@@ -612,7 +612,7 @@ void Analysis::getMaxPartialResult(RuntimeResult &res) {
                 its.removeRule(first);
             }
         }
-        res.headline("Performed chaining from the start location:");
     }
+    res.headline("Performed chaining from the start location:");
 
 }
