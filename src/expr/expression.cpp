@@ -930,6 +930,12 @@ bool Subs::changes(const Var &key) const {
     return contains(key) && !get(key).equals(key);
 }
 
+bool Subs::isLinear() const {
+    return std::all_of(begin(), end(), [](const std::pair<Var, Expr> &p) {
+       return p.second.isLinear();
+    });
+}
+
 ExprMap::ExprMap(): KeyToExprMap<Expr>() {}
 
 ExprMap::ExprMap(const Expr &key, const Expr &val) {

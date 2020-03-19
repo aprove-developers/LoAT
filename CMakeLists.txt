@@ -33,8 +33,6 @@ message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 add_executable(${EXECUTABLE}
         src/accelerate/meter/farkas.cpp
         src/accelerate/meter/farkas.hpp
-        src/accelerate/meter/linearize.cpp
-        src/accelerate/meter/linearize.hpp
         src/accelerate/meter/metering.cpp
         src/accelerate/meter/metering.hpp
         src/accelerate/meter/metertools.cpp
@@ -109,6 +107,7 @@ add_executable(${EXECUTABLE}
         src/config.cpp
         src/config.hpp
         src/main.cpp
+        src/main.hpp
         src/strengthening/constraintbuilder.cpp
         src/strengthening/constraintbuilder.hpp
         src/strengthening/strengthener.cpp

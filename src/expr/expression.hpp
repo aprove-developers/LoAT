@@ -579,6 +579,8 @@ public:
 
     bool changes(const Var &key) const;
 
+    bool isLinear() const;
+
 private:
     void putGinac(const Var &key, const Expr &val) override;
     void eraseGinac(const Var &key) override;

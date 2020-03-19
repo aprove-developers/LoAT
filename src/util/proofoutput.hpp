@@ -41,7 +41,7 @@ public:
         None
     };
 
-    static bool setEnabled(bool on);
+    static void setProofLevel(uint proofLevel);
 
     void append(const std::string &s);
 
@@ -81,9 +81,13 @@ public:
 
     bool empty() const;
 
+    static uint defaultProofLevel;
+
+    static uint maxProofLevel;
+
 private:
 
-    static bool enabled;
+    static uint proofLevel;
 
     std::vector<std::pair<Style, std::string>> proof;
 

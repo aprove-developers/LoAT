@@ -250,9 +250,6 @@ option<GuardList> MeteringToolbox::strengthenGuard(const VarMan &varMan, const G
 
 
 stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
-    namespace Config = Config::ForwardAccel;
-    assert(Config::TempVarInstantiationMaxBounds > 0);
-
     //find free variables
     const VarSet &freeVar = varMan.getTempVars();
     if (freeVar.empty()) return stack<Subs>();
@@ -261,11 +258,7 @@ stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan,
     VarMap<ExprSet> freeBounds;
     for (const Rel &rel : guard) {
         for (Var free : freeVar) {
-            auto it = freeBounds.find(free);
-            if (it != freeBounds.end() && it->second.size() >= Config::TempVarInstantiationMaxBounds) continue;
-
             if (!rel.has(free)) continue;
-
             std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, free);
             if (bounds.first) {
                 freeBounds[free].insert(bounds.first.get());

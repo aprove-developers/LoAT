@@ -33,17 +33,16 @@ GuardList GuardList::subs(const Subs &sigma) const {
     return res;
 }
 
-void GuardList::applySubstitution(const Subs &sigma) {
-    for (Rel &rel: *this) {
-        rel.applySubs(sigma);
-    }
+bool GuardList::isWellformed() const {
+    return std::all_of(begin(), end(), [](const Rel &rel) {
+        return !rel.isNeq();
+    });
 }
 
-bool GuardList::isWellformed() const {
-    for (const Rel &rel : *this) {
-        if (rel.isNeq()) return false;
-    }
-    return true;
+bool GuardList::isLinear() const {
+    return std::all_of(begin(), end(), [](const Rel &rel) {
+        return rel.isLinear();
+    });
 }
 
 bool operator<(const GuardList &m1, const GuardList &m2);

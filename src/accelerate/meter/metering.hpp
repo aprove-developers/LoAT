@@ -47,11 +47,10 @@ public:
     /**
      * Success: metering function was found
      * Nonterm: if the guard is satisfied, the loop does not terminate (whole guard is irrelevant for termination)
-     * Nonlinear: the problem is nonlinear and could not be substituted to a linear problem
-     * ConflictVar: two variables are limiting the execution of the loop, we would need min(A,B) or max(A,B) to resolve
+     * Nonlinear: the problem is nonlinear
      * Unsat: no metering function was found (z3 unknown/unsat)
      */
-    enum ResultKind { Success, Nonterm, Nonlinear, ConflictVar, Unsat };
+    enum ResultKind { Success, Nonterm, Nonlinear, Unsat };
 
     struct Result {
         // Flag indicating whether a metering function was successfully found
@@ -59,9 +58,6 @@ public:
 
         // The metering function (only relevant if result is Success)
         Expr metering;
-
-        // The pair of conflicting variables (only relevant if result is ConflictVar)
-        std::pair<Var, Var> conflictVar;
 
         // Additional constraint that has to be added to the rule's guard to ensure correctness.
         // Only relevant if result is Success (and real coefficients are used).
@@ -118,13 +114,12 @@ private:
      * Performs all available pre-processing steps:
      *  - eliminates temporary variables (where possible)
      *  - simplifies guard/update (calls simplifyAndFindVariables)
-     *  - linearizes guard/update (if possible)
      *
      * Sets/modifies the members: guard, update, reducedGuard, irrelevantGuard, relevantVars.
-     *
-     * @return true iff linearization was successful
      */
-    bool preprocessAndLinearize();
+    void preprocess();
+
+    bool isLinear() const;
 
     /**
      * Uses relevantVars to set meterVars (symbols and coefficients).
@@ -161,17 +156,9 @@ private:
     BoolExpr genNonTrivial() const;
 
     /**
-     * Given the z3 model, builds the corresponding linear metering function and applies the reverse substitution nonlinearSubs
+     * Given the z3 model, builds the corresponding linear metering function
      */
     Expr buildResult(const VarMap<GiNaC::numeric> &model) const;
-
-    /**
-     * Tries to find a pair conflicting variables A, B.
-     * We call two variables conflicting if we would need min(A,B) or max(A,B) in the metering function
-     * (which we can currently not express). Example: A++, B++ [ A < X, B < Y ].
-     * Note that this is just a heuristic that only handles simple cases.
-     */
-    option<std::pair<Var, Var>> findConflictVars() const;
 
     /**
      * Modifies the current result to ensure that the metering function evaluates to an integer.
@@ -193,9 +180,6 @@ private:
     VariableManager &varMan;
 
 
-    /**
-     * The rule's data, is modified by linearization and when restricting to relevant variables
-     */
     std::vector<Subs> updates;
     GuardList guard;
 
@@ -211,11 +195,6 @@ private:
      * These variables are used to build the template for the metering function.
      */
     VarSet relevantVars;
-
-    /**
-     * Reverse substitution from linearization
-     */
-    ExprMap nonlinearSubs;
 
 
 

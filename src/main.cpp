@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include <iostream>
-#include <boost/algorithm/string.hpp>
+#include "main.hpp"
+
 #include "analysis/analysis.hpp"
 #include "its/parser/itsparser.hpp"
 #include "its/sexpressionparser/parser.hpp"
@@ -24,6 +24,9 @@
 #include "config.hpp"
 #include "util/timeout.hpp"
 #include "util/proofoutput.hpp"
+
+#include <iostream>
+#include <boost/algorithm/string.hpp>
 
 #ifdef HAS_YICES
 #include <yices.h>
@@ -34,18 +37,15 @@ using namespace std;
 // Variables for command line flags
 string filename;
 int timeout = 0; // no timeout
-int proofLevel = 2;
-bool printConfig = false;
+int proofLevel = static_cast<int>(ProofOutput::defaultProofLevel);
 
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --proof-level <n>                                Detail level for proof output (0-3, default 2)" << endl;
+    cout << "  --proof-level <n>                                Detail level for proof output (0-" << ProofOutput::maxProofLevel << ", default " << proofLevel << ")" << endl;
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
-    cout << "  --config                                         Show configuration after handling command line flags" << endl;
-    cout << "  --print-simplified                               Print simplified program in the input format" << endl;
     cout << endl;
     cout << "  --allow-division                                 Allow division in the input program (potentially unsound)" << endl;
     cout << "  --no-cost-check                                  Don't check if costs are nonnegative (potentially unsound)" << endl;
@@ -78,11 +78,6 @@ void parseFlags(int argc, char *argv[]) {
             proofLevel = atoi(getNext());
         } else if (strcmp("--plain",argv[arg]) == 0) {
             Config::Output::Colors = false;
-            Config::Output::ColorsInITS = false;
-        } else if (strcmp("--config",argv[arg]) == 0) {
-            printConfig = true;
-        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
-            Config::Output::ExportSimplified = true;
         } else if (strcmp("--allow-division",argv[arg]) == 0) {
             Config::Parser::AllowDivision = true;
         } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
@@ -126,18 +121,12 @@ int main(int argc, char *argv[]) {
     // Parse and interpret command line flags
     parseFlags(argc, argv);
 
-    // Print current configuration (if requested)
-    if (printConfig) {
-        Config::printConfig(cout, true);
-        cout << endl;
-    }
-
     // Timeout
     if (timeout < 0 || (timeout > 0 && timeout < 10)) {
         cerr << "Error: timeout must be at least 10 seconds" << endl;
         return 1;
     }
-    Timeout::setTimeouts(timeout);
+    Timeout::setTimeouts(static_cast<uint>(timeout));
 
     // Start parsing
     if (filename.empty()) {
@@ -169,10 +158,11 @@ int main(int argc, char *argv[]) {
         std::cerr << "This is only safe if costs in the input program are guaranteed to be nonnegative." << std::endl;
     }
 
-    // Disable proof output if requested
-    if (proofLevel == 0) {
-        ProofOutput::setEnabled(false);
+    if (proofLevel < 0 || proofLevel > 3) {
+        cerr << "Error: proof level must be between 0 and 3" << endl;
+        return 1;
     }
+    ProofOutput::setProofLevel(static_cast<uint>(proofLevel));
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.

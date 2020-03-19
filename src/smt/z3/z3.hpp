@@ -24,7 +24,7 @@ public:
 
 private:
     bool models = false;
-    unsigned int timeout = Config::Z3::DefaultTimeout;
+    unsigned int timeout = Config::Smt::DefaultTimeout;
     const VariableManager &varMan;
     z3::context z3Ctx;
     Z3Context ctx;

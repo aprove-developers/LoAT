@@ -106,16 +106,16 @@ public:
     static Result determineComplexity(VarMan &varMan,
                                       const GuardList &guard,
                                       const Expr &cost,
-                                      bool finalCheck,
-                                      const Complexity &currentRes,
-                                      uint timeout);
+                                      bool finalCheck = false,
+                                      const Complexity &currentRes = Complexity::Const,
+                                      uint timeout = Config::Smt::LimitTimeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
                                             const GuardList &guard,
                                             const Expr &cost,
-                                            bool finalCheck,
-                                            Complexity currentRes,
-                                            uint timeout);
+                                            bool finalCheck = false,
+                                            Complexity currentRes = Complexity::Const,
+                                            uint timeout = Config::Smt::LimitTimeout);
 
 };
 

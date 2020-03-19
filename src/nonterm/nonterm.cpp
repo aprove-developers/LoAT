@@ -58,7 +58,7 @@ namespace nonterm {
         if (!Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its, Config::Z3::DefaultTimeout);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its);
         for (const Rel &rel: r.getGuard()) {
             solver->add(rel);
         }

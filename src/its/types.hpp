@@ -36,12 +36,12 @@ public:
     using std::vector<Rel>::vector;
     void collectVariables(VarSet &res) const;
     GuardList subs(const Subs &sigma) const;
-    void applySubstitution(const Subs &sigma);
 
     /**
      * Returns true iff all guard terms are relational without the use of !=
      */
     bool isWellformed() const;
+    bool isLinear() const;
 
     friend GuardList operator&(const GuardList &fst, const GuardList &snd);
     friend GuardList operator&(const GuardList &fst, const Rel &snd);

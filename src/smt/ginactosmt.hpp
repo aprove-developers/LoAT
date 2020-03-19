@@ -109,7 +109,7 @@ protected:
         //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
         if (e.op(1).isRationalConstant()) {
             GiNaC::numeric num = e.op(1).toNum();
-            if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Z3::MaxExponentWithoutPow) {
+            if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Smt::MaxExponentWithoutPow) {
                 int exp = num.to_int();
                 EXPR base = convert_ex(e.op(0));
 

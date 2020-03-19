@@ -134,8 +134,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
                         accelRule.getGuard(),
                         accelRule.getCost(),
                         false,
-                        currentCpx,
-                        Config::Z3::LimitTimeout).cpx;
+                        currentCpx).cpx;
             if (newCpx > currentCpx) {
                 success = true;
                 // Add the new rule
@@ -410,10 +409,7 @@ option<ProofOutput> Accelerator::run() {
             Complexity cpx = AsymptoticBound::determineComplexityViaSMT(
                     its,
                     r.getGuard(),
-                    r.getCost(),
-                    false,
-                    Complexity::Const,
-                    Config::Z3::LimitTimeout).cpx;
+                    r.getCost()).cpx;
             origRules.push_back({loop, loop, cpx});
         }
     }
@@ -440,10 +436,7 @@ option<ProofOutput> Accelerator::run() {
                     Complexity cpx = AsymptoticBound::determineComplexityViaSMT(
                                 its,
                                 accel.getGuard(),
-                                accel.getCost(),
-                                false,
-                                Complexity::Const,
-                                Config::Z3::LimitTimeout).cpx;
+                                accel.getCost()).cpx;
                     nestingCandidates.push_back(NestingCandidate(loop, added, cpx));
                 }
             }

@@ -18,7 +18,6 @@
 #include "metering.hpp"
 
 #include "farkas.hpp"
-#include "linearize.hpp"
 #include "metertools.hpp"
 
 #include "../../expr/guardtoolbox.hpp"
@@ -67,24 +66,10 @@ void MeteringFinder::simplifyAndFindVariables() {
     MT::restrictUpdatesToVariables(updates, relevantVars);
 }
 
-bool MeteringFinder::preprocessAndLinearize() {
-    // simplify guard/update before linearization (expensive, but might remove nonlinear constraints)
+void MeteringFinder::preprocess() {
+    // simplify guard/update
     guard = MT::replaceEqualities(guard);
     simplifyAndFindVariables();
-
-    // linearize (try to substitute nonlinear parts)
-    auto optSubs = Linearize::linearizeGuardUpdates(varMan, guard, updates);
-    if (optSubs) {
-        nonlinearSubs = optSubs.get();
-    } else {
-        return false; // not able to linearize everything
-    }
-
-    // simplify guard/update again, if linearization has modified anything
-    if (!nonlinearSubs.empty()) {
-        simplifyAndFindVariables();
-    }
-    return true;
 }
 
 
@@ -96,11 +81,9 @@ void MeteringFinder::buildMeteringVariables() {
     meterVars.coeffs.clear();
     meterVars.primedSymbols.clear();
 
-    auto coeffType = (Config::ForwardAccel::AllowRealCoeffs) ? Expr::Rational : Expr::Int;
-
     for (const Var &var : relevantVars) {
         meterVars.symbols.push_back(var);
-        meterVars.coeffs.push_back(varMan.getFreshUntrackedSymbol("c", coeffType));
+        meterVars.coeffs.push_back(varMan.getFreshUntrackedSymbol("c", Expr::Rational));
     }
 
     for (const Subs &update : updates) {
@@ -170,12 +153,7 @@ void MeteringFinder::buildLinearConstraints() {
 
 BoolExpr MeteringFinder::genNotGuardImplication() const {
     BoolExpr res = True;
-    vector<Rel> lhs;
-
-    // We can add the irrelevant guard to the lhs ("conditional metering function")
-    if (Config::ForwardAccel::ConditionalMetering) {
-        lhs = linearConstraints.irrelevantGuard;
-    }
+    vector<Rel> lhs = linearConstraints.irrelevantGuard;
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Rel &rel : linearConstraints.reducedGuard) {
@@ -253,8 +231,6 @@ Expr MeteringFinder::buildResult(const VarMap<GiNaC::numeric> &model) const {
     for (unsigned int i=0; i < coeffs.size(); ++i) {
         result = result + model.at(coeffs[i]) * symbols[i];
     }
-    // reverse linearization
-    result.replace(nonlinearSubs);
     return result;
 }
 
@@ -283,49 +259,22 @@ void MeteringFinder::ensureIntegralMetering(Result &result, const VarMap<GiNaC::
     }
 }
 
-option<std::pair<Var, Var>> MeteringFinder::findConflictVars() const {
-    VarSet conflictingVars;
 
-    // find variables on which the loop's runtime might depend (simple heuristic)
-    for (const Subs &update : updates) {
-        for (const auto &it : update) {
-            Var lhsVar = it.first;
-            VarSet rhsVars = it.second.vars();
-
-            // the update must be some sort of simple counting, e.g. A = A+2
-            if (rhsVars.size() != 1 || rhsVars.count(lhsVar) == 0) continue;
-
-            // and there must be a guard term limiting the execution of this counting
-            for (const Rel &rel : reducedGuard) {
-                if (rel.has(lhsVar)) {
-                    conflictingVars.insert(it.first);
-                    break;
-                }
-            }
-        }
-    }
-
-    // we limit the heuristic to only handle 2 variables
-    if (conflictingVars.size() == 2) {
-        auto it = conflictingVars.begin();
-        Var a = *(it++);
-        Var b = *it;
-        return make_pair(a, b);
-    }
-
-    return {};
+bool MeteringFinder::isLinear() const {
+    return reducedGuard.isLinear() && std::all_of(updates.begin(), updates.end(), [](const Subs &up) {
+       return up.isLinear();
+    });
 }
 
-
 /* ### Main function ### */
-
 MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule) {
 
     Result result;
     MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
 
     // linearize and simplify the problem
-    if (!meter.preprocessAndLinearize()) {
+    meter.preprocess();
+    if (!meter.isLinear()) {
         result.result = Nonlinear;
         return result;
     }
@@ -341,7 +290,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     meter.buildLinearConstraints();
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::LA, varMan, Config::Z3::MeterTimeout);
+    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::LA, varMan, Config::Smt::MeterTimeout);
     solver->add(meter.genNotGuardImplication());
     solver->add(meter.genUpdateImplications());
     solver->add(meter.genNonTrivial());
@@ -349,16 +298,6 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 
     // the problem is already unsat (even without "GuardPositiveImplication")
     if (smtRes == Smt::Unsat) {
-
-        if (Config::ForwardAccel::ConflictVarHeuristic) {
-            auto conflictVar = meter.findConflictVars();
-            if (conflictVar) {
-                result.conflictVar = conflictVar.get();
-                result.result = ConflictVar;
-                return result;
-            }
-        }
-
         result.result = Unsat;
         return result;
     }
@@ -387,15 +326,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     result.result = Success;
 
     // If we allow real coefficients, we have to be careful that the metering function evaluates to an integer.
-    if (Config::ForwardAccel::AllowRealCoeffs) {
-        meter.ensureIntegralMetering(result, model);
-    }
-
-    // Proof output for linearization (since this is an addition to the paper)
-    if (!meter.nonlinearSubs.empty()) {
-        result.proof.section("Applied linearization");
-        result.proof.append(stringstream() << "Linearized rule by temporarily substituting " << meter.nonlinearSubs);
-    }
+    meter.ensureIntegralMetering(result, model);
 
     return result;
 }
@@ -419,13 +350,14 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     // We first perform the same steps as in generate()
     MeteringFinder meter(its, rule.getGuard(), getUpdateList(rule));
 
-    if (!meter.preprocessAndLinearize()) return {};
+    meter.preprocess();
+    if (!meter.isLinear()) return {};
     assert(!meter.reducedGuard.empty()); // this method must only be called if generate() fails
 
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Z3::MeterTimeout);
+    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Smt::MeterTimeout);
     Smt::Result smtRes = Smt::Unsat; // this method should only be called if generate() fails
 
     GuardList oldGuard = meter.guard;

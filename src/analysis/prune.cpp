@@ -98,10 +98,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     auto res = AsymptoticBound::determineComplexityViaSMT(
                             its,
                             rule.getGuard(),
-                            rule.getCost(),
-                            false,
-                            Complexity::Const,
-                            Config::Z3::LimitTimeout);
+                            rule.getCost());
                     queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
                 }
 

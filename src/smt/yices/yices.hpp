@@ -30,7 +30,7 @@ public:
     std::ostream& print(std::ostream& os) const;
 
 private:
-    unsigned int timeout = Config::Z3::DefaultTimeout;
+    unsigned int timeout = Config::Smt::DefaultTimeout;
     YicesContext ctx;
     const VariableManager &varMan;
     ctx_config_t *config;

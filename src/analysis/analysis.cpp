@@ -188,11 +188,6 @@ void Analysis::finalize(RuntimeResult &res) {
         }
     }
 
-    if (Config::Output::ExportSimplified) {
-        cout << "Fully simplified program in input format:" << endl;
-        ITSExport::printKoAT(its, cout);
-    }
-
     res.headline("Computing asymptotic complexity");
 
     if (Timeout::soft()) {
@@ -504,7 +499,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
                 }
             }
         }
-        uint timeout = Timeout::soft() ? Config::Z3::LimitTimeoutFinalFast : Config::Z3::LimitTimeoutFinal;
+        uint timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
         if (isPolynomial) {
             checkRes = AsymptoticBound::determineComplexityViaSMT(
                     its,

@@ -35,7 +35,7 @@ static void collectBoundVariables(const Rule &rule, const VarMan &varMan, VarSet
  * Helper to display colors only if colored export is enabled.
  */
 static void printColor(ostream &os, const std::string &s) {
-    if (Config::Output::ColorsInITS) {
+    if (Config::Output::Colors) {
         os << s;
     }
 }

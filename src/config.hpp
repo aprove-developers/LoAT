@@ -37,8 +37,6 @@ namespace Config {
     // Proof output
     namespace Output {
         extern bool Colors;
-        extern bool ColorsInITS;
-        extern bool ExportSimplified;
     }
 
     // Colors (Ansi color codes) for output
@@ -61,7 +59,7 @@ namespace Config {
     }
 
     // All settings for interfacing z3
-    namespace Z3 {
+    namespace Smt {
         extern const unsigned DefaultTimeout;
         extern const unsigned MeterTimeout;
         extern const unsigned StrengtheningTimeout;
@@ -69,18 +67,6 @@ namespace Config {
         extern const unsigned LimitTimeoutFinal;
         extern const unsigned LimitTimeoutFinalFast;
         extern const unsigned MaxExponentWithoutPow;
-    }
-
-    // Acceleration with metering functions
-    namespace ForwardAccel {
-        extern bool AllowRealCoeffs;
-        extern bool AllowLinearization;
-        extern bool ConditionalMetering;
-        extern bool TempVarInstantiation;
-        extern bool ConflictVarHeuristic;
-        extern bool ConstantUpdateHeuristic;
-        extern const unsigned TempVarInstantiationMaxBounds;
-        extern const bool UseTempVarForIterationCount;
     }
 
     // Backward acceleration technique

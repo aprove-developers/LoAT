@@ -4,10 +4,12 @@
 #include <iostream>
 #include <string>
 
-bool ProofOutput::enabled = true;
+uint ProofOutput::defaultProofLevel = 2;
+uint ProofOutput::maxProofLevel = 3;
+uint ProofOutput::proofLevel = defaultProofLevel;
 
 void ProofOutput::writeToFile(const std::string &file) const {
-    if (enabled) {
+    if (proofLevel > 0) {
         std::ofstream myfile;
         myfile.open(file);
         for (const auto &l: proof) {
@@ -18,7 +20,7 @@ void ProofOutput::writeToFile(const std::string &file) const {
 }
 
 void ProofOutput::print() const {
-    if (enabled) {
+    if (proofLevel > 0) {
         for (const auto &l: proof) {
             if (Config::Output::Colors) {
                 switch (l.first) {
@@ -48,7 +50,7 @@ void ProofOutput::append(const std::ostream &s) {
 }
 
 void ProofOutput::append(const Style &style, std::string s) {
-    if (enabled) {
+    if (proofLevel > 0) {
         std::vector<std::string> lines;
         boost::split(lines, s, boost::is_any_of("\n"));
         for (const std::string &l: lines) {
@@ -94,14 +96,12 @@ void ProofOutput::result(const std::ostream &s) {
     result(str.str());
 }
 
-bool ProofOutput::setEnabled(bool on) {
-    bool res = enabled;
-    enabled = on;
-    return res;
+void ProofOutput::setProofLevel(uint proofLevel) {
+    ProofOutput::proofLevel = proofLevel;
 }
 
 void ProofOutput::concat(const ProofOutput &that) {
-    if (enabled) {
+    if (proofLevel > 0) {
         proof.insert(proof.end(), that.proof.begin(), that.proof.end());
     }
 }
@@ -155,9 +155,19 @@ void ProofOutput::chainingProof(const Rule &fst, const Rule &snd, const Rule &ne
 }
 
 void ProofOutput::storeSubProof(const ProofOutput &subProof, const std::string &technique) {
-    const std::string &file = std::tmpnam(nullptr);
-    subProof.writeToFile(file + ".txt");
-    append("Sub-proof via " + technique + " written to file://" + file + ".txt");
+    switch (proofLevel) {
+        case 2: {
+            const std::string &file = std::tmpnam(nullptr);
+            subProof.writeToFile(file + ".txt");
+            append("Sub-proof via " + technique + " written to file://" + file + ".txt");
+            break;
+        }
+        case 3: {
+            append("Sub-proof via " + technique + ":");
+            concat(subProof);
+            break;
+        }
+    }
 }
 
 bool ProofOutput::empty() const {
