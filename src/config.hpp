@@ -71,7 +71,6 @@ namespace Config {
 
     // Backward acceleration technique
     namespace BackwardAccel {
-        extern const bool ReplaceTempVarByUpperbounds;
         extern const unsigned MaxUpperboundsForPropagation;
     }
 

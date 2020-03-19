@@ -91,18 +91,14 @@ Self::AccelerationResult BackwardAcceleration::run() {
                     LinearRule accel(rule.getLhsLoc(), ap->res, ap->cost, rule.getRhsLoc(), up);
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
                     res.proof.storeSubProof(ap->proof, "acceration calculus");
-                    if (Config::BackwardAccel::ReplaceTempVarByUpperbounds) {
-                        std::vector<Rule> instantiated = replaceByUpperbounds(ap->n, accel);
-                        if (instantiated.empty()) {
-                            res.rules.push_back(accel);
-                        } else {
-                            for (const Rule &r: instantiated) {
-                                res.proof.ruleTransformationProof(accel, "instantiation", r, its);
-                                res.rules.push_back(r);
-                            }
-                        }
-                    } else {
+                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->n, accel);
+                    if (instantiated.empty()) {
                         res.rules.push_back(accel);
+                    } else {
+                        for (const Rule &r: instantiated) {
+                            res.proof.ruleTransformationProof(accel, "instantiation", r, its);
+                            res.rules.push_back(r);
+                        }
                     }
                 }
             }

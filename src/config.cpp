@@ -79,10 +79,6 @@ namespace Config {
 
     // Backward acceleration technique
     namespace BackwardAccel {
-        // Backward iteration uses a fresh var "k" for the iteration count.
-        // If true, then "k" is replaced by its upper bounds from the guard (if possible).
-        const bool ReplaceTempVarByUpperbounds = true;
-
         // If KeepTempVarForIterationCount is false, then "k" is instantiated by its upper bounds.
         // If there are several upperbounds, several rules are created.
         // To avoid rule explosion, the propagation is only performed up to this number of upperbounds.
@@ -194,7 +190,6 @@ void Config::printConfig(ostream &os, bool withDescription) {
     {
         using namespace Config::BackwardAccel;
         startSection("Backward Acceleration");
-        PrintCfg(ReplaceTempVarByUpperbounds, "Replace iteration count by its upper bounds");
         PrintCfg(MaxUpperboundsForPropagation, "Max number of upper bounds to allow when replacing");
     }
     {
