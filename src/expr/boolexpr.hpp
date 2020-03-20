@@ -2,6 +2,11 @@
 #define BOOLEXPR_HPP
 
 #include "../its/types.hpp"
+#include "../util/option.hpp"
+#include "../expr/expression.hpp"
+
+#include <memory>
+#include <set>
 
 class BoolLit;
 class BoolJunction;

@@ -95,8 +95,9 @@ add_executable(${EXECUTABLE}
         src/its/itsproblem.hpp
         src/its/rule.cpp
         src/its/rule.hpp
-        src/its/types.cpp
         src/its/types.hpp
+        src/its/guard.cpp
+        src/its/guard.hpp
         src/its/variablemanager.cpp
         src/its/variablemanager.hpp
         src/util/exceptions.hpp

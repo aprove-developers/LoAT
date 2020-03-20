@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 
+#include "../its/guard.hpp"
 #include "../expr/guardtoolbox.hpp"
 #include "inftyexpression.hpp"
 #include "limitvector.hpp"

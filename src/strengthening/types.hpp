@@ -21,6 +21,7 @@
 
 #include "../its/types.hpp"
 #include "../its/rule.hpp"
+#include "../its/variablemanager.hpp"
 #include "../expr/boolexpr.hpp"
 
 namespace strengthening {

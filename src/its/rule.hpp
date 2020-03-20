@@ -23,7 +23,7 @@
 
 #include "types.hpp"
 #include "../util/option.hpp"
-
+#include "../its/guard.hpp"
 
 
 class RuleLhs {
