@@ -32,7 +32,7 @@ public:
      * @param knownVariables Maps variable names (unescaped) to the index of the corresponding variable
      * @param allowDivision Whether to allow (and parse) divisions. If false, ForbiddenDivisionException may be thrown
      */
-    TermParser(const std::map<std::string, Var> &knownVariables, bool allowDivision);
+    TermParser(const std::map<std::string, Var> &knownVariables);
 
     /**
      * Tries to parse the given string into a term. Throws exception on failure.
@@ -66,7 +66,6 @@ private:
 
     // settings
     const std::map<std::string, Var> &knownVariables;
-    bool allowDivision;
 
     // parser state
     bool nextSymbolCalledOnEmptyInput;

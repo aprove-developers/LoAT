@@ -29,8 +29,8 @@ using namespace boost::algorithm;
 const std::set<char> TermParser::specialCharsInVarNames = {'\'', '.', '_'};
 
 
-TermParser::TermParser(const std::map<std::string, Var> &knownVariables, bool allowDivision)
- : knownVariables(knownVariables), allowDivision(allowDivision)
+TermParser::TermParser(const std::map<std::string, Var> &knownVariables)
+ : knownVariables(knownVariables)
 {}
 
 
@@ -179,11 +179,7 @@ TermPtr TermParser::term() {
             result = make_shared<TermBinOp>(result, factor(), TermBinOp::Multiplication);
 
         } else if (op == SLASH) {
-            if (allowDivision) {
-                result = make_shared<TermBinOp>(result, factor(), TermBinOp::Division);
-            } else {
-                throw ForbiddenDivisionException("Division is not allowed in the input");
-            }
+            throw ForbiddenDivisionException("Division is not allowed in the input");
 
         } else { // CIRCUMFLEX
             result = make_shared<TermBinOp>(result, factor(), TermBinOp::Power);

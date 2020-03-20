@@ -57,12 +57,6 @@ namespace Config {
         const std::string Cyan = "\033[0;36m"; // cyan
     }
 
-    namespace Parser {
-        // Whether to allow division to occur in the input.
-        // NOTE: Settings this to true can be unsound (if some terms in the input do not map to int)!
-        bool AllowDivision = false;
-    }
-
     namespace Smt {
         // Timeouts (default / for metering / for limit smt encoding)
         const unsigned DefaultTimeout = 500u;
@@ -130,97 +124,12 @@ namespace Config {
     }
 
     namespace Analysis {
-        // Simplify the rules before starting the analysis?
-        // This involves z3 (to find unsat rules and to simplify guards) and might be expensive.
-        // Disabling is especially useful when debugging specific examples.
-        bool Preprocessing = true;
-
         // Whether to enable pruning to reduce the number of rules.
         // Pruning works by greedily keeping rules with a high complexity.
         // To be more accurate, this involves the asymptotic check (and can thus be expensive).
         bool Pruning = true;
 
-        // Whether a constraint "cost >= 0" is added to every rule.
-        // This influences the semantics: If false, rules can be taken even if the cost is negative.
-        bool EnsureNonnegativeCosts = true;
-
-        // Whether to check for constant complexity (reachable satisfiable rule with cost >= 1).
-        // If disabled, Omega(0) is reported if no non-constant complexity can be inferred.
-        // If enabled, a heuristic is used that only checks initial rules to prove Omega(1).
-        // Involves SMT queries and can impact performance (even if a higher complexity is inferred).
-        bool ConstantCpxCheck = true;
-
         bool NonTermMode = false;
     }
 
-}
-
-#define GetColor(a) ((Config::Output::Colors) ? (Config::Color::a) : "")
-
-#define PrintCfg(a,b) \
-    os << #a << " = " << a; \
-    if (withDescription) os << GetColor(Gray) << "  // " << b << GetColor(None); \
-    os << endl
-
-void Config::printConfig(ostream &os, bool withDescription) {
-    auto startSection = [&](const string &s) {
-        os << endl << GetColor(Headline) << "## " << s << " ##" << GetColor(None) << endl;
-    };
-
-    os << "LoAT Configuration" << endl;
-
-    {
-        using namespace Config::Output;
-        startSection("Output");
-        PrintCfg(Colors, "Enable colors in proof output");
-    }
-    {
-        using namespace Config::Parser;
-        startSection("Parser");
-        PrintCfg(AllowDivision, "Allow divisions in the input file (currently not sound!)");
-    }
-    {
-        using namespace Config::Smt;
-        startSection("Smt");
-        PrintCfg(DefaultTimeout, "Timeout for most z3 calls");
-        PrintCfg(MeterTimeout, "Timeout for z3 when searching for metering functions");
-        PrintCfg(LimitTimeout, "Timeout for z3 when solve limit problems via smt encoding");
-        PrintCfg(MaxExponentWithoutPow, "Max degree for rewriting powers as products for Z3");
-    }
-    {
-        using namespace Config::BackwardAccel;
-        startSection("Backward Acceleration");
-        PrintCfg(MaxUpperboundsForPropagation, "Max number of upper bounds to allow when replacing");
-    }
-    {
-        using namespace Config::Accel;
-        startSection("Acceleration");
-        PrintCfg(SimplifyRulesBefore, "Simplify simple loops before acceleration");
-        PrintCfg(PartialDeletionHeuristic, "Apply partial deletion if acceleration fails");
-        PrintCfg(TryNesting, "Try to interpret parallel simple loops as nested loops");
-    }
-    {
-        using namespace Config::Chain;
-        startSection("Chaining");
-        PrintCfg(CheckSat, "Only chain if the resulting chained rule is satisfiable");
-        PrintCfg(KeepIncomingInChainAccelerated, "Keep incoming rules after chaining with accelerated rules");
-    }
-    {
-        using namespace Config::Prune;
-        startSection("Pruning");
-        PrintCfg(MaxParallelRules, "Number of parallel rules for which pruning is applied");
-    }
-    {
-        using namespace Config::Limit;
-        startSection("Limit Problems");
-        PrintCfg(PolyStrategy, "Strategy to solve limit problems");
-        PrintCfg(ProblemDiscardSize, "Discard problems of this size if z3 says unknown");
-    }
-    {
-        using namespace Config::Analysis;
-        startSection("Main Algorithm");
-        PrintCfg(Preprocessing, "Perform several pre-processing steps to simplify rules");
-        PrintCfg(Pruning, "Whether to enable pruning of rules");
-        PrintCfg(EnsureNonnegativeCosts, "Add 'cost >= 0' to all guards, disallow rules with negative costs");
-    }
 }

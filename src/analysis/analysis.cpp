@@ -57,7 +57,7 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
 
     proof.majorProofStep("Initial ITS", its);
 
-    if (Config::Analysis::EnsureNonnegativeCosts) {
+    if (!Config::Analysis::NonTermMode) {
         const option<ProofOutput> &subProof = ensureNonnegativeCosts();
         if (subProof) {
             proof.concat(subProof.get());
@@ -74,30 +74,26 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
     bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
     // Check if we have at least constant complexity (i.e., at least one rule can be taken with cost >= 1)
-    if (Config::Analysis::ConstantCpxCheck) {
+    if (!Config::Analysis::NonTermMode) {
         checkConstantComplexity(res, proof);
     }
 
-    if (Config::Analysis::Preprocessing) {
+    if (Pruning::removeLeafsAndUnreachable(its)) {
+        proof.minorProofStep("Removed unreachable rules and leafs", its);
+    }
 
-        if (Pruning::removeLeafsAndUnreachable(its)) {
-            proof.minorProofStep("Removed unreachable rules and leafs", its);
-        }
+    if (removeUnsatRules()) {
+        proof.minorProofStep("Removed rules with unsatisfiable guard", its);
+    }
 
-        if (removeUnsatRules()) {
-            proof.minorProofStep("Removed rules with unsatisfiable guard", its);
-        }
+    if (Pruning::removeLeafsAndUnreachable(its)) {
+        proof.minorProofStep("Removed unreachable rules and leafs", its);
+    }
 
-        if (Pruning::removeLeafsAndUnreachable(its)) {
-            proof.minorProofStep("Removed unreachable rules and leafs", its);
-        }
-
-        option<ProofOutput> subProof = preprocessRules();
-        if (subProof) {
-            proof.concat(subProof.get());
-            proof.minorProofStep("Simplified rules", its);
-        }
-
+    option<ProofOutput> subProof = preprocessRules();
+    if (subProof) {
+        proof.concat(subProof.get());
+        proof.minorProofStep("Simplified rules", its);
     }
 
     // We cannot prove any lower bound for an empty ITS

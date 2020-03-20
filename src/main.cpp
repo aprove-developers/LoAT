@@ -47,11 +47,7 @@ void printHelp(char *arg0) {
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
     cout << endl;
-    cout << "  --allow-division                                 Allow division in the input program (potentially unsound)" << endl;
-    cout << "  --no-cost-check                                  Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing                               Don't try to simplify the program first (which involves SMT)" << endl;
     cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
-    cout << "  --no-const-cpx                                   Don't check for constant complexity (might improve performance)" << endl;
     cout << "  --nonterm                                        Just try to prove non-termination" << endl;
 }
 
@@ -78,12 +74,6 @@ void parseFlags(int argc, char *argv[]) {
             proofLevel = atoi(getNext());
         } else if (strcmp("--plain",argv[arg]) == 0) {
             Config::Output::Colors = false;
-        } else if (strcmp("--allow-division",argv[arg]) == 0) {
-            Config::Parser::AllowDivision = true;
-        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
-            Config::Analysis::Preprocessing = false;
-        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
-            Config::Analysis::EnsureNonnegativeCosts = false;
         } else if (strcmp("--limit-strategy",argv[arg]) == 0) {
             const std::string &strategy = getNext();
             bool found = false;
@@ -97,11 +87,8 @@ void parseFlags(int argc, char *argv[]) {
             if (!found) {
                 cerr << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name() << endl;
             }
-        } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
-            Config::Analysis::ConstantCpxCheck = false;
         } else if (strcmp("--nonterm",argv[arg]) == 0) {
             Config::Analysis::NonTermMode = true;
-            Config::Analysis::ConstantCpxCheck = false;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;
@@ -146,16 +133,6 @@ int main(int argc, char *argv[]) {
     } catch (const parser::ITSParser::FileError &err) {
         cout << "Error loading file " << filename << ": " << err.what() << endl;
         return 1;
-    }
-
-    // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
-    if (Config::Parser::AllowDivision) {
-        std::cerr << "WARNING: Allowing division in the input program can yield unsound results!" << std::endl;
-        std::cerr << "Division is only sound if the result of a term is always an integer." << std::endl;
-    }
-    if (!Config::Analysis::EnsureNonnegativeCosts) {
-        std::cerr << "WARNING: Not checking the costs can yield unsound results!" << std::endl;
-        std::cerr << "This is only safe if costs in the input program are guaranteed to be nonnegative." << std::endl;
     }
 
     if (proofLevel < 0 || proofLevel > 3) {

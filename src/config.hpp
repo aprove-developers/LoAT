@@ -122,17 +122,9 @@ namespace Config {
         extern const unsigned int ProblemDiscardSize;
     }
 
-    // Parser for ITS problems
-    namespace Parser {
-        extern bool AllowDivision;
-    }
-
     // Main algorithm
     namespace Analysis {
-        extern bool Preprocessing;
         extern bool Pruning;
-        extern bool EnsureNonnegativeCosts;
-        extern bool ConstantCpxCheck;
         extern bool NonTermMode;
     }
 
