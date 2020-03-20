@@ -29,7 +29,7 @@
 #include "../analysis/chain.hpp"
 #include "accelerationCalculus/accelerationproblem.hpp"
 #include "iterationCounterElimination/vareliminator.hpp"
-#include "../util/result.hpp"
+#include "../util/status.hpp"
 #include "../its/export.hpp"
 
 using namespace std;

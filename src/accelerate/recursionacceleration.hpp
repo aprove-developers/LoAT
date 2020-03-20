@@ -22,7 +22,7 @@
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
-#include "../util/result.hpp"
+#include "../util/status.hpp"
 #include "../util/proofoutput.hpp"
 #include "../util/option.hpp"
 #include "result.hpp"

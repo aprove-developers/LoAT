@@ -21,7 +21,6 @@
 #include "../its/itsproblem.hpp"
 #include "../its/rule.hpp"
 #include "../util/option.hpp"
-#include "../accelerate/recursionacceleration.hpp"
 #include "result.hpp"
 
 class LoopAcceleration {

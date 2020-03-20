@@ -23,7 +23,6 @@
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
 #include "recursionacceleration.hpp"
-#include "../util/result.hpp"
 #include "result.hpp"
 
 

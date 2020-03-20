@@ -108,7 +108,7 @@ add_executable(${EXECUTABLE}
         src/util/proofoutput.cpp
         src/util/timeout.cpp
         src/util/timeout.hpp
-        src/util/result.hpp
+        src/util/status.hpp
         src/config.cpp
         src/config.hpp
         src/main.cpp

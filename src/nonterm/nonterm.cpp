@@ -22,7 +22,7 @@
 #include "../accelerate/recurrence/dependencyorder.hpp"
 #include "../analysis/chain.hpp"
 #include "../util/relevantvariables.hpp"
-#include "../util/result.hpp"
+#include "../util/status.hpp"
 
 namespace nonterm {
 

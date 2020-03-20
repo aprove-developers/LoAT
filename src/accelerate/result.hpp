@@ -1,7 +1,7 @@
 #ifndef RESULT_HPP
 #define RESULT_HPP
 
-#include "../util/result.hpp"
+#include "../util/status.hpp"
 #include "../util/proofoutput.hpp"
 #include "../its/rule.hpp"
 
