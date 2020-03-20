@@ -71,8 +71,8 @@ namespace Config {
         const unsigned MaxExponentWithoutPow = 5;
     }
 
-    // Backward acceleration technique
-    namespace BackwardAccel {
+    // Loop acceleration technique
+    namespace LoopAccel {
         // If KeepTempVarForIterationCount is false, then "k" is instantiated by its upper bounds.
         // If there are several upperbounds, several rules are created.
         // To avoid rule explosion, the propagation is only performed up to this number of upperbounds.

@@ -46,7 +46,7 @@ vector<Rule> LoopAcceleration::replaceByUpperbounds(const Var &N, const Rule &ru
     VarEliminator ve(rule.getGuard(), N, its);
 
     // avoid rule explosion (by not instantiating N if there are too many bounds)
-    if (ve.getRes().empty() || ve.getRes().size() > Config::BackwardAccel::MaxUpperboundsForPropagation) {
+    if (ve.getRes().empty() || ve.getRes().size() > Config::LoopAccel::MaxUpperboundsForPropagation) {
         return {};
     }
 

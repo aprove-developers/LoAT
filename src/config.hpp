@@ -69,8 +69,8 @@ namespace Config {
         extern const unsigned MaxExponentWithoutPow;
     }
 
-    // Backward acceleration technique
-    namespace BackwardAccel {
+    // Loop acceleration technique
+    namespace LoopAccel {
         extern const unsigned MaxUpperboundsForPropagation;
     }
 
