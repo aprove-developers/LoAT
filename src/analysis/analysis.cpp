@@ -496,7 +496,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
             }
         }
         uint timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
-        if (isPolynomial) {
+        if (isPolynomial && Config::Limit::PolyStrategy->smtEnabled()) {
             checkRes = AsymptoticBound::determineComplexityViaSMT(
                     its,
                     rule.getGuard(),
@@ -504,7 +504,8 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
                     true,
                     res.getCpx(),
                     timeout);
-        } else {
+        }
+        if ((!checkRes || checkRes->cpx == Complexity::Unknown) && Config::Limit::PolyStrategy->calculusEnabled()) {
             checkRes = AsymptoticBound::determineComplexity(
                     its,
                     rule.getGuard(),
