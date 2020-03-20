@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "backward.hpp"
+#include "loopacceleration.hpp"
 
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
@@ -23,28 +23,25 @@
 #include "recurrence/recurrence.hpp"
 #include "meter/metertools.hpp"
 #include "../expr/guardtoolbox.hpp"
-#include "forward.hpp"
 
 #include <purrs.hh>
 #include "../util/relevantvariables.hpp"
 #include "../analysis/chain.hpp"
-#include "accelerationproblem.hpp"
-#include "vareliminator.hpp"
+#include "accelerationCalculus/accelerationproblem.hpp"
+#include "iterationCounterElimination/vareliminator.hpp"
 #include "../util/result.hpp"
 #include "../its/export.hpp"
 
 using namespace std;
 
-typedef BackwardAcceleration Self;
-
-BackwardAcceleration::BackwardAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink)
+LoopAcceleration::LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink)
         : its(its), rule(rule), sink(sink) {}
 
-bool BackwardAcceleration::shouldAccelerate() const {
+bool LoopAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPoly();
 }
 
-vector<Rule> BackwardAcceleration::replaceByUpperbounds(const Var &N, const Rule &rule) {
+vector<Rule> LoopAcceleration::replaceByUpperbounds(const Var &N, const Rule &rule) {
     // gather all upper bounds (if possible)
     VarEliminator ve(rule.getGuard(), N, its);
 
@@ -65,33 +62,33 @@ vector<Rule> BackwardAcceleration::replaceByUpperbounds(const Var &N, const Rule
     return res;
 }
 
-LinearRule BackwardAcceleration::buildNontermRule(const GuardList &guard) const {
+LinearRule LoopAcceleration::buildNontermRule(const GuardList &guard) const {
     return LinearRule(rule.getLhsLoc(), guard, Expr::NontermSymbol, sink, {});
 }
 
-Self::AccelerationResult BackwardAcceleration::run() {
-    AccelerationResult res;
+Acceleration::Result LoopAcceleration::run() {
+    Acceleration::Result res;
     res.status = Failure;
     if (shouldAccelerate()) {
-        option<AccelerationProblem> ap = AccelerationCalculus::init(rule, its);
+        option<AccelerationProblem> ap = AccelerationProblem::init(rule, its);
         if (ap) {
             ap->simplifyEquivalently();
             if (ap->solved()) {
                 res.status = Success;
-                if (ap->nonterm) {
-                    const Rule &nontermRule = buildNontermRule(ap->res);
+                if (ap->witnessesNonterm()) {
+                    const Rule &nontermRule = buildNontermRule(ap->getAcceleratedGuard());
                     res.rules.push_back(nontermRule);
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
-                    res.proof.storeSubProof(ap->proof, "acceration calculus");
+                    res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else {
                     Subs up;
-                    for (auto p: ap->closed) {
+                    for (auto p: ap->getClosedForm()) {
                         up.put(p.first, p.second);
                     }
-                    LinearRule accel(rule.getLhsLoc(), ap->res, ap->cost, rule.getRhsLoc(), up);
+                    LinearRule accel(rule.getLhsLoc(), ap->getAcceleratedGuard(), ap->getAcceleratedCost(), rule.getRhsLoc(), up);
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
-                    res.proof.storeSubProof(ap->proof, "acceration calculus");
-                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->n, accel);
+                    res.proof.storeSubProof(ap->getProof(), "acceration calculus");
+                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);
                     if (instantiated.empty()) {
                         res.rules.push_back(accel);
                     } else {
@@ -108,7 +105,7 @@ Self::AccelerationResult BackwardAcceleration::run() {
 }
 
 
-Self::AccelerationResult BackwardAcceleration::accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink) {
-    BackwardAcceleration ba(its, rule, sink);
+Acceleration::Result LoopAcceleration::accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink) {
+    LoopAcceleration ba(its, rule, sink);
     return ba.run();
 }

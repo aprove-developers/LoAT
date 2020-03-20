@@ -19,7 +19,6 @@
 #include "../accelerate/meter/metertools.hpp"
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
-#include "../accelerate/forward.hpp"
 #include "../accelerate/recurrence/dependencyorder.hpp"
 #include "../analysis/chain.hpp"
 #include "../util/relevantvariables.hpp"

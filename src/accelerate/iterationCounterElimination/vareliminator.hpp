@@ -1,7 +1,7 @@
 #ifndef VARELIMINATOR_HPP
 #define VARELIMINATOR_HPP
 
-#include "../its/itsproblem.hpp"
+#include "../../its/itsproblem.hpp"
 #include "boundextractor.hpp"
 
 /**

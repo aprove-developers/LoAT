@@ -2,8 +2,8 @@
 #define BOUNDEXTRACTOR_H
 
 #include <vector>
-#include "../its/itsproblem.hpp"
-#include "../expr/guardtoolbox.hpp"
+#include "../../its/itsproblem.hpp"
+#include "../../expr/guardtoolbox.hpp"
 
 /**
  * Extracts bounds on the given variable from the given guard.

@@ -43,15 +43,17 @@ add_executable(${EXECUTABLE}
         src/accelerate/recurrence/recurrence.hpp
         src/accelerate/accelerator.cpp
         src/accelerate/accelerator.hpp
-        src/accelerate/backward.cpp
-        src/accelerate/backward.hpp
-        src/accelerate/forward.cpp
-        src/accelerate/forward.hpp
-        src/accelerate/accelerationproblem.hpp
-        src/accelerate/boundextractor.hpp
-        src/accelerate/boundextractor.cpp
-        src/accelerate/vareliminator.cpp
-        src/accelerate/vareliminator.hpp
+        src/accelerate/loopacceleration.cpp
+        src/accelerate/loopacceleration.hpp
+        src/accelerate/recursionacceleration.cpp
+        src/accelerate/recursionacceleration.hpp
+        src/accelerate/result.hpp
+        src/accelerate/iterationCounterElimination/boundextractor.hpp
+        src/accelerate/iterationCounterElimination/boundextractor.cpp
+        src/accelerate/iterationCounterElimination/vareliminator.cpp
+        src/accelerate/iterationCounterElimination/vareliminator.hpp
+        src/accelerate/accelerationCalculus/accelerationproblem.cpp
+        src/accelerate/accelerationCalculus/accelerationproblem.hpp
         src/analysis/analysis.cpp
         src/analysis/analysis.hpp
         src/analysis/chain.cpp

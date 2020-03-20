@@ -28,8 +28,7 @@
 #include "../analysis/chain.hpp"
 #include "../analysis/prune.hpp"
 
-#include "forward.hpp"
-#include "backward.hpp"
+#include "loopacceleration.hpp"
 
 #include <queue>
 #include "../asymptotic/asymptoticbound.hpp"
@@ -39,9 +38,6 @@
 
 
 using namespace std;
-namespace Forward = ForwardAcceleration;
-using Backward = BackwardAcceleration;
-
 
 Accelerator::Accelerator(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules)
     : its(its), targetLoc(loc), resultingRules(resultingRules)
@@ -122,7 +118,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         Preprocess::simplifyRule(its, nestedRule);
 
         // Note that we do not try all heuristics or backward accel to keep nesting efficient
-        const Backward::AccelerationResult &accel = Backward::accelerate(its, nestedRule, sinkLoc);
+        const Acceleration::Result &accel = LoopAcceleration::accelerate(its, nestedRule, sinkLoc);
         bool success = false;
         Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
         ProofOutput proof;
@@ -253,8 +249,8 @@ unsigned int Accelerator::numNotInUpdate(const Subs &up) const {
 // ## Acceleration  ##
 // ###################
 
-const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
-    Forward::Result res;
+const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule &rule) const {
+    Acceleration::Result res;
     res.status = PartialSuccess;
     // chain rule if necessary
     const option<LinearRule> &optR = chain(rule);
@@ -267,7 +263,7 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     if (sat) {
         // try acceleration
         bool nonterm = false;
-        BackwardAcceleration::AccelerationResult accelRes = Backward::accelerate(its, r, sinkLoc);
+        Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc);
         if (!accelRes.rules.empty()) {
             res.status = accelRes.status;
             res.proof.concat(accelRes.proof);
@@ -317,10 +313,10 @@ const Forward::Result Accelerator::strengthenAndAccelerate(const LinearRule &rul
     return res;
 }
 
-Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
+Acceleration::Result Accelerator::tryAccelerate(const Rule &rule) const {
     // Forward acceleration
     if (!rule.isLinear()) {
-        return Forward::accelerate(its, rule, sinkLoc);
+        return RecursionAcceleration::accelerate(its, rule, sinkLoc);
     } else {
         return strengthenAndAccelerate(rule.toLinear());
     }
@@ -328,8 +324,8 @@ Forward::Result Accelerator::tryAccelerate(const Rule &rule) const {
 }
 
 
-Forward::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
-    using namespace Forward;
+Acceleration::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
+    using namespace RecursionAcceleration;
 
     // Accelerate the original rule
     auto res = tryAccelerate(rule);
@@ -418,7 +414,7 @@ option<ProofOutput> Accelerator::run() {
     for (TransIdx loop : loops) {
         // Forward and backward accelerate (and partial deletion for nonlinear rules)
         const Rule &r = its.getRule(loop);
-        Forward::Result res = accelerateOrShorten(r);
+        Acceleration::Result res = accelerateOrShorten(r);
 
         if (res.status != Success) {
             keepRules.insert(loop);

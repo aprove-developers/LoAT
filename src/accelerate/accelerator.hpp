@@ -22,8 +22,9 @@
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
-#include "forward.hpp"
+#include "recursionacceleration.hpp"
 #include "../util/result.hpp"
+#include "result.hpp"
 
 
 class Accelerator {
@@ -75,7 +76,7 @@ private:
      * if this fails, by backward acceleration.
      * @returns The acceleration result (including accelerated rules, if successful)
      */
-    ForwardAcceleration::Result tryAccelerate(const Rule &rule) const;
+    Acceleration::Result tryAccelerate(const Rule &rule) const;
 
 
     /**
@@ -94,7 +95,7 @@ private:
      * @returns If successful, the resulting accelerated rule(s). Otherwise,
      * the acceleration result from accelerating the original rule (before shortening).
      */
-    ForwardAcceleration::Result accelerateOrShorten(const Rule &rule) const;
+    Acceleration::Result accelerateOrShorten(const Rule &rule) const;
 
 
     /**
@@ -142,7 +143,7 @@ private:
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
     std::set<TransIdx> keepRules;
 
-    const ForwardAcceleration::Result strengthenAndAccelerate(const LinearRule &rule) const;
+    const Acceleration::Result strengthenAndAccelerate(const LinearRule &rule) const;
 
     ProofOutput proof;
 

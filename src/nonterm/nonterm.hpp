@@ -20,7 +20,7 @@
 
 #include "../its/rule.hpp"
 #include "../its/itsproblem.hpp"
-#include "../accelerate/forward.hpp"
+#include "../util/proofoutput.hpp"
 
 namespace nonterm {
 

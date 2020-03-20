@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "forward.hpp"
+#include "recursionacceleration.hpp"
 
 #include "recurrence/recurrence.hpp"
 #include "meter/metering.hpp"
@@ -23,8 +23,6 @@
 
 
 using namespace std;
-using ForwardAcceleration::Result;
-
 
 /**
  * Helper function that searches for a metering function and,
@@ -59,9 +57,9 @@ static MeteringFinder::Result meterWithInstantiation(ITSProblem &its, const Rule
  * @param sink Used for non-terminating and nonlinear rules (since we do not know to what they evaluate).
  * otherwise it is not modified.
  */
-static Result meterAndIterate(ITSProblem &its, const Rule &r, LocationIdx sink) {
-    using namespace ForwardAcceleration;
-    Result res;
+static Acceleration::Result meterAndIterate(ITSProblem &its, const Rule &r, LocationIdx sink) {
+    using namespace RecursionAcceleration;
+    Acceleration::Result res;
 
     // We may require that the cost is at least 1 in every single iteration of the loop.
     // For linear rules, this is only required for non-termination (see special case below).
@@ -113,25 +111,25 @@ static Result meterAndIterate(ITSProblem &its, const Rule &r, LocationIdx sink) 
 }
 
 
-Result ForwardAcceleration::accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink) {
+Acceleration::Result RecursionAcceleration::accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink) {
     return meterAndIterate(its, rule, sink);
 }
 
 
-Result ForwardAcceleration::accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink) {
+Acceleration::Result RecursionAcceleration::accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink) {
     // Try to find a metering function without any heuristics
-    Result accel = meterAndIterate(its, rule, sink);
+    Acceleration::Result accel = meterAndIterate(its, rule, sink);
     if (accel.status != Failure) {
         return accel;
     }
 
-    Result res;
+    Acceleration::Result res;
 
     // Guard strengthening heuristic (helps in the presence of constant updates like x := 5 or x := free).
     // Check and (possibly) apply heuristic, this modifies newRule
     option<Rule> strengthened = MeteringFinder::strengthenGuard(its, rule);
     if (strengthened) {
-        const Result &accel = accelerateFast(its, strengthened.get(), sink);
+        const Acceleration::Result &accel = accelerateFast(its, strengthened.get(), sink);
         if (accel.status != Failure) {
             res.proof.ruleTransformationProof(rule, "strengthening", strengthened.get(), its);
             res.proof.concat(accel.proof);

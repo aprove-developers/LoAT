@@ -21,9 +21,10 @@
 #include "../its/itsproblem.hpp"
 #include "../its/rule.hpp"
 #include "../util/option.hpp"
-#include "../accelerate/forward.hpp"
+#include "../accelerate/recursionacceleration.hpp"
+#include "result.hpp"
 
-class BackwardAcceleration {
+class LoopAcceleration {
 public:
 
     struct AcceleratedRules {
@@ -31,23 +32,17 @@ public:
         const unsigned int validityBound;
     };
 
-    struct AccelerationResult {
-        std::vector<Rule> rules;
-        Status status;
-        ProofOutput proof;
-    };
-
-    static AccelerationResult accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
+    static Acceleration::Result accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
 
 private:
-    BackwardAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
+    LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
 
     LinearRule buildNontermRule(const GuardList &guard) const;
 
     /**
      * Main function, just calls the methods below in the correct order
      */
-    AccelerationResult run();
+    Acceleration::Result run();
 
     /**
      * Checks whether the backward acceleration technique might be applicable.

@@ -25,18 +25,13 @@
 #include "../util/result.hpp"
 #include "../util/proofoutput.hpp"
 #include "../util/option.hpp"
+#include "result.hpp"
 
 /**
  * The classic acceleration technique by using metering functions.
  * This is applicable to for both linear and nonlinear rules (with several right-hand sides).
  */
-namespace ForwardAcceleration {
-
-    struct Result {
-        Status status = Failure;
-        ProofOutput proof;
-        std::vector<Rule> rules;
-    };
+namespace RecursionAcceleration {
 
     /**
      * Tries to accelerate the given rule, which must be a simple loop.
@@ -47,13 +42,13 @@ namespace ForwardAcceleration {
      * If the original loop was linear, the result is still a simple loop, unless it is non-terminating.
      * If the original loop was nonlinear or found to be non-terminating, the resulting rules go to the given sink.
      */
-    Result accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink);
+    Acceleration::Result accelerate(ITSProblem &its, const Rule &rule, LocationIdx sink);
 
     /**
      * Like accelerateNonlinear, but does not invoke any heuristics (and is thus faster but less powerful).
      * The result is always a single accelerated rule (if acceleration was successful).
      */
-    Result accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink);
+    Acceleration::Result accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink);
 };
 
 #endif // FORWARD_H
