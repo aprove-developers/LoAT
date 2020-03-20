@@ -75,7 +75,7 @@ namespace sexpressionparser {
                             LocationIdx from = locations[ruleExp[2].str()];
                             LocationIdx to = locations[ruleExp[4].str()];
                             Subs update;
-                            GuardList guard;
+                            Guard guard;
                             parseCond(ruleExp[5], guard);
                             for (unsigned int i = 0; i < preVars.size(); i++) {
                                 update.put(vars[preVars[i]], vars[postVars[i]]);
@@ -98,7 +98,7 @@ namespace sexpressionparser {
         }
     }
 
-    void Self::parseCond(sexpresso::Sexp &sexp, GuardList &guard) {
+    void Self::parseCond(sexpresso::Sexp &sexp, Guard &guard) {
         if (sexp.isString()) {
             if (sexp.str() == "false") {
                 guard.push_back(Rel(0, Rel::lt, 0));

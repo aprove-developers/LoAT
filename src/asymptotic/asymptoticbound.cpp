@@ -16,7 +16,7 @@
 using namespace std;
 
 
-AsymptoticBound::AsymptoticBound(VarMan &varMan, GuardList guard,
+AsymptoticBound::AsymptoticBound(VarMan &varMan, Guard guard,
                                  Expr cost, bool finalCheck, uint timeout)
     : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck), timeout(timeout),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize), currentLP(varMan) {
@@ -53,7 +53,7 @@ void AsymptoticBound::initLimitVectors() {
 
 void AsymptoticBound::normalizeGuard() {
 
-    GuardList ineqs;
+    Guard ineqs;
     for (const Rel &rel : guard) {
 
         if (rel.isEq()) {
@@ -209,7 +209,7 @@ Subs AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
 
     solution = solution.compose(limitProblem.getSolution());
 
-    GuardList guardCopy = guard;
+    Guard guardCopy = guard;
     guardCopy.push_back(cost > 0);
     for (const Rel &rel : guardCopy) {
         for (const Var &var : rel.vars()) {
@@ -835,7 +835,7 @@ bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
 
 
 AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
-                                                             const GuardList &guard,
+                                                             const Guard &guard,
                                                              const Expr &cost,
                                                              bool finalCheck,
                                                              const Complexity &currentRes,
@@ -905,7 +905,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
 }
 
 AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varMan,
-                                                                    const GuardList &guard,
+                                                                    const Guard &guard,
                                                                     const Expr &cost,
                                                                     bool finalCheck,
                                                                     Complexity currentRes,

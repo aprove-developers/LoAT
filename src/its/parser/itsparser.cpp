@@ -414,7 +414,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     // Convert lhs to Ginac expressions
     LocationIdx lhsLoc = getLocationData(rule.lhs).index;
     Expr cost = rule.cost ? rule.cost.get()->toGinacExpression() : 1;
-    GuardList guard;
+    Guard guard;
 
     if (!cost.isPoly()) {
         throw FileError("Non-polynomial cost in the input");

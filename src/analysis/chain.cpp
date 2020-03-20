@@ -31,7 +31,7 @@ using namespace std;
 /**
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
-static bool checkSatisfiability(const GuardList &newGuard, const VariableManager &varMan) {
+static bool checkSatisfiability(const Guard &newGuard, const VariableManager &varMan) {
     auto smtRes = Smt::check(buildAnd(newGuard), varMan);
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
@@ -54,7 +54,7 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
                                  const RuleLhs &secondLhs, bool checkSat)
 {
     // Concatenate both guards, but apply the first rule's update to second guard
-    GuardList newGuard = firstLhs.getGuard();
+    Guard newGuard = firstLhs.getGuard();
     for (const Rel &rel : secondLhs.getGuard()) {
         newGuard.push_back(rel.subs(firstUpdate));
     }

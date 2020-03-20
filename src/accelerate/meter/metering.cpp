@@ -33,7 +33,7 @@ using namespace std;
 namespace MT = MeteringToolbox;
 
 
-MeteringFinder::MeteringFinder(VarMan &varMan, const GuardList &guard, const vector<Subs> &updates)
+MeteringFinder::MeteringFinder(VarMan &varMan, const Guard &guard, const vector<Subs> &updates)
     : varMan(varMan),
       updates(updates),
       guard(guard),
@@ -131,7 +131,7 @@ void MeteringFinder::buildLinearConstraints() {
         makeConstraint(rel, linearConstraints.guard);
 
         // all of the guardUpdate constraints need to include the guard
-        for (GuardList &vec : linearConstraints.guardUpdate) {
+        for (Guard &vec : linearConstraints.guardUpdate) {
             makeConstraint(rel, vec);
         }
     }
@@ -336,7 +336,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 /* ### Heuristics to help finding more metering functions ### */
 
 option<Rule> MeteringFinder::strengthenGuard(VarMan &varMan, const Rule &rule) {
-    option<GuardList> guard = MT::strengthenGuard(varMan, rule.getGuard(), getUpdateList(rule));
+    option<Guard> guard = MT::strengthenGuard(varMan, rule.getGuard(), getUpdateList(rule));
     return guard ? option<Rule>(rule.withGuard(guard.get())) : option<Rule>();
 }
 
@@ -360,7 +360,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Smt::MeterTimeout);
     Smt::Result smtRes = Smt::Unsat; // this method should only be called if generate() fails
 
-    GuardList oldGuard = meter.guard;
+    Guard oldGuard = meter.guard;
     vector<Subs> oldUpdates = meter.updates;
 
     // Now try all possible instantiations until the solver is satisfied

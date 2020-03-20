@@ -27,7 +27,7 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(VarMan &varMan, GuardList guard, Expr cost, bool finalCheck, uint timeout);
+    AsymptoticBound(VarMan &varMan, Guard guard, Expr cost, bool finalCheck, uint timeout);
 
     void initLimitVectors();
     void normalizeGuard();
@@ -58,10 +58,10 @@ private:
 
 private:
     VariableManager &varMan;
-    const GuardList guard;
+    const Guard guard;
     const Expr cost;
     bool finalCheck;
-    GuardList normalizedGuard;
+    Guard normalizedGuard;
     ComplexityResult bestComplexity;
     ProofOutput proof;
     uint timeout;
@@ -104,14 +104,14 @@ public:
      * @param finalCheck enables more sophisticated backtracking and uses Timeout::hard
      */
     static Result determineComplexity(VarMan &varMan,
-                                      const GuardList &guard,
+                                      const Guard &guard,
                                       const Expr &cost,
                                       bool finalCheck = false,
                                       const Complexity &currentRes = Complexity::Const,
                                       uint timeout = Config::Smt::LimitTimeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
-                                            const GuardList &guard,
+                                            const Guard &guard,
                                             const Expr &cost,
                                             bool finalCheck = false,
                                             Complexity currentRes = Complexity::Const,

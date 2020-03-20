@@ -97,7 +97,7 @@ public:
     static option<Rule> strengthenGuard(VarMan &varMan, const Rule &rule);
 
 private:
-    MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<Subs> &update);
+    MeteringFinder(VarMan &varMan, const Guard &guard, const std::vector<Subs> &update);
 
     /**
      * Helper for convenience, collects all updates of the given rule into a vector.
@@ -181,14 +181,14 @@ private:
 
 
     std::vector<Subs> updates;
-    GuardList guard;
+    Guard guard;
 
     /**
      * Same as guard, but only contains constraints that (might) limit the execution of the loop.
      * irrelevantGuard is the guard without the reducedGuard (so the constraints that were dropped).
      */
-    GuardList reducedGuard;
-    GuardList irrelevantGuard;
+    Guard reducedGuard;
+    Guard irrelevantGuard;
 
     /**
      * The set of variables that might occur in the metering function.
@@ -203,10 +203,10 @@ private:
      * obtained from guard, reduced guard, irrelevant guard, guard and update.
      */
     struct {
-        GuardList guard;
-        GuardList reducedGuard;
-        GuardList irrelevantGuard;
-        std::vector<GuardList> guardUpdate; // one for each update
+        Guard guard;
+        Guard reducedGuard;
+        Guard irrelevantGuard;
+        std::vector<Guard> guardUpdate; // one for each update
     } linearConstraints;
 
     /**

@@ -30,8 +30,8 @@ using namespace std;
 
 
 bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
-    const GuardList &guardA = a.getGuard();
-    const GuardList &guardB = b.getGuard();
+    const Guard &guardA = a.getGuard();
+    const Guard &guardB = b.getGuard();
 
     // Some trivial syntactic checks
     if (guardA.size() != guardB.size()) return false;

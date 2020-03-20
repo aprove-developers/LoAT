@@ -50,7 +50,7 @@ namespace MeteringToolbox {
      * Modifies guard (member) to contain only <,<=,>=,> by replacing == with <= and >=
      * @return true iff successfull, false if guard contains != which cannot be handled
      */
-    GuardList replaceEqualities(const GuardList &guard);
+    Guard replaceEqualities(const Guard &guard);
 
     /**
      * Computes a guard by only keeping those constraints that might be relevant for the metering function.
@@ -68,7 +68,7 @@ namespace MeteringToolbox {
      * Note: The result of this method is soundness critical, since removing too many constraints
      * from the guard would allow incorrect metering functions (removing too few is not a soundness issue).
      */
-    GuardList reduceGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates, GuardList *irrelevantGuard = nullptr);
+    Guard reduceGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates, Guard *irrelevantGuard = nullptr);
 
     /**
      * Computes a list of variables that might occur in the metering function
@@ -81,7 +81,7 @@ namespace MeteringToolbox {
      *
      * Note: The result of this method is important to find metering functions, but does not affect soundness
      */
-    VarSet findRelevantVariables(const GuardList &reducedGuard, const MultiUpdate &updates);
+    VarSet findRelevantVariables(const Guard &reducedGuard, const MultiUpdate &updates);
 
     /**
      * Removes updates that do not update a variable from vars.
@@ -91,7 +91,7 @@ namespace MeteringToolbox {
     /**
      * Removes constraints that do not contain a variable from vars.
      */
-    void restrictGuardToVariables(GuardList &guard, const VarSet &vars);
+    void restrictGuardToVariables(Guard &guard, const VarSet &vars);
 
 
 
@@ -107,13 +107,13 @@ namespace MeteringToolbox {
      *
      * @return true iff the guard was modified (extended).
      */
-    option<GuardList> strengthenGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates);
+    option<Guard> strengthenGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates);
 
     /**
      * Creates all combinations of instantiating temporary variables by their bounds (i.e. free <= x --> set free=x)
      * @return list of all possible combinations (limited by FREEVAR_INSTANTIATE_MAXBOUNDS per variable).
      */
-    std::stack<Subs> findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard);
+    std::stack<Subs> findInstantiationsForTempVars(const VarMan &varMan, const Guard &guard);
 
 };
 

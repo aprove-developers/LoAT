@@ -43,7 +43,7 @@ namespace strengthening {
 
         const std::vector<Subs> computeUpdates() const;
 
-        const std::vector<GuardList> buildPreconditions(const std::vector<Rule> &predecessors) const;
+        const std::vector<Guard> buildPreconditions(const std::vector<Rule> &predecessors) const;
 
     };
 

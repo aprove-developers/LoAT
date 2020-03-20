@@ -62,7 +62,7 @@ vector<Rule> LoopAcceleration::replaceByUpperbounds(const Var &N, const Rule &ru
     return res;
 }
 
-LinearRule LoopAcceleration::buildNontermRule(const GuardList &guard) const {
+LinearRule LoopAcceleration::buildNontermRule(const Guard &guard) const {
     return LinearRule(rule.getLhsLoc(), guard, Expr::NontermSymbol, sink, {});
 }
 

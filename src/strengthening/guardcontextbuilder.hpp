@@ -28,21 +28,21 @@ namespace strengthening {
 
     public:
 
-        static const GuardContext build(const GuardList &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
+        static const GuardContext build(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
 
     private:
 
-        const GuardList &guard;
+        const Guard &guard;
         const std::vector<Subs> &updates;
         const VariableManager &varMan;
 
-        GuardContextBuilder(const GuardList &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
+        GuardContextBuilder(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
 
         const GuardContext build() const;
 
-        const GuardList computeConstraints() const;
+        const Guard computeConstraints() const;
 
-        const Result splitInvariants(const GuardList &constraints) const;
+        const Result splitInvariants(const Guard &constraints) const;
 
     };
 

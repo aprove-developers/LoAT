@@ -29,13 +29,13 @@ using TransIdx = unsigned int;
 using LocationIdx = unsigned int;
 
 
-// GuardList is a list of expressions with some additional methods for convenience
-class GuardList : public std::vector<Rel> {
+// Guard is a list of expressions with some additional methods for convenience
+class Guard : public std::vector<Rel> {
 public:
     // inherit constructors of base class
     using std::vector<Rel>::vector;
     void collectVariables(VarSet &res) const;
-    GuardList subs(const Subs &sigma) const;
+    Guard subs(const Subs &sigma) const;
 
     /**
      * Returns true iff all guard terms are relational without the use of !=
@@ -43,11 +43,11 @@ public:
     bool isWellformed() const;
     bool isLinear() const;
 
-    friend GuardList operator&(const GuardList &fst, const GuardList &snd);
-    friend GuardList operator&(const GuardList &fst, const Rel &snd);
+    friend Guard operator&(const Guard &fst, const Guard &snd);
+    friend Guard operator&(const Guard &fst, const Rel &snd);
 
 };
 
-std::ostream& operator<<(std::ostream &s, const GuardList &l);
+std::ostream& operator<<(std::ostream &s, const Guard &l);
 
 #endif // TYPES_H

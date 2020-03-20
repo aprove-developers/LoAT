@@ -21,9 +21,9 @@
 namespace util {
 
     const VarSet RelevantVariables::find(
-            const GuardList &constraints,
+            const Guard &constraints,
             const std::vector<Subs> &updates,
-            const GuardList &guard) {
+            const Guard &guard) {
         VarSet res;
         // Add all variables appearing in the guard
         VarSet guardVariables;
@@ -71,9 +71,9 @@ namespace util {
 
 
     const VarSet RelevantVariables::find(
-            const GuardList &constraints,
+            const Guard &constraints,
             const std::vector<RuleRhs> &rhss,
-            const GuardList &guard) {
+            const Guard &guard) {
         std::vector<Subs> updates;
         for (const RuleRhs &rhs: rhss) {
             updates.push_back(rhs.getUpdate());

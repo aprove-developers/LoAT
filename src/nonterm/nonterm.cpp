@@ -71,7 +71,7 @@ namespace nonterm {
             }
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {
-                GuardList newGuard(r.getGuard());
+                Guard newGuard(r.getGuard());
                 for (const Var &var: vars) {
                     const auto &it = up.find(var);
                     newGuard.emplace_back(Rel::buildEq(var, (it == up.end() ? var : it->second)));

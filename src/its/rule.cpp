@@ -27,7 +27,7 @@ Rule::Rule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     }
 }
 
-Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expr cost, LocationIdx rhsLoc, Subs update)
+Rule::Rule(LocationIdx lhsLoc, Guard guard, Expr cost, LocationIdx rhsLoc, Subs update)
         : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)}) {
     if (getCost().isNontermSymbol()) {
         rhss = {RuleRhs(rhss[0].getLoc(), {})};
@@ -89,7 +89,7 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     }
 }
 
-Rule Rule::withGuard(const GuardList &guard) const {
+Rule Rule::withGuard(const Guard &guard) const {
     return Rule(RuleLhs(getLhsLoc(), guard, getCost()), getRhss());
 }
 

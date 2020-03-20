@@ -1,13 +1,14 @@
 #include "vareliminator.hpp"
+#include "boundextractor.hpp"
 
-VarEliminator::VarEliminator(const GuardList &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
+VarEliminator::VarEliminator(const Guard &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
     todoDeps.push({{}, guard});
     findDependencies(guard);
     eliminate();
 }
 
-void VarEliminator::findDependencies(const GuardList &guard) {
+void VarEliminator::findDependencies(const Guard &guard) {
     dependencies.insert(N);
     bool changed;
     do {
@@ -43,7 +44,7 @@ void VarEliminator::findDependencies(const GuardList &guard) {
     dependencies.erase(N);
 }
 
-const std::set<std::pair<Subs, GuardList>> VarEliminator::eliminateDependency(const Subs &subs, const GuardList &guard) const {
+const std::set<std::pair<Subs, Guard>> VarEliminator::eliminateDependency(const Subs &subs, const Guard &guard) const {
     VarSet vars;
     guard.collectVariables(vars);
     for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
@@ -51,7 +52,7 @@ const std::set<std::pair<Subs, GuardList>> VarEliminator::eliminateDependency(co
             continue;
         }
         BoundExtractor be(guard, *it);
-        std::set<std::pair<Subs, GuardList>> res;
+        std::set<std::pair<Subs, Guard>> res;
         for (const Expr &bound: be.getConstantBounds()) {
             Subs newSubs(*it, bound);
             res.insert({subs.compose(newSubs), guard.subs(newSubs)});
@@ -65,8 +66,8 @@ const std::set<std::pair<Subs, GuardList>> VarEliminator::eliminateDependency(co
 
 void VarEliminator::eliminateDependencies() {
     while (!todoDeps.empty()) {
-        const std::pair<Subs, GuardList> current = todoDeps.top();
-        const std::set<std::pair<Subs, GuardList>> &res = eliminateDependency(current.first, current.second);
+        const std::pair<Subs, Guard> current = todoDeps.top();
+        const std::set<std::pair<Subs, Guard>> &res = eliminateDependency(current.first, current.second);
         if (res.empty()) {
             todoN.insert(current);
         }
@@ -81,7 +82,7 @@ void VarEliminator::eliminate() {
     eliminateDependencies();
     for (const auto &p: todoN) {
         const Subs &subs = p.first;
-        const GuardList &guard = p.second;
+        const Guard &guard = p.second;
         BoundExtractor be(guard, N);
         if (be.getEq()) {
             res.insert(subs.compose(Subs(N, be.getEq().get())));

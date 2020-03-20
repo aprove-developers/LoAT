@@ -42,26 +42,26 @@ namespace strengthening {
 
     struct GuardContext {
 
-        GuardContext(const GuardList &guard,
-                GuardList invariants,
-                GuardList todo):
+        GuardContext(const Guard &guard,
+                Guard invariants,
+                Guard todo):
                 guard(guard),
                 invariants(std::move(invariants)),
                 todo(std::move(todo)) { }
 
-        const GuardList &guard;
-        const GuardList invariants;
-        const GuardList todo;
+        const Guard &guard;
+        const Guard invariants;
+        const Guard todo;
     };
 
     struct Implication {
-        GuardList premise;
-        GuardList conclusion;
+        Guard premise;
+        Guard conclusion;
     };
 
     struct Result {
-        GuardList solved;
-        GuardList failed;
+        Guard solved;
+        Guard failed;
     };
 
     struct SmtConstraints {

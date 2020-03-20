@@ -27,7 +27,7 @@ namespace strengthening {
 
     public:
 
-        static const option<GuardList> solve(
+        static const option<Guard> solve(
                 const RuleContext &ruleCtx,
                 const BoolExpr &constraints,
                 const Templates &templates);
@@ -43,9 +43,9 @@ namespace strengthening {
                 const BoolExpr &constraints,
                 const Templates &templates);
 
-        const option<GuardList> solve() const;
+        const option<Guard> solve() const;
 
-        const GuardList instantiateTemplates(const VarMap<GiNaC::numeric> &model) const;
+        const Guard instantiateTemplates(const VarMap<GiNaC::numeric> &model) const;
 
     };
 

@@ -1,6 +1,6 @@
 #include "boundextractor.hpp"
 
-BoundExtractor::BoundExtractor(const GuardList &guard, const Var &N): guard(guard), N(N) {
+BoundExtractor::BoundExtractor(const Guard &guard, const Var &N): guard(guard), N(N) {
     extractBounds();
 }
 

@@ -2,7 +2,6 @@
 #define VARELIMINATOR_HPP
 
 #include "../../its/itsproblem.hpp"
-#include "boundextractor.hpp"
 
 /**
  * Computes substitutions that are suitable to eliminate the given temporary variable from the rule by replacing it with its bounds.
@@ -11,7 +10,7 @@ class VarEliminator
 {
 public:
 
-    VarEliminator(const GuardList &guard, const Var &N, VariableManager &varMan);
+    VarEliminator(const Guard &guard, const Var &N, VariableManager &varMan);
 
     const std::set<Subs> getRes() const;
 
@@ -22,13 +21,13 @@ private:
      * For example, if we have N * M <= X, then we cannot instantiate N with X/M, as the bound must always evaluate to an integer.
      * Thus, in this case M is a dependency of N.
      */
-    void findDependencies(const GuardList &guard);
+    void findDependencies(const Guard &guard);
 
     /**
      * Tries to eliminate a single dependency by instantiating it with a constant bound.
      * Creates a new branch (i.e., a new entry in todoDeps) for every possible instantiation.
      */
-    const std::set<std::pair<Subs, GuardList>> eliminateDependency(const Subs &subs, const GuardList &guard) const;
+    const std::set<std::pair<Subs, Guard>> eliminateDependency(const Subs &subs, const Guard &guard) const;
 
     /**
      * Eliminates as many dependencies as possible by instantiating them with constant bounds.
@@ -48,13 +47,13 @@ private:
      * Each entry represents one branch in the search for suitable instantiations of dependencies.
      * Entries that do not allow for further instantiation are moved to todoN.
      */
-    std::stack<std::pair<Subs, GuardList>> todoDeps;
+    std::stack<std::pair<Subs, Guard>> todoDeps;
 
     /**
      * Each entry represents one possibility to instantiate dependencies exhaustively.
      * N still needs to be eliminated.
      */
-    std::set<std::pair<Subs, GuardList>> todoN;
+    std::set<std::pair<Subs, Guard>> todoN;
 
     /**
      * Substitutions that are suitable to eliminate N.

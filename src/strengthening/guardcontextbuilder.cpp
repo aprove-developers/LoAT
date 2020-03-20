@@ -23,18 +23,18 @@ namespace strengthening {
 
     typedef GuardContextBuilder Self;
 
-    const GuardContext Self::build(const GuardList &guard, const std::vector<Subs> &updates, const VariableManager &varMan) {
+    const GuardContext Self::build(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan) {
         return GuardContextBuilder(guard, updates, varMan).build();
     }
 
     Self::GuardContextBuilder(
-            const GuardList &guard,
+            const Guard &guard,
             const std::vector<Subs> &updates,
             const VariableManager &varMan
     ): guard(guard), updates(updates), varMan(varMan) { }
 
-    const GuardList Self::computeConstraints() const {
-        GuardList constraints;
+    const Guard Self::computeConstraints() const {
+        Guard constraints;
         for (const Rel &rel: guard) {
             if (rel.isLinear() && rel.isEq()) {
                 constraints.emplace_back(rel.lhs() <= rel.rhs());
@@ -46,7 +46,7 @@ namespace strengthening {
         return constraints;
     }
 
-    const Result Self::splitInvariants(const GuardList &constraints) const {
+    const Result Self::splitInvariants(const Guard &constraints) const {
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
         for (const Rel &rel: guard) {
             solver->add(rel);
@@ -77,7 +77,7 @@ namespace strengthening {
     }
 
     const GuardContext Self::build() const {
-        const GuardList &constraints = computeConstraints();
+        const Guard &constraints = computeConstraints();
         const Result inv = splitInvariants(constraints);
         return GuardContext(guard, inv.solved, inv.failed);
     }

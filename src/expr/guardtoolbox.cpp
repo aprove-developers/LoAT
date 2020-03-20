@@ -112,7 +112,7 @@ option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel 
 
 option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
     Subs varSubs;
-    GuardList guard = rule.getGuard();
+    Guard guard = rule.getGuard();
 
     for (unsigned int i=0; i < guard.size(); ++i) {
         Rel rel = guard[i].subs(varSubs);
@@ -161,7 +161,7 @@ option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule 
 
 
 option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool removeHalfBounds, SymbolAcceptor allow) {
-    GuardList guard = rule.getGuard();
+    Guard guard = rule.getGuard();
     //get all variables that appear in an inequality
     VarSet tryVars;
     for (const Rel &rel : guard) {
@@ -226,7 +226,7 @@ abort:  ; //this symbol could not be eliminated, try the next one
 
 
 option<Rule> GuardToolbox::makeEqualities(const Rule &rule) {
-    const GuardList &guard = rule.getGuard();
+    const Guard &guard = rule.getGuard();
     vector<pair<int,Expr>> terms; //inequalities from the guard, with the associated index in guard
     map<int,pair<int,Expr>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
 
@@ -248,7 +248,7 @@ option<Rule> GuardToolbox::makeEqualities(const Rule &rule) {
     // Construct the new guard by keeping unmatched constraint
     // and replacing matched pairs by an equality constraint.
     // This code below mostly retains the order of the constraints.
-    GuardList res;
+    Guard res;
     set<int> ignore;
     for (unsigned int i=0; i < guard.size(); ++i) {
         //ignore multiple equalities as well as the original second inequality

@@ -10,7 +10,7 @@ LimitProblem::LimitProblem(VariableManager &varMan)
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expr &cost, VariableManager &varMan)
+LimitProblem::LimitProblem(const Guard &normalizedGuard, const Expr &cost, VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Rel &rel : normalizedGuard) {
         assert(rel.isGZeroConstraint());
@@ -25,7 +25,7 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expr &cost, V
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, VariableManager &varMan)
+LimitProblem::LimitProblem(const Guard &normalizedGuard, VariableManager &varMan)
     : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
     for (const Rel &rel : normalizedGuard) {
         assert(rel.isGZeroConstraint());

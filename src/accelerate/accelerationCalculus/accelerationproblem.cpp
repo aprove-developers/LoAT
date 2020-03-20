@@ -3,9 +3,9 @@
 #include "../../smt/smtfactory.hpp"
 
 AccelerationProblem::AccelerationProblem(
-        const GuardList &res,
-        const GuardList &done,
-        const GuardList &todo,
+        const Guard &res,
+        const Guard &done,
+        const Guard &todo,
         const Subs &up,
         const Subs &closed,
         const Expr &cost,
@@ -24,7 +24,7 @@ AccelerationProblem AccelerationProblem::init(
         const Expr &iteratedCost,
         const Var &n,
         const uint validityBound) {
-    const GuardList &todo = normalize(r.getGuard());
+    const Guard &todo = normalize(r.getGuard());
     AccelerationProblem res({}, {}, todo, r.getUpdate(), closed, r.getCost(), iteratedCost, n, validityBound, varMan);
     while (res.recurrence());
     return res;
@@ -40,8 +40,8 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
     }
 }
 
-GuardList AccelerationProblem::normalize(const GuardList &g) {
-    GuardList res;
+Guard AccelerationProblem::normalize(const Guard &g) {
+    Guard res;
     for (const Rel &rel: g) {
         if (rel.isEq()) {
             res.push_back(rel.lhs() - rel.rhs() >= 0);
@@ -151,7 +151,7 @@ ProofOutput AccelerationProblem::getProof() const {
     return proof;
 }
 
-GuardList AccelerationProblem::getAcceleratedGuard() const {
+Guard AccelerationProblem::getAcceleratedGuard() const {
     assert(solved());
     return res;
 }

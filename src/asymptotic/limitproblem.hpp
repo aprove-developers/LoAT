@@ -27,12 +27,12 @@ public:
      *                        of the form t > 0
      * @param cost a term
      */
-    LimitProblem(const GuardList &normalizedGuard, const Expr &cost, VariableManager &varMan);
+    LimitProblem(const Guard &normalizedGuard, const Expr &cost, VariableManager &varMan);
 
     /**
      * Creates the initial LimitProblem without any cost term.
      */
-    LimitProblem(const GuardList &normalizedGuard, VariableManager &varMan);
+    LimitProblem(const Guard &normalizedGuard, VariableManager &varMan);
 
     // copy constructor and assignment operator
     LimitProblem(const LimitProblem &other);

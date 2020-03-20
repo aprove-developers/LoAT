@@ -40,7 +40,7 @@ namespace strengthening {
 
         explicit Strengthener(const RuleContext &ruleCtx);
 
-        const option<GuardList> apply(const GuardList &guard) const;
+        const option<Guard> apply(const Guard &guard) const;
 
     };
 

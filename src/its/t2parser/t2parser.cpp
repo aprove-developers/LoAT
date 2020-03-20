@@ -48,7 +48,7 @@ namespace t2parser {
 
     void T2Parser::parseTransition(LocationIdx start, std::ifstream &ifs) {
         std::string line;
-        GuardList guard;
+        Guard guard;
         Subs update;
         while (getline(ifs, line)) {
             line = removeComment(line);

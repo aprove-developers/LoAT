@@ -10,14 +10,14 @@
 
 class AccelerationProblem {
 private:
-    GuardList res;
-    GuardList done;
-    GuardList todo;
+    Guard res;
+    Guard done;
+    Guard todo;
     Subs up;
     Subs closed;
     Expr cost;
     Var n;
-    GuardList guard;
+    Guard guard;
     uint validityBound;
     bool equivalent = true;
     bool nonterm;
@@ -26,9 +26,9 @@ private:
     const VariableManager varMan;
 
     AccelerationProblem(
-            const GuardList &res,
-            const GuardList &done,
-            const GuardList &todo,
+            const Guard &res,
+            const Guard &done,
+            const Guard &todo,
             const Subs &up,
             const Subs &closed,
             const Expr &cost,
@@ -45,7 +45,7 @@ private:
             const Var &n,
             const uint validityBound);
 
-    static GuardList normalize(const GuardList &g);
+    static Guard normalize(const Guard &g);
     bool monotonicity();
     bool recurrence();
     bool eventualWeakDecrease();
@@ -59,7 +59,7 @@ public:
     bool solved() const;
     bool witnessesNonterm() const;
     ProofOutput getProof() const;
-    GuardList getAcceleratedGuard() const;
+    Guard getAcceleratedGuard() const;
     Expr getAcceleratedCost() const;
     Subs getClosedForm() const;
     Var getIterationCounter() const;

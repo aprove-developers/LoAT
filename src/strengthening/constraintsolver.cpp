@@ -26,7 +26,7 @@ namespace strengthening {
 
     typedef ConstraintSolver Self;
 
-    const option<GuardList> Self::solve(
+    const option<Guard> Self::solve(
             const RuleContext &ruleCtx,
             const BoolExpr &constraints,
             const Templates &templates) {
@@ -41,11 +41,11 @@ namespace strengthening {
             constraints(constraints),
             templates(templates) { }
 
-    const option<GuardList> Self::solve() const {
+    const option<Guard> Self::solve() const {
         std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), ruleCtx.varMan);
         solver->add(constraints);
         if (solver->check() == Smt::Sat) {
-            const GuardList &newInvariants = instantiateTemplates(solver->model());
+            const Guard &newInvariants = instantiateTemplates(solver->model());
             if (!newInvariants.empty()) {
                 return {newInvariants};
             }
@@ -53,8 +53,8 @@ namespace strengthening {
         return {};
     }
 
-    const GuardList Self::instantiateTemplates(const VarMap<GiNaC::numeric> &model) const {
-        GuardList res;
+    const Guard Self::instantiateTemplates(const VarMap<GiNaC::numeric> &model) const {
+        Guard res;
         Subs parameterInstantiation;
         for (const Var &p: templates.params()) {
             auto it = model.find(p);

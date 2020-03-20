@@ -117,7 +117,7 @@ option<Rule> Preprocess::simplifyRule(const VarMan &varMan, const Rule &rule) {
 
 
 option<Rule> Preprocess::simplifyGuard(const Rule &rule) {
-    GuardList newGuard;
+    Guard newGuard;
 
     for (const Rel &rel : rule.getGuard()) {
         // Skip trivially true constraints
@@ -160,8 +160,8 @@ option<Rule> Preprocess::simplifyGuardBySmt(const Rule &rule, const VariableMana
     unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({rule.getGuard()}, {}), varMan);
 
     // iterates once over guard and drops constraints that are implied by previous constraints
-    auto dropImplied = [&](const GuardList &guard) {
-        GuardList res;
+    auto dropImplied = [&](const Guard &guard) {
+        Guard res;
         for (const Rel &rel : guard) {
             solver->push();
             solver->add(!buildLit(rel));
@@ -178,7 +178,7 @@ option<Rule> Preprocess::simplifyGuardBySmt(const Rule &rule, const VariableMana
     };
 
     // iterated once, drop implied constraints
-    GuardList newGuard = dropImplied(rule.getGuard());
+    Guard newGuard = dropImplied(rule.getGuard());
 
     // reverse the guard
     std::reverse(newGuard.begin(), newGuard.end());

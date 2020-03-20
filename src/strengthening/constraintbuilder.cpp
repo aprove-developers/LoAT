@@ -41,9 +41,9 @@ namespace strengthening {
     }
 
     const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
-        GuardList invariancePremise;
-        GuardList monotonicityPremise;
-        const GuardList &relevantConstraints = findRelevantConstraints();
+        Guard invariancePremise;
+        Guard monotonicityPremise;
+        const Guard &relevantConstraints = findRelevantConstraints();
         invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
         Implication templatesInvariantImplication = buildTemplatesInvariantImplication();
         // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication
@@ -68,8 +68,8 @@ namespace strengthening {
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
     }
 
-    const GuardList ConstraintBuilder::findRelevantConstraints() const {
-        GuardList relevantConstraints;
+    const Guard ConstraintBuilder::findRelevantConstraints() const {
+        Guard relevantConstraints;
         for (const Rel &rel: guardCtx.guard) {
             for (const Var &var: templates.vars()) {
                 if (rel.vars().count(var) > 0) {
@@ -84,7 +84,7 @@ namespace strengthening {
     const Implication ConstraintBuilder::buildTemplatesInvariantImplication() const {
         Implication res;
         for (const Rel &invTemplate: templates) {
-            GuardList updatedTemplates;
+            Guard updatedTemplates;
             for (const Subs &up: ruleCtx.updates) {
                 Rel updated = invTemplate;
                 updated.applySubs(up);
@@ -101,7 +101,7 @@ namespace strengthening {
         return res;
     }
 
-    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const GuardList &relevantConstraints) const {
+    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const Guard &relevantConstraints) const {
         BoolExpr res = False;
         VarSet allVars;
         for (const Rel &rel: relevantConstraints) {
@@ -127,8 +127,8 @@ namespace strengthening {
     }
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(
-            const GuardList &premise,
-            const GuardList &conclusion) const {
+            const Guard &premise,
+            const Guard &conclusion) const {
         return FarkasLemma::apply(
                 premise,
                 conclusion,
@@ -139,7 +139,7 @@ namespace strengthening {
     }
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(
-            const GuardList &premise,
+            const Guard &premise,
             const Rel &conclusion) const {
         return FarkasLemma::apply(
                 premise,

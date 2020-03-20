@@ -45,8 +45,8 @@ bool MeteringToolbox::isUpdatedByAny(Var var, const MultiUpdate &updates) {
 
 /* ### Preprocessing ### */
 
-GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
-    GuardList newGuard;
+Guard MeteringToolbox::replaceEqualities(const Guard &guard) {
+    Guard newGuard;
 
     for (const Rel &rel : guard) {
         if (rel.isEq()) {
@@ -63,11 +63,11 @@ GuardList MeteringToolbox::replaceEqualities(const GuardList &guard) {
 
 /* ### Filter relevant constarints/variables ### */
 
-GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates,
-                                       GuardList *irrelevantGuard)
+Guard MeteringToolbox::reduceGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates,
+                                       Guard *irrelevantGuard)
 {
     assert(!irrelevantGuard || irrelevantGuard->empty());
-    GuardList reducedGuard;
+    Guard reducedGuard;
 
     // Collect all updated variables (updated by any of the updates)
     VarSet updatedVars;
@@ -121,7 +121,7 @@ GuardList MeteringToolbox::reduceGuard(const VarMan &varMan, const GuardList &gu
 }
 
 
-VarSet MeteringToolbox::findRelevantVariables(const GuardList &guard, const MultiUpdate &updates) {
+VarSet MeteringToolbox::findRelevantVariables(const Guard &guard, const MultiUpdate &updates) {
     VarSet res;
 
     // Add all variables appearing in the guard
@@ -181,7 +181,7 @@ void MeteringToolbox::restrictUpdatesToVariables(MultiUpdate &updates, const Var
 }
 
 
-void MeteringToolbox::restrictGuardToVariables(GuardList &guard, const VarSet &vars) {
+void MeteringToolbox::restrictGuardToVariables(Guard &guard, const VarSet &vars) {
     auto isContainedInVars = [&](const Var &sym) {
         return vars.count(sym) > 0;
     };
@@ -198,12 +198,12 @@ void MeteringToolbox::restrictGuardToVariables(GuardList &guard, const VarSet &v
 
 /* ### Heuristics to improve metering results ### */
 
-option<GuardList> MeteringToolbox::strengthenGuard(const VarMan &varMan, const GuardList &guard, const MultiUpdate &updates) {
+option<Guard> MeteringToolbox::strengthenGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates) {
     bool changed = false;
-    GuardList res(guard);
+    Guard res(guard);
 
     // first remove irrelevant constraints from the guard
-    GuardList reducedGuard = reduceGuard(varMan, res, updates);
+    Guard reducedGuard = reduceGuard(varMan, res, updates);
     VarSet relevantVars = findRelevantVariables(reducedGuard, updates);
 
     // consider each update independently of the others
@@ -245,11 +245,11 @@ option<GuardList> MeteringToolbox::strengthenGuard(const VarMan &varMan, const G
             }
         }
     }
-    return changed ? option<GuardList>(res) : option<GuardList>();
+    return changed ? option<Guard>(res) : option<Guard>();
 }
 
 
-stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const GuardList &guard) {
+stack<Subs> MeteringToolbox::findInstantiationsForTempVars(const VarMan &varMan, const Guard &guard) {
     //find free variables
     const VarSet &freeVar = varMan.getTempVars();
     if (freeVar.empty()) return stack<Subs>();

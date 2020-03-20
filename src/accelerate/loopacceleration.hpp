@@ -37,7 +37,7 @@ public:
 private:
     LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
 
-    LinearRule buildNontermRule(const GuardList &guard) const;
+    LinearRule buildNontermRule(const Guard &guard) const;
 
     /**
      * Main function, just calls the methods below in the correct order

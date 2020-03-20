@@ -400,7 +400,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, ProofOutput &proof) c
 
     for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
         const Rule &rule = its.getRule(idx);
-        GuardList guard = rule.getGuard();
+        Guard guard = rule.getGuard();
         guard.push_back(rule.getCost() >= 1);
 
         if (Smt::check(buildAnd(guard), its) == Smt::Sat) {

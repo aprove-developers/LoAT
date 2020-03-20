@@ -32,7 +32,7 @@ namespace sexpressionparser {
     private:
         void run(const std::string &filename);
 
-        void parseCond(sexpresso::Sexp &sexp, GuardList &guard);
+        void parseCond(sexpresso::Sexp &sexp, Guard &guard);
 
         Rel parseConstraint(sexpresso::Sexp &sexp, bool negate);
 

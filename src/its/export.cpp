@@ -51,7 +51,7 @@ static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &
 }
 
 
-void ITSExport::printGuard(const GuardList &guard, std::ostream &s, bool colors) {
+void ITSExport::printGuard(const Guard &guard, std::ostream &s, bool colors) {
     if (colors) printColor(s, Color::None);
     if (guard.empty()) {
         s << "[]";

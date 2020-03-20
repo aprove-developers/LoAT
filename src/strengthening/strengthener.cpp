@@ -36,7 +36,7 @@ namespace strengthening {
         }
         const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
         const Strengthener strengthener(ruleCtx);
-        const option<GuardList> &strengthened = strengthener.apply(rule.getGuard());
+        const option<Guard> &strengthened = strengthener.apply(rule.getGuard());
         if (strengthened) {
             const RuleLhs newLhs(rule.getLhsLoc(), strengthened.get(), rule.getCost());
             return {LinearRule(newLhs, rule.getRhss()[0])};
@@ -46,16 +46,16 @@ namespace strengthening {
 
     Strengthener::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
 
-    const option<GuardList> Strengthener::apply(const GuardList &guard) const {
+    const option<Guard> Strengthener::apply(const Guard &guard) const {
         const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates, ruleCtx.varMan);
         const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);
         const BoolExpr &constraints = ConstraintBuilder::buildSmtConstraints(templates, ruleCtx, guardCtx);
         if (constraints == True) {
             return {};
         }
-        const option<GuardList> &newInv = ConstraintSolver::solve(ruleCtx, constraints, templates);
+        const option<Guard> &newInv = ConstraintSolver::solve(ruleCtx, constraints, templates);
         if (newInv) {
-            GuardList newGuard(guardCtx.guard);
+            Guard newGuard(guardCtx.guard);
             newGuard.insert(
                     newGuard.end(),
                     newInv.get().begin(),

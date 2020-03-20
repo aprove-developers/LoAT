@@ -47,17 +47,17 @@ namespace strengthening {
 
         const Implication buildTemplatesInvariantImplication() const;
 
-        const BoolExpr constructInitiationConstraints(const GuardList &relevantConstraints) const;
+        const BoolExpr constructInitiationConstraints(const Guard &relevantConstraints) const;
 
         const BoolExpr constructImplicationConstraints(
-                const GuardList &premise,
-                const GuardList &conclusion) const;
+                const Guard &premise,
+                const Guard &conclusion) const;
 
         const BoolExpr constructImplicationConstraints(
-                const GuardList &premise,
+                const Guard &premise,
                 const Rel &conclusion) const;
 
-        const GuardList findRelevantConstraints() const;
+        const Guard findRelevantConstraints() const;
 
         const SmtConstraints buildSmtConstraints() const;
 
