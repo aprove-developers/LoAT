@@ -16,7 +16,6 @@
  */
 
 #include "parser.hpp"
-#include "../../sexpresso/sexpresso.hpp"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 

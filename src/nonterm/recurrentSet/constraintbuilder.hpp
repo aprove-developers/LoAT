@@ -18,11 +18,11 @@
 #ifndef LOAT_STRENGTHENING_CONSTRAINT_BUILDER_H
 #define LOAT_STRENGTHENING_CONSTRAINT_BUILDER_H
 
-#include "../its/rule.hpp"
-#include "../its/variablemanager.hpp"
+#include "../../its/rule.hpp"
+#include "../../its/variablemanager.hpp"
 #include "types.hpp"
 #include "templates.hpp"
-#include "../expr/boolexpr.hpp"
+#include "../../expr/boolexpr.hpp"
 
 namespace strengthening {
 

@@ -2,12 +2,12 @@
 
 #include "cvc4.hpp"
 #include "../../config.hpp"
-#include "../ginactosmt.hpp"
+#include "../exprtosmt.hpp"
 
 Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), ctx(manager), solver(&manager) { }
 
 void Cvc4::add(const BoolExpr &e) {
-    solver.assertFormula(GinacToSmt<CVC4::Expr>::convert(e, ctx, varMan));
+    solver.assertFormula(ExprToSmt<CVC4::Expr>::convert(e, ctx, varMan));
 }
 
 void Cvc4::push() {

@@ -15,7 +15,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../accelerate/meter/farkas.hpp"
+#include "../../accelerate/meter/farkas.hpp"
 #include "constraintbuilder.hpp"
 
 namespace strengthening {

@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../smt/smt.hpp"
-#include "../smt/smtfactory.hpp"
+#include "../../smt/smt.hpp"
+#include "../../smt/smtfactory.hpp"
 #include "guardcontextbuilder.hpp"
 
 namespace strengthening {

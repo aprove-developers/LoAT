@@ -84,12 +84,12 @@ add_executable(${EXECUTABLE}
         src/expr/guardtoolbox.hpp
         src/expr/boolexpr.cpp
         src/expr/boolexpr.hpp
-        src/its/parser/itsparser.cpp
-        src/its/parser/itsparser.hpp
-        src/its/parser/term.cpp
-        src/its/parser/term.hpp
-        src/its/parser/termparser.cpp
-        src/its/parser/termparser.hpp
+        src/its/koatParser/itsparser.cpp
+        src/its/koatParser/itsparser.hpp
+        src/its/koatParser/term.cpp
+        src/its/koatParser/term.hpp
+        src/its/koatParser/termparser.cpp
+        src/its/koatParser/termparser.hpp
         src/its/export.cpp
         src/its/export.hpp
         src/its/hypergraph.hpp
@@ -113,35 +113,35 @@ add_executable(${EXECUTABLE}
         src/config.hpp
         src/main.cpp
         src/main.hpp
-        src/strengthening/constraintbuilder.cpp
-        src/strengthening/constraintbuilder.hpp
-        src/strengthening/strengthener.cpp
-        src/strengthening/strengthener.hpp
-        src/strengthening/types.hpp
-        src/strengthening/templatebuilder.cpp
-        src/strengthening/templatebuilder.hpp
-        src/strengthening/templates.cpp
-        src/strengthening/templates.hpp
-        src/strengthening/constraintsolver.cpp
-        src/strengthening/constraintsolver.hpp
-        src/strengthening/rulecontextbuilder.cpp
-        src/strengthening/rulecontextbuilder.hpp
-        src/strengthening/guardcontextbuilder.cpp
-        src/strengthening/guardcontextbuilder.hpp
+        src/nonterm/recurrentSet/constraintbuilder.cpp
+        src/nonterm/recurrentSet/constraintbuilder.hpp
+        src/nonterm/recurrentSet/strengthener.cpp
+        src/nonterm/recurrentSet/strengthener.hpp
+        src/nonterm/recurrentSet/types.hpp
+        src/nonterm/recurrentSet/templatebuilder.cpp
+        src/nonterm/recurrentSet/templatebuilder.hpp
+        src/nonterm/recurrentSet/templates.cpp
+        src/nonterm/recurrentSet/templates.hpp
+        src/nonterm/recurrentSet/constraintsolver.cpp
+        src/nonterm/recurrentSet/constraintsolver.hpp
+        src/nonterm/recurrentSet/rulecontextbuilder.cpp
+        src/nonterm/recurrentSet/rulecontextbuilder.hpp
+        src/nonterm/recurrentSet/guardcontextbuilder.cpp
+        src/nonterm/recurrentSet/guardcontextbuilder.hpp
         src/util/relevantvariables.cpp
         src/util/relevantvariables.hpp
-        src/sexpresso/sexpresso.cpp
-        src/sexpresso/sexpresso.hpp
-        src/its/sexpressionparser/parser.cpp
-        src/its/sexpressionparser/parser.hpp
+        src/its/smt2Parser/sexpresso/sexpresso.cpp
+        src/its/smt2Parser/sexpresso/sexpresso.hpp
+        src/its/smt2Parser/parser.cpp
+        src/its/smt2Parser/parser.hpp
         src/nonterm/nonterm.cpp
         src/nonterm/nonterm.hpp
-        src/its/t2parser/t2parser.cpp
-        src/its/t2parser/t2parser.hpp
+        src/its/t2Parser/t2parser.cpp
+        src/its/t2Parser/t2parser.hpp
         src/smt/smt.hpp
         src/smt/smt.cpp
         src/smt/smtcontext.hpp
-        src/smt/ginactosmt.hpp
+        src/smt/exprtosmt.hpp
         src/smt/z3/z3.cpp
         src/smt/z3/z3.hpp
         src/smt/z3/z3context.cpp

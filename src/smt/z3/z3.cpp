@@ -1,5 +1,5 @@
 #include "z3.hpp"
-#include "../ginactosmt.hpp"
+#include "../exprtosmt.hpp"
 
 std::ostream& Z3::print(std::ostream& os) const {
     return os << solver;
@@ -12,7 +12,7 @@ Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx)
 }
 
 void Z3::add(const BoolExpr &e) {
-    solver.add(GinacToSmt<z3::expr>::convert(e, ctx, varMan));
+    solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
 }
 
 void Z3::push() {

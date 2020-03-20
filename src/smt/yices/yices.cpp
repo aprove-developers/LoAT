@@ -1,7 +1,7 @@
 #ifdef HAS_YICES
 
 #include "yices.hpp"
-#include "../ginactosmt.hpp"
+#include "../exprtosmt.hpp"
 #include "../../util/exceptions.hpp"
 
 #include <future>
@@ -28,7 +28,7 @@ Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), v
 }
 
 void Yices::add(const BoolExpr &e) {
-    term_t converted = GinacToSmt<term_t>::convert(e, ctx, varMan);
+    term_t converted = ExprToSmt<term_t>::convert(e, ctx, varMan);
     if (yices_assert_formula(solver, converted) < 0) {
         throw YicesError();
     }

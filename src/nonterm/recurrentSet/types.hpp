@@ -19,10 +19,10 @@
 #define LOAT_STRENGTHENING_TYPES_H
 
 
-#include "../its/types.hpp"
-#include "../its/rule.hpp"
-#include "../its/variablemanager.hpp"
-#include "../expr/boolexpr.hpp"
+#include "../../its/types.hpp"
+#include "../../its/rule.hpp"
+#include "../../its/variablemanager.hpp"
+#include "../../expr/boolexpr.hpp"
 
 namespace strengthening {
 

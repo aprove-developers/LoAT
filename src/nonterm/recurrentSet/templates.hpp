@@ -19,7 +19,7 @@
 #define LOAT_STRENGTHENING_TEMPLATES_H
 
 
-#include "../expr/rel.hpp"
+#include "../../expr/rel.hpp"
 #include <boost/detail/iterator.hpp>
 
 class Templates {

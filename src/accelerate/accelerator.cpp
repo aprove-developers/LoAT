@@ -32,7 +32,7 @@
 
 #include <queue>
 #include "../asymptotic/asymptoticbound.hpp"
-#include "../strengthening/strengthener.hpp"
+#include "../nonterm/recurrentSet/strengthener.hpp"
 #include <stdexcept>
 #include "../nonterm/nonterm.hpp"
 

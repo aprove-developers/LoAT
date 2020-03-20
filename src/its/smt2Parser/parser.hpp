@@ -15,37 +15,37 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef LOAT_STRENGTHENING_GUARD_CONTEXT_BUILDER_H
-#define LOAT_STRENGTHENING_GUARD_CONTEXT_BUILDER_H
+#ifndef LOAT_SEXPRESSION_PARSER_H
+#define LOAT_SEXPRESSION_PARSER_H
 
 
-#include "../its/types.hpp"
-#include "types.hpp"
+#include "../../its/itsproblem.hpp"
+#include "sexpresso/sexpresso.hpp"
 
-namespace strengthening {
+namespace sexpressionparser {
 
-    class GuardContextBuilder {
+    class Parser {
 
     public:
-
-        static const GuardContext build(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
+        static ITSProblem loadFromFile(const std::string &filename);
 
     private:
+        void run(const std::string &filename);
 
-        const Guard &guard;
-        const std::vector<Subs> &updates;
-        const VariableManager &varMan;
+        void parseCond(sexpresso::Sexp &sexp, Guard &guard);
 
-        GuardContextBuilder(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
+        Rel parseConstraint(sexpresso::Sexp &sexp, bool negate);
 
-        const GuardContext build() const;
+        Expr parseExpression(sexpresso::Sexp &sexp);
 
-        const Guard computeConstraints() const;
-
-        const Result splitInvariants(const Guard &constraints) const;
+        std::vector<std::string> preVars;
+        std::vector<std::string> postVars;
+        std::map<std::string, LocationIdx > locations;
+        std::map<std::string, Var> vars;
+        ITSProblem res;
 
     };
 
 }
 
-#endif //LOAT_STRENGTHENING_GUARD_CONTEXT_BUILDER_H
+#endif //LOAT_SEXPRESSION_PARSER_H

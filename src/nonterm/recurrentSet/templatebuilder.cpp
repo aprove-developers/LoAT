@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../its/variablemanager.hpp"
-#include "../util/relevantvariables.hpp"
+#include "../../its/variablemanager.hpp"
+#include "../../util/relevantvariables.hpp"
 #include "templatebuilder.hpp"
 
 namespace strengthening {

@@ -15,8 +15,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef GINACTOSMT_H
-#define GINACTOSMT_H
+#ifndef EXPRTOSMT_H
+#define EXPRTOSMT_H
 
 #include "../util/exceptions.hpp"
 #include "smtcontext.hpp"
@@ -27,7 +27,7 @@
 #include <map>
 #include <sstream>
 
-template<typename EXPR> class GinacToSmt {
+template<typename EXPR> class ExprToSmt {
 public:
     EXCEPTION(GinacConversionError,CustomException);
     EXCEPTION(GinacLargeConstantError,CustomException);
@@ -50,13 +50,13 @@ public:
     }
 
     static EXPR convert(const Rel &rel, SmtContext<EXPR> &context, const VariableManager &varMan) {
-        GinacToSmt<EXPR> converter(context, varMan);
+        ExprToSmt<EXPR> converter(context, varMan);
         EXPR res = converter.convert_relational(rel);
         return res;
     }
 
 protected:
-    GinacToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
+    ExprToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
 
     EXPR convert_ex(const Expr &e){
         if (e.isAdd()) {
@@ -176,4 +176,4 @@ private:
     const VariableManager &varMan;
 };
 
-#endif // GINACTOSMT_H
+#endif // ExprToSmt_H

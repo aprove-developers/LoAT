@@ -15,9 +15,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../its/rule.hpp"
-#include "../its/itsproblem.hpp"
-#include "../expr/guardtoolbox.hpp"
+#include "../../its/rule.hpp"
+#include "../../its/itsproblem.hpp"
+#include "../../expr/guardtoolbox.hpp"
 #include "rulecontextbuilder.hpp"
 #include "strengthener.hpp"
 

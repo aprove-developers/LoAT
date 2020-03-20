@@ -15,37 +15,35 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef LOAT_SEXPRESSION_PARSER_H
-#define LOAT_SEXPRESSION_PARSER_H
+#ifndef LOAT_STRENGTHENING_STRENGTHENER_H
+#define LOAT_STRENGTHENING_STRENGTHENER_H
 
 
+#include "../../its/types.hpp"
+#include "../../its/rule.hpp"
+#include "../../its/variablemanager.hpp"
 #include "../../its/itsproblem.hpp"
-#include "../../sexpresso/sexpresso.hpp"
+#include "types.hpp"
+#include "constraintbuilder.hpp"
 
-namespace sexpressionparser {
+namespace strengthening {
 
-    class Parser {
+    class Strengthener {
 
     public:
-        static ITSProblem loadFromFile(const std::string &filename);
+
+        static const option<LinearRule> apply(const LinearRule &r, ITSProblem &its);
 
     private:
-        void run(const std::string &filename);
 
-        void parseCond(sexpresso::Sexp &sexp, Guard &guard);
+        const RuleContext &ruleCtx;
 
-        Rel parseConstraint(sexpresso::Sexp &sexp, bool negate);
+        explicit Strengthener(const RuleContext &ruleCtx);
 
-        Expr parseExpression(sexpresso::Sexp &sexp);
-
-        std::vector<std::string> preVars;
-        std::vector<std::string> postVars;
-        std::map<std::string, LocationIdx > locations;
-        std::map<std::string, Var> vars;
-        ITSProblem res;
+        const option<Guard> apply(const Guard &guard) const;
 
     };
 
 }
 
-#endif //LOAT_SEXPRESSION_PARSER_H
+#endif //LOAT_STRENGTHENING_STRENGTHENER_H

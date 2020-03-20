@@ -15,35 +15,38 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef LOAT_STRENGTHENING_STRENGTHENER_H
-#define LOAT_STRENGTHENING_STRENGTHENER_H
+#ifndef LOAT_STRENGTHENING_RULE_CONTEXT_BUILDER_H
+#define LOAT_STRENGTHENING_RULE_CONTEXT_BUILDER_H
 
-
-#include "../its/types.hpp"
-#include "../its/rule.hpp"
-#include "../its/variablemanager.hpp"
-#include "../its/itsproblem.hpp"
+#include "../../its/rule.hpp"
+#include "../../its/itsproblem.hpp"
 #include "types.hpp"
-#include "constraintbuilder.hpp"
 
 namespace strengthening {
 
-    class Strengthener {
+    class RuleContextBuilder {
 
     public:
 
-        static const option<LinearRule> apply(const LinearRule &r, ITSProblem &its);
+        static const RuleContext build(const Rule &rule, ITSProblem &its);
 
     private:
 
-        const RuleContext &ruleCtx;
+        const Rule &rule;
+        ITSProblem &its;
 
-        explicit Strengthener(const RuleContext &ruleCtx);
+        RuleContextBuilder(const Rule &rule, ITSProblem &its);
 
-        const option<Guard> apply(const Guard &guard) const;
+        const RuleContext build() const;
+
+        const std::vector<Rule> computePredecessors() const;
+
+        const std::vector<Subs> computeUpdates() const;
+
+        const std::vector<Guard> buildPreconditions(const std::vector<Rule> &predecessors) const;
 
     };
 
 }
 
-#endif //LOAT_STRENGTHENING_STRENGTHENER_H
+#endif //LOAT_STRENGTHENING_RULE_CONTEXT_BUILDER_H

@@ -15,38 +15,37 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef LOAT_STRENGTHENING_RULE_CONTEXT_BUILDER_H
-#define LOAT_STRENGTHENING_RULE_CONTEXT_BUILDER_H
+#ifndef LOAT_STRENGTHENING_GUARD_CONTEXT_BUILDER_H
+#define LOAT_STRENGTHENING_GUARD_CONTEXT_BUILDER_H
 
-#include "../its/rule.hpp"
-#include "../its/itsproblem.hpp"
+
+#include "../../its/types.hpp"
 #include "types.hpp"
 
 namespace strengthening {
 
-    class RuleContextBuilder {
+    class GuardContextBuilder {
 
     public:
 
-        static const RuleContext build(const Rule &rule, ITSProblem &its);
+        static const GuardContext build(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
 
     private:
 
-        const Rule &rule;
-        ITSProblem &its;
+        const Guard &guard;
+        const std::vector<Subs> &updates;
+        const VariableManager &varMan;
 
-        RuleContextBuilder(const Rule &rule, ITSProblem &its);
+        GuardContextBuilder(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
 
-        const RuleContext build() const;
+        const GuardContext build() const;
 
-        const std::vector<Rule> computePredecessors() const;
+        const Guard computeConstraints() const;
 
-        const std::vector<Subs> computeUpdates() const;
-
-        const std::vector<Guard> buildPreconditions(const std::vector<Rule> &predecessors) const;
+        const Result splitInvariants(const Guard &constraints) const;
 
     };
 
 }
 
-#endif //LOAT_STRENGTHENING_RULE_CONTEXT_BUILDER_H
+#endif //LOAT_STRENGTHENING_GUARD_CONTEXT_BUILDER_H

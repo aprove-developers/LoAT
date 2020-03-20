@@ -18,8 +18,8 @@
 #ifndef LOAT_STRENGTHENING_TEMPLATE_BUILDER_H
 #define LOAT_STRENGTHENING_TEMPLATE_BUILDER_H
 
-#include "../its/variablemanager.hpp"
-#include "../its/rule.hpp"
+#include "../../its/variablemanager.hpp"
+#include "../../its/rule.hpp"
 #include "types.hpp"
 #include "templates.hpp"
 

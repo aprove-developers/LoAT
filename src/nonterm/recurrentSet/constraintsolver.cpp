@@ -15,12 +15,12 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../util/option.hpp"
+#include "../../util/option.hpp"
 #include "constraintsolver.hpp"
-#include "../its/variablemanager.hpp"
-#include "../smt/smt.hpp"
-#include "../smt/smtfactory.hpp"
-#include "../config.hpp"
+#include "../../its/variablemanager.hpp"
+#include "../../smt/smt.hpp"
+#include "../../smt/smtfactory.hpp"
+#include "../../config.hpp"
 
 namespace strengthening {
 
