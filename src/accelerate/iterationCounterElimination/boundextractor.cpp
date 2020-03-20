@@ -1,4 +1,5 @@
 #include "boundextractor.hpp"
+#include "../../expr/rel.hpp"
 
 BoundExtractor::BoundExtractor(const Guard &guard, const Var &N): guard(guard), N(N) {
     extractBounds();

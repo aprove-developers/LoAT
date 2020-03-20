@@ -16,6 +16,7 @@
  */
 
 #include "rule.hpp"
+#include "../expr/rel.hpp"
 
 using namespace std;
 

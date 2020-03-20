@@ -1,4 +1,5 @@
 #include "term.hpp"
+#include "../../expr/rel.hpp"
 
 using namespace parser;
 

@@ -19,9 +19,8 @@
 #define LOAT_STRENGTHENING_TEMPLATES_H
 
 
+#include "../expr/rel.hpp"
 #include <boost/detail/iterator.hpp>
-#include "../expr/expression.hpp"
-#include <boost/concept_check.hpp>
 
 class Templates {
 

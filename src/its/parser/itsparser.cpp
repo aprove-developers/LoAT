@@ -23,6 +23,7 @@
 #include "termparser.hpp"
 #include "../itsproblem.hpp"
 #include "../../config.hpp"
+#include "../../expr/rel.hpp"
 
 
 using namespace parser;

@@ -78,6 +78,8 @@ add_executable(${EXECUTABLE}
         src/expr/complexity.hpp
         src/expr/expression.cpp
         src/expr/expression.hpp
+        src/expr/rel.cpp
+        src/expr/rel.hpp
         src/expr/guardtoolbox.cpp
         src/expr/guardtoolbox.hpp
         src/expr/boolexpr.cpp

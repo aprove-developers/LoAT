@@ -17,6 +17,7 @@
 
 #include "guardtoolbox.hpp"
 #include "../its/rule.hpp"
+#include "../expr/rel.hpp"
 
 using namespace std;
 

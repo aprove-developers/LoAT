@@ -1,5 +1,6 @@
 #include "vareliminator.hpp"
 #include "boundextractor.hpp"
+#include "../../expr/rel.hpp"
 
 VarEliminator::VarEliminator(const Guard &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
