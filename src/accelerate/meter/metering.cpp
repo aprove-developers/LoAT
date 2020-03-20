@@ -25,7 +25,6 @@
 #include "../../smt/smt.hpp"
 #include "../../smt/smtfactory.hpp"
 #include "../../expr/boolexpr.hpp"
-#include "../../util/proofoutput.hpp"
 
 #include <boost/integer/common_factor.hpp> // for lcm
 
@@ -340,7 +339,7 @@ option<Rule> MeteringFinder::strengthenGuard(VarMan &varMan, const Rule &rule) {
     return guard ? option<Rule>(rule.withGuard(guard.get())) : option<Rule>();
 }
 
-option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule) {
+option<pair<Rule, Proof>> MeteringFinder::instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule) {
     // Quick check whether there are any bounds on temp vars we can use to instantiate them.
     auto hasTempVar = [&](const Rel &rel) { return GuardToolbox::containsTempVar(its, rel); };
     if (std::none_of(rule.getGuard().begin(), rule.getGuard().end(), hasTempVar)) {
@@ -406,7 +405,7 @@ option<pair<Rule, ProofOutput>> MeteringFinder::instantiateTempVarsHeuristic(ITS
     Rule instantiatedRule = rule.subs(successfulSubs);
 
     // Proof output
-    ProofOutput proof;
+    Proof proof;
     proof.ruleTransformationProof(rule, "instantiation", instantiatedRule, its);
 
     return {{instantiatedRule, proof}};

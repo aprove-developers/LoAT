@@ -38,7 +38,7 @@ static MeteringFinder::Result meterWithInstantiation(ITSProblem &its, const Rule
         const auto &instantiation = MeteringFinder::instantiateTempVarsHeuristic(its, rule);
         if (instantiation) {
             const Rule &instantiatedRule = instantiation.get().first;
-            ProofOutput proof = instantiation.get().second;
+            Proof proof = instantiation.get().second;
             meter = MeteringFinder::generate(its, instantiatedRule);
             proof.concat(meter.proof);
             meter.proof = proof;

@@ -53,12 +53,12 @@ Analysis::Analysis(ITSProblem &its)
 // ## Main Analysis Algorithm  ##
 // ##############################
 
-void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
+void Analysis::simplify(RuntimeResult &res, Proof &proof) {
 
     proof.majorProofStep("Initial ITS", its);
 
     if (!Config::Analysis::NonTermMode) {
-        const option<ProofOutput> &subProof = ensureNonnegativeCosts();
+        const option<Proof> &subProof = ensureNonnegativeCosts();
         if (subProof) {
             proof.concat(subProof.get());
             proof.minorProofStep("Ensure Cost >= 0", its);
@@ -90,7 +90,7 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
         proof.minorProofStep("Removed unreachable rules and leafs", its);
     }
 
-    option<ProofOutput> subProof = preprocessRules();
+    option<Proof> subProof = preprocessRules();
     if (subProof) {
         proof.concat(subProof.get());
         proof.minorProofStep("Simplified rules", its);
@@ -121,7 +121,7 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
                 proof.majorProofStep("Accelerated simple loops", its);
             }
 
-            option<ProofOutput> acceleratedChainingProof = Chaining::chainAcceleratedRules(its, acceleratedRules);;
+            option<Proof> acceleratedChainingProof = Chaining::chainAcceleratedRules(its, acceleratedRules);;
             if (acceleratedChainingProof) {
                 changed = true;
                 proof.concat(acceleratedChainingProof.get());
@@ -133,7 +133,7 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
                 proof.majorProofStep("Removed unreachable locations and irrelevant leafs", its);
             }
 
-            option<ProofOutput> linearChainingProof = Chaining::chainLinearPaths(its);
+            option<Proof> linearChainingProof = Chaining::chainLinearPaths(its);
             if (linearChainingProof) {
                 changed = true;
                 proof.concat(linearChainingProof.get());
@@ -152,7 +152,7 @@ void Analysis::simplify(RuntimeResult &res, ProofOutput &proof) {
         }
 
         // Try more involved chaining strategies if we no longer make progress
-        option<ProofOutput> treeChainingProof = Chaining::chainTreePaths(its);
+        option<Proof> treeChainingProof = Chaining::chainTreePaths(its);
         if (treeChainingProof) {
             proof.concat(treeChainingProof.get());
             proof.majorProofStep("Eliminated locations on tree-shaped paths", its);
@@ -203,7 +203,7 @@ void Analysis::run() {
 #ifdef HAS_YICES
     Yices::init();
 #endif
-    ProofOutput *proof = new ProofOutput();
+    Proof *proof = new Proof();
     RuntimeResult *res = new RuntimeResult();
     auto simp = std::async([this, res, proof]{this->simplify(*res, *proof);});
     if (Timeout::enabled()) {
@@ -257,8 +257,8 @@ bool Analysis::ensureProperInitialLocation() {
 }
 
 
-option<ProofOutput> Analysis::ensureNonnegativeCosts() {
-    ProofOutput proof;
+option<Proof> Analysis::ensureNonnegativeCosts() {
+    Proof proof;
     std::vector<TransIdx> del;
     std::vector<Rule> add;
     for (TransIdx trans : its.getAllTransitions()) {
@@ -278,7 +278,7 @@ option<ProofOutput> Analysis::ensureNonnegativeCosts() {
     for (const Rule &r: add) {
         its.addRule(r);
     }
-    return proof.empty() ? option<ProofOutput>() : option<ProofOutput>(proof);
+    return proof.empty() ? option<Proof>() : option<Proof>(proof);
 }
 
 
@@ -296,8 +296,8 @@ bool Analysis::removeUnsatRules() {
 }
 
 
-option<ProofOutput> Analysis::preprocessRules() {
-    ProofOutput proof;
+option<Proof> Analysis::preprocessRules() {
+    Proof proof;
     std::vector<TransIdx> del;
     std::vector<Rule> add;
     // update/guard preprocessing
@@ -330,7 +330,7 @@ option<ProofOutput> Analysis::preprocessRules() {
         proof.deletionProof(removed);
     }
 
-    return proof.empty() ? option<ProofOutput>() : option<ProofOutput>(proof);
+    return proof.empty() ? option<Proof>() : option<Proof>(proof);
 }
 
 
@@ -343,7 +343,7 @@ bool Analysis::isFullySimplified() const {
 }
 
 
-void Analysis::printResult(ProofOutput &proof, RuntimeResult &res) {
+void Analysis::printResult(Proof &proof, RuntimeResult &res) {
     proof.newline();
     proof.result("Proved the following lower bound");
     proof.result(stringstream() << "Complexity:  " << res.getCpx());
@@ -359,11 +359,11 @@ bool Analysis::eliminateALocation(string &eliminatedLocation) {
     return Chaining::eliminateALocation(its, eliminatedLocation);
 }
 
-bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules, ProofOutput &proof) {
+bool Analysis::accelerateSimpleLoops(set<TransIdx> &acceleratedRules, Proof &proof) {
     bool changed = false;
 
     for (LocationIdx node : its.getLocations()) {
-        option<ProofOutput> subProof = Accelerator::accelerateSimpleLoops(its, node, acceleratedRules);
+        option<Proof> subProof = Accelerator::accelerateSimpleLoops(its, node, acceleratedRules);
         if (subProof) {
             proof.concat(subProof.get());
             changed = true;
@@ -392,7 +392,7 @@ bool Analysis::pruneRules() {
 // #############################
 
 
-void Analysis::checkConstantComplexity(RuntimeResult &res, ProofOutput &proof) const {
+void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 
     for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
         const Rule &rule = its.getRule(idx);
@@ -453,7 +453,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
 
     for (TransIdx ruleIdx : todo) {
         Rule rule = its.getRule(ruleIdx);
-        ProofOutput proof;
+        Proof proof;
 
         // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
         // We have to be careful with temp variables, since they can lead to unbounded cost.

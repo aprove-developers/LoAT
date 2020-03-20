@@ -104,8 +104,8 @@ add_executable(${EXECUTABLE}
         src/its/variablemanager.hpp
         src/util/exceptions.hpp
         src/util/option.hpp
-        src/util/proofoutput.hpp
-        src/util/proofoutput.cpp
+        src/util/proof.hpp
+        src/util/proof.cpp
         src/util/timeout.cpp
         src/util/timeout.hpp
         src/util/status.hpp

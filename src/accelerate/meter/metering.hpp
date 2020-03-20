@@ -23,7 +23,7 @@
 #include "../../its/rule.hpp"
 #include "../../util/option.hpp"
 #include "../../expr/boolexpr.hpp"
-#include "../../util/proofoutput.hpp"
+#include "../../util/proof.hpp"
 
 #include <vector>
 #include <map>
@@ -65,7 +65,7 @@ public:
 
         option<Rule> rule;
 
-        ProofOutput proof;
+        Proof proof;
     };
 
     /**
@@ -87,7 +87,7 @@ public:
      *
      * @return the rule resulting from instantiation, if a successful instantiaton was found
      */
-    static option<std::pair<Rule, ProofOutput>> instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule);
+    static option<std::pair<Rule, Proof>> instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule);
 
     /**
      * Guard strengthening heuristic for constant updates, see MeteringToolbox::strengthenGuard.

@@ -11,7 +11,6 @@
 
 #include "limitsmt.hpp"
 #include "inftyexpression.hpp"
-#include "../util/proofoutput.hpp"
 
 using namespace std;
 
@@ -849,7 +848,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     if (expandedCost.isNontermSymbol()) {
         auto smtRes = Smt::check(buildAnd(guard), varMan);
         if (smtRes == Smt::Sat) {
-            ProofOutput proof;
+            Proof proof;
             proof.append("Guard is satisfiable, yielding nontermination");
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
         } else {
@@ -915,7 +914,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     if (expandedCost.isNontermSymbol()) {
         auto smtRes = Smt::check(buildAnd(guard), varMan);
         if (smtRes == Smt::Sat) {
-            ProofOutput proof;
+            Proof proof;
             proof.append("proved non-termination via SMT");
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
         } else {

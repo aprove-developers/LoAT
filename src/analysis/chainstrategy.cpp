@@ -19,7 +19,6 @@
 
 #include "chain.hpp"
 #include "preprocess.hpp"
-#include "../util/proofoutput.hpp"
 
 
 using namespace std;
@@ -42,11 +41,11 @@ using namespace std;
  * The old location is removed, together with all old transitions. So if an outgoing transition cannot be chained
  * with any incoming transition, it will simply be removed.
  */
-static ProofOutput eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
+static Proof eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                                         bool keepUnchainable, bool allowSelfloops = false)
 {
     set<TransIdx> keepRules;
-    ProofOutput proof;
+    Proof proof;
     proof.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
 
     // Chain all pairs of in- and outgoing rules
@@ -135,7 +134,7 @@ static ProofOutput eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
  * Implementation of callRepeatedlyOnEachNode
  */
 template <typename F>
-static bool callOnEachNodeImpl(ITSProblem &its, ProofOutput &proof, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
+static bool callOnEachNodeImpl(ITSProblem &its, Proof &proof, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -174,7 +173,7 @@ static bool callOnEachNodeImpl(ITSProblem &its, ProofOutput &proof, F function, 
  * @returns true iff at least one call of the given function returned true.
  */
 template <typename F>
-static bool callOnEachNode(ITSProblem &its, ProofOutput &proof, F function, bool repeat) {
+static bool callOnEachNode(ITSProblem &its, Proof &proof, F function, bool repeat) {
     set<LocationIdx> visited;
     return callOnEachNodeImpl(its, proof, function, its.getInitialLocation(), repeat, visited);
 }
@@ -211,8 +210,8 @@ static bool isOnLinearPath(ITSProblem &its, LocationIdx node) {
 // ##  Chaining Strategies  ##
 // ###########################
 
-option<ProofOutput> Chaining::chainLinearPaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, ProofOutput &proof, LocationIdx node) {
+option<Proof> Chaining::chainLinearPaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, Proof &proof, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -229,7 +228,7 @@ option<ProofOutput> Chaining::chainLinearPaths(ITSProblem &its) {
         }
         return changed;
     };
-    ProofOutput proof;
+    Proof proof;
     if (callOnEachNode(its, proof, implementation, true)) {
         return {proof};
     } else {
@@ -238,8 +237,8 @@ option<ProofOutput> Chaining::chainLinearPaths(ITSProblem &its) {
 }
 
 
-option<ProofOutput> Chaining::chainTreePaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, ProofOutput &proof, LocationIdx node) {
+option<Proof> Chaining::chainTreePaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, Proof &proof, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -267,7 +266,7 @@ option<ProofOutput> Chaining::chainTreePaths(ITSProblem &its) {
     // We then call the implementation on h (f's new child), which may eliminate u.
     // This avoids the exponential blowup, so we can first accelerate rules or
     // prune rules before calling this method again.
-    ProofOutput proof;
+    Proof proof;
     if (callOnEachNode(its, proof, implementation, false)) {
         return {proof};
     } else {
@@ -315,9 +314,9 @@ bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
 // ##  Chaining after Acceleration  ##
 // ###################################
 
-option<ProofOutput> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
+option<Proof> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
     if (acceleratedRules.empty()) return {};
-    ProofOutput proof;
+    Proof proof;
     set<TransIdx> successfullyChained;
 
     // Find all lhs locations of accelerated rules, so we can iterate over them.

@@ -1,14 +1,14 @@
-#include "proofoutput.hpp"
+#include "proof.hpp"
 #include "../its/export.hpp"
 
 #include <iostream>
 #include <string>
 
-uint ProofOutput::defaultProofLevel = 2;
-uint ProofOutput::maxProofLevel = 3;
-uint ProofOutput::proofLevel = defaultProofLevel;
+uint Proof::defaultProofLevel = 2;
+uint Proof::maxProofLevel = 3;
+uint Proof::proofLevel = defaultProofLevel;
 
-void ProofOutput::writeToFile(const std::string &file) const {
+void Proof::writeToFile(const std::string &file) const {
     if (proofLevel > 0) {
         std::ofstream myfile;
         myfile.open(file);
@@ -19,7 +19,7 @@ void ProofOutput::writeToFile(const std::string &file) const {
     }
 }
 
-void ProofOutput::print() const {
+void Proof::print() const {
     if (proofLevel > 0) {
         for (const auto &l: proof) {
             if (Config::Output::Colors) {
@@ -39,17 +39,17 @@ void ProofOutput::print() const {
     }
 }
 
-void ProofOutput::append(const std::string &s) {
+void Proof::append(const std::string &s) {
     append(Style::None, s);
 }
 
-void ProofOutput::append(const std::ostream &s) {
+void Proof::append(const std::ostream &s) {
     std::stringstream str;
     str << s.rdbuf();
     append(str.str());
 }
 
-void ProofOutput::append(const Style &style, std::string s) {
+void Proof::append(const Style &style, std::string s) {
     if (proofLevel > 0) {
         std::vector<std::string> lines;
         boost::split(lines, s, boost::is_any_of("\n"));
@@ -59,54 +59,54 @@ void ProofOutput::append(const Style &style, std::string s) {
     }
 }
 
-void ProofOutput::newline() {
+void Proof::newline() {
     append(std::stringstream());
 }
 
-void ProofOutput::headline(const std::string &s) {
+void Proof::headline(const std::string &s) {
     newline();
     append(Headline, s);
 }
 
 // print given string in headline style with spacing
-void ProofOutput::headline(const std::ostream &s) {
+void Proof::headline(const std::ostream &s) {
     std::stringstream str;
     str << s.rdbuf();
     headline(str.str());
 }
 
-void ProofOutput::section(const std::string &s) {
+void Proof::section(const std::string &s) {
     newline();
     append(Section, s);
 }
 
-void ProofOutput::section(const std::ostream &s) {
+void Proof::section(const std::ostream &s) {
     std::stringstream str;
     str << s.rdbuf();
     section(str.str());
 }
 
-void ProofOutput::result(const std::string &s) {
+void Proof::result(const std::string &s) {
     append(Result, s);
 }
 
-void ProofOutput::result(const std::ostream &s) {
+void Proof::result(const std::ostream &s) {
     std::stringstream str;
     str << s.rdbuf();
     result(str.str());
 }
 
-void ProofOutput::setProofLevel(uint proofLevel) {
-    ProofOutput::proofLevel = proofLevel;
+void Proof::setProofLevel(uint proofLevel) {
+    Proof::proofLevel = proofLevel;
 }
 
-void ProofOutput::concat(const ProofOutput &that) {
+void Proof::concat(const Proof &that) {
     if (proofLevel > 0) {
         proof.insert(proof.end(), that.proof.begin(), that.proof.end());
     }
 }
 
-void ProofOutput::ruleTransformationProof(const Rule &oldRule, const std::string &transformation, const Rule &newRule, const ITSProblem &its) {
+void Proof::ruleTransformationProof(const Rule &oldRule, const std::string &transformation, const Rule &newRule, const ITSProblem &its) {
     section("Applied " + transformation);
     std::stringstream s;
     s << "Original rule:\n";
@@ -116,21 +116,21 @@ void ProofOutput::ruleTransformationProof(const Rule &oldRule, const std::string
     append(s);
 }
 
-void ProofOutput::majorProofStep(const std::string &step, const ITSProblem &its) {
+void Proof::majorProofStep(const std::string &step, const ITSProblem &its) {
     headline(step);
     std::stringstream s;
     ITSExport::printForProof(its, s);
     append(s);
 }
 
-void ProofOutput::minorProofStep(const std::string &step, const ITSProblem &its) {
+void Proof::minorProofStep(const std::string &step, const ITSProblem &its) {
     section(step);
     std::stringstream s;
     ITSExport::printForProof(its, s);
     append(s);
 }
 
-void ProofOutput::deletionProof(const std::set<TransIdx> &rules) {
+void Proof::deletionProof(const std::set<TransIdx> &rules) {
     if (!rules.empty()) {
         section("Applied deletion");
         std::stringstream s;
@@ -142,7 +142,7 @@ void ProofOutput::deletionProof(const std::set<TransIdx> &rules) {
     }
 }
 
-void ProofOutput::chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule, const ITSProblem &its) {
+void Proof::chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule, const ITSProblem &its) {
     section("Applied chaining");
     std::stringstream s;
     s << "First rule:\n";
@@ -154,7 +154,7 @@ void ProofOutput::chainingProof(const Rule &fst, const Rule &snd, const Rule &ne
     append(s);
 }
 
-void ProofOutput::storeSubProof(const ProofOutput &subProof, const std::string &technique) {
+void Proof::storeSubProof(const Proof &subProof, const std::string &technique) {
     switch (proofLevel) {
         case 2: {
             const std::string &file = std::tmpnam(nullptr);
@@ -170,6 +170,6 @@ void ProofOutput::storeSubProof(const ProofOutput &subProof, const std::string &
     }
 }
 
-bool ProofOutput::empty() const {
+bool Proof::empty() const {
     return proof.empty();
 }

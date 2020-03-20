@@ -20,7 +20,7 @@
 
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
-#include "../util/proofoutput.hpp"
+#include "../util/proof.hpp"
 #include "../its/export.hpp"
 
 #include <fstream>
@@ -45,7 +45,7 @@ private:
     // The final guard
     Guard guard;
 
-    ProofOutput proof;
+    Proof proof;
 
     std::recursive_mutex mutex;
 
@@ -80,7 +80,7 @@ public:
         unlock();
     }
 
-    void concat(const ProofOutput &p) {
+    void concat(const Proof &p) {
         lock();
         proof.concat(p);
         unlock();
@@ -94,7 +94,7 @@ public:
         mutex.unlock();
     }
 
-    ProofOutput getProof() {
+    Proof getProof() {
         return proof;
     }
 
@@ -138,7 +138,7 @@ private:
      */
     void run();
 
-    void simplify(RuntimeResult &res, ProofOutput &proof);
+    void simplify(RuntimeResult &res, Proof &proof);
 
     void finalize(RuntimeResult &res);
 
@@ -148,7 +148,7 @@ private:
      * @note Does not check if "cost >= 0" is implied by the guard (should be covered by preprocessing)
      * @return true iff any rule was modified.
      */
-    option<ProofOutput> ensureNonnegativeCosts();
+    option<Proof> ensureNonnegativeCosts();
 
     /**
      * Makes sure the initial location has no incoming rules (by adding a new one, if required).
@@ -169,7 +169,7 @@ private:
      * @param eliminateCostConstraints if true, "cost >= 0" is removed from the guard if it is implied by the guard
      * @return true iff the ITS was modified
      */
-    option<ProofOutput> preprocessRules();
+    option<Proof> preprocessRules();
 
     /**
      * Returns true iff all all rules start from the initial state.
@@ -178,7 +178,7 @@ private:
 
     // Wrapper methods for Chaining/Accelerator/Pruning methods (adding statistics, debug output)
     bool eliminateALocation(std::string &eliminatedLocation);
-    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules, ProofOutput &proof);
+    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules, Proof &proof);
     bool pruneRules();
 
     /**
@@ -187,7 +187,7 @@ private:
      *
      * @return If a satisfiable rule is found, returns the corresponding runtime result.
      */
-    void checkConstantComplexity(RuntimeResult &res, ProofOutput &proof) const;
+    void checkConstantComplexity(RuntimeResult &res, Proof &proof) const;
 
     /**
      * For a fully chained ITS problem, this calculates the maximum runtime complexity (using asymptotic bounds)
@@ -220,7 +220,7 @@ private:
     /**
      * Prints the final complexity result with all relevant information to the proof output
      */
-    void printResult(ProofOutput &proof, RuntimeResult &runtime);
+    void printResult(Proof &proof, RuntimeResult &runtime);
 
 
 private:

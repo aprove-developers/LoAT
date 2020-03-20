@@ -2,7 +2,7 @@
 #define RESULT_HPP
 
 #include "../util/status.hpp"
-#include "../util/proofoutput.hpp"
+#include "../util/proof.hpp"
 #include "../its/rule.hpp"
 
 namespace Acceleration {
@@ -10,7 +10,7 @@ namespace Acceleration {
 struct Result {
     std::vector<Rule> rules;
     Status status;
-    ProofOutput proof;
+    Proof proof;
 };
 
 }

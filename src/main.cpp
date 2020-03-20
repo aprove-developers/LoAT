@@ -23,7 +23,7 @@
 #include "its/t2Parser/t2parser.hpp"
 #include "config.hpp"
 #include "util/timeout.hpp"
-#include "util/proofoutput.hpp"
+#include "util/proof.hpp"
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -37,13 +37,13 @@ using namespace std;
 // Variables for command line flags
 string filename;
 int timeout = 0; // no timeout
-int proofLevel = static_cast<int>(ProofOutput::defaultProofLevel);
+int proofLevel = static_cast<int>(Proof::defaultProofLevel);
 
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --proof-level <n>                                Detail level for proof output (0-" << ProofOutput::maxProofLevel << ", default " << proofLevel << ")" << endl;
+    cout << "  --proof-level <n>                                Detail level for proof output (0-" << Proof::maxProofLevel << ", default " << proofLevel << ")" << endl;
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
     cout << endl;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         cerr << "Error: proof level must be between 0 and 3" << endl;
         return 1;
     }
-    ProofOutput::setProofLevel(static_cast<uint>(proofLevel));
+    Proof::setProofLevel(static_cast<uint>(proofLevel));
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.

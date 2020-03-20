@@ -146,7 +146,7 @@ bool AccelerationProblem::solved() const {
     return todo.empty();
 }
 
-ProofOutput AccelerationProblem::getProof() const {
+Proof AccelerationProblem::getProof() const {
     assert(solved());
     return proof;
 }

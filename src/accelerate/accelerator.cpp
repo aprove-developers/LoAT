@@ -121,7 +121,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         const Acceleration::Result &accel = LoopAcceleration::accelerate(its, nestedRule, sinkLoc);
         bool success = false;
         Complexity currentCpx = fst.cpx > snd.cpx ? fst.cpx : snd.cpx;
-        ProofOutput proof;
+        Proof proof;
         proof.chainingProof(first, second, nestedRule, its);
         proof.concat(accel.proof);
         for (const Rule &accelRule: accel.rules) {
@@ -273,11 +273,11 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
             }
         }
         if (!nonterm) {
-            option<std::pair<Rule, ProofOutput>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
             if (p) {
                 nonterm = true;
                 const Rule &nontermRule = p.get().first;
-                const ProofOutput &proof = p.get().second;
+                const Proof &proof = p.get().second;
                 res.proof.concat(proof);
                 res.rules.emplace_back(nontermRule);
             }
@@ -298,10 +298,10 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
             }
         }
         if (!nonterm) {
-            option<std::pair<Rule, ProofOutput>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
+            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
             if (p) {
                 const Rule &nontermRule = p.get().first;
-                const ProofOutput &proof = p.get().second;
+                const Proof &proof = p.get().second;
                 res.proof.concat(proof);
                 res.rules.emplace_back(nontermRule);
             }
@@ -346,7 +346,7 @@ Acceleration::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     auto tryAccel = [&](const Rule &newRule) {
         res = tryAccelerate(newRule);
         if (res.status != Failure) {
-            ProofOutput proof;
+            Proof proof;
             proof.ruleTransformationProof(rule, "partial deletion", newRule, its);
             proof.concat(res.proof);
             res.proof = proof;
@@ -384,7 +384,7 @@ Acceleration::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
 // ## Main algorithm  ##
 // #####################
 
-option<ProofOutput> Accelerator::run() {
+option<Proof> Accelerator::run() {
     // Simplifying rules might make it easier to find metering functions
     simplifySimpleLoops();
 
@@ -493,7 +493,7 @@ option<ProofOutput> Accelerator::run() {
 // ## Public interface  ##
 // #######################
 
-option<ProofOutput> Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules) {
+option<Proof> Accelerator::accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules) {
     if (its.getSimpleLoopsAt(loc).empty()) {
         return {};
     }

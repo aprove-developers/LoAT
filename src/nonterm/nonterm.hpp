@@ -20,7 +20,7 @@
 
 #include "../its/rule.hpp"
 #include "../its/itsproblem.hpp"
-#include "../util/proofoutput.hpp"
+#include "../util/proof.hpp"
 
 namespace nonterm {
 
@@ -28,9 +28,9 @@ namespace nonterm {
 
     public:
 
-        static option<std::pair<Rule, ProofOutput>> universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+        static option<std::pair<Rule, Proof>> universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
 
-        static option<std::pair<Rule, ProofOutput>> fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+        static option<std::pair<Rule, Proof>> fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
 
     };
 

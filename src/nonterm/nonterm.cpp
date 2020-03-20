@@ -26,7 +26,7 @@
 
 namespace nonterm {
 
-    option<std::pair<Rule, ProofOutput>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<Rule, Proof>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         if (!Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
@@ -34,7 +34,7 @@ namespace nonterm {
             const Subs &up = r.getUpdate(i);
             if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
                 Rule nontermRule(r.getLhsLoc(), r.getGuard(), Expr::NontermSymbol, sink, {});
-                ProofOutput proof;
+                Proof proof;
                 proof.ruleTransformationProof(r, "non-termination processor", nontermRule, its);
                 return {{nontermRule, proof}};
             }
@@ -44,7 +44,7 @@ namespace nonterm {
             const Subs &up = chained.getUpdate(0);
             if (Smt::check(buildAnd(chained.getGuard()), its) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
                 Rule nontermRule(chained.getLhsLoc(), chained.getGuard(), Expr::NontermSymbol, sink, {});
-                ProofOutput proof;
+                Proof proof;
                 proof.ruleTransformationProof(r, "unrolling", chained, its);
                 proof.ruleTransformationProof(chained, "non-termination processor", nontermRule, its);
                 return {{nontermRule, proof}};
@@ -53,7 +53,7 @@ namespace nonterm {
         return {};
     }
 
-    option<std::pair<Rule, ProofOutput>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<Rule, Proof>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
         if (!Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
             return {};
         }
@@ -77,7 +77,7 @@ namespace nonterm {
                     newGuard.emplace_back(Rel::buildEq(var, (it == up.end() ? var : it->second)));
                 }
                 Rule nontermRule(r.getLhsLoc(), newGuard, Expr::NontermSymbol, sink, {});
-                ProofOutput proof;
+                Proof proof;
                 proof.ruleTransformationProof(r, "fixed-point processor", nontermRule, its);
                 return {{nontermRule, proof}};
             }

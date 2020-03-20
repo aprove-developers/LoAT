@@ -21,7 +21,7 @@
 #include "../its/types.hpp"
 #include "../its/itsproblem.hpp"
 #include "../util/option.hpp"
-#include "../util/proofoutput.hpp"
+#include "../util/proof.hpp"
 
 
 namespace Chaining {
@@ -38,7 +38,7 @@ namespace Chaining {
      *
      * @return true iff the ITS was modified
      */
-    option<ProofOutput> chainLinearPaths(ITSProblem &its);
+    option<Proof> chainLinearPaths(ITSProblem &its);
 
     /**
      * Applies a more involved chaining strategy to the entire ITS problem.
@@ -54,7 +54,7 @@ namespace Chaining {
      *
      * @return true iff the ITS was modified
      */
-    option<ProofOutput> chainTreePaths(ITSProblem &its);
+    option<Proof> chainTreePaths(ITSProblem &its);
 
     /**
      * Starting from the initial location and performing a DFS traversal,
@@ -82,7 +82,7 @@ namespace Chaining {
      *
      * @return true iff the ITS was modified, which is the case iff acceleratedRules was non-empty.
      */
-    option<ProofOutput> chainAcceleratedRules(ITSProblem &its, const std::set<TransIdx> &acceleratedRules);
+    option<Proof> chainAcceleratedRules(ITSProblem &its, const std::set<TransIdx> &acceleratedRules);
 
 };
 

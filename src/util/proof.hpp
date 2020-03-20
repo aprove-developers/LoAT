@@ -32,7 +32,7 @@
 #include "../config.hpp"
 #include "../its/itsproblem.hpp"
 
-class ProofOutput {
+class Proof {
 public:
     enum Style {
         Section,
@@ -73,11 +73,11 @@ public:
 
     void deletionProof(const std::set<TransIdx> &rules);
 
-    void storeSubProof(const ProofOutput &subProof, const std::string &technique);
+    void storeSubProof(const Proof &subProof, const std::string &technique);
 
     void chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule, const ITSProblem &its);
 
-    void concat(const ProofOutput &that);
+    void concat(const Proof &that);
 
     bool empty() const;
 

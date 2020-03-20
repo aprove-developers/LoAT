@@ -5,7 +5,7 @@
 #include "../../its/rule.hpp"
 #include "../../util/option.hpp"
 #include "../../its/variablemanager.hpp"
-#include "../../util/proofoutput.hpp"
+#include "../../util/proof.hpp"
 #include "../../smt/smt.hpp"
 
 class AccelerationProblem {
@@ -21,7 +21,7 @@ private:
     uint validityBound;
     bool equivalent = true;
     bool nonterm;
-    ProofOutput proof;
+    Proof proof;
     std::unique_ptr<Smt> solver;
     const VariableManager varMan;
 
@@ -58,7 +58,7 @@ public:
     void simplifyEquivalently();
     bool solved() const;
     bool witnessesNonterm() const;
-    ProofOutput getProof() const;
+    Proof getProof() const;
     Guard getAcceleratedGuard() const;
     Expr getAcceleratedCost() const;
     Subs getClosedForm() const;
