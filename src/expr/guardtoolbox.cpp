@@ -155,8 +155,7 @@ option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule 
     if (varSubs.empty()) {
         return {};
     } else {
-        Rule substituted = rule.subs(varSubs);
-        return {substituted.withGuard(guard)};
+        return {rule.withGuard(guard).subs(varSubs)};
     }
 }
 
