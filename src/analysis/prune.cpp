@@ -22,6 +22,7 @@
 #include "../expr/boolexpr.hpp"
 #include "../smt/smt.hpp"
 #include "../asymptotic/asymptoticbound.hpp"
+#include "../its/export.hpp"
 
 #include <queue>
 
@@ -198,8 +199,9 @@ bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
     // Remove all nodes that have not been reached in the DFS traversal
     for (LocationIdx node : its.getLocations()) {
         if (visited.count(node) == 0) {
-            its.removeLocationAndRules(node);
-            changed = true;
+            if (!its.removeLocationAndRules(node).empty()) {
+                changed = true;
+            }
         }
     }
 
