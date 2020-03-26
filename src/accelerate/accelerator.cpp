@@ -282,17 +282,19 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 res.rules.emplace_back(nontermRule);
             }
         }
-        if (!nonterm) {
-            option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-            if (strengthened) {
-                bool sat = Smt::check(buildAnd(strengthened.get().getGuard()), its) == Smt::Sat;
-                // only proceed if the guard is sat
-                if (sat) {
-                    if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
-                        nonterm = true;
-                        const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
-                        res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
-                        res.rules.emplace_back(nontermRule);
+        if (Config::Analysis::NonTermMode) {
+            if (!nonterm) {
+                option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
+                if (strengthened) {
+                    bool sat = Smt::check(buildAnd(strengthened.get().getGuard()), its) == Smt::Sat;
+                    // only proceed if the guard is sat
+                    if (sat) {
+                        if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
+                            nonterm = true;
+                            const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
+                            res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
+                            res.rules.emplace_back(nontermRule);
+                        }
                     }
                 }
             }
