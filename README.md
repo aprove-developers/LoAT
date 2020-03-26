@@ -20,7 +20,7 @@ LoAT can parse the [SMTLIB-format](https://www.microsoft.com/en-us/research/wp-c
 
 ### KoAT
 
-LoAT also supports an extended version of [KoAT's input format](aprove.informatik.rwth-aachen.de/eval/IntegerComplexity/), which is also used in the category *Complexity of Integer Transition Systems* at the annual *Termination and Complexity Competition*.
+LoAT also supports an extended version of [KoAT's input format](http://aprove.informatik.rwth-aachen.de/eval/IntegerComplexity/), which is also used in the category *Complexity of Integer Transition Systems* at the annual *Termination and Complexity Competition*.
 
 In this extension, rules can be annotated with polynomial costs:
 ```
