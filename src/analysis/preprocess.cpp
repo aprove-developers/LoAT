@@ -244,23 +244,22 @@ static VarSet collectVarsInUpdateRhs(const Rule &rule) {
 
 
 option<Rule> Preprocess::eliminateTempVars(const VarMan &varMan, const Rule &rule) {
-    //collect all variables that appear in the rhs of any update
-    VarSet varsInUpdate = collectVarsInUpdateRhs(rule);
+    bool changed = false;
+    Rule oldRule = rule;
+    option<Rule> newRule;
 
     //declare helper lambdas to filter variables, to be passed as arguments
     auto isTemp = [&](const Var &sym) {
         return varMan.isTempVar(sym);
     };
     auto isTempInUpdate = [&](const Var &sym) {
+        VarSet varsInUpdate = collectVarsInUpdateRhs(oldRule);
         return isTemp(sym) && varsInUpdate.count(sym) > 0;
     };
     auto isTempOnlyInGuard = [&](const Var &sym) {
+        VarSet varsInUpdate = collectVarsInUpdateRhs(oldRule);
         return isTemp(sym) && varsInUpdate.count(sym) == 0 && !rule.getCost().has(sym);
     };
-
-    bool changed = false;
-    Rule oldRule = rule;
-    option<Rule> newRule;
 
     //equalities allow easy propagation, thus transform x <= y, x >= y into x == y
     newRule = GuardToolbox::makeEqualities(oldRule);
@@ -281,10 +280,6 @@ option<Rule> Preprocess::eliminateTempVars(const VarMan &varMan, const Rule &rul
         oldRule = newRule.get();
         changed = true;
     }
-
-    //note that propagation can alter the update, so we have to recompute
-    //the variables that appear in the rhs of an update:
-    varsInUpdate = collectVarsInUpdateRhs(rule);
 
     //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
     //(not sound if x appears in update or cost, since we then need the value of x)
