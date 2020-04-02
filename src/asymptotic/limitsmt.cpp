@@ -281,8 +281,8 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr &expr
         return {{}, Complexity::Unknown};
     }
 
-    const BoolExpr &normalized = expr->toG();
-    const BoolExpr &encoding = encodeBoolExpr(normalized, templateSubs, n);
+    const BoolExpr normalized = expr->toG();
+    const BoolExpr encoding = encodeBoolExpr(normalized, templateSubs, n);
     solver->add(encoding);
 
     // auxiliary function that checks satisfiability wrt. the current state of the solver

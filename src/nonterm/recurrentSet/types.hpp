@@ -33,7 +33,7 @@ namespace strengthening {
                 guard(guard),
                 todo(std::move(todo)) { }
 
-        const BoolExpr &guard;
+        const BoolExpr guard;
         const Guard todo;
     };
 

@@ -458,7 +458,7 @@ option<Proof> Accelerator::run() {
     std::set<TransIdx> toAdd;
     for (auto it = resultingRules.begin(); it != resultingRules.end();) {
         const Rule &r = its.getRule(*it);
-        const BoolExpr &simplified = Z3::simplify(r.getGuard(), its);
+        const BoolExpr simplified = Z3::simplify(r.getGuard(), its);
         if (r.getGuard() != simplified) {
             const Rule &newR = r.withGuard(simplified);
             this->proof.ruleTransformationProof(r, "simplification", newR, its);

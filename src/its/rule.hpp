@@ -24,6 +24,7 @@
 #include "types.hpp"
 #include "../util/option.hpp"
 #include "../expr/boolexpr.hpp"
+#include "../config.hpp"
 
 
 class RuleLhs {
@@ -33,7 +34,7 @@ class RuleLhs {
 
 public:
     RuleLhs(LocationIdx loc, BoolExpr guard) : RuleLhs(loc, guard, 1) {}
-    RuleLhs(LocationIdx loc, BoolExpr guard, Expr cost) : loc(loc), guard(guard), cost(cost) {}
+    RuleLhs(LocationIdx loc, BoolExpr guard, Expr cost) : loc(loc), guard(guard), cost(Config::Analysis::NonTermMode ? 1 : cost) {}
 
     LocationIdx getLoc() const { return loc; }
     const BoolExpr& getGuard() const { return guard; }

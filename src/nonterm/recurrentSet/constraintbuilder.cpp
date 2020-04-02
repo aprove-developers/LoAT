@@ -45,7 +45,7 @@ namespace strengthening {
     const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
         Guard monotonicityPremise;
         const RelSet &irrelevantConstraints = findIrrelevantConstraints();
-        const BoolExpr &reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
+        const BoolExpr reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
         Implication templatesInvariantImplication = buildTemplatesInvariantImplication(reducedGuard);
         BoolExpr invariancePremise = templatesInvariantImplication.premise;
         BoolExpr conclusionInvariant = True;
@@ -53,12 +53,12 @@ namespace strengthening {
             for (const Subs &up: rule.getUpdates()) {
                 Rel updated = rel;
                 updated.applySubs(up);
-                const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, {updated});
+                const BoolExpr invariant = constructImplicationConstraints(invariancePremise, {updated});
                 conclusionInvariant = conclusionInvariant & invariant;
             }
         }
-        const BoolExpr &initiation = constructInitiationConstraints(reducedGuard);
-        const BoolExpr &templatesInvariant = constructImplicationConstraints(
+        const BoolExpr initiation = constructInitiationConstraints(reducedGuard);
+        const BoolExpr templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
@@ -114,7 +114,7 @@ namespace strengthening {
         for (const Rel &e: updatedTemplates) {
             renamed.push_back(e);
         }
-        const BoolExpr &expr = reducedGuard->subs(varRenaming) & buildAnd(renamed);
+        const BoolExpr expr = reducedGuard->subs(varRenaming) & buildAnd(renamed);
         res = res | expr;
         return res;
     }

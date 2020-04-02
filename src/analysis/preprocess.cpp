@@ -112,7 +112,7 @@ option<Rule> Preprocess::simplifyRule(const VarMan &varMan, const Rule &rule) {
 
 
 option<Rule> Preprocess::simplifyGuard(const Rule &rule, const VariableManager &varMan) {
-    const BoolExpr &newGuard = Z3::simplify(rule.getGuard(), varMan);
+    const BoolExpr newGuard = Z3::simplify(rule.getGuard(), varMan);
     if (rule.getGuard() == newGuard) {
         return {};
     } else {

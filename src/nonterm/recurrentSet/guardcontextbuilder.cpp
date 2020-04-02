@@ -57,7 +57,7 @@ namespace strengthening {
             for (const Subs &up: updates) {
                 Rel conclusionExp = rel;
                 conclusionExp.applySubs(up);
-                const BoolExpr &conclusion = buildLit(conclusionExp);
+                const BoolExpr conclusion = buildLit(conclusionExp);
                 solver->push();
                 solver->add(!conclusion);
                 const Smt::Result &smtRes = solver->check();

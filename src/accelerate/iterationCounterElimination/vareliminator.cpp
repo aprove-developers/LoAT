@@ -82,7 +82,7 @@ void VarEliminator::eliminate() {
     eliminateDependencies();
     for (const auto &p: todoN) {
         const Subs &subs = p.first;
-        const BoolExpr &guard = p.second;
+        const BoolExpr guard = p.second;
         BoundExtractor be(guard, N);
         if (be.getEq()) {
             res.insert(subs.compose(Subs(N, be.getEq().get())));

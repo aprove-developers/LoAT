@@ -35,7 +35,7 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
 BoolExpr AccelerationProblem::getGuardWithout(const Rel &rel) {
     const auto &it = guardWithout.find(rel);
     if (it == guardWithout.end()) {
-        const BoolExpr &res = guard->removeRels({rel}).get();
+        const BoolExpr res = guard->removeRels({rel}).get();
         guardWithout[rel] = res;
         return res;
     } else {
@@ -80,12 +80,12 @@ void AccelerationProblem::monotonicity() {
             if (solver->check() == Smt::Unsat) {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic decrease");
-                const BoolExpr &core = solver->unsatCore();
+                const BoolExpr core = solver->unsatCore();
                 assert(core->isConjunction());
                 RelSet dependencies = core->lits();
                 dependencies.erase(updated);
                 dependencies.erase(!rel);
-                const BoolExpr &newGuard = buildAnd(dependencies) & rel.subs(closed).subs(Subs(n, n-1));
+                const BoolExpr newGuard = buildAnd(dependencies) & rel.subs(closed).subs(Subs(n, n-1));
                 solver->resetSolver();
                 solver->add(newGuard);
                 solver->add(n >= validityBound);
@@ -110,7 +110,7 @@ void AccelerationProblem::recurrence() {
             if (solver->check() == Smt::Unsat) {
                 proof.newline();
                 proof.append(std::stringstream() << "handled " << rel << " via monotonic increase");
-                const BoolExpr &core = solver->unsatCore();
+                const BoolExpr core = solver->unsatCore();
                 assert(core->isConjunction());
                 RelSet dependencies = core->lits();
                 dependencies.erase(rel);
@@ -135,13 +135,13 @@ void AccelerationProblem::eventualWeakDecrease() {
             solver->add(dec);
             solver->add(inc);
             if (solver->check() == Smt::Unsat) {
-                const BoolExpr &core = solver->unsatCore();
+                const BoolExpr core = solver->unsatCore();
                 assert(core->isConjunction());
                 RelSet dependencies = core->lits();
                 dependencies.erase(dec);
                 dependencies.erase(inc);
                 const Rel &newCond = rel.subs(closed).subs(Subs(n, n-1));
-                const BoolExpr &newGuard = buildAnd(dependencies) & rel & newCond;
+                const BoolExpr newGuard = buildAnd(dependencies) & rel & newCond;
                 solver->resetSolver();
                 solver->add(newGuard);
                 solver->add(n >= validityBound);
@@ -200,11 +200,11 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         const Edge &edge = p.first;
         const Rel &start = edge.first;
         const Rel &join = edge.second;
-        const BoolExpr &var1 = p.second;
+        const BoolExpr var1 = p.second;
         for (const Rel &target: todo) {
             if (target == join) continue;
-            const BoolExpr &var2 = edgeVars.at({join, target});
-            const BoolExpr &var3 = edgeVars.at({start, target});
+            const BoolExpr var2 = edgeVars.at({join, target});
+            const BoolExpr var3 = edgeVars.at({start, target});
             closure = closure & ((!var1) | (!var2) | var3);
         }
     }

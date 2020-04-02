@@ -32,7 +32,7 @@ namespace strengthening {
 
     private:
 
-        const BoolExpr &guard;
+        const BoolExpr guard;
         const std::vector<Subs> &updates;
         const VariableManager &varMan;
 

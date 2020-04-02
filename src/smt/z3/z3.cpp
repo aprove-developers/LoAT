@@ -112,7 +112,7 @@ BoolExpr Z3::unsatCore() {
     for (const z3::expr &e: core) {
         res.push_back(markerMap[e.to_string()]);
     }
-    const BoolExpr &ret = buildAnd(res);
+    const BoolExpr ret = buildAnd(res);
     return ret;
 }
 

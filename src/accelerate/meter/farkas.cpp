@@ -115,7 +115,7 @@ const BoolExpr FarkasLemma::apply(
         VariableManager &varMan,
         Expr::Type lambdaType) {
     BoolExpr res = True;
-    const BoolExpr &normalizedPremise = premise->toLeq();
+    const BoolExpr normalizedPremise = premise->toLeq();
     vector<Var> varList(vars.begin(), vars.end());
     RelSet splitConclusion;
     for (const Rel &c: conclusion) {

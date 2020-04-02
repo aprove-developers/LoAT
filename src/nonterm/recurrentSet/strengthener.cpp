@@ -38,7 +38,7 @@ namespace strengthening {
     const option<BoolExpr> Strengthener::apply(const BoolExpr &guard) const {
         const GuardContext &guardCtx = GuardContextBuilder::build(guard, rule.getUpdates(), varMan);
         const Templates &templates = TemplateBuilder::build(guardCtx, rule, varMan);
-        const BoolExpr &constraints = ConstraintBuilder::buildSmtConstraints(templates, rule, guardCtx, varMan);
+        const BoolExpr constraints = ConstraintBuilder::buildSmtConstraints(templates, rule, guardCtx, varMan);
         if (constraints == True) {
             return {};
         }
