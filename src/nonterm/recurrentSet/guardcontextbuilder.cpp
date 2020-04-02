@@ -23,19 +23,19 @@ namespace strengthening {
 
     typedef GuardContextBuilder Self;
 
-    const GuardContext Self::build(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan) {
+    const GuardContext Self::build(const BoolExpr &guard, const std::vector<Subs> &updates, const VariableManager &varMan) {
         return GuardContextBuilder(guard, updates, varMan).build();
     }
 
     Self::GuardContextBuilder(
-            const Guard &guard,
+            const BoolExpr &guard,
             const std::vector<Subs> &updates,
             const VariableManager &varMan
     ): guard(guard), updates(updates), varMan(varMan) { }
 
     const Guard Self::computeConstraints() const {
         Guard constraints;
-        for (const Rel &rel: guard) {
+        for (const Rel &rel: guard->lits()) {
             if (rel.isLinear() && rel.isEq()) {
                 constraints.emplace_back(rel.lhs() <= rel.rhs());
                 constraints.emplace_back(rel.rhs() <= rel.lhs());
@@ -48,11 +48,11 @@ namespace strengthening {
 
     const Result Self::splitInvariants(const Guard &constraints) const {
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
-        for (const Rel &rel: guard) {
-            solver->add(rel);
-        }
+        solver->add(guard);
         Result res;
         for (const Rel &rel: constraints) {
+            solver->push();
+            solver->add(rel);
             bool isInvariant = true;
             for (const Subs &up: updates) {
                 Rel conclusionExp = rel;
@@ -67,6 +67,7 @@ namespace strengthening {
                     break;
                 }
             }
+            solver->pop();
             if (isInvariant) {
                 res.solved.push_back(rel);
             } else {
@@ -79,7 +80,7 @@ namespace strengthening {
     const GuardContext Self::build() const {
         const Guard &constraints = computeConstraints();
         const Result inv = splitInvariants(constraints);
-        return GuardContext(guard, inv.solved, inv.failed);
+        return GuardContext(guard, inv.failed);
     }
 
 }

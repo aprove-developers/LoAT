@@ -27,12 +27,12 @@
 namespace nonterm {
 
     option<std::pair<Rule, Proof>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
+        if (!Smt::isImplication(r.getGuard(), buildLit(r.getCost() > 0), its)) {
             return {};
         }
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             const Subs &up = r.getUpdate(i);
-            if (Smt::isImplication(buildAnd(r.getGuard()), buildAnd(r.getGuard().subs(up)), its)) {
+            if (Smt::isImplication(r.getGuard(), r.getGuard()->subs(up), its)) {
                 Rule nontermRule(r.getLhsLoc(), r.getGuard(), Expr::NontermSymbol, sink, {});
                 Proof proof;
                 proof.ruleTransformationProof(r, "non-termination processor", nontermRule, its);
@@ -42,7 +42,7 @@ namespace nonterm {
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const Subs &up = chained.getUpdate(0);
-            if (Smt::check(buildAnd(chained.getGuard()), its) == Smt::Sat && Smt::isImplication(buildAnd(chained.getGuard()), buildAnd(chained.getGuard().subs(up)), its)) {
+            if (Smt::check(chained.getGuard(), its) == Smt::Sat && Smt::isImplication(chained.getGuard(), chained.getGuard()->subs(up), its)) {
                 Rule nontermRule(chained.getLhsLoc(), chained.getGuard(), Expr::NontermSymbol, sink, {});
                 Proof proof;
                 proof.ruleTransformationProof(r, "unrolling", chained, its);
@@ -54,29 +54,28 @@ namespace nonterm {
     }
 
     option<std::pair<Rule, Proof>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
-        if (!Smt::isImplication(buildAnd(r.getGuard()), buildLit(r.getCost() > 0), its)) {
+        if (!Smt::isImplication(r.getGuard(), buildLit(r.getCost() > 0), its)) {
             return {};
         }
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({r.getGuard()}, r.getUpdates()), its);
-        for (const Rel &rel: r.getGuard()) {
-            solver->add(rel);
-        }
+        solver->add(r.getGuard());
         for (unsigned int i = 0; i < r.getRhss().size(); i++) {
             solver->push();
             const Subs &up = r.getUpdate(i);
-            const VarSet &vars = util::RelevantVariables::find(r.getGuard(), {up}, r.getGuard());
+            const VarSet &vars = util::RelevantVariables::find(r.getGuard()->vars(), {up}, r.getGuard());
             for (const Var &var: vars) {
                 const auto &it = up.find(var);
                 solver->add(Rel::buildEq(var, it == up.end() ? var : it->second));
             }
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {
-                Guard newGuard(r.getGuard());
+                std::vector<BoolExpr> newGuard;
+                newGuard.emplace_back(r.getGuard());
                 for (const Var &var: vars) {
                     const auto &it = up.find(var);
-                    newGuard.emplace_back(Rel::buildEq(var, (it == up.end() ? var : it->second)));
+                    newGuard.emplace_back(buildLit(Rel::buildEq(var, (it == up.end() ? var : it->second))));
                 }
-                Rule nontermRule(r.getLhsLoc(), newGuard, Expr::NontermSymbol, sink, {});
+                Rule nontermRule(r.getLhsLoc(), buildAnd(newGuard), Expr::NontermSymbol, sink, {});
                 Proof proof;
                 proof.ruleTransformationProof(r, "fixed-point processor", nontermRule, its);
                 return {{nontermRule, proof}};

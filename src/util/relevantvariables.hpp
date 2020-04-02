@@ -29,14 +29,19 @@ namespace util {
     public:
 
         static const VarSet find(
+                const VarSet &varsOfInterest,
+                const std::vector<Subs> &updates,
+                const BoolExpr &guard);
+
+        static const VarSet find(
                 const Guard &constraints,
                 const std::vector<Subs> &updates,
-                const Guard &guard);
+                const BoolExpr &guard);
 
         static const VarSet find(
                 const Guard &constraints,
                 const std::vector<RuleRhs> &rhss,
-                const Guard &guard);
+                const BoolExpr &guard);
 
     };
 

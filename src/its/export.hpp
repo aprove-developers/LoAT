@@ -23,7 +23,7 @@ namespace ITSExport {
      * Prints the given guard in a readable format (constraints separated by &&)
      * Note that colors are only used if colors is true and Config::Output::ColorInIts is true
      */
-    void printGuard(const Guard &guard, std::ostream &s, bool colors = true);
+    void printGuard(const BoolExpr &guard, std::ostream &s, bool colors = true);
 
     /**
      * Prints the given cost expression (does not do much except for colors)
@@ -41,21 +41,8 @@ namespace ITSExport {
      */
     void printForProof(const ITSProblem &its, std::ostream &s);
 
-    /**
-     * Print the ITS problem in KoAT format (i.e. LoAT's input format)
-     */
-    void printKoAT(const ITSProblem &its, std::ostream &s);
 }
 
-
-namespace LinearITSExport {
-    /**
-     * Print the graph of a linear ITSProblem in the T2 format, to allow conversion from koat -> T2.
-     * @param its the ITSProblem to print, must be linear!
-     * @param s the output stream to be used
-     */
-    void printT2(const ITSProblem &its, std::ostream &s);
-}
 
 
 #endif //EXPORT_H

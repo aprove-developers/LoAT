@@ -63,7 +63,7 @@ namespace FarkasLemma {
      *
      * @return the resulting z3 expression (without quantifiers, as all variables are existentially quantified)
      */
-    BoolExpr apply(const std::vector<Rel> &constraints,
+    BoolExpr apply(const RelSet &constraints,
                    const std::vector<Var> &vars,
                    const std::vector<Expr> &coeffs,
                    Expr c0,
@@ -72,7 +72,7 @@ namespace FarkasLemma {
                    const VarSet &params = VarSet(),
                    Expr::Type lambdaType = Expr::Rational);
 
-    BoolExpr apply(const std::vector<Rel> &constraints,
+    BoolExpr apply(const RelSet &constraints,
                    const std::vector<Var> &vars,
                    const std::vector<Var> &coeffs,
                    Var c0,
@@ -82,17 +82,17 @@ namespace FarkasLemma {
                    Expr::Type lambdaType = Expr::Rational);
 
     const BoolExpr apply(
-            const std::vector<Rel> &premise,
-            const std::vector<Rel> &conclusion,
+            const BoolExpr &premise,
+            const RelSet &conclusion,
             const VarSet &vars,
             const VarSet &params,
             VariableManager &varMan,
             Expr::Type lambdaType = Expr::Rational);
 
-    const BoolExpr apply(
-            const std::vector<Rel> &premise,
-            const Rel &conclusion,
-            const VarSet &vars,
+    const BoolExpr applyRec(
+            const BoolExpr &premise,
+            const RelSet &conclusion,
+            const std::vector<Var> &vars,
             const VarSet &params,
             VariableManager &varMan,
             Expr::Type lambdaType = Expr::Rational);

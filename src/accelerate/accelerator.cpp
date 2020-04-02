@@ -35,6 +35,7 @@
 #include "../nonterm/recurrentSet/strengthener.hpp"
 #include <stdexcept>
 #include "../nonterm/nonterm.hpp"
+#include "../smt/z3/z3.hpp"
 
 
 using namespace std;
@@ -63,7 +64,7 @@ bool Accelerator::simplifySimpleLoops() {
     bool res = false;
     vector<TransIdx> loops = its.getSimpleLoopsAt(targetLoc);
 
-    // Simplify all all simple loops.
+    // Simplify all simple loops.
     // This is especially useful to eliminate temporary variables before metering.
     if (Config::Accel::SimplifyRulesBefore) {
         for (auto it = loops.begin(), end = loops.end(); it != end; ++it) {
@@ -258,7 +259,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
         res.proof.ruleTransformationProof(rule, "unrolling", optR.get(), its);
     }
     LinearRule r = optR ? optR.get() : rule;
-    bool sat = Smt::check(buildAnd(r.getGuard()), its) == Smt::Sat;
+    bool sat = Smt::check(r.getGuard(), its) == Smt::Sat;
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
@@ -286,7 +287,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
             if (!nonterm) {
                 option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
                 if (strengthened) {
-                    bool sat = Smt::check(buildAnd(strengthened.get().getGuard()), its) == Smt::Sat;
+                    bool sat = Smt::check(strengthened.get().getGuard(), its) == Smt::Sat;
                     // only proceed if the guard is sat
                     if (sat) {
                         if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
@@ -457,11 +458,12 @@ option<Proof> Accelerator::run() {
     std::set<TransIdx> toAdd;
     for (auto it = resultingRules.begin(); it != resultingRules.end();) {
         const Rule &r = its.getRule(*it);
-        option<Rule> simplified = Preprocess::simplifyGuard(r);
-        if (simplified) {
-            this->proof.ruleTransformationProof(r, "simplification", simplified.get(), its);
+        const BoolExpr &simplified = Z3::simplify(r.getGuard(), its);
+        if (r.getGuard() != simplified) {
+            const Rule &newR = r.withGuard(simplified);
+            this->proof.ruleTransformationProof(r, "simplification", newR, its);
             its.removeRule(*it);
-            toAdd.insert(its.addRule(simplified.get()));
+            toAdd.insert(its.addRule(newR));
             it = resultingRules.erase(it);
         } else {
             ++it;

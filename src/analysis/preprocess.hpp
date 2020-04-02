@@ -53,15 +53,7 @@ namespace Preprocess
      *
      * @return true iff the given guard was modified (some constraints were removed)
      */
-    option<Rule> simplifyGuard(const Rule &rule);
-
-    /**
-     * Performs z3 queries to remove constraints which are implied by the previous
-     * constraints. This involves a linear number of queries and is thus rather slow.
-     *
-     * @return true iff the given guard was modified (some constraints were removed)
-     */
-    option<Rule> simplifyGuardBySmt(const Rule &rule, const VariableManager &varMan);
+    option<Rule> simplifyGuard(const Rule &rule, const VariableManager &varMan);
 
     /**
      * Removes trivial updates of the form x <- x.

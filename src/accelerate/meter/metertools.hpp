@@ -21,6 +21,7 @@
 #include "../../expr/expression.hpp"
 #include "../../its/variablemanager.hpp"
 #include "../../its/rule.hpp"
+#include "../../its/guard.hpp"
 
 #include <vector>
 #include <map>

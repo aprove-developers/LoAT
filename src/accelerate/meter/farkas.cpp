@@ -24,7 +24,7 @@ using namespace std;
 
 
 BoolExpr FarkasLemma::apply(
-        const vector<Rel> &constraints,
+        const RelSet &constraints,
         const vector<Var> &vars,
         const vector<Expr> &coeffs,
         Expr c0,
@@ -39,14 +39,14 @@ BoolExpr FarkasLemma::apply(
     BoolExpr res = True;
 
     // Create lambda variables, add the constraint "lambda >= 0"
-    vector<Var> lambda;
+    RelMap<Var> lambda;
     VarSet varSet(vars.begin(), vars.end());
     for (const Rel &rel : constraints) {
         assert(rel.isLinear(varSet) && rel.isIneq());
         assert(rel.relOp() == Rel::leq);
 
         Var var = varMan.getFreshUntrackedSymbol("l", lambdaType);
-        lambda.push_back(var);
+        lambda[rel] = var;
         res = res & (var >= 0);
     }
 
@@ -72,24 +72,26 @@ BoolExpr FarkasLemma::apply(
     // Build the constraints "lambda^T * A = c^T"
     for (auto varIt : varToCoeff) {
         Expr lambdaA = 0;
-        for (unsigned int j=0; j < constraints.size(); ++j) {
-            Expr a = constraints[j].lhs().expand().coeff(varIt.first);
-            Expr add = lambda[j] * a;
-            lambdaA = (j==0) ? add : lambdaA + add; // avoid superflous +0
+        bool first = true;
+        for (const auto &e: lambda) {
+            Expr a = e.first.lhs().expand().coeff(varIt.first);
+            Expr add = e.second * a;
+            lambdaA = first ? add : lambdaA + add; // avoid superflous +0
+            first = false;
         }
         res = res & Rel::buildEq(lambdaA, varIt.second);
     }
 
     // Build the constraints "lambda^T * b + c0 <= delta"
     Expr sum = c0;
-    for (unsigned int i=0; i < constraints.size(); ++i) {
-        sum = sum + lambda[i] * constraints[i].rhs();
+    for (const auto &e: lambda) {
+        sum = sum + e.second * e.first.rhs();
     }
     return res & (sum <= delta);
 }
 
 BoolExpr FarkasLemma::apply(
-        const vector<Rel> &constraints,
+        const RelSet &constraints,
         const vector<Var> &vars,
         const vector<Var> &coeffs,
         Var c0,
@@ -106,53 +108,51 @@ BoolExpr FarkasLemma::apply(
 }
 
 const BoolExpr FarkasLemma::apply(
-        const vector<Rel> &premise,
-        const vector<Rel> &conclusion,
+        const BoolExpr &premise,
+        const RelSet &conclusion,
         const VarSet &vars,
         const VarSet &params,
         VariableManager &varMan,
         Expr::Type lambdaType) {
     BoolExpr res = True;
-    std::vector<Rel> normalizedPremise;
-    for (const Rel &p: premise) {
-        if (p.isLinear(vars) && p.isIneq()) {
-            normalizedPremise.push_back(p.toLeq().splitVariableAndConstantAddends(params));
-        } else if (p.isLinear(vars) && p.isEq()) {
-            normalizedPremise.push_back((p.lhs() <= p.rhs()).splitVariableAndConstantAddends(params));
-            normalizedPremise.push_back((p.rhs() <= p.lhs()).splitVariableAndConstantAddends(params));
-        }
-    }
+    const BoolExpr &normalizedPremise = premise->toLeq();
     vector<Var> varList(vars.begin(), vars.end());
-    vector<Rel> splitConclusion;
+    RelSet splitConclusion;
     for (const Rel &c: conclusion) {
         if (c.isLinear(vars) && c.isIneq()) {
-            splitConclusion.push_back(c);
+            splitConclusion.insert(c.toLeq().splitVariableAndConstantAddends(params));
         } else if (c.isLinear(vars) && c.isEq()) {
-            splitConclusion.emplace_back(c.lhs() <= c.rhs());
-            splitConclusion.emplace_back(c.rhs() <= c.lhs());
+            splitConclusion.insert((c.lhs() <= c.rhs()).splitVariableAndConstantAddends(params));
+            splitConclusion.insert((c.rhs() <= c.lhs()).splitVariableAndConstantAddends(params));
         } else {
             assert(false);
         }
     }
-    for (const Rel &c: splitConclusion) {
-        Rel normalized = c.toLeq().splitVariableAndConstantAddends(params);
-        vector<Expr> coefficients;
-        for (Var &x : varList) {
-            coefficients.push_back(normalized.lhs().coeff(x, 1));
-        }
-        Expr c0 = -normalized.rhs();
-        res = res & FarkasLemma::apply(normalizedPremise, varList, coefficients, c0, 0, varMan, params, lambdaType);
-    }
-    return res;
+    return applyRec(normalizedPremise, splitConclusion, varList, params, varMan, lambdaType);
 }
 
-const BoolExpr FarkasLemma::apply(
-        const vector<Rel> &premise,
-        const Rel &conclusion,
-        const VarSet &vars,
+const BoolExpr FarkasLemma::applyRec(
+        const BoolExpr &premise,
+        const RelSet &conclusion,
+        const std::vector<Var> &vars,
         const VarSet &params,
         VariableManager &varMan,
         Expr::Type lambdaType) {
-    const vector<Rel> &conclusions = {conclusion};
-    return apply(premise, conclusions, vars, params, varMan, lambdaType);
+    std::vector<BoolExpr> res;
+    if (premise->isConjunction() || premise->getLit()) {
+        for (const Rel &c: conclusion) {
+            vector<Expr> coefficients;
+            for (const Var &x : vars) {
+                coefficients.push_back(c.lhs().coeff(x, 1));
+            }
+            Expr c0 = -c.rhs();
+            res.push_back(FarkasLemma::apply(premise->lits(), vars, coefficients, c0, 0, varMan, params, lambdaType));
+        }
+        return buildAnd(res);
+    } else {
+        for (const BoolExpr &c: premise->getChildren()) {
+            res.push_back(applyRec(c, conclusion, vars, params, varMan, lambdaType));
+        }
+        return premise->isAnd() ? buildAnd(res) : buildOr(res);
+    }
 }

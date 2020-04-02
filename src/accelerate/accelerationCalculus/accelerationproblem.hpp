@@ -9,57 +9,57 @@
 #include "../../smt/smt.hpp"
 
 class AccelerationProblem {
+
 private:
-    Guard res;
-    Guard done;
-    Guard todo;
+
+    struct Entry {
+        RelSet dependencies;
+        BoolExpr formula;
+        bool nonterm;
+    };
+
+    using Res = RelMap<std::vector<Entry>>;
+
+    Res res;
+    option<RelMap<Entry>> solution;
+    RelSet todo;
     Subs up;
     Subs closed;
     Expr cost;
     Var n;
-    Guard guard;
+    BoolExpr guard;
     uint validityBound;
-    bool equivalent = true;
-    bool nonterm;
     Proof proof;
     std::unique_ptr<Smt> solver;
+    RelMap<BoolExpr> guardWithout;
     const VariableManager varMan;
 
     AccelerationProblem(
-            const Guard &res,
-            const Guard &done,
-            const Guard &todo,
+            const BoolExpr &guard,
             const Subs &up,
             const Subs &closed,
-            const Expr &cost,
             const Expr &iteratedCost,
             const Var &n,
             const uint validityBound,
             const VariableManager &varMan);
 
-    static AccelerationProblem init(
-            const LinearRule &r,
-            const VariableManager &varMan,
-            const Subs &closed,
-            const Expr &iteratedCost,
-            const Var &n,
-            const uint validityBound);
-
-    static Guard normalize(const Guard &g);
-    bool monotonicity();
-    bool recurrence();
-    bool eventualWeakDecrease();
-    bool eventualWeakIncrease();
-    void print();
+    void monotonicity();
+    void recurrence();
+    void eventualWeakDecrease();
+    RelSet findConsistentSubset(const BoolExpr &e) const;
+    void store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm = false);
+    BoolExpr getGuardWithout(const Rel &rel);
 
 public:
 
+    struct Result {
+        BoolExpr newGuard;
+        bool witnessesNonterm;
+    };
+
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan);
-    void simplifyEquivalently();
-    bool solved() const;
-    bool witnessesNonterm() const;
+    option<Result> computeRes();
     Proof getProof() const;
-    Guard getAcceleratedGuard() const;
     Expr getAcceleratedCost() const;
     Subs getClosedForm() const;
     Var getIterationCounter() const;

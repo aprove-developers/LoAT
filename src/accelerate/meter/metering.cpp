@@ -109,12 +109,12 @@ void MeteringFinder::buildLinearConstraints() {
     linearConstraints.guardUpdate.resize(updates.size());
 
     // helper lambda to transform the given inequality into the required form
-    auto makeConstraint = [&](const Rel &rel, vector<Rel> &vec) {
+    auto makeConstraint = [&](const Rel &rel, RelSet &s) {
         assert(rel.isLinear() && rel.isIneq());
 
         Rel res = rel.toLeq().splitVariableAndConstantAddends();
         if (!res.isTriviallyTrue()) {
-            vec.push_back(res);
+            s.insert(res);
         }
     };
 
@@ -130,8 +130,8 @@ void MeteringFinder::buildLinearConstraints() {
         makeConstraint(rel, linearConstraints.guard);
 
         // all of the guardUpdate constraints need to include the guard
-        for (Guard &vec : linearConstraints.guardUpdate) {
-            makeConstraint(rel, vec);
+        for (RelSet &s : linearConstraints.guardUpdate) {
+            makeConstraint(rel, s);
         }
     }
 
@@ -152,13 +152,14 @@ void MeteringFinder::buildLinearConstraints() {
 
 BoolExpr MeteringFinder::genNotGuardImplication() const {
     BoolExpr res = True;
-    vector<Rel> lhs = linearConstraints.irrelevantGuard;
+    RelSet lhs = linearConstraints.irrelevantGuard;
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Rel &rel : linearConstraints.reducedGuard) {
-        lhs.push_back((!rel).toLeq().splitVariableAndConstantAddends());
+        const Rel &conclusion = (!rel).toLeq().splitVariableAndConstantAddends();
+        lhs.insert(conclusion);
         res = res & FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan);
-        lhs.pop_back();
+        lhs.erase(conclusion);
     }
 
     return res;
@@ -221,24 +222,24 @@ BoolExpr MeteringFinder::genNonTrivial() const {
 
 /* ### Step 4: Result and model interpretation ### */
 
-Expr MeteringFinder::buildResult(const VarMap<GiNaC::numeric> &model) const {
+Expr MeteringFinder::buildResult(const Model &model) const {
     const auto &coeffs = meterVars.coeffs;
     const auto &symbols = meterVars.symbols;
 
     // read off the coefficients of the metering function
-    Expr result = model.at(absCoeff);
+    Expr result = model.get(absCoeff);
     for (unsigned int i=0; i < coeffs.size(); ++i) {
-        result = result + model.at(coeffs[i]) * symbols[i];
+        result = result + model.get(coeffs[i]) * symbols[i];
     }
     return result;
 }
 
-void MeteringFinder::ensureIntegralMetering(Result &result, const VarMap<GiNaC::numeric> &model) const {
+void MeteringFinder::ensureIntegralMetering(Result &result, const Model &model) const {
     bool has_reals = false;
     int mult = 1;
 
     for (const Var &theCoeff : meterVars.coeffs) {
-        GiNaC::numeric coeff = model.at(theCoeff);
+        GiNaC::numeric coeff = model.get(theCoeff);
         if (coeff.denom().to_int() != 1) {
             has_reals = true;
             mult = boost::integer::lcm(mult, coeff.denom().to_int());
@@ -267,9 +268,12 @@ bool MeteringFinder::isLinear() const {
 
 /* ### Main function ### */
 MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule) {
-
     Result result;
-    MeteringFinder meter(varMan, rule.getGuard(), getUpdateList(rule));
+    if (!rule.getGuard()->isConjunction()) {
+        return result;
+    }
+
+    MeteringFinder meter(varMan, rule.getGuard()->conjunctionToGuard(), getUpdateList(rule));
 
     // linearize and simplify the problem
     meter.preprocess();
@@ -320,7 +324,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     }
 
     // If we succeed, extract the metering function from the model
-    VarMap<GiNaC::numeric> model = solver->model();
+    Model model = solver->model();
     result.metering = meter.buildResult(model);
     result.result = Success;
 
@@ -335,19 +339,26 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
 /* ### Heuristics to help finding more metering functions ### */
 
 option<Rule> MeteringFinder::strengthenGuard(VarMan &varMan, const Rule &rule) {
-    option<Guard> guard = MT::strengthenGuard(varMan, rule.getGuard(), getUpdateList(rule));
-    return guard ? option<Rule>(rule.withGuard(guard.get())) : option<Rule>();
+    if (!rule.getGuard()->isConjunction()) {
+        return {};
+    }
+    option<Guard> guard = MT::strengthenGuard(varMan, rule.getGuard()->conjunctionToGuard(), getUpdateList(rule));
+    return guard ? option<Rule>(rule.withGuard(buildAnd(guard.get()))) : option<Rule>();
 }
 
 option<pair<Rule, Proof>> MeteringFinder::instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule) {
+    if (!rule.getGuard()->isConjunction()) {
+        return {};
+    }
     // Quick check whether there are any bounds on temp vars we can use to instantiate them.
     auto hasTempVar = [&](const Rel &rel) { return GuardToolbox::containsTempVar(its, rel); };
-    if (std::none_of(rule.getGuard().begin(), rule.getGuard().end(), hasTempVar)) {
+    const RelSet &lits = rule.getGuard()->lits();
+    if (std::none_of(lits.begin(), lits.end(), hasTempVar)) {
         return {};
     }
 
     // We first perform the same steps as in generate()
-    MeteringFinder meter(its, rule.getGuard(), getUpdateList(rule));
+    MeteringFinder meter(its, rule.getGuard()->conjunctionToGuard(), getUpdateList(rule));
 
     meter.preprocess();
     if (!meter.isLinear()) return {};

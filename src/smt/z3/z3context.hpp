@@ -53,11 +53,33 @@ public:
     z3::expr neq(const z3::expr &x, const z3::expr &y) override;
     z3::expr bAnd(const z3::expr &x, const z3::expr &y) override;
     z3::expr bOr(const z3::expr &x, const z3::expr &y) override;
-    z3::expr bTrue() override;
-    z3::expr bFalse() override;
+    z3::expr bTrue() const override;
+    z3::expr bFalse() const override;
+    z3::expr negate(const z3::expr &x) override;
+
+    bool isLit(const z3::expr &e) const override;
+    bool isTrue(const z3::expr &e) const override;
+    bool isFalse(const z3::expr &e) const override;
+    bool isNot(const z3::expr &e) const override;
+    std::vector<z3::expr> getChildren(const z3::expr &e) const override;
+    bool isAnd(const z3::expr &e) const override;
+    bool isAdd(const z3::expr &e) const override;
+    bool isMul(const z3::expr &e) const override;
+    bool isPow(const z3::expr &e) const override;
+    bool isVar(const z3::expr &e) const override;
+    bool isRationalConstant(const z3::expr &e) const override;
+    bool isInt(const z3::expr &e) const override;
+    long toInt(const z3::expr &e) const override;
+    long numerator(const z3::expr &e) const override;
+    long denominator(const z3::expr &e) const override;
+    z3::expr lhs(const z3::expr &e) const override;
+    z3::expr rhs(const z3::expr &e) const override;
+    Rel::RelOp relOp(const z3::expr &e) const override;
+    std::string getName(const z3::expr &x) const override;
 
 private:
     z3::expr buildVar(const std::string &basename, Expr::Type type) override;
+    z3::expr buildConst(uint id) override;
     z3::context &ctx;
 
 };

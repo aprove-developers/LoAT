@@ -23,15 +23,18 @@ namespace util {
     const VarSet RelevantVariables::find(
             const Guard &constraints,
             const std::vector<Subs> &updates,
-            const Guard &guard) {
-        VarSet res;
-        // Add all variables appearing in the guard
-        VarSet guardVariables;
+            const BoolExpr &guard) {
+        VarSet varsOfInterest;
         for (const Rel &rel: constraints) {
             const VarSet &relVars = rel.vars();
-            guardVariables.insert(relVars.begin(), relVars.end());
+            varsOfInterest.insert(relVars.begin(), relVars.end());
         }
-        for (const Var &sym : guardVariables) {
+        return find(varsOfInterest, updates, guard);
+    }
+
+    const VarSet RelevantVariables::find(const VarSet &varsOfInterest, const std::vector<Subs> &updates, const BoolExpr &guard) {
+        VarSet res;
+        for (const Var &sym : varsOfInterest) {
             res.insert(sym);
         }
         // Compute the closure of res under all updates and the guard
@@ -46,7 +49,7 @@ namespace util {
                         next.insert(rhsVars.begin(), rhsVars.end());
                     }
                 }
-                for (const Rel &rel: guard) {
+                for (const Rel &rel: guard->lits()) {
                     const VarSet &relVars = rel.vars();
                     if (relVars.find(x) != relVars.end()) {
                         next.insert(relVars.begin(), relVars.end());
@@ -73,7 +76,7 @@ namespace util {
     const VarSet RelevantVariables::find(
             const Guard &constraints,
             const std::vector<RuleRhs> &rhss,
-            const Guard &guard) {
+            const BoolExpr &guard) {
         std::vector<Subs> updates;
         for (const RuleRhs &rhs: rhss) {
             updates.push_back(rhs.getUpdate());

@@ -20,6 +20,7 @@
 
 #include "../util/option.hpp"
 #include "../expr/expression.hpp"
+#include "../expr/rel.hpp"
 
 #include <map>
 
@@ -41,8 +42,29 @@ public:
     virtual EXPR neq(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR bAnd(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR bOr(const EXPR &x, const EXPR &y) = 0;
-    virtual EXPR bTrue() = 0;
-    virtual EXPR bFalse() = 0;
+    virtual EXPR bTrue() const = 0;
+    virtual EXPR bFalse() const = 0;
+    virtual EXPR negate(const EXPR &x)= 0;
+
+    virtual bool isLit(const EXPR &e) const = 0;
+    virtual bool isTrue(const EXPR &e) const = 0;
+    virtual bool isFalse(const EXPR &e) const = 0;
+    virtual bool isNot(const EXPR &e) const = 0;
+    virtual std::vector<EXPR> getChildren(const EXPR &e) const = 0;
+    virtual bool isAnd(const EXPR &e) const = 0;
+    virtual bool isAdd(const EXPR &e) const = 0;
+    virtual bool isMul(const EXPR &e) const = 0;
+    virtual bool isPow(const EXPR &e) const = 0;
+    virtual bool isVar(const EXPR &e) const = 0;
+    virtual bool isRationalConstant(const EXPR &e) const = 0;
+    virtual bool isInt(const EXPR &e) const = 0;
+    virtual long toInt(const EXPR &e) const = 0;
+    virtual long numerator(const EXPR &e) const = 0;
+    virtual long denominator(const EXPR &e) const = 0;
+    virtual EXPR lhs(const EXPR &e) const = 0;
+    virtual EXPR rhs(const EXPR &e) const = 0;
+    virtual Rel::RelOp relOp(const EXPR &e) const = 0;
+    virtual std::string getName(const EXPR &e) const = 0;
 
     option<EXPR> getVariable(const Var &symbol) const {
         auto it = symbolMap.find(symbol);
@@ -52,15 +74,46 @@ public:
         return {};
     }
 
+    option<Var> getVariable(const std::string &name) const {
+        auto it = nameMap.find(name);
+        if (it != nameMap.end()) {
+            return it->second;
+        }
+        return {};
+    }
+
     EXPR addNewVariable(const Var &symbol, Expr::Type type = Expr::Int) {
         assert(symbolMap.count(symbol) == 0);
+        assert(nameMap.count(symbol.get_name()) == 0);
         EXPR res = generateFreshVar(symbol.get_name(), type);
         symbolMap.emplace(symbol, res);
+        symbolMap.emplace(symbol.get_name(), res);
+        nameMap.emplace(symbol.get_name(), symbol);
         return res;
     }
 
     VarMap<EXPR> getSymbolMap() const {
         return symbolMap;
+    }
+
+    std::map<uint, EXPR> getConstMap() const {
+        return constMap;
+    }
+
+    EXPR bConst(int id) {
+        bool negated = id < 0;
+        if (negated) {
+            id = -id;
+        }
+        const auto &it = constMap.find(id);
+        option<EXPR> res;
+        if (it == constMap.end()) {
+            res = buildConst(id);
+            constMap.emplace(id, res.get());
+        } else {
+            res = it->second;
+        }
+        return negated ? negate(res.get()) : res.get();
     }
 
     virtual ~SmtContext() {}
@@ -80,10 +133,13 @@ protected:
     }
 
     virtual EXPR buildVar(const std::string &basename, Expr::Type type) = 0;
+    virtual EXPR buildConst(uint id) = 0;
 
 protected:
     VarMap<EXPR> symbolMap;
-    std::map<std::string,int> usedNames;
+    std::map<std::string, Var> nameMap;
+    std::map<std::string, int> usedNames;
+    std::map<uint, EXPR> constMap;
 };
 
 #endif // SMTCONTEXT_H

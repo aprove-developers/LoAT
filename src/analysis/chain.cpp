@@ -31,8 +31,8 @@ using namespace std;
 /**
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
-static bool checkSatisfiability(const Guard &newGuard, const VariableManager &varMan) {
-    auto smtRes = Smt::check(buildAnd(newGuard), varMan);
+static bool checkSatisfiability(const BoolExpr &newGuard, const VariableManager &varMan) {
+    auto smtRes = Smt::check(newGuard, varMan);
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
@@ -54,10 +54,7 @@ static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, 
                                  const RuleLhs &secondLhs, bool checkSat)
 {
     // Concatenate both guards, but apply the first rule's update to second guard
-    Guard newGuard = firstLhs.getGuard();
-    for (const Rel &rel : secondLhs.getGuard()) {
-        newGuard.push_back(rel.subs(firstUpdate));
-    }
+    BoolExpr newGuard = firstLhs.getGuard() & secondLhs.getGuard()->subs(firstUpdate);
 
     // Add the costs, but apply first rule's update to second cost
     Expr newCost = firstLhs.getCost() + secondLhs.getCost().subs(firstUpdate);

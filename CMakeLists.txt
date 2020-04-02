@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 
 project(LoAT)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # non-static build by default
 option(STATIC "static" OFF)
@@ -21,7 +21,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O4")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
@@ -124,8 +124,6 @@ add_executable(${EXECUTABLE}
         src/nonterm/recurrentSet/templates.hpp
         src/nonterm/recurrentSet/constraintsolver.cpp
         src/nonterm/recurrentSet/constraintsolver.hpp
-        src/nonterm/recurrentSet/rulecontextbuilder.cpp
-        src/nonterm/recurrentSet/rulecontextbuilder.hpp
         src/nonterm/recurrentSet/guardcontextbuilder.cpp
         src/nonterm/recurrentSet/guardcontextbuilder.hpp
         src/util/relevantvariables.cpp
@@ -142,26 +140,23 @@ add_executable(${EXECUTABLE}
         src/smt/smt.cpp
         src/smt/smtcontext.hpp
         src/smt/exprtosmt.hpp
+        src/smt/smttoexpr.hpp
         src/smt/z3/z3.cpp
         src/smt/z3/z3.hpp
         src/smt/z3/z3context.cpp
         src/smt/z3/z3context.hpp
-        src/smt/cvc4/cvc4.cpp
-        src/smt/cvc4/cvc4.hpp
-        src/smt/cvc4/cvc4context.cpp
-        src/smt/cvc4/cvc4context.hpp
         src/smt/yices/yices.cpp
         src/smt/yices/yices.hpp
         src/smt/yices/yicescontext.cpp
         src/smt/yices/yicescontext.hpp
         src/smt/smtfactory.cpp
-        src/smt/smtfactory.hpp)
+        src/smt/smtfactory.hpp
+        src/smt/model.cpp
+        src/smt/model.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
 message(STATUS "z3: ${Z3}")
-find_library(CVC4 cvc4)
-message(STATUS "cvc4: ${CVC4}")
 find_library(YICES yices)
 message(STATUS "yices: ${YICES}")
 find_library(PURRS purrs)
@@ -179,11 +174,6 @@ message(STATUS "pthread: ${PTHREAD}")
 find_library(NTL ntl)
 message(STATUS "ntl: ${NTL}")
 
-if(CVC4)
-    add_compile_definitions(HAS_CVC4)
-    target_link_libraries(${EXECUTABLE} ${CVC4})
-    message(STATUS "has CVC4")
-endif()
 if(YICES)
     find_library(POLY poly)
     message(STATUS "poly: ${POLY}")
@@ -196,8 +186,13 @@ if(YICES)
     message(STATUS "has Yices")
 endif()
 
-if ((NOT YICES) AND (NOT Z3) AND (NOT CVC4))
-    message(STATUS "no SMT solver found -- please install Yices, Z3, or CVC4")
+if (NOT YICES)
+    message(STATUS "Yices not found.")
+    return()
+endif()
+
+if (NOT Z3)
+    message(STATUS "Z3 not found.")
     return()
 endif()
 

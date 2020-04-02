@@ -53,7 +53,7 @@ namespace t2parser {
         while (getline(ifs, line)) {
             line = removeComment(line);
             if (boost::starts_with(line, TO)) {
-                res.addRule(Rule(start, guard, 1, getLoc(trim(line, TO, ";")), update));
+                res.addRule(Rule(start, buildAnd(guard), 1, getLoc(trim(line, TO, ";")), update));
                 return;
             } else if (boost::starts_with(line, ASSUME)) {
                 guard.push_back(parseConstraint(trim(line, ASSUME, ");")));

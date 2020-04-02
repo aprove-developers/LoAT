@@ -28,7 +28,7 @@ Rule::Rule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     }
 }
 
-Rule::Rule(LocationIdx lhsLoc, Guard guard, Expr cost, LocationIdx rhsLoc, Subs update)
+Rule::Rule(LocationIdx lhsLoc, BoolExpr guard, Expr cost, LocationIdx rhsLoc, Subs update)
         : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)}) {
     if (getCost().isNontermSymbol()) {
         rhss = {RuleRhs(rhss[0].getLoc(), {})};
@@ -47,7 +47,7 @@ LinearRule Rule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
 }
 
 bool Rule::isDummyRule() const {
-    return isLinear() && getCost().isZero() && getGuard().empty() && getUpdate(0).empty();
+    return isLinear() && getCost().isZero() && getGuard() == True && getUpdate(0).empty();
 }
 
 bool Rule::isLinear() const {
@@ -68,7 +68,7 @@ Rule Rule::subs(const Subs &subs) const {
     for (const RuleRhs &rhs : rhss) {
         newRhss.push_back(RuleRhs(rhs.getLoc(), rhs.getUpdate().concat(subs)));
     }
-    return Rule(RuleLhs(getLhsLoc(), getGuard().subs(subs), getCost().subs(subs)), newRhss);
+    return Rule(RuleLhs(getLhsLoc(), getGuard()->subs(subs), getCost().subs(subs)), newRhss);
 }
 
 LinearRule Rule::replaceRhssBySink(LocationIdx sink) const {
@@ -90,7 +90,7 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     }
 }
 
-Rule Rule::withGuard(const Guard &guard) const {
+Rule Rule::withGuard(const BoolExpr &guard) const {
     return Rule(RuleLhs(getLhsLoc(), guard, getCost()), getRhss());
 }
 
@@ -113,10 +113,7 @@ ostream& operator<<(ostream &s, const Rule &rule) {
 
     // lhs (loc, guard, cost)
     s << rule.getLhsLoc() << " | ";
-
-    for (auto expr : rule.getGuard()) {
-        s << expr << ", ";
-    }
+    s << rule.getGuard();
     s << "| ";
     s << rule.getCost();
 

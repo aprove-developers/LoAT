@@ -28,15 +28,15 @@ namespace strengthening {
 
     public:
 
-        static const GuardContext build(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
+        static const GuardContext build(const BoolExpr &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
 
     private:
 
-        const Guard &guard;
+        const BoolExpr &guard;
         const std::vector<Subs> &updates;
         const VariableManager &varMan;
 
-        GuardContextBuilder(const Guard &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
+        GuardContextBuilder(const BoolExpr &guard, const std::vector<Subs> &updates, const VariableManager &varMan);
 
         const GuardContext build() const;
 

@@ -29,14 +29,15 @@ namespace strengthening {
 
     public:
 
-        static const Templates build(const GuardContext &guardCtx, const RuleContext &ruleCtx);
+        static const Templates build(const GuardContext &guardCtx, const Rule &rule, VariableManager &varMan);
 
     private:
 
         const GuardContext &guardCtx;
-        const RuleContext &ruleCtx;
+        const Rule &rule;
+        VariableManager &varMan;
 
-        TemplateBuilder(const GuardContext &guardCtx, const RuleContext &ruleCtx);
+        TemplateBuilder(const GuardContext &guardCtx, const Rule &rule, VariableManager &varMan);
 
         const Templates build() const;
 

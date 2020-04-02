@@ -3,6 +3,9 @@
 
 #include "expression.hpp"
 
+using RelSet = std::set<Rel>;
+template <class T> using RelMap = std::map<Rel, T>;
+
 class Rel {
 public:
 

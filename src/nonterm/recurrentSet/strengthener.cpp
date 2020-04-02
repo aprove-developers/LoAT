@@ -18,25 +18,14 @@
 #include "strengthener.hpp"
 #include "templatebuilder.hpp"
 #include "constraintsolver.hpp"
-#include "rulecontextbuilder.hpp"
 #include "guardcontextbuilder.hpp"
 
 namespace strengthening {
 
     const option<LinearRule> Strengthener::apply(const LinearRule &rule, ITSProblem &its) {
-        for (const Rel &rel: rule.getGuard()) {
-            if (!rel.isLinear()) {
-                return {};
-            }
-        }
-        for (const auto &p: rule.getUpdate()) {
-            if (!p.second.isLinear()) {
-                return {};
-            }
-        }
-        const RuleContext &ruleCtx = RuleContextBuilder::build(rule, its);
-        const Strengthener strengthener(ruleCtx);
-        const option<Guard> &strengthened = strengthener.apply(rule.getGuard());
+        if (!rule.getGuard()->isLinear() || !rule.getUpdate().isLinear()) return {};
+        const Strengthener strengthener(rule, its);
+        const option<BoolExpr> &strengthened = strengthener.apply(rule.getGuard());
         if (strengthened) {
             const RuleLhs newLhs(rule.getLhsLoc(), strengthened.get(), rule.getCost());
             return {LinearRule(newLhs, rule.getRhss()[0])};
@@ -44,23 +33,18 @@ namespace strengthening {
         return {};
     }
 
-    Strengthener::Strengthener(const RuleContext &ruleCtx): ruleCtx(ruleCtx) { }
+    Strengthener::Strengthener(const Rule &rule, VariableManager &varMan): rule(rule), varMan(varMan) { }
 
-    const option<Guard> Strengthener::apply(const Guard &guard) const {
-        const GuardContext &guardCtx = GuardContextBuilder::build(guard, ruleCtx.updates, ruleCtx.varMan);
-        const Templates &templates = TemplateBuilder::build(guardCtx, ruleCtx);
-        const BoolExpr &constraints = ConstraintBuilder::buildSmtConstraints(templates, ruleCtx, guardCtx);
+    const option<BoolExpr> Strengthener::apply(const BoolExpr &guard) const {
+        const GuardContext &guardCtx = GuardContextBuilder::build(guard, rule.getUpdates(), varMan);
+        const Templates &templates = TemplateBuilder::build(guardCtx, rule, varMan);
+        const BoolExpr &constraints = ConstraintBuilder::buildSmtConstraints(templates, rule, guardCtx, varMan);
         if (constraints == True) {
             return {};
         }
-        const option<Guard> &newInv = ConstraintSolver::solve(ruleCtx, constraints, templates);
+        const option<Guard> &newInv = ConstraintSolver::solve(constraints, templates, varMan);
         if (newInv) {
-            Guard newGuard(guardCtx.guard);
-            newGuard.insert(
-                    newGuard.end(),
-                    newInv.get().begin(),
-                    newInv.get().end());
-            return {newGuard};
+            return {rule.getGuard() & buildAnd(newInv.get())};
         }
         return {};
     }

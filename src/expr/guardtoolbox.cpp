@@ -112,15 +112,24 @@ option<Expr> GuardToolbox::solveTermFor(Expr term, const Var &var, SolvingLevel 
 
 
 option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule &rule, SolvingLevel maxlevel, SymbolAcceptor allow) {
+    if (!rule.getGuard()->isConjunction()) {
+        return {};
+    }
     Subs varSubs;
-    Guard guard = rule.getGuard();
+    RelSet guard = rule.getGuard()->lits();
 
-    for (unsigned int i=0; i < guard.size(); ++i) {
-        Rel rel = guard[i].subs(varSubs);
-        if (!rel.isEq()) continue;
+    for (auto it = guard.begin(); it != guard.end();) {
+        Rel rel = it->subs(varSubs);
+        if (!rel.isEq()) {
+            ++it;
+            continue;
+        }
 
         Expr target = rel.rhs() - rel.lhs();
-        if (!target.isPoly()) continue;
+        if (!target.isPoly()) {
+            ++it;
+            continue;
+        }
 
         // Check if equation can be solved for any single variable.
         // We prefer to solve for variables where this is easy,
@@ -139,8 +148,7 @@ option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule 
                 if (!varMan.isTempVar(var) && containsTempVar(varMan, solved)) continue;
 
                 //remove current equality (ok while iterating by index)
-                guard.erase(guard.begin() + i);
-                i--;
+                it = guard.erase(it);
 
                 //extend the substitution, use compose in case var occurs on some rhs of varSubs
                 varSubs.put(var, solved);
@@ -148,6 +156,7 @@ option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule 
                 goto next;
             }
         }
+        ++it;
         next:;
     }
 
@@ -155,13 +164,16 @@ option<Rule> GuardToolbox::propagateEqualities(const VarMan &varMan, const Rule 
     if (varSubs.empty()) {
         return {};
     } else {
-        return {rule.withGuard(guard).subs(varSubs)};
+        return {rule.withGuard(buildAnd(guard)).subs(varSubs)};
     }
 }
 
 
 option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool removeHalfBounds, SymbolAcceptor allow) {
-    Guard guard = rule.getGuard();
+    if (!rule.getGuard()->isConjunction()) {
+        return {};
+    }
+    RelSet guard = rule.getGuard()->lits();
     //get all variables that appear in an inequality
     VarSet tryVars;
     for (const Rel &rel : guard) {
@@ -175,11 +187,10 @@ option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool r
         if (!allow(var)) continue;
 
         vector<Expr> varLessThan, varGreaterThan; //var <= expr and var >= expr
-        vector<int> guardTerms; //indices of guard terms that can be removed if successful
+        vector<Rel> guardTerms; //indices of guard terms that can be removed if successful
 
-        for (unsigned int i=0; i < guard.size(); ++i) {
+        for (const Rel &rel: guard) {
             //check if this guard must be used for var
-            const Rel &rel = guard[i];
             if (!rel.has(var)) continue;
             if (!rel.isIneq() || !rel.isPoly()) goto abort; // contains var, but cannot be handled
 
@@ -194,7 +205,7 @@ option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool r
             } else {
                 varGreaterThan.push_back( target+var );
             }
-            guardTerms.push_back(i);
+            guardTerms.push_back(rel);
         }
 
         // abort if no eliminations can be performed
@@ -202,15 +213,14 @@ option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool r
         if (!removeHalfBounds && (varLessThan.empty() || varGreaterThan.empty())) goto abort;
 
         //success: remove lower <= x and x <= upper as they will be replaced
-        while (!guardTerms.empty()) {
-            guard.erase(guard.begin() + guardTerms.back());
-            guardTerms.pop_back();
-        }
+        std::for_each(guardTerms.begin(), guardTerms.end(), [&](const Rel &rel) {
+            guard.erase(rel);
+        });
 
         //add new transitive guard terms lower <= upper
         for (const Expr &upper : varLessThan) {
             for (const Expr &lower : varGreaterThan) {
-                guard.push_back(lower <= upper);
+                guard.insert(lower <= upper);
             }
         }
         changed = true;
@@ -218,7 +228,7 @@ option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool r
 abort:  ; //this symbol could not be eliminated, try the next one
     }
     if (changed) {
-        return {rule.withGuard(guard)};
+        return {rule.withGuard(buildAnd(guard))};
     } else {
         return {};
     }
@@ -226,21 +236,24 @@ abort:  ; //this symbol could not be eliminated, try the next one
 
 
 option<Rule> GuardToolbox::makeEqualities(const Rule &rule) {
-    const Guard &guard = rule.getGuard();
-    vector<pair<int,Expr>> terms; //inequalities from the guard, with the associated index in guard
-    map<int,pair<int,Expr>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
+    if (!rule.getGuard()->isConjunction()) {
+        return {};
+    }
+    const RelSet &guard = rule.getGuard()->lits();
+    vector<pair<Rel,Expr>> terms; //inequalities from the guard, with the associated index in guard
+    map<Rel,pair<Rel,Expr>> matches; //maps index in guard to a second index in guard, which can be replaced by Expression
 
     // Find matching constraints "t1 <= 0" and "t2 <= 0" such that t1+t2 is zero
-    for (unsigned int i=0; i < guard.size(); ++i) {
-        if (guard[i].isEq()) continue;
-        if (!guard[i].isPoly() && guard[i].isStrict()) continue;
-        Expr term = guard[i].toLeq().makeRhsZero().lhs();
+    for (const Rel &rel: guard) {
+        if (rel.isEq()) continue;
+        if (!rel.isPoly() && rel.isStrict()) continue;
+        Expr term = rel.toLeq().makeRhsZero().lhs();
         for (const auto &prev : terms) {
             if ((prev.second + term).isZero()) {
-                matches.emplace(prev.first, make_pair(i,prev.second));
+                matches.emplace(prev.first, make_pair(rel,prev.second));
             }
         }
-        terms.push_back(make_pair(i,term));
+        terms.push_back(make_pair(rel,term));
     }
 
     if (matches.empty()) return {};
@@ -249,18 +262,18 @@ option<Rule> GuardToolbox::makeEqualities(const Rule &rule) {
     // and replacing matched pairs by an equality constraint.
     // This code below mostly retains the order of the constraints.
     Guard res;
-    set<int> ignore;
-    for (unsigned int i=0; i < guard.size(); ++i) {
+    set<Rel> ignore;
+    for (const Rel &rel: guard) {
         //ignore multiple equalities as well as the original second inequality
-        if (ignore.count(i) > 0) continue;
+        if (ignore.count(rel) > 0) continue;
 
-        auto it = matches.find(i);
+        auto it = matches.find(rel);
         if (it != matches.end()) {
             res.push_back(Rel::buildEq(it->second.second, 0));
             ignore.insert(it->second.first);
         } else {
-            res.push_back(guard[i]);
+            res.push_back(rel);
         }
     }
-    return {rule.withGuard(res)};
+    return {rule.withGuard(buildAnd(res))};
 }

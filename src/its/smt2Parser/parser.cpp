@@ -79,7 +79,7 @@ namespace sexpressionparser {
                             for (unsigned int i = 0; i < preVars.size(); i++) {
                                 update.put(vars[preVars[i]], vars[postVars[i]]);
                             }
-                            Rule rule(from, guard, 1, to, update);
+                            Rule rule(from, buildAnd(guard), 1, to, update);
                             // make sure that the temporary variables are unique
                             VarSet currTmpVars(tmpVars);
                             guard.collectVariables(currTmpVars);

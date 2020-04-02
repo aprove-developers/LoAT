@@ -575,6 +575,12 @@ bool Subs::isLinear() const {
     });
 }
 
+bool Subs::isPoly() const {
+    return std::all_of(begin(), end(), [](const std::pair<Var, Expr> &p) {
+       return p.second.isPoly();
+    });
+}
+
 ExprMap::ExprMap(): KeyToExprMap<Expr>() {}
 
 ExprMap::ExprMap(const Expr &key, const Expr &val) {

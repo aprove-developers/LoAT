@@ -31,11 +31,7 @@ using namespace std;
 
 
 bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
-    const Guard &guardA = a.getGuard();
-    const Guard &guardB = b.getGuard();
-
     // Some trivial syntactic checks
-    if (guardA.size() != guardB.size()) return false;
     if (compareRhss && a.rhsCount() != b.rhsCount()) return false;
 
     // Costs have to be equal up to a numeric constant
@@ -60,9 +56,7 @@ bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
     }
 
     // Guard has to be fully equal (including the ordering)
-    for (unsigned int i=0; i < guardA.size(); ++i) {
-        if (guardA[i] != guardB[i]) return false;
-    }
+    if (a.getGuard() != b.getGuard()) return false;
     return true;
 }
 

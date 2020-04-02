@@ -23,11 +23,13 @@
 #include "../smtcontext.hpp"
 #include "../../util/option.hpp"
 #include "../../expr/expression.hpp"
+#include "../../util/exceptions.hpp"
 
 #include <gmp.h>
 #include <yices.h>
 #include <map>
 
+EXCEPTION(YicesError, CustomException);
 
 class YicesContext : public SmtContext<term_t> {
 
@@ -46,11 +48,36 @@ public:
     term_t neq(const term_t &x, const term_t &y) override;
     term_t bAnd(const term_t &x, const term_t &y) override;
     term_t bOr(const term_t &x, const term_t &y) override;
-    term_t bTrue() override;
-    term_t bFalse() override;
+    term_t bTrue() const override;
+    term_t bFalse() const override;
+    term_t negate(const term_t &x) override;
+
+    bool isLit(const term_t &e) const override;
+    bool isTrue(const term_t &e) const override;
+    bool isFalse(const term_t &e) const override;
+    bool isNot(const term_t &e) const override;
+    std::vector<term_t> getChildren(const term_t &e) const override;
+    bool isAnd(const term_t &e) const override;
+    bool isAdd(const term_t &e) const override;
+    bool isMul(const term_t &e) const override;
+    bool isPow(const term_t &e) const override;
+    bool isVar(const term_t &e) const override;
+    bool isRationalConstant(const term_t &e) const override;
+    bool isInt(const term_t &e) const override;
+    long toInt(const term_t &e) const override;
+    long numerator(const term_t &e) const override;
+    long denominator(const term_t &e) const override;
+    term_t lhs(const term_t &e) const override;
+    term_t rhs(const term_t &e) const override;
+    Rel::RelOp relOp(const term_t &e) const override;
+    std::string getName(const term_t &e) const override;
 
 protected:
     term_t buildVar(const std::string &basename, Expr::Type type) override;
+    term_t buildConst(uint id) override;
+
+private:
+    std::map<term_t, std::string> varNames;
 
 };
 

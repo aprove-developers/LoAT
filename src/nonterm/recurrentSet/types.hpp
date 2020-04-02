@@ -26,38 +26,20 @@
 
 namespace strengthening {
 
-    struct RuleContext {
-
-        RuleContext(
-                const Rule &rule,
-                const std::vector<Subs> &updates,
-                VariableManager &varMan):
-                rule(rule),
-                updates(std::move(updates)),
-                varMan(varMan) { }
-
-        const Rule &rule;
-        const std::vector<Subs> updates;
-        VariableManager &varMan;
-    };
-
     struct GuardContext {
 
-        GuardContext(const Guard &guard,
-                Guard invariants,
+        GuardContext(const BoolExpr &guard,
                 Guard todo):
                 guard(guard),
-                invariants(std::move(invariants)),
                 todo(std::move(todo)) { }
 
-        const Guard &guard;
-        const Guard invariants;
+        const BoolExpr &guard;
         const Guard todo;
     };
 
     struct Implication {
-        Guard premise;
-        Guard conclusion;
+        BoolExpr premise;
+        RelSet conclusion;
     };
 
     struct Result {

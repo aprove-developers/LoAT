@@ -10,29 +10,31 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
 #include "../../accelerate/meter/farkas.hpp"
 #include "constraintbuilder.hpp"
+#include <algorithm>
 
 namespace strengthening {
 
     ConstraintBuilder::ConstraintBuilder(
             const Templates &templates,
-            const RuleContext &ruleCtx,
-            const GuardContext &guardCtx
+            const Rule &rule,
+            const GuardContext &guardCtx,
+            VariableManager &varMan
     ) : templates(templates),
-        ruleCtx(ruleCtx),
-        guardCtx(guardCtx) {
-    }
+        rule(rule),
+        guardCtx(guardCtx),
+        varMan(varMan) {}
 
     const BoolExpr ConstraintBuilder::buildSmtConstraints(const Templates &templates,
-                                                          const RuleContext &ruleCtx,
-                                                          const GuardContext &guardCtx) {
-        ConstraintBuilder builder(templates, ruleCtx, guardCtx);
+                                                          const Rule &rule,
+                                                          const GuardContext &guardCtx,
+                                                          VariableManager &varMan) {
+        ConstraintBuilder builder(templates, rule, guardCtx, varMan);
         const SmtConstraints &constraints = builder.buildSmtConstraints();
         BoolExpr res = constraints.initiation;
         res = res & constraints.conclusionsInvariant;
@@ -41,112 +43,91 @@ namespace strengthening {
     }
 
     const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
-        Guard invariancePremise;
         Guard monotonicityPremise;
-        const Guard &relevantConstraints = findRelevantConstraints();
-        invariancePremise.insert(invariancePremise.end(), relevantConstraints.begin(), relevantConstraints.end());
-        Implication templatesInvariantImplication = buildTemplatesInvariantImplication();
-        // We use templatesInvariantImplication.premise instead of templates as buildTemplatesInvariantImplication
-        // discards templates that become non-linear when applying the update.
-        invariancePremise.insert(
-                invariancePremise.end(),
-                templatesInvariantImplication.premise.begin(),
-                templatesInvariantImplication.premise.end());
+        const RelSet &irrelevantConstraints = findIrrelevantConstraints();
+        const BoolExpr &reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
+        Implication templatesInvariantImplication = buildTemplatesInvariantImplication(reducedGuard);
+        BoolExpr invariancePremise = templatesInvariantImplication.premise;
         BoolExpr conclusionInvariant = True;
         for (const Rel &rel: guardCtx.todo) {
-            for (const Subs &up: ruleCtx.updates) {
+            for (const Subs &up: rule.getUpdates()) {
                 Rel updated = rel;
                 updated.applySubs(up);
-                const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, updated);
+                const BoolExpr &invariant = constructImplicationConstraints(invariancePremise, {updated});
                 conclusionInvariant = conclusionInvariant & invariant;
             }
         }
-        const BoolExpr &initiation = constructInitiationConstraints(relevantConstraints);
+        const BoolExpr &initiation = constructInitiationConstraints(reducedGuard);
         const BoolExpr &templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
         return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
     }
 
-    const Guard ConstraintBuilder::findRelevantConstraints() const {
-        Guard relevantConstraints;
-        for (const Rel &rel: guardCtx.guard) {
-            for (const Var &var: templates.vars()) {
-                if (rel.vars().count(var) > 0) {
-                    relevantConstraints.push_back(rel);
+    const RelSet ConstraintBuilder::findIrrelevantConstraints() const {
+        RelSet irrelevantConstraints;
+        const VarSet &templateVars = templates.vars();
+        for (const Rel &rel: guardCtx.guard->lits()) {
+            bool irrelevant = true;
+            for (const Var &var: rel.vars()) {
+                if (templateVars.find(var) != templateVars.end()) {
+                    irrelevant = false;
                     break;
                 }
             }
+            if (irrelevant) {
+                irrelevantConstraints.insert(rel);
+            }
         }
-        return relevantConstraints;
+        return irrelevantConstraints;
     }
 
-    const Implication ConstraintBuilder::buildTemplatesInvariantImplication() const {
+    const Implication ConstraintBuilder::buildTemplatesInvariantImplication(const BoolExpr &reducedGuard) const {
         Implication res;
+        RelSet premise;
+        RelSet conclusion;
         for (const Rel &invTemplate: templates) {
             Guard updatedTemplates;
-            for (const Subs &up: ruleCtx.updates) {
+            for (const Subs &up: rule.getUpdates()) {
                 Rel updated = invTemplate;
                 updated.applySubs(up);
                 updatedTemplates.push_back(updated);
             }
-            res.premise.push_back(invTemplate);
+            premise.insert(invTemplate);
             for (const Rel &rel: updatedTemplates) {
-                res.conclusion.push_back(rel);
+                conclusion.insert(rel);
             }
         }
-        for (const Rel &rel: guardCtx.guard) {
-            res.premise.push_back(rel);
-        }
-        return res;
+        return {reducedGuard & buildAnd(premise), conclusion};
     }
 
-    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const Guard &relevantConstraints) const {
+    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {
         BoolExpr res = False;
-        VarSet allVars;
-        for (const Rel &rel: relevantConstraints) {
-            rel.collectVariables(allVars);
-        }
+        VarSet allVars = reducedGuard->vars();
         // TODO Why is this variable renaming needed?
         Subs varRenaming;
         for (const Var &x: allVars) {
-            varRenaming.put(x, ruleCtx.varMan.addFreshVariable(x.get_name()));
+            varRenaming.put(x, varMan.addFreshVariable(x.get_name()));
         }
         std::vector<Rel> renamed;
         const std::vector<Rel> &updatedTemplates = templates.subs(varRenaming);
         for (const Rel &e: updatedTemplates) {
             renamed.push_back(e);
         }
-        for (Rel rel: relevantConstraints) {
-            rel.applySubs(varRenaming);
-            renamed.push_back(rel);
-        }
-        const BoolExpr &expr = buildAnd(renamed);
+        const BoolExpr &expr = reducedGuard->subs(varRenaming) & buildAnd(renamed);
         res = res | expr;
         return res;
     }
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(
-            const Guard &premise,
-            const Guard &conclusion) const {
+            const BoolExpr &premise,
+            const RelSet &conclusion) const {
         return FarkasLemma::apply(
                 premise,
                 conclusion,
                 templates.vars(),
                 templates.params(),
-                ruleCtx.varMan,
-                Expr::Int);
-    }
-
-    const BoolExpr ConstraintBuilder::constructImplicationConstraints(
-            const Guard &premise,
-            const Rel &conclusion) const {
-        return FarkasLemma::apply(
-                premise,
-                conclusion,
-                templates.vars(),
-                templates.params(),
-                ruleCtx.varMan,
+                varMan,
                 Expr::Int);
     }
 

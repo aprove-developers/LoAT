@@ -14,21 +14,31 @@ public:
     void push() override;
     void pop() override;
     Result check() override;
-    VarMap<GiNaC::numeric> model() override;
+    Model model() override;
+    Subs modelSubs() override;
     void setTimeout(unsigned int timeout) override;
     void enableModels() override;
+    void enableUnsatCores() override;
     void resetSolver() override;
+    BoolExpr unsatCore() override;
     ~Z3() override;
 
     std::ostream& print(std::ostream& os) const;
 
+    static BoolExpr simplify(const BoolExpr &expr, const VariableManager &varMan);
+
 private:
     bool models = false;
+    bool unsatCores = false;
     unsigned int timeout = Config::Smt::DefaultTimeout;
     const VariableManager &varMan;
     z3::context z3Ctx;
     Z3Context ctx;
     z3::solver solver;
+    uint markerCount = 0;
+    z3::expr_vector marker;
+    std::stack<uint> markerStack;
+    std::map<std::string, BoolExpr> markerMap;
 
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
     void updateParams();

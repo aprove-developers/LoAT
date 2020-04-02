@@ -20,6 +20,7 @@
 
 #include "types.hpp"
 #include "templates.hpp"
+#include "../../smt/model.hpp"
 
 namespace strengthening {
 
@@ -28,24 +29,23 @@ namespace strengthening {
     public:
 
         static const option<Guard> solve(
-                const RuleContext &ruleCtx,
                 const BoolExpr &constraints,
-                const Templates &templates);
+                const Templates &templates,
+                VariableManager &varMan);
 
     private:
-
-        const RuleContext &ruleCtx;
         const BoolExpr &constraints;
         const Templates &templates;
+        VariableManager &varMan;
 
         ConstraintSolver(
-                const RuleContext &ruleCtx,
                 const BoolExpr &constraints,
-                const Templates &templates);
+                const Templates &templates,
+                VariableManager &varMan);
 
         const option<Guard> solve() const;
 
-        const Guard instantiateTemplates(const VarMap<GiNaC::numeric> &model) const;
+        const Guard instantiateTemplates(const Model &model) const;
 
     };
 

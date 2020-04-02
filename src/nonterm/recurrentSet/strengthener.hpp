@@ -36,11 +36,12 @@ namespace strengthening {
 
     private:
 
-        const RuleContext &ruleCtx;
+        const Rule &rule;
+        VariableManager &varMan;
 
-        explicit Strengthener(const RuleContext &ruleCtx);
+        explicit Strengthener(const Rule &rule, VariableManager &varMan);
 
-        const option<Guard> apply(const Guard &guard) const;
+        const option<BoolExpr> apply(const BoolExpr &guard) const;
 
     };
 

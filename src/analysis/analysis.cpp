@@ -236,6 +236,13 @@ void Analysis::run() {
 #ifdef HAS_YICES
     Yices::exit();
 #endif
+    // propagate exceptions
+    if (simp.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        simp.get();
+    }
+    if (finalize.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        finalize.get();
+    }
     if (simp.wait_for(std::chrono::seconds(0)) != std::future_status::ready || finalize.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
         std::cerr << "some tasks are still running, calling std::terminate" << std::endl;
         std::terminate();
@@ -286,7 +293,7 @@ bool Analysis::removeUnsatRules() {
     bool changed = false;
 
     for (TransIdx rule : its.getAllTransitions()) {
-        if (Smt::check(buildAnd(its.getRule(rule).getGuard()), its) == Smt::Unsat) {
+        if (Smt::check(its.getRule(rule).getGuard(), its) == Smt::Unsat) {
             its.removeRule(rule);
             changed = true;
         }
@@ -396,10 +403,9 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 
     for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
         const Rule &rule = its.getRule(idx);
-        Guard guard = rule.getGuard();
-        guard.push_back(rule.getCost() >= 1);
+        BoolExpr guard = rule.getGuard() & (rule.getCost() >= 1);
 
-        if (Smt::check(buildAnd(guard), its) == Smt::Sat) {
+        if (Smt::check(guard, its) == Smt::Sat) {
             proof.newline();
             proof.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;
@@ -444,8 +450,8 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
             if (fstCpx > sndCpx) return true;
             if (fstCpx < sndCpx) return false;
         }
-        unsigned long fstGuardSize = fstRule.getGuard().size();
-        unsigned long sndGuardSize = sndRule.getGuard().size();
+        unsigned long fstGuardSize = fstRule.getGuard()->size();
+        unsigned long sndGuardSize = sndRule.getGuard()->size();
         return fstGuardSize < sndGuardSize;
     };
 
@@ -469,13 +475,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
         // Simplify guard to speed up asymptotic check
         option<Rule> simplifiedRule;
         option<Rule> tmp = {rule};
-        tmp = Preprocess::simplifyGuard(tmp.get());
-        if (tmp) {
-            simplifiedRule = tmp;
-        } else {
-            tmp = rule;
-        }
-        tmp = Preprocess::simplifyGuardBySmt(tmp.get(), its);
+        tmp = Preprocess::simplifyGuard(tmp.get(), its);
         if (tmp) {
             simplifiedRule = tmp;
         }
@@ -484,38 +484,20 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
             rule = simplifiedRule.get();
         }
 
-        // Perform the asymptotic check to verify that this rule's guard allows infinitely many models
         option<AsymptoticBound::Result> checkRes;
-        bool isPolynomial = rule.getCost().isPoly() && !rule.getCost().isNontermSymbol();
-        if (isPolynomial) {
-            for (const Rel &rel: rule.getGuard()) {
-                if (!rel.isPoly()) {
-                    isPolynomial = false;
-                    break;
-                }
-            }
-        }
+        bool isPolynomial = rule.getCost().isPoly() && !rule.getCost().isNontermSymbol() && rule.getGuard()->isPolynomial();
         uint timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
         if (isPolynomial && Config::Limit::PolyStrategy->smtEnabled()) {
             checkRes = AsymptoticBound::determineComplexityViaSMT(
-                    its,
-                    rule.getGuard(),
-                    rule.getCost(),
-                    true,
-                    res.getCpx(),
-                    timeout);
-        }
-        if ((!checkRes || checkRes->cpx == Complexity::Unknown) && Config::Limit::PolyStrategy->calculusEnabled()) {
-            checkRes = AsymptoticBound::determineComplexity(
-                    its,
-                    rule.getGuard(),
-                    rule.getCost(),
-                    true,
-                    res.getCpx(),
-                    timeout);
+                        its,
+                        rule.getGuard(),
+                        rule.getCost(),
+                        true,
+                        res.getCpx(),
+                        timeout);
         }
 
-        if (checkRes.get().cpx > res.getCpx()) {
+        if (checkRes && checkRes.get().cpx > res.getCpx()) {
             proof.newline();
             proof.result(stringstream() << "Proved lower bound " << checkRes.get().cpx << ".");
             proof.storeSubProof(checkRes.get().proof, "limit calculus");
@@ -525,6 +507,31 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
 
             if (res.getCpx() >= Complexity::Unbounded) {
                 break;
+            }
+        }
+
+        if ((!checkRes || checkRes->cpx == Complexity::Unknown) && Config::Limit::PolyStrategy->calculusEnabled()) {
+            for (const Guard &guard: rule.getGuard()->dnf()) {
+                checkRes = AsymptoticBound::determineComplexity(
+                            its,
+                            guard,
+                            rule.getCost(),
+                            true,
+                            res.getCpx(),
+                            timeout);
+            }
+
+            if (checkRes.get().cpx > res.getCpx()) {
+                proof.newline();
+                proof.result(stringstream() << "Proved lower bound " << checkRes.get().cpx << ".");
+                proof.storeSubProof(checkRes.get().proof, "limit calculus");
+
+                res.update(rule.getGuard(), rule.getCost(), checkRes.get().solvedCost, checkRes.get().cpx);
+                res.concat(proof);
+
+                if (res.getCpx() >= Complexity::Unbounded) {
+                    break;
+                }
             }
         }
 
@@ -587,7 +594,7 @@ void Analysis::getMaxPartialResult(RuntimeResult &res) {
 
         // contract next level (if there is one), so we get new rules from the start state
         auto succs = its.getSuccessorLocations(initial);
-        if (succs.empty()) return;
+        if (succs.empty()) break;
 
         for (LocationIdx succ : succs) {
             for (TransIdx first : its.getTransitionsFromTo(initial,succ)) {

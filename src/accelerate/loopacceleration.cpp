@@ -62,7 +62,7 @@ vector<Rule> LoopAcceleration::replaceByUpperbounds(const Var &N, const Rule &ru
     return res;
 }
 
-LinearRule LoopAcceleration::buildNontermRule(const Guard &guard) const {
+LinearRule LoopAcceleration::buildNontermRule(const BoolExpr &guard) const {
     return LinearRule(rule.getLhsLoc(), guard, Expr::NontermSymbol, sink, {});
 }
 
@@ -72,20 +72,16 @@ Acceleration::Result LoopAcceleration::run() {
     if (shouldAccelerate()) {
         option<AccelerationProblem> ap = AccelerationProblem::init(rule, its);
         if (ap) {
-            ap->simplifyEquivalently();
-            if (ap->solved()) {
+            option<AccelerationProblem::Result> ar = ap->computeRes();
+            if (ar) {
                 res.status = Success;
-                if (ap->witnessesNonterm()) {
-                    const Rule &nontermRule = buildNontermRule(ap->getAcceleratedGuard());
+                if (ar->witnessesNonterm) {
+                    const Rule &nontermRule = buildNontermRule(ar->newGuard);
                     res.rules.push_back(nontermRule);
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else {
-                    Subs up;
-                    for (auto p: ap->getClosedForm()) {
-                        up.put(p.first, p.second);
-                    }
-                    LinearRule accel(rule.getLhsLoc(), ap->getAcceleratedGuard(), ap->getAcceleratedCost(), rule.getRhsLoc(), up);
+                    LinearRule accel(rule.getLhsLoc(), ar->newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                     std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);

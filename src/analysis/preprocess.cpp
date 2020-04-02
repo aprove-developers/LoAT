@@ -19,6 +19,7 @@
 
 #include "../expr/guardtoolbox.hpp"
 #include "../smt/smt.hpp"
+#include "../smt/z3/z3.hpp"
 #include "../smt/smtfactory.hpp"
 
 using namespace std;
@@ -39,13 +40,7 @@ option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) 
     }
 
     // Simplify with smt only once
-    newRule = simplifyGuard(oldRule);
-    if (newRule) {
-        result = true;
-        oldRule = newRule.get();
-    }
-
-    newRule = simplifyGuardBySmt(oldRule, varMan);
+    newRule = simplifyGuard(oldRule, varMan);
     if (newRule) {
         result = true;
         oldRule = newRule.get();
@@ -62,7 +57,7 @@ option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) 
         }
 
         if (changed) {
-            newRule = simplifyGuard(oldRule);
+            newRule = simplifyGuard(oldRule, varMan);
             if (newRule) {
                 oldRule = newRule.get();
             }
@@ -96,7 +91,7 @@ option<Rule> Preprocess::simplifyRule(const VarMan &varMan, const Rule &rule) {
         oldRule = newRule.get();
     }
 
-    newRule = simplifyGuard(oldRule);
+    newRule = simplifyGuard(oldRule, varMan);
     if (newRule) {
         changed = true;
         oldRule = newRule.get();
@@ -116,86 +111,15 @@ option<Rule> Preprocess::simplifyRule(const VarMan &varMan, const Rule &rule) {
 }
 
 
-option<Rule> Preprocess::simplifyGuard(const Rule &rule) {
-    Guard newGuard;
-
-    for (const Rel &rel : rule.getGuard()) {
-        // Skip trivially true constraints
-        if (rel.isTriviallyTrue()) continue;
-
-        // If a constraint is trivially false, we drop all other constraints
-        if (rel.isTriviallyFalse()) {
-            newGuard = {rel};
-            break;
-        }
-
-        // Check if the constraint is syntactically implied by one of the other constraints.
-        // Also check if one of the others is implied by the new constraint.
-        bool implied = false;
-        for (unsigned int i=0; i < newGuard.size(); ++i) {
-            if (GuardToolbox::isTrivialImplication(newGuard.at(i), rel)) {
-                implied = true;
-
-            } else if (GuardToolbox::isTrivialImplication(rel, newGuard.at(i))) {
-                // remove old constraint from newGuard, but preserve order
-                newGuard.erase(newGuard.begin() + i);
-                i--;
-            }
-        }
-
-        if (!implied) {
-            newGuard.push_back(rel);
-        }
-    }
-
-    if (rule.getGuard().size() == newGuard.size()) {
+option<Rule> Preprocess::simplifyGuard(const Rule &rule, const VariableManager &varMan) {
+    const BoolExpr &newGuard = Z3::simplify(rule.getGuard(), varMan);
+    if (rule.getGuard() == newGuard) {
         return {};
     } else {
         return {rule.withGuard(newGuard)};
     }
 }
 
-
-option<Rule> Preprocess::simplifyGuardBySmt(const Rule &rule, const VariableManager &varMan) {
-    unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({rule.getGuard()}, {}), varMan);
-
-    // iterates once over guard and drops constraints that are implied by previous constraints
-    auto dropImplied = [&](const Guard &guard) {
-        Guard res;
-        for (const Rel &rel : guard) {
-            solver->push();
-            solver->add(!buildLit(rel));
-            auto smtRes = solver->check();
-            solver->pop();
-
-            // unsat means that ex is implied by the previous constraints
-            if (smtRes != Smt::Unsat) {
-                res.push_back(rel);
-                solver->add(rel);
-            }
-        }
-        return res;
-    };
-
-    // iterated once, drop implied constraints
-    Guard newGuard = dropImplied(rule.getGuard());
-
-    // reverse the guard
-    std::reverse(newGuard.begin(), newGuard.end());
-
-    // iterate over the reversed guard, drop more implied constraints,
-    // e.g. for "A > 0, A > 1" only the reverse iteration can remove "A > 0".
-    solver->resetSolver();
-    newGuard = dropImplied(newGuard);
-
-    // reverse again to preserve original order
-    std::reverse(newGuard.begin(), newGuard.end());
-    if (rule.getGuard().size() == newGuard.size()) {
-        return {};
-    } else {
-        return {rule.withGuard(newGuard)};
-    }
-}
 
 option<Rule> Preprocess::removeTrivialUpdates(const Rule &rule) {
     bool changed = false;

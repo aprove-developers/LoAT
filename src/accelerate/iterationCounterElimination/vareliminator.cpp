@@ -2,14 +2,14 @@
 #include "boundextractor.hpp"
 #include "../../expr/rel.hpp"
 
-VarEliminator::VarEliminator(const Guard &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
+VarEliminator::VarEliminator(const BoolExpr &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
     todoDeps.push({{}, guard});
     findDependencies(guard);
     eliminate();
 }
 
-void VarEliminator::findDependencies(const Guard &guard) {
+void VarEliminator::findDependencies(const BoolExpr &guard) {
     dependencies.insert(N);
     bool changed;
     do {
@@ -17,7 +17,7 @@ void VarEliminator::findDependencies(const Guard &guard) {
         // compute dependencies of var
         for (const Var &var: dependencies) {
             option<Var> dep;
-            for (const Rel &rel: guard) {
+            for (const Rel &rel: guard->lits()) {
                 const Expr &ex = (rel.lhs() - rel.rhs()).expand();
                 if (ex.degree(var) == 1) {
                     // we found a constraint which is linear in var, check all variables in var's coefficient
@@ -45,18 +45,17 @@ void VarEliminator::findDependencies(const Guard &guard) {
     dependencies.erase(N);
 }
 
-const std::set<std::pair<Subs, Guard>> VarEliminator::eliminateDependency(const Subs &subs, const Guard &guard) const {
-    VarSet vars;
-    guard.collectVariables(vars);
+const std::set<std::pair<Subs, BoolExpr>> VarEliminator::eliminateDependency(const Subs &subs, const BoolExpr &guard) const {
+    VarSet vars = guard->vars();
     for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
         if (vars.find(*it) == vars.end()) {
             continue;
         }
         BoundExtractor be(guard, *it);
-        std::set<std::pair<Subs, Guard>> res;
+        std::set<std::pair<Subs, BoolExpr>> res;
         for (const Expr &bound: be.getConstantBounds()) {
             Subs newSubs(*it, bound);
-            res.insert({subs.compose(newSubs), guard.subs(newSubs)});
+            res.insert({subs.compose(newSubs), guard->subs(newSubs)});
         }
         if (!res.empty()) {
             return res;
@@ -67,8 +66,8 @@ const std::set<std::pair<Subs, Guard>> VarEliminator::eliminateDependency(const 
 
 void VarEliminator::eliminateDependencies() {
     while (!todoDeps.empty()) {
-        const std::pair<Subs, Guard> current = todoDeps.top();
-        const std::set<std::pair<Subs, Guard>> &res = eliminateDependency(current.first, current.second);
+        const std::pair<Subs, BoolExpr> current = todoDeps.top();
+        const std::set<std::pair<Subs, BoolExpr>> &res = eliminateDependency(current.first, current.second);
         if (res.empty()) {
             todoN.insert(current);
         }
@@ -83,7 +82,7 @@ void VarEliminator::eliminate() {
     eliminateDependencies();
     for (const auto &p: todoN) {
         const Subs &subs = p.first;
-        const Guard &guard = p.second;
+        const BoolExpr &guard = p.second;
         BoundExtractor be(guard, N);
         if (be.getEq()) {
             res.insert(subs.compose(Subs(N, be.getEq().get())));

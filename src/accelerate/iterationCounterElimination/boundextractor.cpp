@@ -1,7 +1,7 @@
 #include "boundextractor.hpp"
 #include "../../expr/rel.hpp"
 
-BoundExtractor::BoundExtractor(const Guard &guard, const Var &N): guard(guard), N(N) {
+BoundExtractor::BoundExtractor(const BoolExpr &guard, const Var &N): guard(guard), N(N) {
     extractBounds();
 }
 
@@ -26,7 +26,7 @@ const std::vector<Expr> BoundExtractor::getLowerAndUpper() const {
 
 void BoundExtractor::extractBounds() {
     // First check if there is an equality constraint (we can then ignore all other upper bounds)
-    for (const Rel &rel : guard) {
+    for (const Rel &rel : guard->lits()) {
         if (rel.isEq() && rel.has(N)) {
             auto optSolved = GuardToolbox::solveTermFor(rel.lhs() - rel.rhs(), N, GuardToolbox::ResultMapsToInt);
             if (optSolved) {
@@ -38,7 +38,7 @@ void BoundExtractor::extractBounds() {
     }
 
     // Otherwise, collect all bounds
-    for (const Rel &rel : guard) {
+    for (const Rel &rel : guard->lits()) {
         if (rel.isEq() || !rel.has(N)) continue;
         std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, N);
         if (bounds.first) {

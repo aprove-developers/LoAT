@@ -21,19 +21,19 @@
 
 namespace strengthening {
 
-    const Templates TemplateBuilder::build(const GuardContext &guardCtx, const RuleContext &ruleCtx) {
-        return TemplateBuilder(guardCtx, ruleCtx).build();
+    const Templates TemplateBuilder::build(const GuardContext &guardCtx, const Rule &rule, VariableManager &varMan) {
+        return TemplateBuilder(guardCtx, rule, varMan).build();
     }
 
-    TemplateBuilder::TemplateBuilder(const GuardContext &guardCtx, const RuleContext &ruleCtx):
-            guardCtx(guardCtx), ruleCtx(ruleCtx) { }
+    TemplateBuilder::TemplateBuilder(const GuardContext &guardCtx, const Rule &rule, VariableManager &varMan):
+            guardCtx(guardCtx), rule(rule), varMan(varMan) { }
 
     const Templates TemplateBuilder::build() const {
         Templates res = Templates();
         for (const Rel &rel: guardCtx.todo) {
             const VarSet &varSymbols = util::RelevantVariables::find(
                     {rel},
-                    ruleCtx.updates,
+                    rule.getUpdates(),
                     guardCtx.guard);
             res.add(buildTemplate(varSymbols));
         }
@@ -42,11 +42,11 @@ namespace strengthening {
 
     const Templates::Template TemplateBuilder::buildTemplate(const VarSet &vars) const {
         VarSet params;
-        const Var &c0 = ruleCtx.varMan.addFreshVariable("c0");
+        const Var &c0 = varMan.addFreshVariable("c0");
         params.insert(c0);
         Expr res = c0;
         for (const Var &x: vars) {
-            const Var &param = ruleCtx.varMan.addFreshVariable("c");
+            const Var &param = varMan.addFreshVariable("c");
             params.insert(param);
             res = res + (x * param);
         }

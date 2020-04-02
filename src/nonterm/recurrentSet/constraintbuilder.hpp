@@ -31,33 +31,32 @@ namespace strengthening {
     public:
 
         static const BoolExpr buildSmtConstraints(const Templates &templates,
-                                                  const RuleContext &ruleCtx,
-                                                  const GuardContext &guardCtx);
+                                                  const Rule &rule,
+                                                  const GuardContext &guardCtx,
+                                                  VariableManager &varMan);
 
     private:
 
         const Templates &templates;
-        const RuleContext &ruleCtx;
+        const Rule &rule;
         const GuardContext &guardCtx;
+        VariableManager &varMan;
 
         ConstraintBuilder(
                 const Templates &templates,
-                const RuleContext &ruleCtx,
-                const GuardContext &guardCtx);
+                const Rule &rule,
+                const GuardContext &guardCtx,
+                VariableManager &varMan);
 
-        const Implication buildTemplatesInvariantImplication() const;
+        const Implication buildTemplatesInvariantImplication(const BoolExpr &reducedGuard) const;
 
-        const BoolExpr constructInitiationConstraints(const Guard &relevantConstraints) const;
-
-        const BoolExpr constructImplicationConstraints(
-                const Guard &premise,
-                const Guard &conclusion) const;
+        const BoolExpr constructInitiationConstraints(const BoolExpr &reducedGuard) const;
 
         const BoolExpr constructImplicationConstraints(
-                const Guard &premise,
-                const Rel &conclusion) const;
+                const BoolExpr &premise,
+                const RelSet &conclusion) const;
 
-        const Guard findRelevantConstraints() const;
+        const RelSet findIrrelevantConstraints() const;
 
         const SmtConstraints buildSmtConstraints() const;
 

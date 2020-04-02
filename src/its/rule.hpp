@@ -23,20 +23,20 @@
 
 #include "types.hpp"
 #include "../util/option.hpp"
-#include "../its/guard.hpp"
+#include "../expr/boolexpr.hpp"
 
 
 class RuleLhs {
     LocationIdx loc;
-    Guard guard;
+    BoolExpr guard;
     Expr cost;
 
 public:
-    RuleLhs(LocationIdx loc, Guard guard) : RuleLhs(loc, guard, 1) {}
-    RuleLhs(LocationIdx loc, Guard guard, Expr cost) : loc(loc), guard(guard), cost(cost) {}
+    RuleLhs(LocationIdx loc, BoolExpr guard) : RuleLhs(loc, guard, 1) {}
+    RuleLhs(LocationIdx loc, BoolExpr guard, Expr cost) : loc(loc), guard(guard), cost(cost) {}
 
     LocationIdx getLoc() const { return loc; }
-    const Guard& getGuard() const { return guard; }
+    const BoolExpr& getGuard() const { return guard; }
     const Expr& getCost() const { return cost; }
 };
 
@@ -74,7 +74,7 @@ public:
 
     // constructors for linear rules
     Rule(RuleLhs lhs, RuleRhs rhs);
-    Rule(LocationIdx lhsLoc, Guard guard, Expr cost, LocationIdx rhsLoc, Subs update);
+    Rule(LocationIdx lhsLoc, BoolExpr guard, Expr cost, LocationIdx rhsLoc, Subs update);
 
     // constructs an empty rule (guard/update empty, cost 0)
     static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
@@ -85,7 +85,7 @@ public:
 
     // query lhs data
     LocationIdx getLhsLoc() const { return lhs.getLoc(); }
-    const Guard& getGuard() const { return lhs.getGuard(); }
+    const BoolExpr& getGuard() const { return lhs.getGuard(); }
     const Expr& getCost() const { return lhs.getCost(); }
 
     // iteration over right-hand sides
@@ -124,7 +124,7 @@ public:
     // Removes all right-hand sides that lead to the given location, returns none if all rhss would be removed
     option<Rule> stripRhsLocation(LocationIdx toRemove) const;
 
-    Rule withGuard(const Guard &guard) const;
+    Rule withGuard(const BoolExpr &guard) const;
     Rule withCost(const Expr &cost) const;
     Rule withUpdate(uint i, const Subs &up) const;
 };
@@ -145,7 +145,7 @@ public:
 class LinearRule : public Rule {
 public:
     LinearRule(RuleLhs lhs, RuleRhs rhs) : Rule(lhs, rhs) {}
-    LinearRule(LocationIdx lhsLoc, Guard guard, Expr cost, LocationIdx rhsLoc, Subs update)
+    LinearRule(LocationIdx lhsLoc, BoolExpr guard, Expr cost, LocationIdx rhsLoc, Subs update)
             : Rule(lhsLoc, guard, cost, rhsLoc, update) {}
 
     // special shorthands for linear rules, overwriting the general ones

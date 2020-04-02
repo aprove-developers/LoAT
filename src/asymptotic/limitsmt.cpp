@@ -116,7 +116,7 @@ option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, cons
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
-    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<Subs>({currentLP.getQuery()}, {}), varMan, timeout);
+    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<std::vector<Rel>, Subs>({currentLP.getQuery(), {cost > 0}}, {}), varMan, timeout);
 
     // the parameter of the desired family of solutions
     Var n = currentLP.getN();
@@ -216,12 +216,127 @@ option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, cons
 
     // we found a model -- create the corresponding solution of the limit problem
     Subs smtSubs;
-    VarMap<GiNaC::numeric> model = solver->model();
+    Model model = solver->model();
     for (const Var &var : vars) {
-        auto c0 = model.find(varCoeff0.at(var));
-        Expr c = model.at(varCoeff.at(var));
-        smtSubs.put(var, c0 == model.end() ? (c * n) : (c0->second + c * n));
+        Var c0 = varCoeff0.at(var);
+        Expr c = model.get(varCoeff.at(var));
+        smtSubs.put(var, c0 == model.contains(c0) ? (c * n) : (model.get(c0) + c * n));
     }
 
     return {smtSubs};
+}
+
+BoolExpr encodeBoolExpr(const BoolExpr &expr, const Subs &templateSubs, const Var &n) {
+    BoolExprSet newChildren;
+    for (const BoolExpr &c: expr->getChildren()) {
+        newChildren.insert(encodeBoolExpr(c, templateSubs, n));
+    }
+    if (expr->isAnd()) {
+        return buildAnd(newChildren);
+    } else if (expr->isOr()) {
+        return buildOr(newChildren);
+    } else {
+        option<Rel> lit = expr->getLit();
+        assert(lit);
+        assert(lit->isGZeroConstraint());
+        Expr ex = lit->lhs().subs(templateSubs).expand();
+        map<int, Expr> coefficients = getCoefficients(ex, n);
+        return posConstraint(coefficients) | posInfConstraint(coefficients);
+    }
+}
+
+std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr &expr, const Expr &cost,
+                                                     VarMan &varMan, Complexity currentRes, uint timeout)
+{
+    // initialize z3
+    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({expr, buildLit(cost > 0)}), varMan, timeout);
+
+    // the parameter of the desired family of solutions
+    Var n = varMan.getFreshUntrackedSymbol("n", Expr::Int);
+
+    // get all relevant variables
+    VarSet vars = expr->vars();
+    bool hasTmpVars = false;
+
+    // create linear templates for all variables
+    Subs templateSubs;
+    VarMap<Var> varCoeff, varCoeff0;
+    for (const Var &var : vars) {
+        hasTmpVars |= varMan.isTempVar(var);
+        Var c0 = varMan.getFreshUntrackedSymbol(var.get_name() + "_0", Expr::Int);
+        Var c = varMan.getFreshUntrackedSymbol(var.get_name() + "_c", Expr::Int);
+        varCoeff.emplace(var, c);
+        varCoeff0.emplace(var, c0);
+        templateSubs.put(var, c0 + (n * c));
+    }
+
+    // replace variables in the cost function with their linear templates
+    Expr templateCost = cost.subs(templateSubs).expand();
+
+    // if the cost function is a constant, then we are bound to fail
+    Complexity maxPossibleFiniteRes = templateCost.isPoly() ?
+            Complexity::Poly(templateCost.degree(n)) :
+            Complexity::NestedExp;
+    if (maxPossibleFiniteRes == Complexity::Const) {
+        return {{}, Complexity::Unknown};
+    }
+
+    const BoolExpr &normalized = expr->toG();
+    const BoolExpr &encoding = encodeBoolExpr(normalized, templateSubs, n);
+    solver->add(encoding);
+
+    // auxiliary function that checks satisfiability wrt. the current state of the solver
+    auto checkSolver = [&]() -> bool {
+        Smt::Result res = solver->check();
+        return res == Smt::Sat;
+    };
+
+    auto model = [&]() {
+        Subs smtSubs;
+        Model model = solver->model();
+        for (const Var &var : vars) {
+            Var c0 = varCoeff0.at(var);
+            Expr c = model.get(varCoeff.at(var));
+            smtSubs.put(var, model.contains(c0) ? (c * n) : (model.get(c0) + c * n));
+        }
+        return smtSubs;
+    };
+
+    Complexity cpx;
+    if (hasTmpVars) {
+        solver->push();
+        // first fix that all program variables have to be constants
+        // a model witnesses unbounded complexity
+        for (const Var &var : vars) {
+            if (!varMan.isTempVar(var)) {
+                solver->add(Rel::buildEq(varCoeff.at(var), 0));
+            }
+        }
+        if (checkSolver()) {
+            return {model(), Complexity::Unbounded};
+        }
+        solver->pop();
+    }
+    if (maxPossibleFiniteRes <= currentRes) {
+        return {{}, Complexity::Unknown};
+    }
+    // we failed to find a model -- drop all non-mandatory constraints
+    if (maxPossibleFiniteRes.getType() == Complexity::CpxPolynomial && maxPossibleFiniteRes.getPolynomialDegree().isInteger()) {
+        int maxPossibleDegree = maxPossibleFiniteRes.getPolynomialDegree().asInteger();
+        // try to find a witness for polynomial complexity with degree maxDeg,...,1
+        map<int, Expr> coefficients = getCoefficients(templateCost, n);
+        for (int i = maxPossibleDegree; i > 0 && Complexity::Poly(i) > currentRes; i--) {
+            Expr c = coefficients.find(i)->second;
+            // remember the current state for backtracking
+            solver->push();
+            solver->add(c > 0);
+            if (checkSolver()) {
+                return {model(), cpx};
+            } else {
+                // remove all non-mandatory constraints and retry with degree i-1
+                solver->pop();
+            }
+        }
+    }
+    return {{}, Complexity::Unknown};
 }

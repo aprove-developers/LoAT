@@ -37,7 +37,6 @@ struct Expr_is_less {
 using Var = GiNaC::symbol;
 using VarSet = std::set<Var, GiNaC::ex_is_less>;
 using ExprSet = std::set<Expr, Expr_is_less>;
-using RelSet = std::set<Rel>;
 template <typename T>
 using VarMap = std::map<Var, T, GiNaC::ex_is_less>;
 
@@ -491,6 +490,8 @@ public:
     bool changes(const Var &key) const;
 
     bool isLinear() const;
+
+    bool isPoly() const;
 
 private:
     void putGinac(const Var &key, const Expr &val) override;

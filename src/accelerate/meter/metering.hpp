@@ -21,9 +21,11 @@
 #include "../../expr/expression.hpp"
 #include "../../its/variablemanager.hpp"
 #include "../../its/rule.hpp"
+#include "../../its/guard.hpp"
 #include "../../util/option.hpp"
 #include "../../expr/boolexpr.hpp"
 #include "../../util/proof.hpp"
+#include "../../smt/model.hpp"
 
 #include <vector>
 #include <map>
@@ -158,7 +160,7 @@ private:
     /**
      * Given the z3 model, builds the corresponding linear metering function
      */
-    Expr buildResult(const VarMap<GiNaC::numeric> &model) const;
+    Expr buildResult(const Model &model) const;
 
     /**
      * Modifies the current result to ensure that the metering function evaluates to an integer.
@@ -167,7 +169,7 @@ private:
      *
      * Note: Only required if FARKAS_ALLOW_REAL_COEFFS is set.
      */
-    void ensureIntegralMetering(Result &result, const VarMap<GiNaC::numeric> &model) const;
+    void ensureIntegralMetering(Result &result, const Model &model) const;
 
 
     void dump(const std::string &msg) const;
@@ -203,10 +205,10 @@ private:
      * obtained from guard, reduced guard, irrelevant guard, guard and update.
      */
     struct {
-        Guard guard;
-        Guard reducedGuard;
-        Guard irrelevantGuard;
-        std::vector<Guard> guardUpdate; // one for each update
+        RelSet guard;
+        RelSet reducedGuard;
+        RelSet irrelevantGuard;
+        std::vector<RelSet> guardUpdate; // one for each update
     } linearConstraints;
 
     /**

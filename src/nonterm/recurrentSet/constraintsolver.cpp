@@ -27,22 +27,22 @@ namespace strengthening {
     typedef ConstraintSolver Self;
 
     const option<Guard> Self::solve(
-            const RuleContext &ruleCtx,
             const BoolExpr &constraints,
-            const Templates &templates) {
-        return ConstraintSolver(ruleCtx, constraints, templates).solve();
+            const Templates &templates,
+            VariableManager &varMan) {
+        return ConstraintSolver(constraints, templates, varMan).solve();
     }
 
     Self::ConstraintSolver(
-            const RuleContext &ruleCtx,
             const BoolExpr &constraints,
-            const Templates &templates):
-            ruleCtx(ruleCtx),
+            const Templates &templates,
+            VariableManager &varMan):
             constraints(constraints),
-            templates(templates) { }
+            templates(templates),
+            varMan(varMan) { }
 
     const option<Guard> Self::solve() const {
-        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), ruleCtx.varMan);
+        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), varMan);
         solver->add(constraints);
         if (solver->check() == Smt::Sat) {
             const Guard &newInvariants = instantiateTemplates(solver->model());
@@ -53,18 +53,17 @@ namespace strengthening {
         return {};
     }
 
-    const Guard Self::instantiateTemplates(const VarMap<GiNaC::numeric> &model) const {
+    const Guard Self::instantiateTemplates(const Model &model) const {
         Guard res;
         Subs parameterInstantiation;
         for (const Var &p: templates.params()) {
-            auto it = model.find(p);
-            if (it != model.end()) {
-                const Expr &pi = it->second;
+            if (model.contains(p)) {
+                const Expr &pi = model.get(p);
                 parameterInstantiation.put(p, pi);
             }
         }
         const std::vector<Rel> instantiatedTemplates = templates.subs(parameterInstantiation);
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<Subs>({instantiatedTemplates}, {}), ruleCtx.varMan);
+        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<std::vector<Rel>, Subs>({instantiatedTemplates}, {}), varMan);
         for (const Rel &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
                 solver->push();

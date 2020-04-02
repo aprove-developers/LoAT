@@ -27,6 +27,10 @@ z3::expr Z3Context::buildVar(const std::string &name, Expr::Type type) {
     return (type == Expr::Int) ? ctx.int_const(name.c_str()) : ctx.real_const(name.c_str());
 }
 
+z3::expr Z3Context::buildConst(uint id) {
+    return ctx.bool_const(("x" + to_string(id)).c_str());
+}
+
 z3::expr Z3Context::getInt(long val) {
     return ctx.int_val(val);
 }
@@ -79,10 +83,110 @@ z3::expr Z3Context::bOr(const z3::expr &x, const z3::expr &y) {
     return x || y;
 }
 
-z3::expr Z3Context::bTrue() {
+z3::expr Z3Context::bTrue() const {
     return ctx.bool_val(true);
 }
 
-z3::expr Z3Context::bFalse() {
+z3::expr Z3Context::bFalse() const {
     return ctx.bool_val(false);
+}
+
+z3::expr Z3Context::negate(const z3::expr &x) {
+    return !x;
+}
+
+bool Z3Context::isLit(const z3::expr &e) const {
+    switch (e.decl().decl_kind()) {
+    case Z3_OP_EQ:
+    case Z3_OP_GT:
+    case Z3_OP_GE:
+    case Z3_OP_LE:
+    case Z3_OP_LT: return true;
+    default: return false;
+    }
+}
+
+bool Z3Context::isTrue(const z3::expr &e) const {
+    return e.is_true();
+}
+
+bool Z3Context::isFalse(const z3::expr &e) const {
+    return e.is_false();
+}
+
+bool Z3Context::isNot(const z3::expr &e) const {
+    return e.is_not();
+}
+
+std::vector<z3::expr> Z3Context::getChildren(const z3::expr &e) const {
+    std::vector<z3::expr> res;
+    for (uint i = 0, arity = e.num_args(); i < arity; ++i) {
+        res.push_back(e.arg(i));
+    }
+    return res;
+}
+
+bool Z3Context::isAnd(const z3::expr &e) const {
+    return e.is_and();
+}
+
+bool Z3Context::isAdd(const z3::expr &e) const {
+    return e.is_app() && e.decl().decl_kind() == Z3_OP_ADD;
+}
+
+bool Z3Context::isMul(const z3::expr &e) const {
+    return e.is_app() && e.decl().decl_kind() == Z3_OP_MUL;
+}
+
+bool Z3Context::isPow(const z3::expr &e) const  {
+    return e.is_app() && e.decl().decl_kind() == Z3_OP_POWER;
+}
+
+bool Z3Context::isVar(const z3::expr &e) const  {
+    return e.is_const() && !e.is_numeral();
+}
+
+bool Z3Context::isRationalConstant(const z3::expr &e) const {
+    return e.is_numeral();
+}
+
+bool Z3Context::isInt(const z3::expr &e) const {
+    return e.is_numeral() && e.is_int();
+}
+
+long Z3Context::toInt(const z3::expr &e) const {
+    return e.get_numeral_int64();
+}
+
+long Z3Context::numerator(const z3::expr &e) const {
+    return e.numerator().get_numeral_int64();
+}
+
+long Z3Context::denominator(const z3::expr &e) const {
+    return e.denominator().get_numeral_int64();
+}
+
+z3::expr Z3Context::lhs(const z3::expr &e) const {
+    assert(e.num_args() == 2);
+    return e.arg(0);
+}
+
+z3::expr Z3Context::rhs(const z3::expr &e) const {
+    assert(e.num_args() == 2);
+    return e.arg(1);
+}
+
+Rel::RelOp Z3Context::relOp(const z3::expr &e) const {
+    switch (e.decl().decl_kind()) {
+    case Z3_OP_EQ: return Rel::RelOp::eq;
+    case Z3_OP_GT: return Rel::RelOp::gt;
+    case Z3_OP_GE: return Rel::RelOp::geq;
+    case Z3_OP_LT: return Rel::RelOp::lt;
+    case Z3_OP_LE: return Rel::RelOp::leq;
+    default: assert(false && "unknown relation");
+    }
+}
+
+std::string Z3Context::getName(const z3::expr &x) const {
+    return x.to_string();
 }

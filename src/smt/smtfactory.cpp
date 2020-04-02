@@ -2,9 +2,6 @@
 #include "../config.hpp"
 #include "z3/z3.hpp"
 
-#ifdef HAS_CVC4
-#include "cvc4/cvc4.hpp"
-#endif
 #ifdef HAS_YICES
 #include "yices/yices.hpp"
 #endif

@@ -18,10 +18,13 @@ public:
     void push() override;
     void pop() override;
     Result check() override;
-    VarMap<GiNaC::numeric> model() override;
+    Model model() override;
+    Subs modelSubs() override;
     void setTimeout(unsigned int timeout) override;
     void enableModels() override;
+    void enableUnsatCores() override;
     void resetSolver() override;
+    BoolExpr unsatCore() override;
     ~Yices() override;
 
     static void init();
@@ -36,6 +39,10 @@ private:
     ctx_config_t *config;
     context_t *solver;
     smt_status res;
+    bool unsatCores = false;
+    std::vector<term_t> assumptions;
+    std::stack<uint> assumptionStack;
+    std::map<term_t, BoolExpr> assumptionMap;
 
     static uint running;
     static std::mutex mutex;

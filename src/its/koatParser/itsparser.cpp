@@ -424,7 +424,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
     for (const Relation &rel : rule.guard) {
         guard.push_back(rel.toGinacExpression());
     }
-    RuleLhs lhs(lhsLoc, guard, cost);
+    RuleLhs lhs(lhsLoc, buildAnd(guard), cost);
 
     // Convert rhs, compute update
     vector<RuleRhs> rhss;
@@ -604,9 +604,7 @@ VarSet ITSParser::getSymbols(const Rule &rule) {
 
     // lhs
     rule.getCost().collectVars(res);
-    for (const Rel &rel: rule.getGuard()) {
-        rel.collectVariables(res);
-    }
+    rule.getGuard()->collectVars(res);
 
     // rhs
     // Note: For an update like x/y, only y is counted, since x is not part of this rule (but of a different lhs)

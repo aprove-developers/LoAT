@@ -2,6 +2,7 @@
 
 #include <iterator>
 #include <vector>
+#include <algorithm>
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
@@ -757,7 +758,7 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 
         if (it->isUnivariate() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
             const std::vector<Rel> &query = currentLP.getQuery();
-            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<Subs>({query}, {}), varMan);
+            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<std::vector<Rel>, Subs>({query}, {}), varMan);
             solver->add(buildAnd(query));
             Smt::Result result = solver->check();
 
@@ -765,10 +766,10 @@ bool AsymptoticBound::tryInstantiatingVariable() {
                 currentLP.setUnsolvable();
 
             } else if (result == Smt::Sat) {
-                const VarMap<GiNaC::numeric> &model = solver->model();
+                const Model &model = solver->model();
                 Var var = it->someVar();
 
-                Expr rational = model.at(var);
+                Expr rational = model.get(var);
                 substitutions.push_back(Subs(var, rational));
 
                 createBacktrackingPoint(it, POS_INF);
@@ -939,4 +940,41 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     } else {
         return Result(Complexity::Unknown);
     }
+}
+
+AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varMan,
+                                                                    const BoolExpr &guard,
+                                                                    const Expr &cost,
+                                                                    bool finalCheck,
+                                                                    Complexity currentRes,
+                                                                    uint timeout) {
+    Expr expandedCost = cost.expand();
+    // Handle nontermination. It suffices to check that the guard is satisfiable
+    if (expandedCost.isNontermSymbol()) {
+        auto smtRes = Smt::check(guard, varMan);
+        if (smtRes == Smt::Sat) {
+            Proof proof;
+            proof.append("proved non-termination via SMT");
+            return Result(Complexity::Nonterm);
+        } else {
+            return Result(Complexity::Unknown);
+        }
+    } else if (finalCheck && Config::Analysis::NonTermMode) {
+        return Result(Complexity::Unknown);
+    }
+    assert(!expandedCost.has(Expr::NontermSymbol));
+    Proof proof;
+    const std::pair<Subs, Complexity> &p = LimitSmtEncoding::applyEncoding(guard, cost, varMan, currentRes, timeout);
+    const Subs &subs = p.first;
+    const Complexity &cpx = p.second;
+    if (cpx == Complexity::Unknown) {
+        return Result(Complexity::Unknown, 0, 0, proof);
+    }
+    const Expr &solvedCost = expandedCost.subs(p.first).expand();
+    const VarSet &costVars = cost.vars();
+    long inftyVars = std::count_if(costVars.begin(), costVars.end(), [&](const Var &x){
+        return !subs.get(x).isGround();
+    });
+    proof.append("solved via SMT");
+    return Result(cpx, solvedCost, inftyVars, proof);
 }
