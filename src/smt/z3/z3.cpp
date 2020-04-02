@@ -12,17 +12,20 @@ Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx)
     updateParams();
 }
 
-void Z3::add(const BoolExpr &e) {
+uint Z3::add(const BoolExpr &e) {
     if (unsatCores) {
         const std::string &name = "m" + std::to_string(markerCount);
         const z3::expr &m = z3Ctx.bool_const(name.c_str());
         marker.push_back(m);
-        markerMap[name] = e;
+        uint idx = marker.size() - 1;
+        markerMap[name] = idx;
         ++markerCount;
         const z3::expr &imp = z3::implies(m, ExprToSmt<z3::expr>::convert(e, ctx, varMan));
         solver.add(imp);
+        return idx;
     } else {
         solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
+        return 0;
     }
 }
 
@@ -106,14 +109,13 @@ GiNaC::numeric Z3::getRealFromModel(const z3::model &model, const z3::expr &symb
     return res;
 }
 
-BoolExpr Z3::unsatCore() {
+std::vector<uint> Z3::unsatCore() {
     const z3::expr_vector &core = solver.unsat_core();
-    std::vector<BoolExpr> res;
+    std::vector<uint> res;
     for (const z3::expr &e: core) {
         res.push_back(markerMap[e.to_string()]);
     }
-    const BoolExpr ret = buildAnd(res);
-    return ret;
+    return res;
 }
 
 void Z3::resetSolver() {

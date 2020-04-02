@@ -10,7 +10,7 @@ class Z3 : public Smt {
 public:
     Z3(const VariableManager &varMan);
 
-    void add(const BoolExpr &e) override;
+    uint add(const BoolExpr &e) override;
     void push() override;
     void pop() override;
     Result check() override;
@@ -20,7 +20,7 @@ public:
     void enableModels() override;
     void enableUnsatCores() override;
     void resetSolver() override;
-    BoolExpr unsatCore() override;
+    std::vector<uint> unsatCore() override;
     ~Z3() override;
 
     std::ostream& print(std::ostream& os) const;
@@ -38,7 +38,7 @@ private:
     uint markerCount = 0;
     z3::expr_vector marker;
     std::stack<uint> markerStack;
-    std::map<std::string, BoolExpr> markerMap;
+    std::map<std::string, uint> markerMap;
 
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
     void updateParams();

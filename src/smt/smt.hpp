@@ -13,8 +13,8 @@ public:
     enum Result {Sat, Unknown, Unsat};
     enum Logic {LA, NA, ENA};
 
-    virtual void add(const BoolExpr &e) = 0;
-    void add(const Rel &e);
+    virtual uint add(const BoolExpr &e) = 0;
+    uint add(const Rel &e);
     virtual void push() = 0;
     virtual void pop() = 0;
     virtual Result check() = 0;
@@ -24,7 +24,7 @@ public:
     virtual void enableModels() = 0;
     virtual void enableUnsatCores() = 0;
     virtual void resetSolver() = 0;
-    virtual BoolExpr unsatCore() = 0;
+    virtual std::vector<uint> unsatCore() = 0;
     virtual ~Smt();
 
     static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);

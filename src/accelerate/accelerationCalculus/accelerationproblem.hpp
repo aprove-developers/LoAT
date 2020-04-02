@@ -47,7 +47,7 @@ private:
     void recurrence();
     void eventualWeakDecrease();
     RelSet findConsistentSubset(const BoolExpr &e) const;
-    void store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm = false);
+    uint store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm = false);
     BoolExpr getGuardWithout(const Rel &rel);
 
 public:

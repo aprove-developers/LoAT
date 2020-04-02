@@ -3,8 +3,8 @@
 
 Smt::~Smt() {}
 
-void Smt::add(const Rel &e) {
-    this->add(buildLit(e));
+uint Smt::add(const Rel &e) {
+    return this->add(buildLit(e));
 }
 
 Smt::Result Smt::check(const BoolExpr &e, const VariableManager &varMan) {

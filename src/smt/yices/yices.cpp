@@ -24,15 +24,18 @@ Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), v
     mutex.unlock();
 }
 
-void Yices::add(const BoolExpr &e) {
+uint Yices::add(const BoolExpr &e) {
     term_t converted = ExprToSmt<term_t>::convert(e, ctx, varMan);
     if (unsatCores) {
         assumptions.push_back(converted);
-        assumptionMap[converted] = e;
+        uint idx = assumptions.size() - 1;
+        assumptionMap[converted] = idx;
+        return idx;
     } else {
         if (yices_assert_formula(solver, converted) < 0) {
             throw YicesError();
         }
+        return 0;
     }
 }
 
@@ -88,17 +91,17 @@ Model Yices::model() {
     return Model(vars, constants);
 }
 
-BoolExpr Yices::unsatCore() {
+std::vector<uint> Yices::unsatCore() {
     term_vector_t core;
     yices_init_term_vector(&core);
     if (yices_get_unsat_core(solver, &core) != 0) {
         throw YicesError();
     }
-    std::vector<BoolExpr> res;
+    std::vector<uint> res;
     for (uint i = 0; i < core.size; ++i) {
         res.push_back(assumptionMap[core.data[i]]);
     }
-    return buildAnd(res);
+    return res;
 }
 
 Subs Yices::modelSubs() {

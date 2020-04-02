@@ -21,6 +21,10 @@
 
 using namespace std;
 
+YicesError::YicesError() : std::exception() {
+    yices_print_error(stderr);
+}
+
 YicesContext::~YicesContext() { }
 
 term_t YicesContext::buildVar(const std::string &name, Expr::Type type) {

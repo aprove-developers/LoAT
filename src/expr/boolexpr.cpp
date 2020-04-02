@@ -490,7 +490,7 @@ bool boolexpr_compare::operator() (BoolExpr a, BoolExpr b) const {
     return a->getChildren() < b->getChildren();
 }
 
-std::ostream& operator<<(std::ostream &s, const BoolExpr e) {
+std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
     if (e->getConst()) {
         s << "x" << e->getConst().get();
     } else if (e->getLit()) {

@@ -114,8 +114,10 @@ public:
         s << "Rule cost:   ";
         ITSExport::printCost(res.cost, s);
         s << std::endl;
-        s << "Rule guard:  ";
-        ITSExport::printGuard(res.guard, s);
+        if (res.guard) {
+            s << "Rule guard:  ";
+            ITSExport::printGuard(res.guard, s);
+        }
         return s;
     }
 

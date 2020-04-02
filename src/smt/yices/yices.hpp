@@ -12,7 +12,7 @@ class Yices : public Smt {
 public:
     Yices(const VariableManager &varMan, Logic logic);
 
-    void add(const BoolExpr &e) override;
+    uint add(const BoolExpr &e) override;
     void push() override;
     void pop() override;
     Result check() override;
@@ -22,7 +22,7 @@ public:
     void enableModels() override;
     void enableUnsatCores() override;
     void resetSolver() override;
-    BoolExpr unsatCore() override;
+    std::vector<uint> unsatCore() override;
     ~Yices() override;
 
     static void init();
@@ -40,7 +40,7 @@ private:
     bool unsatCores = false;
     std::vector<term_t> assumptions;
     std::stack<uint> assumptionStack;
-    std::map<term_t, BoolExpr> assumptionMap;
+    std::map<term_t, uint> assumptionMap;
 
     static uint running;
     static std::mutex mutex;

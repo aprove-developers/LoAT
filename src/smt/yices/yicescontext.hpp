@@ -29,7 +29,10 @@
 #include <yices.h>
 #include <map>
 
-EXCEPTION(YicesError, CustomException);
+class YicesError : public std::exception {
+public:
+    YicesError();
+};
 
 class YicesContext : public SmtContext<term_t> {
 
