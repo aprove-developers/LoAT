@@ -200,9 +200,8 @@ void Analysis::finalize(RuntimeResult &res) {
 }
 
 void Analysis::run() {
-#ifdef HAS_YICES
     Yices::init();
-#endif
+
     Proof *proof = new Proof();
     RuntimeResult *res = new RuntimeResult();
     auto simp = std::async([this, res, proof]{this->simplify(*res, *proof);});
@@ -233,17 +232,19 @@ void Analysis::run() {
 
     delete res;
     delete proof;
-#ifdef HAS_YICES
+
     Yices::exit();
-#endif
+
+    bool simpDone = simp.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+    bool finalizeDone = finalize.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     // propagate exceptions
-    if (simp.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+    if (simpDone) {
         simp.get();
     }
-    if (finalize.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+    if (finalizeDone) {
         finalize.get();
     }
-    if (simp.wait_for(std::chrono::seconds(0)) != std::future_status::ready || finalize.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+    if (!simpDone || !finalizeDone) {
         std::cerr << "some tasks are still running, calling std::terminate" << std::endl;
         std::terminate();
     }

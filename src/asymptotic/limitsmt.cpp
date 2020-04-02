@@ -297,7 +297,7 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr &expr
         for (const Var &var : vars) {
             Var c0 = varCoeff0.at(var);
             Expr c = model.get(varCoeff.at(var));
-            smtSubs.put(var, model.contains(c0) ? (c * n) : (model.get(c0) + c * n));
+            smtSubs.put(var, model.contains(c0) ? (model.get(c0) + c * n) : (c * n));
         }
         return smtSubs;
     };
@@ -305,6 +305,7 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr &expr
     Complexity cpx;
     if (hasTmpVars) {
         solver->push();
+        solver->add(posInfConstraint(getCoefficients(templateCost, n)));
         // first fix that all program variables have to be constants
         // a model witnesses unbounded complexity
         for (const Var &var : vars) {

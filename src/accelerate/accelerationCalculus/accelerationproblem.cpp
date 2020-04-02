@@ -159,6 +159,9 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     recurrence();
     monotonicity();
     eventualWeakDecrease();
+    if (std::any_of(todo.begin(), todo.end(), [&](const Rel &rel) {return res.count(rel) == 0;})) {
+        return {};
+    }
     using Edge = std::pair<Rel, Rel>;
     using Vars = std::vector<BoolExpr>;
     std::map<Edge, BoolExpr> edgeVars;

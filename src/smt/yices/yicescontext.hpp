@@ -60,6 +60,7 @@ public:
     bool isAnd(const term_t &e) const override;
     bool isAdd(const term_t &e) const override;
     bool isMul(const term_t &e) const override;
+    bool isDiv(const term_t &e) const override;
     bool isPow(const term_t &e) const override;
     bool isVar(const term_t &e) const override;
     bool isRationalConstant(const term_t &e) const override;
@@ -71,6 +72,8 @@ public:
     term_t rhs(const term_t &e) const override;
     Rel::RelOp relOp(const term_t &e) const override;
     std::string getName(const term_t &e) const override;
+
+    void printStderr(const term_t &e) const override;
 
 protected:
     term_t buildVar(const std::string &basename, Expr::Type type) override;

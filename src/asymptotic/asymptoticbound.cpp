@@ -3,6 +3,7 @@
 #include <iterator>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
@@ -122,79 +123,7 @@ void AsymptoticBound::propagateBounds() {
     if (currentLP.isUnsolvable()) {
         return;
     }
-
-    int numOfEquations = substitutions.size();
-
-    // build substitutions from inequalities
-    for (const Rel &rel : guard) {
-        if (!rel.isEq()) {
-            if (rel.lhs().isVar() || rel.rhs().isVar()) {
-                Var var = rel.lhs().isVar() ? rel.lhs().toVar() : rel.rhs().toVar();
-
-                bool isInLimitProblem = false;
-                for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-                    if (it->has(var)) {
-                        isInLimitProblem = true;
-                    }
-                }
-
-                if (!isInLimitProblem) {
-                    continue;
-                }
-
-                std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, var);
-                if (bounds.first) {
-                    substitutions.push_back(Subs(var, bounds.first.get()));
-                }
-                if (bounds.second) {
-                    substitutions.push_back(Subs(var, bounds.second.get()));
-                }
-            }
-        }
-    }
-
-    // build all possible combinations of substitutions (resulting from inequalites)
-    int numOfSubstitutions = substitutions.size() - numOfEquations;
-    if (finalCheck && numOfSubstitutions <= 10) { // must be smaller than 32
-        unsigned int combination;
-        unsigned int to = (1 << numOfSubstitutions) - 1;
-
-        for (combination = 1; combination < to; combination++) {
-            limitProblems.push_back(currentLP);
-            LimitProblem &limitProblem = limitProblems.back();
-
-            for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
-                if (combination & (1 << bitPos)) {
-                    limitProblem.substitute(substitutions[numOfEquations + bitPos],
-                                            numOfEquations + bitPos);
-                }
-            }
-
-            if (limitProblem.isUnsolvable()) {
-                limitProblems.pop_back();
-            }
-        }
-
-    }
-
-    // no substitution (resulting from inequalies)
     limitProblems.push_back(currentLP);
-
-    if (limitProblems.back().isUnsolvable()) {
-        limitProblems.pop_back();
-    }
-
-    // all substitutions (resulting from inequalies)
-    limitProblems.push_back(currentLP);
-    LimitProblem &limitProblem = limitProblems.back();
-
-    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
-        limitProblem.substitute(substitutions[i], i);
-    }
-
-    if (limitProblem.isUnsolvable()) {
-        limitProblems.pop_back();
-    }
 }
 
 Subs AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
@@ -963,18 +892,20 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
         return Result(Complexity::Unknown);
     }
     assert(!expandedCost.has(Expr::NontermSymbol));
-    Proof proof;
     const std::pair<Subs, Complexity> &p = LimitSmtEncoding::applyEncoding(guard, cost, varMan, currentRes, timeout);
     const Subs &subs = p.first;
     const Complexity &cpx = p.second;
+    Proof proof;
     if (cpx == Complexity::Unknown) {
         return Result(Complexity::Unknown, 0, 0, proof);
     }
-    const Expr &solvedCost = expandedCost.subs(p.first).expand();
+    const Expr &solvedCost = expandedCost.subs(subs).expand();
     const VarSet &costVars = cost.vars();
     long inftyVars = std::count_if(costVars.begin(), costVars.end(), [&](const Var &x){
         return !subs.get(x).isGround();
     });
     proof.append("solved via SMT");
+    proof.append("solution:");
+    proof.append(stringstream() << subs);
     return Result(cpx, solvedCost, inftyVars, proof);
 }

@@ -95,6 +95,14 @@ z3::expr Z3Context::negate(const z3::expr &x) {
     return !x;
 }
 
+bool Z3Context::isNoOp(const z3::expr &e) const {
+    switch (e.decl().decl_kind()) {
+    case Z3_OP_TO_INT:
+    case Z3_OP_TO_REAL: return true;
+    default: return false;
+    }
+}
+
 bool Z3Context::isLit(const z3::expr &e) const {
     switch (e.decl().decl_kind()) {
     case Z3_OP_EQ:
@@ -136,6 +144,10 @@ bool Z3Context::isAdd(const z3::expr &e) const {
 
 bool Z3Context::isMul(const z3::expr &e) const {
     return e.is_app() && e.decl().decl_kind() == Z3_OP_MUL;
+}
+
+bool Z3Context::isDiv(const z3::expr &e) const {
+    return e.is_app() && e.decl().decl_kind() == Z3_OP_DIV;
 }
 
 bool Z3Context::isPow(const z3::expr &e) const  {
@@ -189,4 +201,8 @@ Rel::RelOp Z3Context::relOp(const z3::expr &e) const {
 
 std::string Z3Context::getName(const z3::expr &x) const {
     return x.to_string();
+}
+
+void Z3Context::printStderr(const z3::expr &e) const {
+    std::cerr << e << std::endl;
 }

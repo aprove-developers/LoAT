@@ -50,22 +50,24 @@ protected:
     SmtToExpr<EXPR>(SmtContext<EXPR> &context): context(context) {}
 
     Expr convert_ex(const EXPR &e){
-        if (context.isAdd(e)) {
+        if (context.isNoOp(e)) {
+            const std::vector<EXPR> children = context.getChildren(e);
+            assert(children.size() == 1);
+            return convert_ex(children[0]);
+        } else if (context.isAdd(e)) {
             return convert_add(e);
-
         } else if (context.isMul(e)) {
             return convert_mul(e);
-
+        } else if (context.isDiv(e)) {
+            return convert_mul(e);
         } else if (context.isPow(e)) {
             return convert_power(e);
-
         } else if (context.isRationalConstant(e)) {
             return convert_numeric(e);
-
         } else if (context.isVar(e)) {
             return convert_symbol(e);
-
         }
+        context.printStderr(e);
         assert(false && "unknown operator");
     }
 
@@ -97,6 +99,16 @@ protected:
         }
 
         return res.get();
+    }
+
+    Expr convert_div(const EXPR &e) {
+        const std::vector<EXPR> &children = context.getChildren(e);
+        assert(children.size() == 2);
+        assert(context.isRationalConstant(children[0]));
+        assert(context.isRationalConstant(children[1]));
+        const Expr &x = convert_numeric(context.isRationalConstant(children[0]));
+        const Expr &y = convert_numeric(context.isRationalConstant(children[1]));
+        return x.toNum() / y.toNum();
     }
 
     Expr convert_power(const EXPR &e) {

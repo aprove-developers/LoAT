@@ -139,6 +139,6 @@ Acceleration::Result RecursionAcceleration::accelerate(ITSProblem &its, const Ru
         }
     }
 
-    assert(res.status == Failure && res.rules.empty());
+    res.status = Failure;
     return res;
 }

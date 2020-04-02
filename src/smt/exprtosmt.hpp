@@ -38,7 +38,7 @@ public:
         } else if (e->getConst()) {
             return ctx.bConst(e->getConst().get());
         }
-        EXPR res = ctx.bTrue();
+        EXPR res = e->isAnd() ? ctx.bTrue() : ctx.bFalse();
         bool first = true;
         for (const BoolExpr &c: e->getChildren()) {
             if (first) {

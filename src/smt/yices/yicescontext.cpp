@@ -118,6 +118,12 @@ bool YicesContext::isMul(const term_t &e) const {
     return yices_term_is_product(e) || (yices_term_num_children(e) == 1 && yices_term_is_sum(e));
 }
 
+bool YicesContext::isDiv(const term_t &e) const {
+    term_constructor ctor = yices_term_constructor(e);
+    assert(ctor != YICES_RDIV);
+    return yices_term_constructor(e) == YICES_IDIV;
+}
+
 bool YicesContext::isPow(const term_t &e) const {
     // yices does not support exponentiation
     // it has a special internal representation for polynomials, though
@@ -272,6 +278,10 @@ Rel::RelOp YicesContext::relOp(const term_t &e) const {
 
 std::string YicesContext::getName(const term_t &e) const {
     return varNames.at(e);
+}
+
+void YicesContext::printStderr(const term_t &e) const {
+    yices_pp_term(stderr, e, 80, 20, 0);
 }
 
 #endif

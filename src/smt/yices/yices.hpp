@@ -1,5 +1,3 @@
-#ifdef HAS_YICES
-
 #ifndef YICES_HPP
 #define YICES_HPP
 
@@ -53,5 +51,3 @@ private:
 };
 
 #endif // YICES_HPP
-
-#endif

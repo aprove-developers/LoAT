@@ -57,6 +57,8 @@ public:
     z3::expr bFalse() const override;
     z3::expr negate(const z3::expr &x) override;
 
+    bool isNoOp(const z3::expr &e) const override;
+
     bool isLit(const z3::expr &e) const override;
     bool isTrue(const z3::expr &e) const override;
     bool isFalse(const z3::expr &e) const override;
@@ -65,6 +67,7 @@ public:
     bool isAnd(const z3::expr &e) const override;
     bool isAdd(const z3::expr &e) const override;
     bool isMul(const z3::expr &e) const override;
+    bool isDiv(const z3::expr &e) const override;
     bool isPow(const z3::expr &e) const override;
     bool isVar(const z3::expr &e) const override;
     bool isRationalConstant(const z3::expr &e) const override;
@@ -76,6 +79,8 @@ public:
     z3::expr rhs(const z3::expr &e) const override;
     Rel::RelOp relOp(const z3::expr &e) const override;
     std::string getName(const z3::expr &x) const override;
+
+    void printStderr(const z3::expr &e) const override;
 
 private:
     z3::expr buildVar(const std::string &basename, Expr::Type type) override;

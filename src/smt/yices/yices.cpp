@@ -1,5 +1,3 @@
-#ifdef HAS_YICES
-
 #include "yices.hpp"
 #include "../exprtosmt.hpp"
 #include "../../util/exceptions.hpp"
@@ -154,5 +152,3 @@ void Yices::exit() {
     }
     mutex.unlock();
 }
-
-#endif
