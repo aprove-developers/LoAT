@@ -112,7 +112,6 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
 
     auto optNested = Chaining::chainRules(its, first, second);
     if (optNested) {
-        Chaining::chainRules(its, first, second);
         LinearRule nestedRule = optNested.get();
 
         // Simplify the rule again (chaining can introduce many useless constraints)

@@ -14,17 +14,17 @@ using namespace std;
  * lim_{n->\infty} p is a positive constant
  */
 static BoolExpr posConstraint(const map<int, Expr>& coefficients) {
-    BoolExpr conjunction = True;
+    std::vector<Rel> conjunction;
     for (pair<int, Expr> p : coefficients) {
         int degree = p.first;
         Expr c = p.second;
         if (degree > 0) {
-            conjunction = conjunction & Rel::buildEq(c, 0);
+            conjunction.push_back(Rel::buildEq(c, 0));
         } else {
-            conjunction = conjunction & (c > 0);
+            conjunction.push_back(c > 0);
         }
     }
-    return conjunction;
+    return buildAnd(conjunction);
 }
 
 /**
@@ -33,17 +33,17 @@ static BoolExpr posConstraint(const map<int, Expr>& coefficients) {
  * lim_{n->\infty} p is a negative constant
  */
 static BoolExpr negConstraint(const map<int, Expr>& coefficients) {
-    BoolExpr conjunction = True;
+    std::vector<Rel> conjunction;
     for (pair<int, Expr> p : coefficients) {
         int degree = p.first;
         Expr c = p.second;
         if (degree > 0) {
-            conjunction = conjunction & Rel::buildEq(c, 0);
+            conjunction.push_back(Rel::buildEq(c, 0));
         } else {
-            conjunction = conjunction & (c < 0);
+            conjunction.push_back(c < 0);
         }
     }
-    return conjunction;
+    return buildAnd(conjunction);
 }
 
 /**
@@ -56,21 +56,21 @@ static BoolExpr negInfConstraint(const map<int, Expr>& coefficients) {
     for (pair<int, Expr> p: coefficients) {
         maxDegree = p.first > maxDegree ? p.first : maxDegree;
     }
-    BoolExpr disjunction = False;
+    std::vector<BoolExpr> disjunction;
     for (int i = 1; i <= maxDegree; i++) {
-        BoolExpr conjunction = True;
+        std::vector<Rel> conjunction;
         for (pair<int, Expr> p: coefficients) {
             int degree = p.first;
             Expr c = p.second;
             if (degree > i) {
-                conjunction = conjunction & Rel::buildEq(c, 0);
+                conjunction.push_back(Rel::buildEq(c, 0));
             } else if (degree == i) {
-                conjunction = conjunction & (c < 0);
+                conjunction.push_back(c < 0);
             }
         }
-        disjunction = disjunction | conjunction;
+        disjunction.push_back(buildAnd(conjunction));
     }
-    return disjunction;
+    return buildOr(disjunction);
 }
 
 /**
@@ -83,21 +83,21 @@ static BoolExpr posInfConstraint(const map<int, Expr>& coefficients) {
     for (pair<int, Expr> p: coefficients) {
         maxDegree = p.first > maxDegree ? p.first : maxDegree;
     }
-    BoolExpr disjunction = False;
+    std::vector<BoolExpr> disjunction;
     for (int i = 1; i <= maxDegree; i++) {
-        BoolExpr conjunction = True;
+        std::vector<Rel> conjunction;
         for (pair<int, Expr> p: coefficients) {
             int degree = p.first;
             Expr c = p.second;
             if (degree > i) {
-                conjunction = conjunction & Rel::buildEq(c, 0);
+                conjunction.push_back(Rel::buildEq(c, 0));
             } else if (degree == i) {
-                conjunction = conjunction & (c > 0);
+                conjunction.push_back(c > 0);
             }
         }
-        disjunction = disjunction | conjunction;
+        disjunction.push_back(buildAnd(conjunction));
     }
-    return disjunction;
+    return buildOr(disjunction);
 }
 
 /**

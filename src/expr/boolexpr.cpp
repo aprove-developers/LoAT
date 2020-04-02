@@ -156,7 +156,20 @@ BoolExpr BoolLit::toG() const {
 }
 
 BoolExpr BoolLit::toLeq() const {
-    return buildLit(lit.toLeq());
+    if (lit.isIneq()) {
+        if (lit.relOp() == Rel::leq) {
+            return shared_from_this();
+        } else {
+            return buildLit(lit.toLeq());
+        }
+    } else if (lit.isEq()) {
+        std::vector<Rel> rels {lit.lhs() <= lit.rhs(), lit.rhs() <= lit.lhs()};
+        return buildAnd(rels);
+    } else {
+        assert(lit.isNeq());
+        std::vector<Rel> rels {(lit.lhs() < lit.rhs()).toLeq(), (lit.rhs() < lit.lhs()).toLeq()};
+        return buildOr(rels);
+    }
 }
 
 bool BoolLit::isConjunction() const {

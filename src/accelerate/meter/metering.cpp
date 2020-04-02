@@ -151,18 +151,18 @@ void MeteringFinder::buildLinearConstraints() {
 /* ### Step 3: Construction of the final constraints for the metering function using Farkas lemma ### */
 
 BoolExpr MeteringFinder::genNotGuardImplication() const {
-    BoolExpr res = True;
+    std::vector<BoolExpr> res;
     RelSet lhs = linearConstraints.irrelevantGuard;
 
     // split into one implication for every guard constraint, apply Farkas for each implication
     for (const Rel &rel : linearConstraints.reducedGuard) {
         const Rel &conclusion = (!rel).toLeq().splitVariableAndConstantAddends();
         lhs.insert(conclusion);
-        res = res & FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan);
+        res.push_back(FarkasLemma::apply(lhs, meterVars.symbols, meterVars.coeffs, absCoeff, 0, varMan));
         lhs.erase(conclusion);
     }
 
-    return res;
+    return buildAnd(res);
 }
 
 BoolExpr MeteringFinder::genGuardPositiveImplication(bool strict) const {
@@ -212,11 +212,11 @@ BoolExpr MeteringFinder::genUpdateImplications() const {
 }
 
 BoolExpr MeteringFinder::genNonTrivial() const {
-    BoolExpr res = False;
+    std::vector<Rel> res;
     for (const Var &c : meterVars.coeffs) {
-        res = res | Rel::buildNeq(c, 0);
+        res.push_back(Rel::buildNeq(c, 0));
     }
-    return res;
+    return buildOr(res);
 }
 
 

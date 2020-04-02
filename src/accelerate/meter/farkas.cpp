@@ -36,7 +36,7 @@ BoolExpr FarkasLemma::apply(
     assert(vars.size() == coeffs.size());
 
     // List of expressions whose conjunction will be the result
-    BoolExpr res = True;
+    std::vector<Rel> res;
 
     // Create lambda variables, add the constraint "lambda >= 0"
     RelMap<Var> lambda;
@@ -47,7 +47,7 @@ BoolExpr FarkasLemma::apply(
 
         Var var = varMan.getFreshUntrackedSymbol("l", lambdaType);
         lambda[rel] = var;
-        res = res & (var >= 0);
+        res.push_back(var >= 0);
     }
 
     // Create mapping from every variable to its coefficient
@@ -79,7 +79,7 @@ BoolExpr FarkasLemma::apply(
             lambdaA = first ? add : lambdaA + add; // avoid superflous +0
             first = false;
         }
-        res = res & Rel::buildEq(lambdaA, varIt.second);
+        res.push_back(Rel::buildEq(lambdaA, varIt.second));
     }
 
     // Build the constraints "lambda^T * b + c0 <= delta"
@@ -87,7 +87,8 @@ BoolExpr FarkasLemma::apply(
     for (const auto &e: lambda) {
         sum = sum + e.second * e.first.rhs();
     }
-    return res & (sum <= delta);
+    res.push_back(sum <= delta);
+    return buildAnd(res);
 }
 
 BoolExpr FarkasLemma::apply(
@@ -114,7 +115,6 @@ const BoolExpr FarkasLemma::apply(
         const VarSet &params,
         VariableManager &varMan,
         Expr::Type lambdaType) {
-    BoolExpr res = True;
     const BoolExpr normalizedPremise = premise->toLeq();
     vector<Var> varList(vars.begin(), vars.end());
     RelSet splitConclusion;

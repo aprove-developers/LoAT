@@ -16,6 +16,10 @@ private:
         RelSet dependencies;
         BoolExpr formula;
         bool nonterm;
+        bool active;
+
+        bool subsumes(const Entry &that) const;
+
     };
 
     using Res = RelMap<std::vector<Entry>>;
@@ -26,6 +30,7 @@ private:
     Subs up;
     Subs closed;
     Expr cost;
+    Expr iteratedCost;
     Var n;
     BoolExpr guard;
     uint validityBound;
@@ -38,6 +43,7 @@ private:
             const BoolExpr &guard,
             const Subs &up,
             const Subs &closed,
+            const Expr &cost,
             const Expr &iteratedCost,
             const Var &n,
             const uint validityBound,
@@ -47,7 +53,7 @@ private:
     void recurrence();
     void eventualWeakDecrease();
     RelSet findConsistentSubset(const BoolExpr &e) const;
-    uint store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm = false);
+    option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm = false);
     BoolExpr getGuardWithout(const Rel &rel);
 
 public:

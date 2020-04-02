@@ -419,110 +419,98 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 
 
 void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
-    auto isTempVar = [&](const Var &var){ return its.isTempVar(var); };
-
-    // Only search for runtimes that improve upon the current runtime
-    vector<TransIdx> todo(rules.begin(), rules.end());
-
-    // sort the rules before analyzing them
-    // non-terminating rules first
-    // non-polynomial (i.e., most likely exponential) rules second (preferring rules with temporary variables)
-    // rules with temporary variables (sorted by their degree) third
-    // rules without temporary variables (sorted by their degree) last
-    // if rules are equal wrt. the criteria above, prefer those with less constraints in the guard
-    auto comp = [this, isTempVar](const TransIdx &fst, const TransIdx &snd) {
-        Rule fstRule = its.getRule(fst);
-        Rule sndRule = its.getRule(snd);
-        Expr fstCpxExp = fstRule.getCost().expand();
-        Expr sndCpxExp = sndRule.getCost().expand();
-        if (!fstCpxExp.equals(sndCpxExp)) {
-            if (fstCpxExp.isNontermSymbol()) return true;
-            if (sndCpxExp.isNontermSymbol()) return false;
-            bool fstIsNonPoly = !fstCpxExp.isPoly();
-            bool sndIsNonPoly = !sndCpxExp.isPoly();
-            if (fstIsNonPoly > sndIsNonPoly) return true;
-            if (fstIsNonPoly < sndIsNonPoly) return false;
-            bool fstHasTmpVar = fstCpxExp.hasVarWith(isTempVar);
-            bool sndHasTmpVar = sndCpxExp.hasVarWith(isTempVar);
-            if (fstHasTmpVar > sndHasTmpVar) return true;
-            if (fstHasTmpVar < sndHasTmpVar) return false;
-            Complexity fstCpx = fstCpxExp.toComplexity();
-            Complexity sndCpx = sndCpxExp.toComplexity();
-            if (fstCpx > sndCpx) return true;
-            if (fstCpx < sndCpx) return false;
-        }
-        unsigned long fstGuardSize = fstRule.getGuard()->size();
-        unsigned long sndGuardSize = sndRule.getGuard()->size();
-        return fstGuardSize < sndGuardSize;
-    };
-
-    sort(todo.begin(), todo.end(), comp);
-
-    for (TransIdx ruleIdx : todo) {
-        Rule rule = its.getRule(ruleIdx);
-        Proof proof;
-
-        // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
-        // We have to be careful with temp variables, since they can lead to unbounded cost.
-        const Expr &cost = rule.getCost();
-        bool hasTempVar = !cost.isNontermSymbol() && cost.hasVarWith(isTempVar);
-
-        if (cost.toComplexity() <= max(res.getCpx(), Complexity::Const) && !hasTempVar) {
-            continue;
-        }
-
-        proof.section(stringstream() << "Computing asymptotic complexity for rule " << ruleIdx);
-
-        // Simplify guard to speed up asymptotic check
-        option<Rule> simplifiedRule;
-        option<Rule> tmp = {rule};
-        tmp = Preprocess::simplifyGuard(tmp.get(), its);
-        if (tmp) {
-            simplifiedRule = tmp;
-        }
-        if (simplifiedRule) {
-            proof.ruleTransformationProof(rule, "simplification", simplifiedRule.get(), its);
-            rule = simplifiedRule.get();
-        }
-
-        option<AsymptoticBound::Result> checkRes;
-        bool isPolynomial = rule.getCost().isPoly() && !rule.getCost().isNontermSymbol() && rule.getGuard()->isPolynomial();
-        uint timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
-        if (isPolynomial && Config::Limit::PolyStrategy->smtEnabled()) {
-            checkRes = AsymptoticBound::determineComplexityViaSMT(
-                        its,
-                        rule.getGuard(),
-                        rule.getCost(),
-                        true,
-                        res.getCpx(),
-                        timeout);
-        }
-
-        if (checkRes && checkRes.get().cpx > res.getCpx()) {
-            proof.newline();
-            proof.result(stringstream() << "Proved lower bound " << checkRes.get().cpx << ".");
-            proof.storeSubProof(checkRes.get().proof, "limit calculus");
-
-            res.update(rule.getGuard(), rule.getCost(), checkRes.get().solvedCost, checkRes.get().cpx);
-            res.concat(proof);
-
-            if (res.getCpx() >= Complexity::Unbounded) {
+    if (Config::Analysis::NonTermMode) {
+        for (TransIdx i: rules) {
+            const Rule &r = its.getRule(i);
+            if (r.getCost().isNontermSymbol() && Smt::check(r.getGuard(), its) == Smt::Sat) {
+                res.update(r.getGuard(), Expr::NontermSymbol, Expr::NontermSymbol, Complexity::Nonterm);
+                Proof proof;
+                proof.result(stringstream() << "Proved nontermination of rule " << i << " via SMT.");
+                res.concat(proof);
                 break;
             }
         }
+    } else {
+        auto isTempVar = [&](const Var &var){ return its.isTempVar(var); };
 
-        if ((!checkRes || checkRes->cpx == Complexity::Unknown) && Config::Limit::PolyStrategy->calculusEnabled()) {
-            for (const Guard &guard: rule.getGuard()->dnf()) {
-                checkRes = AsymptoticBound::determineComplexity(
+        // Only search for runtimes that improve upon the current runtime
+        vector<TransIdx> todo(rules.begin(), rules.end());
+
+        // sort the rules before analyzing them
+        // non-terminating rules first
+        // non-polynomial (i.e., most likely exponential) rules second (preferring rules with temporary variables)
+        // rules with temporary variables (sorted by their degree) third
+        // rules without temporary variables (sorted by their degree) last
+        // if rules are equal wrt. the criteria above, prefer those with less constraints in the guard
+        auto comp = [this, isTempVar](const TransIdx &fst, const TransIdx &snd) {
+            Rule fstRule = its.getRule(fst);
+            Rule sndRule = its.getRule(snd);
+            Expr fstCpxExp = fstRule.getCost().expand();
+            Expr sndCpxExp = sndRule.getCost().expand();
+            if (!fstCpxExp.equals(sndCpxExp)) {
+                if (fstCpxExp.isNontermSymbol()) return true;
+                if (sndCpxExp.isNontermSymbol()) return false;
+                bool fstIsNonPoly = !fstCpxExp.isPoly();
+                bool sndIsNonPoly = !sndCpxExp.isPoly();
+                if (fstIsNonPoly > sndIsNonPoly) return true;
+                if (fstIsNonPoly < sndIsNonPoly) return false;
+                bool fstHasTmpVar = fstCpxExp.hasVarWith(isTempVar);
+                bool sndHasTmpVar = sndCpxExp.hasVarWith(isTempVar);
+                if (fstHasTmpVar > sndHasTmpVar) return true;
+                if (fstHasTmpVar < sndHasTmpVar) return false;
+                Complexity fstCpx = fstCpxExp.toComplexity();
+                Complexity sndCpx = sndCpxExp.toComplexity();
+                if (fstCpx > sndCpx) return true;
+                if (fstCpx < sndCpx) return false;
+            }
+            unsigned long fstGuardSize = fstRule.getGuard()->size();
+            unsigned long sndGuardSize = sndRule.getGuard()->size();
+            return fstGuardSize < sndGuardSize;
+        };
+
+        sort(todo.begin(), todo.end(), comp);
+
+        for (TransIdx ruleIdx : todo) {
+            Rule rule = its.getRule(ruleIdx);
+            Proof proof;
+
+            // getComplexity() is not sound, but gives an upperbound, so we can avoid useless asymptotic checks.
+            // We have to be careful with temp variables, since they can lead to unbounded cost.
+            const Expr &cost = rule.getCost();
+            bool hasTempVar = !cost.isNontermSymbol() && cost.hasVarWith(isTempVar);
+
+            if (cost.toComplexity() <= max(res.getCpx(), Complexity::Const) && !hasTempVar) {
+                continue;
+            }
+
+            proof.section(stringstream() << "Computing asymptotic complexity for rule " << ruleIdx);
+
+            // Simplify guard to speed up asymptotic check
+            option<Rule> simplifiedRule;
+            option<Rule> tmp = {rule};
+            tmp = Preprocess::simplifyGuard(tmp.get(), its);
+            if (tmp) {
+                simplifiedRule = tmp;
+            }
+            if (simplifiedRule) {
+                proof.ruleTransformationProof(rule, "simplification", simplifiedRule.get(), its);
+                rule = simplifiedRule.get();
+            }
+
+            option<AsymptoticBound::Result> checkRes;
+            bool isPolynomial = rule.getCost().isPoly() && !rule.getCost().isNontermSymbol() && rule.getGuard()->isPolynomial();
+            uint timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
+            if (isPolynomial && Config::Limit::PolyStrategy->smtEnabled()) {
+                checkRes = AsymptoticBound::determineComplexityViaSMT(
                             its,
-                            guard,
+                            rule.getGuard(),
                             rule.getCost(),
                             true,
                             res.getCpx(),
                             timeout);
             }
 
-            if (checkRes.get().cpx > res.getCpx()) {
+            if (checkRes && checkRes.get().cpx > res.getCpx()) {
                 proof.newline();
                 proof.result(stringstream() << "Proved lower bound " << checkRes.get().cpx << ".");
                 proof.storeSubProof(checkRes.get().proof, "limit calculus");
@@ -534,8 +522,37 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
                     break;
                 }
             }
-        }
 
+            if ((!checkRes || checkRes->cpx == Complexity::Unknown) && Config::Limit::PolyStrategy->calculusEnabled()) {
+                std::vector<Guard> toCheck = rule.getGuard()->dnf();
+                if (toCheck.empty()) {
+                    // guard == True
+                    toCheck.push_back({});
+                }
+                for (const Guard &guard: toCheck) {
+                    checkRes = AsymptoticBound::determineComplexity(
+                                its,
+                                guard,
+                                rule.getCost(),
+                                true,
+                                res.getCpx(),
+                                timeout);
+
+                    if (checkRes && checkRes.get().cpx > res.getCpx()) {
+                        proof.newline();
+                        proof.result(stringstream() << "Proved lower bound " << checkRes.get().cpx << ".");
+                        proof.storeSubProof(checkRes.get().proof, "limit calculus");
+
+                        res.update(rule.getGuard(), rule.getCost(), checkRes.get().solvedCost, checkRes.get().cpx);
+                        res.concat(proof);
+
+                        if (res.getCpx() >= Complexity::Unbounded) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

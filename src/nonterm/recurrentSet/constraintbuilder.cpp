@@ -48,20 +48,20 @@ namespace strengthening {
         const BoolExpr reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
         Implication templatesInvariantImplication = buildTemplatesInvariantImplication(reducedGuard);
         BoolExpr invariancePremise = templatesInvariantImplication.premise;
-        BoolExpr conclusionInvariant = True;
+        std::vector<BoolExpr> conclusionInvariant;
         for (const Rel &rel: guardCtx.todo) {
             for (const Subs &up: rule.getUpdates()) {
                 Rel updated = rel;
                 updated.applySubs(up);
                 const BoolExpr invariant = constructImplicationConstraints(invariancePremise, {updated});
-                conclusionInvariant = conclusionInvariant & invariant;
+                conclusionInvariant.push_back(invariant);
             }
         }
         const BoolExpr initiation = constructInitiationConstraints(reducedGuard);
         const BoolExpr templatesInvariant = constructImplicationConstraints(
                 templatesInvariantImplication.premise,
                 templatesInvariantImplication.conclusion);
-        return SmtConstraints(initiation, templatesInvariant, conclusionInvariant);
+        return SmtConstraints(initiation, templatesInvariant, buildAnd(conclusionInvariant));
     }
 
     const RelSet ConstraintBuilder::findIrrelevantConstraints() const {
@@ -102,7 +102,6 @@ namespace strengthening {
     }
 
     const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {
-        BoolExpr res = False;
         VarSet allVars = reducedGuard->vars();
         // TODO Why is this variable renaming needed?
         Subs varRenaming;
@@ -114,9 +113,7 @@ namespace strengthening {
         for (const Rel &e: updatedTemplates) {
             renamed.push_back(e);
         }
-        const BoolExpr expr = reducedGuard->subs(varRenaming) & buildAnd(renamed);
-        res = res | expr;
-        return res;
+        return reducedGuard->subs(varRenaming) & buildAnd(renamed);
     }
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(
