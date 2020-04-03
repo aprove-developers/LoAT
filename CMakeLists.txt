@@ -152,7 +152,9 @@ add_executable(${EXECUTABLE}
         src/smt/smtfactory.cpp
         src/smt/smtfactory.hpp
         src/smt/model.cpp
-        src/smt/model.hpp)
+        src/smt/model.hpp
+        src/merging/merger.cpp
+        src/merging/merger.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

@@ -21,7 +21,7 @@
 #include "../asymptotic/asymptoticbound.hpp"
 
 #include "../util/timeout.hpp"
-
+#include "../merging/merger.hpp"
 #include "prune.hpp"
 #include "preprocess.hpp"
 #include "chain.hpp"
@@ -161,6 +161,12 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
             proof.majorProofStep("Eliminated location " + eliminatedLocation, its);
         }
         if (isFullySimplified()) break;
+
+        Proof mergingProof = Merger::mergeRules(its);
+        if (!mergingProof.empty()) {
+            proof.concat(mergingProof);
+            proof.majorProofStep("Merged rules", its);
+        }
 
         if (acceleratedOnce) {
 

@@ -471,6 +471,8 @@ template<class T> bool operator==(const KeyToExprMap<T> &m1, const KeyToExprMap<
     while (it1 != m1.end() && it2 != m2.end()) {
         if (it1->first != it2->first) return false;
         if (!it1->second.equals(it2->second)) return false;
+        ++it1;
+        ++it2;
     }
     return true;
 }
