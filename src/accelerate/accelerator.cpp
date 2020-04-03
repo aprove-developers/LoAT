@@ -112,10 +112,9 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
 
     auto optNested = Chaining::chainRules(its, first, second);
     if (optNested) {
-        LinearRule nestedRule = optNested.get();
-
         // Simplify the rule again (chaining can introduce many useless constraints)
-        Preprocess::simplifyRule(its, nestedRule);
+        option<Rule> simplified = Preprocess::simplifyRule(its, optNested.get());
+        LinearRule nestedRule = simplified ? simplified.get().toLinear() : optNested.get();
 
         // Note that we do not try all heuristics or backward accel to keep nesting efficient
         const Acceleration::Result &accel = LoopAcceleration::accelerate(its, nestedRule, sinkLoc);
@@ -360,7 +359,7 @@ Acceleration::Result Accelerator::accelerateOrShorten(const Rule &rule) const {
     // If metering failed, we remove rhss to ease metering.
     // To keep the code efficient, we only try all pairs and each single rhs.
     // We start with pairs of rhss, since this can still yield exponential complexity.
-    const vector<RuleRhs> &rhss = rule.getRhss();
+    const vector<RuleRhs> rhss = rule.getRhss();
 
     for (unsigned int i=0; i < rhss.size(); ++i) {
         for (unsigned int j=i+1; j < rhss.size(); ++j) {

@@ -39,13 +39,6 @@ option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) 
         oldRule = newRule.get();
     }
 
-    // Simplify with smt only once
-    newRule = simplifyGuard(oldRule, varMan);
-    if (newRule) {
-        result = true;
-        oldRule = newRule.get();
-    }
-
     // The other steps are repeated (might not help very often, but is probably cheap enough)
     bool changed = false;
     do {
@@ -56,13 +49,6 @@ option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) 
             oldRule = newRule.get();
         }
 
-        if (changed) {
-            newRule = simplifyGuard(oldRule, varMan);
-            if (newRule) {
-                oldRule = newRule.get();
-            }
-        }
-
         newRule = removeTrivialUpdates(oldRule);
         if (newRule) {
             changed = true;
@@ -71,6 +57,12 @@ option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) 
 
         result = result || changed;
     } while (changed);
+
+    newRule = simplifyGuard(oldRule, varMan);
+    if (newRule) {
+        result = true;
+        oldRule = newRule.get();
+    }
 
     if (result) {
         return {oldRule};

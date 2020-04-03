@@ -140,7 +140,7 @@ void AccelerationProblem::monotonicity() {
 
 void AccelerationProblem::recurrence() {
     for (const Rel &rel: todo) {
-        const Rel &updated = rel.subs(up);
+        const Rel updated = rel.subs(up);
         RelSet premise = findConsistentSubset(guard & rel & updated);
         solver->resetSolver();
         if (!premise.empty()) {
