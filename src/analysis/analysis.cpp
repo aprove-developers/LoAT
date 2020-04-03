@@ -311,7 +311,7 @@ option<Proof> Analysis::preprocessRules() {
     // update/guard preprocessing
     for (TransIdx idx : its.getAllTransitions()) {
         const Rule &rule = its.getRule(idx);
-        const option<Rule> &newRule = Preprocess::preprocessRule(its, rule);
+        const option<Rule> newRule = Preprocess::preprocessRule(its, rule);
         if (newRule) {
             del.push_back(idx);
             add.push_back(newRule.get());

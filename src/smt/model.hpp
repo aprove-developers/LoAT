@@ -14,6 +14,8 @@ public:
     bool contains(const Var &var) const;
     bool contains(uint id) const;
 
+    friend std::ostream& operator<<(std::ostream &s, const Model &e);
+
 private:
 
     VarMap<GiNaC::numeric> vars;

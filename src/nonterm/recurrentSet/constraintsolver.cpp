@@ -63,15 +63,9 @@ namespace strengthening {
             }
         }
         const std::vector<Rel> instantiatedTemplates = templates.subs(parameterInstantiation);
-        std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic<std::vector<Rel>, Subs>({instantiatedTemplates}, {}), varMan);
         for (const Rel &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
-                solver->push();
-                solver->add(!buildLit(rel));
-                if (solver->check() != Smt::Unsat) {
-                    res.push_back(rel);
-                }
-                solver->pop();
+                res.push_back(rel);
             }
         }
         return res;

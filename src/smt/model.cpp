@@ -17,3 +17,19 @@ bool Model::contains(const Var &var) const {
 bool Model::contains(uint id) const {
     return constants.count(id) > 0;
 }
+
+std::ostream& operator<<(std::ostream &s, const Model &e) {
+    if (!e.vars.empty() && !e.constants.empty()) {
+        s << "variables:" << std::endl;
+    }
+    for (const auto &p: e.vars) {
+        s << " " << p.first << "=" << p.second;
+    }
+    if (!e.vars.empty() && !e.constants.empty()) {
+        s << "constants:" << std::endl;
+    }
+    for (const auto &p: e.constants) {
+        s << " " << p.first << "=" << p.second;
+    }
+    return s;
+}

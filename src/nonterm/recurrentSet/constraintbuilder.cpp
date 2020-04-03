@@ -36,10 +36,7 @@ namespace strengthening {
                                                           VariableManager &varMan) {
         ConstraintBuilder builder(templates, rule, guardCtx, varMan);
         const SmtConstraints &constraints = builder.buildSmtConstraints();
-        BoolExpr res = constraints.initiation;
-        res = res & constraints.conclusionsInvariant;
-        res = res & constraints.templatesInvariant;
-        return res;
+        return buildAnd(std::vector<BoolExpr>{constraints.initiation, constraints.conclusionsInvariant, constraints.templatesInvariant});
     }
 
     const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
@@ -102,18 +99,11 @@ namespace strengthening {
     }
 
     const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {
-        VarSet allVars = reducedGuard->vars();
-        // TODO Why is this variable renaming needed?
-        Subs varRenaming;
-        for (const Var &x: allVars) {
-            varRenaming.put(x, varMan.addFreshVariable(x.get_name()));
+        std::vector<Rel> res;
+        for (const Rel &e: templates) {
+            res.push_back(e);
         }
-        std::vector<Rel> renamed;
-        const std::vector<Rel> &updatedTemplates = templates.subs(varRenaming);
-        for (const Rel &e: updatedTemplates) {
-            renamed.push_back(e);
-        }
-        return reducedGuard->subs(varRenaming) & buildAnd(renamed);
+        return reducedGuard & buildAnd(res);
     }
 
     const BoolExpr ConstraintBuilder::constructImplicationConstraints(

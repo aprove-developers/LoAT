@@ -94,7 +94,6 @@ public:
         assert(nameMap.count(symbol.get_name()) == 0);
         EXPR res = generateFreshVar(symbol.get_name(), type);
         symbolMap.emplace(symbol, res);
-        symbolMap.emplace(symbol.get_name(), res);
         nameMap.emplace(symbol.get_name(), symbol);
         return res;
     }

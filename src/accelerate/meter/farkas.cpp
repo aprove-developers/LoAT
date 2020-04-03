@@ -145,7 +145,7 @@ const BoolExpr FarkasLemma::applyRec(
             for (const Var &x : vars) {
                 coefficients.push_back(c.lhs().coeff(x, 1));
             }
-            Expr c0 = -c.rhs();
+            Expr c0 = c.rhs();
             res.push_back(FarkasLemma::apply(premise->lits(), vars, coefficients, c0, 0, varMan, params, lambdaType));
         }
         return buildAnd(res);
