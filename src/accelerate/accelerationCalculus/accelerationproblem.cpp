@@ -249,24 +249,27 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     // maps every constraint to it's 'boolean abstraction'
     // which states that one of the entries corresponding to the constraint needs to be enabled
     RelMap<BoolExpr> boolAbstractionMap;
+    RelMap<BoolExpr> boolNontermAbstractionMap;
     for (const auto &p: res) {
         const Rel &rel = p.first;
         const std::vector<Entry> entries = p.second;
         std::vector<BoolExpr> eVars;
         std::vector<BoolExpr> abstraction;
+        std::vector<BoolExpr> nontermAbstraction;
         for (const Entry &e: entries) {
             BoolExpr entryVar = buildConst(++varId);
             eVars.push_back(entryVar);
             if (!e.active) continue;
             abstraction.push_back(entryVar);
+            if (e.nonterm) nontermAbstraction.push_back(entryVar);
             for (const Rel &dep: e.dependencies) {
                 init.push_back(buildOr(std::vector<BoolExpr>{!entryVar, edgeVars.at({rel, dep})}));
             }
         }
         entryVars[rel] = eVars;
         boolAbstractionMap[rel] = buildOr(abstraction);
+        boolNontermAbstractionMap[rel] = buildOr(nontermAbstraction);
     }
-    BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
     // if a->b and b->c is enabled, then a->c needs to be enabled, too
     std::vector<BoolExpr> closure;
     for (const auto &p: edgeVars) {
@@ -288,10 +291,19 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     }
     solver->resetSolver();
     solver->add(buildAnd(init));
-    solver->add(boolAbstraction);
     solver->add(buildAnd(closure));
     solver->add(buildAnd(acyclic));
-    if (solver->check() == Smt::Sat) {
+    solver->push();
+    BoolExpr boolNontermAbstraction = guard->replaceRels(boolNontermAbstractionMap);
+    solver->add(boolNontermAbstraction);
+    Smt::Result smtRes = solver->check();
+    if (smtRes != Smt::Sat) {
+        solver->pop();
+        BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
+        solver->add(boolAbstraction);
+        smtRes = solver->check();
+    }
+    if (smtRes == Smt::Sat) {
         const Model &model = solver->model();
         RelMap<BoolExpr> map;
         bool nonterm = true;

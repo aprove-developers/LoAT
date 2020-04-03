@@ -594,3 +594,18 @@ void ExprMap::putGinac(const Expr &key, const Expr &val) {
 void ExprMap::eraseGinac(const Expr &key) {
     ginacMap.erase(key.ex);
 }
+
+bool operator==(const Subs &m1, const Subs &m2) {
+    if (m1.size() != m2.size()) {
+        return false;
+    }
+    auto it1 = m1.begin();
+    auto it2 = m2.begin();
+    while (it1 != m1.end() && it2 != m2.end()) {
+        if (!Expr(it1->first).equals(it2->first)) return false;
+        if (!it1->second.equals(it2->second)) return false;
+        ++it1;
+        ++it2;
+    }
+    return it1 == m1.end() && it2 == m2.end();
+}

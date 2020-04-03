@@ -462,21 +462,6 @@ template<class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<T
     return s << "}";
 }
 
-template<class T> bool operator==(const KeyToExprMap<T> &m1, const KeyToExprMap<T> &m2) {
-    if (m1.size() != m2.size()) {
-        return false;
-    }
-    auto it1 = m1.begin();
-    auto it2 = m1.begin();
-    while (it1 != m1.end() && it2 != m2.end()) {
-        if (it1->first != it2->first) return false;
-        if (!it1->second.equals(it2->second)) return false;
-        ++it1;
-        ++it2;
-    }
-    return true;
-}
-
 class Subs: public KeyToExprMap<Var> {
 
 public:
@@ -513,5 +498,7 @@ private:
     void eraseGinac(const Expr &key) override;
 
 };
+
+bool operator==(const Subs &m1, const Subs &m2);
 
 #endif // EXPRESSION_H
