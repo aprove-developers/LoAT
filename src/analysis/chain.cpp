@@ -36,7 +36,7 @@ static bool checkSatisfiability(const BoolExpr &newGuard, const VariableManager 
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
-    return smtRes != Smt::Unsat;
+    return smtRes != Unsat;
 }
 
 

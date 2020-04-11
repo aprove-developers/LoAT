@@ -35,8 +35,6 @@ public:
     static EXPR convert(const BoolExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
         if (e->getLit()) {
             return convert(e->getLit().get(), ctx, varMan);
-        } else if (e->getConst()) {
-            return ctx.bConst(e->getConst().get());
         }
         EXPR res = e->isAnd() ? ctx.bTrue() : ctx.bFalse();
         bool first = true;

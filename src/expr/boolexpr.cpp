@@ -30,79 +30,6 @@ std::vector<Guard> BoolExpression::dnf() const {
 }
 
 
-BoolConst::BoolConst(int id): id(id) {}
-
-bool BoolConst::isAnd() const {
-    return false;
-}
-
-bool BoolConst::isOr() const {
-    return false;
-}
-
-option<Rel> BoolConst::getLit() const {
-    return {};
-}
-
-option<int> BoolConst::getConst() const {
-    return {id};
-}
-
-BoolExprSet BoolConst::getChildren() const {
-    return {};
-}
-
-const BoolExpr BoolConst::negation() const {
-    return buildConst(-id);
-}
-
-bool BoolConst::isLinear() const {
-    return false;
-}
-
-bool BoolConst::isPolynomial() const {
-    return false;
-}
-
-BoolConst::~BoolConst() {}
-
-BoolExpr BoolConst::subs(const Subs &subs) const {
-    return shared_from_this();
-}
-
-bool BoolConst::isConjunction() const {
-    return true;
-}
-
-BoolExpr BoolConst::toG() const {
-    return shared_from_this();
-}
-
-BoolExpr BoolConst::toLeq() const {
-    return shared_from_this();
-}
-
-void BoolConst::collectLits(RelSet &res) const {}
-
-void BoolConst::collectVars(VarSet &res) const {}
-
-size_t BoolConst::size() const {
-    return 1;
-}
-
-option<BoolExpr> BoolConst::removeRels(const RelSet &rels) const {
-    return {shared_from_this()};
-}
-
-BoolExpr BoolConst::replaceRels(const RelMap<BoolExpr> map) const {
-    return shared_from_this();
-}
-
-void BoolConst::dnf(std::vector<Guard> &res) const {
-    assert(false && "not supported");
-}
-
-
 BoolLit::BoolLit(const Rel &lit): lit(lit.makeRhsZero()) { }
 
 bool BoolLit::isAnd() const {
@@ -115,10 +42,6 @@ bool BoolLit::isOr() const {
 
 option<Rel> BoolLit::getLit() const {
     return {lit};
-}
-
-option<int> BoolLit::getConst() const {
-    return {};
 }
 
 BoolExprSet BoolLit::getChildren() const {
@@ -197,12 +120,14 @@ option<BoolExpr> BoolLit::removeRels(const RelSet &rels) const {
     }
 }
 
+PropExpr BoolLit::replaceRels(const RelMap<PropExpr> map) const {
+    assert(map.count(lit) > 0);
+    return map.at(lit);
+}
+
 BoolExpr BoolLit::replaceRels(const RelMap<BoolExpr> map) const {
-    if (map.count(lit) > 0) {
-        return map.at(lit);
-    } else {
-        return shared_from_this();
-    }
+    if (map.count(lit) > 0) return map.at(lit);
+    else return shared_from_this();
 }
 
 void BoolLit::dnf(std::vector<Guard> &res) const {
@@ -218,21 +143,17 @@ void BoolLit::dnf(std::vector<Guard> &res) const {
 BoolLit::~BoolLit() {}
 
 
-BoolJunction::BoolJunction(const BoolExprSet &children, ConcatOperator op): children(children), op(op) { }
+BoolJunction::BoolJunction(const BoolExprSet &children, JunctionType op): children(children), op(op) { }
 
 bool BoolJunction::isAnd() const {
-    return op == ConcatAnd;
+    return op == And;
 }
 
 bool BoolJunction::isOr() const {
-    return op == ConcatOr;
+    return op == Or;
 }
 
 option<Rel> BoolJunction::getLit() const {
-    return {};
-}
-
-option<int> BoolJunction::getConst() const {
     return {};
 }
 
@@ -246,8 +167,8 @@ const BoolExpr BoolJunction::negation() const {
         newChildren.insert(!c);
     }
     switch (op) {
-    case ConcatOr: return buildAnd(newChildren);
-    case ConcatAnd: return buildOr(newChildren);
+    case Or: return buildAnd(newChildren);
+    case And: return buildOr(newChildren);
     }
     assert(false && "unknown junction");
 }
@@ -331,13 +252,18 @@ option<BoolExpr> BoolJunction::removeRels(const RelSet &rels) const {
     return isAnd() ? buildAnd(newChildren) : buildOr(newChildren);
 }
 
+PropExpr BoolJunction::replaceRels(const RelMap<PropExpr> map) const {
+    PropExprSet newChildren;
+    for (const BoolExpr &c: children) {
+        newChildren.insert(c->replaceRels(map));
+    }
+    return isAnd() ? PropJunction::buildAnd(newChildren) : PropJunction::buildOr(newChildren);
+}
+
 BoolExpr BoolJunction::replaceRels(const RelMap<BoolExpr> map) const {
     BoolExprSet newChildren;
     for (const BoolExpr &c: children) {
-        const option<BoolExpr> &newC = c->replaceRels(map);
-        if (newC) {
-            newChildren.insert(newC.get());
-        }
+        newChildren.insert(c->replaceRels(map));
     }
     return isAnd() ? buildAnd(newChildren) : buildOr(newChildren);
 }
@@ -361,7 +287,7 @@ void BoolJunction::dnf(std::vector<Guard> &res) const {
 BoolJunction::~BoolJunction() {}
 
 
-BoolExpr build(BoolExprSet xs, ConcatOperator op) {
+BoolExpr build(BoolExprSet xs, JunctionType op) {
     std::stack<BoolExpr> todo;
     for (const BoolExpr &x: xs) {
         todo.push(x);
@@ -369,7 +295,7 @@ BoolExpr build(BoolExprSet xs, ConcatOperator op) {
     BoolExprSet children;
     while (!todo.empty()) {
         BoolExpr current = todo.top();
-        if ((op == ConcatAnd && current->isAnd()) || (op == ConcatOr && current->isOr())) {
+        if ((op == And && current->isAnd()) || (op == Or && current->isOr())) {
             const BoolExprSet &currentChildren = current->getChildren();
             todo.pop();
             for (const BoolExpr &c: currentChildren) {
@@ -386,7 +312,7 @@ BoolExpr build(BoolExprSet xs, ConcatOperator op) {
     return BoolExpr(new BoolJunction(children, op));
 }
 
-BoolExpr build(const RelSet &xs, ConcatOperator op) {
+BoolExpr build(const RelSet &xs, JunctionType op) {
     BoolExprSet children;
     for (const Rel &x: xs) {
         children.insert(buildLit(x));
@@ -395,43 +321,39 @@ BoolExpr build(const RelSet &xs, ConcatOperator op) {
 }
 
 const BoolExpr buildAnd(const RelSet &xs) {
-    return build(xs, ConcatAnd);
+    return build(xs, And);
 }
 
 const BoolExpr buildAnd(const BoolExprSet &xs) {
-    return build(xs, ConcatAnd);
+    return build(xs, And);
 }
 
 const BoolExpr buildOr(const RelSet &xs) {
-    return build(xs, ConcatOr);
+    return build(xs, Or);
 }
 
 const BoolExpr buildOr(const BoolExprSet &xs) {
-    return build(xs, ConcatOr);
+    return build(xs, Or);
 }
 
 const BoolExpr buildAnd(const std::vector<Rel> &xs) {
-    return build(RelSet(xs.begin(), xs.end()), ConcatAnd);
+    return build(RelSet(xs.begin(), xs.end()), And);
 }
 
 const BoolExpr buildAnd(const std::vector<BoolExpr> &xs) {
-    return build(BoolExprSet(xs.begin(), xs.end()), ConcatAnd);
+    return build(BoolExprSet(xs.begin(), xs.end()), And);
 }
 
 const BoolExpr buildOr(const std::vector<Rel> &xs) {
-    return build(RelSet(xs.begin(), xs.end()), ConcatOr);
+    return build(RelSet(xs.begin(), xs.end()), Or);
 }
 
 const BoolExpr buildOr(const std::vector<BoolExpr> &xs) {
-    return build(BoolExprSet(xs.begin(), xs.end()), ConcatOr);
+    return build(BoolExprSet(xs.begin(), xs.end()), Or);
 }
 
 const BoolExpr buildLit(const Rel &lit) {
     return BoolExpr(new BoolLit(lit));
-}
-
-const BoolExpr buildConst(uint id) {
-    return BoolExpr(new BoolConst(id));
 }
 
 const BoolExpr True = buildAnd(std::vector<BoolExpr>());
@@ -460,9 +382,6 @@ const BoolExpr operator !(const BoolExpr a) {
 }
 
 bool operator ==(const BoolExpr &a, const BoolExpr &b) {
-    if (a->getConst() != b->getConst()) {
-        return false;
-    }
     if (a->getLit() != b->getLit()) {
         return false;
     }
@@ -480,13 +399,6 @@ bool operator !=(const BoolExpr &a, const BoolExpr &b) {
 }
 
 bool boolexpr_compare::operator() (BoolExpr a, BoolExpr b) const {
-    if (a->getConst()) {
-        if (!b->getConst()) {
-            return true;
-        } else {
-            return a->getConst().get() < b->getConst().get();
-        }
-    }
     if (a->getLit()) {
         if (!b->getLit()) {
             return true;
@@ -504,9 +416,7 @@ bool boolexpr_compare::operator() (BoolExpr a, BoolExpr b) const {
 }
 
 std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
-    if (e->getConst()) {
-        s << "x" << e->getConst().get();
-    } else if (e->getLit()) {
+    if (e->getLit()) {
         s << e->getLit().get();
     } else if (e->getChildren().empty()) {
         if (e->isAnd()) {

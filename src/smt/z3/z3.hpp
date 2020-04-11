@@ -13,7 +13,7 @@ public:
     uint add(const BoolExpr &e) override;
     void push() override;
     void pop() override;
-    Result check() override;
+    SatResult check() override;
     Model model() override;
     Subs modelSubs() override;
     void setTimeout(unsigned int timeout) override;

@@ -28,10 +28,8 @@
 #include "chainstrategy.hpp"
 #include "../accelerate/accelerator.hpp"
 #include "../its/export.hpp"
-
-#if HAS_YICES
 #include "../smt/yices/yices.hpp"
-#endif
+#include "../util/yicesmanager.hpp"
 
 #include <future>
 
@@ -206,7 +204,7 @@ void Analysis::finalize(RuntimeResult &res) {
 }
 
 void Analysis::run() {
-    Yices::init();
+    YicesManager::init();
 
     Proof *proof = new Proof();
     RuntimeResult *res = new RuntimeResult();
@@ -239,7 +237,7 @@ void Analysis::run() {
     delete res;
     delete proof;
 
-    Yices::exit();
+    YicesManager::exit();
 
     bool simpDone = simp.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     bool finalizeDone = finalize.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
@@ -300,7 +298,7 @@ bool Analysis::removeUnsatRules() {
     bool changed = false;
 
     for (TransIdx rule : its.getAllTransitions()) {
-        if (Smt::check(its.getRule(rule).getGuard(), its) == Smt::Unsat) {
+        if (Smt::check(its.getRule(rule).getGuard(), its) == Unsat) {
             its.removeRule(rule);
             changed = true;
         }
@@ -412,7 +410,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
         const Rule &rule = its.getRule(idx);
         BoolExpr guard = rule.getGuard() & (rule.getCost() >= 1);
 
-        if (Smt::check(guard, its) == Smt::Sat) {
+        if (Smt::check(guard, its) == Sat) {
             proof.newline();
             proof.result("The following rule witnesses the lower bound Omega(1):");
             stringstream s;
@@ -428,7 +426,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
     if (Config::Analysis::NonTermMode) {
         for (TransIdx i: rules) {
             const Rule &r = its.getRule(i);
-            if (r.getCost().isNontermSymbol() && Smt::check(r.getGuard(), its) == Smt::Sat) {
+            if (r.getCost().isNontermSymbol() && Smt::check(r.getGuard(), its) == Sat) {
                 res.update(r.getGuard(), Expr::NontermSymbol, Expr::NontermSymbol, Complexity::Nonterm);
                 Proof proof;
                 proof.result(stringstream() << "Proved nontermination of rule " << i << " via SMT.");

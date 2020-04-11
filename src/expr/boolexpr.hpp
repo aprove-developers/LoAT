@@ -5,6 +5,8 @@
 #include "../util/option.hpp"
 #include "../expr/rel.hpp"
 #include "../its/guard.hpp"
+#include "../util/junctiontype.hpp"
+#include "../sat/propexpr.hpp"
 
 #include <memory>
 #include <set>
@@ -24,11 +26,9 @@ class BoolExpression: public std::enable_shared_from_this<BoolExpression> {
 
     friend class BoolLit;
     friend class BoolJunction;
-    friend class BoolConst;
 
 public:
     virtual option<Rel> getLit() const = 0;
-    virtual option<int> getConst() const = 0;
     virtual bool isAnd() const = 0;
     virtual bool isOr() const = 0;
     virtual BoolExprSet getChildren() const = 0;
@@ -48,43 +48,11 @@ public:
     virtual void collectVars(VarSet &res) const = 0;
     virtual size_t size() const = 0;
     virtual option<BoolExpr> removeRels(const RelSet &rels) const = 0;
+    virtual PropExpr replaceRels(const RelMap<PropExpr> map) const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
 
 protected:
     virtual void dnf(std::vector<Guard> &res) const = 0;
-};
-
-class BoolConst: public BoolExpression {
-
-private:
-
-    int id;
-
-public:
-
-    BoolConst(int id);
-    bool isAnd() const override;
-    bool isOr() const override;
-    option<Rel> getLit() const override;
-    option<int> getConst() const override;
-    BoolExprSet getChildren() const override;
-    const BoolExpr negation() const override;
-    bool isLinear() const override;
-    bool isPolynomial() const override;
-    ~BoolConst() override;
-    BoolExpr subs(const Subs &subs) const override;
-    bool isConjunction() const override;
-    BoolExpr toG() const override;
-    BoolExpr toLeq() const override;
-    void collectLits(RelSet &res) const override;
-    void collectVars(VarSet &res) const override;
-    size_t size() const override;
-    option<BoolExpr> removeRels(const RelSet &rels) const override;
-    BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
-
-protected:
-    void dnf(std::vector<Guard> &res) const override;
-
 };
 
 class BoolLit: public BoolExpression {
@@ -99,7 +67,6 @@ public:
     bool isAnd() const override;
     bool isOr() const override;
     option<Rel> getLit() const override;
-    option<int> getConst() const override;
     BoolExprSet getChildren() const override;
     const BoolExpr negation() const override;
     bool isLinear() const override;
@@ -113,6 +80,7 @@ public:
     void collectVars(VarSet &res) const override;
     size_t size() const override;
     option<BoolExpr> removeRels(const RelSet &rels) const override;
+    PropExpr replaceRels(const RelMap<PropExpr> map) const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
 
 protected:
@@ -120,22 +88,19 @@ protected:
 
 };
 
-enum ConcatOperator { ConcatAnd, ConcatOr };
-
 class BoolJunction: public BoolExpression {
 
 private:
 
     BoolExprSet children;
-    ConcatOperator op;
+    JunctionType op;
 
 public:
 
-    BoolJunction(const BoolExprSet &children, ConcatOperator op);
+    BoolJunction(const BoolExprSet &children, JunctionType op);
     bool isAnd() const override;
     bool isOr() const override;
     option<Rel> getLit() const override;
-    option<int> getConst() const override;
     BoolExprSet getChildren() const override;
     const BoolExpr negation() const override;
     bool isLinear() const override;
@@ -149,6 +114,7 @@ public:
     void collectVars(VarSet &res) const override;
     size_t size() const override;
     option<BoolExpr> removeRels(const RelSet &rels) const override;
+    PropExpr replaceRels(const RelMap<PropExpr> map) const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
 
 protected:

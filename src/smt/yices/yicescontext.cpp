@@ -18,12 +18,9 @@
  */
 
 #include "yicescontext.hpp"
+#include "../../util/yiceserror.hpp"
 
 using namespace std;
-
-YicesError::YicesError() : std::exception() {
-    yices_print_error(stderr);
-}
 
 YicesContext::~YicesContext() { }
 
@@ -31,12 +28,6 @@ term_t YicesContext::buildVar(const std::string &name, Expr::Type type) {
     term_t res = (type == Expr::Int) ? yices_new_uninterpreted_term(yices_int_type()) : yices_new_uninterpreted_term(yices_real_type());
     yices_set_term_name(res, name.c_str());
     varNames[res] = name;
-    return res;
-}
-
-term_t YicesContext::buildConst(uint id) {
-    term_t res = yices_new_uninterpreted_term(yices_bool_type());
-    yices_set_term_name(res, ("x" + to_string(id)).c_str());
     return res;
 }
 
@@ -130,8 +121,6 @@ bool YicesContext::isDiv(const term_t &e) const {
 
 bool YicesContext::isPow(const term_t &e) const {
     // yices does not support exponentiation
-    // it has a special internal representation for polynomials, though
-    // I'm not sure if we need special handling for that
     return false;
 }
 

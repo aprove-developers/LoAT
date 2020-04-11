@@ -12,6 +12,8 @@ Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx)
     updateParams();
 }
 
+
+
 uint Z3::add(const BoolExpr &e) {
     if (unsatCores) {
         const std::string &name = "m" + std::to_string(markerCount);
@@ -43,7 +45,7 @@ void Z3::pop() {
     }
 }
 
-Smt::Result Z3::check() {
+SatResult Z3::check() {
     z3::check_result res = unsatCores ? solver.check(marker) : solver.check();
     switch (res) {
     case z3::sat: return Sat;
@@ -60,11 +62,7 @@ Model Z3::model() {
     for (const auto &p: ctx.getSymbolMap()) {
         vars[p.first] = getRealFromModel(m, p.second);
     }
-    std::map<uint, bool> constants;
-    for (const auto &p: ctx.getConstMap()) {
-        constants[p.first] = m.eval(p.second).bool_value();
-    }
-    return Model(vars, constants);
+    return Model(vars);
 }
 
 Subs Z3::modelSubs() {

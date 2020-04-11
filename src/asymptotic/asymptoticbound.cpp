@@ -225,9 +225,9 @@ void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
         auto result = Smt::check(buildAnd(limitProblems[i].getQuery()), varMan);
 
-        if (result == Smt::Unsat) {
+        if (result == Unsat) {
             limitProblems.erase(limitProblems.begin() + i);
-        } else if (result == Smt::Unknown
+        } else if (result == Unknown
                    && !finalCheck
                    && limitProblems[i].getSize() >= Config::Limit::ProblemDiscardSize) {
             limitProblems.erase(limitProblems.begin() + i);
@@ -689,12 +689,12 @@ bool AsymptoticBound::tryInstantiatingVariable() {
             const std::vector<Rel> &query = currentLP.getQuery();
             std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<std::vector<Rel>, Subs>({query}, {}), varMan);
             solver->add(buildAnd(query));
-            Smt::Result result = solver->check();
+            SatResult result = solver->check();
 
-            if (result == Smt::Unsat) {
+            if (result == Unsat) {
                 currentLP.setUnsolvable();
 
-            } else if (result == Smt::Sat) {
+            } else if (result == Sat) {
                 const Model &model = solver->model();
                 Var var = it->someVar();
 
@@ -777,7 +777,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
         auto smtRes = Smt::check(buildAnd(guard), varMan);
-        if (smtRes == Smt::Sat) {
+        if (smtRes == Sat) {
             Proof proof;
             proof.append("Guard is satisfiable, yielding nontermination");
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
@@ -843,7 +843,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
         auto smtRes = Smt::check(buildAnd(guard), varMan);
-        if (smtRes == Smt::Sat) {
+        if (smtRes == Sat) {
             Proof proof;
             proof.append("proved non-termination via SMT");
             return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
@@ -881,7 +881,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
         auto smtRes = Smt::check(guard, varMan);
-        if (smtRes == Smt::Sat) {
+        if (smtRes == Sat) {
             Proof proof;
             proof.append("proved non-termination via SMT");
             return Result(Complexity::Nonterm);

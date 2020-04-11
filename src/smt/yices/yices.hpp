@@ -4,10 +4,13 @@
 #include "../smt.hpp"
 #include "yicescontext.hpp"
 #include "../../config.hpp"
+#include "../../sat/yices/yices.hpp"
 
 #include <mutex>
 
 class Yices : public Smt {
+
+    friend class sat::Yices;
 
 public:
     Yices(const VariableManager &varMan, Logic logic);
@@ -15,7 +18,7 @@ public:
     uint add(const BoolExpr &e) override;
     void push() override;
     void pop() override;
-    Result check() override;
+    SatResult check() override;
     Model model() override;
     Subs modelSubs() override;
     void setTimeout(unsigned int timeout) override;
@@ -24,9 +27,6 @@ public:
     void resetSolver() override;
     std::vector<uint> unsatCore() override;
     ~Yices() override;
-
-    static void init();
-    static void exit();
 
     std::ostream& print(std::ostream& os) const;
 
@@ -41,10 +41,6 @@ private:
     std::vector<term_t> assumptions;
     std::stack<uint> assumptionStack;
     std::map<term_t, uint> assumptionMap;
-
-    static uint running;
-    static std::mutex mutex;
-
 
     GiNaC::numeric getRealFromModel(model_t *model, type_t symbol);
 

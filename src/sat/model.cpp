@@ -1,13 +1,16 @@
 #include "model.hpp"
+#include <sstream>
 
-Model::Model(VarMap<GiNaC::numeric> vars): vars(vars) {}
+namespace sat {
 
-GiNaC::numeric Model::get(const Var &var) const {
-    return vars.at(var);
+Model::Model(std::map<uint, bool> vars): vars(vars) {}
+
+bool Model::get(uint i) const {
+    return vars.at(i);
 }
 
-bool Model::contains(const Var &var) const {
-    return vars.count(var) > 0;
+bool Model::contains(uint i) const {
+    return vars.count(i) > 0;
 }
 
 std::ostream& operator<<(std::ostream &s, const Model &e) {
@@ -20,4 +23,6 @@ std::ostream& operator<<(std::ostream &s, const Model &e) {
         } else s << ", " << p.first << "=" << p.second;
     }
     return s << " }";
+}
+
 }

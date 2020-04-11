@@ -44,7 +44,7 @@ namespace strengthening {
     const option<Guard> Self::solve() const {
         std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), varMan);
         solver->add(constraints);
-        if (solver->check() == Smt::Sat) {
+        if (solver->check() == Sat) {
             const Guard &newInvariants = instantiateTemplates(solver->model());
             if (!newInvariants.empty()) {
                 return {newInvariants};

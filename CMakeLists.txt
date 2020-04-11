@@ -19,7 +19,7 @@ else()
     set(EXECUTABLE loat)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -Wno-padded")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -154,13 +154,31 @@ add_executable(${EXECUTABLE}
         src/smt/model.cpp
         src/smt/model.hpp
         src/merging/merger.cpp
-        src/merging/merger.hpp)
+        src/merging/merger.hpp
+        src/sat/propexpr.cpp
+        src/sat/propexpr.hpp
+        src/sat/sat.cpp
+        src/sat/sat.hpp
+        src/sat/model.cpp
+        src/sat/model.hpp
+        src/sat/yices/yices.cpp
+        src/sat/yices/yices.hpp
+        src/util/satresult.hpp
+        src/util/junctiontype.hpp
+        src/util/yicesmanager.cpp
+        src/util/yicesmanager.hpp
+        src/util/yiceserror.cpp
+        src/util/yiceserror.hpp
+        src/sat/satfactory.cpp
+        src/sat/satfactory.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
 message(STATUS "z3: ${Z3}")
 find_library(YICES yices)
 message(STATUS "yices: ${YICES}")
+find_library(CADICAL cadical)
+message(STATUS "cadical: ${CADICAL}")
 find_library(PURRS purrs)
 message(STATUS "purrs: ${PURRS}")
 find_library(GINAC ginac)
