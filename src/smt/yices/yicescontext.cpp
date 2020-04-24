@@ -1,5 +1,3 @@
-#ifdef HAS_YICES
-
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -276,5 +274,3 @@ std::string YicesContext::getName(const term_t &e) const {
 void YicesContext::printStderr(const term_t &e) const {
     yices_pp_term(stderr, e, 80, 20, 0);
 }
-
-#endif

@@ -228,7 +228,7 @@ void AccelerationProblem::eventualWeakDecrease() {
     }
 }
 
-option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
+std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     recurrence();
     monotonicity();
     eventualWeakDecrease();
@@ -239,10 +239,12 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     using Vars = std::vector<PropExpr>;
     std::map<Edge, PropExpr> edgeVars;
     std::map<Rel, Vars> entryVars;
-    uint varId = 0;
+    Vars soft;
+    uint varId = 1;
     for (const Rel &rel1: todo) {
         for (const Rel &rel2: todo) {
-            edgeVars[{rel1, rel2}] = PropLit::buildLit(++varId);
+            edgeVars[{rel1, rel2}] = PropLit::buildLit(varId);
+            ++varId;
         }
     }
     // if an entry is enabled, then the edges corresponding to its dependencies have to be enabled.
@@ -258,8 +260,10 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         PropExprSet abstraction;
         PropExprSet nontermAbstraction;
         for (const Entry &e: entries) {
-            PropExpr entryVar = PropLit::buildLit(++varId);
+            PropExpr entryVar = PropLit::buildLit(varId);
+            ++varId;
             eVars.push_back(entryVar);
+            soft.push_back(entryVar);
             if (!e.active) continue;
             abstraction.insert(entryVar);
             if (e.nonterm) nontermAbstraction.insert(entryVar);
@@ -298,6 +302,16 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     PropExpr boolNontermAbstraction = guard->replaceRels(boolNontermAbstractionMap);
     sat->add(boolNontermAbstraction);
     SatResult satRes = sat->check();
+    std::vector<AccelerationProblem::Result> ret;
+    if (satRes == Sat && Smt::isImplication(guard, buildLit(cost > 0), varMan)) {
+        BoolExpr newGuard = buildRes(sat->model(), entryVars);
+        solver->resetSolver();
+        solver->add(newGuard);
+        // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
+        if (solver->check() == Sat) {
+            ret.push_back({newGuard, true});
+        }
+    }
     if (satRes != Sat) {
         sat->pop();
         PropExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
@@ -305,63 +319,81 @@ option<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         satRes = sat->check();
     }
     if (satRes == Sat) {
-        const sat::Model &model = sat->model();
-        RelMap<BoolExpr> map;
-        bool nonterm = true;
-        RelMap<std::vector<uint>> solution;
-        for (const Rel &rel: todo) {
-            std::vector<BoolExpr> replacement;
-            if (res.count(rel) > 0) {
-                std::vector<uint> sol;
-                std::vector<Entry> entries = res.at(rel);
-                uint eVarIdx = 0;
-                const std::vector<PropExpr> &eVars = entryVars.at(rel);
-                for (auto eIt = entries.begin(), eEnd = entries.end(); eIt != eEnd; ++eIt, ++eVarIdx) {
-                    int id = eVars[eVarIdx]->lit().get();
-                    if (model.contains(id) && model.get(id)) {
-                        replacement.push_back(eIt->formula);
-                        nonterm &= eIt->nonterm;
-                        sol.push_back(eVarIdx);
-                    }
-                }
-                if (!sol.empty()) {
-                    solution[rel] = sol;
-                }
+        sat::Model model = sat->model();
+        for (const PropExpr &s: soft) {
+            sat->push();
+            sat->add(s);
+            satRes = sat->check();
+            if (satRes == Sat) {
+                model = sat->model();
+            } else {
+                sat->pop();
             }
-            map[rel] = buildOr(replacement);
         }
-        BoolExpr ret = guard->replaceRels(map);
-        nonterm &= Smt::isImplication(guard, buildLit(cost > 0), varMan);
-        if (!nonterm) {
-            ret = (ret & (n >= validityBound));
+        BoolExpr newGuard = buildRes(model, entryVars);
+        solver->resetSolver();
+        solver->add(newGuard);
+        // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
+        if (solver->check() == Sat) {
+            ret.push_back({newGuard, false});
         }
-        proof.newline();
-        proof.append("solution:");
-        for (const auto &e: solution) {
-            std::stringstream ss;
-            ss << e.first << ": [";
-            bool first = true;
-            for (uint i: e.second) {
-                if (first) {
-                    first = false;
-                } else {
-                    ss << " ";
-                }
-                ss << i;
-            }
-            ss << "]";
-            proof.append(ss);
-        }
-        proof.newline();
-        proof.append(std::stringstream() << "resulting guard: " << ret);
-        if (nonterm) {
-            proof.newline();
-            proof.append("resulting guard is a recurrent set");
-        }
-        return {{ret, nonterm}};
-    } else {
-        return {};
     }
+    return ret;
+}
+
+BoolExpr AccelerationProblem::buildRes(const sat::Model &model, const std::map<Rel, std::vector<PropExpr>> &entryVars) {
+    RelMap<BoolExpr> map;
+    bool nonterm = true;
+    RelMap<std::vector<uint>> solution;
+    for (const Rel &rel: todo) {
+        std::vector<BoolExpr> replacement;
+        if (res.count(rel) > 0) {
+            std::vector<uint> sol;
+            std::vector<Entry> entries = res.at(rel);
+            uint eVarIdx = 0;
+            const std::vector<PropExpr> &eVars = entryVars.at(rel);
+            for (auto eIt = entries.begin(), eEnd = entries.end(); eIt != eEnd; ++eIt, ++eVarIdx) {
+                int id = eVars[eVarIdx]->lit().get();
+                if (model.contains(id) && model.get(id)) {
+                    replacement.push_back(eIt->formula);
+                    nonterm &= eIt->nonterm;
+                    sol.push_back(eVarIdx);
+                }
+            }
+            if (!sol.empty()) {
+                solution[rel] = sol;
+            }
+        }
+        map[rel] = buildOr(replacement);
+    }
+    BoolExpr ret = guard->replaceRels(map);
+    if (!nonterm) {
+        ret = (ret & (n >= validityBound));
+    }
+    proof.newline();
+    proof.append("solution:");
+    for (const auto &e: solution) {
+        std::stringstream ss;
+        ss << e.first << ": [";
+        bool first = true;
+        for (uint i: e.second) {
+            if (first) {
+                first = false;
+            } else {
+                ss << " ";
+            }
+            ss << i;
+        }
+        ss << "]";
+        proof.append(ss);
+    }
+    proof.newline();
+    proof.append(std::stringstream() << "resulting guard: " << ret);
+    if (nonterm) {
+        proof.newline();
+        proof.append("resulting guard is a recurrent set");
+    }
+    return ret;
 }
 
 Proof AccelerationProblem::getProof() const {

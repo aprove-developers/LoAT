@@ -86,5 +86,6 @@ private:
 
 PropExpr operator&(const PropExpr &a, const PropExpr &b);
 PropExpr operator|(const PropExpr &a, const PropExpr &b);
+std::ostream& operator<<(std::ostream &s, const PropExpr &e);
 
 #endif // PROPEXPR_HPP

@@ -28,10 +28,6 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 
-#ifdef HAS_YICES
-#include <yices.h>
-#endif
-
 using namespace std;
 
 // Variables for command line flags

@@ -14,7 +14,9 @@ PropExpr operator!(const PropExpr &a) {
     return a->negate();
 }
 
-PropLit::PropLit(int id): id(id) { }
+PropLit::PropLit(int id): id(id) {
+    assert(id != 0);
+}
 
 PropExpr PropLit::buildLit(int id) {
     return PropExpr(new PropLit(id));
@@ -89,4 +91,34 @@ bool propexpr_compare::operator() (PropExpr a, PropExpr b) const {
         return false;
     }
     return a->getChildren() < b->getChildren();
+}
+
+std::ostream& operator<<(std::ostream &s, const PropExpr &e) {
+    if (e->lit()) {
+        s << e->lit().get();
+    } else if (e->getChildren().empty()) {
+        if (e->isAnd()) {
+            s << "TRUE";
+        } else {
+            s << "FALSE";
+        }
+    } else {
+        bool first = true;
+        s << "(";
+        for (const PropExpr &c: e->getChildren()) {
+            if (first) {
+                s << c;
+                first = false;
+            } else {
+                if (e->isAnd()) {
+                    s << " /\\ ";
+                } else {
+                    s << " \\/ ";
+                }
+                s << c;
+            }
+        }
+        s << ")";
+    }
+    return s;
 }

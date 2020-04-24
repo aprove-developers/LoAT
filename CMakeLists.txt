@@ -163,6 +163,8 @@ add_executable(${EXECUTABLE}
         src/sat/model.hpp
         src/sat/yices/yices.cpp
         src/sat/yices/yices.hpp
+        src/sat/z3/z3.cpp
+        src/sat/z3/z3.hpp
         src/util/satresult.hpp
         src/util/junctiontype.hpp
         src/util/yicesmanager.cpp
@@ -177,8 +179,6 @@ find_library(Z3 z3)
 message(STATUS "z3: ${Z3}")
 find_library(YICES yices)
 message(STATUS "yices: ${YICES}")
-find_library(CADICAL cadical)
-message(STATUS "cadical: ${CADICAL}")
 find_library(PURRS purrs)
 message(STATUS "purrs: ${PURRS}")
 find_library(GINAC ginac)
@@ -200,10 +200,8 @@ if(YICES)
     find_library(CUDD cudd)
     message(STATUS "cudd: ${CUDD}")
     if (POLY AND CUDD)
-        add_compile_definitions(HAS_YICES)
         target_link_libraries(${EXECUTABLE} ${YICES} ${POLY} ${CUDD})
     endif()
-    message(STATUS "has Yices")
 endif()
 
 if (NOT YICES)

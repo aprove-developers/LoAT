@@ -1,5 +1,3 @@
-#ifdef HAS_YICES
-
 /*  This file is part of LoAT.
  *  Copyright (c) 2015-2016 Matthias Naaf, RWTH Aachen University, Germany
  *
@@ -82,5 +80,3 @@ private:
 };
 
 #endif // YICESCONTEXT_H
-
-#endif

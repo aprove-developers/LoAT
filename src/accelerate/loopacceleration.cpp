@@ -72,16 +72,16 @@ Acceleration::Result LoopAcceleration::run() {
     if (shouldAccelerate()) {
         option<AccelerationProblem> ap = AccelerationProblem::init(rule, its);
         if (ap) {
-            option<AccelerationProblem::Result> ar = ap->computeRes();
-            if (ar) {
+            std::vector<AccelerationProblem::Result> ars = ap->computeRes();
+            for (const AccelerationProblem::Result &ar: ars) {
                 res.status = Success;
-                if (ar->witnessesNonterm) {
-                    const Rule &nontermRule = buildNontermRule(ar->newGuard);
+                if (ar.witnessesNonterm) {
+                    const Rule &nontermRule = buildNontermRule(ar.newGuard);
                     res.rules.push_back(nontermRule);
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else {
-                    LinearRule accel(rule.getLhsLoc(), ar->newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
+                    LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                     std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);

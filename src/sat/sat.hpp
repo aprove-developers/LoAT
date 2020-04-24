@@ -12,7 +12,7 @@ class Sat {
 public:
 
     virtual void add(const PropExpr &e) = 0;
-    virtual SatResult check() const = 0;
+    virtual SatResult check() = 0;
     virtual Model model() const = 0;
     virtual void push() = 0;
     virtual void pop() = 0;

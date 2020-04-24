@@ -49,7 +49,7 @@ term_t Yices::convert(const PropExpr &e) {
     }
 }
 
-SatResult Yices::check() const {
+SatResult Yices::check() {
     auto future = std::async(yices_check_context, solver, nullptr);
     if (future.wait_for(std::chrono::milliseconds(timeout)) != std::future_status::timeout) {
         switch (future.get()) {
