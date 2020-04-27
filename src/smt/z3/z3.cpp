@@ -12,8 +12,6 @@ Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx)
     updateParams();
 }
 
-
-
 uint Z3::add(const BoolExpr &e) {
     if (unsatCores) {
         const std::string &name = "m" + std::to_string(markerCount);

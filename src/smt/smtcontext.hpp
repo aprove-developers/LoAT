@@ -44,7 +44,7 @@ public:
     virtual EXPR bOr(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR bTrue() const = 0;
     virtual EXPR bFalse() const = 0;
-    virtual EXPR negate(const EXPR &x)= 0;
+    virtual EXPR negate(const EXPR &x) = 0;
 
     virtual bool isNoOp(const EXPR &e) const {
         return false;
