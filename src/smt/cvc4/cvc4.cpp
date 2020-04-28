@@ -3,7 +3,9 @@
 #include "../exprtosmt.hpp"
 #include "../smttoexpr.hpp"
 
-Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), ctx(manager), solver(&manager) { }
+Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), ctx(manager), solver(&manager) {
+    solver.setLogic("NIA");
+}
 
 void Cvc4::_add(const ForAllExpr &e) {
     solver.assertFormula(ExprToSmt<CVC4::Expr>::convert(e, ctx, varMan));
@@ -22,7 +24,7 @@ Smt::Result Cvc4::check() {
     for (const BoolExpr &m: marker) {
         assumptions.push_back(ExprToSmt<CVC4::Expr>::convert(m, ctx, varMan));
     }
-    switch (solver.checkSat(assumptions).isSat()) {
+    switch (solver.checkSat().isSat()) {
     case CVC4::Result::SAT: return Smt::Sat;
     case CVC4::Result::UNSAT: return Smt::Unsat;
     case CVC4::Result::SAT_UNKNOWN: return Smt::Unknown;
@@ -68,5 +70,8 @@ void Cvc4::_resetSolver() {
     solver.reset();
 }
 
+void Cvc4::_resetContext() {
+    ctx.reset();
+}
 
 Cvc4::~Cvc4() {}

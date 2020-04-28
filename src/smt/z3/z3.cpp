@@ -56,7 +56,7 @@ void Z3::updateParams() {
     z3::params params(z3Ctx);
     params.set(":model", models);
     params.set(":timeout", timeout);
-    params.set(":produce-unsat-cores", unsatCores);
+    params.set(":unsat-core", unsatCores);
     solver.set(params);
 }
 
@@ -82,6 +82,10 @@ std::vector<uint> Z3::unsatCore() {
 
 void Z3::_resetSolver() {
     solver.reset();
+}
+
+void Z3::_resetContext() {
+    ctx.reset();
 }
 
 BoolExpr Z3::simplify(const BoolExpr &expr, const VariableManager &varMan) {

@@ -44,7 +44,8 @@ public:
     virtual EXPR bOr(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR bTrue() const = 0;
     virtual EXPR bFalse() const = 0;
-    virtual EXPR negate(const EXPR &x)= 0;
+    virtual EXPR negate(const EXPR &x) = 0;
+    virtual EXPR forall(const std::vector<EXPR> &vars, const EXPR &body) = 0;
 
     virtual bool isNoOp(const EXPR &e) const {
         return false;
@@ -74,8 +75,16 @@ public:
     virtual void printStderr(const EXPR &e) const = 0;
 
     option<EXPR> getVariable(const Var &symbol) const {
-        auto it = symbolMap.find(symbol);
-        if (it != symbolMap.end()) {
+        auto it = varMap.find(symbol);
+        if (it != varMap.end()) {
+            return it->second;
+        }
+        return {};
+    }
+
+    option<EXPR> getBoundVariable(const Var &symbol) const {
+        auto it = boundVarMap.find(symbol);
+        if (it != boundVarMap.end()) {
             return it->second;
         }
         return {};
@@ -83,32 +92,30 @@ public:
 
     option<Var> getVariable(const std::string &name) const {
         auto it = nameMap.find(name);
-        if (it != nameMap.end()) {
+        if (it != nameMap.end() && varMap.count(it->second) > 0) {
             return it->second;
         }
         return {};
     }
 
     EXPR addNewBoundVariable(const Var &symbol, Expr::Type type = Expr::Int) {
-        assert(symbolMap.count(symbol) == 0);
-        assert(nameMap.count(symbol.get_name()) == 0);
+        assert(boundVarMap.count(symbol) == 0);
         EXPR res = generateFreshBoundVar(symbol.get_name(), type);
-        symbolMap.emplace(symbol, res);
-        nameMap.emplace(symbol.get_name(), symbol);
+        boundVarMap.emplace(symbol, res);
         return res;
     }
 
     EXPR addNewVariable(const Var &symbol, Expr::Type type = Expr::Int) {
-        assert(symbolMap.count(symbol) == 0);
+        assert(varMap.count(symbol) == 0);
         assert(nameMap.count(symbol.get_name()) == 0);
         EXPR res = generateFreshVar(symbol.get_name(), type);
-        symbolMap.emplace(symbol, res);
+        varMap.emplace(symbol, res);
         nameMap.emplace(symbol.get_name(), symbol);
         return res;
     }
 
     VarMap<EXPR> getSymbolMap() const {
-        return symbolMap;
+        return varMap;
     }
 
     std::map<uint, EXPR> getConstMap() const {
@@ -133,6 +140,14 @@ public:
 
     virtual ~SmtContext() {}
 
+    void reset() {
+        varMap.clear();
+        boundVarMap.clear();
+        nameMap.clear();
+        usedNames.clear();
+        constMap.clear();
+    }
+
 protected:
 
     std::string generateFreshVarName(const std::string &basename) {
@@ -142,6 +157,7 @@ protected:
             newname = basename + "_" + std::to_string(cnt);
         }
         usedNames.emplace(newname, 1); // newname is now used once
+        return newname;
     }
 
     EXPR generateFreshBoundVar(const std::string &basename, Expr::Type type) {
@@ -157,7 +173,8 @@ protected:
     virtual EXPR buildConst(uint id) = 0;
 
 protected:
-    VarMap<EXPR> symbolMap;
+    VarMap<EXPR> varMap;
+    VarMap<EXPR> boundVarMap;
     std::map<std::string, Var> nameMap;
     std::map<std::string, int> usedNames;
     std::map<uint, EXPR> constMap;

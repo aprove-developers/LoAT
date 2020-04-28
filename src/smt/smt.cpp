@@ -39,6 +39,7 @@ void Smt::pop() {
 
 void Smt::resetSolver() {
     _resetSolver();
+    _resetContext();
     marker.clear();
     markerCount = 0;
     markerStack = std::stack<uint>();

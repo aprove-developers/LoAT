@@ -56,6 +56,7 @@ public:
     z3::expr bTrue() const override;
     z3::expr bFalse() const override;
     z3::expr negate(const z3::expr &x) override;
+    z3::expr forall(const std::vector<z3::expr> &vars, const z3::expr &body) override;
 
     bool isNoOp(const z3::expr &e) const override;
 
@@ -83,10 +84,12 @@ public:
     void printStderr(const z3::expr &e) const override;
 
 private:
+
+    z3::context &ctx;
+
     z3::expr buildVar(const std::string &basename, Expr::Type type) override;
     z3::expr buildBoundVar(const std::string &basename, Expr::Type type) override;
     z3::expr buildConst(uint id) override;
-    z3::context &ctx;
 
 };
 

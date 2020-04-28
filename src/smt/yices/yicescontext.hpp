@@ -52,6 +52,7 @@ public:
     term_t bTrue() const override;
     term_t bFalse() const override;
     term_t negate(const term_t &x) override;
+    term_t forall(const std::vector<term_t> &vars, const term_t &body) override;
 
     bool isLit(const term_t &e) const override;
     bool isTrue(const term_t &e) const override;

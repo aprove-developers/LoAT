@@ -28,6 +28,7 @@ public:
     CVC4::Expr bTrue() const override;
     CVC4::Expr bFalse() const override;
     CVC4::Expr negate(const CVC4::Expr &x) override;
+    CVC4::Expr forall(const std::vector<CVC4::Expr> &vars, const CVC4::Expr &body) override;
 
     bool isLit(const CVC4::Expr &e) const override;
     bool isTrue(const CVC4::Expr &e) const override;
@@ -54,10 +55,11 @@ public:
 
 private:
     CVC4::ExprManager &manager;
+    std::map<CVC4::Expr, std::string> varNames;
+
     CVC4::Expr buildVar(const std::string &basename, Expr::Type type) override;
     CVC4::Expr buildBoundVar(const std::string &basename, Expr::Type type) override;
     CVC4::Expr buildConst(uint id) override;
-    std::map<CVC4::Expr, std::string> varNames;
 
 };
 

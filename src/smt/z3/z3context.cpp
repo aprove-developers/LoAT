@@ -99,6 +99,14 @@ z3::expr Z3Context::negate(const z3::expr &x) {
     return !x;
 }
 
+z3::expr Z3Context::forall(const std::vector<z3::expr> &vars, const z3::expr &body) {
+    z3::expr_vector z3Vars(ctx);
+    for (const z3::expr &x: vars) {
+        z3Vars.push_back(x);
+    }
+    return z3::forall(z3Vars, body);
+}
+
 bool Z3Context::isNoOp(const z3::expr &e) const {
     switch (e.decl().decl_kind()) {
     case Z3_OP_TO_INT:

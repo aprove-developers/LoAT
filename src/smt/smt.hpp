@@ -62,14 +62,15 @@ protected:
     std::vector<BoolExpr> marker;
     std::map<BoolExpr, uint> markerMap;
 
-    bool unsatCores;
-    bool models;
+    bool unsatCores = false;
+    bool models = false;
     uint timeout = Config::Smt::DefaultTimeout;
 
     virtual void _add(const ForAllExpr &e) = 0;
     virtual void _push() = 0;
     virtual void _pop() = 0;
     virtual void _resetSolver() = 0;
+    virtual void _resetContext() = 0;
     virtual void updateParams() = 0;
 
 private:

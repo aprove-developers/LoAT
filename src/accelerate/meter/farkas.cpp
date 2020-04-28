@@ -30,8 +30,7 @@ BoolExpr FarkasLemma::apply(
         Expr c0,
         int delta,
         VariableManager &varMan,
-        const VarSet &params,
-        Expr::Type lambdaType)
+        const VarSet &params)
 {
     assert(vars.size() == coeffs.size());
 
@@ -45,7 +44,7 @@ BoolExpr FarkasLemma::apply(
         assert(rel.isLinear(varSet) && rel.isIneq());
         assert(rel.relOp() == Rel::leq);
 
-        Var var = varMan.getFreshUntrackedSymbol("l", lambdaType);
+        Var var = varMan.getFreshUntrackedSymbol("l", Expr::Rational);
         lambda[rel] = var;
         res.push_back(var >= 0);
     }
@@ -98,14 +97,13 @@ BoolExpr FarkasLemma::apply(
         Var c0,
         int delta,
         VariableManager &varMan,
-        const VarSet &params,
-        Expr::Type lambdaType)
+        const VarSet &params)
 {
     std::vector<Expr> theCoeffs;
     for (const Var &x: coeffs) {
         theCoeffs.push_back(x);
     }
-    return apply(constraints, vars, theCoeffs, c0, delta, varMan, params, lambdaType);
+    return apply(constraints, vars, theCoeffs, c0, delta, varMan, params);
 }
 
 const BoolExpr FarkasLemma::apply(
@@ -113,8 +111,7 @@ const BoolExpr FarkasLemma::apply(
         const RelSet &conclusion,
         const VarSet &vars,
         const VarSet &params,
-        VariableManager &varMan,
-        Expr::Type lambdaType) {
+        VariableManager &varMan) {
     const BoolExpr normalizedPremise = premise->toLeq();
     vector<Var> varList(vars.begin(), vars.end());
     RelSet splitConclusion;
@@ -128,7 +125,7 @@ const BoolExpr FarkasLemma::apply(
             assert(false);
         }
     }
-    return applyRec(normalizedPremise, splitConclusion, varList, params, varMan, lambdaType);
+    return applyRec(normalizedPremise, splitConclusion, varList, params, varMan);
 }
 
 const BoolExpr FarkasLemma::applyRec(
@@ -136,8 +133,7 @@ const BoolExpr FarkasLemma::applyRec(
         const RelSet &conclusion,
         const std::vector<Var> &vars,
         const VarSet &params,
-        VariableManager &varMan,
-        Expr::Type lambdaType) {
+        VariableManager &varMan) {
     std::vector<BoolExpr> res;
     if (premise->isConjunction() || premise->getLit()) {
         for (const Rel &c: conclusion) {
@@ -146,12 +142,12 @@ const BoolExpr FarkasLemma::applyRec(
                 coefficients.push_back(c.lhs().coeff(x, 1));
             }
             Expr c0 = c.rhs();
-            res.push_back(FarkasLemma::apply(premise->lits(), vars, coefficients, c0, 0, varMan, params, lambdaType));
+            res.push_back(FarkasLemma::apply(premise->lits(), vars, coefficients, c0, 0, varMan, params));
         }
         return buildAnd(res);
     } else {
         for (const BoolExpr &c: premise->getChildren()) {
-            res.push_back(applyRec(c, conclusion, vars, params, varMan, lambdaType));
+            res.push_back(applyRec(c, conclusion, vars, params, varMan));
         }
         return premise->isAnd() ? buildAnd(res) : buildOr(res);
     }

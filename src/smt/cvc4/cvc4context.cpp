@@ -84,6 +84,11 @@ CVC4::Expr Cvc4Context::negate(const CVC4::Expr &x) {
     return x.notExpr();
 }
 
+CVC4::Expr Cvc4Context::forall(const std::vector<CVC4::Expr> &vars, const CVC4::Expr &body) {
+    const CVC4::Expr &boundVarList = manager.mkExpr(CVC4::Kind::BOUND_VAR_LIST, vars);
+    return manager.mkExpr(CVC4::Kind::FORALL, boundVarList, body);
+}
+
 bool Cvc4Context::isLit(const CVC4::Expr &e) const {
     switch (e.getKind()) {
     case CVC4::Kind::GT:

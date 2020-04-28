@@ -69,8 +69,7 @@ namespace FarkasLemma {
                    Expr c0,
                    int delta,
                    VariableManager &varMan,
-                   const VarSet &params = VarSet(),
-                   Expr::Type lambdaType = Expr::Rational);
+                   const VarSet &params = VarSet());
 
     BoolExpr apply(const RelSet &constraints,
                    const std::vector<Var> &vars,
@@ -78,24 +77,21 @@ namespace FarkasLemma {
                    Var c0,
                    int delta,
                    VariableManager &varMan,
-                   const VarSet &params = VarSet(),
-                   Expr::Type lambdaType = Expr::Rational);
+                   const VarSet &params = VarSet());
 
     const BoolExpr apply(
             const BoolExpr &premise,
             const RelSet &conclusion,
             const VarSet &vars,
             const VarSet &params,
-            VariableManager &varMan,
-            Expr::Type lambdaType = Expr::Rational);
+            VariableManager &varMan);
 
     const BoolExpr applyRec(
             const BoolExpr &premise,
             const RelSet &conclusion,
             const std::vector<Var> &vars,
             const VarSet &params,
-            VariableManager &varMan,
-            Expr::Type lambdaType = Expr::Rational);
+            VariableManager &varMan);
 
 };
 

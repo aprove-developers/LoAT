@@ -105,6 +105,10 @@ void Yices::_resetSolver() {
     yices_reset_context(solver);
 }
 
+void Yices::_resetContext() {
+    ctx.reset();
+}
+
 void Yices::updateParams() {
     // do nothing
 }

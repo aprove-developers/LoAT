@@ -36,6 +36,7 @@ private:
     void _push() override;
     void _pop() override;
     void _resetSolver() override;
+    void _resetContext() override;
     void updateParams() override;
     GiNaC::numeric getRealFromModel(model_t *model, type_t symbol);
 

@@ -115,6 +115,11 @@ term_t YicesContext::negate(const term_t &x) {
     return yices_not(x);
 }
 
+term_t YicesContext::forall(const std::vector<term_t> &vars, const term_t &body) {
+    std::vector<term_t> mutVars(vars);
+    return yices_forall(mutVars.size(), &mutVars[0], body);
+}
+
 bool YicesContext::isAnd(const term_t &e) const {
     return false; // yices represents x /\ y as !(x \/ y)
 }

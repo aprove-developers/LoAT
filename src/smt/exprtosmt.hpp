@@ -39,7 +39,15 @@ public:
 
     static EXPR convert(const ForAllExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
         ExprToSmt<EXPR> converter(ctx, varMan, e.boundVars);
-        return converter.convertBoolEx(e.expr);
+        const EXPR &body = converter.convertBoolEx(e.expr);
+        if (e.boundVars.empty()) {
+            return body;
+        }
+        std::vector<EXPR> vars;
+        for (const Var &var: e.boundVars) {
+            vars.push_back(converter.convertSymbol(var));
+        }
+        return ctx.forall(vars, body);
     }
 
 protected:
@@ -153,16 +161,17 @@ protected:
     }
 
     EXPR convertSymbol(const Var &e) {
-        // if the symbol is already known, we re-use it (regardless of its type!)
-        auto optVar = context.getVariable(e);
-        if (optVar) {
-            return optVar.get();
-        }
-
-        // otherwise we add a fresh z3 variable and associate it with this symbol
         if (boundVars.count(e) > 0) {
+            auto optVar = context.getBoundVariable(e);
+            if (optVar) {
+                return optVar.get();
+            }
             return context.addNewBoundVariable(e, varMan.getType(e));
         } else {
+            auto optVar = context.getVariable(e);
+            if (optVar) {
+                return optVar.get();
+            }
             return context.addNewVariable(e, varMan.getType(e));
         }
     }
