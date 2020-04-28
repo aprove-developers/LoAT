@@ -3,24 +3,19 @@
 
 Smt::~Smt() {}
 
-uint Smt::add(const ForAllExpr &e) {
+uint Smt::add(const BoolExpr &e) {
     if (unsatCores) {
         const BoolExpr &m = buildConst(markerCount);
         marker.push_back(m);
         uint idx = marker.size() - 1;
         markerMap[m] = idx;
         ++markerCount;
-        ForAllExpr imp = ((!m) | e.expr)->quantify(e.boundVars);
-        _add(imp);
+        _add((!m) | e);
         return idx;
     } else {
         _add(e);
         return 0;
     }
-}
-
-uint Smt::add(const BoolExpr &e) {
-    return add(e->quantify({}));
 }
 
 void Smt::push() {
@@ -98,21 +93,4 @@ Smt::Logic Smt::chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<S
         }
     }
     return res;
-}
-
-Smt::Logic Smt::chooseLogic(const std::vector<ForAllExpr> &xs, const std::vector<Subs> &up) {
-    std::vector<BoolExpr> boolExpr;
-    bool quantified = false;
-    for (const ForAllExpr &x: xs) {
-        boolExpr.push_back(x.expr);
-        quantified |= !x.boundVars.empty();
-    }
-    Logic l = chooseLogic(boolExpr, up);
-    if (!quantified) return l;
-    switch (l) {
-    case Smt::QF_LA: return LA;
-    case Smt::QF_NA: return NA;
-    case Smt::QF_ENA: return ENA;
-    default: assert(false && "chooseLogic returned quantified logic for quantifier free expressions");
-    }
 }

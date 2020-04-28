@@ -27,14 +27,14 @@ namespace strengthening {
     typedef ConstraintSolver Self;
 
     const BoolExpr Self::solve(
-            const std::vector<ForAllExpr> &constraints,
+            const BoolExpr &constraints,
             const Templates &templates,
             VariableManager &varMan) {
         return ConstraintSolver(constraints, templates, varMan).solve();
     }
 
     Self::ConstraintSolver(
-            const std::vector<ForAllExpr> &constraints,
+            const BoolExpr &constraints,
             const Templates &templates,
             VariableManager &varMan):
             constraints(constraints),
@@ -42,10 +42,8 @@ namespace strengthening {
             varMan(varMan) { }
 
     const BoolExpr Self::solve() const {
-        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic(constraints), varMan);
-        for (const ForAllExpr &e: constraints) {
-            solver->add(e);
-        }
+        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), varMan);
+        solver->add(constraints);
         if (solver->check() == Smt::Sat) {
             return instantiateTemplates(solver->model());
         }

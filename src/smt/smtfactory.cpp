@@ -2,7 +2,6 @@
 #include "../config.hpp"
 #include "z3/z3.hpp"
 #include "yices/yices.hpp"
-#include "cvc4/cvc4.hpp"
 
 std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager &varMan, uint timeout) {
     std::unique_ptr<Smt> res;
@@ -12,11 +11,6 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
         break;
     case Smt::QF_NA:
     case Smt::QF_ENA:
-    case Smt::ENA:
-        res = std::unique_ptr<Smt>(new Z3(varMan));
-        break;
-    case Smt::LA:
-    case Smt::NA:
         res = std::unique_ptr<Smt>(new Z3(varMan));
         break;
     }

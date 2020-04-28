@@ -30,10 +30,10 @@ namespace strengthening {
 
     public:
 
-        static const std::vector<ForAllExpr> buildSmtConstraints(const Templates &templates,
-                                                                 const Rule &rule,
-                                                                 const GuardContext &guardCtx,
-                                                                 VariableManager &varMan);
+        static const BoolExpr buildSmtConstraints(const Templates &templates,
+                                                  const Rule &rule,
+                                                  const GuardContext &guardCtx,
+                                                  VariableManager &varMan);
 
     private:
 
@@ -54,7 +54,7 @@ namespace strengthening {
 
         const RelSet findIrrelevantConstraints() const;
 
-        const std::vector<ForAllExpr> buildSmtConstraints() const;
+        const BoolExpr buildSmtConstraints() const;
 
     };
 

@@ -12,9 +12,8 @@ class Smt
 public:
 
     enum Result {Sat, Unknown, Unsat};
-    enum Logic {QF_LA, QF_NA, QF_ENA, LA, NA, ENA};
+    enum Logic {QF_LA, QF_NA, QF_ENA};
 
-    uint add(const ForAllExpr &e);
     uint add(const BoolExpr &e);
     void push();
     void pop();
@@ -32,7 +31,6 @@ public:
     static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
     static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up = {});
-    static Logic chooseLogic(const std::vector<ForAllExpr> &xs, const std::vector<Subs> &up = {});
 
     template<class RELS, class UP> static Logic chooseLogic(const std::vector<RELS> &g, const std::vector<UP> &up) {
         Logic res = QF_LA;
@@ -66,7 +64,7 @@ protected:
     bool models = false;
     uint timeout = Config::Smt::DefaultTimeout;
 
-    virtual void _add(const ForAllExpr &e) = 0;
+    virtual void _add(const BoolExpr &e) = 0;
     virtual void _push() = 0;
     virtual void _pop() = 0;
     virtual void _resetSolver() = 0;

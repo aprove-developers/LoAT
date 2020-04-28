@@ -45,7 +45,6 @@ public:
     virtual EXPR bTrue() const = 0;
     virtual EXPR bFalse() const = 0;
     virtual EXPR negate(const EXPR &x) = 0;
-    virtual EXPR forall(const std::vector<EXPR> &vars, const EXPR &body) = 0;
 
     virtual bool isNoOp(const EXPR &e) const {
         return false;
@@ -82,27 +81,12 @@ public:
         return {};
     }
 
-    option<EXPR> getBoundVariable(const Var &symbol) const {
-        auto it = boundVarMap.find(symbol);
-        if (it != boundVarMap.end()) {
-            return it->second;
-        }
-        return {};
-    }
-
     option<Var> getVariable(const std::string &name) const {
         auto it = nameMap.find(name);
         if (it != nameMap.end() && varMap.count(it->second) > 0) {
             return it->second;
         }
         return {};
-    }
-
-    EXPR addNewBoundVariable(const Var &symbol, Expr::Type type = Expr::Int) {
-        assert(boundVarMap.count(symbol) == 0);
-        EXPR res = generateFreshBoundVar(symbol.get_name(), type);
-        boundVarMap.emplace(symbol, res);
-        return res;
     }
 
     EXPR addNewVariable(const Var &symbol, Expr::Type type = Expr::Int) {
@@ -142,7 +126,6 @@ public:
 
     void reset() {
         varMap.clear();
-        boundVarMap.clear();
         nameMap.clear();
         usedNames.clear();
         constMap.clear();
@@ -160,21 +143,15 @@ protected:
         return newname;
     }
 
-    EXPR generateFreshBoundVar(const std::string &basename, Expr::Type type) {
-        return buildBoundVar(generateFreshVarName(basename), type);
-    }
-
     EXPR generateFreshVar(const std::string &basename, Expr::Type type) {
         return buildVar(generateFreshVarName(basename), type);
     }
 
     virtual EXPR buildVar(const std::string &basename, Expr::Type type) = 0;
-    virtual EXPR buildBoundVar(const std::string &basename, Expr::Type type) = 0;
     virtual EXPR buildConst(uint id) = 0;
 
 protected:
     VarMap<EXPR> varMap;
-    VarMap<EXPR> boundVarMap;
     std::map<std::string, Var> nameMap;
     std::map<std::string, int> usedNames;
     std::map<uint, EXPR> constMap;

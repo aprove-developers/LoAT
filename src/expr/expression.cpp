@@ -581,6 +581,41 @@ bool Subs::isPoly() const {
     });
 }
 
+void Subs::collectDomain(VarSet &vars) const {
+    for (const auto &p: *this) {
+        vars.insert(p.first);
+    }
+}
+
+void Subs::collectCoDomainVars(VarSet &vars) const {
+    for (const auto &p: *this) {
+        p.second.collectVars(vars);
+    }
+}
+
+void Subs::collectAllVars(VarSet &vars) const {
+    collectCoDomainVars(vars);
+    collectDomain(vars);
+}
+
+VarSet Subs::domain() const {
+    VarSet res;
+    collectDomain(res);
+    return res;
+}
+
+VarSet Subs::coDomainVars() const {
+    VarSet res;
+    collectCoDomainVars(res);
+    return res;
+}
+
+VarSet Subs::allVars() const {
+    VarSet res;
+    collectAllVars(res);
+    return res;
+}
+
 ExprMap::ExprMap(): KeyToExprMap<Expr>() {}
 
 ExprMap::ExprMap(const Expr &key, const Expr &val) {

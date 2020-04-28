@@ -293,7 +293,7 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     meter.buildLinearConstraints();
 
     // solve constraints for the metering function (without the "GuardPositiveImplication" for now)
-    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::LA, varMan, Config::Smt::MeterTimeout);
+    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::QF_LA, varMan, Config::Smt::MeterTimeout);
     solver->add(meter.genNotGuardImplication());
     solver->add(meter.genUpdateImplications());
     solver->add(meter.genNonTrivial());
@@ -367,7 +367,7 @@ option<pair<Rule, Proof>> MeteringFinder::instantiateTempVarsHeuristic(ITSProble
     meter.buildMeteringVariables();
     meter.buildLinearConstraints();
 
-    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Smt::MeterTimeout);
+    std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::QF_LA, its, Config::Smt::MeterTimeout);
     Smt::Result smtRes = Smt::Result::Unsat; // this method should only be called if generate() fails
 
     Guard oldGuard = meter.guard;

@@ -12,7 +12,7 @@ Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx)
     updateParams();
 }
 
-void Z3::_add(const ForAllExpr &e) {
+void Z3::_add(const BoolExpr &e) {
     solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
 }
 
@@ -25,11 +25,16 @@ void Z3::_pop() {
 }
 
 Smt::Result Z3::check() {
-    z3::expr_vector z3Marker(z3Ctx);
-    for (const BoolExpr &m: marker) {
-        z3Marker.push_back(ExprToSmt<z3::expr>::convert(m, ctx, varMan));
+    z3::check_result res;
+    if (unsatCores) {
+        z3::expr_vector z3Marker(z3Ctx);
+        for (const BoolExpr &m: marker) {
+            z3Marker.push_back(ExprToSmt<z3::expr>::convert(m, ctx, varMan));
+        }
+        res = solver.check(z3Marker);
+    } else {
+        res = solver.check();
     }
-    z3::check_result res = solver.check(z3Marker);
     switch (res) {
     case z3::sat: return Sat;
     case z3::unsat: return Unsat;

@@ -27,10 +27,6 @@ z3::expr Z3Context::buildVar(const std::string &name, Expr::Type type) {
     return (type == Expr::Int) ? ctx.int_const(name.c_str()) : ctx.real_const(name.c_str());
 }
 
-z3::expr Z3Context::buildBoundVar(const std::string &name, Expr::Type type) {
-    return buildVar(name, type);
-}
-
 z3::expr Z3Context::buildConst(uint id) {
     return ctx.bool_const(("x" + to_string(id)).c_str());
 }
@@ -97,14 +93,6 @@ z3::expr Z3Context::bFalse() const {
 
 z3::expr Z3Context::negate(const z3::expr &x) {
     return !x;
-}
-
-z3::expr Z3Context::forall(const std::vector<z3::expr> &vars, const z3::expr &body) {
-    z3::expr_vector z3Vars(ctx);
-    for (const z3::expr &x: vars) {
-        z3Vars.push_back(x);
-    }
-    return z3::forall(z3Vars, body);
 }
 
 bool Z3Context::isNoOp(const z3::expr &e) const {

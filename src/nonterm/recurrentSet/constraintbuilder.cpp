@@ -17,6 +17,7 @@
 #include "../../accelerate/meter/farkas.hpp"
 #include "constraintbuilder.hpp"
 #include <algorithm>
+#include "../../accelerate/meter/farkas.hpp"
 
 namespace strengthening {
 
@@ -30,38 +31,29 @@ namespace strengthening {
         guardCtx(guardCtx),
         varMan(varMan) {}
 
-    const std::vector<ForAllExpr> ConstraintBuilder::buildSmtConstraints(const Templates &templates,
-                                                                         const Rule &rule,
-                                                                         const GuardContext &guardCtx,
-                                                                         VariableManager &varMan) {
+    const BoolExpr ConstraintBuilder::buildSmtConstraints(const Templates &templates,
+                                                          const Rule &rule,
+                                                          const GuardContext &guardCtx,
+                                                          VariableManager &varMan) {
         ConstraintBuilder builder(templates, rule, guardCtx, varMan);
         return builder.buildSmtConstraints();
     }
 
-    const std::vector<ForAllExpr> ConstraintBuilder::buildSmtConstraints() const {
+    const BoolExpr ConstraintBuilder::buildSmtConstraints() const {
         Guard monotonicityPremise;
         const RelSet &irrelevantConstraints = findIrrelevantConstraints();
         const BoolExpr reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
         Implication imp = buildTemplatesInvariantImplication(reducedGuard);
-        std::vector<ForAllExpr> res;
+        VarSet vars = rule.vars();
+        BoolExpr res = FarkasLemma::apply(imp.premise, imp.conclusion, vars, templates.params(), varMan);
+        RelSet conclusion;
         for (const Rel &rel: guardCtx.todo) {
             for (const Subs &up: rule.getUpdates()) {
-                const BoolExpr invariant = ((!imp.premise) | rel.subs(up));
-                VarSet boundVars = invariant->vars();
-                for (const Var &x: templates.params()) {
-                    boundVars.erase(x);
-                }
-                res.push_back(invariant->quantify(boundVars));
+                conclusion.insert(rel.subs(up));
             }
         }
-        const BoolExpr initiation = constructInitiationConstraints(reducedGuard);
-        res.push_back(initiation->quantify({}));
-        BoolExpr templatesInvariant = ((!imp.premise) | imp.conclusion);
-        VarSet boundVars = templatesInvariant->vars();
-        for (const Var &x: templates.params()) {
-            boundVars.erase(x);
-        }
-        res.push_back(templatesInvariant->quantify(boundVars));
+        res = res & FarkasLemma::apply(imp.premise, conclusion, vars, templates.params(), varMan);
+        res = res & constructInitiationConstraints(reducedGuard);
         return res;
     }
 
@@ -99,7 +91,7 @@ namespace strengthening {
                 conclusion.insert(rel);
             }
         }
-        return {reducedGuard & buildAnd(premise), buildAnd(conclusion)};
+        return {reducedGuard & buildAnd(premise), conclusion};
     }
 
     const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {

@@ -480,6 +480,18 @@ public:
 
     bool isPoly() const;
 
+    VarSet domain() const;
+
+    VarSet coDomainVars() const;
+
+    VarSet allVars() const;
+
+    void collectDomain(VarSet &vars) const;
+
+    void collectCoDomainVars(VarSet &vars) const;
+
+    void collectAllVars(VarSet &vars) const;
+
 private:
     void putGinac(const Var &key, const Expr &val) override;
     void eraseGinac(const Var &key) override;

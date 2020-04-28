@@ -32,7 +32,7 @@ private:
     static uint running;
     static std::mutex mutex;
 
-    void _add(const ForAllExpr &e) override;
+    void _add(const BoolExpr &e) override;
     void _push() override;
     void _pop() override;
     void _resetSolver() override;

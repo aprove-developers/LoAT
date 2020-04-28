@@ -37,24 +37,11 @@ public:
         return converter.convertBoolEx(e);
     }
 
-    static EXPR convert(const ForAllExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
-        ExprToSmt<EXPR> converter(ctx, varMan, e.boundVars);
-        const EXPR &body = converter.convertBoolEx(e.expr);
-        if (e.boundVars.empty()) {
-            return body;
-        }
-        std::vector<EXPR> vars;
-        for (const Var &var: e.boundVars) {
-            vars.push_back(converter.convertSymbol(var));
-        }
-        return ctx.forall(vars, body);
-    }
 
 protected:
-    ExprToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan, const VarSet &boundVars = {}):
+    ExprToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan):
         context(context),
-        varMan(varMan),
-        boundVars(boundVars) {}
+        varMan(varMan) {}
 
     EXPR convertBoolEx(const BoolExpr &e) {
         if (e->getLit()) {
@@ -161,19 +148,11 @@ protected:
     }
 
     EXPR convertSymbol(const Var &e) {
-        if (boundVars.count(e) > 0) {
-            auto optVar = context.getBoundVariable(e);
-            if (optVar) {
-                return optVar.get();
-            }
-            return context.addNewBoundVariable(e, varMan.getType(e));
-        } else {
-            auto optVar = context.getVariable(e);
-            if (optVar) {
-                return optVar.get();
-            }
-            return context.addNewVariable(e, varMan.getType(e));
+        auto optVar = context.getVariable(e);
+        if (optVar) {
+            return optVar.get();
         }
+        return context.addNewVariable(e, varMan.getType(e));
     }
 
     EXPR convertRelational(const Rel &rel) {
@@ -196,7 +175,6 @@ protected:
 private:
     SmtContext<EXPR> &context;
     const VariableManager &varMan;
-    VarSet boundVars;
 };
 
 #endif // ExprToSmt_H

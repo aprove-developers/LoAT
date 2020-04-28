@@ -32,13 +32,6 @@ term_t YicesContext::buildVar(const std::string &name, Expr::Type type) {
     return res;
 }
 
-term_t YicesContext::buildBoundVar(const std::string &name, Expr::Type type) {
-    term_t res = (type == Expr::Int) ? yices_new_variable(yices_int_type()) : yices_new_variable(yices_real_type());
-    yices_set_term_name(res, name.c_str());
-    varNames[res] = name;
-    return res;
-}
-
 term_t YicesContext::buildConst(uint id) {
     term_t res = yices_new_uninterpreted_term(yices_bool_type());
     yices_set_term_name(res, ("x" + to_string(id)).c_str());
@@ -113,11 +106,6 @@ term_t YicesContext::bFalse() const {
 
 term_t YicesContext::negate(const term_t &x) {
     return yices_not(x);
-}
-
-term_t YicesContext::forall(const std::vector<term_t> &vars, const term_t &body) {
-    std::vector<term_t> mutVars(vars);
-    return yices_forall(mutVars.size(), &mutVars[0], body);
 }
 
 bool YicesContext::isAnd(const term_t &e) const {

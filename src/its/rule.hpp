@@ -39,6 +39,11 @@ public:
     LocationIdx getLoc() const { return loc; }
     const BoolExpr& getGuard() const { return guard; }
     const Expr& getCost() const { return cost; }
+
+    void collectVars(VarSet &vars) const {
+        guard->collectVars(vars);
+        cost.collectVars(vars);
+    }
 };
 
 
@@ -51,6 +56,10 @@ public:
 
     LocationIdx getLoc() const { return loc; }
     const Subs& getUpdate() const { return update; }
+
+    void collectVars(VarSet &vars) const {
+        update.collectAllVars(vars);
+    }
 
 };
 
@@ -128,6 +137,9 @@ public:
     Rule withGuard(const BoolExpr &guard) const;
     Rule withCost(const Expr &cost) const;
     Rule withUpdate(uint i, const Subs &up) const;
+
+    VarSet vars() const;
+    void collectVars(VarSet &vars) const;
 };
 
 

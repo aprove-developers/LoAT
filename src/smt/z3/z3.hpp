@@ -26,7 +26,7 @@ private:
     z3::solver solver;
 
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
-    void _add(const ForAllExpr &e) override;
+    void _add(const BoolExpr &e) override;
     void _push() override;
     void _pop() override;
     void _resetSolver() override;

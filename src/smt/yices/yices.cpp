@@ -15,7 +15,7 @@ Yices::~Yices() {
 }
 
 Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), varMan(varMan), config(yices_new_config()) {
-    if (logic == Smt::NA) {
+    if (logic == Smt::QF_NA) {
         yices_set_config(config, "solver-type", "mcsat");
     }
     solver = yices_new_context(config);
@@ -24,7 +24,7 @@ Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), v
     mutex.unlock();
 }
 
-void Yices::_add(const ForAllExpr &e) {
+void Yices::_add(const BoolExpr &e) {
     term_t converted = ExprToSmt<term_t>::convert(e, ctx, varMan);
     if (yices_assert_formula(solver, converted) < 0) {
         throw YicesError();
@@ -40,11 +40,16 @@ void Yices::_pop() {
 }
 
 Smt::Result Yices::check() {
-    std::vector<term_t> assumptions;
-    for (const BoolExpr &m: marker) {
-        assumptions.push_back(ExprToSmt<term_t>::convert(m, ctx, varMan));
+    std::future<smt_status> future;
+    if (unsatCores) {
+        std::vector<term_t> assumptions;
+        for (const BoolExpr &m: marker) {
+            assumptions.push_back(ExprToSmt<term_t>::convert(m, ctx, varMan));
+        }
+        future = std::async(yices_check_context_with_assumptions, solver, nullptr, assumptions.size(), &assumptions[0]);
+    } else {
+        future = std::async(yices_check_context, solver, nullptr);
     }
-    std::future<smt_status> future = std::async(yices_check_context_with_assumptions, solver, nullptr, assumptions.size(), &assumptions[0]);
     if (future.wait_for(std::chrono::milliseconds(timeout)) != std::future_status::timeout) {
         switch (future.get()) {
         case STATUS_SAT:

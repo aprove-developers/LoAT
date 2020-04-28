@@ -38,18 +38,8 @@ namespace strengthening {
     const option<BoolExpr> Strengthener::apply(const BoolExpr &guard) const {
         const GuardContext &guardCtx = GuardContextBuilder::build(guard, rule.getUpdates(), varMan);
         const Templates &templates = TemplateBuilder::build(guardCtx, rule, varMan);
-        std::vector<ForAllExpr> constraints = ConstraintBuilder::buildSmtConstraints(templates, rule, guardCtx, varMan);
-        auto trivial = [](const ForAllExpr &e){
-            return e.expr == True;
-        };
-        for (auto it = constraints.begin(); it < constraints.end();) {
-            if (trivial(*it)) {
-                it = constraints.erase(it);
-            } else {
-                ++it;
-            }
-        }
-        if (constraints.empty()) {
+        const BoolExpr constraints = ConstraintBuilder::buildSmtConstraints(templates, rule, guardCtx, varMan);
+        if (constraints == True) {
             return {};
         }
         const BoolExpr newInv = ConstraintSolver::solve(constraints, templates, varMan);

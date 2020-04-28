@@ -39,7 +39,7 @@ namespace strengthening {
 
     struct Implication {
         BoolExpr premise;
-        BoolExpr conclusion;
+        RelSet conclusion;
     };
 
 }

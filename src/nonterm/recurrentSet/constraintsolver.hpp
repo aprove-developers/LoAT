@@ -29,17 +29,17 @@ namespace strengthening {
     public:
 
         static const BoolExpr solve(
-                const std::vector<ForAllExpr> &constraints,
+                const BoolExpr &constraints,
                 const Templates &templates,
                 VariableManager &varMan);
 
     private:
-        const std::vector<ForAllExpr> &constraints;
+        const BoolExpr &constraints;
         const Templates &templates;
         VariableManager &varMan;
 
         ConstraintSolver(
-                const std::vector<ForAllExpr> &constraints,
+                const BoolExpr &constraints,
                 const Templates &templates,
                 VariableManager &varMan);
 

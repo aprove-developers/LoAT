@@ -149,10 +149,6 @@ add_executable(${EXECUTABLE}
         src/smt/yices/yices.hpp
         src/smt/yices/yicescontext.cpp
         src/smt/yices/yicescontext.hpp
-        src/smt/cvc4/cvc4.cpp
-        src/smt/cvc4/cvc4.hpp
-        src/smt/cvc4/cvc4context.cpp
-        src/smt/cvc4/cvc4context.hpp
         src/smt/smtfactory.cpp
         src/smt/smtfactory.hpp
         src/smt/model.cpp
@@ -203,9 +199,4 @@ if (NOT Z3)
     return()
 endif()
 
-if (NOT CVC4)
-    message(STATUS "CVC4 not found.")
-    return()
-endif()
-
-target_link_libraries(${EXECUTABLE} ${Z3} ${CVC4} ${PURRS} ${GINAC} ${NTL} ${CLN} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})
+target_link_libraries(${EXECUTABLE} ${Z3} ${PURRS} ${GINAC} ${NTL} ${CLN} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})
