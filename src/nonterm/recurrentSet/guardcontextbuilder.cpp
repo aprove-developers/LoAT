@@ -60,9 +60,9 @@ namespace strengthening {
                 const BoolExpr conclusion = buildLit(conclusionExp);
                 solver->push();
                 solver->add(!conclusion);
-                const SatResult &smtRes = solver->check();
+                const Smt::Result &smtRes = solver->check();
                 solver->pop();
-                if (smtRes != Unsat) {
+                if (smtRes != Smt::Unsat) {
                     isInvariant = false;
                     break;
                 }

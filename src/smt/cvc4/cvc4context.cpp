@@ -10,6 +10,10 @@ CVC4::Expr Cvc4Context::buildVar(const std::string &name, Expr::Type type) {
     return res;
 }
 
+CVC4::Expr Cvc4Context::buildConst(uint id) {
+    return manager.mkVar(manager.booleanType());
+}
+
 CVC4::Expr Cvc4Context::getInt(long val) {
     return manager.mkConst(CVC4::Rational(val, 1l));
 }
@@ -70,7 +74,7 @@ CVC4::Expr Cvc4Context::bFalse() const {
     return manager.mkConst(false);
 }
 
-CVC4::Expr negate(const CVC4::Expr &x) {
+CVC4::Expr Cvc4Context::negate(const CVC4::Expr &x) {
     return x.notExpr();
 }
 
@@ -136,7 +140,7 @@ bool Cvc4Context::isInt(const CVC4::Expr &e) const {
 
 long Cvc4Context::toInt(const CVC4::Expr &e) const {
     assert(isInt(e));
-    return e.getConst<CVC4::Integer>().getLong();
+    return e.getConst<CVC4::Rational>().getNumerator().getLong();
 }
 
 long Cvc4Context::numerator(const CVC4::Expr &e) const {

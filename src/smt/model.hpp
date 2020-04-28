@@ -1,5 +1,5 @@
-#ifndef SMT_MODEL_HPP
-#define SMT_MODEL_HPP
+#ifndef MODEL_HPP
+#define MODEL_HPP
 
 #include "../expr/boolexpr.hpp"
 
@@ -7,17 +7,20 @@ class Model
 {
 public:
 
-    Model(VarMap<GiNaC::numeric> vars);
+    Model(VarMap<GiNaC::numeric> vars, std::map<uint, bool> constants);
 
     GiNaC::numeric get(const Var &var) const;
+    bool get(uint id) const;
     bool contains(const Var &var) const;
+    bool contains(uint id) const;
 
     friend std::ostream& operator<<(std::ostream &s, const Model &e);
 
 private:
 
     VarMap<GiNaC::numeric> vars;
+    std::map<uint, bool> constants;
 
 };
 
-#endif // SMT_MODEL_HPP
+#endif // MODEL_HPP

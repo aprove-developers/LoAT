@@ -42,7 +42,7 @@ namespace nonterm {
         if (r.isLinear()) {
             Rule chained = Chaining::chainRules(its, r, r, false).get();
             const Subs &up = chained.getUpdate(0);
-            if (Smt::check(chained.getGuard(), its) == Sat && Smt::isImplication(chained.getGuard(), chained.getGuard()->subs(up), its)) {
+            if (Smt::check(chained.getGuard(), its) == Smt::Sat && Smt::isImplication(chained.getGuard(), chained.getGuard()->subs(up), its)) {
                 Rule nontermRule(chained.getLhsLoc(), chained.getGuard(), Expr::NontermSymbol, sink, {});
                 Proof proof;
                 proof.ruleTransformationProof(r, "unrolling", chained, its);
@@ -67,8 +67,8 @@ namespace nonterm {
                 const auto &it = up.find(var);
                 solver->add(Rel::buildEq(var, it == up.end() ? var : it->second));
             }
-            SatResult smtRes = solver->check();
-            if (smtRes == Sat) {
+            Smt::Result smtRes = solver->check();
+            if (smtRes == Smt::Sat) {
                 std::vector<BoolExpr> newGuard;
                 newGuard.emplace_back(r.getGuard());
                 for (const Var &var: vars) {

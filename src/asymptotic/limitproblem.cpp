@@ -403,7 +403,7 @@ std::vector<Rel> LimitProblem::getQuery() const {
 
 
 bool LimitProblem::isUnsat() const {
-    return Smt::check(buildAnd(getQuery()), varMan) == Unsat;
+    return Smt::check(buildAnd(getQuery()), varMan) == Smt::Unsat;
 }
 
 

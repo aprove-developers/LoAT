@@ -7,7 +7,6 @@
 #include "../../its/variablemanager.hpp"
 #include "../../util/proof.hpp"
 #include "../../smt/smt.hpp"
-#include "../../sat/model.hpp"
 
 class AccelerationProblem {
 
@@ -66,7 +65,7 @@ public:
 
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan);
     std::vector<Result> computeRes();
-    BoolExpr buildRes(const sat::Model &model, const std::map<Rel, std::vector<PropExpr>> &entryVars);
+    BoolExpr buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
     Expr getAcceleratedCost() const;
     Subs getClosedForm() const;

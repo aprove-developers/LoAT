@@ -7,7 +7,7 @@ uint Smt::add(const Rel &e) {
     return this->add(buildLit(e));
 }
 
-SatResult Smt::check(const BoolExpr &e, const VariableManager &varMan) {
+Smt::Result Smt::check(const BoolExpr &e, const VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic({e}), varMan);
     s->add(e);
     return s->check();
@@ -17,7 +17,7 @@ bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const Variable
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic({lhs, rhs}), varMan);
     s->add(lhs);
     s->add(!rhs);
-    return s->check() == Unsat;
+    return s->check() == Smt::Unsat;
 }
 
 Smt::Logic Smt::chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up) {

@@ -44,7 +44,7 @@ public:
     virtual EXPR bOr(const EXPR &x, const EXPR &y) = 0;
     virtual EXPR bTrue() const = 0;
     virtual EXPR bFalse() const = 0;
-    virtual EXPR negate(const EXPR &x) = 0;
+    virtual EXPR negate(const EXPR &x)= 0;
 
     virtual bool isNoOp(const EXPR &e) const {
         return false;
@@ -102,6 +102,26 @@ public:
         return symbolMap;
     }
 
+    std::map<uint, EXPR> getConstMap() const {
+        return constMap;
+    }
+
+    EXPR bConst(int id) {
+        bool negated = id < 0;
+        if (negated) {
+            id = -id;
+        }
+        const auto &it = constMap.find(id);
+        option<EXPR> res;
+        if (it == constMap.end()) {
+            res = buildConst(id);
+            constMap.emplace(id, res.get());
+        } else {
+            res = it->second;
+        }
+        return negated ? negate(res.get()) : res.get();
+    }
+
     virtual ~SmtContext() {}
 
 protected:
@@ -119,11 +139,13 @@ protected:
     }
 
     virtual EXPR buildVar(const std::string &basename, Expr::Type type) = 0;
+    virtual EXPR buildConst(uint id) = 0;
 
 protected:
     VarMap<EXPR> symbolMap;
     std::map<std::string, Var> nameMap;
     std::map<std::string, int> usedNames;
+    std::map<uint, EXPR> constMap;
 };
 
 #endif // SMTCONTEXT_H

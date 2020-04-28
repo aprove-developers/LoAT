@@ -169,8 +169,8 @@ option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, cons
 
     // auxiliary function that checks satisfiability wrt. the current state of the solver
     auto checkSolver = [&]() -> bool {
-        SatResult res = solver->check();
-        return res == Sat;
+        Smt::Result res = solver->check();
+        return res == Smt::Sat;
     };
 
     // remember the current state for backtracking before trying several variations
@@ -287,8 +287,8 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr &expr
 
     // auxiliary function that checks satisfiability wrt. the current state of the solver
     auto checkSolver = [&]() -> bool {
-        SatResult res = solver->check();
-        return res == Sat;
+        Smt::Result res = solver->check();
+        return res == Smt::Sat;
     };
 
     auto model = [&]() {

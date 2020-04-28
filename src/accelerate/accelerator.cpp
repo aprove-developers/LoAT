@@ -257,7 +257,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
         res.proof.ruleTransformationProof(rule, "unrolling", optR.get(), its);
     }
     LinearRule r = optR ? optR.get() : rule;
-    bool sat = Smt::check(r.getGuard(), its) == Sat;
+    bool sat = Smt::check(r.getGuard(), its) == Smt::Sat;
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
@@ -285,7 +285,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
             if (!nonterm) {
                 option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
                 if (strengthened) {
-                    bool sat = Smt::check(strengthened.get().getGuard(), its) == Sat;
+                    bool sat = Smt::check(strengthened.get().getGuard(), its) == Smt::Sat;
                     // only proceed if the guard is sat
                     if (sat) {
                         if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {

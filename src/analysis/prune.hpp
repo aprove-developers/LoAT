@@ -83,7 +83,7 @@ namespace Pruning {
         bool changed = false;
 
         for (TransIdx rule : trans) {
-            if (Smt::check(its.getRule(rule).getGuard(), its) == Unsat) {
+            if (Smt::check(its.getRule(rule).getGuard(), its) == Smt::Unsat) {
                 its.removeRule(rule);
                 changed = true;
             }

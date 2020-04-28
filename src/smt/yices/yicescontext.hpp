@@ -27,6 +27,11 @@
 #include <yices.h>
 #include <map>
 
+class YicesError : public std::exception {
+public:
+    YicesError();
+};
+
 class YicesContext : public SmtContext<term_t> {
 
 public:
@@ -73,6 +78,7 @@ public:
 
 protected:
     term_t buildVar(const std::string &basename, Expr::Type type) override;
+    term_t buildConst(uint id) override;
 
 private:
     std::map<term_t, std::string> varNames;

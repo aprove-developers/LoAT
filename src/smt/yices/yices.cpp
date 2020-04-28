@@ -2,15 +2,14 @@
 #include "../exprtosmt.hpp"
 #include "../../util/exceptions.hpp"
 #include "../smttoexpr.hpp"
-#include "../../util/yicesmanager.hpp"
-#include "../../util/satresult.hpp"
-#include "../../util/yiceserror.hpp"
 
 #include <future>
 #include <chrono>
 
 Yices::~Yices() {
-    YicesManager::dec();
+    mutex.lock();
+    --running;
+    mutex.unlock();
     yices_free_config(config);
     yices_free_context(solver);
 }
@@ -20,7 +19,9 @@ Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), v
         yices_set_config(config, "solver-type", "mcsat");
     }
     solver = yices_new_context(config);
-    YicesManager::inc();
+    mutex.lock();
+    ++running;
+    mutex.unlock();
 }
 
 uint Yices::add(const BoolExpr &e) {
@@ -53,7 +54,7 @@ void Yices::pop() {
     }
 }
 
-SatResult Yices::check() {
+Smt::Result Yices::check() {
     auto future = unsatCores ?
                 std::async(yices_check_context_with_assumptions, solver, nullptr, assumptions.size(), &assumptions[0]) :
                 std::async(yices_check_context, solver, nullptr);
@@ -78,8 +79,16 @@ Model Yices::model() {
     for (const auto &p: ctx.getSymbolMap()) {
         vars[p.first] = getRealFromModel(m, p.second);
     }
+    std::map<uint, bool> constants;
+    for (const auto &p: ctx.getConstMap()) {
+        int32_t val;
+        if (yices_get_bool_value(m, p.second, &val) != 0) {
+            throw YicesError();
+        }
+        constants[p.first] = val;
+    }
     yices_free_model(m);
-    return Model(vars);
+    return Model(vars, constants);
 }
 
 std::vector<uint> Yices::unsatCore() {
@@ -130,4 +139,19 @@ void Yices::resetSolver() {
     assumptionStack = std::stack<uint>();
     assumptionMap.clear();
     yices_reset_context(solver);
+}
+
+uint Yices::running;
+std::mutex Yices::mutex;
+
+void Yices::init() {
+    yices_init();
+}
+
+void Yices::exit() {
+    mutex.lock();
+    if (running == 0) {
+        yices_exit();
+    }
+    mutex.unlock();
 }

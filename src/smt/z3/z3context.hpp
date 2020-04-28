@@ -84,6 +84,7 @@ public:
 
 private:
     z3::expr buildVar(const std::string &basename, Expr::Type type) override;
+    z3::expr buildConst(uint id) override;
     z3::context &ctx;
 
 };

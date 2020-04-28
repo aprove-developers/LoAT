@@ -98,7 +98,7 @@ Guard MeteringToolbox::reduceGuard(const VarMan &varMan, const Guard &guard, con
                 solver->pop();
 
                 // unsat means that the updated `ex` must always hold (i.e., is implied after the update)
-                if (smtRes != Unsat) {
+                if (smtRes != Smt::Unsat) {
                     implied = false;
                     break;
                 }

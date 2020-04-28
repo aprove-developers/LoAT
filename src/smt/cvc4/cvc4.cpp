@@ -31,11 +31,24 @@ GiNaC::numeric Cvc4::getRealFromModel(const CVC4::Expr &symbol) {
     return res / rat.getDenominator().getLong();
 }
 
-VarMap<GiNaC::numeric> Cvc4::model() {
+Model Cvc4::model() {
     assert(models);
-    VarMap<GiNaC::numeric> res;
+    VarMap<GiNaC::numeric> vars;
     for (const auto &p: ctx.getSymbolMap()) {
-        res[p.first] = getRealFromModel(p.second);
+        vars[p.first] = getRealFromModel(p.second);
+    }
+    std::map<uint, bool> constants;
+    for (const auto &p: ctx.getConstMap()) {
+        constants[p.first] = solver.getValue(p.second).getConst<bool>();
+    }
+    return Model(vars, constants);
+}
+
+Subs Cvc4::modelSubs() {
+    assert(models);
+    Subs res;
+    for (const auto &p: ctx.getSymbolMap()) {
+        res.put(p.first, getRealFromModel(p.second));
     }
     return res;
 }
@@ -50,9 +63,16 @@ void Cvc4::enableModels() {
     solver.setOption("produce-models", true);
 }
 
+void Cvc4::enableUnsatCores() {
+    this->unsatCores = true;
+    solver.setOption("produce-unsat-cores", true);
+}
+
 void Cvc4::resetSolver() {
     solver.reset();
     solver.setTimeLimit(timeout);
+    solver.setOption("produce-models", models);
+    solver.setOption("produce-unsat-cores", unsatCores);
 }
 
 

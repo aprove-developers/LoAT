@@ -297,10 +297,10 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     solver->add(meter.genNotGuardImplication());
     solver->add(meter.genUpdateImplications());
     solver->add(meter.genNonTrivial());
-    SatResult smtRes = solver->check();
+    Smt::Result smtRes = solver->check();
 
     // the problem is already unsat (even without "GuardPositiveImplication")
-    if (smtRes == SatResult::Unsat) {
+    if (smtRes == Smt::Unsat) {
         result.result = Unsat;
         return result;
     }
@@ -311,14 +311,14 @@ MeteringFinder::Result MeteringFinder::generate(VarMan &varMan, const Rule &rule
     smtRes = solver->check();
 
     // If we fail, try the relaxed version instead (f(x) >= 0 instead of f(x) > 0)
-    if (smtRes != Sat) {
+    if (smtRes != Smt::Sat) {
         solver->pop();
         solver->add(meter.genGuardPositiveImplication(false));
         smtRes = solver->check();
     }
 
     // If we still fail, we have to give up
-    if (smtRes != Sat) {
+    if (smtRes != Smt::Sat) {
         result.result = Unsat;
         return result;
     }
@@ -368,7 +368,7 @@ option<pair<Rule, Proof>> MeteringFinder::instantiateTempVarsHeuristic(ITSProble
     meter.buildLinearConstraints();
 
     std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::LA, its, Config::Smt::MeterTimeout);
-    SatResult smtRes = SatResult::Unsat; // this method should only be called if generate() fails
+    Smt::Result smtRes = Smt::Result::Unsat; // this method should only be called if generate() fails
 
     Guard oldGuard = meter.guard;
     vector<Subs> oldUpdates = meter.updates;
@@ -399,7 +399,7 @@ option<pair<Rule, Proof>> MeteringFinder::instantiateTempVarsHeuristic(ITSProble
         solver->add(meter.genGuardPositiveImplication(false));
         smtRes = solver->check();
 
-        if (smtRes == Sat) {
+        if (smtRes == Smt::Sat) {
             successfulSubs = sub;
             break;
         }
@@ -408,7 +408,7 @@ option<pair<Rule, Proof>> MeteringFinder::instantiateTempVarsHeuristic(ITSProble
     }
 
     // If we found a successful instantiation, z3res is sat
-    if (smtRes != Sat) {
+    if (smtRes != Smt::Sat) {
         return {};
     }
 
