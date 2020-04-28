@@ -261,20 +261,20 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
-        bool nonterm = false;
+        bool universalNonterm = false;
         Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc);
         if (!accelRes.rules.empty()) {
             res.status = accelRes.status;
             res.proof.concat(accelRes.proof);
             for (const Rule &ar: accelRes.rules) {
-                nonterm |= ar.getCost().isNontermSymbol();
+                universalNonterm |= ar.getCost().isNontermSymbol();
                 res.rules.emplace_back(ar);
             }
         }
-        if (!nonterm) {
+        if (!universalNonterm) {
             option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
             if (p) {
-                nonterm = true;
+                universalNonterm = true;
                 const Rule &nontermRule = p.get().first;
                 const Proof &proof = p.get().second;
                 res.proof.concat(proof);
@@ -282,14 +282,13 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
             }
         }
         if (Config::Analysis::NonTermMode) {
-            if (!nonterm) {
+            if (!universalNonterm) {
                 option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
                 if (strengthened) {
                     bool sat = Smt::check(strengthened.get().getGuard(), its) == Smt::Sat;
                     // only proceed if the guard is sat
                     if (sat) {
                         if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
-                            nonterm = true;
                             const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
                             res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
                             res.rules.emplace_back(nontermRule);
@@ -298,12 +297,14 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 }
             }
         }
-        option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
-        if (p) {
-            const Rule &nontermRule = p.get().first;
-            const Proof &proof = p.get().second;
-            res.proof.concat(proof);
-            res.rules.emplace_back(nontermRule);
+        if (!universalNonterm) {
+            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
+            if (p) {
+                const Rule &nontermRule = p.get().first;
+                const Proof &proof = p.get().second;
+                res.proof.concat(proof);
+                res.rules.emplace_back(nontermRule);
+            }
         }
     }
     if (res.rules.empty()) {
