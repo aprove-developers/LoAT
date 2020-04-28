@@ -32,6 +32,11 @@ namespace strengthening {
 
     private:
 
+        struct Split {
+            Guard invariant;
+            Guard nonInvariant;
+        };
+
         const BoolExpr guard;
         const std::vector<Subs> &updates;
         const VariableManager &varMan;
@@ -42,7 +47,7 @@ namespace strengthening {
 
         const Guard computeConstraints() const;
 
-        const Result splitInvariants(const Guard &constraints) const;
+        const Split splitInvariants(const Guard &constraints) const;
 
     };
 

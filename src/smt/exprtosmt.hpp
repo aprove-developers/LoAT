@@ -33,48 +33,55 @@ public:
     EXCEPTION(GinacLargeConstantError,CustomException);
 
     static EXPR convert(const BoolExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
+        ExprToSmt<EXPR> converter(ctx, varMan);
+        return converter.convertBoolEx(e);
+    }
+
+    static EXPR convert(const ForAllExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
+        ExprToSmt<EXPR> converter(ctx, varMan, e.boundVars);
+        return converter.convertBoolEx(e.expr);
+    }
+
+protected:
+    ExprToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan, const VarSet &boundVars = {}):
+        context(context),
+        varMan(varMan),
+        boundVars(boundVars) {}
+
+    EXPR convertBoolEx(const BoolExpr &e) {
         if (e->getLit()) {
-            return convert(e->getLit().get(), ctx, varMan);
+            return convertRelational(e->getLit().get());
         } else if (e->getConst()) {
-            return ctx.bConst(e->getConst().get());
+            return context.bConst(e->getConst().get());
         }
-        EXPR res = e->isAnd() ? ctx.bTrue() : ctx.bFalse();
+        EXPR res = e->isAnd() ? context.bTrue() : context.bFalse();
         bool first = true;
         for (const BoolExpr &c: e->getChildren()) {
             if (first) {
-                res = convert(c, ctx, varMan);
+                res = convertBoolEx(c);
                 first = false;
             } else {
-                res = e->isAnd() ? ctx.bAnd(res, convert(c, ctx, varMan)) : ctx.bOr(res, convert(c, ctx, varMan));
+                res = e->isAnd() ? context.bAnd(res, convertBoolEx(c)) : context.bOr(res, convertBoolEx(c));
             }
         }
         return res;
     }
 
-    static EXPR convert(const Rel &rel, SmtContext<EXPR> &context, const VariableManager &varMan) {
-        ExprToSmt<EXPR> converter(context, varMan);
-        EXPR res = converter.convert_relational(rel);
-        return res;
-    }
-
-protected:
-    ExprToSmt<EXPR>(SmtContext<EXPR> &context, const VariableManager &varMan): context(context), varMan(varMan) {}
-
-    EXPR convert_ex(const Expr &e){
+    EXPR convertEx(const Expr &e){
         if (e.isAdd()) {
-            return convert_add(e);
+            return convertAdd(e);
 
         } else if (e.isMul()) {
-            return convert_mul(e);
+            return convertMul(e);
 
         } else if (e.isPow()) {
-            return convert_power(e);
+            return convertPower(e);
 
         } else if (e.isRationalConstant()) {
-            return convert_numeric(e.toNum());
+            return convertNumeric(e.toNum());
 
         } else if (e.isVar()) {
-            return convert_symbol(e.toVar());
+            return convertSymbol(e.toVar());
 
         }
 
@@ -83,29 +90,29 @@ protected:
         throw GinacConversionError(ss.str());
     }
 
-    EXPR convert_add(const Expr &e){
+    EXPR convertAdd(const Expr &e){
         assert(e.arity() > 0);
 
-        EXPR res = convert_ex(e.op(0));
+        EXPR res = convertEx(e.op(0));
         for (unsigned int i=1; i < e.arity(); ++i) {
-            res = context.plus(res, convert_ex(e.op(i)));
+            res = context.plus(res, convertEx(e.op(i)));
         }
 
         return res;
     }
 
-    EXPR convert_mul(const Expr &e) {
+    EXPR convertMul(const Expr &e) {
         assert(e.arity() > 0);
 
-        EXPR res = convert_ex(e.op(0));
+        EXPR res = convertEx(e.op(0));
         for (unsigned int i=1; i < e.arity(); ++i) {
-            res = context.times(res, convert_ex(e.op(i)));
+            res = context.times(res, convertEx(e.op(i)));
         }
 
         return res;
     }
 
-    EXPR convert_power(const Expr &e) {
+    EXPR convertPower(const Expr &e) {
         assert(e.arity() == 2);
 
         //rewrite power as multiplication if possible, which z3 can handle much better (e.g x^3 becomes x*x*x)
@@ -113,7 +120,7 @@ protected:
             GiNaC::numeric num = e.op(1).toNum();
             if (num.is_integer() && num.is_positive() && num.to_long() <= Config::Smt::MaxExponentWithoutPow) {
                 int exp = num.to_int();
-                EXPR base = convert_ex(e.op(0));
+                EXPR base = convertEx(e.op(0));
 
                 EXPR res = base;
                 while (--exp > 0) {
@@ -125,10 +132,10 @@ protected:
         }
 
         //use z3 power as fallback (only poorly supported)
-        return context.pow(convert_ex(e.op(0)), convert_ex(e.op(1)));
+        return context.pow(convertEx(e.op(0)), convertEx(e.op(1)));
     }
 
-    EXPR convert_numeric(const GiNaC::numeric &num) {
+    EXPR convertNumeric(const GiNaC::numeric &num) {
         assert(num.is_integer() || num.is_real());
 
         try {
@@ -145,7 +152,7 @@ protected:
         }
     }
 
-    EXPR convert_symbol(const GiNaC::symbol &e) {
+    EXPR convertSymbol(const Var &e) {
         // if the symbol is already known, we re-use it (regardless of its type!)
         auto optVar = context.getVariable(e);
         if (optVar) {
@@ -153,13 +160,17 @@ protected:
         }
 
         // otherwise we add a fresh z3 variable and associate it with this symbol
-        return context.addNewVariable(e, varMan.getType(e));
+        if (boundVars.count(e) > 0) {
+            return context.addNewBoundVariable(e, varMan.getType(e));
+        } else {
+            return context.addNewVariable(e, varMan.getType(e));
+        }
     }
 
-    EXPR convert_relational(const Rel &rel) {
+    EXPR convertRelational(const Rel &rel) {
 
-        EXPR a = convert_ex(rel.lhs());
-        EXPR b = convert_ex(rel.rhs());
+        EXPR a = convertEx(rel.lhs());
+        EXPR b = convertEx(rel.rhs());
 
         switch (rel.relOp()) {
         case Rel::eq: return context.eq(a, b);
@@ -176,6 +187,7 @@ protected:
 private:
     SmtContext<EXPR> &context;
     const VariableManager &varMan;
+    VarSet boundVars;
 };
 
 #endif // ExprToSmt_H

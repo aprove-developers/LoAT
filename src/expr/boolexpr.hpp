@@ -12,6 +12,7 @@
 class BoolLit;
 class BoolJunction;
 class BoolExpression;
+struct ForAllExpr;
 typedef std::shared_ptr<const BoolExpression> BoolExpr;
 
 struct boolexpr_compare {
@@ -49,6 +50,7 @@ public:
     virtual size_t size() const = 0;
     virtual option<BoolExpr> removeRels(const RelSet &rels) const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
+    ForAllExpr quantify(const VarSet &boundVars) const;
 
 protected:
     virtual void dnf(std::vector<Guard> &res) const = 0;
@@ -179,5 +181,10 @@ const BoolExpr operator !(const BoolExpr);
 bool operator ==(const BoolExpr &a, const BoolExpr &b);
 bool operator !=(const BoolExpr &a, const BoolExpr &b);
 std::ostream& operator<<(std::ostream &s, const BoolExpr &e);
+
+struct ForAllExpr {
+    VarSet boundVars;
+    BoolExpr expr;
+};
 
 #endif // BOOLEXPR_HPP

@@ -32,6 +32,13 @@ term_t YicesContext::buildVar(const std::string &name, Expr::Type type) {
     return res;
 }
 
+term_t YicesContext::buildBoundVar(const std::string &name, Expr::Type type) {
+    term_t res = (type == Expr::Int) ? yices_new_variable(yices_int_type()) : yices_new_variable(yices_real_type());
+    yices_set_term_name(res, name.c_str());
+    varNames[res] = name;
+    return res;
+}
+
 term_t YicesContext::buildConst(uint id) {
     term_t res = yices_new_uninterpreted_term(yices_bool_type());
     yices_set_term_name(res, ("x" + to_string(id)).c_str());

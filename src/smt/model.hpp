@@ -13,6 +13,7 @@ public:
     bool get(uint id) const;
     bool contains(const Var &var) const;
     bool contains(uint id) const;
+    Subs toSubs() const;
 
     friend std::ostream& operator<<(std::ostream &s, const Model &e);
 

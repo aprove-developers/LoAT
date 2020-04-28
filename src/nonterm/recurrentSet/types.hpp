@@ -39,28 +39,7 @@ namespace strengthening {
 
     struct Implication {
         BoolExpr premise;
-        RelSet conclusion;
-    };
-
-    struct Result {
-        Guard solved;
-        Guard failed;
-    };
-
-    struct SmtConstraints {
-
-        SmtConstraints(
-                const BoolExpr &initiation,
-                const BoolExpr &templatesInvariant,
-                const BoolExpr &conclusionsInvariant) :
-                initiation(std::move(initiation)),
-                templatesInvariant(std::move(templatesInvariant)),
-                conclusionsInvariant(std::move(conclusionsInvariant)) {}
-
-        const BoolExpr initiation;
-        const BoolExpr templatesInvariant;
-        const BoolExpr conclusionsInvariant;
-
+        BoolExpr conclusion;
     };
 
 }

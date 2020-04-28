@@ -89,6 +89,15 @@ public:
         return {};
     }
 
+    EXPR addNewBoundVariable(const Var &symbol, Expr::Type type = Expr::Int) {
+        assert(symbolMap.count(symbol) == 0);
+        assert(nameMap.count(symbol.get_name()) == 0);
+        EXPR res = generateFreshBoundVar(symbol.get_name(), type);
+        symbolMap.emplace(symbol, res);
+        nameMap.emplace(symbol.get_name(), symbol);
+        return res;
+    }
+
     EXPR addNewVariable(const Var &symbol, Expr::Type type = Expr::Int) {
         assert(symbolMap.count(symbol) == 0);
         assert(nameMap.count(symbol.get_name()) == 0);
@@ -126,19 +135,25 @@ public:
 
 protected:
 
-    EXPR generateFreshVar(const std::string &basename, Expr::Type type) {
+    std::string generateFreshVarName(const std::string &basename) {
         std::string newname = basename;
-
         while (usedNames.find(newname) != usedNames.end()) {
             int cnt = usedNames[basename]++;
             newname = basename + "_" + std::to_string(cnt);
         }
-
         usedNames.emplace(newname, 1); // newname is now used once
-        return buildVar(newname, type);
+    }
+
+    EXPR generateFreshBoundVar(const std::string &basename, Expr::Type type) {
+        return buildBoundVar(generateFreshVarName(basename), type);
+    }
+
+    EXPR generateFreshVar(const std::string &basename, Expr::Type type) {
+        return buildVar(generateFreshVarName(basename), type);
     }
 
     virtual EXPR buildVar(const std::string &basename, Expr::Type type) = 0;
+    virtual EXPR buildBoundVar(const std::string &basename, Expr::Type type) = 0;
     virtual EXPR buildConst(uint id) = 0;
 
 protected:

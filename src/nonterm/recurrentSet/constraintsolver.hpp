@@ -28,24 +28,24 @@ namespace strengthening {
 
     public:
 
-        static const option<Guard> solve(
-                const BoolExpr &constraints,
+        static const BoolExpr solve(
+                const std::vector<ForAllExpr> &constraints,
                 const Templates &templates,
                 VariableManager &varMan);
 
     private:
-        const BoolExpr &constraints;
+        const std::vector<ForAllExpr> &constraints;
         const Templates &templates;
         VariableManager &varMan;
 
         ConstraintSolver(
-                const BoolExpr &constraints,
+                const std::vector<ForAllExpr> &constraints,
                 const Templates &templates,
                 VariableManager &varMan);
 
-        const option<Guard> solve() const;
+        const BoolExpr solve() const;
 
-        const Guard instantiateTemplates(const Model &model) const;
+        const BoolExpr instantiateTemplates(const Model &model) const;
 
     };
 

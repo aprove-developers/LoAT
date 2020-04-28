@@ -46,10 +46,10 @@ namespace strengthening {
         return constraints;
     }
 
-    const Result Self::splitInvariants(const Guard &constraints) const {
+    const GuardContextBuilder::Split Self::splitInvariants(const Guard &constraints) const {
         std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic({guard}, updates), varMan);
         solver->add(guard);
-        Result res;
+        GuardContextBuilder::Split res;
         for (const Rel &rel: constraints) {
             solver->push();
             solver->add(rel);
@@ -69,9 +69,9 @@ namespace strengthening {
             }
             solver->pop();
             if (isInvariant) {
-                res.solved.push_back(rel);
+                res.invariant.push_back(rel);
             } else {
-                res.failed.push_back(rel);
+                res.nonInvariant.push_back(rel);
             }
         }
         return res;
@@ -79,8 +79,8 @@ namespace strengthening {
 
     const GuardContext Self::build() const {
         const Guard &constraints = computeConstraints();
-        const Result inv = splitInvariants(constraints);
-        return GuardContext(guard, inv.failed);
+        const GuardContextBuilder::Split inv = splitInvariants(constraints);
+        return GuardContext(guard, inv.nonInvariant);
     }
 
 }

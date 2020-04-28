@@ -26,35 +26,34 @@ namespace strengthening {
 
     typedef ConstraintSolver Self;
 
-    const option<Guard> Self::solve(
-            const BoolExpr &constraints,
+    const BoolExpr Self::solve(
+            const std::vector<ForAllExpr> &constraints,
             const Templates &templates,
             VariableManager &varMan) {
         return ConstraintSolver(constraints, templates, varMan).solve();
     }
 
     Self::ConstraintSolver(
-            const BoolExpr &constraints,
+            const std::vector<ForAllExpr> &constraints,
             const Templates &templates,
             VariableManager &varMan):
             constraints(constraints),
             templates(templates),
             varMan(varMan) { }
 
-    const option<Guard> Self::solve() const {
-        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), varMan);
-        solver->add(constraints);
-        if (solver->check() == Smt::Sat) {
-            const Guard &newInvariants = instantiateTemplates(solver->model());
-            if (!newInvariants.empty()) {
-                return {newInvariants};
-            }
+    const BoolExpr Self::solve() const {
+        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic(constraints), varMan);
+        for (const ForAllExpr &e: constraints) {
+            solver->add(e);
         }
-        return {};
+        if (solver->check() == Smt::Sat) {
+            return instantiateTemplates(solver->model());
+        }
+        return True;
     }
 
-    const Guard Self::instantiateTemplates(const Model &model) const {
-        Guard res;
+    const BoolExpr Self::instantiateTemplates(const Model &model) const {
+        RelSet res;
         Subs parameterInstantiation;
         for (const Var &p: templates.params()) {
             if (model.contains(p)) {
@@ -65,10 +64,10 @@ namespace strengthening {
         const std::vector<Rel> instantiatedTemplates = templates.subs(parameterInstantiation);
         for (const Rel &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
-                res.push_back(rel);
+                res.insert(rel);
             }
         }
-        return res;
+        return buildAnd(res);
     }
 
 }

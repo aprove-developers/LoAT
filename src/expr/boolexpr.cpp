@@ -29,6 +29,10 @@ std::vector<Guard> BoolExpression::dnf() const {
     return res;
 }
 
+ForAllExpr BoolExpression::quantify(const VarSet &boundVars) const {
+    return {boundVars, shared_from_this()};
+}
+
 
 BoolConst::BoolConst(int id): id(id) {}
 

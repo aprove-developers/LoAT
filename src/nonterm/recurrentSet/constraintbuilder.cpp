@@ -30,35 +30,39 @@ namespace strengthening {
         guardCtx(guardCtx),
         varMan(varMan) {}
 
-    const BoolExpr ConstraintBuilder::buildSmtConstraints(const Templates &templates,
-                                                          const Rule &rule,
-                                                          const GuardContext &guardCtx,
-                                                          VariableManager &varMan) {
+    const std::vector<ForAllExpr> ConstraintBuilder::buildSmtConstraints(const Templates &templates,
+                                                                         const Rule &rule,
+                                                                         const GuardContext &guardCtx,
+                                                                         VariableManager &varMan) {
         ConstraintBuilder builder(templates, rule, guardCtx, varMan);
-        const SmtConstraints &constraints = builder.buildSmtConstraints();
-        return buildAnd(std::vector<BoolExpr>{constraints.initiation, constraints.conclusionsInvariant, constraints.templatesInvariant});
+        return builder.buildSmtConstraints();
     }
 
-    const SmtConstraints ConstraintBuilder::buildSmtConstraints() const {
+    const std::vector<ForAllExpr> ConstraintBuilder::buildSmtConstraints() const {
         Guard monotonicityPremise;
         const RelSet &irrelevantConstraints = findIrrelevantConstraints();
         const BoolExpr reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
-        Implication templatesInvariantImplication = buildTemplatesInvariantImplication(reducedGuard);
-        BoolExpr invariancePremise = templatesInvariantImplication.premise;
-        std::vector<BoolExpr> conclusionInvariant;
+        Implication imp = buildTemplatesInvariantImplication(reducedGuard);
+        std::vector<ForAllExpr> res;
         for (const Rel &rel: guardCtx.todo) {
             for (const Subs &up: rule.getUpdates()) {
-                Rel updated = rel;
-                updated.applySubs(up);
-                const BoolExpr invariant = constructImplicationConstraints(invariancePremise, {updated});
-                conclusionInvariant.push_back(invariant);
+                const BoolExpr invariant = ((!imp.premise) | rel.subs(up));
+                VarSet boundVars = invariant->vars();
+                for (const Var &x: templates.params()) {
+                    boundVars.erase(x);
+                }
+                res.push_back(invariant->quantify(boundVars));
             }
         }
         const BoolExpr initiation = constructInitiationConstraints(reducedGuard);
-        const BoolExpr templatesInvariant = constructImplicationConstraints(
-                templatesInvariantImplication.premise,
-                templatesInvariantImplication.conclusion);
-        return SmtConstraints(initiation, templatesInvariant, buildAnd(conclusionInvariant));
+        res.push_back(initiation->quantify({}));
+        BoolExpr templatesInvariant = ((!imp.premise) | imp.conclusion);
+        VarSet boundVars = templatesInvariant->vars();
+        for (const Var &x: templates.params()) {
+            boundVars.erase(x);
+        }
+        res.push_back(templatesInvariant->quantify(boundVars));
+        return res;
     }
 
     const RelSet ConstraintBuilder::findIrrelevantConstraints() const {
@@ -95,7 +99,7 @@ namespace strengthening {
                 conclusion.insert(rel);
             }
         }
-        return {reducedGuard & buildAnd(premise), conclusion};
+        return {reducedGuard & buildAnd(premise), buildAnd(conclusion)};
     }
 
     const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {
@@ -104,18 +108,6 @@ namespace strengthening {
             res.push_back(e);
         }
         return reducedGuard & buildAnd(res);
-    }
-
-    const BoolExpr ConstraintBuilder::constructImplicationConstraints(
-            const BoolExpr &premise,
-            const RelSet &conclusion) const {
-        return FarkasLemma::apply(
-                premise,
-                conclusion,
-                templates.vars(),
-                templates.params(),
-                varMan,
-                Expr::Int);
     }
 
 }

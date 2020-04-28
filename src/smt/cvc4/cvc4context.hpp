@@ -55,6 +55,7 @@ public:
 private:
     CVC4::ExprManager &manager;
     CVC4::Expr buildVar(const std::string &basename, Expr::Type type) override;
+    CVC4::Expr buildBoundVar(const std::string &basename, Expr::Type type) override;
     CVC4::Expr buildConst(uint id) override;
     std::map<CVC4::Expr, std::string> varNames;
 

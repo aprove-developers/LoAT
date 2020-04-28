@@ -10,6 +10,12 @@ CVC4::Expr Cvc4Context::buildVar(const std::string &name, Expr::Type type) {
     return res;
 }
 
+CVC4::Expr Cvc4Context::buildBoundVar(const std::string &name, Expr::Type type) {
+    CVC4::Expr res = (type == Expr::Int) ? manager.mkBoundVar(name, manager.integerType()) : manager.mkBoundVar(name, manager.realType());
+    varNames[res] = name;
+    return res;
+}
+
 CVC4::Expr Cvc4Context::buildConst(uint id) {
     return manager.mkVar(manager.booleanType());
 }

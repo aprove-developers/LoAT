@@ -1,23 +1,28 @@
 #include "cvc4.hpp"
 #include "../../config.hpp"
 #include "../exprtosmt.hpp"
+#include "../smttoexpr.hpp"
 
 Cvc4::Cvc4(const VariableManager &varMan): varMan(varMan), ctx(manager), solver(&manager) { }
 
-uint Cvc4::add(const BoolExpr &e) {
+void Cvc4::_add(const ForAllExpr &e) {
     solver.assertFormula(ExprToSmt<CVC4::Expr>::convert(e, ctx, varMan));
 }
 
-void Cvc4::push() {
+void Cvc4::_push() {
     solver.push();
 }
 
-void Cvc4::pop() {
+void Cvc4::_pop() {
     solver.pop();
 }
 
 Smt::Result Cvc4::check() {
-    switch (solver.checkSat().isSat()) {
+    std::vector<CVC4::Expr> assumptions;
+    for (const BoolExpr &m: marker) {
+        assumptions.push_back(ExprToSmt<CVC4::Expr>::convert(m, ctx, varMan));
+    }
+    switch (solver.checkSat(assumptions).isSat()) {
     case CVC4::Result::SAT: return Smt::Sat;
     case CVC4::Result::UNSAT: return Smt::Unsat;
     case CVC4::Result::SAT_UNKNOWN: return Smt::Unknown;
@@ -44,35 +49,23 @@ Model Cvc4::model() {
     return Model(vars, constants);
 }
 
-Subs Cvc4::modelSubs() {
-    assert(models);
-    Subs res;
-    for (const auto &p: ctx.getSymbolMap()) {
-        res.put(p.first, getRealFromModel(p.second));
+std::vector<uint> Cvc4::unsatCore() {
+    const CVC4::UnsatCore &core = solver.getUnsatCore();
+    std::vector<uint> res;
+    for (const CVC4::Expr &e: core) {
+        res.push_back(markerMap[SmtToExpr<CVC4::Expr>::convert(e, ctx)]);
     }
     return res;
 }
 
-void Cvc4::setTimeout(unsigned int timeout) {
-    this->timeout = timeout;
-    solver.setTimeLimit(timeout);
-}
-
-void Cvc4::enableModels() {
-    this->models = true;
-    solver.setOption("produce-models", true);
-}
-
-void Cvc4::enableUnsatCores() {
-    this->unsatCores = true;
-    solver.setOption("produce-unsat-cores", true);
-}
-
-void Cvc4::resetSolver() {
-    solver.reset();
-    solver.setTimeLimit(timeout);
-    solver.setOption("produce-models", models);
+void Cvc4::updateParams() {
     solver.setOption("produce-unsat-cores", unsatCores);
+    solver.setOption("produce-models", models);
+    solver.setTimeLimit(timeout);
+}
+
+void Cvc4::_resetSolver() {
+    solver.reset();
 }
 
 

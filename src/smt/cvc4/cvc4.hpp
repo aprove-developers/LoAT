@@ -10,27 +10,22 @@ class Cvc4: public Smt
 public:
     Cvc4(const VariableManager &varMan);
 
-    uint add(const BoolExpr &e) override;
-    void push() override;
-    void pop() override;
     Result check() override;
     Model model() override;
-    Subs modelSubs() override;
-    void setTimeout(unsigned int timeout) override;
-    void enableModels() override;
-    void enableUnsatCores() override;
-    void resetSolver() override;
     std::vector<uint> unsatCore() override;
     ~Cvc4() override;
 
 private:
-    uint timeout;
     const VariableManager &varMan;
     CVC4::ExprManager manager;
     Cvc4Context ctx;
     CVC4::SmtEngine solver;
-    bool models = false;
 
+    void _add(const ForAllExpr &e) override;
+    void _push() override;
+    void _pop() override;
+    void _resetSolver() override;
+    void updateParams() override;
     GiNaC::numeric getRealFromModel(const CVC4::Expr &symbol);
 };
 

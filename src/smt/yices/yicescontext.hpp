@@ -78,6 +78,7 @@ public:
 
 protected:
     term_t buildVar(const std::string &basename, Expr::Type type) override;
+    term_t buildBoundVar(const std::string &basename, Expr::Type type) override;
     term_t buildConst(uint id) override;
 
 private:

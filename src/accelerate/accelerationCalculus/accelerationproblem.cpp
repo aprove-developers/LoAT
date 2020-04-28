@@ -51,7 +51,7 @@ RelSet AccelerationProblem::findConsistentSubset(const BoolExpr &e) const {
     solver->add(e);
     RelSet res;
     if (solver->check() == Smt::Sat) {
-        const Subs &model = solver->modelSubs();
+        const Subs &model = solver->model().toSubs();
         for (const Rel &rel: todo) {
             if (rel.subs(model).isTriviallyTrue()) {
                 res.insert(rel);

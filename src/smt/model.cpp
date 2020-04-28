@@ -18,6 +18,14 @@ bool Model::contains(uint id) const {
     return constants.count(id) > 0;
 }
 
+Subs Model::toSubs() const {
+    Subs res;
+    for (const auto &e: vars) {
+        res.put(e.first, e.second);
+    }
+    return res;
+}
+
 std::ostream& operator<<(std::ostream &s, const Model &e) {
     if (!e.vars.empty() && !e.constants.empty()) {
         s << "variables:" << std::endl;
