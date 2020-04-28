@@ -298,14 +298,12 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 }
             }
         }
-        if (!nonterm) {
-            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
-            if (p) {
-                const Rule &nontermRule = p.get().first;
-                const Proof &proof = p.get().second;
-                res.proof.concat(proof);
-                res.rules.emplace_back(nontermRule);
-            }
+        option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
+        if (p) {
+            const Rule &nontermRule = p.get().first;
+            const Proof &proof = p.get().second;
+            res.proof.concat(proof);
+            res.rules.emplace_back(nontermRule);
         }
     }
     if (res.rules.empty()) {

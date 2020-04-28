@@ -65,7 +65,9 @@ namespace nonterm {
             const VarSet &vars = util::RelevantVariables::find(r.getGuard()->vars(), {up}, r.getGuard());
             for (const Var &var: vars) {
                 const auto &it = up.find(var);
-                solver->add(Rel::buildEq(var, it == up.end() ? var : it->second));
+                if (it != up.end()) {
+                    solver->add(Rel::buildEq(var, it->second));
+                }
             }
             Smt::Result smtRes = solver->check();
             if (smtRes == Smt::Sat) {
@@ -73,7 +75,9 @@ namespace nonterm {
                 newGuard.emplace_back(r.getGuard());
                 for (const Var &var: vars) {
                     const auto &it = up.find(var);
-                    newGuard.emplace_back(buildLit(Rel::buildEq(var, (it == up.end() ? var : it->second))));
+                    if (it != up.end()) {
+                        newGuard.emplace_back(buildLit(Rel::buildEq(var, it->second)));
+                    }
                 }
                 Rule nontermRule(r.getLhsLoc(), buildAnd(newGuard), Expr::NontermSymbol, sink, {});
                 Proof proof;
