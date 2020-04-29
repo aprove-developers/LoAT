@@ -31,8 +31,6 @@ message(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
 message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
 add_executable(${EXECUTABLE}
-        src/accelerate/meter/farkas.cpp
-        src/accelerate/meter/farkas.hpp
         src/accelerate/meter/metering.cpp
         src/accelerate/meter/metering.hpp
         src/accelerate/meter/metertools.cpp
@@ -109,6 +107,12 @@ add_executable(${EXECUTABLE}
         src/util/timeout.cpp
         src/util/timeout.hpp
         src/util/status.hpp
+        src/util/farkas.cpp
+        src/util/farkas.hpp
+        src/util/templates.cpp
+        src/util/templates.hpp
+        src/util/relevantvariables.cpp
+        src/util/relevantvariables.hpp
         src/config.cpp
         src/config.hpp
         src/main.cpp
@@ -120,14 +124,10 @@ add_executable(${EXECUTABLE}
         src/nonterm/recurrentSet/types.hpp
         src/nonterm/recurrentSet/templatebuilder.cpp
         src/nonterm/recurrentSet/templatebuilder.hpp
-        src/nonterm/recurrentSet/templates.cpp
-        src/nonterm/recurrentSet/templates.hpp
         src/nonterm/recurrentSet/constraintsolver.cpp
         src/nonterm/recurrentSet/constraintsolver.hpp
         src/nonterm/recurrentSet/guardcontextbuilder.cpp
         src/nonterm/recurrentSet/guardcontextbuilder.hpp
-        src/util/relevantvariables.cpp
-        src/util/relevantvariables.hpp
         src/its/smt2Parser/sexpresso/sexpresso.cpp
         src/its/smt2Parser/sexpresso/sexpresso.hpp
         src/its/smt2Parser/parser.cpp

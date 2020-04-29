@@ -17,7 +17,7 @@
 
 #include "metering.hpp"
 
-#include "farkas.hpp"
+#include "../../util/farkas.hpp"
 #include "metertools.hpp"
 
 #include "../../expr/guardtoolbox.hpp"

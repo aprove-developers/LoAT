@@ -109,6 +109,8 @@ namespace GuardToolbox {
      */
     option<Rule> makeEqualities(const Rule &rule);
 
+    option<Rule> propagateEqualitiesBySmt(const Rule &rule, VariableManager &varMan);
+
 
     /**
      * Returns true iff term contains a temporary variable

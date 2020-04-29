@@ -15,12 +15,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#ifndef LOAT_STRENGTHENING_TEMPLATES_H
-#define LOAT_STRENGTHENING_TEMPLATES_H
+#ifndef LOAT_TEMPLATES_H
+#define LOAT_TEMPLATES_H
 
 
-#include "../../expr/rel.hpp"
+#include "../expr/rel.hpp"
 #include <boost/detail/iterator.hpp>
+#include "../its/variablemanager.hpp"
 
 class Templates {
 
@@ -28,16 +29,16 @@ public:
 
     struct Template {
 
-        Template(Rel t, VarSet vars, VarSet params) :
+        Template(Expr t, VarSet vars, VarSet params) :
                 t(std::move(t)), vars(std::move(vars)), params(std::move(params)) {}
 
-        const Rel t;
+        const Expr t;
         const VarSet vars;
         const VarSet params;
 
     };
 
-    typedef std::vector<Rel>::const_iterator iterator;
+    typedef std::vector<Expr>::const_iterator iterator;
 
     void add(const Template &t);
 
@@ -45,21 +46,23 @@ public:
 
     const VarSet& vars() const;
 
-    bool isParametric(const Rel &rel) const;
+    bool isParametric(const Expr &e) const;
 
-    const std::vector<Rel> subs(const Subs &sigma) const;
+    const std::vector<Expr> subs(const Subs &sigma) const;
 
     iterator begin() const;
 
     iterator end() const;
 
+    const Templates::Template buildTemplate(const VarSet &vars, VariableManager &varMan) const;
+
 private:
 
-    std::vector<Rel> templates;
+    std::vector<Expr> templates;
     VarSet params_;
     VarSet vars_;
 
 };
 
 
-#endif //LOAT_STRENGTHENING_TEMPLATES_H
+#endif //LOAT_TEMPLATES_H

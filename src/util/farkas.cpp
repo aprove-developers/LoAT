@@ -17,8 +17,7 @@
 
 #include "farkas.hpp"
 
-#include "../../smt/smt.hpp"
-#include "../../its/variablemanager.hpp"
+#include "../its/variablemanager.hpp"
 
 using namespace std;
 
@@ -149,6 +148,6 @@ const BoolExpr FarkasLemma::applyRec(
         for (const BoolExpr &c: premise->getChildren()) {
             res.push_back(applyRec(c, conclusion, vars, params, varMan));
         }
-        return premise->isAnd() ? buildAnd(res) : buildOr(res);
+        return premise->isAnd() ? buildOr(res) : buildAnd(res);
     }
 }

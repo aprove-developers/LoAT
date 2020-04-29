@@ -474,6 +474,8 @@ public:
 
     Subs concat(const Subs &that) const;
 
+    Subs project(const VarSet &vars) const;
+
     bool changes(const Var &key) const;
 
     bool isLinear() const;

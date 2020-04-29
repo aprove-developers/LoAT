@@ -18,6 +18,10 @@
 #include "guardtoolbox.hpp"
 #include "../its/rule.hpp"
 #include "../expr/rel.hpp"
+#include "../util/relevantvariables.hpp"
+#include "../util/farkas.hpp"
+#include "../util/templates.hpp"
+#include "../smt/smtfactory.hpp"
 
 using namespace std;
 
@@ -276,4 +280,42 @@ option<Rule> GuardToolbox::makeEqualities(const Rule &rule) {
         }
     }
     return {rule.withGuard(buildAnd(res))};
+}
+
+option<Rule> GuardToolbox::propagateEqualitiesBySmt(const Rule &rule, VariableManager &varMan) {
+    if (!rule.getGuard()->isLinear()) {
+        return {};
+    }
+    VarSet tempVars = rule.vars();
+    for (auto it = tempVars.begin(); it != tempVars.end();) {
+        if (varMan.isTempVar(*it)) {
+            ++it;
+        } else {
+            it = tempVars.erase(it);
+        }
+    }
+
+    Templates templates;
+    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::QF_NA, varMan);
+    bool changed = false;
+    Rule res = rule;
+    for (const Var &x: tempVars) {
+        solver->resetSolver();
+        VarSet relevantVars = util::RelevantVariables::find({x}, std::vector<Subs>(), rule.getGuard());
+        relevantVars.erase(x);
+        Templates::Template t = templates.buildTemplate(relevantVars, varMan);
+        relevantVars.insert(x);
+        const BoolExpr e = FarkasLemma::apply(rule.getGuard(), {Rel::buildEq(t.t, x)}, relevantVars, t.params, varMan);
+        solver->add(e);
+        if (solver->check() == Smt::Sat) {
+            const Subs &m = solver->model().toSubs().project(t.params);
+            changed = true;
+            res = res.subs({x, t.t.subs(m)});
+        }
+    }
+    if (changed) {
+        return {res};
+    } else {
+        return {};
+    }
 }

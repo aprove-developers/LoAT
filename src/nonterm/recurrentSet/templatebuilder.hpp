@@ -21,7 +21,7 @@
 #include "../../its/variablemanager.hpp"
 #include "../../its/rule.hpp"
 #include "types.hpp"
-#include "templates.hpp"
+#include "../../util/templates.hpp"
 
 namespace strengthening {
 
@@ -40,8 +40,6 @@ namespace strengthening {
         TemplateBuilder(const GuardContext &guardCtx, const Rule &rule, VariableManager &varMan);
 
         const Templates build() const;
-
-        const Templates::Template buildTemplate(const VarSet &vars) const;
 
     };
 

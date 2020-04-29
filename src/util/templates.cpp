@@ -17,24 +17,22 @@
 
 #include "templates.hpp"
 
-typedef Templates Self;
-
-void Self::add(const Self::Template &t) {
+void Templates::add(const Templates::Template &t) {
     templates.push_back(t.t);
     vars_.insert(t.vars.begin(), t.vars.end());
     params_.insert(t.params.begin(), t.params.end());
 }
 
-const VarSet& Self::params() const {
+const VarSet& Templates::params() const {
     return params_;
 }
 
-const VarSet& Self::vars() const {
+const VarSet& Templates::vars() const {
     return vars_;
 }
 
-bool Self::isParametric(const Rel &rel) const {
-    VarSet relVars = rel.vars();
+bool Templates::isParametric(const Expr &e) const {
+    VarSet relVars = e.vars();
     for (const Var &x: params()) {
         if (relVars.count(x) > 0) {
             return true;
@@ -43,19 +41,31 @@ bool Self::isParametric(const Rel &rel) const {
     return false;
 }
 
-const std::vector<Rel> Self::subs(const Subs &sigma) const {
-    std::vector<Rel> res;
-    for (Rel rel: templates) {
-        rel.applySubs(sigma);
-        res.push_back(rel);
+const std::vector<Expr> Templates::subs(const Subs &sigma) const {
+    std::vector<Expr> res;
+    for (Expr e: templates) {
+        res.push_back(e.subs(sigma));
     }
     return res;
 }
 
-Self::iterator Self::begin() const {
+Templates::iterator Templates::begin() const {
     return templates.begin();
 }
 
-Self::iterator Self::end() const {
+Templates::iterator Templates::end() const {
     return templates.end();
+}
+
+const Templates::Template Templates::buildTemplate(const VarSet &vars, VariableManager &varMan) const {
+    VarSet params;
+    const Var &c0 = varMan.getFreshUntrackedSymbol("c0", Expr::Int);
+    params.insert(c0);
+    Expr res = c0;
+    for (const Var &x: vars) {
+        const Var &param = varMan.getFreshUntrackedSymbol("c", Expr::Int);
+        params.insert(param);
+        res = res + (x * param);
+    }
+    return Templates::Template(res, vars, std::move(params));
 }

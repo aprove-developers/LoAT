@@ -25,19 +25,10 @@
 using namespace std;
 
 
-option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) {
+option<Rule> Preprocess::preprocessRule(VarMan &varMan, const Rule &rule) {
     bool result = false;
     Rule oldRule = rule;
     option<Rule> newRule;
-
-    // First try to find equalities (A <= B and B <= A become A == B).
-    // We do this before simplifying by smt, as this might remove one of the two constraints
-    // (if it is semantically implied) so we don't recognize the equality later on.
-    newRule = GuardToolbox::makeEqualities(oldRule);
-    if (newRule) {
-        result = true;
-        oldRule = newRule.get();
-    }
 
     // The other steps are repeated (might not help very often, but is probably cheap enough)
     bool changed = false;
@@ -72,7 +63,7 @@ option<Rule> Preprocess::preprocessRule(const VarMan &varMan, const Rule &rule) 
 }
 
 
-option<Rule> Preprocess::simplifyRule(const VarMan &varMan, const Rule &rule) {
+option<Rule> Preprocess::simplifyRule(VarMan &varMan, const Rule &rule) {
     bool changed = false;
     Rule oldRule = rule;
     option<Rule> newRule;
@@ -159,7 +150,7 @@ static VarSet collectVarsInUpdateRhs(const Rule &rule) {
 }
 
 
-option<Rule> Preprocess::eliminateTempVars(const VarMan &varMan, const Rule &rule) {
+option<Rule> Preprocess::eliminateTempVars(VarMan &varMan, const Rule &rule) {
     bool changed = false;
     Rule oldRule = rule;
     option<Rule> newRule;
@@ -192,6 +183,12 @@ option<Rule> Preprocess::eliminateTempVars(const VarMan &varMan, const Rule &rul
 
     //try to remove all remaining temp variables (we do 2 steps to priorizie removing vars from the update)
     newRule = GuardToolbox::propagateEqualities(varMan, oldRule, GuardToolbox::ResultMapsToInt, isTemp);
+    if (newRule) {
+        oldRule = newRule.get();
+        changed = true;
+    }
+
+    newRule = GuardToolbox::propagateEqualitiesBySmt(oldRule, varMan);
     if (newRule) {
         oldRule = newRule.get();
         changed = true;

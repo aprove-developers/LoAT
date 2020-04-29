@@ -35,22 +35,9 @@ namespace strengthening {
                     {rel},
                     rule.getUpdates(),
                     guardCtx.guard);
-            res.add(buildTemplate(varSymbols));
+            res.add(res.buildTemplate(varSymbols, varMan));
         }
         return res;
-    }
-
-    const Templates::Template TemplateBuilder::buildTemplate(const VarSet &vars) const {
-        VarSet params;
-        const Var &c0 = varMan.addFreshVariable("c0");
-        params.insert(c0);
-        Expr res = c0;
-        for (const Var &x: vars) {
-            const Var &param = varMan.addFreshVariable("c");
-            params.insert(param);
-            res = res + (x * param);
-        }
-        return Templates::Template(res <= 0, vars, std::move(params));
     }
 
 }

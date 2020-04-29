@@ -52,17 +52,10 @@ namespace strengthening {
 
     const BoolExpr Self::instantiateTemplates(const Model &model) const {
         RelSet res;
-        Subs parameterInstantiation;
-        for (const Var &p: templates.params()) {
-            if (model.contains(p)) {
-                const Expr &pi = model.get(p);
-                parameterInstantiation.put(p, pi);
-            }
-        }
-        const std::vector<Rel> instantiatedTemplates = templates.subs(parameterInstantiation);
-        for (const Rel &rel: instantiatedTemplates) {
+        const std::vector<Expr> instantiatedTemplates = templates.subs(model.toSubs().project(templates.params()));
+        for (const Expr &rel: instantiatedTemplates) {
             if (!templates.isParametric(rel)) {
-                res.insert(rel);
+                res.insert(rel <= 0);
             }
         }
         return buildAnd(res);

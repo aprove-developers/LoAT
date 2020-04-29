@@ -19,7 +19,7 @@
 #define LOAT_STRENGTHENING_CONSTRAINT_SOLVER_H
 
 #include "types.hpp"
-#include "templates.hpp"
+#include "../../util/templates.hpp"
 #include "../../smt/model.hpp"
 
 namespace strengthening {

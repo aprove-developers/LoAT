@@ -14,10 +14,9 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
-#include "../../accelerate/meter/farkas.hpp"
+#include "../../util/farkas.hpp"
 #include "constraintbuilder.hpp"
 #include <algorithm>
-#include "../../accelerate/meter/farkas.hpp"
 
 namespace strengthening {
 
@@ -79,14 +78,13 @@ namespace strengthening {
         Implication res;
         RelSet premise;
         RelSet conclusion;
-        for (const Rel &invTemplate: templates) {
+        for (const Expr &invTemplate: templates) {
             Guard updatedTemplates;
             for (const Subs &up: rule.getUpdates()) {
-                Rel updated = invTemplate;
-                updated.applySubs(up);
+                Rel updated = (invTemplate <= 0).subs(up);
                 updatedTemplates.push_back(updated);
             }
-            premise.insert(invTemplate);
+            premise.insert(invTemplate <= 0);
             for (const Rel &rel: updatedTemplates) {
                 conclusion.insert(rel);
             }
@@ -96,8 +94,8 @@ namespace strengthening {
 
     const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {
         std::vector<Rel> res;
-        for (const Rel &e: templates) {
-            res.push_back(e);
+        for (const Expr &e: templates) {
+            res.push_back(e <= 0);
         }
         return reducedGuard & buildAnd(res);
     }

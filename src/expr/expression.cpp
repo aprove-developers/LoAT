@@ -557,6 +557,16 @@ Subs Subs::concat(const Subs &that) const {
     return res;
 }
 
+Subs Subs::project(const VarSet &vars) const {
+    Subs res;
+    for (const auto &p: *this) {
+        if (vars.count(p.first)) {
+            res.put(p.first, p.second);
+        }
+    }
+    return res;
+}
+
 void Subs::putGinac(const Var &key, const Expr &val) {
     ginacMap[key] = val.ex;
 }
