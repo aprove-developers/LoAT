@@ -63,8 +63,7 @@ Guard MeteringToolbox::replaceEqualities(const Guard &guard) {
 
 /* ### Filter relevant constarints/variables ### */
 
-Guard MeteringToolbox::reduceGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates,
-                                       Guard *irrelevantGuard)
+Guard MeteringToolbox::reduceGuard(VarMan &varMan, const Guard &guard, const MultiUpdate &updates, Guard *irrelevantGuard)
 {
     assert(!irrelevantGuard || irrelevantGuard->empty());
     Guard reducedGuard;
@@ -198,7 +197,7 @@ void MeteringToolbox::restrictGuardToVariables(Guard &guard, const VarSet &vars)
 
 /* ### Heuristics to improve metering results ### */
 
-option<Guard> MeteringToolbox::strengthenGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates) {
+option<Guard> MeteringToolbox::strengthenGuard(VarMan &varMan, const Guard &guard, const MultiUpdate &updates) {
     bool changed = false;
     Guard res(guard);
 

@@ -8,7 +8,7 @@
 class Z3 : public Smt {
 
 public:
-    Z3(const VariableManager &varMan);
+    Z3(VariableManager &varMan);
 
     Result check() override;
     Model model() override;
@@ -20,7 +20,6 @@ public:
     static BoolExpr simplify(const BoolExpr &expr, const VariableManager &varMan);
 
 private:
-    const VariableManager &varMan;
     z3::context z3Ctx;
     Z3Context ctx;
     z3::solver solver;

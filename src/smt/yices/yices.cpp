@@ -14,7 +14,7 @@ Yices::~Yices() {
     yices_free_context(solver);
 }
 
-Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), varMan(varMan), config(yices_new_config()) {
+Yices::Yices(VariableManager &varMan, Logic logic): Smt(varMan), ctx(YicesContext()), config(yices_new_config()) {
     if (logic == Smt::QF_NA) {
         yices_set_config(config, "solver-type", "mcsat");
     }

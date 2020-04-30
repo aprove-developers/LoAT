@@ -37,7 +37,7 @@ private:
     Proof proof;
     std::unique_ptr<Smt> solver;
     RelMap<BoolExpr> guardWithout;
-    const VariableManager varMan;
+    VariableManager &varMan;
 
     AccelerationProblem(
             const BoolExpr &guard,
@@ -47,7 +47,7 @@ private:
             const Expr &iteratedCost,
             const Var &n,
             const uint validityBound,
-            const VariableManager &varMan);
+            VariableManager &varMan);
 
     void monotonicity();
     void recurrence();

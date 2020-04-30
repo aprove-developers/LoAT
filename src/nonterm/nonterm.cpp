@@ -26,7 +26,7 @@
 
 namespace nonterm {
 
-    option<std::pair<Rule, Proof>> NonTerm::universal(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<Rule, Proof>> NonTerm::universal(const Rule &r, ITSProblem &its, const LocationIdx &sink) {
         if (!Smt::isImplication(r.getGuard(), buildLit(r.getCost() > 0), its)) {
             return {};
         }
@@ -53,7 +53,7 @@ namespace nonterm {
         return {};
     }
 
-    option<std::pair<Rule, Proof>> NonTerm::fixedPoint(const Rule &r, const ITSProblem &its, const LocationIdx &sink) {
+    option<std::pair<Rule, Proof>> NonTerm::fixedPoint(const Rule &r, ITSProblem &its, const LocationIdx &sink) {
         if (!Smt::isImplication(r.getGuard(), buildLit(r.getCost() > 0), its)) {
             return {};
         }

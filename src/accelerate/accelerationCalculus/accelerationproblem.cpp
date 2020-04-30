@@ -10,7 +10,7 @@ AccelerationProblem::AccelerationProblem(
         const Expr &iteratedCost,
         const Var &n,
         const uint validityBound,
-        const VariableManager &varMan): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), varMan(varMan) {
+        VariableManager &varMan): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), varMan(varMan) {
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, {up, closed});
     this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
     this->solver->enableUnsatCores();
@@ -236,11 +236,9 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     std::map<Edge, BoolExpr> edgeVars;
     std::map<Rel, Vars> entryVars;
     Vars soft;
-    uint varId = 1;
     for (const Rel &rel1: todo) {
         for (const Rel &rel2: todo) {
-            edgeVars[{rel1, rel2}] = buildConst(varId);
-            ++varId;
+            edgeVars[{rel1, rel2}] = varMan.freshBoolVar();
         }
     }
     // if an entry is enabled, then the edges corresponding to its dependencies have to be enabled.
@@ -256,8 +254,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         BoolExprSet abstraction;
         BoolExprSet nontermAbstraction;
         for (const Entry &e: entries) {
-            BoolExpr entryVar = buildConst(varId);
-            ++varId;
+            BoolExpr entryVar = varMan.freshBoolVar();
             eVars.push_back(entryVar);
             soft.push_back(entryVar);
             if (!e.active) continue;

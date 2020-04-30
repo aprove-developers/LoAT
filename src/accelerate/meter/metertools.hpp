@@ -69,7 +69,7 @@ namespace MeteringToolbox {
      * Note: The result of this method is soundness critical, since removing too many constraints
      * from the guard would allow incorrect metering functions (removing too few is not a soundness issue).
      */
-    Guard reduceGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates, Guard *irrelevantGuard = nullptr);
+    Guard reduceGuard(VarMan &varMan, const Guard &guard, const MultiUpdate &updates, Guard *irrelevantGuard = nullptr);
 
     /**
      * Computes a list of variables that might occur in the metering function
@@ -108,7 +108,7 @@ namespace MeteringToolbox {
      *
      * @return true iff the guard was modified (extended).
      */
-    option<Guard> strengthenGuard(const VarMan &varMan, const Guard &guard, const MultiUpdate &updates);
+    option<Guard> strengthenGuard(VarMan &varMan, const Guard &guard, const MultiUpdate &updates);
 
     /**
      * Creates all combinations of instantiating temporary variables by their bounds (i.e. free <= x --> set free=x)

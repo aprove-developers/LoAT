@@ -8,7 +8,7 @@ std::ostream& Z3::print(std::ostream& os) const {
 
 Z3::~Z3() {}
 
-Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx) {
+Z3::Z3(VariableManager &varMan): Smt(varMan), ctx(z3Ctx), solver(z3Ctx) {
     updateParams();
 }
 

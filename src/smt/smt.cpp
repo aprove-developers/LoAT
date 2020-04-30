@@ -1,15 +1,16 @@
 #include "smt.hpp"
 #include "smtfactory.hpp"
 
+Smt::Smt(VariableManager &varMan): varMan(varMan) {}
+
 Smt::~Smt() {}
 
 uint Smt::add(const BoolExpr &e) {
     if (unsatCores) {
-        const BoolExpr &m = buildConst(markerCount);
+        const BoolExpr &m = varMan.freshBoolVar();
         marker.push_back(m);
         uint idx = marker.size() - 1;
         markerMap[m] = idx;
-        ++markerCount;
         _add((!m) | e);
         return idx;
     } else {
@@ -36,7 +37,6 @@ void Smt::resetSolver() {
     _resetSolver();
     _resetContext();
     marker.clear();
-    markerCount = 1;
     markerStack = std::stack<uint>();
     markerMap.clear();
     updateParams();
@@ -61,13 +61,13 @@ uint Smt::add(const Rel &e) {
     return this->add(buildLit(e));
 }
 
-Smt::Result Smt::check(const BoolExpr &e, const VariableManager &varMan) {
+Smt::Result Smt::check(const BoolExpr &e, VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic({e}), varMan);
     s->add(e);
     return s->check();
 }
 
-bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan) {
+bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic({lhs, rhs}), varMan);
     s->add(lhs);
     s->add(!rhs);

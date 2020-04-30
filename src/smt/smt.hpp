@@ -11,6 +11,8 @@ class Smt
 {
 public:
 
+    Smt(VariableManager &varMan);
+
     enum Result {Sat, Unknown, Unsat};
     enum Logic {QF_LA, QF_NA, QF_ENA};
 
@@ -28,8 +30,8 @@ public:
     virtual std::vector<uint> unsatCore() = 0;
     virtual ~Smt();
 
-    static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
-    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
+    static Smt::Result check(const BoolExpr &e, VariableManager &varMan);
+    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up = {});
 
     template<class RELS, class UP> static Logic chooseLogic(const std::vector<RELS> &g, const std::vector<UP> &up) {
@@ -59,6 +61,7 @@ protected:
 
     std::vector<BoolExpr> marker;
     std::map<BoolExpr, uint> markerMap;
+    VariableManager &varMan;
 
     bool unsatCores = false;
     bool models = false;
@@ -73,7 +76,6 @@ protected:
 
 private:
 
-    uint markerCount = 1;
     std::stack<uint> markerStack;
 
 };

@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include "../expr/expression.hpp"
+#include "../expr/boolexpr.hpp"
 
 
 // Abbreviation since the VariableManager is passed around quite a bit
@@ -47,6 +48,8 @@ public:
 
     Expr::Type getType(const Var &x) const;
 
+    BoolExpr freshBoolVar();
+
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
     Var addVariable(std::string name);
@@ -71,6 +74,8 @@ private:
 
     // Reverse mapping for efficiency
     std::map<std::string, Var> variableNameLookup;
+
+    uint boolVarCount = 1;
 };
 
 

@@ -80,3 +80,7 @@ Expr::Type VariableManager::getType(const Var &x) const {
         return Expr::Int;
     }
 }
+
+BoolExpr VariableManager::freshBoolVar() {
+    return buildConst(boolVarCount++);
+}

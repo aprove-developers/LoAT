@@ -10,7 +10,7 @@
 class Yices : public Smt {
 
 public:
-    Yices(const VariableManager &varMan, Logic logic);
+    Yices(VariableManager &varMan, Logic logic);
 
     Result check() override;
     Model model() override;
@@ -24,7 +24,6 @@ public:
 
 private:
     YicesContext ctx;
-    const VariableManager &varMan;
     ctx_config_t *config;
     context_t *solver;
 
