@@ -23,7 +23,7 @@ namespace util {
     const VarSet RelevantVariables::find(
             const Guard &constraints,
             const std::vector<Subs> &updates,
-            const BoolExpr &guard) {
+            const BoolExpr guard) {
         VarSet varsOfInterest;
         for (const Rel &rel: constraints) {
             const VarSet &relVars = rel.vars();
@@ -32,7 +32,7 @@ namespace util {
         return find(varsOfInterest, updates, guard);
     }
 
-    const VarSet RelevantVariables::find(const VarSet &varsOfInterest, const std::vector<Subs> &updates, const BoolExpr &guard) {
+    const VarSet RelevantVariables::find(const VarSet &varsOfInterest, const std::vector<Subs> &updates, const BoolExpr guard) {
         VarSet res;
         for (const Var &sym : varsOfInterest) {
             res.insert(sym);
@@ -76,7 +76,7 @@ namespace util {
     const VarSet RelevantVariables::find(
             const Guard &constraints,
             const std::vector<RuleRhs> &rhss,
-            const BoolExpr &guard) {
+            const BoolExpr guard) {
         std::vector<Subs> updates;
         for (const RuleRhs &rhs: rhss) {
             updates.push_back(rhs.getUpdate());

@@ -118,7 +118,7 @@ public:
                                             uint timeout = Config::Smt::LimitTimeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
-                                            const BoolExpr &guard,
+                                            const BoolExpr guard,
                                             const Expr &cost,
                                             bool finalCheck = false,
                                             Complexity currentRes = Complexity::Const,

@@ -23,12 +23,12 @@ namespace strengthening {
 
     typedef GuardContextBuilder Self;
 
-    const GuardContext Self::build(const BoolExpr &guard, const std::vector<Subs> &updates, VariableManager &varMan) {
+    const GuardContext Self::build(const BoolExpr guard, const std::vector<Subs> &updates, VariableManager &varMan) {
         return GuardContextBuilder(guard, updates, varMan).build();
     }
 
     Self::GuardContextBuilder(
-            const BoolExpr &guard,
+            const BoolExpr guard,
             const std::vector<Subs> &updates,
             VariableManager &varMan
     ): guard(guard), updates(updates), varMan(varMan) { }

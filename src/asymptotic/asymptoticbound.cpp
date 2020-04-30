@@ -872,7 +872,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
 }
 
 AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varMan,
-                                                                    const BoolExpr &guard,
+                                                                    const BoolExpr guard,
                                                                     const Expr &cost,
                                                                     bool finalCheck,
                                                                     Complexity currentRes,

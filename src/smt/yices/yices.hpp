@@ -32,7 +32,7 @@ private:
 
     std::vector<term_t> assumptions;
 
-    void _add(const BoolExpr &e) override;
+    void _add(const BoolExpr e) override;
     void _push() override;
     void _pop() override;
     void _resetSolver() override;

@@ -3,7 +3,7 @@
 #include "../../smt/smtfactory.hpp"
 
 AccelerationProblem::AccelerationProblem(
-        const BoolExpr &guard,
+        const BoolExpr guard,
         const Subs &up,
         const Subs &closed,
         const Expr &cost,
@@ -46,7 +46,7 @@ BoolExpr AccelerationProblem::getGuardWithout(const Rel &rel) {
     }
 }
 
-RelSet AccelerationProblem::findConsistentSubset(const BoolExpr &e) const {
+RelSet AccelerationProblem::findConsistentSubset(const BoolExpr e) const {
     solver->resetSolver();
     solver->add(e);
     RelSet res;
@@ -73,7 +73,7 @@ bool AccelerationProblem::Entry::subsumes(const Entry &that) const {
     return true;
 }
 
-option<uint> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm) {
+option<uint> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm) {
     if (res.count(rel) == 0) {
         res[rel] = std::vector<Entry>();
     }

@@ -80,14 +80,14 @@ namespace FarkasLemma {
                    const VarSet &params = VarSet());
 
     const BoolExpr apply(
-            const BoolExpr &premise,
+            const BoolExpr premise,
             const RelSet &conclusion,
             const VarSet &vars,
             const VarSet &params,
             VariableManager &varMan);
 
     const BoolExpr applyRec(
-            const BoolExpr &premise,
+            const BoolExpr premise,
             const RelSet &conclusion,
             const std::vector<Var> &vars,
             const VarSet &params,

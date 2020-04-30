@@ -5,9 +5,9 @@ Smt::Smt(VariableManager &varMan): varMan(varMan) {}
 
 Smt::~Smt() {}
 
-uint Smt::add(const BoolExpr &e) {
+uint Smt::add(const BoolExpr e) {
     if (unsatCores) {
-        const BoolExpr &m = varMan.freshBoolVar();
+        const BoolExpr m = varMan.freshBoolVar();
         marker.push_back(m);
         _add((!m) | e);
         return marker.size() - 1;
@@ -59,13 +59,13 @@ uint Smt::add(const Rel &e) {
     return this->add(buildLit(e));
 }
 
-Smt::Result Smt::check(const BoolExpr &e, VariableManager &varMan) {
+Smt::Result Smt::check(const BoolExpr e, VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic({e}), varMan);
     s->add(e);
     return s->check();
 }
 
-bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, VariableManager &varMan) {
+bool Smt::isImplication(const BoolExpr lhs, const BoolExpr rhs, VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic({lhs, rhs}), varMan);
     s->add(lhs);
     s->add(!rhs);

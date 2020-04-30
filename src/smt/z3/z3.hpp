@@ -17,7 +17,7 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
-    static BoolExpr simplify(const BoolExpr &expr, const VariableManager &varMan);
+    static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan);
 
 private:
     z3::context z3Ctx;
@@ -27,7 +27,7 @@ private:
     option<z3::expr_vector> z3Marker;
 
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
-    void _add(const BoolExpr &e) override;
+    void _add(const BoolExpr e) override;
     void _push() override;
     void _pop() override;
     void _resetSolver() override;

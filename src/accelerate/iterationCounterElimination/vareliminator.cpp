@@ -2,14 +2,14 @@
 #include "boundextractor.hpp"
 #include "../../expr/rel.hpp"
 
-VarEliminator::VarEliminator(const BoolExpr &guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
+VarEliminator::VarEliminator(const BoolExpr guard, const Var &N, VariableManager &varMan): varMan(varMan), N(N) {
     assert(varMan.isTempVar(N));
     todoDeps.push({{}, guard});
     findDependencies(guard);
     eliminate();
 }
 
-void VarEliminator::findDependencies(const BoolExpr &guard) {
+void VarEliminator::findDependencies(const BoolExpr guard) {
     dependencies.insert(N);
     bool changed;
     do {
@@ -45,7 +45,7 @@ void VarEliminator::findDependencies(const BoolExpr &guard) {
     dependencies.erase(N);
 }
 
-const std::set<std::pair<Subs, BoolExpr>> VarEliminator::eliminateDependency(const Subs &subs, const BoolExpr &guard) const {
+const std::set<std::pair<Subs, BoolExpr>> VarEliminator::eliminateDependency(const Subs &subs, const BoolExpr guard) const {
     VarSet vars = guard->vars();
     for (auto it = dependencies.begin(); it != dependencies.end(); ++it) {
         if (vars.find(*it) == vars.end()) {

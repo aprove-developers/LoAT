@@ -28,7 +28,7 @@ namespace strengthening {
 
     struct GuardContext {
 
-        GuardContext(const BoolExpr &guard,
+        GuardContext(const BoolExpr guard,
                 Guard todo):
                 guard(guard),
                 todo(std::move(todo)) { }

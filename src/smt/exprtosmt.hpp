@@ -32,7 +32,7 @@ public:
     EXCEPTION(GinacConversionError,CustomException);
     EXCEPTION(GinacLargeConstantError,CustomException);
 
-    static EXPR convert(const BoolExpr &e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
+    static EXPR convert(const BoolExpr e, SmtContext<EXPR> &ctx, const VariableManager &varMan) {
         ExprToSmt<EXPR> converter(ctx, varMan);
         return converter.convertBoolEx(e);
     }
@@ -43,7 +43,7 @@ protected:
         context(context),
         varMan(varMan) {}
 
-    EXPR convertBoolEx(const BoolExpr &e) {
+    EXPR convertBoolEx(const BoolExpr e) {
         if (e->getLit()) {
             return convertRelational(e->getLit().get());
         } else if (e->getConst()) {

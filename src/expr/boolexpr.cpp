@@ -208,9 +208,9 @@ void BoolLit::dnf(std::vector<Guard> &res) const {
     if (res.empty()) {
         res.push_back({lit});
     } else {
-        std::for_each(res.begin(), res.end(), [&](Guard &g) {
+        for (Guard &g: res) {
             g.push_back(lit);
-        });
+        }
     }
 }
 
@@ -294,7 +294,7 @@ BoolExpr BoolJunction::toLeq() const {
 }
 
 bool BoolJunction::isConjunction() const {
-    return isAnd() && std::all_of(children.begin(), children.end(), [](const BoolExpr &c){
+    return isAnd() && std::all_of(children.begin(), children.end(), [](const BoolExpr c){
         return c->isConjunction();
     });
 }
@@ -343,17 +343,17 @@ BoolExpr BoolJunction::replaceRels(const RelMap<BoolExpr> map) const {
 
 void BoolJunction::dnf(std::vector<Guard> &res) const {
     if (isAnd()) {
-        std::for_each(children.begin(), children.end(), [&](const BoolExpr &e) {
+        for (const BoolExpr &e: children) {
             e->dnf(res);
-        });
+        }
     } else {
         std::vector<Guard> oldRes(res);
         res.clear();
-        std::for_each(children.begin(), children.end(), [&](const BoolExpr &e) {
+        for (const BoolExpr &e: children) {
             std::vector<Guard> newRes(oldRes);
             e->dnf(newRes);
             res.insert(res.end(), newRes.begin(), newRes.end());
-        });
+        }
     }
 }
 
@@ -458,7 +458,7 @@ const BoolExpr operator !(const BoolExpr a) {
     return a->negation();
 }
 
-bool operator ==(const BoolExpr &a, const BoolExpr &b) {
+bool operator ==(const BoolExpr a, const BoolExpr b) {
     if (a->getConst() != b->getConst()) {
         return false;
     }
@@ -474,7 +474,7 @@ bool operator ==(const BoolExpr &a, const BoolExpr &b) {
     return a->getChildren() == b->getChildren();
 }
 
-bool operator !=(const BoolExpr &a, const BoolExpr &b) {
+bool operator !=(const BoolExpr a, const BoolExpr b) {
     return !(a==b);
 }
 
@@ -502,7 +502,7 @@ bool boolexpr_compare::operator() (BoolExpr a, BoolExpr b) const {
     return a->getChildren() < b->getChildren();
 }
 
-std::ostream& operator<<(std::ostream &s, const BoolExpr &e) {
+std::ostream& operator<<(std::ostream &s, const BoolExpr e) {
     if (e->getConst()) {
         s << "x" << e->getConst().get();
     } else if (e->getLit()) {

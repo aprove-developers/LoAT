@@ -11,7 +11,7 @@
 class BoundExtractor
 {
 public:
-    BoundExtractor(const BoolExpr &guard, const Var &N);
+    BoundExtractor(const BoolExpr guard, const Var &N);
 
     const option<Expr> getEq() const;
     const std::vector<Expr> getLower() const;

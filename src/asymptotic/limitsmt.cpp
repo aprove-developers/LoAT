@@ -226,7 +226,7 @@ option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, cons
     return {smtSubs};
 }
 
-BoolExpr encodeBoolExpr(const BoolExpr &expr, const Subs &templateSubs, const Var &n) {
+BoolExpr encodeBoolExpr(const BoolExpr expr, const Subs &templateSubs, const Var &n) {
     BoolExprSet newChildren;
     for (const BoolExpr &c: expr->getChildren()) {
         newChildren.insert(encodeBoolExpr(c, templateSubs, n));
@@ -245,7 +245,7 @@ BoolExpr encodeBoolExpr(const BoolExpr &expr, const Subs &templateSubs, const Va
     }
 }
 
-std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr &expr, const Expr &cost,
+std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr expr, const Expr &cost,
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3

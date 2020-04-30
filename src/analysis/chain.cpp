@@ -31,7 +31,7 @@ using namespace std;
 /**
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
-static bool checkSatisfiability(const BoolExpr &newGuard, VariableManager &varMan) {
+static bool checkSatisfiability(const BoolExpr newGuard, VariableManager &varMan) {
     auto smtRes = Smt::check(newGuard, varMan);
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.

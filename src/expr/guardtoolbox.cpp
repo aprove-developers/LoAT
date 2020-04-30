@@ -217,9 +217,9 @@ option<Rule> GuardToolbox::eliminateByTransitiveClosure(const Rule &rule, bool r
         if (!removeHalfBounds && (varLessThan.empty() || varGreaterThan.empty())) goto abort;
 
         //success: remove lower <= x and x <= upper as they will be replaced
-        std::for_each(guardTerms.begin(), guardTerms.end(), [&](const Rel &rel) {
+        for (const Rel &rel: guardTerms) {
             guard.erase(rel);
-        });
+        }
 
         //add new transitive guard terms lower <= upper
         for (const Expr &upper : varLessThan) {

@@ -16,7 +16,7 @@ public:
     enum Result {Sat, Unknown, Unsat};
     enum Logic {QF_LA, QF_NA, QF_ENA};
 
-    uint add(const BoolExpr &e);
+    uint add(const BoolExpr e);
     void push();
     void pop();
     uint add(const Rel &e);
@@ -30,8 +30,8 @@ public:
     virtual std::vector<uint> unsatCore() = 0;
     virtual ~Smt();
 
-    static Smt::Result check(const BoolExpr &e, VariableManager &varMan);
-    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, VariableManager &varMan);
+    static Smt::Result check(const BoolExpr e, VariableManager &varMan);
+    static bool isImplication(const BoolExpr lhs, const BoolExpr rhs, VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up = {});
 
     template<class RELS, class UP> static Logic chooseLogic(const std::vector<RELS> &g, const std::vector<UP> &up) {
@@ -66,7 +66,7 @@ protected:
     bool models = false;
     uint timeout = Config::Smt::DefaultTimeout;
 
-    virtual void _add(const BoolExpr &e) = 0;
+    virtual void _add(const BoolExpr e) = 0;
     virtual void _push() = 0;
     virtual void _pop() = 0;
     virtual void _resetSolver() = 0;

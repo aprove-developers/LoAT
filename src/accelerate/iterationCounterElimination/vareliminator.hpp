@@ -10,7 +10,7 @@ class VarEliminator
 {
 public:
 
-    VarEliminator(const BoolExpr &guard, const Var &N, VariableManager &varMan);
+    VarEliminator(const BoolExpr guard, const Var &N, VariableManager &varMan);
 
     const std::set<Subs> getRes() const;
 
@@ -21,13 +21,13 @@ private:
      * For example, if we have N * M <= X, then we cannot instantiate N with X/M, as the bound must always evaluate to an integer.
      * Thus, in this case M is a dependency of N.
      */
-    void findDependencies(const BoolExpr &guard);
+    void findDependencies(const BoolExpr guard);
 
     /**
      * Tries to eliminate a single dependency by instantiating it with a constant bound.
      * Creates a new branch (i.e., a new entry in todoDeps) for every possible instantiation.
      */
-    const std::set<std::pair<Subs, BoolExpr>> eliminateDependency(const Subs &subs, const BoolExpr &guard) const;
+    const std::set<std::pair<Subs, BoolExpr>> eliminateDependency(const Subs &subs, const BoolExpr guard) const;
 
     /**
      * Eliminates as many dependencies as possible by instantiating them with constant bounds.

@@ -106,7 +106,7 @@ BoolExpr FarkasLemma::apply(
 }
 
 const BoolExpr FarkasLemma::apply(
-        const BoolExpr &premise,
+        const BoolExpr premise,
         const RelSet &conclusion,
         const VarSet &vars,
         const VarSet &params,
@@ -128,7 +128,7 @@ const BoolExpr FarkasLemma::apply(
 }
 
 const BoolExpr FarkasLemma::applyRec(
-        const BoolExpr &premise,
+        const BoolExpr premise,
         const RelSet &conclusion,
         const std::vector<Var> &vars,
         const VarSet &params,

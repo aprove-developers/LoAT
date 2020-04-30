@@ -12,7 +12,7 @@ Z3::Z3(VariableManager &varMan): Smt(varMan), ctx(z3Ctx), solver(z3Ctx) {
     updateParams();
 }
 
-void Z3::_add(const BoolExpr &e) {
+void Z3::_add(const BoolExpr e) {
     solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
 }
 
@@ -102,7 +102,7 @@ void Z3::_resetContext() {
     ctx.reset();
 }
 
-BoolExpr Z3::simplify(const BoolExpr &expr, const VariableManager &varMan) {
+BoolExpr Z3::simplify(const BoolExpr expr, const VariableManager &varMan) {
     z3::context z3Ctx;
     Z3Context ctx(z3Ctx);
     z3::tactic t(z3Ctx, "ctx-solver-simplify");

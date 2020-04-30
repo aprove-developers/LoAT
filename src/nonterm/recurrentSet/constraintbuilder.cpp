@@ -74,7 +74,7 @@ namespace strengthening {
         return irrelevantConstraints;
     }
 
-    const Implication ConstraintBuilder::buildTemplatesInvariantImplication(const BoolExpr &reducedGuard) const {
+    const Implication ConstraintBuilder::buildTemplatesInvariantImplication(const BoolExpr reducedGuard) const {
         Implication res;
         RelSet premise;
         RelSet conclusion;
@@ -92,7 +92,7 @@ namespace strengthening {
         return {reducedGuard & buildAnd(premise), conclusion};
     }
 
-    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr &reducedGuard) const {
+    const BoolExpr ConstraintBuilder::constructInitiationConstraints(const BoolExpr reducedGuard) const {
         std::vector<Rel> res;
         for (const Expr &e: templates) {
             res.push_back(e <= 0);

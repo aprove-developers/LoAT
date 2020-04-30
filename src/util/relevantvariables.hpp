@@ -31,17 +31,17 @@ namespace util {
         static const VarSet find(
                 const VarSet &varsOfInterest,
                 const std::vector<Subs> &updates,
-                const BoolExpr &guard);
+                const BoolExpr guard);
 
         static const VarSet find(
                 const Guard &constraints,
                 const std::vector<Subs> &updates,
-                const BoolExpr &guard);
+                const BoolExpr guard);
 
         static const VarSet find(
                 const Guard &constraints,
                 const std::vector<RuleRhs> &rhss,
-                const BoolExpr &guard);
+                const BoolExpr guard);
 
     };
 

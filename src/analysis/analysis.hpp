@@ -53,7 +53,7 @@ public:
     // Default constructor yields unknown complexity
     RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0) {}
 
-    void update(const BoolExpr &guard, const Expr &cost, const Expr &solvedCost, const Complexity &cpx) {
+    void update(const BoolExpr guard, const Expr &cost, const Expr &solvedCost, const Complexity &cpx) {
         lock();
         this->guard = guard;
         this->cost = cost;

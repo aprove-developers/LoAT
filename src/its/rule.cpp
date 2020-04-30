@@ -103,7 +103,7 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     }
 }
 
-Rule Rule::withGuard(const BoolExpr &guard) const {
+Rule Rule::withGuard(const BoolExpr guard) const {
     return Rule(RuleLhs(getLhsLoc(), guard, getCost()), getRhss());
 }
 

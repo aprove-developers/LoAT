@@ -27,14 +27,14 @@ namespace strengthening {
     typedef ConstraintSolver Self;
 
     const BoolExpr Self::solve(
-            const BoolExpr &constraints,
+            const BoolExpr constraints,
             const Templates &templates,
             VariableManager &varMan) {
         return ConstraintSolver(constraints, templates, varMan).solve();
     }
 
     Self::ConstraintSolver(
-            const BoolExpr &constraints,
+            const BoolExpr constraints,
             const Templates &templates,
             VariableManager &varMan):
             constraints(constraints),

@@ -48,9 +48,9 @@ namespace strengthening {
                 const GuardContext &guardCtx,
                 VariableManager &varMan);
 
-        const Implication buildTemplatesInvariantImplication(const BoolExpr &reducedGuard) const;
+        const Implication buildTemplatesInvariantImplication(const BoolExpr reducedGuard) const;
 
-        const BoolExpr constructInitiationConstraints(const BoolExpr &reducedGuard) const;
+        const BoolExpr constructInitiationConstraints(const BoolExpr reducedGuard) const;
 
         const RelSet findIrrelevantConstraints() const;
 

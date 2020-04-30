@@ -134,7 +134,7 @@ public:
     // Removes all right-hand sides that lead to the given location, returns none if all rhss would be removed
     option<Rule> stripRhsLocation(LocationIdx toRemove) const;
 
-    Rule withGuard(const BoolExpr &guard) const;
+    Rule withGuard(const BoolExpr guard) const;
     Rule withCost(const Expr &cost) const;
     Rule withUpdate(uint i, const Subs &up) const;
 

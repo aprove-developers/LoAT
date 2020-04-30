@@ -41,7 +41,7 @@ namespace strengthening {
 
         explicit Strengthener(const Rule &rule, VariableManager &varMan);
 
-        const option<BoolExpr> apply(const BoolExpr &guard) const;
+        const option<BoolExpr> apply(const BoolExpr guard) const;
 
     };
 

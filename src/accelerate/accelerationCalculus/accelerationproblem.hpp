@@ -40,7 +40,7 @@ private:
     VariableManager &varMan;
 
     AccelerationProblem(
-            const BoolExpr &guard,
+            const BoolExpr guard,
             const Subs &up,
             const Subs &closed,
             const Expr &cost,
@@ -52,8 +52,8 @@ private:
     void monotonicity();
     void recurrence();
     void eventualWeakDecrease();
-    RelSet findConsistentSubset(const BoolExpr &e) const;
-    option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr &formula, bool nonterm = false);
+    RelSet findConsistentSubset(const BoolExpr e) const;
+    option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
     BoolExpr getGuardWithout(const Rel &rel);
 
 public:

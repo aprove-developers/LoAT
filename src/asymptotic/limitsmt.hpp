@@ -13,7 +13,7 @@ namespace LimitSmtEncoding {
      */
     option<Subs> applyEncoding(const LimitProblem &currentLP, const Expr &cost, VarMan &varMan, Complexity currentRes, uint timeout);
 
-    std::pair<Subs, Complexity> applyEncoding(const BoolExpr &exp, const Expr &cost, VarMan &varMan, Complexity currentRes, uint timeout);
+    std::pair<Subs, Complexity> applyEncoding(const BoolExpr exp, const Expr &cost, VarMan &varMan, Complexity currentRes, uint timeout);
 }
 
 #endif //LIMITSMT_H

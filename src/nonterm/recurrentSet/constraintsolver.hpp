@@ -29,17 +29,17 @@ namespace strengthening {
     public:
 
         static const BoolExpr solve(
-                const BoolExpr &constraints,
+                const BoolExpr constraints,
                 const Templates &templates,
                 VariableManager &varMan);
 
     private:
-        const BoolExpr &constraints;
+        const BoolExpr constraints;
         const Templates &templates;
         VariableManager &varMan;
 
         ConstraintSolver(
-                const BoolExpr &constraints,
+                const BoolExpr constraints,
                 const Templates &templates,
                 VariableManager &varMan);
 
