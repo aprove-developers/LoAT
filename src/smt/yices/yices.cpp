@@ -42,7 +42,7 @@ void Yices::_pop() {
 Smt::Result Yices::check() {
     std::future<smt_status> future;
     if (unsatCores) {
-        std::vector<term_t> assumptions;
+        assumptions.clear();
         for (const BoolExpr &m: marker) {
             assumptions.push_back(ExprToSmt<term_t>::convert(m, ctx, varMan));
         }
@@ -91,7 +91,15 @@ std::vector<uint> Yices::unsatCore() {
     }
     std::vector<uint> res;
     for (size_t i = 0; i < core.size; ++i) {
-        res.push_back(markerMap[SmtToExpr<term_t>::convert(core.data[i], ctx)]);
+        bool found = false;
+        for (uint j = 0; j < assumptions.size(); ++j) {
+            if (core.data[i] == assumptions[j]) {
+                res.push_back(j);
+                found = true;
+                break;
+            }
+        }
+        assert(found);
     }
     return res;
 }

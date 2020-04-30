@@ -24,6 +24,8 @@ private:
     Z3Context ctx;
     z3::solver solver;
 
+    option<z3::expr_vector> z3Marker;
+
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
     void _add(const BoolExpr &e) override;
     void _push() override;

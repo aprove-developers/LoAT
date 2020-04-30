@@ -60,7 +60,6 @@ public:
 protected:
 
     std::vector<BoolExpr> marker;
-    std::map<BoolExpr, uint> markerMap;
     VariableManager &varMan;
 
     bool unsatCores = false;

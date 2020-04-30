@@ -30,6 +30,8 @@ private:
     static uint running;
     static std::mutex mutex;
 
+    std::vector<term_t> assumptions;
+
     void _add(const BoolExpr &e) override;
     void _push() override;
     void _pop() override;

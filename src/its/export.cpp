@@ -26,7 +26,7 @@ static void printLocation(LocationIdx loc, const ITSProblem &its, std::ostream &
 }
 
 
-void ITSExport::printGuard(const BoolExpr &guard, std::ostream &s, bool colors) {
+void ITSExport::printGuard(const BoolExpr guard, std::ostream &s, bool colors) {
     if (colors) printColor(s, Color::Guard);
     s << guard;
 }

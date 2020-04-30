@@ -9,10 +9,8 @@ uint Smt::add(const BoolExpr &e) {
     if (unsatCores) {
         const BoolExpr &m = varMan.freshBoolVar();
         marker.push_back(m);
-        uint idx = marker.size() - 1;
-        markerMap[m] = idx;
         _add((!m) | e);
-        return idx;
+        return marker.size() - 1;
     } else {
         _add(e);
         return 0;
@@ -30,6 +28,7 @@ void Smt::pop() {
     _pop();
     if (unsatCores) {
         marker.resize(markerStack.top());
+        markerStack.pop();
     }
 }
 
@@ -38,7 +37,6 @@ void Smt::resetSolver() {
     _resetContext();
     marker.clear();
     markerStack = std::stack<uint>();
-    markerMap.clear();
     updateParams();
 }
 

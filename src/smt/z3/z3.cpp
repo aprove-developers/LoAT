@@ -27,11 +27,11 @@ void Z3::_pop() {
 Smt::Result Z3::check() {
     z3::check_result res;
     if (unsatCores) {
-        z3::expr_vector z3Marker(z3Ctx);
+        z3Marker = z3::expr_vector(z3Ctx);
         for (const BoolExpr &m: marker) {
-            z3Marker.push_back(ExprToSmt<z3::expr>::convert(m, ctx, varMan));
+            z3Marker->push_back(ExprToSmt<z3::expr>::convert(m, ctx, varMan));
         }
-        res = solver.check(z3Marker);
+        res = solver.check(z3Marker.get());
     } else {
         res = solver.check();
     }
@@ -80,7 +80,16 @@ std::vector<uint> Z3::unsatCore() {
     const z3::expr_vector &core = solver.unsat_core();
     std::vector<uint> res;
     for (const z3::expr &e: core) {
-        res.push_back(markerMap[SmtToExpr<z3::expr>::convert(e, ctx)]);
+        bool found = false;
+        for (uint i = 0; i < z3Marker->size(); ++i) {
+            // both are variables, so comparing their string representation is (ugly but) fine
+            if (e.to_string() == z3Marker.get()[i].to_string()) {
+                res.push_back(i);
+                found = true;
+                break;
+            }
+        }
+        assert(found);
     }
     return res;
 }

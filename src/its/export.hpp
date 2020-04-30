@@ -23,7 +23,7 @@ namespace ITSExport {
      * Prints the given guard in a readable format (constraints separated by &&)
      * Note that colors are only used if colors is true and Config::Output::ColorInIts is true
      */
-    void printGuard(const BoolExpr &guard, std::ostream &s, bool colors = true);
+    void printGuard(const BoolExpr guard, std::ostream &s, bool colors = true);
 
     /**
      * Prints the given cost expression (does not do much except for colors)
