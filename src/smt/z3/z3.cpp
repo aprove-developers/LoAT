@@ -8,43 +8,33 @@ std::ostream& Z3::print(std::ostream& os) const {
 
 Z3::~Z3() {}
 
-Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx), marker(z3Ctx) {
+Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx) {
     updateParams();
 }
 
-uint Z3::add(const BoolExpr &e) {
-    if (unsatCores) {
-        const std::string &name = "m" + std::to_string(markerCount);
-        const z3::expr &m = z3Ctx.bool_const(name.c_str());
-        marker.push_back(m);
-        uint idx = marker.size() - 1;
-        markerMap[name] = idx;
-        ++markerCount;
-        const z3::expr &imp = z3::implies(m, ExprToSmt<z3::expr>::convert(e, ctx, varMan));
-        solver.add(imp);
-        return idx;
-    } else {
-        solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
-        return 0;
-    }
+void Z3::_add(const BoolExpr &e) {
+    solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
 }
 
-void Z3::push() {
+void Z3::_push() {
     solver.push();
-    if (unsatCores) {
-        markerStack.push(marker.size());
-    }
 }
 
-void Z3::pop() {
+void Z3::_pop() {
     solver.pop();
-    if (unsatCores) {
-        marker.resize(markerStack.top());
-    }
 }
 
 Smt::Result Z3::check() {
-    z3::check_result res = unsatCores ? solver.check(marker) : solver.check();
+    z3::check_result res;
+    if (unsatCores) {
+        z3::expr_vector z3Marker(z3Ctx);
+        for (const BoolExpr &m: marker) {
+            z3Marker.push_back(ExprToSmt<z3::expr>::convert(m, ctx, varMan));
+        }
+        res = solver.check(z3Marker);
+    } else {
+        res = solver.check();
+    }
     switch (res) {
     case z3::sat: return Sat;
     case z3::unsat: return Unsat;
@@ -65,21 +55,6 @@ Model Z3::model() {
         constants[p.first] = m.eval(p.second).bool_value();
     }
     return Model(vars, constants);
-}
-
-void Z3::setTimeout(unsigned int timeout) {
-    this->timeout = timeout;
-    updateParams();
-}
-
-void Z3::enableModels() {
-    this->models = true;
-    updateParams();
-}
-
-void Z3::enableUnsatCores() {
-    this->unsatCores = true;
-    updateParams();
 }
 
 void Z3::updateParams() {
@@ -105,18 +80,17 @@ std::vector<uint> Z3::unsatCore() {
     const z3::expr_vector &core = solver.unsat_core();
     std::vector<uint> res;
     for (const z3::expr &e: core) {
-        res.push_back(markerMap[e.to_string()]);
+        res.push_back(markerMap[SmtToExpr<z3::expr>::convert(e, ctx)]);
     }
     return res;
 }
 
-void Z3::resetSolver() {
-    marker = z3::expr_vector(z3Ctx);
-    markerCount = 0;
-    markerStack = std::stack<uint>();
-    markerMap.clear();
+void Z3::_resetSolver() {
     solver.reset();
-    updateParams();
+}
+
+void Z3::_resetContext() {
+    ctx.reset();
 }
 
 BoolExpr Z3::simplify(const BoolExpr &expr, const VariableManager &varMan) {

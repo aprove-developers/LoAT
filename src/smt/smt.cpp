@@ -3,6 +3,60 @@
 
 Smt::~Smt() {}
 
+uint Smt::add(const BoolExpr &e) {
+    if (unsatCores) {
+        const BoolExpr &m = buildConst(markerCount);
+        marker.push_back(m);
+        uint idx = marker.size() - 1;
+        markerMap[m] = idx;
+        ++markerCount;
+        _add((!m) | e);
+        return idx;
+    } else {
+        _add(e);
+        return 0;
+    }
+}
+
+void Smt::push() {
+    _push();
+    if (unsatCores) {
+        markerStack.push(marker.size());
+    }
+}
+
+void Smt::pop() {
+    _pop();
+    if (unsatCores) {
+        marker.resize(markerStack.top());
+    }
+}
+
+void Smt::resetSolver() {
+    _resetSolver();
+    _resetContext();
+    marker.clear();
+    markerCount = 1;
+    markerStack = std::stack<uint>();
+    markerMap.clear();
+    updateParams();
+}
+
+void Smt::enableModels() {
+    this->models = true;
+    updateParams();
+}
+
+void Smt::enableUnsatCores() {
+    this->unsatCores = true;
+    updateParams();
+}
+
+void Smt::setTimeout(unsigned int timeout) {
+    this->timeout = timeout;
+    updateParams();
+}
+
 uint Smt::add(const Rel &e) {
     return this->add(buildLit(e));
 }

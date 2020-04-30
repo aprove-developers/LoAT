@@ -165,7 +165,7 @@ const BoolExpr buildAnd(const BoolExprSet &xs);
 const BoolExpr buildOr(const RelSet &xs);
 const BoolExpr buildOr(const BoolExprSet &xs);
 const BoolExpr buildLit(const Rel &lit);
-const BoolExpr buildConst(uint id);
+const BoolExpr buildConst(int id);
 
 extern const BoolExpr True;
 extern const BoolExpr False;

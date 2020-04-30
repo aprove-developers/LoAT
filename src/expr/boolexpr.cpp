@@ -429,7 +429,7 @@ const BoolExpr buildLit(const Rel &lit) {
     return BoolExpr(new BoolLit(lit));
 }
 
-const BoolExpr buildConst(uint id) {
+const BoolExpr buildConst(int id) {
     return BoolExpr(new BoolConst(id));
 }
 

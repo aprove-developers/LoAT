@@ -24,40 +24,32 @@ Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), v
     mutex.unlock();
 }
 
-uint Yices::add(const BoolExpr &e) {
+void Yices::_add(const BoolExpr &e) {
     term_t converted = ExprToSmt<term_t>::convert(e, ctx, varMan);
-    if (unsatCores) {
-        assumptions.push_back(converted);
-        uint idx = assumptions.size() - 1;
-        assumptionMap[converted] = idx;
-        return idx;
-    } else {
-        if (yices_assert_formula(solver, converted) < 0) {
-            throw YicesError();
-        }
-        return 0;
+    if (yices_assert_formula(solver, converted) < 0) {
+        throw YicesError();
     }
 }
 
-void Yices::push() {
+void Yices::_push() {
     yices_push(solver);
-    if (unsatCores) {
-        assumptionStack.push(assumptions.size());
-    }
 }
 
-void Yices::pop() {
+void Yices::_pop() {
     yices_pop(solver);
-    if (unsatCores) {
-        assumptions.resize(assumptionStack.top());
-        assumptionStack.pop();
-    }
 }
 
 Smt::Result Yices::check() {
-    auto future = unsatCores ?
-                std::async(yices_check_context_with_assumptions, solver, nullptr, assumptions.size(), &assumptions[0]) :
-                std::async(yices_check_context, solver, nullptr);
+    std::future<smt_status> future;
+    if (unsatCores) {
+        std::vector<term_t> assumptions;
+        for (const BoolExpr &m: marker) {
+            assumptions.push_back(ExprToSmt<term_t>::convert(m, ctx, varMan));
+        }
+        future = std::async(yices_check_context_with_assumptions, solver, nullptr, assumptions.size(), &assumptions[0]);
+    } else {
+        future = std::async(yices_check_context, solver, nullptr);
+    }
     if (future.wait_for(std::chrono::milliseconds(timeout)) != std::future_status::timeout) {
         switch (future.get()) {
         case STATUS_SAT:
@@ -98,20 +90,10 @@ std::vector<uint> Yices::unsatCore() {
         throw YicesError();
     }
     std::vector<uint> res;
-    for (uint i = 0; i < core.size; ++i) {
-        res.push_back(assumptionMap[core.data[i]]);
+    for (size_t i = 0; i < core.size; ++i) {
+        res.push_back(markerMap[SmtToExpr<term_t>::convert(core.data[i], ctx)]);
     }
     return res;
-}
-
-void Yices::setTimeout(unsigned int timeout) {
-    this->timeout = timeout;
-}
-
-void Yices::enableModels() { }
-
-void Yices::enableUnsatCores() {
-    unsatCores = true;
 }
 
 GiNaC::numeric Yices::getRealFromModel(model_t *model, type_t symbol) {
@@ -124,11 +106,16 @@ GiNaC::numeric Yices::getRealFromModel(model_t *model, type_t symbol) {
     return res;
 }
 
-void Yices::resetSolver() {
-    assumptions.clear();
-    assumptionStack = std::stack<uint>();
-    assumptionMap.clear();
+void Yices::_resetSolver() {
     yices_reset_context(solver);
+}
+
+void Yices::_resetContext() {
+    ctx.reset();
+}
+
+void Yices::updateParams() {
+    // do nothing
 }
 
 uint Yices::running;

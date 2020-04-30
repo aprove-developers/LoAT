@@ -33,11 +33,13 @@ std::ostream& operator<<(std::ostream &s, const Model &e) {
     for (const auto &p: e.vars) {
         s << " " << p.first << "=" << p.second;
     }
+    s << std::endl;
     if (!e.vars.empty() && !e.constants.empty()) {
         s << "constants:" << std::endl;
     }
     for (const auto &p: e.constants) {
         s << " " << p.first << "=" << p.second;
     }
+    s << std::endl;
     return s;
 }

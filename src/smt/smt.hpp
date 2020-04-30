@@ -5,6 +5,7 @@
 #include "../expr/boolexpr.hpp"
 #include "../its/variablemanager.hpp"
 #include "model.hpp"
+#include "../config.hpp"
 
 class Smt
 {
@@ -13,16 +14,17 @@ public:
     enum Result {Sat, Unknown, Unsat};
     enum Logic {QF_LA, QF_NA, QF_ENA};
 
-    virtual uint add(const BoolExpr &e) = 0;
+    uint add(const BoolExpr &e);
+    void push();
+    void pop();
     uint add(const Rel &e);
-    virtual void push() = 0;
-    virtual void pop() = 0;
+    void resetSolver();
+    void enableModels();
+    void enableUnsatCores();
+    void setTimeout(unsigned int timeout);
+
     virtual Result check() = 0;
     virtual Model model() = 0;
-    virtual void setTimeout(unsigned int timeout) = 0;
-    virtual void enableModels() = 0;
-    virtual void enableUnsatCores() = 0;
-    virtual void resetSolver() = 0;
     virtual std::vector<uint> unsatCore() = 0;
     virtual ~Smt();
 
@@ -52,6 +54,27 @@ public:
         }
         return res;
     }
+
+protected:
+
+    std::vector<BoolExpr> marker;
+    std::map<BoolExpr, uint> markerMap;
+
+    bool unsatCores = false;
+    bool models = false;
+    uint timeout = Config::Smt::DefaultTimeout;
+
+    virtual void _add(const BoolExpr &e) = 0;
+    virtual void _push() = 0;
+    virtual void _pop() = 0;
+    virtual void _resetSolver() = 0;
+    virtual void _resetContext() = 0;
+    virtual void updateParams() = 0;
+
+private:
+
+    uint markerCount = 1;
+    std::stack<uint> markerStack;
 
 };
 
