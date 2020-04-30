@@ -286,7 +286,7 @@ option<Rule> GuardToolbox::propagateEqualitiesBySmt(const Rule &rule, VariableMa
     if (!rule.getGuard()->isLinear()) {
         return {};
     }
-    VarSet tempVars = rule.vars();
+    VarSet tempVars = rule.getGuard()->vars();
     for (auto it = tempVars.begin(); it != tempVars.end();) {
         if (varMan.isTempVar(*it)) {
             ++it;

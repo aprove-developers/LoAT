@@ -264,7 +264,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             abstraction.insert(entryVar);
             if (e.nonterm) nontermAbstraction.insert(entryVar);
             for (const Rel &dep: e.dependencies) {
-                init.insert(!entryVar | edgeVars.at({rel, dep}));
+                init.insert((!entryVar) | edgeVars.at({rel, dep}));
             }
         }
         entryVars[rel] = eVars;
@@ -282,7 +282,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             if (target == join) continue;
             const BoolExpr var2 = edgeVars.at({join, target});
             const BoolExpr var3 = edgeVars.at({start, target});
-            closure.insert(!var1 | !var2 | var3);
+            closure.insert((!var1) | (!var2) | var3);
         }
     }
     // forbids self-loops (which suffices due to 'closure' above)
@@ -301,10 +301,8 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     std::vector<AccelerationProblem::Result> ret;
     if (satRes == Smt::Sat && Smt::isImplication(guard, buildLit(cost > 0), varMan)) {
         BoolExpr newGuard = buildRes(solver->model(), entryVars);
-        solver->resetSolver();
-        solver->add(newGuard);
         // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
-        if (solver->check() == Smt::Sat) {
+        if (Smt::check(newGuard, varMan) == Smt::Sat) {
             ret.push_back({newGuard, true});
         }
     }
@@ -327,10 +325,8 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             }
         }
         BoolExpr newGuard = buildRes(model, entryVars);
-        solver->resetSolver();
-        solver->add(newGuard);
         // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
-        if (solver->check() == Smt::Sat) {
+        if (Smt::check(newGuard, varMan) == Smt::Sat) {
             ret.push_back({newGuard, false});
         }
     }

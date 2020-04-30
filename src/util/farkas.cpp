@@ -134,18 +134,38 @@ const BoolExpr FarkasLemma::applyRec(
         const VarSet &params,
         VariableManager &varMan) {
     std::vector<BoolExpr> res;
-    if (premise->isConjunction() || premise->getLit()) {
+    if (premise->isConjunction()) {
         for (const Rel &c: conclusion) {
             vector<Expr> coefficients;
             for (const Var &x : vars) {
                 coefficients.push_back(c.lhs().coeff(x, 1));
             }
-            Expr c0 = c.rhs();
-            res.push_back(FarkasLemma::apply(premise->lits(), vars, coefficients, c0, 0, varMan, params));
+            Expr c0 = -c.rhs();
+            RelSet lits;
+            for (const Rel &lit: premise->lits()) {
+                lits.insert(lit.splitVariableAndConstantAddends(params));
+            }
+            res.push_back(FarkasLemma::apply(lits, vars, coefficients, c0, 0, varMan, params));
         }
         return buildAnd(res);
     } else {
-        for (const BoolExpr &c: premise->getChildren()) {
+        BoolExprSet children;
+        if (premise->isOr()) {
+            children = premise->getChildren();
+        } else {
+            BoolExprSet conj;
+            for (const BoolExpr &c: premise->getChildren()) {
+                if (c->isOr()) {
+                    children.insert(c);
+                } else {
+                    conj.insert(c);
+                }
+            }
+            if (!conj.empty()) {
+                children.insert(buildAnd(conj));
+            }
+        }
+        for (const BoolExpr &c: children) {
             res.push_back(applyRec(c, conclusion, vars, params, varMan));
         }
         return premise->isAnd() ? buildOr(res) : buildAnd(res);
