@@ -67,6 +67,7 @@ namespace Config {
         extern const unsigned LimitTimeoutFinal;
         extern const unsigned LimitTimeoutFinalFast;
         extern const unsigned MaxExponentWithoutPow;
+        extern const unsigned SimpTimeout;
     }
 
     // Loop acceleration technique

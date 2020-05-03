@@ -69,7 +69,7 @@ bool Accelerator::simplifySimpleLoops() {
     if (Config::Accel::SimplifyRulesBefore) {
         for (auto it = loops.begin(), end = loops.end(); it != end; ++it) {
             const Rule &rule = its.getRule(*it);
-            option<Rule> simplified = Preprocess::simplifyRule(its, rule);
+            option<Rule> simplified = Preprocess::simplifyRule(its, rule, false);
             if (simplified) {
                 this->proof.ruleTransformationProof(rule, "simplification", simplified.get(), its);
                 its.removeRule(*it);
@@ -113,7 +113,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
     auto optNested = Chaining::chainRules(its, first, second);
     if (optNested) {
         // Simplify the rule again (chaining can introduce many useless constraints)
-        option<Rule> simplified = Preprocess::simplifyRule(its, optNested.get());
+        option<Rule> simplified = Preprocess::simplifyRule(its, optNested.get(), true);
         LinearRule nestedRule = simplified ? simplified.get().toLinear() : optNested.get();
 
         // Note that we do not try all heuristics or backward accel to keep nesting efficient

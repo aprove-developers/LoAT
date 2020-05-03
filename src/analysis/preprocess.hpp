@@ -39,7 +39,7 @@ namespace Preprocess
     /**
      * A simpler/cheaper version of preprocessRule without any smt queries.
      */
-    option<Rule> simplifyRule(VarMan &varMan, const Rule &rule);
+    option<Rule> simplifyRule(VarMan &varMan, const Rule &rule, bool fast);
 
     /**
      * Simplifies the guard by dropping trivial constraints and constraints
@@ -70,7 +70,7 @@ namespace Preprocess
      * @param rule the rule, modified
      * @return true iff rule was modified
      */
-    option<Rule> eliminateTempVars(VarMan &varMan, const Rule &rule);
+    option<Rule> eliminateTempVars(VarMan &varMan, const Rule &rule, bool fast);
 }
 
 #endif // PREPROCESS_H

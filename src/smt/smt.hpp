@@ -13,7 +13,7 @@ public:
     enum Result {Sat, Unknown, Unsat};
     enum Logic {QF_LA, QF_NA, QF_ENA};
 
-    virtual void add(const BoolExpr &e) = 0;
+    virtual void add(const BoolExpr e) = 0;
     void add(const Rel &e);
     virtual void push() = 0;
     virtual void pop() = 0;
@@ -24,8 +24,8 @@ public:
     virtual void resetSolver() = 0;
     virtual ~Smt();
 
-    static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
-    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
+    static Smt::Result check(const BoolExpr e, const VariableManager &varMan);
+    static bool isImplication(const BoolExpr lhs, const BoolExpr rhs, const VariableManager &varMan);
     static BoolExprSet unsatCore(const BoolExprSet &assumptions, VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up = {});
     static Logic chooseLogic(const BoolExprSet &xs);

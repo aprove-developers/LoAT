@@ -24,7 +24,7 @@ Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), v
     mutex.unlock();
 }
 
-void Yices::add(const BoolExpr &e) {
+void Yices::add(const BoolExpr e) {
     if (yices_assert_formula(solver, ExprToSmt<term_t>::convert(e, ctx, varMan)) < 0) {
         throw YicesError();
     }

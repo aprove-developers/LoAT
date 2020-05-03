@@ -65,6 +65,7 @@ namespace Config {
         const unsigned LimitTimeout = 500u;
         const unsigned LimitTimeoutFinal = 3000u;
         const unsigned LimitTimeoutFinalFast = 500u;
+        const unsigned SimpTimeout = 200u;
 
         // The largest k for which x^k is rewritten to x*x*...*x (k times).
         // z3 does not like powers, so writing x*x*...*x can sometimes help.

@@ -7,13 +7,13 @@ void Smt::add(const Rel &e) {
     return this->add(buildLit(e));
 }
 
-Smt::Result Smt::check(const BoolExpr &e, const VariableManager &varMan) {
+Smt::Result Smt::check(const BoolExpr e, const VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic(BoolExprSet{e}), varMan);
     s->add(e);
     return s->check();
 }
 
-bool Smt::isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan) {
+bool Smt::isImplication(const BoolExpr lhs, const BoolExpr rhs, const VariableManager &varMan) {
     std::unique_ptr<Smt> s = SmtFactory::solver(Smt::chooseLogic(BoolExprSet{lhs, rhs}), varMan);
     s->add(lhs);
     s->add(!rhs);

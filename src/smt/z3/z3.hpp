@@ -10,7 +10,7 @@ class Z3 : public Smt {
 public:
     Z3(const VariableManager &varMan);
 
-    void add(const BoolExpr &e) override;
+    void add(const BoolExpr e) override;
     void push() override;
     void pop() override;
     Result check() override;
@@ -22,7 +22,7 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
-    static BoolExpr simplify(const BoolExpr &expr, const VariableManager &varMan);
+    static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan, uint timeout = Config::Smt::SimpTimeout);
 
 protected:
 

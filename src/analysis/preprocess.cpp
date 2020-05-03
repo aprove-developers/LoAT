@@ -34,7 +34,7 @@ option<Rule> Preprocess::preprocessRule(VarMan &varMan, const Rule &rule) {
     bool changed = false;
     do {
         changed = false;
-        newRule = eliminateTempVars(varMan, oldRule);
+        newRule = eliminateTempVars(varMan, oldRule, true);
         if (newRule) {
             changed = true;
             oldRule = newRule.get();
@@ -63,12 +63,12 @@ option<Rule> Preprocess::preprocessRule(VarMan &varMan, const Rule &rule) {
 }
 
 
-option<Rule> Preprocess::simplifyRule(VarMan &varMan, const Rule &rule) {
+option<Rule> Preprocess::simplifyRule(VarMan &varMan, const Rule &rule, bool fast) {
     bool changed = false;
     Rule oldRule = rule;
     option<Rule> newRule;
 
-    newRule = eliminateTempVars(varMan, oldRule);
+    newRule = eliminateTempVars(varMan, oldRule, fast);
     if (newRule) {
         changed = true;
         oldRule = newRule.get();
@@ -150,7 +150,7 @@ static VarSet collectVarsInUpdateRhs(const Rule &rule) {
 }
 
 
-option<Rule> Preprocess::eliminateTempVars(VarMan &varMan, const Rule &rule) {
+option<Rule> Preprocess::eliminateTempVars(VarMan &varMan, const Rule &rule, bool fast) {
     bool changed = false;
     Rule oldRule = rule;
     option<Rule> newRule;
@@ -188,10 +188,12 @@ option<Rule> Preprocess::eliminateTempVars(VarMan &varMan, const Rule &rule) {
         changed = true;
     }
 
-    newRule = GuardToolbox::propagateEqualitiesBySmt(oldRule, varMan);
-    if (newRule) {
-        oldRule = newRule.get();
-        changed = true;
+    if (!fast && !oldRule.getGuard()->isConjunction()) {
+        newRule = GuardToolbox::propagateEqualitiesBySmt(oldRule, varMan);
+        if (newRule) {
+            oldRule = newRule.get();
+            changed = true;
+        }
     }
 
     //now eliminate a <= x and replace a <= x, x <= b by a <= b for all free variables x where this is sound
