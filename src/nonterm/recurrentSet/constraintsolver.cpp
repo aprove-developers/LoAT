@@ -42,7 +42,7 @@ namespace strengthening {
             varMan(varMan) { }
 
     const BoolExpr Self::solve() const {
-        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({constraints}), varMan);
+        std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic(BoolExprSet{constraints}), varMan);
         solver->add(constraints);
         if (solver->check() == Smt::Sat) {
             return instantiateTemplates(solver->model());

@@ -5,34 +5,30 @@
 #include "../expr/boolexpr.hpp"
 #include "../its/variablemanager.hpp"
 #include "model.hpp"
-#include "../config.hpp"
 
 class Smt
 {
 public:
 
-    Smt(VariableManager &varMan);
-
     enum Result {Sat, Unknown, Unsat};
     enum Logic {QF_LA, QF_NA, QF_ENA};
 
-    uint add(const BoolExpr e);
-    void push();
-    void pop();
-    uint add(const Rel &e);
-    void resetSolver();
-    void enableModels();
-    void enableUnsatCores();
-    void setTimeout(unsigned int timeout);
-
+    virtual void add(const BoolExpr &e) = 0;
+    void add(const Rel &e);
+    virtual void push() = 0;
+    virtual void pop() = 0;
     virtual Result check() = 0;
     virtual Model model() = 0;
-    virtual std::vector<uint> unsatCore() = 0;
+    virtual void setTimeout(unsigned int timeout) = 0;
+    virtual void enableModels() = 0;
+    virtual void resetSolver() = 0;
     virtual ~Smt();
 
-    static Smt::Result check(const BoolExpr e, VariableManager &varMan);
-    static bool isImplication(const BoolExpr lhs, const BoolExpr rhs, VariableManager &varMan);
+    static Smt::Result check(const BoolExpr &e, const VariableManager &varMan);
+    static bool isImplication(const BoolExpr &lhs, const BoolExpr &rhs, const VariableManager &varMan);
+    static BoolExprSet unsatCore(const BoolExprSet &assumptions, VariableManager &varMan);
     static Logic chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up = {});
+    static Logic chooseLogic(const BoolExprSet &xs);
 
     template<class RELS, class UP> static Logic chooseLogic(const std::vector<RELS> &g, const std::vector<UP> &up) {
         Logic res = QF_LA;
@@ -59,23 +55,7 @@ public:
 
 protected:
 
-    std::vector<BoolExpr> marker;
-    VariableManager &varMan;
-
-    bool unsatCores = false;
-    bool models = false;
-    uint timeout = Config::Smt::DefaultTimeout;
-
-    virtual void _add(const BoolExpr e) = 0;
-    virtual void _push() = 0;
-    virtual void _pop() = 0;
-    virtual void _resetSolver() = 0;
-    virtual void _resetContext() = 0;
-    virtual void updateParams() = 0;
-
-private:
-
-    std::stack<uint> markerStack;
+    virtual BoolExprSet _unsatCore(const BoolExprSet &assumptions) = 0;
 
 };
 

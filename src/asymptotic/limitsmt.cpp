@@ -249,13 +249,15 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr expr,
                                                      VarMan &varMan, Complexity currentRes, uint timeout)
 {
     // initialize z3
-    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic({expr, buildLit(cost > 0)}), varMan, timeout);
+    unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic(BoolExprSet{expr, buildLit(cost > 0)}), varMan, timeout);
 
     // the parameter of the desired family of solutions
     Var n = varMan.getFreshUntrackedSymbol("n", Expr::Int);
 
     // get all relevant variables
-    VarSet vars = expr->vars();
+    VarSet vars;
+    expr->collectVars(vars);
+    cost.collectVars(vars);
     bool hasTmpVars = false;
 
     // create linear templates for all variables

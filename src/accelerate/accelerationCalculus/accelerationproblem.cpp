@@ -13,7 +13,6 @@ AccelerationProblem::AccelerationProblem(
         VariableManager &varMan): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), varMan(varMan) {
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, {up, closed});
     this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
-    this->solver->enableUnsatCores();
     this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << up);
 }
 
@@ -32,17 +31,6 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
                         varMan)};
     } else {
         return {};
-    }
-}
-
-BoolExpr AccelerationProblem::getGuardWithout(const Rel &rel) {
-    const auto &it = guardWithout.find(rel);
-    if (it == guardWithout.end()) {
-        const BoolExpr res = guard->removeRels({rel}).get();
-        guardWithout[rel] = res;
-        return res;
-    } else {
-        return it->second;
     }
 }
 
@@ -96,22 +84,25 @@ void AccelerationProblem::monotonicity() {
     for (const Rel &rel: todo) {
         const Rel &updated = rel.subs(up);
         RelSet premise = findConsistentSubset(guard & rel & updated);
-        solver->resetSolver();
         if (!premise.empty()) {
-            std::map<uint, BoolExpr> assumptions;
+            BoolExprSet assumptions;
+            BoolExprSet deps;
             premise.erase(rel);
             for (const Rel &p: premise) {
-                assumptions.emplace(solver->add(p), buildLit(p));
+                const BoolExpr lit = buildLit(p);
+                assumptions.insert(lit);
+                deps.insert(lit);
             }
-            solver->add(updated);
-            solver->add(!rel);
-            if (solver->check() == Smt::Unsat) {
-                const std::vector<uint> core = solver->unsatCore();
+            assumptions.insert(buildLit(updated));
+            assumptions.insert(buildLit(!rel));
+            const BoolExprSet &unsatCore = Smt::unsatCore(assumptions, varMan);
+            if (!unsatCore.empty()) {
                 RelSet dependencies;
-                for (uint i: core) {
-                    if (assumptions.count(i) > 0) {
-                        const RelSet &deps = assumptions[i]->lits();
-                        dependencies.insert(deps.begin(), deps.end());
+                for (const BoolExpr &e: unsatCore) {
+                    if (deps.count(e) > 0) {
+                        const RelSet &lit = e->lits();
+                        assert(lit.size() == 1);
+                        dependencies.insert(*lit.begin());
                     }
                 }
                 const BoolExpr newGuard = buildAnd(dependencies) & rel.subs(closed).subs(Subs(n, n-1));
@@ -142,20 +133,23 @@ void AccelerationProblem::recurrence() {
     for (const Rel &rel: todo) {
         const Rel updated = rel.subs(up);
         RelSet premise = findConsistentSubset(guard & rel & updated);
-        solver->resetSolver();
         if (!premise.empty()) {
-            std::map<uint, BoolExpr> assumptions;
+            BoolExprSet deps;
+            BoolExprSet assumptions;
             for (const Rel &p: premise) {
-                assumptions.emplace(solver->add(p), buildLit(p));
+                const BoolExpr b = buildLit(p);
+                assumptions.insert(b);
+                deps.insert(b);
             }
-            solver->add(!updated);
-            if (solver->check() == Smt::Unsat) {
-                const std::vector<uint> core = solver->unsatCore();
+            assumptions.insert(buildLit(!updated));
+            BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
+            if (!unsatCore.empty()) {
                 RelSet dependencies;
-                for (uint i: core) {
-                    if (assumptions.count(i) > 0) {
-                        const RelSet &deps = assumptions[i]->lits();
-                        dependencies.insert(deps.begin(), deps.end());
+                for (const BoolExpr &e: unsatCore) {
+                    if (deps.count(e) > 0) {
+                        const RelSet &lit = e->lits();
+                        assert(lit.size() == 1);
+                        dependencies.insert(*lit.begin());
                     }
                 }
                 dependencies.erase(rel);
@@ -184,22 +178,25 @@ void AccelerationProblem::eventualWeakDecrease() {
         const Rel &dec = rel.lhs() >= updated;
         const Rel &inc = updated < updated.subs(up);
         RelSet premise = findConsistentSubset(guard & dec & !inc);
-        solver->resetSolver();
         if (!premise.empty()) {
             premise.erase(rel);
-            std::map<uint, BoolExpr> assumptions;
+            BoolExprSet assumptions;
+            BoolExprSet deps;
             for (const Rel &p: premise) {
-                assumptions.emplace(solver->add(p), buildLit(p));
+                const BoolExpr lit = buildLit(p);
+                assumptions.insert(lit);
+                deps.insert(lit);
             }
-            solver->add(dec);
-            solver->add(inc);
-            if (solver->check() == Smt::Unsat) {
-                const std::vector<uint> core = solver->unsatCore();
+            assumptions.insert(buildLit(dec));
+            assumptions.insert(buildLit(inc));
+            BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
+            if (!unsatCore.empty()) {
                 RelSet dependencies;
-                for (uint i: core) {
-                    if (assumptions.count(i) > 0) {
-                        const RelSet &deps = assumptions[i]->lits();
-                        dependencies.insert(deps.begin(), deps.end());
+                for (const BoolExpr &e: unsatCore) {
+                    if (deps.count(e) > 0) {
+                        const RelSet &lit = e->lits();
+                        assert(lit.size() == 1);
+                        dependencies.insert(*lit.begin());
                     }
                 }
                 const Rel &newCond = rel.subs(closed).subs(Subs(n, n-1));

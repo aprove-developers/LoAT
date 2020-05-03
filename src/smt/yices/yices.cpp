@@ -14,7 +14,7 @@ Yices::~Yices() {
     yices_free_context(solver);
 }
 
-Yices::Yices(VariableManager &varMan, Logic logic): Smt(varMan), ctx(YicesContext()), config(yices_new_config()) {
+Yices::Yices(const VariableManager &varMan, Logic logic): ctx(YicesContext()), varMan(varMan), config(yices_new_config()) {
     if (logic == Smt::QF_NA) {
         yices_set_config(config, "solver-type", "mcsat");
     }
@@ -24,32 +24,22 @@ Yices::Yices(VariableManager &varMan, Logic logic): Smt(varMan), ctx(YicesContex
     mutex.unlock();
 }
 
-void Yices::_add(const BoolExpr e) {
-    term_t converted = ExprToSmt<term_t>::convert(e, ctx, varMan);
-    if (yices_assert_formula(solver, converted) < 0) {
+void Yices::add(const BoolExpr &e) {
+    if (yices_assert_formula(solver, ExprToSmt<term_t>::convert(e, ctx, varMan)) < 0) {
         throw YicesError();
     }
 }
 
-void Yices::_push() {
+void Yices::push() {
     yices_push(solver);
 }
 
-void Yices::_pop() {
+void Yices::pop() {
     yices_pop(solver);
 }
 
 Smt::Result Yices::check() {
-    std::future<smt_status> future;
-    if (unsatCores) {
-        assumptions.clear();
-        for (const BoolExpr &m: marker) {
-            assumptions.push_back(ExprToSmt<term_t>::convert(m, ctx, varMan));
-        }
-        future = std::async(yices_check_context_with_assumptions, solver, nullptr, assumptions.size(), &assumptions[0]);
-    } else {
-        future = std::async(yices_check_context, solver, nullptr);
-    }
+    auto future = std::async(yices_check_context, solver, nullptr);
     if (future.wait_for(std::chrono::milliseconds(timeout)) != std::future_status::timeout) {
         switch (future.get()) {
         case STATUS_SAT:
@@ -66,6 +56,9 @@ Smt::Result Yices::check() {
 }
 
 Model Yices::model() {
+    if (ctx.getSymbolMap().empty() && ctx.getConstMap().empty()) {
+        return Model({}, {});
+    }
     model_t *m = yices_get_model(solver, true);
     VarMap<GiNaC::numeric> vars;
     for (const auto &p: ctx.getSymbolMap()) {
@@ -83,26 +76,11 @@ Model Yices::model() {
     return Model(vars, constants);
 }
 
-std::vector<uint> Yices::unsatCore() {
-    term_vector_t core;
-    yices_init_term_vector(&core);
-    if (yices_get_unsat_core(solver, &core) != 0) {
-        throw YicesError();
-    }
-    std::vector<uint> res;
-    for (size_t i = 0; i < core.size; ++i) {
-        bool found = false;
-        for (uint j = 0; j < assumptions.size(); ++j) {
-            if (core.data[i] == assumptions[j]) {
-                res.push_back(j);
-                found = true;
-                break;
-            }
-        }
-        assert(found);
-    }
-    return res;
+void Yices::setTimeout(unsigned int timeout) {
+    this->timeout = timeout;
 }
+
+void Yices::enableModels() { }
 
 GiNaC::numeric Yices::getRealFromModel(model_t *model, type_t symbol) {
     int64_t num;
@@ -114,16 +92,40 @@ GiNaC::numeric Yices::getRealFromModel(model_t *model, type_t symbol) {
     return res;
 }
 
-void Yices::_resetSolver() {
+void Yices::resetSolver() {
     yices_reset_context(solver);
 }
 
-void Yices::_resetContext() {
-    ctx.reset();
-}
-
-void Yices::updateParams() {
-    // do nothing
+BoolExprSet Yices::_unsatCore(const BoolExprSet &assumptions) {
+    std::vector<term_t> as;
+    std::map<term_t, BoolExpr> map;
+    for (const BoolExpr &a: assumptions) {
+        term_t t = ExprToSmt<term_t>::convert(a, ctx, varMan);
+        as.push_back(t);
+        map.emplace(t, a);
+    }
+    auto future = std::async(yices_check_context_with_assumptions, solver, nullptr, as.size(), &as[0]);
+    if (future.wait_for(std::chrono::milliseconds(timeout)) != std::future_status::timeout) {
+        switch (future.get()) {
+        case STATUS_SAT:
+            return {};
+        case STATUS_UNSAT: {
+            term_vector_t core;
+            yices_init_term_vector(&core);
+            yices_get_unsat_core(solver, &core);
+            BoolExprSet res;
+            for (uint i = 0; i < core.size; ++i) {
+                res.insert(map[core.data[i]]);
+            }
+            return res;
+        }
+        default:
+            return {};
+        }
+    } else {
+        yices_stop_search(solver);
+        return {};
+    }
 }
 
 uint Yices::running;

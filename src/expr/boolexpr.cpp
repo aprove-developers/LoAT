@@ -89,10 +89,6 @@ size_t BoolConst::size() const {
     return 1;
 }
 
-option<BoolExpr> BoolConst::removeRels(const RelSet &rels) const {
-    return {shared_from_this()};
-}
-
 BoolExpr BoolConst::replaceRels(const RelMap<BoolExpr> map) const {
     return shared_from_this();
 }
@@ -186,14 +182,6 @@ void BoolLit::collectLits(RelSet &res) const {
 void BoolLit::collectVars(VarSet &res) const {
     const VarSet &litVars = lit.vars();
     res.insert(litVars.begin(), litVars.end());
-}
-
-option<BoolExpr> BoolLit::removeRels(const RelSet &rels) const {
-    if (rels.count(lit) > 0) {
-        return {};
-    } else {
-        return {shared_from_this()};
-    }
 }
 
 BoolExpr BoolLit::replaceRels(const RelMap<BoolExpr> map) const {
@@ -317,17 +305,6 @@ void BoolJunction::collectVars(VarSet &res) const {
     for (const BoolExpr &c: children) {
         c->collectVars(res);
     }
-}
-
-option<BoolExpr> BoolJunction::removeRels(const RelSet &rels) const {
-    BoolExprSet newChildren;
-    for (const BoolExpr &c: children) {
-        const option<BoolExpr> &newC = c->removeRels(rels);
-        if (newC) {
-            newChildren.insert(newC.get());
-        }
-    }
-    return isAnd() ? buildAnd(newChildren) : buildOr(newChildren);
 }
 
 BoolExpr BoolJunction::replaceRels(const RelMap<BoolExpr> map) const {

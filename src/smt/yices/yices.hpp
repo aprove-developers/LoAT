@@ -10,11 +10,16 @@
 class Yices : public Smt {
 
 public:
-    Yices(VariableManager &varMan, Logic logic);
+    Yices(const VariableManager &varMan, Logic logic);
 
+    void add(const BoolExpr &e) override;
+    void push() override;
+    void pop() override;
     Result check() override;
     Model model() override;
-    std::vector<uint> unsatCore() override;
+    void setTimeout(unsigned int timeout) override;
+    void enableModels() override;
+    void resetSolver() override;
     ~Yices() override;
 
     static void init();
@@ -22,22 +27,21 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
+protected:
+
+    BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
+
 private:
+    unsigned int timeout = Config::Smt::DefaultTimeout;
     YicesContext ctx;
+    const VariableManager &varMan;
     ctx_config_t *config;
     context_t *solver;
 
     static uint running;
     static std::mutex mutex;
 
-    std::vector<term_t> assumptions;
 
-    void _add(const BoolExpr e) override;
-    void _push() override;
-    void _pop() override;
-    void _resetSolver() override;
-    void _resetContext() override;
-    void updateParams() override;
     GiNaC::numeric getRealFromModel(model_t *model, type_t symbol);
 
 };

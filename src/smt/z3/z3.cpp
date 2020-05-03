@@ -8,34 +8,24 @@ std::ostream& Z3::print(std::ostream& os) const {
 
 Z3::~Z3() {}
 
-Z3::Z3(VariableManager &varMan): Smt(varMan), ctx(z3Ctx), solver(z3Ctx) {
+Z3::Z3(const VariableManager &varMan): varMan(varMan), ctx(z3Ctx), solver(z3Ctx) {
     updateParams();
 }
 
-void Z3::_add(const BoolExpr e) {
+void Z3::add(const BoolExpr &e) {
     solver.add(ExprToSmt<z3::expr>::convert(e, ctx, varMan));
 }
 
-void Z3::_push() {
+void Z3::push() {
     solver.push();
 }
 
-void Z3::_pop() {
+void Z3::pop() {
     solver.pop();
 }
 
 Smt::Result Z3::check() {
-    z3::check_result res;
-    if (unsatCores) {
-        z3Marker = z3::expr_vector(z3Ctx);
-        for (const BoolExpr &m: marker) {
-            z3Marker->push_back(ExprToSmt<z3::expr>::convert(m, ctx, varMan));
-        }
-        res = solver.check(z3Marker.get());
-    } else {
-        res = solver.check();
-    }
-    switch (res) {
+    switch (solver.check()) {
     case z3::sat: return Sat;
     case z3::unsat: return Unsat;
     case z3::unknown: return Unknown;
@@ -57,11 +47,20 @@ Model Z3::model() {
     return Model(vars, constants);
 }
 
+void Z3::setTimeout(unsigned int timeout) {
+    this->timeout = timeout;
+    updateParams();
+}
+
+void Z3::enableModels() {
+    this->models = true;
+    updateParams();
+}
+
 void Z3::updateParams() {
     z3::params params(z3Ctx);
     params.set(":model", models);
     params.set(":timeout", timeout);
-    params.set(":unsat-core", unsatCores);
     solver.set(params);
 }
 
@@ -76,33 +75,35 @@ GiNaC::numeric Z3::getRealFromModel(const z3::model &model, const z3::expr &symb
     return res;
 }
 
-std::vector<uint> Z3::unsatCore() {
-    const z3::expr_vector &core = solver.unsat_core();
-    std::vector<uint> res;
-    for (const z3::expr &e: core) {
-        bool found = false;
-        for (uint i = 0; i < z3Marker->size(); ++i) {
-            // both are variables, so comparing their string representation is (ugly but) fine
-            if (e.to_string() == z3Marker.get()[i].to_string()) {
-                res.push_back(i);
-                found = true;
-                break;
-            }
-        }
-        assert(found);
+BoolExprSet Z3::_unsatCore(const BoolExprSet &assumptions) {
+    std::vector<z3::expr> as;
+    std::map<std::pair<uint, std::string>, BoolExpr> map;
+    for (const BoolExpr &a: assumptions) {
+        z3::expr t = ExprToSmt<z3::expr>::convert(a, ctx, varMan);
+        as.push_back(t);
+        std::pair<uint, std::string> key = {t.hash(), t.to_string()};
+        assert(map.count(key) == 0);
+        map.emplace(key, a);
     }
-    return res;
+    if (solver.check(as.size(), &as[0]) == z3::unsat) {
+        z3::expr_vector core = solver.unsat_core();
+        BoolExprSet res;
+        for (const z3::expr &e: core) {
+            std::pair<uint, std::string> key = {e.hash(), e.to_string()};
+            assert(map.count(key) > 0);
+            res.insert(map[key]);
+        }
+        return res;
+    }
+    return {};
 }
 
-void Z3::_resetSolver() {
+void Z3::resetSolver() {
     solver.reset();
+    updateParams();
 }
 
-void Z3::_resetContext() {
-    ctx.reset();
-}
-
-BoolExpr Z3::simplify(const BoolExpr expr, const VariableManager &varMan) {
+BoolExpr Z3::simplify(const BoolExpr &expr, const VariableManager &varMan) {
     z3::context z3Ctx;
     Z3Context ctx(z3Ctx);
     z3::tactic t(z3Ctx, "ctx-solver-simplify");

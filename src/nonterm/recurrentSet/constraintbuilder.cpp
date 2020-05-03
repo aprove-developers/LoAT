@@ -40,9 +40,7 @@ namespace strengthening {
 
     const BoolExpr ConstraintBuilder::buildSmtConstraints() const {
         Guard monotonicityPremise;
-        const RelSet &irrelevantConstraints = findIrrelevantConstraints();
-        const BoolExpr reducedGuard = rule.getGuard()->removeRels(irrelevantConstraints).get();
-        Implication imp = buildTemplatesInvariantImplication(reducedGuard);
+        Implication imp = buildTemplatesInvariantImplication(guardCtx.guard);
         VarSet vars = rule.vars();
         BoolExpr res = FarkasLemma::apply(imp.premise, imp.conclusion, vars, templates.params(), varMan);
         RelSet conclusion;
@@ -52,26 +50,8 @@ namespace strengthening {
             }
         }
         res = res & FarkasLemma::apply(imp.premise, conclusion, vars, templates.params(), varMan);
-        res = res & constructInitiationConstraints(reducedGuard);
+        res = res & constructInitiationConstraints(guardCtx.guard);
         return res;
-    }
-
-    const RelSet ConstraintBuilder::findIrrelevantConstraints() const {
-        RelSet irrelevantConstraints;
-        const VarSet &templateVars = templates.vars();
-        for (const Rel &rel: guardCtx.guard->lits()) {
-            bool irrelevant = true;
-            for (const Var &var: rel.vars()) {
-                if (templateVars.find(var) != templateVars.end()) {
-                    irrelevant = false;
-                    break;
-                }
-            }
-            if (irrelevant) {
-                irrelevantConstraints.insert(rel);
-            }
-        }
-        return irrelevantConstraints;
     }
 
     const Implication ConstraintBuilder::buildTemplatesInvariantImplication(const BoolExpr reducedGuard) const {

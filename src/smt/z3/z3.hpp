@@ -8,31 +8,36 @@
 class Z3 : public Smt {
 
 public:
-    Z3(VariableManager &varMan);
+    Z3(const VariableManager &varMan);
 
+    void add(const BoolExpr &e) override;
+    void push() override;
+    void pop() override;
     Result check() override;
     Model model() override;
-    std::vector<uint> unsatCore() override;
+    void setTimeout(unsigned int timeout) override;
+    void enableModels() override;
+    void resetSolver() override;
     ~Z3() override;
 
     std::ostream& print(std::ostream& os) const;
 
-    static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan);
+    static BoolExpr simplify(const BoolExpr &expr, const VariableManager &varMan);
+
+protected:
+
+    BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
 
 private:
+    bool models = false;
+    unsigned int timeout = Config::Smt::DefaultTimeout;
+    const VariableManager &varMan;
     z3::context z3Ctx;
     Z3Context ctx;
     z3::solver solver;
 
-    option<z3::expr_vector> z3Marker;
-
     GiNaC::numeric getRealFromModel(const z3::model &model, const z3::expr &symbol);
-    void _add(const BoolExpr e) override;
-    void _push() override;
-    void _pop() override;
-    void _resetSolver() override;
-    void _resetContext() override;
-    void updateParams() override;
+    void updateParams();
 
 };
 

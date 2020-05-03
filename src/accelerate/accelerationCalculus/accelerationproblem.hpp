@@ -54,7 +54,6 @@ private:
     void eventualWeakDecrease();
     RelSet findConsistentSubset(const BoolExpr e) const;
     option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
-    BoolExpr getGuardWithout(const Rel &rel);
 
 public:
 

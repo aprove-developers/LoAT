@@ -52,8 +52,6 @@ namespace strengthening {
 
         const BoolExpr constructInitiationConstraints(const BoolExpr reducedGuard) const;
 
-        const RelSet findIrrelevantConstraints() const;
-
         const BoolExpr buildSmtConstraints() const;
 
     };

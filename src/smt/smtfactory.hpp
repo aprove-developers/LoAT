@@ -7,8 +7,8 @@
 class SmtFactory {
 
 public:
-    static std::unique_ptr<Smt> solver(Smt::Logic logic, VariableManager &varMan, uint timeout = Config::Smt::DefaultTimeout);
-    static std::unique_ptr<Smt> modelBuildingSolver(Smt::Logic logic, VariableManager &varMan, uint timeout = Config::Smt::DefaultTimeout);
+    static std::unique_ptr<Smt> solver(Smt::Logic logic, const VariableManager &varMan, uint timeout = Config::Smt::DefaultTimeout);
+    static std::unique_ptr<Smt> modelBuildingSolver(Smt::Logic logic, const VariableManager &varMan, uint timeout = Config::Smt::DefaultTimeout);
 
 };
 

@@ -47,7 +47,6 @@ public:
     virtual void collectLits(RelSet &res) const = 0;
     virtual void collectVars(VarSet &res) const = 0;
     virtual size_t size() const = 0;
-    virtual option<BoolExpr> removeRels(const RelSet &rels) const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
 
 protected:
@@ -79,7 +78,6 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    option<BoolExpr> removeRels(const RelSet &rels) const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
 
 protected:
@@ -112,7 +110,6 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    option<BoolExpr> removeRels(const RelSet &rels) const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
 
 protected:
@@ -148,7 +145,6 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    option<BoolExpr> removeRels(const RelSet &rels) const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
 
 protected:
