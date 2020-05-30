@@ -220,7 +220,7 @@ option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, cons
     for (const Var &var : vars) {
         Var c0 = varCoeff0.at(var);
         Expr c = model.get(varCoeff.at(var));
-        smtSubs.put(var, c0 == model.contains(c0) ? (c * n) : (model.get(c0) + c * n));
+        smtSubs.put(var, c0 == model.contains(c0) ? (model.get(c0) + c * n) : (c * n));
     }
 
     return {smtSubs};

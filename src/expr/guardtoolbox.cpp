@@ -294,9 +294,12 @@ option<Rule> GuardToolbox::propagateEqualitiesBySmt(const Rule &rule, VariableMa
             it = tempVars.erase(it);
         }
     }
+    if (tempVars.size() > 10) {
+        return {};
+    }
 
     Templates templates;
-    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::QF_NA, varMan);
+    std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::QF_NA, varMan, Config::Smt::SimpTimeout);
     bool changed = false;
     Rule res = rule;
     for (const Var &x: tempVars) {

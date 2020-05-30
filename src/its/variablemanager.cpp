@@ -47,22 +47,29 @@ Var VariableManager::addVariable(string name) {
     auto sym = Var(name);
 
     // remember variable
+    if (basenameCount.count(name) == 0) {
+        basenameCount.emplace(name, 0);
+    }
     variables.insert(sym);
     variableNameLookup.emplace(name, sym);
 
     return sym;
 }
 
-string VariableManager::getFreshName(string basename) const {
-    int n = 1;
-    string name = basename;
-
-    while (variableNameLookup.count(name) != 0) {
-        name = basename + "_" + to_string(n);
-        n++;
+string VariableManager::getFreshName(string basename) {
+    if (basenameCount.count(basename) == 0) {
+        basenameCount.emplace(basename, 0);
+        return basename;
+    } else {
+        uint count = basenameCount.at(basename);
+        std::string res = basename + to_string(count);
+        while (variableNameLookup.count(res) != 0) {
+            ++count;
+            res = basename + to_string(count);
+        }
+        basenameCount[basename] = count + 1;
+        return res;
     }
-
-    return name;
 }
 
 const VarSet &VariableManager::getTempVars() const {

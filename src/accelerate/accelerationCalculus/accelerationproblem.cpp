@@ -224,6 +224,41 @@ void AccelerationProblem::eventualWeakDecrease() {
     }
 }
 
+bool AccelerationProblem::checkCycle(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars) {
+    RelSet done;
+    const Model &m = solver->model();
+    for (const Rel &rel: todo) {
+        RelSet reachable;
+        for (const Rel &rel2: todo) {
+            if (rel == rel2) continue;
+            const uint x = edgeVars.at({rel, rel2})->getConst().get();
+            if (m.contains(x) && m.get(x)) {
+                reachable.insert(rel2);
+            }
+        }
+        bool changed;
+        do {
+            changed = false;
+            for (const Rel &rel1: reachable) {
+                for (const Rel &rel2: todo) {
+                    const uint x = edgeVars.at({rel1, rel2})->getConst().get();
+                    if (m.contains(x) && m.get(x)) {
+                        if (rel == rel2) {
+                            return true;
+                        } else {
+                            const auto &res = reachable.insert(rel2);
+                            if (res.second) {
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+        } while (changed);
+    }
+    return false;
+}
+
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     recurrence();
     monotonicity();
@@ -239,11 +274,11 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         }
     }
     // if an entry is enabled, then the edges corresponding to its dependencies have to be enabled.
-    BoolExprSet init;
     // maps every constraint to it's 'boolean abstraction'
     // which states that one of the entries corresponding to the constraint needs to be enabled
     RelMap<BoolExpr> boolAbstractionMap;
     RelMap<BoolExpr> boolNontermAbstractionMap;
+    solver->resetSolver();
     for (const auto &p: res) {
         const Rel &rel = p.first;
         const std::vector<Entry> entries = p.second;
@@ -258,41 +293,41 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             abstraction.insert(entryVar);
             if (e.nonterm) nontermAbstraction.insert(entryVar);
             for (const Rel &dep: e.dependencies) {
-                init.insert((!entryVar) | edgeVars.at({rel, dep}));
+                solver->add((!entryVar) | edgeVars.at({rel, dep}));
             }
         }
         entryVars[rel] = eVars;
         boolAbstractionMap[rel] = buildOr(abstraction);
         boolNontermAbstractionMap[rel] = buildOr(nontermAbstraction);
     }
-    // if a->b and b->c is enabled, then a->c needs to be enabled, too
-    BoolExprSet closure;
-    for (const auto &p: edgeVars) {
-        const Edge &edge = p.first;
-        const Rel &start = edge.first;
-        const Rel &join = edge.second;
-        const BoolExpr var1 = p.second;
-        for (const Rel &target: todo) {
-            if (target == join) continue;
-            const BoolExpr var2 = edgeVars.at({join, target});
-            const BoolExpr var3 = edgeVars.at({start, target});
-            closure.insert((!var1) | (!var2) | var3);
+    // forbids loops of length 2
+    for (auto it1 = todo.begin(), end = todo.end(); it1 != end; ++it1) {
+        for (auto it2 = it1; it2 != end; ++it2) {
+            if (it1 == it2) continue;
+                solver->add(!edgeVars.at({*it1, *it2}) | !edgeVars.at({*it2, *it1}));
         }
     }
-    // forbids self-loops (which suffices due to 'closure' above)
-    BoolExprSet acyclic;
-    for (const Rel &rel: todo) {
-        acyclic.insert(!edgeVars.at({rel, rel}));
-    }
-    solver->resetSolver();
-    solver->add(buildAnd(init));
-    solver->add(buildAnd(closure));
-    solver->add(buildAnd(acyclic));
     solver->push();
     BoolExpr boolNontermAbstraction = guard->replaceRels(boolNontermAbstractionMap);
     solver->add(boolNontermAbstraction);
     Smt::Result satRes = solver->check();
     std::vector<AccelerationProblem::Result> ret;
+    if (satRes == Smt::Sat && checkCycle(edgeVars)) {
+        // if a->b and b->c is enabled, then a->c needs to be enabled, too
+        for (const auto &p: edgeVars) {
+            const Edge &edge = p.first;
+            const Rel &start = edge.first;
+            const Rel &join = edge.second;
+            const BoolExpr var1 = p.second;
+            for (const Rel &target: todo) {
+                if (target == join) continue;
+                const BoolExpr var2 = edgeVars.at({join, target});
+                const BoolExpr var3 = edgeVars.at({start, target});
+                solver->add((!var1) | (!var2) | var3);
+            }
+        }
+        satRes = solver->check();
+    }
     if (satRes == Smt::Sat && Smt::isImplication(guard, buildLit(cost > 0), varMan)) {
         BoolExpr newGuard = buildRes(solver->model(), entryVars);
         // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
@@ -305,6 +340,22 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
         solver->add(boolAbstraction);
         satRes = solver->check();
+        if (satRes == Smt::Sat && checkCycle(edgeVars)) {
+            // if a->b and b->c is enabled, then a->c needs to be enabled, too
+            for (const auto &p: edgeVars) {
+                const Edge &edge = p.first;
+                const Rel &start = edge.first;
+                const Rel &join = edge.second;
+                const BoolExpr var1 = p.second;
+                for (const Rel &target: todo) {
+                    if (target == join) continue;
+                    const BoolExpr var2 = edgeVars.at({join, target});
+                    const BoolExpr var3 = edgeVars.at({start, target});
+                    solver->add((!var1) | (!var2) | var3);
+                }
+            }
+            satRes = solver->check();
+        }
     }
     if (satRes == Smt::Sat) {
         Model model = solver->model();

@@ -106,6 +106,8 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
     const LinearRule first = its.getLinearRule(fst.newRule);
     const LinearRule second = its.getLinearRule(snd.newRule);
 
+    if (first.getGuard()->size() > 20 || second.getGuard()->size() > 20) return;
+
     if (first.getCost().isNontermSymbol() || second.getCost().isNontermSymbol()) {
         return;
     }

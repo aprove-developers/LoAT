@@ -378,6 +378,10 @@ const BoolExpr buildAnd(const BoolExprSet &xs) {
     return build(xs, ConcatAnd);
 }
 
+const BoolExpr buildConjunctiveClause(const BoolExprSet &xs) {
+    return BoolExpr(new BoolJunction(xs, ConcatAnd));
+}
+
 const BoolExpr buildOr(const RelSet &xs) {
     return build(xs, ConcatOr);
 }

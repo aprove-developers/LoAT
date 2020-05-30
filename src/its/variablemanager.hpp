@@ -55,7 +55,7 @@ private:
     Var addVariable(std::string name);
 
     // Generates a yet unused name starting with the given string
-    std::string getFreshName(std::string basename) const;
+    std::string getFreshName(std::string basename);
 
 private:
     // Data stored for each variable
@@ -72,6 +72,7 @@ private:
     // The set of variables (identified by their index) that are used as temporary variables (not bound by lhs)
     VarSet temporaryVariables;
 
+    std::map<std::string, uint> basenameCount;
     // Reverse mapping for efficiency
     std::map<std::string, Var> variableNameLookup;
 

@@ -36,7 +36,6 @@ private:
     uint validityBound;
     Proof proof;
     std::unique_ptr<Smt> solver;
-    RelMap<BoolExpr> guardWithout;
     VariableManager &varMan;
 
     AccelerationProblem(
@@ -69,6 +68,10 @@ public:
     Expr getAcceleratedCost() const;
     Subs getClosedForm() const;
     Var getIterationCounter() const;
+
+private:
+
+    bool checkCycle(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars);
 
 };
 
