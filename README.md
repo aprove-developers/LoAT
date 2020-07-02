@@ -3,11 +3,9 @@
 LoAT (**Lo**op **A**cceleration **T**ool, formerly known as **Lo**wer Bounds **A**nalysis **T**ool) is a fully automated tool to analyze programs operating on integers.
 Currently, it supports the inference of **lower bounds** on the worst-case runtime complexity and **non-termination proving** (in the branch [nonterm](https://github.com/aprove-developers/LoAT/tree/nonterm)).
 
-LoAT has been inspired by [KoAT](<https://github.com/s-falke/kittel-koat/>) and uses a variation of ranking functions in combination with recurrence solving to deduce lower bounds.
+LoAT uses a [calculus for modular loop acceleration](https://doi.org/10.1007/978-3-030-45190-5_4) and a variation of ranking functions to deduce lower bounds and to prove non-termination.
 
-To prove non-termination, it uses recurrent sets, a new loop acceleration technique based on a novel monotonicity criterion, and an SMT-based invariant inference technique.
-
-The tool is based on the recurrence solver [PURRS](http://www.cs.unipr.it/purrs/) and the SMT solver [Z3](https://github.com/Z3Prover/z3/).
+The tool is based on the recurrence solver [PURRS](http://www.cs.unipr.it/purrs/) and the SMT solvers [Yices](https://yices.csl.sri.com/) and [Z3](https://github.com/Z3Prover/z3/).
 
 ## Input Formats
 
@@ -47,8 +45,17 @@ The techniques implemented in LoAT are described in the following publications (
 * [Inferring Lower Runtime Bounds for Integer Programs](https://arxiv.org/abs/1911.01077)\
   F. Frohn, M. Naaf, M. Brockschmidt, and J. Giesl\
   under review
+* [A Calculus for Modular Loop Acceleration](https://doi.org/10.1007/978-3-030-45190-5_4)\
+  F. Frohn\
+  TACAS '20\
+  Winner of the EASST Best Paper Award
 
 ## Awards
+
+In 2020, LoAT competed as standalone tool at the [*Termination and Complexity Competition*](http://termination-portal.org/wiki/Termination_Competition) for the first time.
+
+* best tool for proving non-termination in the category *Termination of Integer Transition Systems* at the [*Termination and Complexity Competition 2020*](http://termination-portal.org/wiki/Termination_Competition_2020)
+* 2nd place in the category *Termination of Integer Transition Systems* at the [*Termination and Complexity Competition 2020*](http://termination-portal.org/wiki/Termination_Competition_2020)
 
 Since 2016, [AProVE](http://aprove.informatik.rwth-aachen.de/) is using LoAT as backend to prove lower bounds on the runtime complexity of integer transition systems.
 In this constellation, AProVE and LoAT won the following awards:
