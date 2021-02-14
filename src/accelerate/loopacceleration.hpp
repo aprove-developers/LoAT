@@ -31,10 +31,10 @@ public:
         const unsigned int validityBound;
     };
 
-    static Acceleration::Result accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
+    static Acceleration::Result accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink, Complexity cpx);
 
 private:
-    LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink);
+    LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink, Complexity cpx);
 
     LinearRule buildNontermRule(const BoolExpr guard) const;
 
@@ -64,6 +64,7 @@ private:
     ITSProblem &its;
     const LinearRule &rule;
     LocationIdx sink;
+    Complexity cpx;
 };
 
 #endif /* BACKWARDACCELERATION_H */

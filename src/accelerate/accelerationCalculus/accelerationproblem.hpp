@@ -68,6 +68,7 @@ public:
     Expr getAcceleratedCost() const;
     Subs getClosedForm() const;
     Var getIterationCounter() const;
+    uint getValidityBound() const;
 
 private:
 

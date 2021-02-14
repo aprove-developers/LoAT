@@ -449,3 +449,7 @@ Var AccelerationProblem::getIterationCounter() const {
     return n;
 }
 
+uint AccelerationProblem::getValidityBound() const {
+    return validityBound;
+}
+

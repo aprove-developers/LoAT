@@ -52,6 +52,7 @@ private:
         TransIdx newRule;
         Complexity cpx;
 
+        NestingCandidate() {}
         NestingCandidate(TransIdx oldRule, TransIdx newRule, Complexity cpx): oldRule(oldRule), newRule(newRule), cpx(cpx) {}
     };
 
@@ -75,7 +76,7 @@ private:
      * if this fails, by backward acceleration.
      * @returns The acceleration result (including accelerated rules, if successful)
      */
-    Acceleration::Result tryAccelerate(const Rule &rule) const;
+    Acceleration::Result tryAccelerate(const Rule &rule, Complexity cpx) const;
 
 
     /**
@@ -94,7 +95,7 @@ private:
      * @returns If successful, the resulting accelerated rule(s). Otherwise,
      * the acceleration result from accelerating the original rule (before shortening).
      */
-    Acceleration::Result accelerateOrShorten(const Rule &rule) const;
+    Acceleration::Result accelerateOrShorten(const Rule &rule, Complexity cpx) const;
 
 
     /**
@@ -112,7 +113,7 @@ private:
     /**
      * Main implementation of nesting
      */
-    void performNesting(std::vector<NestingCandidate> origRules, std::vector<NestingCandidate> todo);
+    void performNesting(std::unordered_map<TransIdx, NestingCandidate> origRules, std::vector<NestingCandidate> todo);
 
     /**
      * Removes all given loops, unless they are contained in keepRules.
@@ -142,7 +143,7 @@ private:
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
     std::set<TransIdx> keepRules;
 
-    const Acceleration::Result strengthenAndAccelerate(const LinearRule &rule) const;
+    const Acceleration::Result strengthenAndAccelerate(const LinearRule &rule, Complexity cpx) const;
 
     Proof proof;
 

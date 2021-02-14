@@ -239,7 +239,8 @@ BoolExpr encodeBoolExpr(const BoolExpr expr, const Subs &templateSubs, const Var
         option<Rel> lit = expr->getLit();
         assert(lit);
         assert(lit->isGZeroConstraint());
-        Expr ex = lit->lhs().subs(templateSubs).expand();
+        const auto &lhs = lit->isStrict() ? lit->lhs() : lit->lhs() + 1;
+        Expr ex = lhs.subs(templateSubs).expand();
         map<int, Expr> coefficients = getCoefficients(ex, n);
         return posConstraint(coefficients) | posInfConstraint(coefficients);
     }
@@ -304,7 +305,6 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr expr,
         return smtSubs;
     };
 
-    Complexity cpx;
     if (hasTmpVars) {
         solver->push();
         solver->add(posInfConstraint(getCoefficients(templateCost, n)));
@@ -334,7 +334,7 @@ std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr expr,
             solver->push();
             solver->add(c > 0);
             if (checkSolver()) {
-                return {model(), cpx};
+                return {model(), Complexity::Poly(i)};
             } else {
                 // remove all non-mandatory constraints and retry with degree i-1
                 solver->pop();

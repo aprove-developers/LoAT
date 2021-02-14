@@ -19,7 +19,7 @@
 
 #include "../smt/smt.hpp"
 #include "../smt/smtfactory.hpp"
-
+#include "../asymptotic/asymptoticbound.hpp"
 #include "recurrence/recurrence.hpp"
 #include "meter/metertools.hpp"
 #include "../expr/guardtoolbox.hpp"
@@ -34,8 +34,8 @@
 
 using namespace std;
 
-LoopAcceleration::LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink)
-        : its(its), rule(rule), sink(sink) {}
+LoopAcceleration::LoopAcceleration(ITSProblem &its, const LinearRule &rule, LocationIdx sink, Complexity cpx)
+        : its(its), rule(rule), sink(sink), cpx(cpx) {}
 
 bool LoopAcceleration::shouldAccelerate() const {
     return !rule.getCost().isNontermSymbol() && rule.getCost().isPoly();
@@ -74,23 +74,29 @@ Acceleration::Result LoopAcceleration::run() {
         if (ap) {
             std::vector<AccelerationProblem::Result> ars = ap->computeRes();
             for (const AccelerationProblem::Result &ar: ars) {
-                res.status = Success;
+                res.status = ap->getValidityBound() > 1 ? PartialSuccess : Success;
                 if (ar.witnessesNonterm) {
                     const Rule &nontermRule = buildNontermRule(ar.newGuard);
-                    res.rules.push_back(nontermRule);
+                    res.rules.emplace_back(nontermRule, Complexity::Nonterm);
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else {
                     LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
-                    res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
-                    res.proof.storeSubProof(ap->getProof(), "acceration calculus");
-                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);
-                    if (instantiated.empty()) {
-                        res.rules.push_back(accel);
-                    } else {
-                        for (const Rule &r: instantiated) {
-                            res.proof.ruleTransformationProof(accel, "instantiation", r, its);
-                            res.rules.push_back(r);
+                    Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
+                                its,
+                                accel.getGuard(),
+                                accel.getCost()).cpx;
+                    if (newCpx > cpx) {
+                        res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
+                        res.proof.storeSubProof(ap->getProof(), "acceration calculus");
+                        std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);
+                        if (instantiated.empty()) {
+                            res.rules.emplace_back(accel, newCpx);
+                        } else {
+                            for (const Rule &r: instantiated) {
+                                res.proof.ruleTransformationProof(accel, "instantiation", r, its);
+                                res.rules.emplace_back(r, newCpx);
+                            }
                         }
                     }
                 }
@@ -101,7 +107,7 @@ Acceleration::Result LoopAcceleration::run() {
 }
 
 
-Acceleration::Result LoopAcceleration::accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink) {
-    LoopAcceleration ba(its, rule, sink);
+Acceleration::Result LoopAcceleration::accelerate(ITSProblem &its, const LinearRule &rule, LocationIdx sink, Complexity cpx) {
+    LoopAcceleration ba(its, rule, sink, cpx);
     return ba.run();
 }
