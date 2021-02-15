@@ -45,7 +45,7 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
                 validitybound = validitybounds.at(x) + 1;
             }
         }
-        return {{.res=updateRhs.subs(updatePreRecurrences), .validityBound=validitybound}};
+        return {{updateRhs.subs(updatePreRecurrences), validitybound}};
     }
     Purrs::Recurrence rec(rhs);
     Purrs::Recurrence::Solver_Status res = Purrs::Recurrence::Solver_Status::TOO_COMPLEX;
@@ -57,7 +57,7 @@ option<Recurrence::RecurrenceSolution> Recurrence::findUpdateRecurrence(const Ex
     }
     if (res == Purrs::Recurrence::SUCCESS) {
         rec.exact_solution(exact);
-        return {{.res=exact.toGiNaC(), .validityBound=0}};
+        return {{exact.toGiNaC(), 0}};
     }
     return {};
 }
@@ -120,7 +120,7 @@ option<Recurrence::RecurrenceSystemSolution> Recurrence::iterateUpdate(const Sub
         newUpdate.put(target, updateRec.get().res.subs(Subs(ginacN, meterfunc)));
     }
 
-    return {{.update=newUpdate, .validityBound=validityBound}};
+    return {{newUpdate, validityBound}};
 }
 
 

@@ -19,7 +19,7 @@ else()
     set(EXECUTABLE loat)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -Wno-padded")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
