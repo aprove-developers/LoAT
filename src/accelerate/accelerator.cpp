@@ -123,7 +123,10 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         Proof proof;
         proof.chainingProof(first, second, nestedRule, its);
         proof.concat(accel.proof);
+        bool success = false;
         for (const auto &p: accel.rules) {
+            if (Config::Analysis::NonTermMode && p.second != Complexity::Nonterm) continue;
+            success = true;
             const Rule& accelRule = p.first;
             // Add the new rule
             addResultingRule(accelRule);
@@ -134,7 +137,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
                 proof.chainingProof(second, accelRule, chained.get(), its);
             }
         }
-        if (!accel.rules.empty()) {
+        if (success) {
             this->proof.concat(proof);
         }
     }

@@ -90,11 +90,20 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     const Rule &rule = its.getRule(parallel[idx]);
 
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
-                    auto res = AsymptoticBound::determineComplexityViaSMT(
-                            its,
-                            rule.getGuard(),
-                            rule.getCost());
-                    queue.push(make_tuple(ruleIdx, res.cpx, res.inftyVars));
+                    Complexity cpx;
+                    size_t inftyVars;
+                    if (Config::Analysis::NonTermMode) {
+                        cpx = Complexity::Unknown;
+                        inftyVars = 0;
+                    } else {
+                        const auto& res = AsymptoticBound::determineComplexityViaSMT(
+                                    its,
+                                    rule.getGuard(),
+                                    rule.getCost());
+                        cpx = res.cpx;
+                        inftyVars = res.inftyVars;
+                    }
+                    queue.push(make_tuple(ruleIdx, cpx, inftyVars));
                 }
 
                 // Keep only the top elements of the queue
@@ -115,8 +124,9 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                 // Remove all rules except for the ones in keep, add a dummy rule if there was one before
                 // Note that for nonlinear rules, we only remove edges (so only single rhss), not the entire rule
                 for (TransIdx rule : parallel) {
-                    if (keep.count(rule) == 0) {
-                        auto optRule = its.getRule(rule).stripRhsLocation(node);
+                    const Rule& r = its.getRule(rule);
+                    if (!r.getCost().isNontermSymbol() && keep.count(rule) == 0) {
+                        auto optRule = r.stripRhsLocation(node);
                         if (optRule) {
                             its.addRule(optRule.get());
                         }
