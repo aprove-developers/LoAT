@@ -124,10 +124,9 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         proof.chainingProof(first, second, nestedRule, its);
         proof.concat(accel.proof);
         bool success = false;
-        for (const auto &p: accel.rules) {
-            if (Config::Analysis::NonTermMode && p.second != Complexity::Nonterm) continue;
+        for (const auto &accelRule: accel.rules) {
+            if (Config::Analysis::NonTermMode && !accelRule.getCost().isNontermSymbol()) continue;
             success = true;
-            const Rule& accelRule = p.first;
             // Add the new rule
             addResultingRule(accelRule);
             // Try to combine chain and the accelerated loop
@@ -253,9 +252,9 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
         if (!accelRes.rules.empty()) {
             res.status = accelRes.status;
             res.proof.concat(accelRes.proof);
-            for (const auto &p: accelRes.rules) {
-                universalNonterm |= p.first.getCost().isNontermSymbol();
-                res.rules.emplace_back(p);
+            for (const auto &r: accelRes.rules) {
+                universalNonterm |= r.getCost().isNontermSymbol();
+                res.rules.emplace_back(r);
             }
         }
         if (!universalNonterm) {
@@ -265,7 +264,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 const Rule &nontermRule = p.get().first;
                 const Proof &proof = p.get().second;
                 res.proof.concat(proof);
-                res.rules.emplace_back(nontermRule, Complexity::Nonterm);
+                res.rules.emplace_back(nontermRule);
             }
         }
         if (Config::Analysis::NonTermMode) {
@@ -278,7 +277,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                         if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
                             const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
                             res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
-                            res.rules.emplace_back(nontermRule, Complexity::Nonterm);
+                            res.rules.emplace_back(nontermRule);
                         }
                     }
                 }
@@ -290,7 +289,7 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 const Rule &nontermRule = p.get().first;
                 const Proof &proof = p.get().second;
                 res.proof.concat(proof);
-                res.rules.emplace_back(nontermRule, Complexity::Nonterm);
+                res.rules.emplace_back(nontermRule);
             }
         }
     }
@@ -415,12 +414,17 @@ option<Proof> Accelerator::run() {
         if  (res.status != Failure) {
             // Add accelerated rules, also mark them as inner nesting candidates
             this->proof.concat(res.proof);
-            for (const auto &p : res.rules) {
-                const Rule& accel = p.first;
-                Complexity cpx = p.second;
+            for (const auto &accel : res.rules) {
                 TransIdx added = addResultingRule(accel);
 
                 if (accel.isSimpleLoop()) {
+                    Complexity cpx =
+                            Config::Analysis::NonTermMode ?
+                                Complexity::Unknown :
+                                AsymptoticBound::determineComplexityViaSMT(
+                                    its,
+                                    accel.getGuard(),
+                                    accel.getCost()).cpx;
                     // accel.rule is a simple loop iff the original was linear and not non-terminating.
                     nestingCandidates.push_back(NestingCandidate(loop, added, cpx));
                 }

@@ -100,7 +100,7 @@ static Acceleration::Result meterAndIterate(ITSProblem &its, const Rule &r, Loca
             // So we have to clear the rhs (fresh sink location, update is irrelevant).
             const Rule &accelRule = newRule.replaceRhssBySink(sink);
             res.proof.ruleTransformationProof(rule, "Acceleration with metering function " + meterStr, accelRule, its);
-            res.rules.emplace_back(accelRule, Complexity::Unknown);
+            res.rules.emplace_back(accelRule);
 
             res.status = Success;
             return res;

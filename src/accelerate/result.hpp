@@ -8,7 +8,7 @@
 namespace Acceleration {
 
 struct Result {
-    std::vector<std::pair<Rule, Complexity>> rules;
+    std::vector<Rule> rules;
     Status status;
     Proof proof;
 };

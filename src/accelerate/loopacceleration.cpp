@@ -77,29 +77,20 @@ Acceleration::Result LoopAcceleration::run() {
                 res.status = ap->getValidityBound() > 1 ? PartialSuccess : Success;
                 if (ar.witnessesNonterm) {
                     const Rule &nontermRule = buildNontermRule(ar.newGuard);
-                    res.rules.emplace_back(nontermRule, Complexity::Nonterm);
+                    res.rules.emplace_back(nontermRule);
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
-                } else {
+                } else if (Smt::check(ar.newGuard->subs({ap->getIterationCounter(), max(2u, ap->getValidityBound())}), its) == Smt::Sat) {
                     LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
-                    Complexity newCpx =
-                            Config::Analysis::NonTermMode ?
-                                Complexity::Unknown :
-                                AsymptoticBound::determineComplexityViaSMT(
-                                    its,
-                                    accel.getGuard(),
-                                    accel.getCost()).cpx;
-                    if (Config::Analysis::NonTermMode || newCpx > cpx) {
-                        res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
-                        res.proof.storeSubProof(ap->getProof(), "acceration calculus");
-                        std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);
-                        if (instantiated.empty()) {
-                            res.rules.emplace_back(accel, newCpx);
-                        } else {
-                            for (const Rule &r: instantiated) {
-                                res.proof.ruleTransformationProof(accel, "instantiation", r, its);
-                                res.rules.emplace_back(r, newCpx);
-                            }
+                    res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
+                    res.proof.storeSubProof(ap->getProof(), "acceration calculus");
+                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);
+                    if (instantiated.empty()) {
+                        res.rules.emplace_back(accel);
+                    } else {
+                        for (const Rule &r: instantiated) {
+                            res.proof.ruleTransformationProof(accel, "instantiation", r, its);
+                            res.rules.emplace_back(r);
                         }
                     }
                 }
