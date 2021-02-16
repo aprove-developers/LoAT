@@ -125,7 +125,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                 // Note that for nonlinear rules, we only remove edges (so only single rhss), not the entire rule
                 for (TransIdx rule : parallel) {
                     const Rule& r = its.getRule(rule);
-                    if (!r.getCost().isNontermSymbol() && keep.count(rule) == 0) {
+                    if ((!Config::Analysis::NonTermMode || !r.getCost().isNontermSymbol()) && keep.count(rule) == 0) {
                         auto optRule = r.stripRhsLocation(node);
                         if (optRule) {
                             its.addRule(optRule.get());
