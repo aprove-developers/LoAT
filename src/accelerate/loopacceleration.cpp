@@ -82,11 +82,14 @@ Acceleration::Result LoopAcceleration::run() {
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else {
                     LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
-                    Complexity newCpx = AsymptoticBound::determineComplexityViaSMT(
-                                its,
-                                accel.getGuard(),
-                                accel.getCost()).cpx;
-                    if (newCpx > cpx) {
+                    Complexity newCpx =
+                            Config::Analysis::NonTermMode ?
+                                Complexity::Unknown :
+                                AsymptoticBound::determineComplexityViaSMT(
+                                    its,
+                                    accel.getGuard(),
+                                    accel.getCost()).cpx;
+                    if (Config::Analysis::NonTermMode || newCpx > cpx) {
                         res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
                         res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                         std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);

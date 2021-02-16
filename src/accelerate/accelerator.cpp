@@ -389,10 +389,13 @@ option<Proof> Accelerator::run() {
     for (TransIdx loop : loops) {
         const Rule &r = its.getRule(loop);
         if (r.isLinear()) {
-            Complexity cpx = AsymptoticBound::determineComplexityViaSMT(
-                    its,
-                    r.getGuard(),
-                    r.getCost()).cpx;
+            Complexity cpx =
+                    Config::Analysis::NonTermMode ?
+                        Complexity::Unknown :
+                        AsymptoticBound::determineComplexityViaSMT(
+                            its,
+                            r.getGuard(),
+                            r.getCost()).cpx;
             origRules.emplace(loop, NestingCandidate{loop, loop, cpx});
         }
     }
