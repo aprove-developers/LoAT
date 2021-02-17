@@ -1,7 +1,7 @@
 # LoAT -- the Loop Acceleration Tool
 
 LoAT (**Lo**op **A**cceleration **T**ool, formerly known as **Lo**wer Bounds **A**nalysis **T**ool) is a fully automated tool to analyze programs operating on integers.
-Currently, it supports the inference of **lower bounds** on the worst-case runtime complexity and **non-termination proving** (in the branch [nonterm](https://github.com/aprove-developers/LoAT/tree/nonterm)).
+Currently, it supports the inference of **lower bounds** on the worst-case runtime complexity and **non-termination proving**.
 
 LoAT uses a [calculus for modular loop acceleration](https://doi.org/10.1007/978-3-030-45190-5_4) and a variation of ranking functions to deduce lower bounds and to prove non-termination.
 
@@ -30,7 +30,7 @@ The lower bound has to be non-negative for every model of the transition's guard
 
 ### T2
 
-The branch [nonterm](https://github.com/aprove-developers/LoAT/tree/nonterm) comes with experimental support for the native input format of [T2](https://github.com/mmjb/T2).
+LoAT also comes with experimental support for the native input format of [T2](https://github.com/mmjb/T2).
 
 ## Publications
 
@@ -44,7 +44,7 @@ The techniques implemented in LoAT are described in the following publications (
   FMCAD '19
 * [Inferring Lower Runtime Bounds for Integer Programs](https://arxiv.org/abs/1911.01077)\
   F. Frohn, M. Naaf, M. Brockschmidt, and J. Giesl\
-  under review
+  ACM Transactions on Programming Languages and Systems, 42(3), 2020
 * [A Calculus for Modular Loop Acceleration](https://doi.org/10.1007/978-3-030-45190-5_4)\
   F. Frohn\
   TACAS '20\
@@ -74,6 +74,7 @@ To compile LoAT, you will need the following libraries (and their dependencies, 
 
 * [GiNaC](http://www.ginac.de)
 * a custom version of [PURRS](https://github.com/aprove-developers/LoAT-purrs)
+* [Yices](https://yices.csl.sri.com/)
 * [Z3](https://github.com/Z3Prover/z3)
 * [boost](https://www.boost.org)
 
