@@ -20,11 +20,6 @@
 #include "chain.hpp"
 #include "preprocess.hpp"
 
-#include "../debug.hpp"
-#include "../util/stats.hpp"
-#include "../util/timing.hpp"
-#include "../util/timeout.hpp"
-
 
 using namespace std;
 
@@ -46,15 +41,12 @@ using namespace std;
  * The old location is removed, together with all old transitions. So if an outgoing transition cannot be chained
  * with any incoming transition, it will simply be removed.
  */
-static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
+static Proof eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
                                         bool keepUnchainable, bool allowSelfloops = false)
 {
     set<TransIdx> keepRules;
-    debugChain("  eliminating location " << loc << " by chaining (keep unchainable: " << keepUnchainable << ")");
-
-    bool wasProofEnabled = proofout.setEnabled(Config::Output::ProofChain);
-    proofout.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
-    proofout.increaseIndention();
+    Proof proof;
+    proof.headline("Eliminating location " + its.getPrintableLocationName(loc) + " by chaining:");
 
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
@@ -70,7 +62,8 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
         if (inRule.getLhsLoc() == loc) continue;
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
-            auto optRule = Chaining::chainRules(its, inRule, its.getRule(out));
+            const Rule &outRule = its.getRule(out);
+            auto optRule = Chaining::chainRules(its, inRule, outRule);
             if (optRule) {
                 // If we allow self loops at loc, then chained rules may still lead to loc,
                 // e.g. if h -> f and f -> f,g are chained to h -> f,g (where f is loc).
@@ -82,22 +75,25 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
 
                 // Simplify the guard (chaining often introduces trivial constraints)
                 Rule newRule = optRule.get();
-                Preprocess::simplifyGuard(newRule.getGuardMut());
+                proof.chainingProof(inRule, outRule, newRule, its);
 
-                TransIdx added = its.addRule(newRule);
-                debugChain("    chained " << in << " and " << out << " to new rule: " << added);
-                proofout << "Chained rules " << in << " and " << out << " to new rule " << added << "." << endl;
+                option<Rule> simplified = Preprocess::simplifyGuard(newRule, its);
+                if (simplified) {
+                    proof.ruleTransformationProof(newRule, "simplification", simplified.get(), its);
+                    newRule = simplified.get();
+                }
+
+                its.addRule(newRule);
+
 
             } else {
                 wasChainedWithAll = false;
-                debugChain("    failed to chain " << in << " and " << out);
-                proofout << "Failed to chain rules " << in << " and " << out << "." << endl;
             }
         }
 
         if (keepUnchainable && !wasChainedWithAll) {
             // Only keep the rule if it might give non-trivial complexity
-            if (inRule.getCost().getComplexity() > Complexity::Const) {
+            if (inRule.getCost().toComplexity() > Complexity::Const) {
                 keepRules.insert(in);
             }
         }
@@ -107,27 +103,26 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
     if (keepUnchainable && !keepRules.empty()) {
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
-            auto newRule = its.getRule(trans).stripRhsLocation(loc);
+            const Rule &oldRule = its.getRule(trans);
+            auto newRule = oldRule.stripRhsLocation(loc);
             if (newRule) {
                 // In case of nonlinear rules, we can simply delete all rhss leading to loc, but keep the other ones
-                TransIdx added = its.addRule(newRule.get());
-                debugChain("    keeping rule " << trans << " by adding stripped rule: " << added);
-                proofout << "Keeping rule " << trans << " after partial deletion, yielding new rule " << added << "." << endl;
+                its.addRule(newRule.get());
+                proof.ruleTransformationProof(oldRule, "partial deletion", newRule.get(), its);
             } else {
                 // If all rhss lead to loc (for instance if the rule is linear), we add a new dummy rhs
-                TransIdx added = its.addRule(its.getRule(trans).replaceRhssBySink(dummyLoc));
-                debugChain("    keeping rule " << trans << " by adding dummy rule: " << added);
-                proofout << "Keeping rule " << trans << " by adding a dummy rule " << added << "." << endl;
+                const Rule &dummyRule = oldRule.replaceRhssBySink(dummyLoc);
+                its.addRule(dummyRule);
+                proof.ruleTransformationProof(oldRule, "partial deletion", dummyRule, its);
             }
         }
     }
 
     // Remove loc and all incoming/outgoing rules.
     // Note that all rules have already been chained (or backed up), so removing these rules is ok.
-    its.removeLocationAndRules(loc);
-
-    proofout.decreaseIndention();
-    proofout.setEnabled(wasProofEnabled);
+    const std::set<TransIdx> &removed = its.removeLocationAndRules(loc);
+    proof.deletionProof(removed);
+    return proof;
 }
 
 
@@ -139,7 +134,7 @@ static void eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
  * Implementation of callRepeatedlyOnEachNode
  */
 template <typename F>
-static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
+static bool callOnEachNodeImpl(ITSProblem &its, Proof &proof, F function, LocationIdx node, bool repeat, set<LocationIdx> &visited) {
     if (!visited.insert(node).second) {
         return false;
     }
@@ -149,23 +144,14 @@ static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bo
 
     // Call the function repeatedly, until it returns false
     do {
-        changed = function(its, node);
+        changed = function(its, proof, node);
         changedOverall = changedOverall || changed;
-
-        if (Timeout::soft()) {
-            return changedOverall;
-        }
-
     } while (repeat && changed);
 
     // Continue with the successors of the current node (DFS traversal)
     for (LocationIdx next : its.getSuccessorLocations(node)) {
-        bool changed = callOnEachNodeImpl(its, function, next, repeat, visited);
+        bool changed = callOnEachNodeImpl(its, proof, function, next, repeat, visited);
         changedOverall = changedOverall || changed;
-
-        if (Timeout::soft()) {
-            return changedOverall;
-        }
     }
 
     return changedOverall;
@@ -187,9 +173,9 @@ static bool callOnEachNodeImpl(ITSProblem &its, F function, LocationIdx node, bo
  * @returns true iff at least one call of the given function returned true.
  */
 template <typename F>
-static bool callOnEachNode(ITSProblem &its, F function, bool repeat) {
+static bool callOnEachNode(ITSProblem &its, Proof &proof, F function, bool repeat) {
     set<LocationIdx> visited;
-    return callOnEachNodeImpl(its, function, its.getInitialLocation(), repeat, visited);
+    return callOnEachNodeImpl(its, proof, function, its.getInitialLocation(), repeat, visited);
 }
 
 
@@ -224,8 +210,8 @@ static bool isOnLinearPath(ITSProblem &its, LocationIdx node) {
 // ##  Chaining Strategies  ##
 // ###########################
 
-bool Chaining::chainLinearPaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, LocationIdx node) {
+option<Proof> Chaining::chainLinearPaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, Proof &proof, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -236,20 +222,23 @@ bool Chaining::chainLinearPaths(ITSProblem &its) {
 
             // Only apply chaining if succ has exactly one in- and one outgoing transition
             if (isOnLinearPath(its, succ)) {
-                eliminateLocationByChaining(its, succ, true);
                 changed = true;
+                proof.concat(eliminateLocationByChaining(its, succ, true));
             }
         }
         return changed;
     };
-
-    debugChain("Chaining linear paths");
-    return callOnEachNode(its, implementation, true);
+    Proof proof;
+    if (callOnEachNode(its, proof, implementation, true)) {
+        return {proof};
+    } else {
+        return {};
+    }
 }
 
 
-bool Chaining::chainTreePaths(ITSProblem &its) {
-    auto implementation = [](ITSProblem &its, LocationIdx node) {
+option<Proof> Chaining::chainTreePaths(ITSProblem &its) {
+    auto implementation = [](ITSProblem &its, Proof &proof, LocationIdx node) {
         bool changed = false;
         for (LocationIdx succ : its.getSuccessorLocations(node)) {
 
@@ -265,23 +254,24 @@ bool Chaining::chainTreePaths(ITSProblem &its) {
 
             // Chain transitions from node to succ with all transitions from succ.
             if (its.hasTransitionsFrom(succ)) {
-                eliminateLocationByChaining(its, succ, true);
+                proof.concat(eliminateLocationByChaining(its, succ, true));
                 changed = true;
             }
-
-            if (Timeout::soft()) break;
         }
         return changed;
     };
-
-    debugChain("Chaining tree paths");
 
     // To avoid rule explosion, the implementation is only called once per node.
     // Example: path f -> g -> h -> u -> ... When called on f, g is eliminated.
     // We then call the implementation on h (f's new child), which may eliminate u.
     // This avoids the exponential blowup, so we can first accelerate rules or
     // prune rules before calling this method again.
-    return callOnEachNode(its, implementation, false);
+    Proof proof;
+    if (callOnEachNode(its, proof, implementation, false)) {
+        return {proof};
+    } else {
+        return {};
+    }
 }
 
 
@@ -293,8 +283,6 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
         return false;
     }
 
-    debugChain("  checking if we can eliminate location " << node);
-
     bool hasIncoming = its.hasTransitionsTo(node);
     bool hasOutgoing = its.hasTransitionsFrom(node);
     bool hasSimpleLoop = !its.getSimpleLoopsAt(node).empty();
@@ -305,25 +293,18 @@ static bool eliminateALocationImpl(ITSProblem &its, LocationIdx node, set<Locati
             if (eliminateALocationImpl(its, succ, visited, eliminated)) {
                 return true;
             }
-
-            if (Timeout::soft()) {
-                return false;
-            }
         }
         return false;
     }
 
     // Otherwise, we can eliminate node
     eliminated = its.getPrintableLocationName(node);
-    debugChain("  found location to eliminate: " << node);
     eliminateLocationByChaining(its, node, true, true);
     return true;
 }
 
 
 bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
-    debugChain("Trying to eliminate a location");
-
     set<LocationIdx> visited;
     return eliminateALocationImpl(its, its.getInitialLocation(), visited, eliminatedLocation);
 }
@@ -333,13 +314,10 @@ bool Chaining::eliminateALocation(ITSProblem &its, string &eliminatedLocation) {
 // ##  Chaining after Acceleration  ##
 // ###################################
 
-bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
-    if (acceleratedRules.empty()) return false;
+option<Proof> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &acceleratedRules) {
+    if (acceleratedRules.empty()) return {};
+    Proof proof;
     set<TransIdx> successfullyChained;
-
-    bool wasProofEnabled = proofout.setEnabled(Config::Output::ProofChain);
-    proofout.headline("Chaining " + to_string(acceleratedRules.size()) + " accelerated rules with incoming rules:");
-    proofout.increaseIndention();
 
     // Find all lhs locations of accelerated rules, so we can iterate over them.
     // If we would iterate over acceleratedRules directly, we might consider an lhs location twice,
@@ -353,13 +331,11 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
         // We only query the incoming transitions once, before adding new rules starting at node
         set<TransIdx> incomingTransitions = its.getTransitionsTo(node);
 
+        std::set<TransIdx> deleted;
         for (TransIdx accel : its.getTransitionsFrom(node)) {
-            if (Timeout::soft()) break;
-
             // Only chain accelerated rules
             if (acceleratedRules.count(accel) == 0) continue;
             const Rule &accelRule = its.getRule(accel);
-            debugChain("Chaining accelerated rule " << accel);
 
             for (TransIdx incoming : incomingTransitions) {
                 // Do not chain with another accelerated rule
@@ -373,35 +349,31 @@ bool Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransIdx> &accel
                 auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
                 if (optRule) {
                     // Simplify the rule (can help to eliminate temporary variables of the metering function)
-                    Rule newRule = optRule.get();
-                    Preprocess::simplifyRule(its, newRule);
+                    option<Rule> simplified = Preprocess::simplifyRule(its, optRule.get(), true);
+                    Rule newRule = simplified ? simplified.get() : optRule.get();
+
+                    proof.chainingProof(incomingRule, accelRule, newRule, its);
 
                     // Add the chained rule
-                    TransIdx added = its.addRule(newRule);
-                    debugChain("  chained incoming rule " << incoming << " with " << accel << ", resulting in new rule: " << added);
-                    proofout << "Chained incoming rule " << incoming << " with accelerated rule " << accel << " to new rule " << added << "." << endl;
+                    its.addRule(newRule);
                     successfullyChained.insert(incoming);
                 }
             }
 
-            debugChain("  removing accelerated rule " << accel);
-            proofout << "Removing accelerated rule " << accel << "." << endl;
+            deleted.insert(accel);
             its.removeRule(accel);
         }
+        proof.deletionProof(deleted);
     }
 
     // Removing chained incoming rules may help to avoid too many rules.
     // However, we also lose execution paths (especially if there are more loops, which are not simple).
     if (!Config::Chain::KeepIncomingInChainAccelerated) {
         for (TransIdx toRemove : successfullyChained) {
-            debugChain("  removing chained incoming rule " << its.getRule(toRemove));
-            proofout << "Removing incoming rule " << toRemove << " (after successful chaining)." << endl;
             its.removeRule(toRemove);
         }
+        proof.deletionProof(successfullyChained);
     }
 
-    proofout.decreaseIndention();
-    proofout.setEnabled(wasProofEnabled);
-
-    return !acceleratedRules.empty();
+    return {proof};
 }

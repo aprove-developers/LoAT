@@ -39,20 +39,8 @@ namespace DependencyOrder {
      * Fails if there is a nontrivial set of variables whose updates depend on each other.
      * @return list indicating the order (if successful)
      */
-    option<std::vector<VariableIdx>> findOrder(const VarMan &varMan, const UpdateMap &update);
+    option<std::vector<Var>> findOrder(const Subs &update);
 
-    /**
-     * Tries to find an order to calculate recurrence equations.
-     *
-     * If this is not possible, an optimization is used that assumes all conflicting variables are equal.
-     * To this end, new constraints are added to the guard (of the form "A == B") and the update is simplified by
-     * replacing variables accordingly (e.g., A/B).
-     *
-     * Note that the heuristic is not always applicable, so we can still fail to find an ordering.
-     *
-     * @return list indicating the order (if successful), both arguments may be modified
-     */
-    option<std::vector<VariableIdx>> findOrderWithHeuristic(const VarMan &varMan, UpdateMap &update, GuardList &guard);
 };
 
 #endif // DEPENDENCYORDER_H

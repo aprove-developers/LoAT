@@ -18,14 +18,13 @@
 #ifndef ITSPROBLEM_H
 #define ITSPROBLEM_H
 
-#include "../global.hpp"
-
-#include "../util/exceptions.hpp"
 #include "../util/option.hpp"
 
 #include "rule.hpp"
 #include "variablemanager.hpp"
 #include "hypergraph.hpp"
+
+#include <mutex>
 
 
 class ITSProblem : public VariableManager {
@@ -34,7 +33,7 @@ public:
     ITSProblem() = default;
 
     // Creates an empty ITS problem with the given variables
-    explicit ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {};
+    explicit ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {}
 
     // True iff there are no rules
     bool isEmpty() const;
@@ -50,7 +49,6 @@ public:
     // query the rule associated with a given transition
     bool hasRule(TransIdx transition) const;
     const Rule& getRule(TransIdx transition) const;
-    Rule& getRuleMut(TransIdx transition); // Note: the locations of the returned rule must not be changed!
 
     // the rule associated with the given index must be linear!
     LinearRule getLinearRule(TransIdx transition) const;
@@ -94,10 +92,13 @@ public:
     void removeOnlyLocation(LocationIdx loc);
 
     // Removes a location and all rules that visit loc
-    void removeLocationAndRules(LocationIdx loc);
+    std::set<TransIdx> removeLocationAndRules(LocationIdx loc);
 
     // Print the ITSProblem in a simple, but user-friendly format
     void print(std::ostream &s) const;
+
+    static void lock();
+    static void unlock();
 
 protected:
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
@@ -118,6 +119,8 @@ protected:
 
     // only for output, remembers the original location names
     std::map<LocationIdx, std::string> locationNames;
+
+    static std::recursive_mutex mutex;
 };
 
 

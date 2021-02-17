@@ -15,12 +15,12 @@ extern const char* DirectionNames[];
 /**
  * This class extends an Expression by a direction.
  */
-class InftyExpression : public Expression {
+class InftyExpression : public Expr {
 public:
     /**
      * Creates a new InftyExpression from the given ginac expression and direction.
      */
-    InftyExpression(const GiNaC::ex &other, Direction dir);
+    InftyExpression(const Expr &other, Direction dir);
 
     /**
      * Sets the direction of this InftyExpression.
@@ -45,6 +45,6 @@ private:
 
 std::ostream& operator<<(std::ostream &os, const InftyExpression &ie);
 
-typedef std::set<InftyExpression, GiNaC::ex_is_less> InftyExpressionSet;
+typedef std::set<InftyExpression, Expr_is_less> InftyExpressionSet;
 
 #endif // INFTYEXPRESSION_H

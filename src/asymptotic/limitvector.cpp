@@ -1,9 +1,6 @@
 #include "limitvector.hpp"
 
 #include <cassert>
-#include <ginac/ginac.h>
-
-using namespace GiNaC;
 
 const std::vector<LimitVector> LimitVector::Addition = {
     // increasing limit vectors
@@ -102,7 +99,7 @@ bool LimitVector::isApplicable(Direction dir) const {
 }
 
 
-bool LimitVector::makesSense(Expression l, Expression r) const {
+bool LimitVector::makesSense(Expr l, Expr r) const {
     InftyExpression inftyL(l, first);
     if (inftyL.isTriviallyUnsatisfiable()) {
         return false;
@@ -113,21 +110,21 @@ bool LimitVector::makesSense(Expression l, Expression r) const {
         return false;
     }
 
-    if (l == r && first != second) {
+    if (l.equals(r) && first != second) {
         return false;
     }
 
     if ((first == NEG_CONS || first == NEG_INF)
-        && is_a<power>(l)
-        && is_a<numeric>(l.op(1))
-        && ex_to<numeric>(l.op(1)).is_even()) {
+        && l.isPow()
+        && l.op(1).isRationalConstant()
+        && l.op(1).toNum().is_even()) {
         return false;
     }
 
     if ((second == NEG_CONS || second == NEG_INF)
-        && is_a<power>(r)
-        && is_a<numeric>(r.op(1))
-        && ex_to<numeric>(r.op(1)).is_even()) {
+        && r.isPow()
+        && r.op(1).isRationalConstant()
+        && r.op(1).toNum().is_even()) {
         return false;
     }
 

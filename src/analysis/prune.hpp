@@ -18,6 +18,10 @@
 #ifndef PRUNE_H
 #define PRUNE_H
 
+#include "../its/types.hpp"
+#include "../its/itsproblem.hpp"
+#include "../smt/smt.hpp"
+
 class Rule;
 class ITSProblem;
 
@@ -39,7 +43,35 @@ namespace Pruning {
      * @return true iff the ITS was modified (i.e. a duplicate got deleted)
      */
     template <typename Container>
-    bool removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareUpdate = true);
+    std::set<TransIdx> removeDuplicateRules(ITSProblem &its, const Container &trans, bool compareRhss = true) {
+        std::set<TransIdx> toRemove;
+
+        for (auto i = trans.begin(); i != trans.end(); ++i) {
+            for (auto j = i; ++j != trans.end(); /**/) {
+                TransIdx idxA = *i;
+                TransIdx idxB = *j;
+
+                const Rule &ruleA = its.getRule(idxA);
+                const Rule &ruleB = its.getRule(idxB);
+
+                // if rules are identical up to cost, keep the one with the higher cost
+                if (compareRules(ruleA, ruleB, compareRhss)) {
+                    if ((ruleA.getCost() - ruleB.getCost()).toNum().is_positive() > 0) {
+                        toRemove.insert(idxB);
+                    } else {
+                        toRemove.insert(idxA);
+                        break; // do not remove trans[i] again
+                    }
+                }
+            }
+        }
+
+        for (TransIdx rule : toRemove) {
+            its.removeRule(rule);
+        }
+
+        return toRemove;
+    }
 
     /**
      * Removes all rules within the given list/set/... whose guard is found to be unsatisfiable.
@@ -47,7 +79,18 @@ namespace Pruning {
      * @return true iff the ITS was modified (i.e., an unsat rule got deleted)
      */
     template <typename Container>
-    bool removeUnsatRules(ITSProblem &its, const Container &trans);
+    bool removeUnsatRules(ITSProblem &its, const Container &trans) {
+        bool changed = false;
+
+        for (TransIdx rule : trans) {
+            if (Smt::check(its.getRule(rule).getGuard(), its) == Smt::Unsat) {
+                its.removeRule(rule);
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
 
     /**
      * Reduces the number of parallel rules by applying some greedy heuristic to find the "best" rules

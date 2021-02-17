@@ -20,44 +20,44 @@
 
 namespace util {
 
-    const ExprSymbolSet RelevantVariables::find(
-            const GuardList &constraints,
-            const std::vector<GiNaC::exmap> &updates,
-            const GuardList &guard,
-            const VariableManager &varMan) {
-        std::set<VariableIdx> res;
-        // Add all variables appearing in the guard
-        ExprSymbolSet guardVariables;
-        for (const Expression &c: constraints) {
-            const ExprSymbolSet &cVariables = c.getVariables();
-            guardVariables.insert(cVariables.begin(), cVariables.end());
+    const VarSet RelevantVariables::find(
+            const Guard &constraints,
+            const std::vector<Subs> &updates,
+            const BoolExpr guard) {
+        VarSet varsOfInterest;
+        for (const Rel &rel: constraints) {
+            const VarSet &relVars = rel.vars();
+            varsOfInterest.insert(relVars.begin(), relVars.end());
         }
-        for (const ExprSymbol &sym : guardVariables) {
-            res.insert(varMan.getVarIdx(sym));
+        return find(varsOfInterest, updates, guard);
+    }
+
+    const VarSet RelevantVariables::find(const VarSet &varsOfInterest, const std::vector<Subs> &updates, const BoolExpr guard) {
+        VarSet res;
+        for (const Var &sym : varsOfInterest) {
+            res.insert(sym);
         }
         // Compute the closure of res under all updates and the guard
-        std::set<VariableIdx> todo = res;
+        VarSet todo = res;
         while (!todo.empty()) {
-            ExprSymbolSet next;
-            for (const VariableIdx &var : todo) {
-                const ExprSymbol &x = varMan.getVarSymbol(var);
-                for (const GiNaC::exmap &up: updates) {
+            VarSet next;
+            for (const Var &x : todo) {
+                for (const Subs &up: updates) {
                     auto it = up.find(x);
                     if (it != up.end()) {
-                        const ExprSymbolSet &rhsVars = Expression(it->second).getVariables();
+                        const VarSet &rhsVars = it->second.vars();
                         next.insert(rhsVars.begin(), rhsVars.end());
                     }
                 }
-                for (const Expression &g: guard) {
-                    const ExprSymbolSet &gVars = g.getVariables();
-                    if (gVars.find(varMan.getVarSymbol(var)) != gVars.end()) {
-                        next.insert(gVars.begin(), gVars.end());
+                for (const Rel &rel: guard->lits()) {
+                    const VarSet &relVars = rel.vars();
+                    if (relVars.find(x) != relVars.end()) {
+                        next.insert(relVars.begin(), relVars.end());
                     }
                 }
             }
             todo.clear();
-            for (const ExprSymbol &sym : next) {
-                const VariableIdx &var = varMan.getVarIdx(sym);
+            for (const Var &var : next) {
                 if (res.count(var) == 0) {
                     todo.insert(var);
                 }
@@ -65,35 +65,23 @@ namespace util {
             // collect all variables from every iteration
             res.insert(todo.begin(), todo.end());
         }
-        ExprSymbolSet symbols;
-        for (const VariableIdx &x: res) {
-            symbols.insert(varMan.getVarSymbol(x));
+        VarSet symbols;
+        for (const Var &x: res) {
+            symbols.insert(x);
         }
         return symbols;
     }
 
-    const ExprSymbolSet RelevantVariables::find(
-            const GuardList &constraints,
-            const std::vector<UpdateMap> &updateMaps,
-            const GuardList &guard,
-            const VariableManager &varMan) {
-        std::vector<GiNaC::exmap> updates;
-        for (const UpdateMap &up: updateMaps) {
-            updates.push_back(up.toSubstitution(varMan));
-        }
-        return RelevantVariables::find(constraints, updates, guard, varMan);
-    }
 
-    const ExprSymbolSet RelevantVariables::find(
-            const GuardList &constraints,
+    const VarSet RelevantVariables::find(
+            const Guard &constraints,
             const std::vector<RuleRhs> &rhss,
-            const GuardList &guard,
-            const VariableManager &varMan) {
-        std::vector<GiNaC::exmap> updates;
+            const BoolExpr guard) {
+        std::vector<Subs> updates;
         for (const RuleRhs &rhs: rhss) {
-            updates.push_back(rhs.getUpdate().toSubstitution(varMan));
+            updates.push_back(rhs.getUpdate());
         }
-        return RelevantVariables::find(constraints, updates, guard, varMan);
+        return RelevantVariables::find(constraints, updates, guard);
     }
 
 }

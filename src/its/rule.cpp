@@ -16,6 +16,7 @@
  */
 
 #include "rule.hpp"
+#include "../expr/rel.hpp"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ Rule::Rule(RuleLhs lhs, std::vector<RuleRhs> rhss) : lhs(lhs), rhss(rhss) {
     }
 }
 
-Rule::Rule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
+Rule::Rule(LocationIdx lhsLoc, BoolExpr guard, Expr cost, LocationIdx rhsLoc, Subs update)
         : lhs(lhsLoc, guard, cost), rhss({RuleRhs(rhsLoc, update)}) {
     if (getCost().isNontermSymbol()) {
         rhss = {RuleRhs(rhss[0].getLoc(), {})};
@@ -41,12 +42,25 @@ Rule::Rule(RuleLhs lhs, RuleRhs rhs)
     }
 }
 
+void Rule::collectVars(VarSet &vars) const {
+    lhs.collectVars(vars);
+    for (const RuleRhs &rhs: rhss) {
+        rhs.collectVars(vars);
+    }
+}
+
+VarSet Rule::vars() const {
+    VarSet res;
+    collectVars(res);
+    return res;
+}
+
 LinearRule Rule::dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc) {
-    return LinearRule(lhsLoc, {}, Expression(0), rhsLoc, {});
+    return LinearRule(lhsLoc, {}, 0, rhsLoc, {});
 }
 
 bool Rule::isDummyRule() const {
-    return isLinear() && getCost().is_zero() && getGuard().empty() && getUpdate(0).empty();
+    return isLinear() && getCost().isZero() && getGuard() == True && getUpdate(0).empty();
 }
 
 bool Rule::isLinear() const {
@@ -62,16 +76,12 @@ bool Rule::isSimpleLoop() const {
     return std::all_of(rhss.begin(), rhss.end(), [&](const RuleRhs &rhs){ return rhs.getLoc() == lhs.getLoc(); });
 }
 
-void Rule::applySubstitution(const GiNaC::exmap &subs) {
-    getCostMut().applySubs(subs);
-    for (Expression &ex : getGuardMut()) {
-        ex.applySubs(subs);
+Rule Rule::subs(const Subs &subs) const {
+    std::vector<RuleRhs> newRhss;
+    for (const RuleRhs &rhs : rhss) {
+        newRhss.push_back(RuleRhs(rhs.getLoc(), rhs.getUpdate().concat(subs)));
     }
-    for (RuleRhs &rhs : rhss) {
-        for (auto &it : rhs.getUpdateMut()) {
-            it.second.applySubs(subs);
-        }
-    }
+    return Rule(RuleLhs(getLhsLoc(), getGuard()->subs(subs), getCost().subs(subs)), newRhss);
 }
 
 LinearRule Rule::replaceRhssBySink(LocationIdx sink) const {
@@ -93,6 +103,20 @@ option<Rule> Rule::stripRhsLocation(LocationIdx toRemove) const {
     }
 }
 
+Rule Rule::withGuard(const BoolExpr guard) const {
+    return Rule(RuleLhs(getLhsLoc(), guard, getCost()), getRhss());
+}
+
+Rule Rule::withCost(const Expr &cost) const {
+    return Rule(RuleLhs(getLhsLoc(), getGuard(), cost), getRhss());
+}
+
+Rule Rule::withUpdate(uint i, const Subs &up) const {
+    std::vector<RuleRhs> rhss = getRhss();
+    rhss[i] = RuleRhs(rhss[i].getLoc(), up);
+    return Rule(RuleLhs(getLhsLoc(), getGuard(), getCost()), rhss);
+}
+
 bool operator ==(const RuleRhs &fst, const RuleRhs &snd) {
     return fst.getLoc() == snd.getLoc() && fst.getUpdate() == snd.getUpdate();
 }
@@ -102,10 +126,7 @@ ostream& operator<<(ostream &s, const Rule &rule) {
 
     // lhs (loc, guard, cost)
     s << rule.getLhsLoc() << " | ";
-
-    for (auto expr : rule.getGuard()) {
-        s << expr << ", ";
-    }
+    s << rule.getGuard();
     s << "| ";
     s << rule.getCost();
 

@@ -18,7 +18,6 @@
 #ifndef GUARDTOOLBOX_H
 #define GUARDTOOLBOX_H
 
-#include "../global.hpp"
 #include "expression.hpp"
 #include "../its/variablemanager.hpp"
 #include "../util/option.hpp"
@@ -43,7 +42,7 @@ namespace GuardToolbox {
     };
 
     // Shorthand for lambdas that check if a given symbol is accepted/allowed (depending on the context)
-    using SymbolAcceptor = std::function<bool(const ExprSymbol &)>;
+    using SymbolAcceptor = std::function<bool(const Var &)>;
 
 
     /**
@@ -67,7 +66,7 @@ namespace GuardToolbox {
      *
      * @return true if any progpagation was performed.
      */
-    bool propagateEqualities(const VarMan &varMan, Rule &rule, SolvingLevel level, SymbolAcceptor allow);
+    option<Rule> propagateEqualities(const VarMan &varMan, const Rule &rule, SolvingLevel level, SymbolAcceptor allow);
 
 
     /**
@@ -83,14 +82,15 @@ namespace GuardToolbox {
      *
      * @return true if any changes have been made
      */
-    bool eliminateByTransitiveClosure(GuardList &guard, bool removeHalfBounds, SymbolAcceptor allow);
+    option<Rule> eliminateByTransitiveClosure(const Rule &rule, bool removeHalfBounds, SymbolAcceptor allow);
 
+    std::pair<option<Expr>, option<Expr>> getBoundFromIneq(const Rel &rel, const Var &N);
 
     /**
      * Tries to solve the equation term == 0 for the given variable, using the given level of restrictiveness
      * @return if possible, the term t such that "var == t" is equivalent to "term == 0"
      */
-    option<Expression> solveTermFor(Expression term, const ExprSymbol &var, SolvingLevel level);
+    option<Expr> solveTermFor(Expr term, const Var &var, SolvingLevel level);
 
 
     /**
@@ -98,7 +98,7 @@ namespace GuardToolbox {
      * For example, A > 0 or A == 0 both imply A+1 > 0
      * @return true if lhsConstraint implies rhsConstraint, false has no meaning.
      */
-    bool isTrivialImplication(const Expression &lhsConstraint, const Expression &rhsConstraint);
+    bool isTrivialImplication(const Rel &lhsConstraint, const Rel &rhsConstraint);
 
 
     /**
@@ -107,41 +107,20 @@ namespace GuardToolbox {
      * @note expensive for large guards
      * @return true iff guard was changed.
      */
-    bool makeEqualities(GuardList &guard);
+    option<Rule> makeEqualities(const Rule &rule);
 
-
-    /**
-     * Returns true iff all guard terms are relational without the use of !=
-     */
-    bool isWellformedGuard(const GuardList &guard);
-
-
-    /**
-     * Returns true iff all guard terms have polynomial rhs and lhs
-     * @note guard must be a well-formed guard
-     */
-    bool isPolynomialGuard(const GuardList &guard);
+    option<Rule> propagateEqualitiesBySmt(const Rule &rule, VariableManager &varMan);
 
 
     /**
      * Returns true iff term contains a temporary variable
      */
-    bool containsTempVar(const VarMan &varMan, const Expression &term);
-
-
-    /**
-     * Given a polynomial expression, checks if the given term always evaluates
-     * to an integer if all occurring variables are instantiated by integer values.
-     * @note expensive for large polynomials (roughly d^n for degree d and n variables)
-     * @note the given expression must be a polynomial!
-     */
-    bool mapsToInt(const Expression &e);
-
-
-    /**
-     * Compose two substitutions, i.e. compute f ∘ g ("f after g")
-     */
-    GiNaC::exmap composeSubs(const GiNaC::exmap &f, const GiNaC::exmap &g);
+    template<class T>
+    bool containsTempVar(const VarMan &varMan, const T &x) {
+        return x.hasVarWith([&varMan](const Var &sym) {
+            return varMan.isTempVar(sym);
+        });
+    }
 
 }
 

@@ -21,75 +21,73 @@
 using namespace std;
 
 
-bool VariableManager::hasVarIdx(VariableIdx idx) const {
-    return idx < variables.size();
+bool VariableManager::isTempVar(const Var &var) const {
+    return temporaryVariables.count(var) > 0;
 }
 
-string VariableManager::getVarName(VariableIdx idx) const {
-    return variables[idx].name;
-}
-
-VariableIdx VariableManager::getVarIdx(const ExprSymbol &var) const {
-    return variableNameLookup.at(var.get_name());
-}
-
-const set<VariableIdx> &VariableManager::getTempVars() const {
-    return temporaryVariables;
-}
-
-bool VariableManager::isTempVar(VariableIdx idx) const {
-    return temporaryVariables.count(idx) > 0;
-}
-
-bool VariableManager::isTempVar(const ExprSymbol &var) const {
-    VariableIdx idx = getVarIdx(var);
-    return temporaryVariables.count(idx) > 0;
-}
-
-ExprSymbol VariableManager::getVarSymbol(VariableIdx idx) const {
-    return variables[idx].symbol;
-}
-
-VariableIdx VariableManager::addFreshVariable(string basename) {
+Var VariableManager::addFreshVariable(string basename) {
     return addVariable(getFreshName(basename));
 }
 
-VariableIdx VariableManager::addFreshTemporaryVariable(string basename) {
-    VariableIdx idx = addVariable(getFreshName(basename));
-    temporaryVariables.insert(idx);
-    return idx;
+Var VariableManager::addFreshTemporaryVariable(string basename) {
+    Var x = addVariable(getFreshName(basename));
+    temporaryVariables.insert(x);
+    return x;
 }
 
-ExprSymbol VariableManager::getFreshUntrackedSymbol(string basename) const {
-    return ExprSymbol(getFreshName(basename));
+Var VariableManager::getFreshUntrackedSymbol(string basename, Expr::Type type) {
+    Var res(getFreshName(basename));
+    variableNameLookup.emplace(res.get_name(), res);
+    untrackedVariables[res] = type;
+    return res;
 }
 
-VariableIdx VariableManager::addVariable(string name) {
-    // find new index
-    VariableIdx idx = variables.size();
-
+Var VariableManager::addVariable(string name) {
     //convert to ginac
-    auto sym = GiNaC::symbol(name);
+    auto sym = Var(name);
 
     // remember variable
-    variables.push_back({name, sym});
-    variableNameLookup.emplace(name, idx);
-
-    return idx;
-}
-
-string VariableManager::getFreshName(string basename) const {
-    int n = 1;
-    string name = basename;
-
-    while (variableNameLookup.count(name) != 0) {
-        name = basename + "_" + to_string(n);
-        n++;
+    if (basenameCount.count(name) == 0) {
+        basenameCount.emplace(name, 0);
     }
+    variables.insert(sym);
+    variableNameLookup.emplace(name, sym);
 
-    return name;
+    return sym;
 }
 
-size_t VariableManager::getVariableCount() const {
-    return variables.size();
+string VariableManager::getFreshName(string basename) {
+    if (basenameCount.count(basename) == 0) {
+        basenameCount.emplace(basename, 0);
+        return basename;
+    } else {
+        uint count = basenameCount.at(basename);
+        std::string res = basename + to_string(count);
+        while (variableNameLookup.count(res) != 0) {
+            ++count;
+            res = basename + to_string(count);
+        }
+        basenameCount[basename] = count + 1;
+        return res;
+    }
+}
+
+const VarSet &VariableManager::getTempVars() const {
+    return temporaryVariables;
+}
+
+VarSet VariableManager::getVars() const {
+    return variables;
+}
+
+Expr::Type VariableManager::getType(const Var &x) const {
+    if (untrackedVariables.find(x) != untrackedVariables.end()) {
+        return untrackedVariables.at(x);
+    } else {
+        return Expr::Int;
+    }
+}
+
+BoolExpr VariableManager::freshBoolVar() {
+    return buildConst(boolVarCount++);
 }

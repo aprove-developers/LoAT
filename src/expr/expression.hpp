@@ -18,147 +18,150 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-#include "../global.hpp"
-
 #include <ginac/ginac.h>
-#include <z3++.h>
-#include <string>
-#include <vector>
 
-#include "../util/exceptions.hpp"
 #include "complexity.hpp"
+#include "../util/option.hpp"
 
+class Expr;
+template<class Key> class KeyToExprMap;
+class Recurrence;
+class Rel;
+class Subs;
+class ExprMap;
 
-class Z3Context;
-class Expression;
+struct Expr_is_less {
+    bool operator() (const Expr &lh, const Expr &rh) const;
+};
 
-//Useful typedefs for readability
-using ExprSymbol = GiNaC::symbol;
-using ExprSymbolSet = std::set<ExprSymbol, GiNaC::ex_is_less>;
-using ExpressionSet = std::set<Expression, GiNaC::ex_is_less>;
+using Var = GiNaC::symbol;
+using VarSet = std::set<Var, GiNaC::ex_is_less>;
+using ExprSet = std::set<Expr, Expr_is_less>;
 template <typename T>
-using ExprSymbolMap = std::map<ExprSymbol, T, GiNaC::ex_is_less>;
-
-
+using VarMap = std::map<Var, T, GiNaC::ex_is_less>;
 
 /**
- * Class for arithmetic expressions, can be converted to a z3 expression.
- * Essentially a wrapper around GiNaC::ex which provides additional functionality.
+ * Class for arithmetic expressions.
+ * Just a wrapper for GiNaC expressions.
  */
-class Expression : public GiNaC::ex {
-public:
-    static const ExprSymbol NontermSymbol; // special symbol "INF" to be used within cost expressions
+class Expr {
 
-public:
-    /**
-     * Creates a new Expression from the given string representation.
-     * Unlike GiNaC this can also parse relational expressions (i.e. <,<= etc.).
-     * @param variables a list of GiNaC symbols that may occur as variables in s
+    /*
+     * We use PURRS to solve recurrence relatios, which also uses GiNaC.
+     * Declaring it as a friend allows us to direclty work on the encapsulated GiNaC::ex when constructing recurrence relations.
      */
-    static Expression fromString(const std::string &s, const GiNaC::lst &variables);
-    EXCEPTION(InvalidRelationalExpression,CustomException);
+    friend class Recurrence;
 
-    /**
-     * static helper to cast a ginac expression (which must be a symbol) to a ginac symbol
+    /*
+     * An ExprMap encapsulates a GiNaC::exmap, which can directly be applied to the encapsulated GiNaC::ex.
      */
-    static ExprSymbol toSymbol(const GiNaC::ex &x) { return GiNaC::ex_to<GiNaC::symbol>(x); }
+    friend class Subs;
+    friend class ExprMap;
 
 public:
-    Expression() : Expression(GiNaC::ex()) {}
-    Expression(const GiNaC::basic &other) : Expression(GiNaC::ex(other)) {}
-    Expression(const GiNaC::ex &other) : GiNaC::ex(other) {
-#ifdef DEBUG_EXPRESSION
-        //build string representation to be used in debugger
-        std::stringstream ss;
-        print(GiNaC::print_dflt(ss));
-        string_rep = ss.str();
-#endif
-    }
 
     /**
-     * Applies a substitution. Like GiNaC::subs, but assigns the result to this expression.
+     * possible types of variables
      */
-    void applySubs(const GiNaC::exmap &subs);
+    enum Type {Int, Rational};
 
     /**
-     * Version of ex::find() that searches also in subexpressions of a match
+     * Special variable that represents the cost of non-terminating computations.
      */
-    bool findAll(const GiNaC::ex &pattern, GiNaC::exset &found) const;
+    static const Var NontermSymbol;
 
     /**
-     * Returns true iff this expression is the given variable (up to trivial arithmetic, which is resolved by GiNaC)
+     * @return A wildcard for constructing patterns.
      */
-    bool equalsVariable(const GiNaC::symbol &var) const;
+    static Expr wildcard(uint label);
+
+    Expr() : Expr(GiNaC::ex()) {}
+    Expr(const GiNaC::basic &other) : Expr(GiNaC::ex(other)) {}
+    Expr(const GiNaC::ex &ex) : ex(ex) {}
+    Expr(long i): ex(i) {}
 
     /**
-     * Checks if this expression is the NONTERM-symbol (used to represent nontermination).
-     * This is only a syntactic check.
+     * @brief Applies a substitution via side-effects.
+     * @deprecated use subs instead
+     */
+    void applySubs(const Subs &subs);
+
+    /**
+     * @brief Computes all matches of the given pattern.
+     * @return True iff there was at least one match.
+     */
+    bool findAll(const Expr &pattern, ExprSet &found) const;
+
+    /**
+     * @return True iff this expression is equal (resp. evaluates) to the given variable
+     */
+    bool equals(const Var &var) const;
+
+    /**
+     * @return True iff this expression is equal to NontermSymbol.
      */
     bool isNontermSymbol() const;
 
     /**
-     * Returns true iff this expression is linear
-     * (e.g. 1/2*x+y is linear, but x^2 or x*y are not considered linear)
+     * @return True iff this expression is a linear polynomial wrt. the given variables (resp. all variables, if vars is empty).
      */
-    bool isLinear(const boost::optional<ExprSymbolSet> &vars = boost::optional<ExprSymbolSet>()) const;
+    bool isLinear(const option<VarSet> &vars = option<VarSet>()) const;
 
     /**
-     * Returns true iff this expression is polynomial, e.g. 1/2 * y * x^2 + y^3.
+     * @return True iff this expression is a polynomial.
      */
-    bool isPolynomial() const;
+    bool isPoly() const;
 
     /**
-     * Returns true iff this expression is polynomial where all coefficients are integers.
+     * @return True iff this expression is polynomial where all coefficients are integers.
      */
-    bool isPolynomialWithIntegerCoeffs() const;
+    bool isIntPoly() const;
 
     /**
-     * Returns true iff this expression is an integer value (and thus a constant).
+     * @return True iff this expression is an integer value (and thus a constant).
      */
-    bool isIntegerConstant() const;
+    bool isInt() const;
 
     /**
-     * Returns true iff this expression is a rational number (and thus a constant).
+     * @return True iff this expression is a rational number (and thus a constant).
      */
     bool isRationalConstant() const;
 
     /**
-     * Returns true iff this expression is a proper rational number,
-     * i.e., a rational number that is not an integer.
+     * @return True iff this expression is a rational number, but no integer constant.
      */
-    bool isProperRational() const;
+    bool isNonIntConstant() const;
 
     /**
-     * Returns true iff this expression is a proper natural power,
-     * i.e., of the form expresion^n for some natural n >= 2.
+     * @return True iff this expression is a power where the exponent is a natural number > 1.
      */
-    bool isProperNaturalPower() const;
+    bool isNaturalPow() const;
 
     /**
-     * Returns the highest degree of any variable in this polynomial expression
+     * @return The highest degree of any variable in this expression.
+     * @note For polynomials only.
      */
-    int getMaxDegree() const;
+    int maxDegree() const;
 
     /**
-     * Returns a set of all ginac symbols that occur in this expression
-     * (similar to collectVariableNames)
+     * @brief Collects all variables that occur in this expression.
      */
-    void collectVariables(ExprSymbolSet &res) const;
+    void collectVars(VarSet &res) const;
 
     /**
-     * Convenience method for collectVariables
+     * @return The set of all variables that occur in this expression.
      */
-    ExprSymbolSet getVariables() const;
+    VarSet vars() const;
 
     /**
-     * Checks whether this expression contains a variable that satisfies the given predicate.
-     * The predicate is called with a `const ExprSymbol &` as argument.
+     * @return True iff this expression contains a variable that satisfies the given predicate.
+     * @param A function of type `const Var & => bool`.
      */
     template <typename P>
-    bool hasVariableWith(P predicate) const {
+    bool hasVarWith(P predicate) const {
         struct SymbolVisitor : public GiNaC::visitor, public GiNaC::symbol::visitor {
             SymbolVisitor(P predicate) : predicate(predicate) {}
-            void visit(const ExprSymbol &sym) {
+            void visit(const Var &sym) {
                 if (!res && predicate(sym)) {
                     res = true;
                 }
@@ -177,63 +180,339 @@ public:
     }
 
     /**
-     * Returns true iff this Expression does not contain any variables, i.e.,
-     * getVariables().size() == 0 (but more efficient)
+     * @return True iff this expression does not contain any variables.
      */
-    bool hasNoVariables() const;
+    bool isGround() const;
 
     /**
-     * Returns true iff this Expression contains exactly one variable, i.e.,
-     * getVariables().size() == 1 (but more efficient)
+     * @return True iff this expression contains exactly one variable.
      */
-    bool hasExactlyOneVariable() const;
+    bool isUnivariate() const;
 
     /**
-     * Returns a variable that occurs in this Expression (given that there is one)
+     * @return Some variable that occurs in this Expression.
+     * @note Only for non-ground expressions.
      */
-    ExprSymbol getAVariable() const;
+    Var someVar() const;
 
     /**
-     * Returns true iff this Expression contains at most one variable, i.e.,
-     * getVariables().size() <= 1 (but this methods is more efficient)
+     * @return True iff this expression is ground or univariate.
      */
-    bool hasAtMostOneVariable() const;
+    bool isNotMultivariate() const;
 
     /**
-     * Returns true iff this Expression contains at most one variable, i.e.,
-     * getVariables().size() >= 2 (but this methods is more efficient)
+     * @return True iff this expression contains at least two variable.
      */
-    bool hasAtLeastTwoVariables() const;
+    bool isMultivariate() const;
 
     /**
-     * Converts this term from a GiNaC::ex to a Z3 expression, see GinacToZ3
-     * @return newly created z3 expression
+     * @return An estimate of the asymptotic complexity of this expression.
+     * @note This should be an over-approximation, but there are no guarantees.
+     * @note May return Complexity::CpxUnknown.
      */
-    z3::expr toZ3(Z3Context &context, bool useReals = false) const;
+    Complexity toComplexity() const;
 
     /**
-     * Returns an estimate of the exponent of the complexity class, e.g. "x^3" is 3, "x*y" is 2, "42" is 0 (constant)
-     * @note this should be an OVER-approximation, but there are no guarantees as this is just a simple syntactic check!
-     * @return the complexity, or ComplexExp for exponential, or ComplexNone for unknown complexity
-     */
-    Complexity getComplexity() const;
-
-    /**
-     * Converts this expression to a string by using GiNaC's operator<<
+     * @return A string representation of this expression.
      */
     std::string toString() const;
 
-private:
     /**
-     * Helper for getComplexity that operates recursively on the given term
+     * @return True iff this and that are equal.
      */
-    static Complexity getComplexity(const GiNaC::ex &term);
+    bool equals(const Expr &that) const;
 
+    /**
+     * @return The degree wrt. var.
+     * @note For polynomials only.
+     */
+    int degree(const Var &var) const;
+
+    /**
+     * @return The minimal degree of all monomials wrt. var.
+     */
+    int ldegree(const Var &var) const;
+
+    /**
+     * @return The coefficient of the monomial where var occurs with the given degree (which defaults to 1).
+     */
+    Expr coeff(const Var &var, int degree = 1) const;
+
+    /**
+     * @return The coefficient of the monomial whose degree wrt. var is ldegree(var).
+     */
+    Expr lcoeff(const Var &var) const;
+
+    /**
+     * @return A normalized version of this expression up to the order of monomials.
+     * @note No guarantees for non-polynomial expressions.
+     */
+    Expr expand() const;
+
+    /**
+     * @return True iff some subexpression matches the given pattern.
+     */
+    bool has(const Expr &pattern) const;
+
+    /**
+     * @return True iff this is 0.
+     */
+    bool isZero() const;
+
+    /**
+     * @return True iff this is a variable.
+     */
+    bool isVar() const;
+
+    /**
+     * @return True iff this is of the form x^y for some expressions x, y.
+     */
+    bool isPow() const;
+
+    /**
+     * @return True iff this is of the form x*y for some expressions x, y.
+     */
+    bool isMul() const;
+
+    /**
+     * @return True iff this is of the form x+y for some expressions x, y.
+     */
+    bool isAdd() const;
+
+    /**
+     * @return This as a variable.
+     * @note For variables only.
+     */
+    Var toVar() const;
+
+    /**
+     * @return This as a number.
+     * @note For constants only.
+     */
+    GiNaC::numeric toNum() const;
+
+    /**
+     * @return The i-th operand.
+     * @note For function applications whose root symbol has at least arity i+1 only.
+     */
+    Expr op(uint i) const;
+
+    /**
+     * @return The arity of the root symbol.
+     * @note For function applications only.
+     */
+    size_t arity() const;
+
+    /**
+     * @return The result of applying the given substitution to this expression.
+     * @note The second argument is deprecated.
+     */
+    Expr subs(const Subs &map) const;
+
+    Expr replace(const ExprMap &map) const;
+
+    /**
+     * @brief Provides a total order for expressions.
+     */
+    int compare(const Expr &that) const;
+
+    /**
+     * @return The numerator.
+     * @note For fractions only.
+     */
+    Expr numerator() const;
+
+    /**
+     * @return The denominator.
+     * @note For fractions only.
+     */
+    Expr denominator() const;
+
+    /**
+     * @return True iff this is a polynomial wrt. the given variable.
+     */
+    bool isPoly(const Var &n) const;
+
+    bool isIntegral() const;
+
+    Expr toIntPoly() const;
+
+    GiNaC::numeric denomLcm() const;
+
+    /**
+     * @brief exponentiation
+     */
+    friend Expr operator^(const Expr &x, const Expr &y);
+    friend Expr operator-(const Expr &x);
+    friend Expr operator-(const Expr &x, const Expr &y);
+    friend Expr operator+(const Expr &x, const Expr &y);
+    friend Expr operator*(const Expr &x, const Expr &y);
+    friend Expr operator/(const Expr &x, const Expr &y);
+    friend Rel operator<(const Expr &x, const Expr &y);
+    friend Rel operator>(const Expr &x, const Expr &y);
+    friend Rel operator<=(const Expr &x, const Expr &y);
+    friend Rel operator>=(const Expr &x, const Expr &y);
+    friend Rel operator!=(const Expr &x, const Expr &y);
+    friend Rel operator==(const Expr &x, const Expr &y);
+    friend std::ostream& operator<<(std::ostream &s, const Expr &e);
 
 private:
-#ifdef DEBUG_EXPRESSION
-    std::string string_rep;
-#endif
+
+    GiNaC::ex ex;
+
+    static Complexity toComplexity(const Expr &term);
+
+    bool match(const Expr &pattern) const;
+    void traverse(GiNaC::visitor & v) const;
+
 };
+
+template<class Key>
+class KeyToExprMap {
+    friend class Expr;
+    using It = typename std::map<Key, Expr, Expr_is_less>::const_iterator;
+
+public:
+
+    KeyToExprMap() {}
+
+    virtual ~KeyToExprMap() {}
+
+    Expr get(const Key &key) const {
+        return map.at(key);
+    }
+
+    void put(const Key &key, const Expr &val) {
+        map[key] = val;
+        putGinac(key, val);
+    }
+
+    It begin() const {
+        return map.begin();
+    }
+
+    It end() const {
+        return map.end();
+    }
+
+    It find(const Key &e) const {
+        return map.find(e);
+    }
+
+    bool contains(const Key &e) const {
+        return map.count(e) > 0;
+    }
+
+    bool empty() const {
+        return map.empty();
+    }
+
+    uint size() const {
+        return map.size();
+    }
+
+    size_t erase(const Key &key) {
+        eraseGinac(key);
+        return map.erase(key);
+    }
+
+protected:
+    std::map<GiNaC::ex, GiNaC::ex, GiNaC::ex_is_less> ginacMap;
+    void virtual putGinac(const Key &key, const Expr &val) = 0;
+    void virtual eraseGinac(const Key &key) = 0;
+
+private:
+    std::map<Key, Expr, Expr_is_less> map;
+
+};
+
+template<class T> bool operator<(const KeyToExprMap<T> &x, const KeyToExprMap<T> &y) {
+    auto it1 = x.begin();
+    auto it2 = y.begin();
+    while (it1 != x.end() && it2 != y.end()) {
+        int fst = it1->first.compare(it2->first);
+        if (fst != 0) {
+            return fst < 0;
+        }
+        int snd = it1->second.compare(it2->second);
+        if (snd != 0) {
+            return snd < 0;
+        }
+        ++it1;
+        ++it2;
+    }
+    return it1 == x.end() && it2 != y.end();
+}
+
+template<class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<T> &map) {
+    if (map.empty()) {
+        s << "{}";
+    } else {
+        s << "{";
+        bool fst = true;
+        for (const auto &p: map) {
+            if (!fst) {
+                s << ", ";
+            } else {
+                fst = false;
+            }
+            s << p.first << ": " << p.second;
+        }
+    }
+    return s << "}";
+}
+
+class Subs: public KeyToExprMap<Var> {
+
+public:
+
+    Subs();
+
+    Subs(const Var &key, const Expr &val);
+
+    Subs compose(const Subs &that) const;
+
+    Subs concat(const Subs &that) const;
+
+    Subs project(const VarSet &vars) const;
+
+    bool changes(const Var &key) const;
+
+    bool isLinear() const;
+
+    bool isPoly() const;
+
+    VarSet domain() const;
+
+    VarSet coDomainVars() const;
+
+    VarSet allVars() const;
+
+    void collectDomain(VarSet &vars) const;
+
+    void collectCoDomainVars(VarSet &vars) const;
+
+    void collectAllVars(VarSet &vars) const;
+
+private:
+    void putGinac(const Var &key, const Expr &val) override;
+    void eraseGinac(const Var &key) override;
+
+};
+
+class ExprMap: public KeyToExprMap<Expr> {
+
+public:
+    ExprMap();
+
+    ExprMap(const Expr &key, const Expr &val);
+
+private:
+    void putGinac(const Expr &key, const Expr &val) override;
+    void eraseGinac(const Expr &key) override;
+
+};
+
+bool operator==(const Subs &m1, const Subs &m2);
 
 #endif // EXPRESSION_H

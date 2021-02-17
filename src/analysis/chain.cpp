@@ -17,9 +17,9 @@
 
 #include "chain.hpp"
 
-#include "../z3/z3toolbox.hpp"
-#include "../util/stats.hpp"
-#include "../debug.hpp"
+#include "../smt/smt.hpp"
+#include "../config.hpp"
+#include "../expr/boolexpr.hpp"
 
 using namespace std;
 
@@ -31,19 +31,12 @@ using namespace std;
 /**
  * Helper for chainRules. Checks if the given (chained) guard is satisfiable.
  */
-static bool checkSatisfiability(const GuardList &newGuard) {
-    auto z3res = Z3Toolbox::checkAll(newGuard);
-
-#ifdef DEBUG_PROBLEMS
-    if (z3res == z3::unknown) {
-        debugProblem("Chaining: got z3::unknown for: ");
-        dumpList("guard", newGuard);
-    }
-#endif
+static bool checkSatisfiability(const BoolExpr newGuard, VariableManager &varMan) {
+    auto smtRes = Smt::check(newGuard, varMan);
 
     // If we still get "unknown", we interpret it as "sat", so we prefer to chain if unsure.
     // This is especially needed for exponentials, since z3 cannot handle them well.
-    return z3res != z3::unsat;
+    return smtRes != Smt::Unsat;
 }
 
 
@@ -57,54 +50,28 @@ static bool checkSatisfiability(const GuardList &newGuard) {
  * by applying the first rule's update to the second rule's lhs (guard/cost).
  * Also checks whether the resulting guard is satisfiable (and returns none if not), unless checkSat is false.
  */
-static option<RuleLhs> chainLhss(const VarMan &varMan, const RuleLhs &firstLhs, const UpdateMap &firstUpdate,
+static option<RuleLhs> chainLhss(VarMan &varMan, const RuleLhs &firstLhs, const Subs &firstUpdate,
                                  const RuleLhs &secondLhs, bool checkSat)
 {
-    // Build a substitution corresponding to the first rule's update
-    GiNaC::exmap updateSubs = firstUpdate.toSubstitution(varMan);
-
     // Concatenate both guards, but apply the first rule's update to second guard
-    GuardList newGuard = firstLhs.getGuard();
-    for (const Expression &ex : secondLhs.getGuard()) {
-        newGuard.push_back(ex.subs(updateSubs));
-    }
+    BoolExpr newGuard = firstLhs.getGuard() & secondLhs.getGuard()->subs(firstUpdate);
 
     // Add the costs, but apply first rule's update to second cost
-    Expression newCost = firstLhs.getCost() + secondLhs.getCost().subs(updateSubs);
+    Expr newCost = firstLhs.getCost() + secondLhs.getCost().subs(firstUpdate);
 
     // As a small optimization: Keep a NONTERM symbol (easier to identify NONTERM cost later on)
     if (firstLhs.getCost().isNontermSymbol() || secondLhs.getCost().isNontermSymbol()) {
-        newCost = Expression::NontermSymbol;
+        newCost = Expr::NontermSymbol;
     }
 
     if (Config::Chain::CheckSat) {
         // Avoid chaining if the resulting rule can never be taken
-        if (checkSat && !checkSatisfiability(newGuard)) {
-            Stats::add(Stats::ChainFail);
+        if (checkSat && !checkSatisfiability(newGuard, varMan)) {
             return {};
         }
     }
 
-    Stats::add(Stats::ChainSuccess);
     return RuleLhs(firstLhs.getLoc(), newGuard, newCost);
-}
-
-
-/**
- * Part of the main chaining algorithm.
- * Composes the two given updates (such that firstUpdate is applied before secondUpdate)
- */
-static UpdateMap chainUpdates(const VarMan &varMan, const UpdateMap &first, const UpdateMap &second) {
-    // Start with the first update
-    UpdateMap newUpdate = first;
-    const GiNaC::exmap firstSubs = first.toSubstitution(varMan);
-
-    // Then add the second update (possibly overwriting the first updates).
-    // Note that we apply the first update to the second update's right-hand sides.
-    for (const auto &it : second) {
-        newUpdate[it.first] = it.second.subs(firstSubs);
-    }
-    return newUpdate;
 }
 
 
@@ -116,19 +83,17 @@ static UpdateMap chainUpdates(const VarMan &varMan, const UpdateMap &first, cons
  * Special case for chaining linear rules.
  * The behaviour is the same as for general rules, but the implementation is simpler (and possibly faster).
  */
-static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second,
+static option<LinearRule> chainLinearRules(VarMan &varMan, const LinearRule &first, const LinearRule &second,
                                            bool checkSat)
 {
     assert(first.getRhsLoc() == second.getLhsLoc());
 
     auto newLhs = chainLhss(varMan, first.getLhs(), first.getUpdate(), second.getLhs(), checkSat);
     if (!newLhs) {
-        debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
     }
 
-    UpdateMap newUpdate = chainUpdates(varMan, first.getUpdate(), second.getUpdate());
-    return LinearRule(newLhs.get(), RuleRhs(second.getRhsLoc(), newUpdate));
+    return LinearRule(newLhs.get(), RuleRhs(second.getRhsLoc(), second.getUpdate().compose(first.getUpdate())));
 }
 
 
@@ -142,14 +107,13 @@ static option<LinearRule> chainLinearRules(const VarMan &varMan, const LinearRul
  * with the second rule (the locations must match).
  * @return The resulting rule, unless it can be shown to be unsatisfiable.
  */
-static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, unsigned int firstRhsIdx, const Rule &second,
+static option<Rule> chainRulesOnRhs(VarMan &varMan, const Rule &first, unsigned int firstRhsIdx, const Rule &second,
                                     bool checkSat)
 {
-    const UpdateMap &firstUpdate = first.getUpdate(firstRhsIdx);
+    const Subs &firstUpdate = first.getUpdate(firstRhsIdx);
 
     auto newLhs = chainLhss(varMan, first.getLhs(), firstUpdate, second.getLhs(), checkSat);
     if (!newLhs) {
-        debugChain("Cannot chain rules due to z3::unsat/unknown: " << first << " + " << second);
         return {};
     }
 
@@ -163,8 +127,7 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, uns
 
     // insert the rhss of second, chained with first's update
     for (const RuleRhs &secondRhs : second.getRhss()) {
-        UpdateMap newUpdate = chainUpdates(varMan, firstUpdate, secondRhs.getUpdate());
-        newRhss.push_back(RuleRhs(secondRhs.getLoc(), newUpdate));
+        newRhss.push_back(RuleRhs(secondRhs.getLoc(), secondRhs.getUpdate().compose(firstUpdate)));
     }
 
     // keep the last rhss of first (after the one we want to chain)
@@ -180,7 +143,7 @@ static option<Rule> chainRulesOnRhs(const VarMan &varMan, const Rule &first, uns
  * Implementation of chaining for nonlinear rules,
  * chains all rhss that lead to second's lhs loc with second.
  */
-static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first, const Rule &second, bool checkSat) {
+static option<Rule> chainNonlinearRules(VarMan &varMan, const Rule &first, const Rule &second, bool checkSat) {
     Rule res = first;
 
     // Iterate over rhss, chain every rhs whose location matches second's lhs location.
@@ -207,7 +170,7 @@ static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first,
         }
     }
 
-    return res;
+    return {res};
 }
 
 
@@ -215,7 +178,7 @@ static option<Rule> chainNonlinearRules(const VarMan &varMan, const Rule &first,
 // ##  Public Interface  ##
 // ########################
 
-option<Rule> Chaining::chainRules(const VarMan &varMan, const Rule &first, const Rule &second, bool checkSat) {
+option<Rule> Chaining::chainRules(VarMan &varMan, const Rule &first, const Rule &second, bool checkSat) {
     // Use the simpler/faster implementation if applicable (even if we have to copy for the conversion)
     if (first.isLinear() && second.isLinear()) {
         auto res = chainLinearRules(varMan, first.toLinear(), second.toLinear(), checkSat);
@@ -228,7 +191,7 @@ option<Rule> Chaining::chainRules(const VarMan &varMan, const Rule &first, const
     return chainNonlinearRules(varMan, first, second, checkSat);
 }
 
-option<LinearRule> Chaining::chainRules(const VarMan &varMan, const LinearRule &first, const LinearRule &second,
+option<LinearRule> Chaining::chainRules(VarMan &varMan, const LinearRule &first, const LinearRule &second,
                                         bool checkSat)
 {
     return chainLinearRules(varMan, first.toLinear(), second.toLinear(), checkSat);

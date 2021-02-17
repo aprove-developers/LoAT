@@ -18,38 +18,10 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "../expr/expression.hpp"
-#include <boost/utility.hpp> // for pair
-
-class VariableManager;
-
 
 // some typedefs for clarity
 using TransIdx = unsigned int;
 using LocationIdx = unsigned int;
-using VariableIdx = unsigned int;
-using VariablePair = std::pair<VariableIdx, VariableIdx>;
-
-
-// GuardList is a list of expressions with some additional methods for convenience
-class GuardList : public std::vector<Expression> {
-public:
-    // inherit constructors of base class
-    using std::vector<Expression>::vector;
-    void collectVariables(ExprSymbolSet &res) const;
-    GuardList subs(const GiNaC::exmap &sigma) const;
-    void applySubstitution(const GiNaC::exmap &sigma);
-};
-
-
-// UpdateMap is a map from variables (as indices) to an expression (with which the variable is updated),
-// with some additional methods for convenience
-class UpdateMap : public std::map<VariableIdx,Expression> {
-public:
-    bool isUpdated(VariableIdx var) const;
-    Expression getUpdate(VariableIdx var) const;
-    GiNaC::exmap toSubstitution(const VariableManager &varMan) const;
-};
 
 
 #endif // TYPES_H

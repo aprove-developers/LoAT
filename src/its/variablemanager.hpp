@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include "../expr/expression.hpp"
+#include "../expr/boolexpr.hpp"
 
 
 // Abbreviation since the VariableManager is passed around quite a bit
@@ -19,29 +20,21 @@ typedef VariableManager VarMan;
  */
 class VariableManager {
 public:
-    // Mapping between indices and names
-    bool hasVarIdx(VariableIdx idx) const;
-    std::string getVarName(VariableIdx idx) const;
-
-    // Mapping between indices and ginac symbols
-    VariableIdx getVarIdx(const ExprSymbol &var) const;
-    ExprSymbol getVarSymbol(VariableIdx idx) const;
 
     // Handling of temporary variables
-    const std::set<VariableIdx>& getTempVars() const;
-    bool isTempVar(VariableIdx idx) const;
-    bool isTempVar(const ExprSymbol &var) const;
+    const VarSet& getTempVars() const;
+    bool isTempVar(const Var &var) const;
 
     // Useful to iterate over all variables (for printing/debugging)
-    size_t getVariableCount() const;
+    VarSet getVars() const;
 
     /**
      * Adds a new fresh variable based on the given name
      * (the given name is used if it is still available, otherwise it is modified)
      * @return the VariableIdx of the newly added variable
      */
-    VariableIdx addFreshVariable(std::string basename);
-    VariableIdx addFreshTemporaryVariable(std::string basename);
+    Var addFreshVariable(std::string basename);
+    Var addFreshTemporaryVariable(std::string basename);
 
     /**
      * Generates a fresh (unused) GiNaC symbol, but does _not_ add it to the list of variables
@@ -51,31 +44,39 @@ public:
      *
      * @return The newly created symbol (_not_ associated with a variable index!)
      */
-    ExprSymbol getFreshUntrackedSymbol(std::string basename) const;
+    Var getFreshUntrackedSymbol(std::string basename, Expr::Type type);
+
+    Expr::Type getType(const Var &x) const;
+
+    BoolExpr freshBoolVar();
 
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index
-    VariableIdx addVariable(std::string name);
+    Var addVariable(std::string name);
 
     // Generates a yet unused name starting with the given string
-    std::string getFreshName(std::string basename) const;
+    std::string getFreshName(std::string basename);
 
 private:
     // Data stored for each variable
     struct Variable {
         std::string name;
-        ExprSymbol symbol;
+        Var symbol;
     };
 
     // List of all variables (VariableIdx is an index in this list; a Variable is a name and a ginac symbol)
     // Note: Variables are never removed, so this list is appended, but otherwise not modified
-    std::vector<Variable> variables;
+    VarSet variables;
+    VarMap<Expr::Type> untrackedVariables;
 
     // The set of variables (identified by their index) that are used as temporary variables (not bound by lhs)
-    std::set<VariableIdx> temporaryVariables;
+    VarSet temporaryVariables;
 
+    std::map<std::string, uint> basenameCount;
     // Reverse mapping for efficiency
-    std::map<std::string,VariableIdx> variableNameLookup;
+    std::map<std::string, Var> variableNameLookup;
+
+    uint boolVarCount = 1;
 };
 
 

@@ -20,7 +20,7 @@
 
 #include "../its/rule.hpp"
 #include "../its/itsproblem.hpp"
-#include "../accelerate/forward.hpp"
+#include "../util/proof.hpp"
 
 namespace nonterm {
 
@@ -28,7 +28,9 @@ namespace nonterm {
 
     public:
 
-        static option<std::pair<Rule, ForwardAcceleration::ResultKind>> apply(const Rule &r, const ITSProblem &its, const LocationIdx &sink);
+        static option<std::pair<Rule, Proof>> universal(const Rule &r, ITSProblem &its, const LocationIdx &sink);
+
+        static option<std::pair<Rule, Proof>> fixedPoint(const Rule &r, ITSProblem &its, const LocationIdx &sink);
 
     };
 

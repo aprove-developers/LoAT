@@ -28,23 +28,20 @@ namespace util {
 
     public:
 
-        static const ExprSymbolSet find(
-                const GuardList &constraints,
-                const std::vector<GiNaC::exmap> &updates,
-                const GuardList &guard,
-                const VariableManager &varMan);
+        static const VarSet find(
+                const VarSet &varsOfInterest,
+                const std::vector<Subs> &updates,
+                const BoolExpr guard);
 
-        static const ExprSymbolSet find(
-                const GuardList &constraints,
-                const std::vector<UpdateMap> &updates,
-                const GuardList &guard,
-                const VariableManager &varMan);
+        static const VarSet find(
+                const Guard &constraints,
+                const std::vector<Subs> &updates,
+                const BoolExpr guard);
 
-        static const ExprSymbolSet find(
-                const GuardList &constraints,
+        static const VarSet find(
+                const Guard &constraints,
                 const std::vector<RuleRhs> &rhss,
-                const GuardList &guard,
-                const VariableManager &varMan);
+                const BoolExpr guard);
 
     };
 

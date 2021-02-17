@@ -17,9 +17,9 @@
 
 #include "itsproblem.hpp"
 #include "export.hpp"
-
 using namespace std;
 
+std::recursive_mutex ITSProblem::mutex;
 
 bool ITSProblem::isEmpty() const {
     return rules.empty();
@@ -51,15 +51,26 @@ bool ITSProblem::hasRule(TransIdx transition) const {
 }
 
 const Rule& ITSProblem::getRule(TransIdx transition) const {
-    return rules.at(transition);
+    lock();
+    assert(rules.count(transition) > 0);
+    const Rule &res = rules.at(transition);
+    unlock();
+    return res;
 }
 
-Rule& ITSProblem::getRuleMut(TransIdx transition) {
-    return rules.at(transition);
+void ITSProblem::lock() {
+    mutex.lock();
+}
+
+void ITSProblem::unlock() {
+    mutex.unlock();
 }
 
 LinearRule ITSProblem::getLinearRule(TransIdx transition) const {
-    return rules.at(transition).toLinear();
+    lock();
+    const LinearRule &res = rules.at(transition).toLinear();
+    unlock();
+    return res;
 }
 
 const std::set<LocationIdx>& ITSProblem::getTransitionTargets(TransIdx idx) const {
@@ -113,8 +124,10 @@ std::set<LocationIdx> ITSProblem::getPredecessorLocations(LocationIdx loc) const
 }
 
 void ITSProblem::removeRule(TransIdx transition) {
+    lock();
     graph.removeTrans(transition);
     rules.erase(transition);
+    unlock();
 }
 
 TransIdx ITSProblem::addRule(Rule rule) {
@@ -125,8 +138,10 @@ TransIdx ITSProblem::addRule(Rule rule) {
     }
 
     // add transition and store mapping to rule
+    lock();
     TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
     rules.emplace(idx, rule);
+    unlock();
     return idx;
 }
 
@@ -175,7 +190,7 @@ void ITSProblem::removeOnlyLocation(LocationIdx loc) {
     assert(removed.empty());
 }
 
-void ITSProblem::removeLocationAndRules(LocationIdx loc) {
+std::set<TransIdx> ITSProblem::removeLocationAndRules(LocationIdx loc) {
     // The initial location must not be removed
     assert(loc != initialLocation);
 
@@ -187,6 +202,7 @@ void ITSProblem::removeLocationAndRules(LocationIdx loc) {
     for (TransIdx t : removed) {
         removeRule(t);
     }
+    return removed;
 }
 
 void ITSProblem::print(std::ostream &s) const {

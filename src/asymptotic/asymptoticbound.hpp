@@ -9,6 +9,7 @@
 #include "../its/variablemanager.hpp"
 #include "inftyexpression.hpp"
 #include "limitproblem.hpp"
+#include "../util/proof.hpp"
 
 
 class AsymptoticBound {
@@ -19,22 +20,22 @@ private:
             : complexity(), upperBound(0), lowerBound(0), inftyVars(0) {
         }
 
-        GiNaC::exmap solution;
+        Subs solution;
         Complexity complexity;
         int upperBound;
         int lowerBound;
         int inftyVars;
     };
 
-    AsymptoticBound(const VarMan &varMan, GuardList guard, Expression cost, bool finalCheck);
+    AsymptoticBound(VarMan &varMan, Guard guard, Expr cost, bool finalCheck, uint timeout);
 
     void initLimitVectors();
     void normalizeGuard();
-    void createInitialLimitProblem();
+    void createInitialLimitProblem(VariableManager &varMan);
     void propagateBounds();
-    GiNaC::exmap calcSolution(const LimitProblem &limitProblem);
-    int findUpperBoundforSolution(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
-    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const GiNaC::exmap &solution);
+    Subs calcSolution(const LimitProblem &limitProblem);
+    int findUpperBoundforSolution(const LimitProblem &limitProblem, const Subs &solution);
+    int findLowerBoundforSolvedCost(const LimitProblem &limitProblem, const Subs &solution);
     void removeUnsatProblems();
     bool solveViaSMT(Complexity currentRes);
     bool solveLimitProblem();
@@ -49,22 +50,21 @@ private:
     bool tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it);
     bool tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it);
     bool applyLimitVectorsThatMakeSense(const InftyExpressionSet::const_iterator &it,
-                                        const Expression &l, const Expression &r,
+                                        const Expr &l, const Expr &r,
                                         const std::vector<LimitVector> &limitVectors);
     bool tryInstantiatingVariable();
     bool trySubstitutingVariable();
     bool trySmtEncoding(Complexity currentRes);
 
-    //check Timeout::soft or Timeout::hard, depending on finalCheck
-    bool isTimeout() const;
-
 private:
-    const VariableManager &varMan;
-    const GuardList guard;
-    const Expression cost;
+    VariableManager &varMan;
+    const Guard guard;
+    const Expr cost;
     bool finalCheck;
-    GuardList normalizedGuard;
+    Guard normalizedGuard;
     ComplexityResult bestComplexity;
+    Proof proof;
+    uint timeout;
 
     std::vector<std::vector<LimitVector>> addition;
     std::vector<std::vector<LimitVector>> multiplication;
@@ -74,7 +74,7 @@ private:
     std::vector<LimitProblem> solvedLimitProblems;
     LimitProblem currentLP;
 
-    std::vector<GiNaC::exmap> substitutions;
+    std::vector<Subs> substitutions;
 
     std::vector<LimitVector> toApply;
 
@@ -87,17 +87,15 @@ public:
         Complexity cpx;
 
         // The resulting cost, after expressing variables in terms of n.
-        Expression solvedCost;
-
-        // Whether the complexity of the cost had to be reduced due to the size of other variables.
-        // E.g. "cost x, guard x^2 == y" only has complexity sqrt(n), as y is also part of the input!
-        bool reducedCpx;
+        Expr solvedCost;
 
         // The number of non-constant variables (i.e., which grow with n).
         int inftyVars;
 
-        explicit Result(Complexity c) : cpx(c), solvedCost(0), reducedCpx(false), inftyVars(0) {}
-        Result(Complexity c, Expression x, bool r, int v) : cpx(c), solvedCost(x), reducedCpx(r), inftyVars(v) {}
+        Proof proof;
+
+        explicit Result(Complexity c) : cpx(c), solvedCost(0), inftyVars(0) {}
+        Result(Complexity c, Expr x, int v, Proof proof) : cpx(c), solvedCost(x), inftyVars(v), proof(proof) {}
     };
 
     /**
@@ -106,16 +104,25 @@ public:
      * @param finalCheck enables more sophisticated backtracking and uses Timeout::hard
      */
     static Result determineComplexity(VarMan &varMan,
-                                      const GuardList &guard,
-                                      const Expression &cost,
-                                      bool finalCheck,
-                                      const Complexity &currentRes);
+                                      const Guard &guard,
+                                      const Expr &cost,
+                                      bool finalCheck = false,
+                                      const Complexity &currentRes = Complexity::Const,
+                                      uint timeout = Config::Smt::LimitTimeout);
 
-    static Result determineComplexityViaSMT(const VarMan &varMan,
-                                            const GuardList &guard,
-                                            const Expression &cost,
-                                            bool finalCheck,
-                                            Complexity currentRes);
+    static Result determineComplexityViaSMT(VarMan &varMan,
+                                            const Guard &guard,
+                                            const Expr &cost,
+                                            bool finalCheck = false,
+                                            Complexity currentRes = Complexity::Const,
+                                            uint timeout = Config::Smt::LimitTimeout);
+
+    static Result determineComplexityViaSMT(VarMan &varMan,
+                                            const BoolExpr guard,
+                                            const Expr &cost,
+                                            bool finalCheck = false,
+                                            Complexity currentRes = Complexity::Const,
+                                            uint timeout = Config::Smt::LimitTimeout);
 
 };
 

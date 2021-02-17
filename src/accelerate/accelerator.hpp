@@ -18,13 +18,12 @@
 #ifndef ACCELERATE_H
 #define ACCELERATE_H
 
-#include "../global.hpp"
-
 #include "../its/types.hpp"
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
 #include "meter/metering.hpp"
-#include "forward.hpp"
+#include "recursionacceleration.hpp"
+#include "result.hpp"
 
 
 class Accelerator {
@@ -42,21 +41,19 @@ public:
      * @return true iff the ITS was modified
      *         (which is always the case if any simple loops were present)
      */
-    static bool accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules);
+    static option<Proof> accelerateSimpleLoops(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &resultingRules);
 
 private:
     // Potential candidate for the inner loop when nesting two loops.
     // Inner loops are always accelerated loops, so this stores the original and the accelerated rule.
     // The information on the original rule is only used to avoid nesting a loop with itself
-    struct InnerCandidate {
+    struct NestingCandidate {
         TransIdx oldRule;
         TransIdx newRule;
-    };
+        Complexity cpx;
 
-    // Potential candidate for the outer loop when nesting two loops.
-    // Outer loops are always un-accelerated rules, so we just store an original rule here.
-    struct OuterCandidate {
-        TransIdx oldRule;
+        NestingCandidate() {}
+        NestingCandidate(TransIdx oldRule, TransIdx newRule, Complexity cpx): oldRule(oldRule), newRule(newRule), cpx(cpx) {}
     };
 
 private:
@@ -66,7 +63,7 @@ private:
      * Main function. Tries to accelerate and nest all loops
      * by calling the methods below in a suitable way.
      */
-    void run();
+    option<Proof> run();
 
     /**
      * Helper that calls Preprocess::simplifyRule
@@ -79,7 +76,7 @@ private:
      * if this fails, by backward acceleration.
      * @returns The acceleration result (including accelerated rules, if successful)
      */
-    ForwardAcceleration::Result tryAccelerate(const Rule &rule) const;
+    Acceleration::Result tryAccelerate(const Rule &rule, Complexity cpx) const;
 
 
     /**
@@ -98,7 +95,7 @@ private:
      * @returns If successful, the resulting accelerated rule(s). Otherwise,
      * the acceleration result from accelerating the original rule (before shortening).
      */
-    ForwardAcceleration::Result accelerateOrShorten(const Rule &rule) const;
+    Acceleration::Result accelerateOrShorten(const Rule &rule, Complexity cpx) const;
 
 
     /**
@@ -108,29 +105,15 @@ private:
     TransIdx addResultingRule(Rule rule);
 
     /**
-     * Helper function that checks with a simple heuristic if the transitions might be nested loops
-     * (this is done to avoid too many nesting attemts, as finding a metering function takes some time).
-     */
-    bool canNest(const LinearRule &inner, const LinearRule &outer) const;
-
-    /**
-     * Adds the given accelerated rule to the ITS.
-     * Also tries to chain the rule `chain` in front of the accelerated rule (and adds the result, if any).
-     * Takes care of proof output (the arguments inner, outer are only used for the output).
-     */
-    void addNestedRule(const Rule &accelerated, const LinearRule &chain,
-                       TransIdx inner, TransIdx outer);
-
-    /**
      * Tries to nest the given nesting candidates (i.e., rules).
      * Returns true if nesting was successful (at least one new rule was added).
      */
-    bool nestRules(const Complexity &currentCpx, const InnerCandidate &inner, const OuterCandidate &outer);
+    void nestRules(const NestingCandidate &inner, const NestingCandidate &outer);
 
     /**
      * Main implementation of nesting
      */
-    void performNesting(std::vector<InnerCandidate> inner, std::vector<OuterCandidate> outer);
+    void performNesting(std::unordered_map<TransIdx, NestingCandidate> origRules, std::vector<NestingCandidate> todo);
 
     /**
      * Removes all given loops, unless they are contained in keepRules.
@@ -138,9 +121,9 @@ private:
      */
     void removeOldLoops(const std::vector<TransIdx> &loops);
 
-    const Rule chain(const Rule &rule) const;
+    const option<LinearRule> chain(const LinearRule &rule) const;
 
-    unsigned int numNotInUpdate(const UpdateMap &up) const;
+    unsigned int numNotInUpdate(const Subs &up) const;
 
 private:
     // The ITS problem. Accelerated rules are added to the ITS immediately,
@@ -160,7 +143,9 @@ private:
     // All rules where acceleration failed, but where we want to keep the un-accelerated rule.
     std::set<TransIdx> keepRules;
 
-    const ForwardAcceleration::Result strengthenAndAccelerate(const Rule &rule) const;
+    const Acceleration::Result strengthenAndAccelerate(const LinearRule &rule, Complexity cpx) const;
+
+    Proof proof;
 
 };
 

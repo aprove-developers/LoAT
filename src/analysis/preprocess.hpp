@@ -34,12 +34,12 @@ namespace Preprocess
      * @param rule The rule to be simplified, is modified.
      * @returns true iff rule was modified
      */
-    bool preprocessRule(const VarMan &varMan, Rule &rule);
+    option<Rule> preprocessRule(VarMan &varMan, const Rule &rule);
 
     /**
      * A simpler/cheaper version of preprocessRule without any smt queries.
      */
-    bool simplifyRule(const VarMan &varMan, Rule &rule);
+    option<Rule> simplifyRule(VarMan &varMan, const Rule &rule, bool fast);
 
     /**
      * Simplifies the guard by dropping trivial constraints and constraints
@@ -53,21 +53,15 @@ namespace Preprocess
      *
      * @return true iff the given guard was modified (some constraints were removed)
      */
-    bool simplifyGuard(GuardList &guard);
-
-    /**
-     * Performs z3 queries to remove constraints which are implied by the previous
-     * constraints. This involves a linear number of queries and is thus rather slow.
-     *
-     * @return true iff the given guard was modified (some constraints were removed)
-     */
-    bool simplifyGuardBySmt(GuardList &guard);
+    option<Rule> simplifyGuard(const Rule &rule, const VariableManager &varMan);
 
     /**
      * Removes trivial updates of the form x <- x.
      * @return true iff update was modified
      */
-    bool removeTrivialUpdates(const VarMan &varMan, UpdateMap &update);
+    option<Rule> removeTrivialUpdates(const Rule &rule);
+
+    bool removeTrivialUpdates(Subs &subs);
 
     /**
      * Tries to remove as many temporary variables from update right-hand sides
@@ -76,7 +70,7 @@ namespace Preprocess
      * @param rule the rule, modified
      * @return true iff rule was modified
      */
-    bool eliminateTempVars(const VarMan &varMan, Rule &rule);
+    option<Rule> eliminateTempVars(VarMan &varMan, const Rule &rule, bool fast);
 }
 
 #endif // PREPROCESS_H

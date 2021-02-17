@@ -18,39 +18,110 @@
 #ifndef LINEAR_H
 #define LINEAR_H
 
-#include "../global.hpp"
-
 #include "../its/itsproblem.hpp"
 #include "../expr/expression.hpp"
+#include "../util/proof.hpp"
+#include "../its/export.hpp"
 
 #include <fstream>
+#include <mutex>
 
 
 /**
  * Represents the final runtime complexity result,
  * including the final cost and guard
  */
-struct RuntimeResult {
+class RuntimeResult {
+private:
     // The final complexity (computed from bound and guard)
     Complexity cpx;
 
     // The final cost expression, after solving by asymptotic check
-    Expression solvedCost;
+    Expr solvedCost;
 
     // The final cost, before solving
-    Expression cost;
+    Expr cost;
 
     // The final guard
-    GuardList guard;
+    BoolExpr guard;
 
-    // If false, cpx is the complexity of bound.
-    // If true, the complexity had to be reduced to satisfy the guard (e.g. cost x and guard x = y^2).
-    bool reducedCpx;
+    Proof proof;
 
+    std::recursive_mutex mutex;
+
+public:
     // Default constructor yields unknown complexity
-    RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0), reducedCpx(false) {}
-};
+    RuntimeResult() : cpx(Complexity::Unknown), solvedCost(0), cost(0) {}
 
+    void update(const BoolExpr guard, const Expr &cost, const Expr &solvedCost, const Complexity &cpx) {
+        lock();
+        this->guard = guard;
+        this->cost = cost;
+        this->solvedCost = solvedCost;
+        this->cpx = cpx;
+        unlock();
+    }
+
+    void majorProofStep(const std::string &step, const ITSProblem &its) {
+        lock();
+        proof.majorProofStep(step, its);
+        unlock();
+    }
+
+    void minorProofStep(const std::string &step, const ITSProblem &its) {
+        lock();
+        proof.minorProofStep(step, its);
+        unlock();
+    }
+
+    void headline(const std::string &s) {
+        lock();
+        proof.headline(s);
+        unlock();
+    }
+
+    void concat(const Proof &p) {
+        lock();
+        proof.concat(p);
+        unlock();
+    }
+
+    void lock() {
+        mutex.lock();
+    }
+
+    void unlock() {
+        mutex.unlock();
+    }
+
+    Proof getProof() {
+        return proof;
+    }
+
+    Complexity getCpx() {
+        return cpx;
+    }
+
+    friend std::ostream& operator<<(std::ostream &s, const RuntimeResult &res) {
+        s << "Cpx degree: ";
+        switch (res.cpx.getType()) {
+        case Complexity::CpxPolynomial: s << res.cpx.getPolynomialDegree().toFloat() << std::endl; break;
+        case Complexity::CpxUnknown: s << "?" << std::endl; break;
+        default: s << res.cpx << std::endl;
+        }
+        s << std::endl;
+        s << "Solved cost: " << res.solvedCost << std::endl;
+        s << "Rule cost:   ";
+        ITSExport::printCost(res.cost, s);
+        s << std::endl;
+        if (res.guard) {
+            s << "Rule guard:  ";
+            ITSExport::printGuard(res.guard, s);
+        }
+        return s;
+    }
+
+};
 
 /**
  * Analysis of ITSProblems where all rules are linear.
@@ -58,7 +129,7 @@ struct RuntimeResult {
  */
 class Analysis {
 public:
-    static RuntimeResult analyze(ITSProblem &its);
+    static void analyze(ITSProblem &its);
 
 private:
     explicit Analysis(ITSProblem &its);
@@ -67,7 +138,11 @@ private:
      * Main analysis algorithm.
      * Combines chaining, acceleration, pruning in some sensible order.
      */
-    RuntimeResult run();
+    void run();
+
+    void simplify(RuntimeResult &res, Proof &proof);
+
+    void finalize(RuntimeResult &res);
 
     /**
      * Makes sure that the cost of a rule is always nonnegative when the rule is applicable
@@ -75,7 +150,7 @@ private:
      * @note Does not check if "cost >= 0" is implied by the guard (should be covered by preprocessing)
      * @return true iff any rule was modified.
      */
-    bool ensureNonnegativeCosts();
+    option<Proof> ensureNonnegativeCosts();
 
     /**
      * Makes sure the initial location has no incoming rules (by adding a new one, if required).
@@ -96,7 +171,7 @@ private:
      * @param eliminateCostConstraints if true, "cost >= 0" is removed from the guard if it is implied by the guard
      * @return true iff the ITS was modified
      */
-    bool preprocessRules();
+    option<Proof> preprocessRules();
 
     /**
      * Returns true iff all all rules start from the initial state.
@@ -104,11 +179,8 @@ private:
     bool isFullySimplified() const;
 
     // Wrapper methods for Chaining/Accelerator/Pruning methods (adding statistics, debug output)
-    bool chainLinearPaths();
-    bool chainTreePaths();
     bool eliminateALocation(std::string &eliminatedLocation);
-    bool chainAcceleratedLoops(const std::set<TransIdx> &acceleratedRules);
-    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules);
+    bool accelerateSimpleLoops(std::set<TransIdx> &acceleratedRules, Proof &proof);
     bool pruneRules();
 
     /**
@@ -117,12 +189,12 @@ private:
      *
      * @return If a satisfiable rule is found, returns the corresponding runtime result.
      */
-    option<RuntimeResult> checkConstantComplexity() const;
+    void checkConstantComplexity(RuntimeResult &res, Proof &proof) const;
 
     /**
      * For a fully chained ITS problem, this calculates the maximum runtime complexity (using asymptotic bounds)
      */
-    RuntimeResult getMaxRuntime();
+    void getMaxRuntime(RuntimeResult &res);
 
     /**
      * In case of a timeout (when the ITS is not fully chained), this tries to find a good partial result.
@@ -131,7 +203,7 @@ private:
      * Then, these rules are chained with their successors and the process is repeated.
      * This way, complexity results are quickly obtained and deeper rules are considered if enough time is left.
      */
-    RuntimeResult getMaxPartialResult();
+    void getMaxPartialResult(RuntimeResult &res);
 
     /**
      * Used by getMaxRuntime and getMaxPartialResult.
@@ -139,7 +211,7 @@ private:
      * computed runtime or currResult, whichever is larger. If currResult is given, rules whose
      * complexity cannot be larger than currResult are skipped to make the computation faster.
      */
-    RuntimeResult getMaxRuntimeOf(const std::set<TransIdx> &rules, RuntimeResult currResult);
+    void getMaxRuntimeOf(const std::set<TransIdx> &rules, RuntimeResult &res);
 
     /**
      * This removes all subgraphs where all rules only have constant/unknown cost (this includes simple loops!).
@@ -148,26 +220,14 @@ private:
     void removeConstantPathsAfterTimeout();
 
     /**
-     * Prints the ITS problem to the proof output and, if dot output is enabled,
-     * to the dot output stream using the given descriptive text.
-     */
-    void printForProof(const std::string &dotDescription);
-
-    /**
      * Prints the final complexity result with all relevant information to the proof output
      */
-    void printResult(const RuntimeResult &runtime);
+    void printResult(Proof &proof, RuntimeResult &runtime);
 
-    // Handling of dot export
-    void setupDotOutput();
-    void finalizeDotOutput(const RuntimeResult &runtime);
 
 private:
     ITSProblem &its;
 
-    // State for dot export (file stream and number of written subgraphs, since they have to be numbered)
-    uint dotCounter = 0;
-    std::ofstream dotStream;
 };
 
 #endif // LINEAR_H

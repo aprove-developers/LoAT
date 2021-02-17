@@ -23,36 +23,43 @@
 
 #include "types.hpp"
 #include "../util/option.hpp"
-
+#include "../expr/boolexpr.hpp"
+#include "../config.hpp"
 
 
 class RuleLhs {
     LocationIdx loc;
-    GuardList guard;
-    Expression cost;
+    BoolExpr guard;
+    Expr cost;
 
 public:
-    RuleLhs(LocationIdx loc, GuardList guard) : RuleLhs(loc, guard, Expression(1)) {}
-    RuleLhs(LocationIdx loc, GuardList guard, Expression cost) : loc(loc), guard(guard), cost(cost) {}
+    RuleLhs(LocationIdx loc, BoolExpr guard) : RuleLhs(loc, guard, 1) {}
+    RuleLhs(LocationIdx loc, BoolExpr guard, Expr cost) : loc(loc), guard(guard), cost(cost) {}
 
     LocationIdx getLoc() const { return loc; }
-    const GuardList& getGuard() const { return guard; }
-    GuardList& getGuardMut() { return guard; }
-    const Expression& getCost() const { return cost; }
-    Expression& getCostMut() { return cost; }
+    const BoolExpr& getGuard() const { return guard; }
+    const Expr& getCost() const { return cost; }
+
+    void collectVars(VarSet &vars) const {
+        guard->collectVars(vars);
+        cost.collectVars(vars);
+    }
 };
 
 
 class RuleRhs {
     LocationIdx loc;
-    UpdateMap update;
+    Subs update;
 
 public:
-    RuleRhs(LocationIdx loc, UpdateMap update) : loc(loc), update(update) {}
+    RuleRhs(LocationIdx loc, Subs update) : loc(loc), update(update) {}
 
     LocationIdx getLoc() const { return loc; }
-    const UpdateMap& getUpdate() const { return update; }
-    UpdateMap& getUpdateMut() { return update; }
+    const Subs& getUpdate() const { return update; }
+
+    void collectVars(VarSet &vars) const {
+        update.collectAllVars(vars);
+    }
 
 };
 
@@ -77,7 +84,7 @@ public:
 
     // constructors for linear rules
     Rule(RuleLhs lhs, RuleRhs rhs);
-    Rule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update);
+    Rule(LocationIdx lhsLoc, BoolExpr guard, Expr cost, LocationIdx rhsLoc, Subs update);
 
     // constructs an empty rule (guard/update empty, cost 0)
     static LinearRule dummyRule(LocationIdx lhsLoc, LocationIdx rhsLoc);
@@ -88,12 +95,8 @@ public:
 
     // query lhs data
     LocationIdx getLhsLoc() const { return lhs.getLoc(); }
-    const GuardList& getGuard() const { return lhs.getGuard(); }
-    const Expression& getCost() const { return lhs.getCost(); }
-
-    // lhs mutation
-    GuardList& getGuardMut() { return lhs.getGuardMut(); }
-    Expression& getCostMut() { return lhs.getCostMut(); }
+    const BoolExpr& getGuard() const { return lhs.getGuard(); }
+    const Expr& getCost() const { return lhs.getCost(); }
 
     // iteration over right-hand sides
     const RuleRhs* rhsBegin() const { return &rhss.front(); }
@@ -103,9 +106,15 @@ public:
     size_t rhsCount() const { return rhss.size(); }
 
     // special methods for nonlinear rules (idx is an index to rhss)
-    LocationIdx getRhsLoc(int idx) const { return rhss[idx].getLoc(); }
-    const UpdateMap& getUpdate(int idx) const { return rhss[idx].getUpdate(); }
-    UpdateMap& getUpdateMut(int idx) { return rhss[idx].getUpdateMut(); }
+    LocationIdx getRhsLoc(uint idx) const { return rhss[idx].getLoc(); }
+    const std::vector<Subs> getUpdates() const {
+        std::vector<Subs> res;
+        for (const RuleRhs &rhs: rhss) {
+            res.push_back(rhs.getUpdate());
+        }
+        return res;
+    }
+    const Subs& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
 
     // conversion to linear rule
     bool isLinear() const;
@@ -117,13 +126,20 @@ public:
     // applies the given substitution to guard, cost, and the update's rhss (not to the update's lhss!)
     // Note: Result may be incorrect if an updated variable is updated (which is not checked!)
     // Note: It is always safe if only temporary variables are substituted.
-    void applySubstitution(const GiNaC::exmap &subs);
+    Rule subs(const Subs &subs) const;
 
     // Creates a new rule that only leads to the given location, the updates are cleared, guard/cost are kept
     LinearRule replaceRhssBySink(LocationIdx sink) const;
 
     // Removes all right-hand sides that lead to the given location, returns none if all rhss would be removed
     option<Rule> stripRhsLocation(LocationIdx toRemove) const;
+
+    Rule withGuard(const BoolExpr guard) const;
+    Rule withCost(const Expr &cost) const;
+    Rule withUpdate(uint i, const Subs &up) const;
+
+    VarSet vars() const;
+    void collectVars(VarSet &vars) const;
 };
 
 
@@ -142,13 +158,12 @@ public:
 class LinearRule : public Rule {
 public:
     LinearRule(RuleLhs lhs, RuleRhs rhs) : Rule(lhs, rhs) {}
-    LinearRule(LocationIdx lhsLoc, GuardList guard, Expression cost, LocationIdx rhsLoc, UpdateMap update)
+    LinearRule(LocationIdx lhsLoc, BoolExpr guard, Expr cost, LocationIdx rhsLoc, Subs update)
             : Rule(lhsLoc, guard, cost, rhsLoc, update) {}
 
     // special shorthands for linear rules, overwriting the general ones
     LocationIdx getRhsLoc() const { return Rule::getRhsLoc(0); }
-    const UpdateMap& getUpdate() const { return Rule::getUpdate(0); }
-    UpdateMap& getUpdateMut() { return Rule::getUpdateMut(0); }
+    const Subs& getUpdate() const { return Rule::getUpdate(0); }
 };
 
 

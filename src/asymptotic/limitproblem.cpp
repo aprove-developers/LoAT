@@ -1,29 +1,23 @@
 #include "limitproblem.hpp"
 
-#include <z3++.h>
 #include <sstream>
 #include <utility>
 
-#include "../debug.hpp"
-#include "../expr/relation.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
 
-using namespace GiNaC;
-
-LimitProblem::LimitProblem()
-    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
+LimitProblem::LimitProblem(VariableManager &varMan)
+    : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &cost)
-    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
-    for (const Expression &ex : normalizedGuard) {
-        assert(Relation::isGreaterThanZero(ex));
+LimitProblem::LimitProblem(const Guard &normalizedGuard, const Expr &cost, VariableManager &varMan)
+    : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
+    for (const Rel &rel : normalizedGuard) {
+        assert(rel.isGZeroConstraint());
 
-        addExpression(InftyExpression(ex.lhs(), POS));
+        addExpression(InftyExpression(rel.lhs(), POS));
     }
 
-    assert(!is_a<relational>(cost));
     addExpression(InftyExpression(cost, POS_INF));
 
     (*log) << "Created initial limit problem:" << std::endl
@@ -31,11 +25,11 @@ LimitProblem::LimitProblem(const GuardList &normalizedGuard, const Expression &c
 }
 
 
-LimitProblem::LimitProblem(const GuardList &normalizedGuard)
-    : variableN("n"), unsolvable(false), log(new std::ostringstream()) {
-    for (const Expression &ex : normalizedGuard) {
-        assert(Relation::isGreaterThanZero(ex));
-        addExpression(InftyExpression(ex.lhs(), POS));
+LimitProblem::LimitProblem(const Guard &normalizedGuard, VariableManager &varMan)
+    : variableN("n"), unsolvable(false), varMan(varMan), log(new std::ostringstream()) {
+    for (const Rel &rel : normalizedGuard) {
+        assert(rel.isGZeroConstraint());
+        addExpression(InftyExpression(rel.lhs(), POS));
     }
 
     (*log) << "Created initial limit problem without cost:" << std::endl
@@ -48,6 +42,7 @@ LimitProblem::LimitProblem(const LimitProblem &other)
       variableN(other.variableN),
       substitutions(other.substitutions),
       unsolvable(other.unsolvable),
+      varMan(other.varMan),
       log(new std::ostringstream()) {
     (*log) << other.log->str();
 }
@@ -58,6 +53,7 @@ LimitProblem& LimitProblem::operator=(const LimitProblem &other) {
         set = other.set;
         variableN = other.variableN;
         substitutions = other.substitutions;
+        varMan = other.varMan;
         (*log) << other.log->str();
         unsolvable = other.unsolvable;
     }
@@ -71,6 +67,7 @@ LimitProblem::LimitProblem(LimitProblem &&other)
       variableN(other.variableN),
       substitutions(std::move(other.substitutions)),
       unsolvable(other.unsolvable),
+      varMan(other.varMan),
       log(std::move(other.log)) {
 }
 
@@ -80,6 +77,7 @@ LimitProblem& LimitProblem::operator=(LimitProblem &&other) {
         set = std::move(other.set);
         variableN = other.variableN;
         substitutions = std::move(other.substitutions);
+        varMan = other.varMan;
         log = std::move(other.log);
         unsolvable = other.unsolvable;
     }
@@ -130,7 +128,7 @@ InftyExpressionSet::iterator LimitProblem::cend() const {
 
 
 void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it,
-                                    const Expression &l, const Expression &r,
+                                    const Expr &l, const Expr &r,
                                     const LimitVector &lv) {
     Direction dir = it->getDirection();
     assert(lv.isApplicable(dir));
@@ -140,48 +138,37 @@ void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it
 
     (*log) << "applying transformation rule (A), replacing " << *it
         << " by " << firstIE << " and " << secondIE << " using " << lv << std::endl;
-    debugLimitProblem("applying transformation rule (A), replacing " << *it
-                      << " by " << firstIE << " and " << secondIE << " using " << lv);
-
 
     set.erase(it);
     addExpression(firstIE);
     addExpression(secondIE);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
 void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) {
-    assert(it->info(info_flags::integer));
+    assert(it->isInt());
 
-    numeric num = ex_to<numeric>(*it);
+    GiNaC::numeric num = it->toNum();
     Direction dir = it->getDirection();
     assert((num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS));
 
     (*log) << "applying transformation rule (B), deleting " << *it << std::endl;
-    debugLimitProblem("applying transformation rule (B), deleting " << *it);
 
     set.erase(it);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
-void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
+void LimitProblem::substitute(const Subs &sub, int substitutionIndex) {
     for (auto const &s : sub) {
         assert(!s.second.has(s.first));
     }
 
     (*log) << "applying transformation rule (C) using substitution " << sub << std::endl;
-    debugLimitProblem("applying transformation rule (C) using substitution " << sub);
 
     InftyExpressionSet oldSet;
     oldSet.swap(set);
@@ -192,30 +179,23 @@ void LimitProblem::substitute(const GiNaC::exmap &sub, int substitutionIndex) {
     substitutions.push_back(substitutionIndex);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
 void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) {
     // the expression has to be a univariate polynomial
-    assert(it->info(info_flags::polynomial));
-    assert(it->hasExactlyOneVariable());
+    assert(it->isPoly());
+    assert(it->isUnivariate());
 
     Direction dir = it->getDirection();
     assert((dir == POS) || (dir == POS_INF) || (dir == NEG_INF));
 
-    ExprSymbol var = it->getAVariable();
+    Var var = it->someVar();
 
-    Expression expanded = it->expand();
-    debugLimitProblem("expanded " << *it << " to " << expanded);
+    Expr expanded = it->expand();
 
-
-    if (is_a<add>(expanded)) {
-        Expression leadingTerm = expanded.lcoeff(var) * pow(var, expanded.degree(var));
-
-        debugLimitProblem("the leading term is " << leadingTerm);
+    if (expanded.isAdd()) {
+        Expr leadingTerm = expanded.lcoeff(var) * pow(var, expanded.degree(var));
 
         if (dir == POS) {
             // Fix the direction
@@ -226,35 +206,26 @@ void LimitProblem::trimPolynomial(const InftyExpressionSet::const_iterator &it) 
 
         (*log) << "applying transformation rule (D), replacing " << *it
             << " by " << inftyExp << std::endl;
-        debugLimitProblem("applying transformation rule (D), replacing " << *it
-                          << " by " << inftyExp);
 
         set.erase(it);
         addExpression(inftyExp);
-    } else {
-        debugLimitProblem(*it << " is already a monom");
     }
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
 void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
 
-    debugLimitProblem("expression: " << *it);
+    assert(it->isUnivariate());
+    Var x = it->someVar();
 
-    assert(it->hasExactlyOneVariable());
-    ExprSymbol x = it->getAVariable();
-
-    Expression powerInExp;
-    if (is_a<add>(*it)) {
-        for (unsigned int i = 0; i < it->nops(); ++i) {
-            Expression summand = it->op(i);
-            if (is_a<power>(summand) && summand.op(1).has(x)) {
+    Expr powerInExp;
+    if (it->isAdd()) {
+        for (unsigned int i = 0; i < it->arity(); ++i) {
+            Expr summand = it->op(i);
+            if (summand.isPow() && summand.op(1).has(x)) {
                 powerInExp = summand;
                 break;
             }
@@ -263,20 +234,16 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
     } else {
         powerInExp = *it;
     }
-    debugLimitProblem("exp: " << powerInExp);
-    assert(is_a<power>(powerInExp));
+    assert(powerInExp.isPow());
 
-    Expression b = *it - powerInExp;
-    debugLimitProblem("b: " << b);
-    assert(b.is_polynomial(x));
+    Expr b = *it - powerInExp;
+    assert(b.isPoly(x));
 
-    Expression a = powerInExp.op(0);
-    Expression e = powerInExp.op(1);
+    Expr a = powerInExp.op(0);
+    Expr e = powerInExp.op(1);
 
-    debugLimitProblem("a: " << a << ", e: " << e);
-
-    assert(a.is_polynomial(x));
-    assert(e.is_polynomial(x));
+    assert(a.isPoly(x));
+    assert(e.isPoly(x));
     assert(e.has(x));
 
     InftyExpression firstIE(a - 1, POS);
@@ -284,31 +251,24 @@ void LimitProblem::reduceExp(const InftyExpressionSet::const_iterator &it) {
 
     (*log) << "applying transformation rule (E), replacing " << *it << " by "
         << firstIE << " and " << secondIE << std::endl;
-    debugLimitProblem("applying transformation rule (E), replacing " << *it
-                      << " by " << firstIE << " and " << secondIE);
 
     set.erase(it);
     addExpression(firstIE);
     addExpression(secondIE);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
 void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it) {
     assert(it->getDirection() == POS_INF || it->getDirection() == POS);
 
-    debugLimitProblem("expression: " << *it);
-
-    Expression powerInExp;
-    if (is_a<add>(*it)) {
-        for (unsigned int i = 0; i < it->nops(); ++i) {
-            Expression summand = it->op(i);
-            if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
-                                         || summand.hasAtLeastTwoVariables())) {
+    Expr powerInExp;
+    if (it->isAdd()) {
+        for (unsigned int i = 0; i < it->arity(); ++i) {
+            Expr summand = it->op(i);
+            if (summand.isPow() && (!summand.op(1).isPoly()
+                                         || summand.isMultivariate())) {
                 powerInExp = summand;
                 break;
             }
@@ -317,35 +277,26 @@ void LimitProblem::reduceGeneralExp(const InftyExpressionSet::const_iterator &it
     } else {
         powerInExp = *it;
     }
-    debugLimitProblem("general power: " << powerInExp);
-    assert(is_a<power>(powerInExp));
-    assert(!powerInExp.op(1).info(info_flags::polynomial)
-           || powerInExp.hasAtLeastTwoVariables());
+    assert(powerInExp.isPow());
+    assert(!powerInExp.op(1).isPoly()
+           || powerInExp.isMultivariate());
 
-    Expression b = *it - powerInExp;
-    debugLimitProblem("b: " << b);
+    Expr b = *it - powerInExp;
 
-    Expression a = powerInExp.op(0);
-    Expression e = powerInExp.op(1);
-
-    debugLimitProblem("a: " << a << ", e: " << e);
+    Expr a = powerInExp.op(0);
+    Expr e = powerInExp.op(1);
 
     InftyExpression firstIE(a - 1, POS);
     InftyExpression secondIE(e + b, POS_INF);
 
     (*log) << "reducing general power, replacing " << *it
         << " by " << firstIE << " and " << secondIE << std::endl;
-    debugLimitProblem("reducing general power, replacing " << *it
-                      << " by " << firstIE << " and " << secondIE);
 
     set.erase(it);
     addExpression(firstIE);
     addExpression(secondIE);
 
     (*log) << "resulting limit problem:" << std::endl << *this << std::endl << std::endl;
-    debugLimitProblem("resulting limit problem:");
-    debugLimitProblem(*this);
-    debugLimitProblem("");
 }
 
 
@@ -372,7 +323,7 @@ bool LimitProblem::isSolved() const {
 
     // Check if an expression is not a variable
     for (const InftyExpression &ex : set) {
-        if (!is_a<symbol>(ex)) {
+        if (!ex.isVar()) {
             return false;
         }
     }
@@ -384,24 +335,25 @@ bool LimitProblem::isSolved() const {
 }
 
 
-GiNaC::exmap LimitProblem::getSolution() const {
+Subs LimitProblem::getSolution() const {
     assert(isSolved());
 
-    exmap solution;
+    Subs solution;
     for (const InftyExpression &ex : set) {
+        assert(ex.isVar());
         switch (ex.getDirection()) {
             case POS:
             case POS_INF:
-                solution.insert(std::make_pair(ex, variableN));
+                solution.put(ex.toVar(), variableN);
                 break;
             case NEG_INF:
-                solution.insert(std::make_pair(ex, -variableN));
+                solution.put(ex.toVar(), -variableN);
                 break;
             case POS_CONS:
-                solution.insert(std::make_pair(ex, numeric(1)));
+                solution.put(ex.toVar(), 1);
                 break;
             case NEG_CONS:
-                solution.insert(std::make_pair(ex, numeric(-1)));
+                solution.put(ex.toVar(), -1);
                 break;
         }
     }
@@ -410,7 +362,7 @@ GiNaC::exmap LimitProblem::getSolution() const {
 }
 
 
-ExprSymbol LimitProblem::getN() const {
+Var LimitProblem::getN() const {
     return variableN;
 }
 
@@ -425,18 +377,18 @@ InftyExpressionSet::const_iterator LimitProblem::find(const InftyExpression &ex)
 }
 
 
-ExprSymbolSet LimitProblem::getVariables() const {
-    ExprSymbolSet res;
+VarSet LimitProblem::getVariables() const {
+    VarSet res;
     for (const InftyExpression &ex : set) {
-        ExprSymbolSet exVars = ex.getVariables();
+        VarSet exVars = ex.vars();
         res.insert(exVars.cbegin(),exVars.cend());
     }
     return res;
 }
 
 
-std::vector<Expression> LimitProblem::getQuery() const {
-    std::vector<Expression> query;
+std::vector<Rel> LimitProblem::getQuery() const {
+    std::vector<Rel> query;
 
     for (const InftyExpression &ex : set) {
         if (ex.getDirection() == NEG_INF || ex.getDirection() == NEG_CONS) {
@@ -451,7 +403,7 @@ std::vector<Expression> LimitProblem::getQuery() const {
 
 
 bool LimitProblem::isUnsat() const {
-    return Z3Toolbox::checkAll(getQuery()) == z3::unsat;
+    return Smt::check(buildAnd(getQuery()), varMan) == Smt::Unsat;
 }
 
 
@@ -466,7 +418,7 @@ bool LimitProblem::isLinear() const {
 
 bool LimitProblem::isPolynomial() const {
     for (const InftyExpression &ex : set) {
-        if (!ex.isPolynomial()) {
+        if (!ex.isPoly()) {
             return false;
         }
     }
@@ -474,11 +426,11 @@ bool LimitProblem::isPolynomial() const {
 }
 
 bool LimitProblem::removeConstantIsApplicable(const InftyExpressionSet::const_iterator &it) {
-    if (!it->info(info_flags::integer)) {
+    if (!it->isInt()) {
         return false;
     }
 
-    numeric num = ex_to<numeric>(*it);
+    GiNaC::numeric num = it->toNum();
     Direction dir = it->getDirection();
 
     return (num.is_positive() && (dir == POS_CONS || dir == POS))
@@ -492,16 +444,16 @@ bool LimitProblem::trimPolynomialIsApplicable(const InftyExpressionSet::const_it
         return false;
     }
 
-    if (!it->info(info_flags::polynomial)) {
+    if (!it->isPoly()) {
         return false;
     }
 
     // Check if it is a monom
-    if (!is_a<add>(it->expand())) {
+    if (!it->expand().isAdd()) {
         return false;
     }
 
-    return it->hasExactlyOneVariable();
+    return it->isUnivariate();
 }
 
 
@@ -511,17 +463,17 @@ bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterato
         return false;
     }
 
-    if (!it->hasExactlyOneVariable()) {
+    if (!it->isUnivariate()) {
         return false;
     }
 
-    ExprSymbol x = it->getAVariable();
+    Var x = it->someVar();
 
-    Expression powerInExp;
-    if (is_a<add>(*it)) {
-        for (unsigned int i = 0; i < it->nops(); ++i) {
-            Expression summand = it->op(i);
-            if (is_a<power>(summand) && summand.op(1).has(x)) {
+    Expr powerInExp;
+    if (it->isAdd()) {
+        for (unsigned int i = 0; i < it->arity(); ++i) {
+            Expr summand = it->op(i);
+            if (summand.isPow() && summand.op(1).has(x)) {
                 powerInExp = summand;
                 break;
             }
@@ -531,20 +483,20 @@ bool LimitProblem::reduceExpIsApplicable(const InftyExpressionSet::const_iterato
         powerInExp = *it;
     }
 
-    if (!is_a<power>(powerInExp)) {
+    if (!powerInExp.isPow()) {
         return false;
     }
 
-    Expression b = *it - powerInExp;
+    Expr b = *it - powerInExp;
 
-    if (!b.is_polynomial(x)) {
+    if (!b.isPoly(x)) {
         return false;
     }
 
-    Expression a = powerInExp.op(0);
-    Expression e = powerInExp.op(1);
+    Expr a = powerInExp.op(0);
+    Expr e = powerInExp.op(1);
 
-    if (!(a.is_polynomial(x) && e.is_polynomial(x))) {
+    if (!(a.isPoly(x) && e.isPoly(x))) {
         return false;
     }
 
@@ -558,11 +510,11 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
         return false;
     }
 
-    if (is_a<add>(*it)) {
-        for (unsigned int i = 0; i < it->nops(); ++i) {
-            Expression summand = it->op(i);
-            if (is_a<power>(summand) && (!summand.op(1).info(info_flags::polynomial)
-                                         || summand.hasAtLeastTwoVariables())) {
+    if (it->isAdd()) {
+        for (unsigned int i = 0; i < it->arity(); ++i) {
+            Expr summand = it->op(i);
+            if (summand.isPow() && (!summand.op(1).isPoly()
+                                         || summand.isMultivariate())) {
                 return true;
             }
         }
@@ -570,14 +522,17 @@ bool LimitProblem::reduceGeneralExpIsApplicable(const InftyExpressionSet::const_
         return false;
     }
 
-    return is_a<power>(*it) && (!it->op(1).info(info_flags::polynomial)
-                                || it->hasAtLeastTwoVariables());
+    return it->isPow() && (!it->op(1).isPoly()
+                                || it->isMultivariate());
 }
 
 InftyExpressionSet::size_type LimitProblem::getSize() const {
     return set.size();
 }
 
+const InftyExpressionSet LimitProblem::getSet() const {
+    return set;
+}
 
 std::string LimitProblem::getProof() const {
     return log->str();

@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 
+#include "../its/guard.hpp"
 #include "../expr/guardtoolbox.hpp"
 #include "inftyexpression.hpp"
 #include "limitvector.hpp"
@@ -19,7 +20,7 @@ public:
     /**
      * Creates a new, empty LimitProblem.
      */
-    LimitProblem();
+    LimitProblem(VariableManager &varMan);
 
     /**
      * Creates the initial LimitProblem for the given guard and cost.
@@ -27,12 +28,12 @@ public:
      *                        of the form t > 0
      * @param cost a term
      */
-    LimitProblem(const GuardList &normalizedGuard, const Expression &cost);
+    LimitProblem(const Guard &normalizedGuard, const Expr &cost, VariableManager &varMan);
 
     /**
      * Creates the initial LimitProblem without any cost term.
      */
-    LimitProblem(const GuardList &normalizedGuard);
+    LimitProblem(const Guard &normalizedGuard, VariableManager &varMan);
 
     // copy constructor and assignment operator
     LimitProblem(const LimitProblem &other);
@@ -68,7 +69,7 @@ public:
      * @param lv must be applicable to *it
      */
     void applyLimitVector(const InftyExpressionSet::const_iterator &it,
-                          const Expression &l, const Expression &r,
+                          const Expr &l, const Expr &r,
                           const LimitVector &lv);
 
     /**
@@ -85,7 +86,7 @@ public:
      * transformation rule (C)
      * @param sub must be a valid substitution
      */
-    void substitute(const GiNaC::exmap &sub, int substitutionIndex);
+    void substitute(const Subs &sub, int substitutionIndex);
 
     /**
      * Discards all but the leading term of the given univariate polynomial.
@@ -140,12 +141,12 @@ public:
      * Returns a solution for this LimitProblem.
      * This LimitProblem must be solved and must not be marked as unsolvable.
      */
-    GiNaC::exmap getSolution() const;
+    Subs getSolution() const;
 
     /**
      * Returns the variable that is used in the solution returned by getSolution().
      */
-    ExprSymbol getN() const;
+    Var getN() const;
 
     /**
      * Returns a reference to the vector storing the substitution identifiers.
@@ -161,14 +162,14 @@ public:
     /**
      * Returns a set of all variables appearing in this limit problem
      */
-    ExprSymbolSet getVariables() const;
+    VarSet getVariables() const;
 
     /**
      * Returns this LimitProblem as a set of relational Expressions:
      * t (+), t (+!), t(+/+!) -> t > 0
      * t (-), t (-!) -> t < 0
      */
-    std::vector<Expression> getQuery() const;
+    std::vector<Rel> getQuery() const;
 
     /**
      * Returns true if the result of getQuery() is unsatisfiable according to z3.
@@ -214,6 +215,8 @@ public:
      */
     InftyExpressionSet::size_type getSize() const;
 
+    const InftyExpressionSet getSet() const;
+
     /**
      * Returns the internal log.
      */
@@ -221,9 +224,10 @@ public:
 
 private:
     InftyExpressionSet set;
-    ExprSymbol variableN;
+    Var variableN;
     std::vector<int> substitutions;
     bool unsolvable;
+    VariableManager &varMan;
 
     // use unique_ptr, as gcc < 5 is lacking std::move on ostringstream
     std::unique_ptr<std::ostringstream> log;

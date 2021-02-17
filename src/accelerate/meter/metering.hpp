@@ -19,10 +19,13 @@
 #define METERING_H
 
 #include "../../expr/expression.hpp"
-#include "../../z3/z3context.hpp"
 #include "../../its/variablemanager.hpp"
 #include "../../its/rule.hpp"
+#include "../../its/guard.hpp"
 #include "../../util/option.hpp"
+#include "../../expr/boolexpr.hpp"
+#include "../../util/proof.hpp"
+#include "../../smt/model.hpp"
 
 #include <vector>
 #include <map>
@@ -46,25 +49,25 @@ public:
     /**
      * Success: metering function was found
      * Nonterm: if the guard is satisfied, the loop does not terminate (whole guard is irrelevant for termination)
-     * Nonlinear: the problem is nonlinear and could not be substituted to a linear problem
-     * ConflictVar: two variables are limiting the execution of the loop, we would need min(A,B) or max(A,B) to resolve
+     * Nonlinear: the problem is nonlinear
      * Unsat: no metering function was found (z3 unknown/unsat)
      */
-    enum ResultKind { Success, Nonterm, Nonlinear, ConflictVar, Unsat };
+    enum ResultKind { Success, Nonterm, Nonlinear, Unsat };
 
     struct Result {
         // Flag indicating whether a metering function was successfully found
         ResultKind result;
 
         // The metering function (only relevant if result is Success)
-        Expression metering;
-
-        // The pair of conflicting variables (only relevant if result is ConflictVar)
-        VariablePair conflictVar;
+        Expr metering;
 
         // Additional constraint that has to be added to the rule's guard to ensure correctness.
         // Only relevant if result is Success (and real coefficients are used).
-        option<Expression> integralConstraint;
+        option<Rel> integralConstraint;
+
+        option<Rule> rule;
+
+        Proof proof;
     };
 
     /**
@@ -86,22 +89,22 @@ public:
      *
      * @return the rule resulting from instantiation, if a successful instantiaton was found
      */
-    static option<Rule> instantiateTempVarsHeuristic(VarMan &varMan, const Rule &rule);
+    static option<std::pair<Rule, Proof>> instantiateTempVarsHeuristic(ITSProblem &its, const Rule &rule);
 
     /**
      * Guard strengthening heuristic for constant updates, see MeteringToolbox::strengthenGuard.
      * @note modifies the given rule
      * @return true iff successful (i.e., iff rule was modified)
      */
-    static bool strengthenGuard(VarMan &varMan, Rule &rule);
+    static option<Rule> strengthenGuard(VarMan &varMan, const Rule &rule);
 
 private:
-    MeteringFinder(VarMan &varMan, const GuardList &guard, const std::vector<UpdateMap> &update);
+    MeteringFinder(VarMan &varMan, const Guard &guard, const std::vector<Subs> &update);
 
     /**
      * Helper for convenience, collects all updates of the given rule into a vector.
      */
-    static std::vector<UpdateMap> getUpdateList(const Rule &rule);
+    static std::vector<Subs> getUpdateList(const Rule &rule);
 
     /**
      * Simplifies guard/update by removing constraints that do not affect the metering function.
@@ -113,13 +116,12 @@ private:
      * Performs all available pre-processing steps:
      *  - eliminates temporary variables (where possible)
      *  - simplifies guard/update (calls simplifyAndFindVariables)
-     *  - linearizes guard/update (if possible)
      *
      * Sets/modifies the members: guard, update, reducedGuard, irrelevantGuard, relevantVars.
-     *
-     * @return true iff linearization was successful
      */
-    bool preprocessAndLinearize();
+    void preprocess();
+
+    bool isLinear() const;
 
     /**
      * Uses relevantVars to set meterVars (symbols and coefficients).
@@ -136,37 +138,29 @@ private:
     /**
      * Helper to build the implication: "(G and U) --> f(x)-f(x') <= 1" using applyFarkas
      */
-    z3::expr genUpdateImplications() const;
+    BoolExpr genUpdateImplications() const;
 
     /**
      * Helper to build the implication: "(not G) --> f(x) <= 0" using multiple applyFarkas calls (which are AND-concated)
      * @note makes use of reducedGuard instead of guard
      */
-    z3::expr genNotGuardImplication() const;
+    BoolExpr genNotGuardImplication() const;
 
     /**
      * Helper to build the implication: "G --> f(x) > 0" using applyFarkas
      * @param strict if true, the rhs is strict, i.e. f(x) > 0 formulated as f(x) >= 1; if false f(x) >= 0 is used
      */
-    z3::expr genGuardPositiveImplication(bool strict) const;
+    BoolExpr genGuardPositiveImplication(bool strict) const;
 
     /**
      * Helper to build constraints to suppress trivial solutions, i.e. "OR c_i != 0" for the coefficients c_i
      */
-    z3::expr genNonTrivial() const;
+    BoolExpr genNonTrivial() const;
 
     /**
-     * Given the z3 model, builds the corresponding linear metering function and applies the reverse substitution nonlinearSubs
+     * Given the z3 model, builds the corresponding linear metering function
      */
-    Expression buildResult(const z3::model &model) const;
-
-    /**
-     * Tries to find a pair conflicting variables A, B.
-     * We call two variables conflicting if we would need min(A,B) or max(A,B) in the metering function
-     * (which we can currently not express). Example: A++, B++ [ A < X, B < Y ].
-     * Note that this is just a heuristic that only handles simple cases.
-     */
-    option<VariablePair> findConflictVars() const;
+    Expr buildResult(const Model &model) const;
 
     /**
      * Modifies the current result to ensure that the metering function evaluates to an integer.
@@ -175,7 +169,7 @@ private:
      *
      * Note: Only required if FARKAS_ALLOW_REAL_COEFFS is set.
      */
-    void ensureIntegralMetering(Result &result, const z3::model &model) const;
+    void ensureIntegralMetering(Result &result, const Model &model) const;
 
 
     void dump(const std::string &msg) const;
@@ -187,36 +181,22 @@ private:
      */
     VariableManager &varMan;
 
-    /**
-     * The Z3 context to handle z3 symbols/expressions
-     */
-    mutable Z3Context context;
 
-
-
-    /**
-     * The rule's data, is modified by linearization and when restricting to relevant variables
-     */
-    std::vector<UpdateMap> updates;
-    GuardList guard;
+    std::vector<Subs> updates;
+    Guard guard;
 
     /**
      * Same as guard, but only contains constraints that (might) limit the execution of the loop.
      * irrelevantGuard is the guard without the reducedGuard (so the constraints that were dropped).
      */
-    GuardList reducedGuard;
-    GuardList irrelevantGuard;
+    Guard reducedGuard;
+    Guard irrelevantGuard;
 
     /**
      * The set of variables that might occur in the metering function.
      * These variables are used to build the template for the metering function.
      */
-    std::set<VariableIdx> relevantVars;
-
-    /**
-     * Reverse substitution from linearization
-     */
-    GiNaC::exmap nonlinearSubs;
+    VarSet relevantVars;
 
 
 
@@ -225,10 +205,10 @@ private:
      * obtained from guard, reduced guard, irrelevant guard, guard and update.
      */
     struct {
-        GuardList guard;
-        GuardList reducedGuard;
-        GuardList irrelevantGuard;
-        std::vector<GuardList> guardUpdate; // one for each update
+        RelSet guard;
+        RelSet reducedGuard;
+        RelSet irrelevantGuard;
+        std::vector<RelSet> guardUpdate; // one for each update
     } linearConstraints;
 
     /**
@@ -236,15 +216,15 @@ private:
      * primedSymbols maps updated variables to a primed version of the variable's symbol.
      */
     struct {
-        std::vector<ExprSymbol> symbols;
-        std::vector<z3::expr> coeffs;
-        std::map<VariableIdx,ExprSymbol> primedSymbols;
+        std::vector<Var> symbols;
+        std::vector<Var> coeffs;
+        VarMap<Var> primedSymbols;
     } meterVars;
 
     /**
      * The absolute coefficient for the metering function template.
      */
-    z3::expr absCoeff;
+    Var absCoeff;
 
 };
 

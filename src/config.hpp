@@ -37,13 +37,6 @@ namespace Config {
     // Proof output
     namespace Output {
         extern bool Colors;
-        extern bool ColorsInITS;
-        extern bool Timestamps;
-        extern option<std::string> DotFile;
-        extern bool ExportSimplified;
-        extern bool ProofAccel;
-        extern bool ProofChain;
-        extern bool ProofLimit;
     }
 
     // Colors (Ansi color codes) for output
@@ -66,7 +59,7 @@ namespace Config {
     }
 
     // All settings for interfacing z3
-    namespace Z3 {
+    namespace Smt {
         extern const unsigned DefaultTimeout;
         extern const unsigned MeterTimeout;
         extern const unsigned StrengtheningTimeout;
@@ -74,23 +67,11 @@ namespace Config {
         extern const unsigned LimitTimeoutFinal;
         extern const unsigned LimitTimeoutFinalFast;
         extern const unsigned MaxExponentWithoutPow;
+        extern const unsigned SimpTimeout;
     }
 
-    // Acceleration with metering functions
-    namespace ForwardAccel {
-        extern bool AllowRealCoeffs;
-        extern bool AllowLinearization;
-        extern bool ConditionalMetering;
-        extern bool TempVarInstantiation;
-        extern bool ConflictVarHeuristic;
-        extern bool ConstantUpdateHeuristic;
-        extern const unsigned TempVarInstantiationMaxBounds;
-        extern const bool UseTempVarForIterationCount;
-    }
-
-    // Backward acceleration technique
-    namespace BackwardAccel {
-        extern const bool ReplaceTempVarByUpperbounds;
+    // Loop acceleration technique
+    namespace LoopAccel {
         extern const unsigned MaxUpperboundsForPropagation;
     }
 
@@ -98,8 +79,6 @@ namespace Config {
     namespace Accel {
         extern const bool SimplifyRulesBefore;
         extern bool PartialDeletionHeuristic;
-        extern bool UseBackwardAccel;
-        extern bool UseForwardAccel;
         extern bool TryNesting;
     }
 
@@ -144,18 +123,9 @@ namespace Config {
         extern const unsigned int ProblemDiscardSize;
     }
 
-    // Parser for ITS problems
-    namespace Parser {
-        extern bool AllowDivision;
-    }
-
     // Main algorithm
     namespace Analysis {
-        extern bool Preprocessing;
         extern bool Pruning;
-        extern bool EnsureNonnegativeCosts;
-        extern bool ConstantCpxCheck;
-        extern bool AsymptoticCheck; // must be enabled for soundness!
         extern bool NonTermMode;
     }
 

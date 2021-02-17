@@ -2,108 +2,83 @@
 
 #include <iterator>
 #include <vector>
-#include <ginac/ginac.h>
-#include <z3++.h>
+#include <algorithm>
+#include <sstream>
 
 #include "../expr/expression.hpp"
 #include "../expr/guardtoolbox.hpp"
-#include "../expr/relation.hpp"
-#include "../expr/ginactoz3.hpp"
-#include "../util/timeout.hpp"
 
-#include "../z3/z3solver.hpp"
-#include "../z3/z3context.hpp"
-#include "../z3/z3toolbox.hpp"
+#include "../smt/smt.hpp"
+#include "../smt/smtfactory.hpp"
 
 #include "limitsmt.hpp"
 #include "inftyexpression.hpp"
-#include "../global.hpp"
 
-using namespace GiNaC;
 using namespace std;
 
 
-AsymptoticBound::AsymptoticBound(const VarMan &varMan, GuardList guard,
-                                 Expression cost, bool finalCheck)
-    : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck),
-      addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize) {
-    assert(GuardToolbox::isWellformedGuard(guard));
+AsymptoticBound::AsymptoticBound(VarMan &varMan, Guard guard,
+                                 Expr cost, bool finalCheck, uint timeout)
+    : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck), timeout(timeout),
+      addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize), currentLP(varMan) {
+    assert(guard.isWellformed());
 }
 
 
 void AsymptoticBound::initLimitVectors() {
-    debugAsymptoticBound("Initializing limit vectors.");
 
     for (int i = 0; i < DirectionSize; ++i) {
         Direction dir = static_cast<Direction>(i);
-        debugAsymptoticBound("Direction: " << DirectionNames[dir]);
 
-        debugAsymptoticBound("Addition:");
         for (const LimitVector &lv : LimitVector::Addition) {
             if (lv.isApplicable(dir)) {
-                debugAsymptoticBound(lv);
                 addition[dir].push_back(lv);
             }
         }
 
-        debugAsymptoticBound("Multiplication:");
         for (const LimitVector &lv : LimitVector::Multiplication) {
             if (lv.isApplicable(dir)) {
-                debugAsymptoticBound(lv);
                 multiplication[dir].push_back(lv);
             }
         }
 
-        debugAsymptoticBound("Division:");
         for (const LimitVector &lv : LimitVector::Division) {
             if (lv.isApplicable(dir)) {
-                debugAsymptoticBound(lv);
                 division[dir].push_back(lv);
             }
         }
     }
 
-    debugAsymptoticBound("");
 }
 
 
 void AsymptoticBound::normalizeGuard() {
-    debugAsymptoticBound("Normalizing guard.");
 
-    for (const Expression &ex : guard) {
-        assert(Relation::isRelation(ex));
+    Guard ineqs;
+    for (const Rel &rel : guard) {
 
-        if (ex.info(info_flags::relation_equal)) {
+        if (rel.isEq()) {
             // Split equation
-            Expression greaterEqual = Relation::normalizeInequality(ex.lhs() >= ex.rhs());
-            Expression lessEqual = Relation::normalizeInequality(ex.lhs() <= ex.rhs());
-
-            normalizedGuard.push_back(greaterEqual);
-            normalizedGuard.push_back(lessEqual);
-
-            debugAsymptoticBound(ex << " -> " << greaterEqual << " and " << lessEqual);
+            ineqs.push_back(rel.lhs() - rel.rhs() >= 0);
+            ineqs.push_back(rel.rhs() - rel.lhs() >= 0);
         } else {
-            Expression normalized = Relation::normalizeInequality(ex);
-
-            normalizedGuard.push_back(normalized);
-
-            debugAsymptoticBound(ex << " -> " << normalized);
+            ineqs.push_back(rel.toG().makeRhsZero());
         }
     }
-
-    debugAsymptoticBound("");
+    for (const Rel &rel: ineqs) {
+        if (rel.isPoly() && !rel.isStrict()) {
+            normalizedGuard.push_back(rel.toGt());
+        } else {
+            normalizedGuard.push_back(rel);
+        }
+    }
 }
 
-void AsymptoticBound::createInitialLimitProblem() {
-    debugLimitProblem("Creating initial limit problem.");
-    currentLP = LimitProblem(normalizedGuard, cost);
-
-    debugLimitProblem(currentLP);
-    debugLimitProblem("");
+void AsymptoticBound::createInitialLimitProblem(VariableManager &varMan) {
+    currentLP = LimitProblem(normalizedGuard, cost, varMan);
 }
 
 void AsymptoticBound::propagateBounds() {
-    debugAsymptoticBound("Propagating bounds.");
     assert(substitutions.size() == 0);
 
     if (currentLP.isUnsolvable()) {
@@ -111,16 +86,13 @@ void AsymptoticBound::propagateBounds() {
     }
 
     // build substitutions from equations
-    for (const Expression &ex : guard) {
-        assert(Relation::isRelation(ex));
+    for (const Rel &rel : guard) {
+        Expr target = rel.rhs() - rel.lhs();
+        if (rel.isEq() && rel.isPoly()) {
 
-        Expression target = ex.rhs() - ex.lhs();
-        if (ex.info(info_flags::relation_equal)
-            && target.info(info_flags::polynomial)) {
-
-            std::vector<ExprSymbol> vars;
-            std::vector<ExprSymbol> tempVars;
-            for (const ExprSymbol & var : target.getVariables()) {
+            std::vector<Var> vars;
+            std::vector<Var> tempVars;
+            for (const Var & var : target.vars()) {
                 if (varMan.isTempVar(var)) {
                     tempVars.push_back(var);
                 } else {
@@ -132,15 +104,11 @@ void AsymptoticBound::propagateBounds() {
 
             // check if equation can be solved for a single variable
             // check program variables first
-            for (const ExprSymbol &var : vars) {
+            for (const Var &var : vars) {
                 //solve target for var (result is in target)
                 auto optSolved = GuardToolbox::solveTermFor(target, var, GuardToolbox::TrivialCoeffs);
                 if (optSolved) {
-                    exmap sub;
-                    sub.insert(std::make_pair(var, optSolved.get()));
-
-                    debugAsymptoticBound("substitution (equation): " << sub);
-                    substitutions.push_back(std::move(sub));
+                    substitutions.push_back(Subs(var, optSolved.get()));
                     break;
                 }
             }
@@ -155,230 +123,96 @@ void AsymptoticBound::propagateBounds() {
     if (currentLP.isUnsolvable()) {
         return;
     }
-
-    int numOfEquations = substitutions.size();
-
-    // build substitutions from inequalities
-    for (const Expression &ex : guard) {
-        if (!ex.info(info_flags::relation_equal)) {
-            if (is_a<symbol>(ex.lhs()) || is_a<symbol>(ex.rhs())) {
-                Expression exT = Relation::toLessOrLessEq(ex);
-
-                Expression l, r;
-                bool swap = is_a<symbol>(exT.rhs());
-                if (swap) {
-                    l = exT.rhs();
-                    r = exT.lhs();
-                } else {
-                    l = exT.lhs();
-                    r = exT.rhs();
-                }
-
-                bool isInLimitProblem = false;
-                for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-                    if (it->has(l)) {
-                        isInLimitProblem = true;
-                    }
-                }
-
-                if (!isInLimitProblem) {
-                    debugAsymptoticBound(l << " is not in the limit problem");
-                    continue;
-                }
-
-                if (r.info(info_flags::polynomial) && !r.has(l)) {
-                    if (exT.info(info_flags::relation_less) && !swap) { // exT: x = l < r
-                        r = r - 1;
-                    } else if (exT.info(info_flags::relation_less) && swap) { // exT: r < l = x
-                        r = r + 1;
-                    }
-
-                    exmap sub;
-                    sub.insert(std::make_pair(l, r));
-
-                    debugAsymptoticBound("substitution (inequality): " << sub);
-                    substitutions.push_back(std::move(sub));
-                }
-            }
-        }
-    }
-
-    // build all possible combinations of substitutions (resulting from inequalites)
-    int numOfSubstitutions = substitutions.size() - numOfEquations;
-    if (finalCheck && numOfSubstitutions <= 10) { // must be smaller than 32
-        unsigned int combination;
-        unsigned int to = (1 << numOfSubstitutions) - 1;
-
-        for (combination = 1; combination < to; combination++) {
-            limitProblems.push_back(currentLP);
-            LimitProblem &limitProblem = limitProblems.back();
-
-            debugAsymptoticBound("combination of substitutions:");
-            for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
-                if (combination & (1 << bitPos)) {
-                    debugAsymptoticBound(substitutions[numOfEquations + bitPos]);
-                }
-            }
-
-            for (int bitPos = 0; bitPos < numOfSubstitutions; ++bitPos) {
-                if (combination & (1 << bitPos)) {
-                    limitProblem.substitute(substitutions[numOfEquations + bitPos],
-                                            numOfEquations + bitPos);
-                }
-            }
-
-            if (limitProblem.isUnsolvable()) {
-                limitProblems.pop_back();
-            }
-        }
-
-    }
-
-    // no substitution (resulting from inequalies)
     limitProblems.push_back(currentLP);
-
-    if (limitProblems.back().isUnsolvable()) {
-        limitProblems.pop_back();
-    }
-
-    // all substitutions (resulting from inequalies)
-    limitProblems.push_back(currentLP);
-    LimitProblem &limitProblem = limitProblems.back();
-
-    debugAsymptoticBound("combination of substitutions:");
-    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
-        debugAsymptoticBound(substitutions[i]);
-    }
-
-    for (unsigned int i = numOfEquations; i < substitutions.size(); ++i) {
-        limitProblem.substitute(substitutions[i], i);
-    }
-
-    if (limitProblem.isUnsolvable()) {
-        limitProblems.pop_back();
-    }
 }
 
-GiNaC::exmap AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
-    debugAsymptoticBound("Calculating solution for the initial limit problem.");
+Subs AsymptoticBound::calcSolution(const LimitProblem &limitProblem) {
     assert(limitProblem.isSolved());
 
-    exmap solution;
+    Subs solution;
     for (int index : limitProblem.getSubstitutions()) {
-        const exmap &sub = substitutions[index];
+        const Subs &sub = substitutions[index];
 
-        solution = std::move(GuardToolbox::composeSubs(sub, solution));
-        debugAsymptoticBound("substitution: " << sub);
+        solution = solution.compose(sub);
     }
 
-    debugAsymptoticBound("solution for the solved limit problem: " << limitProblem.getSolution());
-    solution = std::move(GuardToolbox::composeSubs(limitProblem.getSolution(), solution));
-    debugAsymptoticBound("resulting solution: " << solution);
+    solution = solution.compose(limitProblem.getSolution());
 
-    debugAsymptoticBound("fixing solution");
-
-    GuardList guardCopy = guard;
-    guardCopy.push_back(cost);
-    for (const Expression &ex : guardCopy) {
-        for (const ExprSymbol &var : ex.getVariables()) {
-            if (solution.count(var) == 0) {
-                debugAsymptoticBound(var << " is missing");
-
-                exmap sub;
-                sub.insert(std::make_pair(var, numeric(0)));
-
-                solution = std::move(GuardToolbox::composeSubs(sub, solution));
+    Guard guardCopy = guard;
+    guardCopy.push_back(cost > 0);
+    for (const Rel &rel : guardCopy) {
+        for (const Var &var : rel.vars()) {
+            if (!solution.contains(var)) {
+                solution = solution.compose(Subs(var, 0));
             }
         }
     }
-
-    debugAsymptoticBound("fixed solution: " << solution << std::endl);
 
     return solution;
 }
 
 
 int AsymptoticBound::findUpperBoundforSolution(const LimitProblem &limitProblem,
-                                               const GiNaC::exmap &solution) {
-    debugAsymptoticBound("Finding upper bound for the solution.");
-
-    ExprSymbol n = limitProblem.getN();
+                                               const Subs &solution) {
+    Var n = limitProblem.getN();
     int upperBound = 0;
     for (auto const &pair : solution) {
-        assert(is_a<symbol>(pair.first));
+        if (!varMan.isTempVar(pair.first)) {
+            Expr sub = pair.second;
+            assert(sub.isPoly(n));
+            assert(sub.isGround()
+                   || (sub.isUnivariate() && sub.has(n)));
 
-        if (!varMan.isTempVar(ex_to<symbol>(pair.first))) {
-            Expression sub = pair.second;
-            assert(sub.is_polynomial(n));
-            assert(sub.hasNoVariables()
-                   || (sub.hasExactlyOneVariable() && sub.has(n)));
-
-            Expression expanded = sub.expand();
+            Expr expanded = sub.expand();
             int d = expanded.degree(n);
-            debugAsymptoticBound(pair.first << "==" << expanded << ", degree: " << d);
 
             if (d > upperBound) {
                 upperBound = d;
             }
-        } else {
-            debugAsymptoticBound(pair.first << " is not a program variable");
         }
     }
-
-    debugAsymptoticBound("O(" << n << "^" << upperBound << ")" << std::endl);
 
     return upperBound;
 }
 
 
 int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProblem,
-                                                 const GiNaC::exmap &solution) {
-    debugAsymptoticBound("Finding lower bound for the solved cost.");
+                                                 const Subs &solution) {
 
-    Expression solvedCost = cost.subs(solution);
-
-    debugAsymptoticBound("COST:  " << cost << "  ===>  " << solvedCost);
+    Expr solvedCost = cost.subs(solution);
 
     int lowerBound;
-    ExprSymbol n = limitProblem.getN();
-    if (solvedCost.info(info_flags::polynomial)) {
-        assert(solvedCost.is_polynomial(n));
-        assert(solvedCost.hasAtMostOneVariable());
+    Var n = limitProblem.getN();
+    if (solvedCost.isPoly()) {
+        assert(solvedCost.isPoly(n));
+        assert(solvedCost.isNotMultivariate());
 
-        Expression expanded = solvedCost.expand();
+        Expr expanded = solvedCost.expand();
         int d = expanded.degree(n);
-        debugAsymptoticBound("solved cost: " << expanded << ", degree: " << d);
         lowerBound = d;
 
-        debugAsymptoticBound("Omega(" << n << "^" << lowerBound << ")" << std::endl);
-
     } else {
-        std::vector<Expression> nonPolynomial;
-        Expression expanded = solvedCost.expand();
-        debugAsymptoticBound("solved cost: " << expanded);
+        std::vector<Expr> nonPolynomial;
+        Expr expanded = solvedCost.expand();
 
-        Expression powerPattern = pow(wild(1), wild(2));
-        std::set<ex, ex_is_less> powers;
+        Expr powerPattern = Expr::wildcard(1) ^ Expr::wildcard(2);
+        ExprSet powers;
         assert(expanded.findAll(powerPattern, powers));
 
         lowerBound = 1;
-        for (const Expression &ex : powers) {
-            debugAsymptoticBound("power: " << ex);
+        for (const Expr &ex : powers) {
 
-            if (ex.op(1).has(n) && ex.op(1).is_polynomial(n)) {
-                assert(ex.op(0).info(info_flags::integer));
-                assert(ex.op(0).info(info_flags::positive));
+            if (ex.op(1).has(n) && ex.op(1).isPoly(n)) {
+                assert(ex.op(0).isInt());
+                assert(ex.op(0).toNum().is_positive());
 
-                int base =  ex_to<numeric>(ex.op(0)).to_int();
-                debugAsymptoticBound("base: " << base);
+                int base =  ex.op(0).toNum().to_int();
                 if (base > lowerBound) {
                     lowerBound = base;
                 }
             }
         }
         assert(lowerBound > 1);
-
-        debugAsymptoticBound("Omega(" << lowerBound << "^" << n << ")" << std::endl);
 
         // code the lowerBound as a negative number to mark it as exponential
         lowerBound = -lowerBound;
@@ -389,18 +223,13 @@ int AsymptoticBound::findLowerBoundforSolvedCost(const LimitProblem &limitProble
 
 void AsymptoticBound::removeUnsatProblems() {
     for (int i = limitProblems.size() - 1; i >= 0; --i) {
-        auto result = Z3Toolbox::checkAll(limitProblems[i].getQuery());
+        auto result = Smt::check(buildAnd(limitProblems[i].getQuery()), varMan);
 
-        if (result == z3::unsat) {
-            debugAsymptoticBound("unsat:");
-            debugAsymptoticBound(limitProblems[i]);
+        if (result == Smt::Unsat) {
             limitProblems.erase(limitProblems.begin() + i);
-        } else if (result == z3::unknown
+        } else if (result == Smt::Unknown
                    && !finalCheck
                    && limitProblems[i].getSize() >= Config::Limit::ProblemDiscardSize) {
-            debugAsymptoticBound("removing a limit problem since this is not the final check"
-                                 << " and it is very large (" << limitProblems[i].getSize()
-                                 << " InftyExpressions)");
             limitProblems.erase(limitProblems.begin() + i);
         }
     }
@@ -408,29 +237,21 @@ void AsymptoticBound::removeUnsatProblems() {
 
 
 bool AsymptoticBound::solveViaSMT(Complexity currentRes) {
-    debugAsymptoticBound("Trying to solve the initial limit problem via SMT.");
-
     if (!Config::Limit::PolyStrategy->smtEnabled() || !currentLP.isPolynomial() || !trySmtEncoding(currentRes)) {
         return false;
     }
 
     solvedLimitProblems.push_back(currentLP);
 
-    proofout << "Solved the limit problem by the following transformations:" << endl;
-    proofout.increaseIndention();
-    proofout << currentLP.getProof();
-    proofout.decreaseIndention();
+    proof.append("Solved the limit problem by the following transformations:");
+    proof.append(currentLP.getProof());
 
     isAdequateSolution(currentLP);
-    debugAsymptoticBound("Found solution.");
-    debugAsymptoticBound("Proof:" << std::endl << currentLP.getProof());
     return true;
 }
 
 
 bool AsymptoticBound::solveLimitProblem() {
-    debugAsymptoticBound("Trying to solve the initial limit problem.");
-
     if (limitProblems.empty()) {
         return false;
     }
@@ -439,10 +260,7 @@ bool AsymptoticBound::solveLimitProblem() {
     limitProblems.pop_back();
 
     start:
-    if (!currentLP.isUnsolvable() && !currentLP.isSolved() && !isTimeout()) {
-        debugAsymptoticBound("Currently handling:");
-        debugAsymptoticBound(currentLP);
-        debugAsymptoticBound("");
+    if (!currentLP.isUnsolvable() && !currentLP.isSolved()) {
 
         InftyExpressionSet::const_iterator it;
 
@@ -488,13 +306,13 @@ bool AsymptoticBound::solveLimitProblem() {
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-            if (it->hasAtMostOneVariable() && tryApplyingLimitVector(it)) {
+            if (it->isNotMultivariate() && tryApplyingLimitVector(it)) {
                 goto start;
             }
         }
 
         for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-            if (it->hasAtLeastTwoVariables() && tryApplyingLimitVectorSmartly(it)) {
+            if (it->isMultivariate() && tryApplyingLimitVectorSmartly(it)) {
                 goto start;
             }
         }
@@ -508,31 +326,18 @@ bool AsymptoticBound::solveLimitProblem() {
     }
     end:
 
-    if (currentLP.isUnsolvable()) {
-        debugAsymptoticBound("Limit problem is unsolvable, throwing away");
-
-    } else if (currentLP.isSolved()) {
+    if (!currentLP.isUnsolvable() && currentLP.isSolved()) {
         solvedLimitProblems.push_back(currentLP);
 
-        proofout << "Solved the limit problem by the following transformations:" << endl;
-        proofout.increaseIndention();
-        proofout << currentLP.getProof();
-        proofout.decreaseIndention();
+        proof.append("Solved the limit problem by the following transformations:");
+        proof.append(currentLP.getProof());
 
         if (isAdequateSolution(currentLP)) {
-            debugAsymptoticBound("Found adequate solution.");
-            debugAsymptoticBound("Proof:" << std::endl << currentLP.getProof());
             return true;
-        } else {
-            debugAsymptoticBound("Found non-adequate solution.");
-            debugAsymptoticBound("Proof:" << std::endl << currentLP.getProof());
         }
-
-    } else {
-        debugAsymptoticBound("I don't know how to continue, throwing away");
     }
 
-    if (limitProblems.empty() || isTimeout()) {
+    if (limitProblems.empty()) {
         return !solvedLimitProblems.empty();
 
     } else {
@@ -544,47 +349,36 @@ bool AsymptoticBound::solveLimitProblem() {
 
 
 AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProblem &limitProblem) {
-    debugAsymptoticBound("Calculating complexity.");
     ComplexityResult res;
 
-    res.solution = std::move(calcSolution(limitProblem));
+    res.solution = calcSolution(limitProblem);
     res.upperBound = findUpperBoundforSolution(limitProblem, res.solution);
 
     for (auto const &pair : res.solution) {
-        if (!is_a<numeric>(pair.second)) {
+        if (!pair.second.isRationalConstant()) {
             ++res.inftyVars;
         }
     }
 
-    debugAsymptoticBound(res.inftyVars << " infty var(s)");
-
     if (res.inftyVars == 0) {
-        debugAsymptoticBound("Complexity: None, no infty var!");
         res.complexity = Complexity::Unknown;
     } else if (res.upperBound == 0) {
-        debugAsymptoticBound("Complexity: INF (unbounded runtime)");
         res.complexity = Complexity::Unbounded;
     } else {
         res.lowerBound = findLowerBoundforSolvedCost(limitProblem, res.solution);
 
-        ExprSymbol n = limitProblem.getN();
+        Var n = limitProblem.getN();
         if (res.lowerBound < 0) { // lower bound is exponential
             res.lowerBound = -res.lowerBound;
-            debugAsymptoticBound("Complexity: Omega(" << res.lowerBound << "^" << "(" << n << "^"
-                                 << "(1/" << res.upperBound << ")" << ")" << ")" << std::endl);
             res.complexity = Complexity::Exp;
 
             // Note: 2^sqrt(n) is not exponential, we just give up such cases (where the exponent might be sublinear)
             // Example: cost 2^y with guard x > y^2
             if (res.upperBound > 1) {
                 res.complexity = Complexity::Unknown;
-                debugWarn("Complexity is possibly sub-exponential, giving up (solution: " << res.solution << ")");
             }
 
         } else {
-            debugAsymptoticBound("Complexity: Omega(" << n << "^" << "(" << res.lowerBound
-                                 << "/" << res.upperBound << ")" << ")" << std::endl);
-
             res.complexity = Complexity::Poly(res.lowerBound, res.upperBound);
         }
     }
@@ -598,7 +392,6 @@ AsymptoticBound::ComplexityResult AsymptoticBound::getComplexity(const LimitProb
 
 
 bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
-    debugAsymptoticBound("Checking solution for adequateness.");
     assert(limitProblem.isSolved());
 
     ComplexityResult result = getComplexity(limitProblem);
@@ -607,28 +400,26 @@ bool AsymptoticBound::isAdequateSolution(const LimitProblem &limitProblem) {
         return true;
     }
 
-    if (cost.getComplexity()  > result.complexity) {
+    if (cost.toComplexity()  > result.complexity) {
         return false;
     }
 
-    Expression solvedCost = cost.subs(result.solution).expand();
-    ExprSymbol n = limitProblem.getN();
-    debugAsymptoticBound("solved cost: " << solvedCost);
-    debugAsymptoticBound("cost: " << cost);
+    Expr solvedCost = cost.subs(result.solution).expand();
+    Var n = limitProblem.getN();
 
-    if (solvedCost.is_polynomial(n)) {
-        if (!cost.info(info_flags::polynomial)) {
+    if (solvedCost.isPoly(n)) {
+        if (!cost.isPoly()) {
             return false;
         }
 
-        if (cost.getMaxDegree() > solvedCost.degree(n)) {
+        if (cost.maxDegree() > solvedCost.degree(n)) {
             return false;
         }
 
     }
 
-    for (const ExprSymbol &var : cost.getVariables()) {
-        if (varMan.isTempVar(ex_to<symbol>(var))) {
+    for (const Var &var : cost.vars()) {
+        if (varMan.isTempVar(var)) {
             // we try to achieve ComplexInfty
             return false;
         }
@@ -645,17 +436,12 @@ void AsymptoticBound::createBacktrackingPoint(const InftyExpressionSet::const_it
     if (finalCheck && it->getDirection() == POS) {
         limitProblems.push_back(currentLP);
         limitProblems.back().addExpression(InftyExpression(*it, dir));
-
-        debugAsymptoticBound("creating backtracking point:");
-        debugAsymptoticBound(limitProblems.back());
-        debugAsymptoticBound("");
     }
 }
 
 
 bool AsymptoticBound::tryRemovingConstant(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.removeConstantIsApplicable(it)) {
-        debugAsymptoticBound("removing constant");
 
         currentLP.removeConstant(it);
         return true;
@@ -668,7 +454,6 @@ bool AsymptoticBound::tryRemovingConstant(const InftyExpressionSet::const_iterat
 
 bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.trimPolynomialIsApplicable(it)) {
-        debugAsymptoticBound("trimming polynomial");
         createBacktrackingPoint(it, POS_CONS);
 
         currentLP.trimPolynomial(it);
@@ -682,7 +467,6 @@ bool AsymptoticBound::tryTrimmingPolynomial(const InftyExpressionSet::const_iter
 
 bool AsymptoticBound::tryReducingExp(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.reduceExpIsApplicable(it)) {
-        debugAsymptoticBound("reducing exp");
         createBacktrackingPoint(it, POS_CONS);
 
         currentLP.reduceExp(it);
@@ -696,7 +480,6 @@ bool AsymptoticBound::tryReducingExp(const InftyExpressionSet::const_iterator &i
 
 bool AsymptoticBound::tryReducingGeneralExp(const InftyExpressionSet::const_iterator &it) {
     if (currentLP.reduceGeneralExpIsApplicable(it)) {
-        debugAsymptoticBound("reducing exp (general)");
         createBacktrackingPoint(it, POS_CONS);
 
         currentLP.reduceGeneralExp(it);
@@ -711,55 +494,51 @@ bool AsymptoticBound::tryReducingGeneralExp(const InftyExpressionSet::const_iter
 bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_iterator &it) {
     std::vector<LimitVector> *limitVectors;
 
-    Expression l, r;
-    if (it->isProperRational()) {
-        debugAsymptoticBound(*it << " is a proper rational");
-        l = it->numer();
-        r = it->denom();
+    Expr l, r;
+    if (it->isNonIntConstant()) {
+        l = it->numerator();
+        r = it->denominator();
 
         limitVectors = &division[it->getDirection()];
 
-    } else if (is_a<add>(*it)) {
-        debugAsymptoticBound(*it << " is an addition");
-        l = numeric(0);
-        r = numeric(0);
+    } else if (it->isAdd()) {
+        l = 0;
+        r = 0;
         int pos = 0;
 
         for (int i = 0; i <= pos; ++i) {
-            l += it->op(i);
+            l = l + it->op(i);
         }
-        for (unsigned int i = pos + 1; i < it->nops(); ++i) {
-            r += it->op(i);
+        for (unsigned int i = pos + 1; i < it->arity(); ++i) {
+            r = r + it->op(i);
         }
 
         limitVectors = &addition[it->getDirection()];
 
-    } else if (is_a<mul>(*it)) {
-        debugAsymptoticBound(*it << " is a multiplication");
-        l = numeric(1);
-        r = numeric(1);
+    } else if (it->isMul()) {
+        l = 1;
+        r = 1;
         int pos = 0;
 
         for (int i = 0; i <= pos; ++i) {
-            l *= it->op(i);
+            l = l * it->op(i);
         }
-        for (unsigned int i = pos + 1; i < it->nops(); ++i) {
-            r *= it->op(i);
+        for (unsigned int i = pos + 1; i < it->arity(); ++i) {
+            r = r * it->op(i);
         }
 
         limitVectors = &multiplication[it->getDirection()];
 
-    } else if (it->isProperNaturalPower()) {
-        debugLimitProblem(*it << " is a proper natural power");
-        Expression base = it->op(0);
-        numeric power = ex_to<numeric>(it->op(1));
+    } else if (it->isNaturalPow()) {
+        Expr base = it->op(0);
+        GiNaC::numeric power = it->op(1).toNum();
 
         if (power.is_even()) {
-            l = pow(base, power / 2);
+            l = base ^ (power / 2);
             r = l;
         } else {
             l = base;
-            r = pow(base, power - 1);
+            r = base ^ (power - 1);
         }
 
         limitVectors = &multiplication[it->getDirection()];
@@ -768,82 +547,81 @@ bool AsymptoticBound::tryApplyingLimitVector(const InftyExpressionSet::const_ite
         return false;
     }
 
-    debugAsymptoticBound("trying to apply limit vectors");
     return applyLimitVectorsThatMakeSense(it, l, r, *limitVectors);
 }
 
 
 bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::const_iterator &it) {
-    Expression l, r;
+    Expr l, r;
     std::vector<LimitVector> *limitVectors;
-    if (is_a<add>(*it)) {
-        l = numeric(0);
-        r = numeric(0);
+    if (it->isAdd()) {
+        l = 0;
+        r = 0;
 
         bool foundOneVar = false;
-        ExprSymbol oneVar;
-        for (unsigned int i = 0; i < it->nops(); ++i) {
-            Expression ex(it->op(i));
+        Var oneVar;
+        for (unsigned int i = 0; i < it->arity(); ++i) {
+            Expr ex(it->op(i));
 
-            if (ex.hasNoVariables()) {
+            if (ex.isGround()) {
                 l = ex;
                 r = *it - ex;
                 break;
 
-            } else if (ex.hasExactlyOneVariable()) {
+            } else if (ex.isUnivariate()) {
                 if (!foundOneVar) {
                     foundOneVar = true;
-                    oneVar = ex.getAVariable();
+                    oneVar = ex.someVar();
                     l = ex;
 
-                } else if (oneVar == ex.getAVariable()) {
-                    l += ex;
+                } else if (oneVar == ex.someVar()) {
+                    l = l + ex;
 
                 } else {
-                    r += ex;
+                    r = r + ex;
                 }
             } else {
-                r += ex;
+                r = r + ex;
             }
         }
 
-        if (l.is_zero() || r.is_zero()) {
+        if (l.isZero() || r.isZero()) {
             return false;
         }
 
         limitVectors = &addition[it->getDirection()];
-    } else if (is_a<mul>(*it)) {
-        l = numeric(1);
-        r = numeric(1);
+    } else if (it->isMul()) {
+        l = 1;
+        r = 1;
 
         bool foundOneVar = false;
-        ExprSymbol oneVar;
-        for (unsigned int i = 0; i < it->nops(); ++i) {
-            Expression ex(it->op(i));
+        Var oneVar;
+        for (unsigned int i = 0; i < it->arity(); ++i) {
+            Expr ex(it->op(i));
 
-            if (ex.hasNoVariables()) {
+            if (ex.isGround()) {
                 l = ex;
                 r = *it / ex;
                 break;
 
-            } else if (ex.hasExactlyOneVariable()) {
+            } else if (ex.isUnivariate()) {
                 if (!foundOneVar) {
                     foundOneVar = true;
-                    oneVar = ex.getAVariable();
+                    oneVar = ex.someVar();
                     l = ex;
 
-                } else if (oneVar == ex.getAVariable()) {
-                    l *= ex;
+                } else if (oneVar == ex.someVar()) {
+                    l = l * ex;
 
                 } else {
-                    r *= ex;
+                    r = r * ex;
                 }
             } else {
-                r *= ex;
+                r = r * ex;
             }
         }
 
-        if (l == numeric(1) || r == numeric(1)) {
+        if (l.equals(1) || r.equals(1)) {
             return false;
         }
 
@@ -852,24 +630,18 @@ bool AsymptoticBound::tryApplyingLimitVectorSmartly(const InftyExpressionSet::co
         return false;
     }
 
-    debugAsymptoticBound("trying to apply limit vectors (smart)");
     return applyLimitVectorsThatMakeSense(it, l, r, *limitVectors);
 }
 
 
 bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::const_iterator &it,
-                                                     const Expression &l, const Expression &r,
+                                                     const Expr &l, const Expr &r,
                                                      const std::vector<LimitVector> &limitVectors) {
-    debugAsymptoticBound("expression: " << *it);
-    debugAsymptoticBound("l: " << l);
-    debugAsymptoticBound("r: " << r);
-    debugAsymptoticBound("applicable limit vectors:");
     bool posInfVector = false;
     bool posConsVector = false;
     toApply.clear();
     for (const LimitVector &lv: limitVectors) {
         if (lv.makesSense(l, r)) {
-            debugAsymptoticBound(lv << " makes sense");
             toApply.push_back(lv);
 
             if (lv.getType() == POS_INF) {
@@ -877,11 +649,8 @@ bool AsymptoticBound::applyLimitVectorsThatMakeSense(const InftyExpressionSet::c
             } else if (lv.getType() == POS_CONS) {
                 posConsVector = true;
             }
-        } else {
-            debugAsymptoticBound(lv << " does not make sense");
         }
     }
-    debugAsymptoticBound("");
 
     if (posInfVector && !posConsVector) {
         createBacktrackingPoint(it, POS_CONS);
@@ -916,40 +685,28 @@ bool AsymptoticBound::tryInstantiatingVariable() {
     for (auto it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
         Direction dir = it->getDirection();
 
-        if (it->hasExactlyOneVariable() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
-            Z3Context context;
-            z3::model model(context, Z3_model());
-            z3::check_result result;
-            result = Z3Toolbox::checkAll(currentLP.getQuery(), context, &model);
+        if (it->isUnivariate() && (dir == POS || dir == POS_CONS || dir == NEG_CONS)) {
+            const std::vector<Rel> &query = currentLP.getQuery();
+            std::unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<std::vector<Rel>, Subs>({query}, {}), varMan);
+            solver->add(buildAnd(query));
+            Smt::Result result = solver->check();
 
-            if (result == z3::unsat) {
-                debugAsymptoticBound("Z3: limit problem is unsat");
+            if (result == Smt::Unsat) {
                 currentLP.setUnsolvable();
 
-            } else if (result == z3::sat) {
-                ExprSymbol var = it->getAVariable();
+            } else if (result == Smt::Sat) {
+                const Model &model = solver->model();
+                Var var = it->someVar();
 
-                debugAsymptoticBound("Z3: limit problem is sat");
-                Expression rational =
-                    Z3Toolbox::getRealFromModel(model, GinacToZ3::convert(var, context));
-
-                exmap sub;
-                sub.insert(std::make_pair(var, rational));
-                substitutions.push_back(std::move(sub));
-
-                debugAsymptoticBound("instantiating " << var << " with " << rational);
+                Expr rational = model.get(var);
+                substitutions.push_back(Subs(var, rational));
 
                 createBacktrackingPoint(it, POS_INF);
                 currentLP.substitute(substitutions.back(), substitutions.size() - 1);
 
             } else {
-                debugAsymptoticBound("Z3: limit problem is unknown");
 
                 if (!finalCheck && currentLP.getSize() >= Config::Limit::ProblemDiscardSize) {
-                    debugAsymptoticBound("marking the current limit problem as unsolvable"
-                                         << " since this is not the final check"
-                                         << " and it is very large (" << currentLP.getSize()
-                                         << " InftyExpressions)");
                     currentLP.setUnsolvable();
                 }
 
@@ -967,20 +724,17 @@ bool AsymptoticBound::tryInstantiatingVariable() {
 bool AsymptoticBound::trySubstitutingVariable() {
     InftyExpressionSet::const_iterator it, it2;
     for (it = currentLP.cbegin(); it != currentLP.cend(); ++it) {
-        if (is_a<symbol>(*it)) {
+        if (it->isVar()) {
             for (it2 = std::next(it); it2 != currentLP.cend(); ++it2) {
-                if (is_a<symbol>(*it2)) {
+                if (it2->isVar()) {
                     Direction dir = it->getDirection();
                     Direction dir2 = it2->getDirection();
 
                     if (((dir == POS || dir == POS_INF) && (dir2 == POS || dir2 == POS_INF))
                         || (dir == NEG_INF && dir2 == NEG_INF)) {
-                        assert(*it != *it2);
+                        assert(!it->equals(*it2));
 
-                        debugAsymptoticBound("substituting variable " << *it << " by " << *it2);
-
-                        exmap sub;
-                        sub.insert(std::make_pair(*it, *it2));
+                        Subs sub(it->toVar(), *it2);
                         substitutions.push_back(sub);
 
                         createBacktrackingPoint(it, POS_CONS);
@@ -999,7 +753,7 @@ bool AsymptoticBound::trySubstitutingVariable() {
 
 
 bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
-    auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, finalCheck, currentRes);
+    auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, currentRes, timeout);
     if (!optSubs) return false;
 
     substitutions.push_back(optSubs.get());
@@ -1009,57 +763,41 @@ bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
 }
 
 
-bool AsymptoticBound::isTimeout() const {
-    return finalCheck ? Timeout::hard() : Timeout::soft();
-}
-
-
 AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
-                                                             const GuardList &guard,
-                                                             const Expression &cost,
+                                                             const Guard &guard,
+                                                             const Expr &cost,
                                                              bool finalCheck,
-                                                             const Complexity &currentRes) {
-    debugAsymptoticBound("Analyzing asymptotic bound.");
+                                                             const Complexity &currentRes,
+                                                             uint timeout) {
 
     // Expand the cost to make it easier to analyze
-    Expression expandedCost = cost.expand();
-    Expression costToCheck = expandedCost;
-
-#ifdef DEBUG_ASYMPTOTIC_BOUNDS
-    debugAsymptoticBound("guard:");
-    for (const Expression &ex : guard) {
-        debugAsymptoticBound(ex);
-    }
-    debugAsymptoticBound(endl << "cost:" << expandedCost << endl);
-#endif
+    Expr expandedCost = cost.expand();
+    Expr costToCheck = expandedCost;
 
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto z3res = Z3Toolbox::checkAll(guard);
-        if (z3res == z3::sat) {
-            if (finalCheck) proofout << "Guard is satisfiable, yielding nontermination" << endl;
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        auto smtRes = Smt::check(buildAnd(guard), varMan);
+        if (smtRes == Smt::Sat) {
+            Proof proof;
+            proof.append("Guard is satisfiable, yielding nontermination");
+            return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
         } else {
             // if Z3 fails, the calculus for limit problems might still succeed if, e.g., the rule contains exponentials
-            costToCheck = varMan.getVarSymbol(varMan.addFreshVariable("x"));
+            costToCheck = varMan.addFreshVariable("x");
         }
     }
     if (finalCheck && Config::Analysis::NonTermMode) {
         return Result(Complexity::Unknown);
     }
-    assert(!costToCheck.has(Expression::NontermSymbol));
+    assert(!costToCheck.has(Expr::NontermSymbol));
 
-    // Only enable proof output for the final check (we don't want proof output when pruning)
-    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
-    if (finalCheck) Timing::start(Timing::Asymptotic);
-
-    AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck);
+    AsymptoticBound asymptoticBound(varMan, guard, costToCheck, finalCheck, timeout);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
 
-    asymptoticBound.createInitialLimitProblem();
+    asymptoticBound.createInitialLimitProblem(varMan);
     // first try the SMT encoding
-    bool polynomial = cost.isPolynomial() && asymptoticBound.currentLP.isPolynomial();
+    bool polynomial = cost.isPoly() && asymptoticBound.currentLP.isPolynomial();
     bool result = polynomial && asymptoticBound.solveViaSMT(currentRes);
     if (!result && (!polynomial || Config::Limit::PolyStrategy->calculusEnabled())) {
         // Otherwise perform limit calculus
@@ -1067,80 +805,107 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
         asymptoticBound.removeUnsatProblems();
         result = asymptoticBound.solveLimitProblem();
     }
-    if (finalCheck) Timing::done(Timing::Asymptotic);
 
     if (result) {
-        debugAsymptoticBound("Solved the initial limit problem. ("
-                << asymptoticBound.solvedLimitProblems.size()
-                << " solved problem(s))");
 
         // Print solution
-        proofout << "Solution:" << std::endl;
-        proofout.increaseIndention();
+        asymptoticBound.proof.append("Solution:");
         for (const auto &pair : asymptoticBound.bestComplexity.solution) {
-            proofout << pair.first << " / " << pair.second << std::endl;
+            asymptoticBound.proof.append(stringstream() << pair.first << " / " << pair.second);
         }
-        proofout.decreaseIndention();
-        proofout.setEnabled(wasProofEnabled);
 
         // Gather all relevant information
         if (expandedCost.isNontermSymbol()) {
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+            return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, asymptoticBound.proof);
         } else {
-            Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+            Expr solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
             return Result(asymptoticBound.bestComplexity.complexity,
                           solvedCost.expand(),
-                          asymptoticBound.bestComplexity.upperBound > 1,
-                          asymptoticBound.bestComplexity.inftyVars);
+                          asymptoticBound.bestComplexity.inftyVars,
+                          asymptoticBound.proof);
         }
     } else {
-        debugAsymptoticBound("Could not solve the initial limit problem");
 
-        proofout << "Could not solve the limit problem." << endl;
-        proofout.setEnabled(wasProofEnabled);
+        asymptoticBound.proof.append("Could not solve the limit problem.");
 
         return Result(Complexity::Unknown);
     }
 
 }
 
-AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(const VarMan &varMan,
-                                                                    const GuardList &guard,
-                                                                    const Expression &cost,
+AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varMan,
+                                                                    const Guard &guard,
+                                                                    const Expr &cost,
                                                                     bool finalCheck,
-                                                                    Complexity currentRes) {
-    Expression expandedCost = cost.expand();
+                                                                    Complexity currentRes,
+                                                                    uint timeout) {
+    Expr expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
-        auto z3res = Z3Toolbox::checkAll(guard);
-        if (z3res == z3::sat) {
-            return Result(Complexity::Nonterm, Expression::NontermSymbol, false, 0);
+        auto smtRes = Smt::check(buildAnd(guard), varMan);
+        if (smtRes == Smt::Sat) {
+            Proof proof;
+            proof.append("proved non-termination via SMT");
+            return Result(Complexity::Nonterm, Expr::NontermSymbol, 0, proof);
         } else {
             return Result(Complexity::Unknown);
         }
     } else if (finalCheck && Config::Analysis::NonTermMode) {
         return Result(Complexity::Unknown);
     }
-    assert(!expandedCost.has(Expression::NontermSymbol));
+    assert(!expandedCost.has(Expr::NontermSymbol));
 
-    // Only enable proof output for the final check (we don't want proof output when pruning)
-    bool wasProofEnabled = proofout.setEnabled(finalCheck && Config::Output::ProofLimit);
-    if (finalCheck) Timing::start(Timing::Asymptotic);
-
-    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false);
+    AsymptoticBound asymptoticBound(varMan, guard, expandedCost, false, timeout);
     asymptoticBound.initLimitVectors();
     asymptoticBound.normalizeGuard();
-    asymptoticBound.createInitialLimitProblem();
+    asymptoticBound.createInitialLimitProblem(varMan);
     bool success = asymptoticBound.solveViaSMT(currentRes);
-    if (finalCheck) Timing::done(Timing::Asymptotic);
-    proofout.setEnabled(wasProofEnabled);
     if (success) {
-        Expression solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
+        Expr solvedCost = asymptoticBound.cost.subs(asymptoticBound.bestComplexity.solution);
         return Result(asymptoticBound.bestComplexity.complexity,
                       solvedCost.expand(),
-                      asymptoticBound.bestComplexity.upperBound > 1,
-                      asymptoticBound.bestComplexity.inftyVars);
+                      asymptoticBound.bestComplexity.inftyVars,
+                      asymptoticBound.proof);
     } else {
         return Result(Complexity::Unknown);
     }
+}
+
+AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varMan,
+                                                                    const BoolExpr guard,
+                                                                    const Expr &cost,
+                                                                    bool finalCheck,
+                                                                    Complexity currentRes,
+                                                                    uint timeout) {
+    Expr expandedCost = cost.expand();
+    // Handle nontermination. It suffices to check that the guard is satisfiable
+    if (expandedCost.isNontermSymbol()) {
+        auto smtRes = Smt::check(guard, varMan);
+        if (smtRes == Smt::Sat) {
+            Proof proof;
+            proof.append("proved non-termination via SMT");
+            return Result(Complexity::Nonterm);
+        } else {
+            return Result(Complexity::Unknown);
+        }
+    } else if (finalCheck && Config::Analysis::NonTermMode) {
+        return Result(Complexity::Unknown);
+    }
+    assert(!expandedCost.has(Expr::NontermSymbol));
+    const std::pair<Subs, Complexity> &p = LimitSmtEncoding::applyEncoding(guard, cost, varMan, currentRes, timeout);
+    const Subs &subs = p.first;
+    const Complexity &cpx = p.second;
+    Proof proof;
+    if (cpx == Complexity::Unknown) {
+        return Result(Complexity::Unknown, 0, 0, proof);
+    }
+    const Expr &solvedCost = expandedCost.subs(subs).expand();
+    const VarSet &costVars = cost.vars();
+    long inftyVars = std::count_if(costVars.begin(), costVars.end(), [&](const Var &x){
+        return !subs.get(x).isGround();
+    });
+    proof.append("solved via SMT");
+    proof.append("solution:");
+    proof.append(stringstream() << subs);
+    return Result(cpx, solvedCost, inftyVars, proof);
 }

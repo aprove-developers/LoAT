@@ -49,9 +49,5 @@ public: \
     exceptionName() : exceptionName(#exceptionName) {} \
 }
 
-//example:
-//EXCEPTION(NotYetImplementedException, CustomException);
-
-
 #endif // EXCEPTIONS_H
 

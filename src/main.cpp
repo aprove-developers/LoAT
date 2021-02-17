@@ -15,50 +15,35 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses>.
  */
 
+#include "main.hpp"
+
+#include "analysis/analysis.hpp"
+#include "its/koatParser/itsparser.hpp"
+#include "its/smt2Parser/parser.hpp"
+#include "its/t2Parser/t2parser.hpp"
+#include "config.hpp"
+#include "util/timeout.hpp"
+#include "util/proof.hpp"
+
 #include <iostream>
 #include <boost/algorithm/string.hpp>
-#include "analysis/analysis.hpp"
-#include "its/parser/itsparser.hpp"
-#include "its/sexpressionparser/parser.hpp"
-#include "its/t2parser/t2parser.hpp"
-
-#include "util/stats.hpp"
-#include "util/timing.hpp"
-#include "util/timeout.hpp"
 
 using namespace std;
 
 // Variables for command line flags
 string filename;
-string benchmarkMode = "none"; // no benchmark
 int timeout = 0; // no timeout
-int proofLevel = 2;
-bool printStats = false;
-bool printTiming = false;
-bool printConfig = false;
-bool allowRecursion = true;
-
+int proofLevel = static_cast<int>(Proof::defaultProofLevel);
 
 void printHelp(char *arg0) {
     cout << "Usage: " << arg0 << " [options] <file>" << endl;
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
-    cout << "  --benchmark <basic|cond|bkwd|rec|smt|just-smt>   Set configuration for the benchmarks in the paper" << endl;
-    cout << "  --proof-level <n>                                Detail level for proof output (0-3, default 2)" << endl;
+    cout << "  --proof-level <n>                                Detail level for proof output (0-" << Proof::maxProofLevel << ", default " << proofLevel << ")" << endl;
     cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
-    cout << "  --dot <file>                                     Dump dot output to given file (only for non-recursive problems)" << endl;
-    cout << "  --stats                                          Print some statistics about the performed steps" << endl;
-    cout << "  --timing                                         Print information about time usage" << endl;
-    cout << "  --config                                         Show configuration after handling command line flags" << endl;
-    cout << "  --timestamps                                     Include time stamps in proof output" << endl;
-    cout << "  --print-simplified                               Print simplified program in the input format" << endl;
     cout << endl;
-    cout << "  --allow-division                                 Allow division in the input program (potentially unsound)" << endl;
-    cout << "  --no-cost-check                                  Don't check if costs are nonnegative (potentially unsound)" << endl;
-    cout << "  --no-preprocessing                               Don't try to simplify the program first (which involves SMT)" << endl;
     cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
-    cout << "  --no-const-cpx                                   Don't check for constant complexity (might improve performance)" << endl;
     cout << "  --nonterm                                        Just try to prove non-termination" << endl;
 }
 
@@ -79,34 +64,12 @@ void parseFlags(int argc, char *argv[]) {
         if (strcmp("--help",argv[arg]) == 0) {
             printHelp(argv[0]);
             exit(1);
-        }
-        else if (strcmp("--dot",argv[arg]) == 0) {
-            Config::Output::DotFile = getNext();
         } else if (strcmp("--timeout",argv[arg]) == 0) {
             timeout = atoi(getNext());
-        } else if (strcmp("--benchmark",argv[arg]) == 0) {
-            benchmarkMode = getNext();
         } else if (strcmp("--proof-level",argv[arg]) == 0) {
             proofLevel = atoi(getNext());
         } else if (strcmp("--plain",argv[arg]) == 0) {
             Config::Output::Colors = false;
-            Config::Output::ColorsInITS = false;
-        } else if (strcmp("--config",argv[arg]) == 0) {
-            printConfig = true;
-        } else if (strcmp("--stats",argv[arg]) == 0) {
-            printStats = true;
-        } else if (strcmp("--timing",argv[arg]) == 0) {
-            printTiming = true;
-        } else if (strcmp("--timestamps",argv[arg]) == 0) {
-            Config::Output::Timestamps = true;
-        } else if (strcmp("--print-simplified",argv[arg]) == 0) {
-            Config::Output::ExportSimplified = true;
-        } else if (strcmp("--allow-division",argv[arg]) == 0) {
-            Config::Parser::AllowDivision = true;
-        } else if (strcmp("--no-preprocessing",argv[arg]) == 0) {
-            Config::Analysis::Preprocessing = false;
-        } else if (strcmp("--no-cost-check",argv[arg]) == 0) {
-            Config::Analysis::EnsureNonnegativeCosts = false;
         } else if (strcmp("--limit-strategy",argv[arg]) == 0) {
             const std::string &strategy = getNext();
             bool found = false;
@@ -118,30 +81,19 @@ void parseFlags(int argc, char *argv[]) {
                 }
             }
             if (!found) {
-                cout << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name();
+                cerr << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name() << endl;
             }
-        } else if (strcmp("--no-const-cpx",argv[arg]) == 0) {
-            Config::Analysis::ConstantCpxCheck = false;
         } else if (strcmp("--nonterm",argv[arg]) == 0) {
             Config::Analysis::NonTermMode = true;
         } else {
             if (!filename.empty()) {
-                cout << "Error: additional argument " << argv[arg] << " (already got filenam: " << filename << ")" << endl;
+                cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;
                 exit(1);
             }
             filename = argv[arg];
         }
     }
 }
-
-
-void setBenchmarkConfig(bool conditionalMeter, bool backAccel, bool recursion, Config::Limit::PolynomialLimitProblemStrategy* limitStrategy) {
-    Config::ForwardAccel::ConditionalMetering = conditionalMeter;
-    Config::Accel::UseBackwardAccel = backAccel;
-    Config::Limit::PolyStrategy = limitStrategy;
-    allowRecursion = recursion;
-}
-
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -152,40 +104,16 @@ int main(int argc, char *argv[]) {
     // Parse and interpret command line flags
     parseFlags(argc, argv);
 
-    // Proof output
-    Config::Output::ProofAccel = (proofLevel >= 1);
-    Config::Output::ProofLimit = (proofLevel >= 2);
-    Config::Output::ProofChain = (proofLevel >= 3);
-
-    // Benchmark and heuristic settings
-         if (benchmarkMode.compare("basic")    == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("cond")     == 0) setBenchmarkConfig(true,  false, false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("bkwd")     == 0) setBenchmarkConfig(false, true,  false, &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("rec")      == 0) setBenchmarkConfig(false, false, true,  &Config::Limit::Calculus);
-    else if (benchmarkMode.compare("smt")      == 0) setBenchmarkConfig(false, false, false, &Config::Limit::SmtAndCalculus);
-    else if (benchmarkMode.compare("just-smt") == 0) setBenchmarkConfig(false, false, false, &Config::Limit::Smt);
-    else if (benchmarkMode.compare("none")     != 0) {
-        cout << "Unknown benchmark setting" << endl;
-        return 1;
-    }
-
-    // Print current configuration (if requested)
-    if (printConfig) {
-        Config::printConfig(cout, true);
-        cout << endl;
-    }
-
     // Timeout
     if (timeout < 0 || (timeout > 0 && timeout < 10)) {
-        cout << "Error: timeout must be at least 10 seconds" << endl;
+        cerr << "Error: timeout must be at least 10 seconds" << endl;
         return 1;
     }
-    Timeout::setTimeouts(timeout);
-    Timing::start(Timing::Total);
+    Timeout::setTimeouts(static_cast<uint>(timeout));
 
     // Start parsing
     if (filename.empty()) {
-        cout << "Error: missing filename" << endl;
+        cerr << "Error: missing filename" << endl;
         return 1;
     }
 
@@ -203,50 +131,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Warnings for unsound configurations (they might still be useful for testing or for specific inputs)
-    if (Config::Parser::AllowDivision) {
-        proofout << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "WARNING: Allowing division in the input program can yield unsound results!" << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "Division is only sound if the result of a term is always an integer." << endl;
+    if (proofLevel < 0 || proofLevel > 3) {
+        cerr << "Error: proof level must be between 0 and 3" << endl;
+        return 1;
     }
-    if (!Config::Analysis::EnsureNonnegativeCosts) {
-        proofout << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "WARNING: Not checking the costs can yield unsound results!" << endl;
-        proofout.setLineStyle(ProofOutput::Warning);
-        proofout << "This is only safe if costs in the input program are guaranteed to be nonnegative." << endl;
-    }
-
-    // Disable proof output if requested (after issuing the warnings for unsound configuration)
-    if (proofLevel == 0) {
-        proofout.setEnabled(false);
-    }
+    Proof::setProofLevel(static_cast<uint>(proofLevel));
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
-    RuntimeResult runtime;
-    if (!allowRecursion && !its.isLinear()) {
-        proofout.warning("Cannot analyze recursive ITS problem (recursion is disabled).");
-    } else {
-        runtime = Analysis::analyze(its);
-    }
-    Timing::done(Timing::Total);
-
-    // Statistics
-    if (printStats) {
-        cout << endl;
-        Stats::print(cout);
-    }
-    if (printTiming) {
-        cout << endl;
-        Timing::print(cout);
-    }
-
-    // WST style proof output
-    proofout.setEnabled(true);
-    proofout << endl << runtime.cpx.toWstString() << endl;
-
+    Analysis::analyze(its);
     return 0;
 }

@@ -16,60 +16,49 @@
  */
 
 #include "timeout.hpp"
-#include "../debug.hpp"
+#include "../config.hpp"
 
 #include <algorithm>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
 static bool timeout_enable = false;
 static TimePoint timeout_start;
-static TimePoint timeout_preprocess;
 static TimePoint timeout_soft;
 static TimePoint timeout_hard;
 
-void Timeout::setTimeouts(int seconds) {
+void Timeout::setTimeouts(uint seconds) {
     assert(seconds == 0 || seconds >= 10);
-    TimePoint now = chrono::steady_clock::now();
-    timeout_start = now;
+    timeout_start = chrono::steady_clock::now();
 
     if (seconds > 0) {
-        timeout_preprocess = now + static_cast<std::chrono::seconds>((seconds < 30) ? 3 : 5);
-        timeout_soft = now + static_cast<std::chrono::seconds>(seconds-((seconds < 30) ? 5 : 10));
-        timeout_hard = now + static_cast<std::chrono::seconds>(seconds-2);
+        ulong slack = max(5u, min(60u, seconds * 15 / 100));
+        timeout_soft = timeout_start + static_cast<std::chrono::seconds>(seconds - slack);
+        timeout_hard = timeout_start + static_cast<std::chrono::seconds>(seconds - 2);
         timeout_enable = true;
     }
 }
 
-TimePoint Timeout::start() {
-    return timeout_start;
-}
-
-bool Timeout::preprocessing() {
-    if (!timeout_enable) return false;
-    TimePoint now = chrono::steady_clock::now();
-    return now >= timeout_preprocess;
+bool Timeout::hard() {
+    if (!timeout_enable || Config::Analysis::NonTermMode) return false;
+    return remainingHard().count() <= 0;
 }
 
 bool Timeout::soft() {
     if (!timeout_enable) return false;
-    TimePoint now = chrono::steady_clock::now();
-    return now >= timeout_soft;
+    return remainingSoft().count() <= 0;
 }
 
-bool Timeout::hard() {
-    if (!timeout_enable) return false;
-    TimePoint now = chrono::steady_clock::now();
-    return now >= timeout_hard;
+bool Timeout::enabled() {
+    return timeout_enable;
 }
 
-TimePoint Timeout::create(int seconds) {
-    TimePoint now = chrono::steady_clock::now();
-    return now + static_cast<std::chrono::seconds>(seconds);
+std::chrono::seconds Timeout::remainingSoft() {
+    return std::chrono::duration_cast<std::chrono::seconds>(timeout_soft - chrono::steady_clock::now());
 }
 
-bool Timeout::over(const TimePoint &point) {
-    TimePoint now = chrono::steady_clock::now();
-    return now >= point;
+std::chrono::seconds Timeout::remainingHard() {
+    return std::chrono::duration_cast<std::chrono::seconds>(timeout_hard - chrono::steady_clock::now());
 }

@@ -57,7 +57,7 @@ public:
      * Returns false if applying this limit vector's directions to the expressions
      * would result in a trivially unsolvable limit problem.
      */
-    bool makesSense(Expression l, Expression r) const;
+    bool makesSense(Expr l, Expr r) const;
 
 private:
     const Direction type;

@@ -20,8 +20,8 @@
 using namespace std;
 
 struct PartialResult {
-    std::vector<VariableIdx> ordering; // might not contain all variables (hence partial)
-    std::set<VariableIdx> ordered; // set of all variables occurring in ordering
+    std::vector<Var> ordering; // might not contain all variables (hence partial)
+    VarSet ordered; // set of all variables occurring in ordering
 };
 
 
@@ -31,7 +31,7 @@ struct PartialResult {
  * already ordered. Stops if this is no longer possible (we are either done
  * or there are conflicting variables depending on each other).
  */
-static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &update, PartialResult &res) {
+static void findOrderUntilConflicting(const Subs &update, PartialResult &res) {
     bool changed = true;
 
     while (changed && res.ordering.size() < update.size()) {
@@ -42,9 +42,8 @@ static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &upd
 
             //check if all variables on update rhs are already processed
             bool ready = true;
-            for (const ExprSymbol &sym : up.second.getVariables()) {
-                VariableIdx var = varMan.getVarIdx(sym);
-                if (var != up.first && update.count(var) > 0 && res.ordered.count(var) == 0) {
+            for (const Var &var : up.second.vars()) {
+                if (var != up.first && update.contains(var) && res.ordered.count(var) == 0) {
                     ready = false;
                     break;
                 }
@@ -59,75 +58,13 @@ static void findOrderUntilConflicting(const VarMan &varMan, const UpdateMap &upd
     }
 }
 
-option<vector<VariableIdx>> DependencyOrder::findOrder(const VarMan &varMan, const UpdateMap &update) {
+option<vector<Var>> DependencyOrder::findOrder(const Subs &update) {
     PartialResult res;
-    findOrderUntilConflicting(varMan, update, res);
+    findOrderUntilConflicting(update, res);
 
     if (res.ordering.size() == update.size()) {
         return res.ordering;
     }
 
-    debugPurrs("No dependency order found (not using heuristic).");
     return {};
-}
-
-
-option<vector<VariableIdx>> DependencyOrder::findOrderWithHeuristic(const VarMan &varMan, UpdateMap &update,
-                                                                      GuardList &guard)
-{
-    // order variables until a conflict is reached
-    PartialResult res;
-    findOrderUntilConflicting(varMan, update, res);
-
-    // check if we are done
-    if (res.ordering.size() == update.size()) {
-        return res.ordering;
-    }
-    debugPurrs("No dependency order found, trying heuristic.");
-
-    // If not all dependencies could be resolved, try to add constraints to the guard to make things easier.
-    // e.g. for A'=A+B, B'=A+B we add the constraint A==B and can thus simplify to A'=A+A, B'=A+A.
-
-    // Note that this is only possible if A'==B' follows from A==B. This is always the case if the two right-hand
-    // sides are equal, as in the example above (A+B and A+B). It is also the case if the right-hand sides are
-    // equal after substituting A/B (to enforce A==B).
-
-    // To see that this is condition is required, consider A'=B+1, B'=A+2.
-    // Note that A'==B' is *not* implied by A==B. Hence using A'=A+1, B'=A+2 is not correct!
-
-    // Choose one of the remaining variables
-    auto notOrdered = [&](const pair<VariableIdx,Expression> &it){ return res.ordered.count(it.first) == 0; };
-    auto it = std::find_if(update.begin(), update.end(), notOrdered);
-    assert(it != update.end());
-
-    ExprSymbol targetSym = varMan.getVarSymbol(it->first);
-    Expression targetRhs = it->second;
-
-    // Build a substitution that replaces all remaining variables x by var.
-    // To ensure soundness, constraints "x == var" are added to the guard.
-    GiNaC::exmap subs;
-    for (const auto &up : update) {
-        if (res.ordered.count(up.first) > 0) continue;
-        subs[varMan.getVarSymbol(up.first)] = targetSym;
-        guard.push_back(varMan.getVarSymbol(up.first) == targetSym);
-    }
-
-    // Apply the substitution to all remaining updates.
-    // To ensure soundness, check that the resulting updates are all equal (to targetRhs)
-    targetRhs.applySubs(subs);
-    for (auto &up : update) {
-        if (res.ordered.count(up.first) > 0) continue;
-        up.second.applySubs(subs);
-        if (!up.second.is_equal(targetRhs)) {
-            // optimization cannot be applied, give up
-            debugPurrs("Heuristic not applicable for different rhss: " << targetRhs << " and " << up.second);
-            return {};
-        }
-    }
-
-    // Now an order is trivial to find (any order will do)
-    findOrderUntilConflicting(varMan, update, res);
-    assert (res.ordering.size() == update.size());
-    debugPurrs("Heuristic successful, dependency order found.");
-    return res.ordering;
 }
