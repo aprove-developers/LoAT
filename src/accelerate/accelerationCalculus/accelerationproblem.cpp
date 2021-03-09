@@ -279,26 +279,31 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     RelMap<BoolExpr> boolAbstractionMap;
     RelMap<BoolExpr> boolNontermAbstractionMap;
     solver->resetSolver();
-    for (const auto &p: res) {
-        const Rel &rel = p.first;
-        const std::vector<Entry> entries = p.second;
-        Vars eVars;
-        BoolExprSet abstraction;
-        BoolExprSet nontermAbstraction;
-        for (const Entry &e: entries) {
-            BoolExpr entryVar = varMan.freshBoolVar();
-            eVars.push_back(entryVar);
-            soft.push_back(entryVar);
-            if (!e.active) continue;
-            abstraction.insert(entryVar);
-            if (e.nonterm) nontermAbstraction.insert(entryVar);
-            for (const Rel &dep: e.dependencies) {
-                solver->add((!entryVar) | edgeVars.at({rel, dep}));
+    for (const auto &rel: todo) {
+        auto it = res.find(rel);
+        if (it == res.end()) {
+            boolAbstractionMap[rel] = False;
+            boolNontermAbstractionMap[rel] = False;
+        } else {
+            const std::vector<Entry> entries = it->second;
+            Vars eVars;
+            BoolExprSet abstraction;
+            BoolExprSet nontermAbstraction;
+            for (const Entry &e: entries) {
+                BoolExpr entryVar = varMan.freshBoolVar();
+                eVars.push_back(entryVar);
+                soft.push_back(entryVar);
+                if (!e.active) continue;
+                abstraction.insert(entryVar);
+                if (e.nonterm) nontermAbstraction.insert(entryVar);
+                for (const Rel &dep: e.dependencies) {
+                    solver->add((!entryVar) | edgeVars.at({rel, dep}));
+                }
             }
+            entryVars[rel] = eVars;
+            boolAbstractionMap[rel] = buildOr(abstraction);
+            boolNontermAbstractionMap[rel] = buildOr(nontermAbstraction);
         }
-        entryVars[rel] = eVars;
-        boolAbstractionMap[rel] = buildOr(abstraction);
-        boolNontermAbstractionMap[rel] = buildOr(nontermAbstraction);
     }
     // forbids loops of length 2
     for (auto it1 = todo.begin(), end = todo.end(); it1 != end; ++it1) {
@@ -381,27 +386,23 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
 BoolExpr AccelerationProblem::buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars) {
     RelMap<BoolExpr> map;
     bool nonterm = true;
-    RelMap<std::vector<uint>> solution;
+    RelMap<uint> solution;
     for (const Rel &rel: todo) {
-        std::vector<BoolExpr> replacement;
+        map[rel] = False;
         if (res.count(rel) > 0) {
-            std::vector<uint> sol;
             std::vector<Entry> entries = res.at(rel);
             uint eVarIdx = 0;
             const std::vector<BoolExpr> &eVars = entryVars.at(rel);
             for (auto eIt = entries.begin(), eEnd = entries.end(); eIt != eEnd; ++eIt, ++eVarIdx) {
                 int id = eVars[eVarIdx]->getConst().get();
                 if (model.contains(id) && model.get(id)) {
-                    replacement.push_back(eIt->formula);
+                    map[rel] = eIt->formula;
                     nonterm &= eIt->nonterm;
-                    sol.push_back(eVarIdx);
+                    solution[rel] = eVarIdx;
+                    break;
                 }
             }
-            if (!sol.empty()) {
-                solution[rel] = sol;
-            }
         }
-        map[rel] = buildOr(replacement);
     }
     BoolExpr ret = guard->replaceRels(map);
     if (!nonterm) {
@@ -411,17 +412,7 @@ BoolExpr AccelerationProblem::buildRes(const Model &model, const std::map<Rel, s
     proof.append("solution:");
     for (const auto &e: solution) {
         std::stringstream ss;
-        ss << e.first << ": [";
-        bool first = true;
-        for (uint i: e.second) {
-            if (first) {
-                first = false;
-            } else {
-                ss << " ";
-            }
-            ss << i;
-        }
-        ss << "]";
+        ss << e.first << ": " << e.second;
         proof.append(ss);
     }
     proof.newline();
