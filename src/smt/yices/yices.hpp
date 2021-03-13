@@ -27,8 +27,6 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
-protected:
-
     BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
 
 private:

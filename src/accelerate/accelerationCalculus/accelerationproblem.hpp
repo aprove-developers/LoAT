@@ -28,7 +28,7 @@ private:
     option<RelMap<Entry>> solution;
     RelSet todo;
     Subs up;
-    Subs closed;
+    option<Subs> closed;
     Expr cost;
     Expr iteratedCost;
     Var n;
@@ -41,7 +41,7 @@ private:
     AccelerationProblem(
             const BoolExpr guard,
             const Subs &up,
-            const Subs &closed,
+            option<const Subs&> closed,
             const Expr &cost,
             const Expr &iteratedCost,
             const Var &n,
@@ -51,6 +51,7 @@ private:
     void monotonicity();
     void recurrence();
     void eventualWeakDecrease();
+    void eventualWeakIncrease();
     RelSet findConsistentSubset(const BoolExpr e) const;
     option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 
@@ -66,7 +67,7 @@ public:
     BoolExpr buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
     Expr getAcceleratedCost() const;
-    Subs getClosedForm() const;
+    option<Subs> getClosedForm() const;
     Var getIterationCounter() const;
     uint getValidityBound() const;
 

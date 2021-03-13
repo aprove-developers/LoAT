@@ -153,6 +153,7 @@ add_executable(${EXECUTABLE}
         src/smt/smtfactory.hpp
         src/smt/model.cpp
         src/smt/model.hpp
+        src/smt/combined_solver.hpp
         src/merging/merger.cpp
         src/merging/merger.hpp)
 

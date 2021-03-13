@@ -24,8 +24,6 @@ public:
 
     static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan, uint timeout = Config::Smt::SimpTimeout);
 
-protected:
-
     BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
 
 private:

@@ -5,13 +5,14 @@
 AccelerationProblem::AccelerationProblem(
         const BoolExpr guard,
         const Subs &up,
-        const Subs &closed,
+        option<const Subs&> closed,
         const Expr &cost,
         const Expr &iteratedCost,
         const Var &n,
         const uint validityBound,
         VariableManager &varMan): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), varMan(varMan) {
-    Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, {up, closed});
+    std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
+    Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
     this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
     this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << up);
 }
@@ -23,14 +24,22 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
         return {AccelerationProblem(
                         r.getGuard()->toG(),
                         r.getUpdate(),
-                        res->update,
+                        option<const Subs&>(res->update),
                         r.getCost(),
                         res->cost,
                         n,
                         res->validityBound,
                         varMan)};
     } else {
-        return {};
+        return {AccelerationProblem(
+                        r.getGuard()->toG(),
+                        r.getUpdate(),
+                        option<const Subs&>(),
+                        r.getCost(),
+                        r.getCost(),
+                        n,
+                        0,
+                        varMan)};
     }
 }
 
@@ -81,47 +90,54 @@ option<uint> AccelerationProblem::store(const Rel &rel, const RelSet &deps, cons
 }
 
 void AccelerationProblem::monotonicity() {
-    for (const Rel &rel: todo) {
-        const Rel &updated = rel.subs(up);
-        RelSet premise = findConsistentSubset(guard & rel & updated);
-        if (!premise.empty()) {
-            BoolExprSet assumptions;
-            BoolExprSet deps;
-            premise.erase(rel);
-            for (const Rel &p: premise) {
-                const BoolExpr lit = buildLit(p);
-                assumptions.insert(lit);
-                deps.insert(lit);
+    if (closed) {
+        for (const Rel &rel: todo) {
+            const auto it = res.find(rel);
+            auto no_deps = [](auto const &e){return e.dependencies.empty();};
+            if (it != res.end() && std::any_of(it->second.begin(), it->second.end(), no_deps)) {
+                continue;
             }
-            assumptions.insert(buildLit(updated));
-            assumptions.insert(buildLit(!rel));
-            const BoolExprSet &unsatCore = Smt::unsatCore(assumptions, varMan);
-            if (!unsatCore.empty()) {
-                RelSet dependencies;
-                for (const BoolExpr &e: unsatCore) {
-                    if (deps.count(e) > 0) {
-                        const RelSet &lit = e->lits();
-                        assert(lit.size() == 1);
-                        dependencies.insert(*lit.begin());
-                    }
+            const Rel &updated = rel.subs(up);
+            RelSet premise = findConsistentSubset(guard & rel & updated);
+            if (!premise.empty()) {
+                BoolExprSet assumptions;
+                BoolExprSet deps;
+                premise.erase(rel);
+                for (const Rel &p: premise) {
+                    const BoolExpr lit = buildLit(p);
+                    assumptions.insert(lit);
+                    deps.insert(lit);
                 }
-                const BoolExpr newGuard = buildAnd(dependencies) & rel.subs(closed).subs(Subs(n, n-1));
-                solver->resetSolver();
-                solver->add(newGuard);
-                solver->add(n >= validityBound);
-                if (solver->check() == Smt::Sat) {
-                    option<uint> idx = store(rel, dependencies, newGuard);
-                    if (idx) {
-                        std::stringstream ss;
-                        ss << rel << " [" << idx.get() << "]: montonic decrease yields " << newGuard;
-                        if (!dependencies.empty()) {
-                            ss << ", dependencies:";
-                            for (const Rel &rel: dependencies) {
-                                ss << " " << rel;
-                            }
+                assumptions.insert(buildLit(updated));
+                assumptions.insert(buildLit(!rel));
+                const BoolExprSet &unsatCore = Smt::unsatCore(assumptions, varMan);
+                if (!unsatCore.empty()) {
+                    RelSet dependencies;
+                    for (const BoolExpr &e: unsatCore) {
+                        if (deps.count(e) > 0) {
+                            const RelSet &lit = e->lits();
+                            assert(lit.size() == 1);
+                            dependencies.insert(*lit.begin());
                         }
-                        proof.newline();
-                        proof.append(ss);
+                    }
+                    const BoolExpr newGuard = buildAnd(dependencies) & rel.subs(closed.get()).subs(Subs(n, n-1));
+                    solver->resetSolver();
+                    solver->add(newGuard);
+                    solver->add(n >= validityBound);
+                    if (solver->check() == Smt::Sat) {
+                        option<uint> idx = store(rel, dependencies, newGuard);
+                        if (idx) {
+                            std::stringstream ss;
+                            ss << rel << " [" << idx.get() << "]: montonic decrease yields " << newGuard;
+                            if (!dependencies.empty()) {
+                                ss << ", dependencies:";
+                                for (const Rel &rel: dependencies) {
+                                    ss << " " << rel;
+                                }
+                            }
+                            proof.newline();
+                            proof.append(ss);
+                        }
                     }
                 }
             }
@@ -173,11 +189,75 @@ void AccelerationProblem::recurrence() {
 }
 
 void AccelerationProblem::eventualWeakDecrease() {
+    if (closed) {
+        for (const Rel &rel: todo) {
+            const auto it = res.find(rel);
+            auto no_deps = [](auto const &e){return e.dependencies.empty();};
+            if (it != res.end() && std::any_of(it->second.begin(), it->second.end(), no_deps)) {
+                continue;
+            }
+            const Expr &updated = rel.lhs().subs(up);
+            const Rel &dec = rel.lhs() >= updated;
+            const Rel &inc = updated < updated.subs(up);
+            RelSet premise = findConsistentSubset(guard & dec & !inc);
+            if (!premise.empty()) {
+                premise.erase(rel);
+                BoolExprSet assumptions;
+                BoolExprSet deps;
+                for (const Rel &p: premise) {
+                    const BoolExpr lit = buildLit(p);
+                    assumptions.insert(lit);
+                    deps.insert(lit);
+                }
+                assumptions.insert(buildLit(dec));
+                assumptions.insert(buildLit(inc));
+                BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
+                if (!unsatCore.empty()) {
+                    RelSet dependencies;
+                    for (const BoolExpr &e: unsatCore) {
+                        if (deps.count(e) > 0) {
+                            const RelSet &lit = e->lits();
+                            assert(lit.size() == 1);
+                            dependencies.insert(*lit.begin());
+                        }
+                    }
+                    const Rel &newCond = rel.subs(closed.get()).subs(Subs(n, n-1));
+                    const BoolExpr newGuard = buildAnd(dependencies) & rel & newCond;
+                    solver->resetSolver();
+                    solver->add(newGuard);
+                    solver->add(n >= validityBound);
+                    if (solver->check() == Smt::Sat) {
+                        option<uint> idx = store(rel, dependencies, newGuard);
+                        if (idx) {
+                            std::stringstream ss;
+                            ss << rel << " [" << idx.get() << "]: eventual decrease yields " << newGuard;
+                            if (!dependencies.empty()) {
+                                ss << ", dependencies:";
+                                for (const Rel &rel: dependencies) {
+                                    ss << " " << rel;
+                                }
+                            }
+                            proof.newline();
+                            proof.append(ss);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AccelerationProblem::eventualWeakIncrease() {
     for (const Rel &rel: todo) {
+        const auto it = res.find(rel);
+        auto no_deps = [](auto const &e){return e.nonterm && e.dependencies.empty();};
+        if (it != res.end() && std::any_of(it->second.begin(), it->second.end(), no_deps)) {
+            continue;
+        }
         const Expr &updated = rel.lhs().subs(up);
-        const Rel &dec = rel.lhs() >= updated;
-        const Rel &inc = updated < updated.subs(up);
-        RelSet premise = findConsistentSubset(guard & dec & !inc);
+        const Rel &inc = rel.lhs() <= updated;
+        const Rel &dec = updated > updated.subs(up);
+        RelSet premise = findConsistentSubset(guard & inc & !dec);
         if (!premise.empty()) {
             premise.erase(rel);
             BoolExprSet assumptions;
@@ -199,16 +279,14 @@ void AccelerationProblem::eventualWeakDecrease() {
                         dependencies.insert(*lit.begin());
                     }
                 }
-                const Rel &newCond = rel.subs(closed).subs(Subs(n, n-1));
-                const BoolExpr newGuard = buildAnd(dependencies) & rel & newCond;
+                const BoolExpr newGuard = buildAnd(dependencies) & rel & inc;
                 solver->resetSolver();
                 solver->add(newGuard);
-                solver->add(n >= validityBound);
                 if (solver->check() == Smt::Sat) {
-                    option<uint> idx = store(rel, dependencies, newGuard);
+                    option<uint> idx = store(rel, dependencies, newGuard, true);
                     if (idx) {
                         std::stringstream ss;
-                        ss << rel << " [" << idx.get() << "]: eventual decrease yields " << newGuard;
+                        ss << rel << " [" << idx.get() << "]: eventual increase yields " << newGuard;
                         if (!dependencies.empty()) {
                             ss << ", dependencies:";
                             for (const Rel &rel: dependencies) {
@@ -263,6 +341,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     recurrence();
     monotonicity();
     eventualWeakDecrease();
+    eventualWeakIncrease();
     using Edge = std::pair<Rel, Rel>;
     using Vars = std::vector<BoolExpr>;
     std::map<Edge, BoolExpr> edgeVars;
@@ -340,44 +419,46 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             ret.push_back({newGuard, true});
         }
     }
-    if (satRes != Smt::Sat) {
-        solver->pop();
-        BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
-        solver->add(boolAbstraction);
-        satRes = solver->check();
-        if (satRes == Smt::Sat && checkCycle(edgeVars)) {
-            // if a->b and b->c is enabled, then a->c needs to be enabled, too
-            for (const auto &p: edgeVars) {
-                const Edge &edge = p.first;
-                const Rel &start = edge.first;
-                const Rel &join = edge.second;
-                const BoolExpr var1 = p.second;
-                for (const Rel &target: todo) {
-                    if (target == join) continue;
-                    const BoolExpr var2 = edgeVars.at({join, target});
-                    const BoolExpr var3 = edgeVars.at({start, target});
-                    solver->add((!var1) | (!var2) | var3);
+    if (closed) {
+        if (satRes != Smt::Sat) {
+            solver->pop();
+            BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
+            solver->add(boolAbstraction);
+            satRes = solver->check();
+            if (satRes == Smt::Sat && checkCycle(edgeVars)) {
+                // if a->b and b->c is enabled, then a->c needs to be enabled, too
+                for (const auto &p: edgeVars) {
+                    const Edge &edge = p.first;
+                    const Rel &start = edge.first;
+                    const Rel &join = edge.second;
+                    const BoolExpr var1 = p.second;
+                    for (const Rel &target: todo) {
+                        if (target == join) continue;
+                        const BoolExpr var2 = edgeVars.at({join, target});
+                        const BoolExpr var3 = edgeVars.at({start, target});
+                        solver->add((!var1) | (!var2) | var3);
+                    }
+                }
+                satRes = solver->check();
+            }
+        }
+        if (satRes == Smt::Sat) {
+            Model model = solver->model();
+            for (const BoolExpr &s: soft) {
+                solver->push();
+                solver->add(s);
+                satRes = solver->check();
+                if (satRes == Smt::Sat) {
+                    model = solver->model();
+                } else {
+                    solver->pop();
                 }
             }
-            satRes = solver->check();
-        }
-    }
-    if (satRes == Smt::Sat) {
-        Model model = solver->model();
-        for (const BoolExpr &s: soft) {
-            solver->push();
-            solver->add(s);
-            satRes = solver->check();
-            if (satRes == Smt::Sat) {
-                model = solver->model();
-            } else {
-                solver->pop();
+            BoolExpr newGuard = buildRes(model, entryVars);
+            // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
+            if (Smt::check(newGuard, varMan) == Smt::Sat) {
+                ret.push_back({newGuard, false});
             }
-        }
-        BoolExpr newGuard = buildRes(model, entryVars);
-        // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
-        if (Smt::check(newGuard, varMan) == Smt::Sat) {
-            ret.push_back({newGuard, false});
         }
     }
     return ret;
@@ -432,7 +513,7 @@ Expr AccelerationProblem::getAcceleratedCost() const {
     return iteratedCost;
 }
 
-Subs AccelerationProblem::getClosedForm() const {
+option<Subs> AccelerationProblem::getClosedForm() const {
     return closed;
 }
 
