@@ -32,7 +32,6 @@
 
 #include <queue>
 #include "../asymptotic/asymptoticbound.hpp"
-#include "../nonterm/recurrentSet/strengthener.hpp"
 #include <stdexcept>
 #include "../nonterm/nonterm.hpp"
 #include "../smt/z3/z3.hpp"
@@ -265,22 +264,6 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
 //                const Proof &proof = p.get().second;
 //                res.proof.concat(proof);
 //                res.rules.emplace_back(nontermRule);
-//            }
-//        }
-//        if (Config::Analysis::NonTermMode) {
-//            if (!universalNonterm) {
-//                option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-//                if (strengthened) {
-//                    bool sat = Smt::check(strengthened.get().getGuard(), its) == Smt::Sat;
-//                    // only proceed if the guard is sat
-//                    if (sat) {
-//                        if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
-//                            const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
-//                            res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
-//                            res.rules.emplace_back(nontermRule);
-//                        }
-//                    }
-//                }
 //            }
 //        }
         if (!universalNonterm) {

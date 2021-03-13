@@ -117,17 +117,6 @@ add_executable(${EXECUTABLE}
         src/config.hpp
         src/main.cpp
         src/main.hpp
-        src/nonterm/recurrentSet/constraintbuilder.cpp
-        src/nonterm/recurrentSet/constraintbuilder.hpp
-        src/nonterm/recurrentSet/strengthener.cpp
-        src/nonterm/recurrentSet/strengthener.hpp
-        src/nonterm/recurrentSet/types.hpp
-        src/nonterm/recurrentSet/templatebuilder.cpp
-        src/nonterm/recurrentSet/templatebuilder.hpp
-        src/nonterm/recurrentSet/constraintsolver.cpp
-        src/nonterm/recurrentSet/constraintsolver.hpp
-        src/nonterm/recurrentSet/guardcontextbuilder.cpp
-        src/nonterm/recurrentSet/guardcontextbuilder.hpp
         src/its/smt2Parser/sexpresso/sexpresso.cpp
         src/its/smt2Parser/sexpresso/sexpresso.hpp
         src/its/smt2Parser/parser.cpp
