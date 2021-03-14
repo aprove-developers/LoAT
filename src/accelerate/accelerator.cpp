@@ -81,13 +81,6 @@ bool Accelerator::simplifySimpleLoops() {
         this->proof.minorProofStep("Simplified simple loops", its);
     }
 
-    // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
-    std::set<TransIdx> removed = Pruning::removeDuplicateRules(its, loops);
-    if (!removed.empty()) {
-        res = true;
-        this->proof.deletionProof(removed);
-    }
-
     return res;
 }
 
@@ -171,16 +164,6 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
         }
     }
     this->proof.deletionProof(deleted);
-
-    // In some cases, two loops can yield similar accelerated rules, so we prune duplicates
-    // and have to remove rules that were removed from resultingRules.
-    std::set<TransIdx> removed = Pruning::removeDuplicateRules(its, resultingRules);
-    if (!removed.empty()) {
-        for (TransIdx r: removed) {
-            resultingRules.erase(r);
-        }
-        this->proof.deletionProof(removed);
-    }
 }
 
 const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
