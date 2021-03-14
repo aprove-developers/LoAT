@@ -22,7 +22,7 @@ bool Smt::isImplication(const BoolExpr lhs, const BoolExpr rhs, const VariableMa
 
 BoolExprSet Smt::unsatCore(const BoolExprSet &assumptions, VariableManager &varMan) {
     std::unique_ptr<Smt> solver = SmtFactory::solver(Smt::chooseLogic(assumptions), varMan);
-    return solver->_unsatCore(assumptions);
+    return solver->_unsatCore(assumptions).second;
 }
 
 Smt::Logic Smt::chooseLogic(const std::vector<BoolExpr> &xs, const std::vector<Subs> &up) {

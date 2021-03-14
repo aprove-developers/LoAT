@@ -13,6 +13,7 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
     case Smt::QF_NA:
         res = std::unique_ptr<Smt>(new CombinedSolver(new Yices(varMan, logic), new Z3(varMan)));
         break;
+//    case Smt::QF_NA:
     case Smt::QF_ENA:
         res = std::unique_ptr<Smt>(new Z3(varMan));
         break;

@@ -96,7 +96,7 @@ void Yices::resetSolver() {
     yices_reset_context(solver);
 }
 
-BoolExprSet Yices::_unsatCore(const BoolExprSet &assumptions) {
+std::pair<Smt::Result, BoolExprSet> Yices::_unsatCore(const BoolExprSet &assumptions) {
     std::vector<term_t> as;
     std::map<term_t, BoolExpr> map;
     for (const BoolExpr &a: assumptions) {
@@ -108,7 +108,7 @@ BoolExprSet Yices::_unsatCore(const BoolExprSet &assumptions) {
     if (future.wait_for(std::chrono::milliseconds(timeout)) != std::future_status::timeout) {
         switch (future.get()) {
         case STATUS_SAT:
-            return {};
+            return {Sat, {}};
         case STATUS_UNSAT: {
             term_vector_t core;
             yices_init_term_vector(&core);
@@ -117,14 +117,14 @@ BoolExprSet Yices::_unsatCore(const BoolExprSet &assumptions) {
             for (uint i = 0; i < core.size; ++i) {
                 res.insert(map[core.data[i]]);
             }
-            return res;
+            return {Unsat, res};
         }
         default:
-            return {};
+            return {Unknown, {}};
         }
     } else {
         yices_stop_search(solver);
-        return {};
+        return {Unknown, {}};
     }
 }
 

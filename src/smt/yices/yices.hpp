@@ -27,7 +27,7 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
-    BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
+    std::pair<Result, BoolExprSet> _unsatCore(const BoolExprSet &assumptions) override;
 
 private:
     unsigned int timeout = Config::Smt::DefaultTimeout;

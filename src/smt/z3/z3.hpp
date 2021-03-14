@@ -24,7 +24,7 @@ public:
 
     static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan, uint timeout = Config::Smt::SimpTimeout);
 
-    BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
+    std::pair<Result, BoolExprSet> _unsatCore(const BoolExprSet &assumptions) override;
 
 private:
     bool models = false;
