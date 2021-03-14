@@ -2,7 +2,6 @@
 #define COMBINED_SOLVER_HPP
 
 #include <type_traits>
-#include <future>
 #include "smt.hpp"
 
 template <class S1, class S2>
@@ -39,15 +38,13 @@ public:
     }
 
     virtual Result check() {
-        auto s1_async = std::async([&](){return s1->check();});
-        Result res = s2->check();
-        s1_async.wait();
+        Result res = s1->check();
         if (res != Unknown) {
-            active = Snd;
+            active = Fst;
             return res;
         }
-        active = Fst;
-        return s1_async.get();
+        active = Snd;
+        return s2->check();
     }
 
     virtual Model model() {
@@ -78,20 +75,12 @@ public:
 
 protected:
 
-    virtual BoolExprSet _unsatCore(const BoolExprSet &assumptions) {
-        auto s1_async = std::async([&](){return s1->_unsatCore(assumptions);});
-        const BoolExprSet res1 = s2->_unsatCore(assumptions);
-        s1_async.wait();
-        const BoolExprSet res2 = s1_async.get();
-        if (res1.empty() && !res2.empty()) {
-            return res2;
-        } else if (!res1.empty() && res2.empty()) {
-            return res1;
-        } else if (res1.size() <= res2.size()) {
-            return res1;
-        } else {
-            return res2;
+    virtual std::pair<Result, BoolExprSet> _unsatCore(const BoolExprSet &assumptions) {
+        const auto& p = s1->_unsatCore(assumptions);
+        if (p.first != Unknown) {
+            return p;
         }
+        return s2->_unsatCore(assumptions);
     }
 
 };

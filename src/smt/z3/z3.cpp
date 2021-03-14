@@ -75,7 +75,7 @@ GiNaC::numeric Z3::getRealFromModel(const z3::model &model, const z3::expr &symb
     return res;
 }
 
-BoolExprSet Z3::_unsatCore(const BoolExprSet &assumptions) {
+std::pair<Smt::Result, BoolExprSet> Z3::_unsatCore(const BoolExprSet &assumptions) {
     std::vector<z3::expr> as;
     std::map<std::pair<unsigned int, std::string>, BoolExpr> map;
     for (const BoolExpr &a: assumptions) {
@@ -85,7 +85,8 @@ BoolExprSet Z3::_unsatCore(const BoolExprSet &assumptions) {
         assert(map.count(key) == 0);
         map.emplace(key, a);
     }
-    if (solver.check(as.size(), &as[0]) == z3::unsat) {
+    auto z3res = solver.check(as.size(), &as[0]);
+    if (z3res == z3::unsat) {
         z3::expr_vector core = solver.unsat_core();
         BoolExprSet res;
         for (const z3::expr &e: core) {
@@ -93,9 +94,12 @@ BoolExprSet Z3::_unsatCore(const BoolExprSet &assumptions) {
             assert(map.count(key) > 0);
             res.insert(map[key]);
         }
-        return res;
+        return {Unsat, res};
+    } else if (z3res == z3::sat) {
+        return {Sat, {}};
+    } else {
+        return {Unknown, {}};
     }
-    return {};
 }
 
 void Z3::resetSolver() {
