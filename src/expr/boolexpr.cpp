@@ -97,6 +97,10 @@ void BoolConst::dnf(std::vector<Guard> &res) const {
     assert(false && "not supported");
 }
 
+unsigned BoolConst::hash() const {
+    return id;
+}
+
 
 BoolLit::BoolLit(const Rel &lit): lit(lit.makeRhsZero()) { }
 
@@ -200,6 +204,10 @@ void BoolLit::dnf(std::vector<Guard> &res) const {
             g.push_back(lit);
         }
     }
+}
+
+unsigned BoolLit::hash() const {
+    return lit.hash();
 }
 
 BoolLit::~BoolLit() {}
@@ -332,6 +340,15 @@ void BoolJunction::dnf(std::vector<Guard> &res) const {
             res.insert(res.end(), newRes.begin(), newRes.end());
         }
     }
+}
+
+unsigned BoolJunction::hash() const {
+    unsigned hash = 7;
+    for (const BoolExpr& c: children) {
+        hash = 31 * hash + c->hash();
+    }
+    hash = 31 * hash + op;
+    return hash;
 }
 
 BoolJunction::~BoolJunction() {}

@@ -44,6 +44,15 @@ public:
         guard->collectVars(vars);
         cost.collectVars(vars);
     }
+
+    unsigned hash() const {
+        unsigned hash = 7;
+        hash = hash * 31 + loc;
+        hash = hash * 31 + guard->hash();
+        hash = hash * 31 + cost.hash();
+        return hash;
+    }
+
 };
 
 
@@ -59,6 +68,13 @@ public:
 
     void collectVars(VarSet &vars) const {
         update.collectAllVars(vars);
+    }
+
+    unsigned hash() const {
+        unsigned hash = 7;
+        hash = hash * 31 + loc;
+        hash = hash * 31 + update.hash();
+        return hash;
     }
 
 };
@@ -140,6 +156,9 @@ public:
 
     VarSet vars() const;
     void collectVars(VarSet &vars) const;
+
+    unsigned hash() const;
+    bool approxEqual(const Rule &that, bool compareRhss) const;
 };
 
 

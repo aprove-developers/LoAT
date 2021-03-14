@@ -117,6 +117,50 @@ Rule Rule::withUpdate(unsigned int i, const Subs &up) const {
     return Rule(RuleLhs(getLhsLoc(), getGuard(), getCost()), rhss);
 }
 
+bool Rule::approxEqual(const Rule &that, bool compareRhss) const {
+    // Some trivial syntactic checks
+    if (compareRhss && rhsCount() != that.rhsCount()) return false;
+
+    // Costs have to be equal up to a numeric constant
+    if (!(getCost() - that.getCost()).isRationalConstant()) return false;
+
+    // All right-hand sides have to match exactly
+    if (compareRhss) {
+        for (unsigned int i=0; i < rhsCount(); ++i) {
+            const Subs &updateA = getUpdate(i);
+            const Subs &updateB = that.getUpdate(i);
+
+            if (getRhsLoc(i) != that.getRhsLoc(i)) return false;
+            if (updateA.size() != updateB.size()) return false;
+
+            // update has to be fully equal (one inclusion suffices, since the size is equal)
+            for (const auto &itA : updateA) {
+                auto itB = updateB.find(itA.first);
+                if (itB == updateB.end()) return false;
+                if (!itB->second.equals(itA.second)) return false;
+            }
+        }
+    }
+
+    // Guard has to be fully equal (including the ordering)
+    if (getGuard() != that.getGuard()) return false;
+    return true;
+}
+
+unsigned Rule::hash() const {
+    unsigned hash = 7;
+    hash = hash * 31 + lhs.hash();
+    std::vector<unsigned> rhsHashs;
+    for (const auto& r: rhss) {
+        rhsHashs.push_back(r.hash());
+    }
+    std::sort(rhsHashs.begin(), rhsHashs.end());
+    for (unsigned h: rhsHashs) {
+        hash = 31 * hash + h;
+    }
+    return hash;
+}
+
 bool operator ==(const RuleRhs &fst, const RuleRhs &snd) {
     return fst.getLoc() == snd.getLoc() && fst.getUpdate() == snd.getUpdate();
 }

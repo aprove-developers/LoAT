@@ -21,6 +21,8 @@ using namespace std;
 
 std::recursive_mutex ITSProblem::mutex;
 
+ITSProblem::ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {}
+
 bool ITSProblem::isEmpty() const {
     return rules.empty();
 }

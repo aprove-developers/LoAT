@@ -419,6 +419,10 @@ int Expr::compare(const Expr &that) const {
     return ex.compare(that.ex);
 }
 
+unsigned Expr::hash() const {
+    return ex.gethash();
+}
+
 Expr Expr::numerator() const {
     return ex.numer();
 }
@@ -624,6 +628,15 @@ VarSet Subs::allVars() const {
     VarSet res;
     collectAllVars(res);
     return res;
+}
+
+unsigned Subs::hash() const {
+    unsigned hash = 7;
+    for (const auto& p: *this) {
+        hash = hash * 31 + p.first.gethash();
+        hash = hash * 31 + p.second.hash();
+    }
+    return hash;
 }
 
 ExprMap::ExprMap(): KeyToExprMap<Expr>() {}

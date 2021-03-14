@@ -48,6 +48,7 @@ public:
     virtual void collectVars(VarSet &res) const = 0;
     virtual size_t size() const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
+    virtual unsigned hash() const = 0;
 
 protected:
     virtual void dnf(std::vector<Guard> &res) const = 0;
@@ -79,6 +80,7 @@ public:
     void collectVars(VarSet &res) const override;
     size_t size() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
+    unsigned hash() const override;
 
 protected:
     void dnf(std::vector<Guard> &res) const override;
@@ -111,6 +113,7 @@ public:
     void collectVars(VarSet &res) const override;
     size_t size() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
+    unsigned hash() const override;
 
 protected:
     void dnf(std::vector<Guard> &res) const override;
@@ -146,6 +149,7 @@ public:
     void collectVars(VarSet &res) const override;
     size_t size() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
+    unsigned hash() const override;
 
 protected:
     void dnf(std::vector<Guard> &res) const override;
