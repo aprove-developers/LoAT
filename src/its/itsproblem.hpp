@@ -25,6 +25,7 @@
 #include "hypergraph.hpp"
 
 #include <mutex>
+#include <unordered_map>
 
 
 class ITSProblem : public VariableManager {
@@ -48,13 +49,13 @@ public:
 
     // query the rule associated with a given transition
     bool hasRule(TransIdx transition) const;
-    const Rule& getRule(TransIdx transition) const;
+    const Rule getRule(TransIdx transition) const;
 
     // the rule associated with the given index must be linear!
     LinearRule getLinearRule(TransIdx transition) const;
 
     // returns the destinations of the given transition
-    const std::set<LocationIdx> &getTransitionTargets(TransIdx idx) const;
+    const std::set<LocationIdx> getTransitionTargets(TransIdx idx) const;
 
     // query transitions of the graph
     std::set<TransIdx> getTransitionsFrom(LocationIdx loc) const;
@@ -101,12 +102,26 @@ public:
     static void unlock();
 
 protected:
+
+    struct RuleHash {
+        std::size_t operator()(const Rule& r) const {
+            return r.hash();
+        }
+    };
+
+    struct RuleEqual {
+        bool operator()(const Rule& fst, const Rule& snd) const {
+            return fst.approxEqual(snd, true);
+        }
+    };
+
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
     HyperGraph<LocationIdx> graph;
 
     // Collection of all rules, identified by the corresponding transitions in the graph.
     // The map allows to efficiently add/delete rules.
     std::map<TransIdx, Rule> rules;
+    std::unordered_map<Rule, TransIdx, RuleHash, RuleEqual> rulesBwd;
 
     // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
     std::set<LocationIdx> locations;

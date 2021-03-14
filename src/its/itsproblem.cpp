@@ -17,6 +17,7 @@
 
 #include "itsproblem.hpp"
 #include "export.hpp"
+
 using namespace std;
 
 std::recursive_mutex ITSProblem::mutex;
@@ -24,10 +25,12 @@ std::recursive_mutex ITSProblem::mutex;
 ITSProblem::ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {}
 
 bool ITSProblem::isEmpty() const {
+    std::lock_guard guard(mutex);
     return rules.empty();
 }
 
 bool ITSProblem::isLinear() const {
+    std::lock_guard guard(mutex);
     for (const auto &it : rules) {
         if (!it.second.isLinear()) {
             return false;
@@ -37,27 +40,29 @@ bool ITSProblem::isLinear() const {
 }
 
 LocationIdx ITSProblem::getInitialLocation() const {
+    std::lock_guard guard(mutex);
     return initialLocation;
 }
 
 bool ITSProblem::isInitialLocation(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return loc == initialLocation;
 }
 
 void ITSProblem::setInitialLocation(LocationIdx loc) {
+    std::lock_guard guard(mutex);
     initialLocation = loc;
 }
 
 bool ITSProblem::hasRule(TransIdx transition) const {
+    std::lock_guard guard(mutex);
     return rules.find(transition) != rules.end();
 }
 
-const Rule& ITSProblem::getRule(TransIdx transition) const {
-    lock();
+const Rule ITSProblem::getRule(TransIdx transition) const {
+    std::lock_guard guard(mutex);
     assert(rules.count(transition) > 0);
-    const Rule &res = rules.at(transition);
-    unlock();
-    return res;
+    return rules.at(transition);
 }
 
 void ITSProblem::lock() {
@@ -69,45 +74,52 @@ void ITSProblem::unlock() {
 }
 
 LinearRule ITSProblem::getLinearRule(TransIdx transition) const {
-    lock();
-    const LinearRule &res = rules.at(transition).toLinear();
-    unlock();
-    return res;
+    std::lock_guard guard(mutex);
+    return rules.at(transition).toLinear();
 }
 
-const std::set<LocationIdx>& ITSProblem::getTransitionTargets(TransIdx idx) const {
+const std::set<LocationIdx> ITSProblem::getTransitionTargets(TransIdx idx) const {
+    std::lock_guard guard(mutex);
     return graph.getTransTargets(idx);
 }
 
 std::set<TransIdx> ITSProblem::getTransitionsFrom(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return graph.getTransFrom(loc);
 }
 
 std::vector<TransIdx> ITSProblem::getTransitionsFromTo(LocationIdx from, LocationIdx to) const {
+    std::lock_guard guard(mutex);
     return graph.getTransFromTo(from, to);
 }
 
 std::set<TransIdx> ITSProblem::getTransitionsTo(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return graph.getTransTo(loc);
 }
 
 std::vector<TransIdx> ITSProblem::getAllTransitions() const {
+    std::lock_guard guard(mutex);
     return graph.getAllTrans();
 }
 
 bool ITSProblem::hasTransitionsFrom(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return graph.hasTransFrom(loc);
 }
 
 bool ITSProblem::hasTransitionsFromTo(LocationIdx from, LocationIdx to) const {
+    std::lock_guard guard(mutex);
     return graph.hasTransFromTo(from, to);
 }
 
 bool ITSProblem::hasTransitionsTo(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return graph.hasTransTo(loc);
 }
 
 std::vector<TransIdx> ITSProblem::getSimpleLoopsAt(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     vector<TransIdx> res;
     for (TransIdx rule : getTransitionsFromTo(loc, loc)) {
         if (getRule(rule).isSimpleLoop()) {
@@ -118,21 +130,31 @@ std::vector<TransIdx> ITSProblem::getSimpleLoopsAt(LocationIdx loc) const {
 }
 
 std::set<LocationIdx> ITSProblem::getSuccessorLocations(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return graph.getSuccessors(loc);
 }
 
 std::set<LocationIdx> ITSProblem::getPredecessorLocations(LocationIdx loc) const {
+    std::lock_guard guard(mutex);
     return graph.getPredecessors(loc);
 }
 
 void ITSProblem::removeRule(TransIdx transition) {
-    lock();
+    std::lock_guard guard(mutex);
     graph.removeTrans(transition);
+    auto it = rules.find(transition);
+    if (it != rules.end()) {
+        rulesBwd.erase(it->second);
+    }
     rules.erase(transition);
-    unlock();
 }
 
 TransIdx ITSProblem::addRule(Rule rule) {
+    std::lock_guard guard(mutex);
+    auto it = rulesBwd.find(rule);
+    if (it != rulesBwd.end()) {
+        return it->second;
+    }
     // gather target locations
     set<LocationIdx> rhsLocs;
     for (auto it = rule.rhsBegin(); it != rule.rhsEnd(); ++it) {
@@ -140,30 +162,33 @@ TransIdx ITSProblem::addRule(Rule rule) {
     }
 
     // add transition and store mapping to rule
-    lock();
     TransIdx idx = graph.addTrans(rule.getLhsLoc(), rhsLocs);
     rules.emplace(idx, rule);
-    unlock();
+    rulesBwd.emplace(rule, idx);
     return idx;
 }
 
 LocationIdx ITSProblem::addLocation() {
+    std::lock_guard guard(mutex);
     LocationIdx loc = nextUnusedLocation++;
     locations.insert(loc);
     return loc;
 }
 
 LocationIdx ITSProblem::addNamedLocation(std::string name) {
+    std::lock_guard guard(mutex);
     LocationIdx loc = addLocation();
     locationNames.emplace(loc, name);
     return loc;
 }
 
 set<LocationIdx> ITSProblem::getLocations() const {
+    std::lock_guard guard(mutex);
     return locations;
 }
 
 option<string> ITSProblem::getLocationName(LocationIdx idx) const {
+    std::lock_guard guard(mutex);
     auto it = locationNames.find(idx);
     if (it != locationNames.end()) {
         return it->second;
@@ -172,6 +197,7 @@ option<string> ITSProblem::getLocationName(LocationIdx idx) const {
 }
 
 string ITSProblem::getPrintableLocationName(LocationIdx idx) const {
+    std::lock_guard guard(mutex);
     auto it = locationNames.find(idx);
     if (it != locationNames.end()) {
         return it->second;
@@ -181,6 +207,7 @@ string ITSProblem::getPrintableLocationName(LocationIdx idx) const {
 
 
 void ITSProblem::removeOnlyLocation(LocationIdx loc) {
+    std::lock_guard guard(mutex);
     // The initial location must not be removed
     assert(loc != initialLocation);
 
@@ -193,6 +220,7 @@ void ITSProblem::removeOnlyLocation(LocationIdx loc) {
 }
 
 std::set<TransIdx> ITSProblem::removeLocationAndRules(LocationIdx loc) {
+    std::lock_guard guard(mutex);
     // The initial location must not be removed
     assert(loc != initialLocation);
 
@@ -208,5 +236,6 @@ std::set<TransIdx> ITSProblem::removeLocationAndRules(LocationIdx loc) {
 }
 
 void ITSProblem::print(std::ostream &s) const {
+    std::lock_guard guard(mutex);
     ITSExport::printDebug(*this, s);
 }
