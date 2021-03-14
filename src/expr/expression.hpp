@@ -316,6 +316,8 @@ public:
      */
     int compare(const Expr &that) const;
 
+    unsigned hash() const;
+
     /**
      * @return The numerator.
      * @note For fractions only.
@@ -493,6 +495,8 @@ public:
     void collectCoDomainVars(VarSet &vars) const;
 
     void collectAllVars(VarSet &vars) const;
+
+    unsigned hash() const;
 
 private:
     void putGinac(const Var &key, const Expr &val) override;

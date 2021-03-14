@@ -33,7 +33,7 @@ public:
     ITSProblem() = default;
 
     // Creates an empty ITS problem with the given variables
-    explicit ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {}
+    explicit ITSProblem(VariableManager &&varMan);
 
     // True iff there are no rules
     bool isEmpty() const;

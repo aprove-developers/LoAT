@@ -29,37 +29,6 @@
 
 using namespace std;
 
-
-bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
-    // Some trivial syntactic checks
-    if (compareRhss && a.rhsCount() != b.rhsCount()) return false;
-
-    // Costs have to be equal up to a numeric constant
-    if (!(a.getCost() - b.getCost()).isRationalConstant()) return false;
-
-    // All right-hand sides have to match exactly
-    if (compareRhss) {
-        for (unsigned int i=0; i < a.rhsCount(); ++i) {
-            const Subs &updateA = a.getUpdate(i);
-            const Subs &updateB = b.getUpdate(i);
-
-            if (a.getRhsLoc(i) != b.getRhsLoc(i)) return false;
-            if (updateA.size() != updateB.size()) return false;
-
-            // update has to be fully equal (one inclusion suffices, since the size is equal)
-            for (const auto &itA : updateA) {
-                auto itB = updateB.find(itA.first);
-                if (itB == updateB.end()) return false;
-                if (!itB->second.equals(itA.second)) return false;
-            }
-        }
-    }
-
-    // Guard has to be fully equal (including the ordering)
-    if (a.getGuard() != b.getGuard()) return false;
-    return true;
-}
-
 bool Pruning::pruneParallelRules(ITSProblem &its) {
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
     // (see ComplexityResult for the latter). We first compare the complexity, then the number of inftyVars.
