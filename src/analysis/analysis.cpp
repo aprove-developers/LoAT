@@ -137,6 +137,18 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
                 proof.majorProofStep("Eliminated locations on linear paths", its);
             }
 
+            std::set<TransIdx> removed;
+            for (LocationIdx node : its.getLocations()) {
+                for (LocationIdx succ : its.getSuccessorLocations(node)) {
+                    std::set<TransIdx> tmp = Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, succ));
+                    removed.insert(tmp.begin(), tmp.end());
+                }
+            }
+            if (!removed.empty()) {
+                proof.deletionProof(removed);
+                proof.majorProofStep("Deleted duplicate rules", its);
+            }
+
             // Check if the ITS is now linear (we accelerated all nonlinear rules)
             if (changed && nonlinearProblem) {
                 nonlinearProblem = !its.isLinear();
