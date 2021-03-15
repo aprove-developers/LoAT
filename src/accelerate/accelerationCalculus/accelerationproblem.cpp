@@ -413,7 +413,10 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         satRes = solver->check();
     }
     if (satRes == Smt::Sat && Smt::isImplication(guard, buildLit(cost > 0), varMan)) {
-        BoolExpr newGuard = buildRes(solver->model(), entryVars);
+        const auto p = buildRes(solver->model(), entryVars);
+        const BoolExpr& newGuard = p.first;
+        bool nonterm = p.second;
+        assert(nonterm);
         // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
         if (Smt::check(newGuard, varMan) == Smt::Sat) {
             ret.push_back({newGuard, true});
@@ -454,17 +457,19 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
                     solver->pop();
                 }
             }
-            BoolExpr newGuard = buildRes(model, entryVars);
+            const auto p = buildRes(model, entryVars);
+            const BoolExpr& newGuard = p.first;
+            bool nonterm = p.second;
             // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
             if (Smt::check(newGuard, varMan) == Smt::Sat) {
-                ret.push_back({newGuard, false});
+                ret.push_back({newGuard, nonterm});
             }
         }
     }
     return ret;
 }
 
-BoolExpr AccelerationProblem::buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars) {
+std::pair<BoolExpr, bool> AccelerationProblem::buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars) {
     RelMap<BoolExpr> map;
     bool nonterm = true;
     RelMap<unsigned int> solution;
@@ -502,7 +507,7 @@ BoolExpr AccelerationProblem::buildRes(const Model &model, const std::map<Rel, s
         proof.newline();
         proof.append("resulting guard is a recurrent set");
     }
-    return ret;
+    return {ret, nonterm};
 }
 
 Proof AccelerationProblem::getProof() const {

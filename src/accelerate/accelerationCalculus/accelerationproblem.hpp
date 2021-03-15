@@ -64,7 +64,7 @@ public:
 
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan);
     std::vector<Result> computeRes();
-    BoolExpr buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
+    std::pair<BoolExpr, bool> buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
     Expr getAcceleratedCost() const;
     option<Subs> getClosedForm() const;
