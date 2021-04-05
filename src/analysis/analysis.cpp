@@ -137,18 +137,6 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
                 proof.majorProofStep("Eliminated locations on linear paths", its);
             }
 
-//            std::set<TransIdx> removed;
-//            for (LocationIdx node : its.getLocations()) {
-//                for (LocationIdx succ : its.getSuccessorLocations(node)) {
-//                    std::set<TransIdx> tmp = Pruning::removeDuplicateRules(its, its.getTransitionsFromTo(node, succ));
-//                    removed.insert(tmp.begin(), tmp.end());
-//                }
-//            }
-//            if (!removed.empty()) {
-//                proof.deletionProof(removed);
-//                proof.majorProofStep("Deleted duplicate rules", its);
-//            }
-
             // Check if the ITS is now linear (we accelerated all nonlinear rules)
             if (changed && nonlinearProblem) {
                 nonlinearProblem = !its.isLinear();
@@ -285,7 +273,7 @@ option<Proof> Analysis::ensureNonnegativeCosts() {
     std::vector<TransIdx> del;
     std::vector<Rule> add;
     for (TransIdx trans : its.getAllTransitions()) {
-        const Rule &rule = its.getRule(trans);
+        const Rule rule = its.getRule(trans);
         // Add the constraint unless it is trivial (e.g. if the cost is 1).
         Rel costConstraint = rule.getCost() >= 0;
         if (!costConstraint.isTriviallyTrue()) {
@@ -295,12 +283,10 @@ option<Proof> Analysis::ensureNonnegativeCosts() {
             proof.ruleTransformationProof(rule, "strengthening", r, its);
         }
     }
-    for (TransIdx trans: del) {
-        its.removeRule(trans);
-    }
-    for (const Rule &r: add) {
-        its.addRule(r);
-    }
+    its.replaceRules(del, add);
+
+
+
     return proof.empty() ? option<Proof>() : option<Proof>(proof);
 }
 
@@ -325,7 +311,7 @@ option<Proof> Analysis::preprocessRules() {
     std::vector<Rule> add;
     // update/guard preprocessing
     for (TransIdx idx : its.getAllTransitions()) {
-        const Rule &rule = its.getRule(idx);
+        const Rule rule = its.getRule(idx);
         const option<Rule> newRule = Preprocess::preprocessRule(its, rule);
         if (newRule) {
             del.push_back(idx);
@@ -333,14 +319,7 @@ option<Proof> Analysis::preprocessRules() {
             proof.ruleTransformationProof(rule, "preprocessing", newRule.get(), its);
         }
     }
-
-    for (TransIdx idx: del) {
-        its.removeRule(idx);
-    }
-    for (const Rule &r: add) {
-        its.addRule(r);
-    }
-
+    its.replaceRules(del, add);
     return proof.empty() ? option<Proof>() : option<Proof>(proof);
 }
 
@@ -406,7 +385,7 @@ bool Analysis::pruneRules() {
 void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 
     for (TransIdx idx : its.getTransitionsFrom(its.getInitialLocation())) {
-        const Rule &rule = its.getRule(idx);
+        const Rule rule = its.getRule(idx);
         BoolExpr guard = rule.getGuard() & (rule.getCost() >= 1);
 
         if (Smt::check(guard, its) == Smt::Sat) {
@@ -424,7 +403,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
     if (Config::Analysis::NonTermMode) {
         for (TransIdx i: rules) {
-            const Rule &r = its.getRule(i);
+            const Rule r = its.getRule(i);
             if (r.getCost().isNontermSymbol() && Smt::check(r.getGuard(), its) == Smt::Sat) {
                 res.update(r.getGuard(), Expr::NontermSymbol, Expr::NontermSymbol, Complexity::Nonterm);
                 Proof proof;
@@ -619,17 +598,15 @@ void Analysis::getMaxPartialResult(RuntimeResult &res) {
 
         for (LocationIdx succ : succs) {
             for (TransIdx first : its.getTransitionsFromTo(initial,succ)) {
+                const Rule firstRule = its.getRule(first);
+                std::vector<Rule> replacement;
                 for (TransIdx second : its.getTransitionsFrom(succ)) {
-
-                    auto chained = Chaining::chainRules(its, its.getRule(first), its.getRule(second));
+                    auto chained = Chaining::chainRules(its, firstRule, its.getRule(second));
                     if (chained) {
-                        its.addRule(chained.get());
+                        replacement.push_back(chained.get());
                     }
-
                 }
-
-                // We already computed the complexity and tried to chain, so we can drop this rule
-                its.removeRule(first);
+                its.replaceRules({first}, replacement);
             }
         }
     }

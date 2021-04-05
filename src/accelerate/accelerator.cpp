@@ -48,9 +48,11 @@ Accelerator::Accelerator(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &r
 }
 
 
-TransIdx Accelerator::addResultingRule(Rule rule) {
-    TransIdx idx = its.addRule(rule);
-    resultingRules.insert(idx);
+option<TransIdx> Accelerator::addResultingRule(Rule rule) {
+    option<TransIdx> idx = its.addRule(rule);
+    if (idx) {
+        resultingRules.insert(idx.get());
+    }
     return idx;
 }
 
@@ -67,13 +69,15 @@ bool Accelerator::simplifySimpleLoops() {
     // This is especially useful to eliminate temporary variables before metering.
     if (Config::Accel::SimplifyRulesBefore) {
         for (auto it = loops.begin(), end = loops.end(); it != end; ++it) {
-            const Rule &rule = its.getRule(*it);
+            const Rule rule = its.getRule(*it);
             option<Rule> simplified = Preprocess::simplifyRule(its, rule, false);
             if (simplified) {
                 this->proof.ruleTransformationProof(rule, "simplification", simplified.get(), its);
-                its.removeRule(*it);
-                *it = its.addRule(simplified.get());
-                res = true;
+                std::vector<TransIdx> newIdx = its.replaceRules({*it}, {simplified.get()});
+                for (TransIdx i: newIdx) {
+                    *it = i;
+                    res = true;
+                }
             }
         }
     }
@@ -352,7 +356,7 @@ option<Proof> Accelerator::run() {
     std::unordered_map<TransIdx, NestingCandidate> origRules;
     vector<NestingCandidate> nestingCandidates;
     for (TransIdx loop : loops) {
-        const Rule &r = its.getRule(loop);
+        const Rule r = its.getRule(loop);
         if (r.isLinear()) {
             Complexity cpx =
                     Config::Analysis::NonTermMode ?
@@ -368,7 +372,7 @@ option<Proof> Accelerator::run() {
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
         // Forward and backward accelerate (and partial deletion for nonlinear rules)
-        const Rule &r = its.getRule(loop);
+        const Rule r = its.getRule(loop);
         Complexity cpx = r.isLinear() ? origRules[loop].cpx : Complexity::Unknown;
         Acceleration::Result res = accelerateOrShorten(r, cpx);
 
@@ -381,9 +385,9 @@ option<Proof> Accelerator::run() {
             // Add accelerated rules, also mark them as inner nesting candidates
             this->proof.concat(res.proof);
             for (const auto &accel : res.rules) {
-                TransIdx added = addResultingRule(accel);
+                option<TransIdx> added = addResultingRule(accel);
 
-                if (accel.isSimpleLoop()) {
+                if (accel.isSimpleLoop() && added) {
                     Complexity cpx =
                             Config::Analysis::NonTermMode ?
                                 Complexity::Unknown :
@@ -392,7 +396,7 @@ option<Proof> Accelerator::run() {
                                     accel.getGuard(),
                                     accel.getCost()).cpx;
                     // accel.rule is a simple loop iff the original was linear and not non-terminating.
-                    nestingCandidates.push_back(NestingCandidate(loop, added, cpx));
+                    nestingCandidates.push_back(NestingCandidate(loop, added.get(), cpx));
                 }
             }
         }
@@ -414,13 +418,13 @@ option<Proof> Accelerator::run() {
     bool changed = false;
     std::set<TransIdx> toAdd;
     for (auto it = resultingRules.begin(); it != resultingRules.end();) {
-        const Rule &r = its.getRule(*it);
+        const Rule r = its.getRule(*it);
         const BoolExpr simplified = Z3::simplify(r.getGuard(), its);
         if (r.getGuard() != simplified) {
             const Rule &newR = r.withGuard(simplified);
             this->proof.ruleTransformationProof(r, "simplification", newR, its);
-            its.removeRule(*it);
-            toAdd.insert(its.addRule(newR));
+            std::vector<TransIdx> newIdx = its.replaceRules({*it}, {newR});
+            toAdd.insert(newIdx.begin(), newIdx.end());
             it = resultingRules.erase(it);
         } else {
             ++it;

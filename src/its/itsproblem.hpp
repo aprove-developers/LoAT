@@ -77,7 +77,8 @@ public:
 
     // Mutation of Rules
     void removeRule(TransIdx transition);
-    TransIdx addRule(Rule rule);
+    option<TransIdx> addRule(Rule rule);
+    std::vector<TransIdx> replaceRules(const std::vector<TransIdx> &toReplace, const std::vector<Rule> replacement);
 
     // Mutation for Locations
     LocationIdx addLocation();
@@ -103,25 +104,13 @@ public:
 
 protected:
 
-    struct RuleHash {
-        std::size_t operator()(const Rule& r) const {
-            return r.hash();
-        }
-    };
-
-    struct RuleEqual {
-        bool operator()(const Rule& fst, const Rule& snd) const {
-            return fst.approxEqual(snd, true);
-        }
-    };
-
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
     HyperGraph<LocationIdx> graph;
 
     // Collection of all rules, identified by the corresponding transitions in the graph.
     // The map allows to efficiently add/delete rules.
     std::map<TransIdx, Rule> rules;
-    std::unordered_map<Rule, TransIdx, RuleHash, RuleEqual> rulesBwd;
+    Rule::ApproxMap<TransIdx> rulesBwd;
 
     // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
     std::set<LocationIdx> locations;
