@@ -149,11 +149,11 @@ void ITSProblem::removeRule(TransIdx transition) {
     rules.erase(transition);
 }
 
-TransIdx ITSProblem::addRule(Rule rule) {
+option<TransIdx> ITSProblem::addRule(Rule rule) {
     std::lock_guard guard(mutex);
     auto it = rulesBwd.find(rule);
     if (it != rulesBwd.end()) {
-        return it->second;
+        return {};
     }
     // gather target locations
     set<LocationIdx> rhsLocs;
@@ -166,6 +166,25 @@ TransIdx ITSProblem::addRule(Rule rule) {
     rules.emplace(idx, rule);
     rulesBwd.emplace(rule, idx);
     return idx;
+}
+
+std::vector<TransIdx> ITSProblem::replaceRules(const std::vector<TransIdx> &toReplace, const std::vector<Rule> replacement) {
+    std::vector<TransIdx> keep;
+    std::vector<TransIdx> result;
+    for (const Rule& r: replacement) {
+        option<TransIdx> added = addRule(r);
+        if (added) {
+            result.push_back(added.get());
+        } else {
+            keep.push_back(rulesBwd.find(r)->second);
+        }
+    }
+    for (TransIdx idx: toReplace) {
+        if (std::find(keep.begin(), keep.end(), idx) == keep.end()) {
+            removeRule(idx);
+        }
+    }
+    return result;
 }
 
 LocationIdx ITSProblem::addLocation() {

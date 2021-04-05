@@ -51,7 +51,7 @@ static Proof eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
     // Chain all pairs of in- and outgoing rules
     for (TransIdx in : its.getTransitionsTo(loc)) {
         bool wasChainedWithAll = true;
-        const Rule &inRule = its.getRule(in);
+        const Rule inRule = its.getRule(in);
 
         // We usually require that loc doesn't have any self-loops (since we would destroy the self-loop by chaining).
         // E.g. chaining f -> g, g -> g would result in f -> g without the self-loop.
@@ -62,7 +62,7 @@ static Proof eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
         if (inRule.getLhsLoc() == loc) continue;
 
         for (TransIdx out : its.getTransitionsFrom(loc)) {
-            const Rule &outRule = its.getRule(out);
+            const Rule outRule = its.getRule(out);
             auto optRule = Chaining::chainRules(its, inRule, outRule);
             if (optRule) {
                 // If we allow self loops at loc, then chained rules may still lead to loc,
@@ -103,7 +103,7 @@ static Proof eliminateLocationByChaining(ITSProblem &its, LocationIdx loc,
     if (keepUnchainable && !keepRules.empty()) {
         LocationIdx dummyLoc = its.addLocation();
         for (TransIdx trans : keepRules) {
-            const Rule &oldRule = its.getRule(trans);
+            const Rule oldRule = its.getRule(trans);
             auto newRule = oldRule.stripRhsLocation(loc);
             if (newRule) {
                 // In case of nonlinear rules, we can simply delete all rhss leading to loc, but keep the other ones
@@ -335,7 +335,10 @@ option<Proof> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransId
         for (TransIdx accel : its.getTransitionsFrom(node)) {
             // Only chain accelerated rules
             if (acceleratedRules.count(accel) == 0) continue;
-            const Rule &accelRule = its.getRule(accel);
+            const Rule accelRule = its.getRule(accel);
+
+            deleted.insert(accel);
+            std::vector<Rule> replacement;
 
             for (TransIdx incoming : incomingTransitions) {
                 // Do not chain with another accelerated rule
@@ -343,7 +346,7 @@ option<Proof> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransId
 
                 // Do not chain with incoming loops that are themselves self-loops at node
                 // (no matter if they are simple or not)
-                const Rule &incomingRule = its.getRule(incoming);
+                const Rule incomingRule = its.getRule(incoming);
                 if (incomingRule.getLhsLoc() == node) continue;
 
                 auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
@@ -355,24 +358,13 @@ option<Proof> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransId
                     proof.chainingProof(incomingRule, accelRule, newRule, its);
 
                     // Add the chained rule
-                    its.addRule(newRule);
+                    replacement.push_back(newRule);
                     successfullyChained.insert(incoming);
                 }
             }
-
-            deleted.insert(accel);
-            its.removeRule(accel);
+            its.replaceRules({accel}, replacement);
         }
         proof.deletionProof(deleted);
-    }
-
-    // Removing chained incoming rules may help to avoid too many rules.
-    // However, we also lose execution paths (especially if there are more loops, which are not simple).
-    if (!Config::Chain::KeepIncomingInChainAccelerated) {
-        for (TransIdx toRemove : successfullyChained) {
-            its.removeRule(toRemove);
-        }
-        proof.deletionProof(successfullyChained);
     }
 
     return {proof};

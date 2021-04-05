@@ -20,6 +20,8 @@
 
 #include <map>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "types.hpp"
 #include "../util/option.hpp"
@@ -159,6 +161,24 @@ public:
 
     unsigned hash() const;
     bool approxEqual(const Rule &that, bool compareRhss) const;
+
+    struct Hash {
+        std::size_t operator()(const Rule& r) const {
+            return r.hash();
+        }
+    };
+
+    struct ApproxEqual {
+        bool operator()(const Rule& fst, const Rule& snd) const {
+            return fst.approxEqual(snd, true);
+        }
+    };
+
+    using ApproxSet = std::unordered_set<Rule, Rule::Hash, Rule::ApproxEqual>;
+
+    template<class T>
+    using ApproxMap = std::unordered_map<Rule, T, Rule::Hash, Rule::ApproxEqual>;
+
 };
 
 

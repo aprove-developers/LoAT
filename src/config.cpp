@@ -102,12 +102,6 @@ namespace Config {
         // If disabled, a rule with high complexity can become unsatisfiable if chained with an incompatible rule.
         // If disabled, many unsatisfiable rules could be created, leading to rule explosion.
         const bool CheckSat = true;
-
-        // Whether to keep incoming rules after chaining them with accelerated rules.
-        // In many cases, we don't need the incoming rules if they have been successfully chained.
-        // But there are cases where some loops are not yet simple, so we accelerate them at a later point in time.
-        // For such cases, it helps to keep the incoming rules (even if this increases the number of rules).
-        const bool KeepIncomingInChainAccelerated = true;
     }
 
     namespace Prune {
