@@ -85,11 +85,18 @@ To install Yices2, you need to install its dependencies [LibPoly](https://github
 After installing all dependencies, run:
 
 ```
-mkdir build && cd build && cmake .. && make
+mkdir build && cd build && cmake .. && make -j
 ```
 
 To build a statically linked binary, you need to build a statically linked version of Yices2.
 To do so, you need to build position independent versions of LibPoly, CUDD, and GMP (compiled with the option `-fPIC`).
 See [here](https://github.com/SRI-CSL/yices2/blob/master/doc/COMPILING) and [here](https://github.com/SRI-CSL/yices2/blob/master/doc/GMP) for detailed instructions.
+
+Once all dependencies are available, run:
+
+
+```
+mkdir build-static && cd build-static && cmake -DSTATIC=1 .. && make -j
+```
 
 If you experience any problems, contact ffrohn [at] mpi-inf.mpg.de.
