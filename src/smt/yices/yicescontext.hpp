@@ -78,7 +78,7 @@ public:
 
 protected:
     term_t buildVar(const std::string &basename, Expr::Type type) override;
-    term_t buildConst(uint id) override;
+    term_t buildConst(unsigned int id) override;
 
 private:
     std::map<term_t, std::string> varNames;

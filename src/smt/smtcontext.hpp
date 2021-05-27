@@ -102,7 +102,7 @@ public:
         return varMap;
     }
 
-    std::map<uint, EXPR> getConstMap() const {
+    std::map<unsigned int, EXPR> getConstMap() const {
         return constMap;
     }
 
@@ -148,13 +148,13 @@ protected:
     }
 
     virtual EXPR buildVar(const std::string &basename, Expr::Type type) = 0;
-    virtual EXPR buildConst(uint id) = 0;
+    virtual EXPR buildConst(unsigned int id) = 0;
 
 protected:
     VarMap<EXPR> varMap;
     std::map<std::string, Var> nameMap;
     std::map<std::string, int> usedNames;
-    std::map<uint, EXPR> constMap;
+    std::map<unsigned int, EXPR> constMap;
 };
 
 #endif // SMTCONTEXT_H

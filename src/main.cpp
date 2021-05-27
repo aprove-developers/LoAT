@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
         cerr << "Error: timeout must be at least 10 seconds" << endl;
         return 1;
     }
-    Timeout::setTimeouts(static_cast<uint>(timeout));
+    Timeout::setTimeouts(static_cast<unsigned int>(timeout));
 
     // Start parsing
     if (filename.empty()) {
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         cerr << "Error: proof level must be between 0 and 3" << endl;
         return 1;
     }
-    Proof::setProofLevel(static_cast<uint>(proofLevel));
+    Proof::setProofLevel(static_cast<unsigned int>(proofLevel));
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.

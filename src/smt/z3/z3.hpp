@@ -22,7 +22,7 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
-    static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan, uint timeout = Config::Smt::SimpTimeout);
+    static BoolExpr simplify(const BoolExpr expr, const VariableManager &varMan, unsigned int timeout = Config::Smt::SimpTimeout);
 
     BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
 

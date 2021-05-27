@@ -29,12 +29,12 @@ static TimePoint timeout_start;
 static TimePoint timeout_soft;
 static TimePoint timeout_hard;
 
-void Timeout::setTimeouts(uint seconds) {
+void Timeout::setTimeouts(unsigned int seconds) {
     assert(seconds == 0 || seconds >= 10);
     timeout_start = chrono::steady_clock::now();
 
     if (seconds > 0) {
-        ulong slack = max(5u, min(60u, seconds * 15 / 100));
+        unsigned long slack = max(5u, min(60u, seconds * 15 / 100));
         timeout_soft = timeout_start + static_cast<std::chrono::seconds>(seconds - slack);
         timeout_hard = timeout_start + static_cast<std::chrono::seconds>(seconds - 2);
         timeout_enable = true;

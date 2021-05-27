@@ -27,7 +27,7 @@ private:
         int inftyVars;
     };
 
-    AsymptoticBound(VarMan &varMan, Guard guard, Expr cost, bool finalCheck, uint timeout);
+    AsymptoticBound(VarMan &varMan, Guard guard, Expr cost, bool finalCheck, unsigned int timeout);
 
     void initLimitVectors();
     void normalizeGuard();
@@ -64,7 +64,7 @@ private:
     Guard normalizedGuard;
     ComplexityResult bestComplexity;
     Proof proof;
-    uint timeout;
+    unsigned int timeout;
 
     std::vector<std::vector<LimitVector>> addition;
     std::vector<std::vector<LimitVector>> multiplication;
@@ -108,21 +108,21 @@ public:
                                       const Expr &cost,
                                       bool finalCheck = false,
                                       const Complexity &currentRes = Complexity::Const,
-                                      uint timeout = Config::Smt::LimitTimeout);
+                                      unsigned int timeout = Config::Smt::LimitTimeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
                                             const Guard &guard,
                                             const Expr &cost,
                                             bool finalCheck = false,
                                             Complexity currentRes = Complexity::Const,
-                                            uint timeout = Config::Smt::LimitTimeout);
+                                            unsigned int timeout = Config::Smt::LimitTimeout);
 
     static Result determineComplexityViaSMT(VarMan &varMan,
                                             const BoolExpr guard,
                                             const Expr &cost,
                                             bool finalCheck = false,
                                             Complexity currentRes = Complexity::Const,
-                                            uint timeout = Config::Smt::LimitTimeout);
+                                            unsigned int timeout = Config::Smt::LimitTimeout);
 
 };
 

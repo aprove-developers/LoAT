@@ -502,7 +502,7 @@ void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
 
             option<AsymptoticBound::Result> checkRes;
             bool isPolynomial = rule.getCost().isPoly() && !rule.getCost().isNontermSymbol() && rule.getGuard()->isPolynomial();
-            uint timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
+            unsigned int timeout = Timeout::soft() ? Config::Smt::LimitTimeoutFinalFast : Config::Smt::LimitTimeoutFinal;
             if (isPolynomial && Config::Limit::PolyStrategy->smtEnabled()) {
                 checkRes = AsymptoticBound::determineComplexityViaSMT(
                             its,

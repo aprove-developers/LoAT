@@ -64,7 +64,7 @@ Model Yices::model() {
     for (const auto &p: ctx.getSymbolMap()) {
         vars[p.first] = getRealFromModel(m, p.second);
     }
-    std::map<uint, bool> constants;
+    std::map<unsigned int, bool> constants;
     for (const auto &p: ctx.getConstMap()) {
         int32_t val;
         if (yices_get_bool_value(m, p.second, &val) != 0) {
@@ -114,7 +114,7 @@ BoolExprSet Yices::_unsatCore(const BoolExprSet &assumptions) {
             yices_init_term_vector(&core);
             yices_get_unsat_core(solver, &core);
             BoolExprSet res;
-            for (uint i = 0; i < core.size; ++i) {
+            for (unsigned int i = 0; i < core.size; ++i) {
                 res.insert(map[core.data[i]]);
             }
             return res;
@@ -128,7 +128,7 @@ BoolExprSet Yices::_unsatCore(const BoolExprSet &assumptions) {
     }
 }
 
-uint Yices::running;
+unsigned int Yices::running;
 std::mutex Yices::mutex;
 
 void Yices::init() {

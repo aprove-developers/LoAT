@@ -9,7 +9,7 @@ AccelerationProblem::AccelerationProblem(
         const Expr &cost,
         const Expr &iteratedCost,
         const Var &n,
-        const uint validityBound,
+        const unsigned int validityBound,
         VariableManager &varMan): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), varMan(varMan) {
     std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
@@ -70,7 +70,7 @@ bool AccelerationProblem::Entry::subsumes(const Entry &that) const {
     return true;
 }
 
-option<uint> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm) {
+option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm) {
     if (res.count(rel) == 0) {
         res[rel] = std::vector<Entry>();
     }
@@ -125,7 +125,7 @@ void AccelerationProblem::monotonicity() {
                     solver->add(newGuard);
                     solver->add(n >= validityBound);
                     if (solver->check() == Smt::Sat) {
-                        option<uint> idx = store(rel, dependencies, newGuard);
+                        option<unsigned int> idx = store(rel, dependencies, newGuard);
                         if (idx) {
                             std::stringstream ss;
                             ss << rel << " [" << idx.get() << "]: montonic decrease yields " << newGuard;
@@ -170,7 +170,7 @@ void AccelerationProblem::recurrence() {
                 }
                 dependencies.erase(rel);
                 const BoolExpr newGuard = buildAnd(dependencies) & rel;
-                option<uint> idx = store(rel, dependencies, newGuard, true);
+                option<unsigned int> idx = store(rel, dependencies, newGuard, true);
                 if (idx) {
                     std::stringstream ss;
                     ss << rel << " [" << idx.get() << "]: monotonic increase yields " << newGuard;
@@ -227,7 +227,7 @@ void AccelerationProblem::eventualWeakDecrease() {
                     solver->add(newGuard);
                     solver->add(n >= validityBound);
                     if (solver->check() == Smt::Sat) {
-                        option<uint> idx = store(rel, dependencies, newGuard);
+                        option<unsigned int> idx = store(rel, dependencies, newGuard);
                         if (idx) {
                             std::stringstream ss;
                             ss << rel << " [" << idx.get() << "]: eventual decrease yields " << newGuard;
@@ -283,7 +283,7 @@ void AccelerationProblem::eventualWeakIncrease() {
                 solver->resetSolver();
                 solver->add(newGuard);
                 if (solver->check() == Smt::Sat) {
-                    option<uint> idx = store(rel, dependencies, newGuard, true);
+                    option<unsigned int> idx = store(rel, dependencies, newGuard, true);
                     if (idx) {
                         std::stringstream ss;
                         ss << rel << " [" << idx.get() << "]: eventual increase yields " << newGuard;
@@ -309,7 +309,7 @@ bool AccelerationProblem::checkCycle(const std::map<std::pair<Rel, Rel>, BoolExp
         RelSet reachable;
         for (const Rel &rel2: todo) {
             if (rel == rel2) continue;
-            const uint x = edgeVars.at({rel, rel2})->getConst().get();
+            const unsigned int x = edgeVars.at({rel, rel2})->getConst().get();
             if (m.contains(x) && m.get(x)) {
                 reachable.insert(rel2);
             }
@@ -319,7 +319,7 @@ bool AccelerationProblem::checkCycle(const std::map<std::pair<Rel, Rel>, BoolExp
             changed = false;
             for (const Rel &rel1: reachable) {
                 for (const Rel &rel2: todo) {
-                    const uint x = edgeVars.at({rel1, rel2})->getConst().get();
+                    const unsigned int x = edgeVars.at({rel1, rel2})->getConst().get();
                     if (m.contains(x) && m.get(x)) {
                         if (rel == rel2) {
                             return true;
@@ -467,12 +467,12 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
 BoolExpr AccelerationProblem::buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars) {
     RelMap<BoolExpr> map;
     bool nonterm = true;
-    RelMap<uint> solution;
+    RelMap<unsigned int> solution;
     for (const Rel &rel: todo) {
         map[rel] = False;
         if (res.count(rel) > 0) {
             std::vector<Entry> entries = res.at(rel);
-            uint eVarIdx = 0;
+            unsigned int eVarIdx = 0;
             const std::vector<BoolExpr> &eVars = entryVars.at(rel);
             for (auto eIt = entries.begin(), eEnd = entries.end(); eIt != eEnd; ++eIt, ++eVarIdx) {
                 int id = eVars[eVarIdx]->getConst().get();
@@ -521,7 +521,7 @@ Var AccelerationProblem::getIterationCounter() const {
     return n;
 }
 
-uint AccelerationProblem::getValidityBound() const {
+unsigned int AccelerationProblem::getValidityBound() const {
     return validityBound;
 }
 

@@ -61,7 +61,7 @@ string VariableManager::getFreshName(string basename) {
         basenameCount.emplace(basename, 0);
         return basename;
     } else {
-        uint count = basenameCount.at(basename);
+        unsigned int count = basenameCount.at(basename);
         std::string res = basename + to_string(count);
         while (variableNameLookup.count(res) != 0) {
             ++count;

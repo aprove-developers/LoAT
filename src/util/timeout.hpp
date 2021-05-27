@@ -36,7 +36,7 @@ typedef std::chrono::duration<std::chrono::seconds> Duration;
 namespace Timeout {
     //calculates all relevant timeout points from this global timeout
     //call with 0 to disable timeouts
-    void setTimeouts(uint seconds);
+    void setTimeouts(unsigned int seconds);
 
     //return true if the timeout has already occurred
     bool hard();
