@@ -33,7 +33,7 @@ private:
     Expr iteratedCost;
     Var n;
     BoolExpr guard;
-    uint validityBound;
+    unsigned int validityBound;
     Proof proof;
     std::unique_ptr<Smt> solver;
     VariableManager &varMan;
@@ -45,7 +45,7 @@ private:
             const Expr &cost,
             const Expr &iteratedCost,
             const Var &n,
-            const uint validityBound,
+            const unsigned int validityBound,
             VariableManager &varMan);
 
     void monotonicity();
@@ -53,7 +53,7 @@ private:
     void eventualWeakDecrease();
     void eventualWeakIncrease();
     RelSet findConsistentSubset(const BoolExpr e) const;
-    option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
+    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 
 public:
 
@@ -69,7 +69,7 @@ public:
     Expr getAcceleratedCost() const;
     option<Subs> getClosedForm() const;
     Var getIterationCounter() const;
-    uint getValidityBound() const;
+    unsigned int getValidityBound() const;
 
 private:
 

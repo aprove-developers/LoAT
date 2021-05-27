@@ -111,7 +111,7 @@ Rule Rule::withCost(const Expr &cost) const {
     return Rule(RuleLhs(getLhsLoc(), getGuard(), cost), getRhss());
 }
 
-Rule Rule::withUpdate(uint i, const Subs &up) const {
+Rule Rule::withUpdate(unsigned int i, const Subs &up) const {
     std::vector<RuleRhs> rhss = getRhss();
     rhss[i] = RuleRhs(rhss[i].getLoc(), up);
     return Rule(RuleLhs(getLhsLoc(), getGuard(), getCost()), rhss);

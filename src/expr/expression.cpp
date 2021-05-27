@@ -395,7 +395,7 @@ GiNaC::numeric Expr::toNum() const {
     return GiNaC::ex_to<GiNaC::numeric>(ex);
 }
 
-Expr Expr::op(uint i) const {
+Expr Expr::op(unsigned int i) const {
     return ex.op(i);
 }
 
@@ -459,7 +459,7 @@ Expr operator^(const Expr &x, const Expr &y) {
     return GiNaC::pow(x.ex, y.ex);
 }
 
-Expr Expr::wildcard(uint label) {
+Expr Expr::wildcard(unsigned int label) {
     return GiNaC::wild(label);
 }
 

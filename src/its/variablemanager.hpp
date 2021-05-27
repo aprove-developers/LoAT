@@ -72,11 +72,11 @@ private:
     // The set of variables (identified by their index) that are used as temporary variables (not bound by lhs)
     VarSet temporaryVariables;
 
-    std::map<std::string, uint> basenameCount;
+    std::map<std::string, unsigned int> basenameCount;
     // Reverse mapping for efficiency
     std::map<std::string, Var> variableNameLookup;
 
-    uint boolVarCount = 1;
+    unsigned int boolVarCount = 1;
 };
 
 

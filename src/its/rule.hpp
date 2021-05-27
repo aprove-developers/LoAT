@@ -124,7 +124,7 @@ public:
     size_t rhsCount() const { return rhss.size(); }
 
     // special methods for nonlinear rules (idx is an index to rhss)
-    LocationIdx getRhsLoc(uint idx) const { return rhss[idx].getLoc(); }
+    LocationIdx getRhsLoc(unsigned int idx) const { return rhss[idx].getLoc(); }
     const std::vector<Subs> getUpdates() const {
         std::vector<Subs> res;
         for (const RuleRhs &rhs: rhss) {
@@ -132,7 +132,7 @@ public:
         }
         return res;
     }
-    const Subs& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
+    const Subs& getUpdate(unsigned int idx) const { return rhss[idx].getUpdate(); }
 
     // conversion to linear rule
     bool isLinear() const;
@@ -154,7 +154,7 @@ public:
 
     Rule withGuard(const BoolExpr guard) const;
     Rule withCost(const Expr &cost) const;
-    Rule withUpdate(uint i, const Subs &up) const;
+    Rule withUpdate(unsigned int i, const Subs &up) const;
 
     VarSet vars() const;
     void collectVars(VarSet &vars) const;

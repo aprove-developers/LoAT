@@ -36,7 +36,7 @@ private:
     ctx_config_t *config;
     context_t *solver;
 
-    static uint running;
+    static unsigned int running;
     static std::mutex mutex;
 
 

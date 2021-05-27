@@ -27,7 +27,7 @@ z3::expr Z3Context::buildVar(const std::string &name, Expr::Type type) {
     return (type == Expr::Int) ? ctx.int_const(name.c_str()) : ctx.real_const(name.c_str());
 }
 
-z3::expr Z3Context::buildConst(uint id) {
+z3::expr Z3Context::buildConst(unsigned int id) {
     return ctx.bool_const(("x" + to_string(id)).c_str());
 }
 
@@ -128,7 +128,7 @@ bool Z3Context::isNot(const z3::expr &e) const {
 
 std::vector<z3::expr> Z3Context::getChildren(const z3::expr &e) const {
     std::vector<z3::expr> res;
-    for (uint i = 0, arity = e.num_args(); i < arity; ++i) {
+    for (unsigned int i = 0, arity = e.num_args(); i < arity; ++i) {
         res.push_back(e.arg(i));
     }
     return res;

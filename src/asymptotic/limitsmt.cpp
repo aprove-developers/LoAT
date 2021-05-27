@@ -113,7 +113,7 @@ static map<int, Expr> getCoefficients(const Expr &ex, const Var &n) {
 }
 
 option<Subs> LimitSmtEncoding::applyEncoding(const LimitProblem &currentLP, const Expr &cost,
-                                                     VarMan &varMan, Complexity currentRes, uint timeout)
+                                                     VarMan &varMan, Complexity currentRes, unsigned int timeout)
 {
     // initialize z3
     unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic<std::vector<Rel>, Subs>({currentLP.getQuery(), {cost > 0}}, {}), varMan, timeout);
@@ -247,7 +247,7 @@ BoolExpr encodeBoolExpr(const BoolExpr expr, const Subs &templateSubs, const Var
 }
 
 std::pair<Subs, Complexity> LimitSmtEncoding::applyEncoding(const BoolExpr expr, const Expr &cost,
-                                                     VarMan &varMan, Complexity currentRes, uint timeout)
+                                                     VarMan &varMan, Complexity currentRes, unsigned int timeout)
 {
     // initialize z3
     unique_ptr<Smt> solver = SmtFactory::modelBuildingSolver(Smt::chooseLogic(BoolExprSet{expr, buildLit(cost > 0)}), varMan, timeout);
