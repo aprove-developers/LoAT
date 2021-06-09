@@ -52,7 +52,9 @@ WORKDIR /src
 RUN wget https://www.ginac.de/ginac-1.8.0.tar.bz2
 RUN tar xf ginac-1.8.0.tar.bz2
 WORKDIR /src/ginac-1.8.0
-RUN ./configure
+RUN mkdir build
+WORKDIR /src/ginac-1.8.0/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false ..
 RUN make -j # ignore errors caused by examples / documentation
 RUN make install
 
