@@ -2,9 +2,20 @@ FROM voidlinux/voidlinux-musl as loat_build
 LABEL author="Florian Frohn"
 
 RUN xbps-install -ySu
-RUN xbps-install -y gcc git automake autoconf make cmake lzip python-devel wget gperf libtool readline-devel cln-devel pkg-config giac-devel boost-devel
+RUN xbps-install -y gcc git automake autoconf make cmake lzip python-devel wget gperf libtool readline-devel cln-devel pkg-config giac-devel boost-devel bash
 
 RUN mkdir /src/
+
+# z3
+WORKDIR /src
+RUN wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.8.10.tar.gz
+RUN tar xf z3-4.8.10.tar.gz
+WORKDIR /src/z3-z3-4.8.10
+RUN mkdir build
+WORKDIR /src/z3-z3-4.8.10/build
+RUN cmake -DZ3_BUILD_LIBZ3_SHARED=FALSE -DCMAKE_BUILD_TYPE=Release ..
+RUN make -j
+RUN make install
 
 # gmp
 WORKDIR /src
@@ -76,19 +87,6 @@ RUN automake
 RUN ./configure
 RUN make -j
 RUN make install
-
-# z3
-WORKDIR /src
-RUN wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.8.10.tar.gz
-RUN tar xf z3-4.8.10.tar.gz
-WORKDIR /src/z3-z3-4.8.10
-RUN mkdir build
-WORKDIR /src/z3-z3-4.8.10/build
-RUN cmake -DZ3_BUILD_LIBZ3_SHARED=FALSE ..
-RUN make -j
-RUN make install
-
-RUN xbps-install -y bash
 
 # loat
 WORKDIR  /src
