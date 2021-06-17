@@ -2,7 +2,9 @@ FROM voidlinux/voidlinux-musl as loat_build
 LABEL author="Florian Frohn"
 
 RUN xbps-install -ySu
-RUN xbps-install -y gcc git automake autoconf make cmake lzip python-devel wget gperf libtool readline-devel cln-devel pkg-config giac-devel boost-devel bash
+RUN xbps-install -y gcc git automake autoconf make cmake lzip python-devel
+RUN xbps-install -ySu
+RUN xbps-install -y wget gperf libtool readline-devel cln-devel pkg-config giac-devel boost-devel bash
 
 RUN mkdir /src/
 
