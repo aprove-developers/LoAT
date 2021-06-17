@@ -47,8 +47,9 @@ function bundle {
         rm $OUT
     fi
 
-    default_build
-    cd ../../..
+    print "building LoAT..."
+    ./compile_static_binary
+    check "build"
 
     if [[ -d $BUNDLE ]]; then
         rm -r $BUNDLE
