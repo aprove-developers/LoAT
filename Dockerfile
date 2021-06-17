@@ -94,4 +94,7 @@ RUN git clone https://github.com/aprove-developers/LoAT.git
 WORKDIR /src/LoAT
 RUN git checkout tool-paper
 RUN git pull origin tool-paper
-RUN exec ./build.sh
+RUN mkdir -p /src/LoAT/build/static/release
+WORKDIR /src/LoAT/build/static/release
+RUN cmake -DSTATIC=1 -DCMAKE_BUILD_TYPE=Release ../../../
+RUN make -j
