@@ -6,22 +6,29 @@ set(CMAKE_CXX_STANDARD 17)
 
 # non-static build by default
 option(STATIC "static" OFF)
+option(SANITIZE "sanitize" OFF)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 if(${STATIC})
     message(STATUS "Configuring static build")
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
     set(BUILD_SHARED_LIBS OFF)
-    set(LINKER_OPTIONS "-ldl -lpthread -static")
+    add_link_options(-ldl -lpthread -static)
     set(EXECUTABLE loat-static)
 else()
     message(STATUS "Configuring non-static build")
-    set(LINKER_OPTIONS "")
     set(EXECUTABLE loat)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+if(${SANITIZE})
+    message(STATUS "Sanitizer enabled")
+    add_link_options(-fsanitize=undefined)
+    add_compile_options(-fsanitize=undefined)
+endif()
+
+add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter)
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
