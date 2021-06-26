@@ -8,9 +8,6 @@ set(CMAKE_CXX_STANDARD 17)
 option(STATIC "static" OFF)
 option(SANITIZE "sanitize" OFF)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-
 if(${STATIC})
     message(STATUS "Configuring static build")
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)

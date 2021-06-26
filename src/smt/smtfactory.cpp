@@ -8,10 +8,8 @@ std::unique_ptr<Smt> SmtFactory::solver(Smt::Logic logic, const VariableManager 
     std::unique_ptr<Smt> res;
     switch (logic) {
     case Smt::QF_LA:
-        res = std::unique_ptr<Smt>(new Yices(varMan, logic));
-        break;
     case Smt::QF_NA:
-        res = std::unique_ptr<Smt>(new CombinedSolver(new Yices(varMan, logic), new Z3(varMan)));
+        res = std::unique_ptr<Smt>(new Yices(varMan, logic));
         break;
 //    case Smt::QF_NA:
     case Smt::QF_ENA:
