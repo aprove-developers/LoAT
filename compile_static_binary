@@ -5,5 +5,5 @@ rm -f loat-static
 docker build -t loat .
 docker create -ti --name loat_dummy loat bash
 mkdir -p ./build/static/release
-docker cp loat_dummy:/src/LoAT/build/static/release/loat-static ./build/static/release/loat-static
+docker cp loat_dummy:/home/ffrohn/repos/LoAT/build/static/release/loat-static ./build/static/release/loat-static
 docker rm -f loat_dummy
