@@ -256,16 +256,16 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 res.rules.emplace_back(r);
             }
         }
-//        if (!universalNonterm) {
-//            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
-//            if (p) {
-//                universalNonterm = true;
-//                const Rule &nontermRule = p.get().first;
-//                const Proof &proof = p.get().second;
-//                res.proof.concat(proof);
-//                res.rules.emplace_back(nontermRule);
-//            }
-//        }
+       if (!universalNonterm) {
+           option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+           if (p) {
+               universalNonterm = true;
+               const Rule &nontermRule = p.get().first;
+               const Proof &proof = p.get().second;
+               res.proof.concat(proof);
+               res.rules.emplace_back(nontermRule);
+           }
+       }
         if (!universalNonterm) {
             option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
             if (p) {
