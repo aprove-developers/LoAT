@@ -755,10 +755,11 @@ bool AsymptoticBound::trySubstitutingVariable() {
 bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
     auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, currentRes, timeout);
     if (!optSubs) return false;
-
-    substitutions.push_back(optSubs.get());
+    auto subs = optSubs.get();
+    auto idx = substitutions.size();
+    substitutions.push_back(subs);
     currentLP.removeAllConstraints();
-    currentLP.substitute(substitutions.back(), substitutions.size() - 1);
+    currentLP.substitute(subs, idx);
     return true;
 }
 
