@@ -68,7 +68,7 @@ protected:
             return convert_symbol(e);
         }
         context.printStderr(e);
-        assert(false && "unknown operator");
+        throw std::invalid_argument("unknown operator");
     }
 
     Expr convert_add(const EXPR &e){
@@ -130,7 +130,7 @@ protected:
         if (optVar) {
             return optVar.get();
         }
-        assert(false && "unknown variable");
+        throw std::invalid_argument("unknown variable");
     }
 
     Rel convert_relational(const EXPR &rel) {

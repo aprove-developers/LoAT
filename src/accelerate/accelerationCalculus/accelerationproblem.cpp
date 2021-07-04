@@ -388,7 +388,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     for (auto it1 = todo.begin(), end = todo.end(); it1 != end; ++it1) {
         for (auto it2 = it1; it2 != end; ++it2) {
             if (it1 == it2) continue;
-                solver->add(!edgeVars.at({*it1, *it2}) | !edgeVars.at({*it2, *it1}));
+                solver->add((!edgeVars.at({*it1, *it2})) | (!edgeVars.at({*it2, *it1})));
         }
     }
     solver->push();
@@ -415,8 +415,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     if (satRes == Smt::Sat && Smt::isImplication(guard, buildLit(cost > 0), varMan)) {
         const auto p = buildRes(solver->model(), entryVars);
         const BoolExpr& newGuard = p.first;
-        bool nonterm = p.second;
-        assert(nonterm);
+        assert(p.second); // p.second = true means we've proven non-termination
         // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
         if (Smt::check(newGuard, varMan) == Smt::Sat) {
             ret.push_back({newGuard, true});

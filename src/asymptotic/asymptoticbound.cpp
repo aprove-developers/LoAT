@@ -787,7 +787,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
             costToCheck = varMan.addFreshVariable("x");
         }
     }
-    if (finalCheck && Config::Analysis::NonTermMode) {
+    if (finalCheck && Config::Analysis::termination()) {
         return Result(Complexity::Unknown);
     }
     assert(!costToCheck.has(Expr::NontermSymbol));
@@ -851,7 +851,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
         } else {
             return Result(Complexity::Unknown);
         }
-    } else if (finalCheck && Config::Analysis::NonTermMode) {
+    } else if (finalCheck && Config::Analysis::termination()) {
         return Result(Complexity::Unknown);
     }
     assert(!expandedCost.has(Expr::NontermSymbol));
@@ -889,7 +889,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
         } else {
             return Result(Complexity::Unknown);
         }
-    } else if (finalCheck && Config::Analysis::NonTermMode) {
+    } else if (finalCheck && Config::Analysis::termination()) {
         return Result(Complexity::Unknown);
     }
     assert(!expandedCost.has(Expr::NontermSymbol));

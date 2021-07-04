@@ -36,6 +36,6 @@ namespace Chaining {
      * The implementation is much simpler, but semantically equivalent to chainRules.
      */
     option<LinearRule> chainRules(VarMan &varMan, const LinearRule &first, const LinearRule &second, bool checkSat = true);
-};
+}
 
 #endif // CHAIN_H

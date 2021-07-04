@@ -123,7 +123,7 @@ bool YicesContext::isMul(const term_t &e) const {
 bool YicesContext::isDiv(const term_t &e) const {
     term_constructor ctor = yices_term_constructor(e);
     assert(ctor != YICES_RDIV);
-    return yices_term_constructor(e) == YICES_IDIV;
+    return ctor == YICES_IDIV;
 }
 
 bool YicesContext::isPow(const term_t &e) const {
@@ -147,8 +147,7 @@ bool YicesContext::isInt(const term_t &e) const {
 
 long YicesContext::toInt(const term_t &e) const {
     long res = numerator(e);
-    long denom = denominator(e);
-    assert(denom == 1);
+    assert(denominator(e) == 1);
     return res;
 }
 
@@ -274,7 +273,7 @@ Rel::RelOp YicesContext::relOp(const term_t &e) const {
     switch (yices_term_constructor(e)) {
     case YICES_ARITH_GE_ATOM: return Rel::RelOp::geq;
     case YICES_EQ_TERM: return Rel::RelOp::eq;
-    default: assert(false && "unknown relation"); // yices normalizes all other relations to >= or =
+    default: throw std::invalid_argument("unknown relation"); // yices normalizes all other relations to >= or =
     }
 }
 

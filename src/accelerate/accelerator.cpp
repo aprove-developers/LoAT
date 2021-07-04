@@ -121,7 +121,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         proof.concat(accel.proof);
         bool success = false;
         for (const auto &accelRule: accel.rules) {
-            if (Config::Analysis::NonTermMode && !accelRule.getCost().isNontermSymbol()) continue;
+            if (Config::Analysis::termination() && !accelRule.getCost().isNontermSymbol()) continue;
             success = true;
             // Add the new rule
             addResultingRule(accelRule);
@@ -359,7 +359,7 @@ option<Proof> Accelerator::run() {
         const Rule r = its.getRule(loop);
         if (r.isLinear()) {
             Complexity cpx =
-                    Config::Analysis::NonTermMode ?
+                    Config::Analysis::termination() ?
                         Complexity::Unknown :
                         AsymptoticBound::determineComplexityViaSMT(
                             its,
@@ -389,7 +389,7 @@ option<Proof> Accelerator::run() {
 
                 if (accel.isSimpleLoop() && added) {
                     Complexity cpx =
-                            Config::Analysis::NonTermMode ?
+                            Config::Analysis::termination() ?
                                 Complexity::Unknown :
                                 AsymptoticBound::determineComplexityViaSMT(
                                     its,

@@ -83,8 +83,19 @@ void parseFlags(int argc, char *argv[]) {
             if (!found) {
                 cerr << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name() << endl;
             }
-        } else if (strcmp("--nonterm",argv[arg]) == 0) {
-            Config::Analysis::NonTermMode = true;
+        } else if (strcmp("--mode",argv[arg]) == 0) {
+            bool found = false;
+            std::string str = getNext();
+            for (const Config::Analysis::Mode mode: Config::Analysis::modes) {
+                if (boost::iequals(str, Config::Analysis::modeName(mode))) {
+                    Config::Analysis::mode = mode;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                cerr << "Unknown mode " << str << ", defaulting to " << Config::Analysis::modeName(Config::Analysis::mode) << endl;
+            }
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;

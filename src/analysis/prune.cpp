@@ -61,7 +61,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
                     Complexity cpx;
                     size_t inftyVars;
-                    if (Config::Analysis::NonTermMode) {
+                    if (Config::Analysis::termination()) {
                         cpx = Complexity::Unknown;
                         inftyVars = 0;
                     } else {
@@ -96,7 +96,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                 std::vector<Rule> toAdd;
                 for (TransIdx rule : parallel) {
                     const Rule r = its.getRule(rule);
-                    if ((!Config::Analysis::NonTermMode || !r.getCost().isNontermSymbol()) && keep.count(rule) == 0) {
+                    if ((Config::Analysis::complexity() || !r.getCost().isNontermSymbol()) && keep.count(rule) == 0) {
                         toRemove.push_back(rule);
                         auto optRule = r.stripRhsLocation(node);
                         if (optRule) {
@@ -143,7 +143,7 @@ static bool removeIrrelevantLeafs(ITSProblem &its, LocationIdx node, set<Locatio
                 const Complexity &c = rule.getCost().toComplexity();
                 if (c == Complexity::Nonterm) {
                     continue;
-                } else if (!Config::Analysis::NonTermMode && rule.getCost().toComplexity() > Complexity::Const) {
+                } else if (Config::Analysis::complexity() && rule.getCost().toComplexity() > Complexity::Const) {
                     continue;
                 }
 

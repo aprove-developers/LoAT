@@ -30,7 +30,7 @@ Smt::Result Z3::check() {
     case z3::unsat: return Unsat;
     case z3::unknown: return Unknown;
     }
-    assert(false && "unknown result");
+    throw std::logic_error("unknown result");
 }
 
 Model Z3::model() {

@@ -169,7 +169,7 @@ protected:
         case Rel::geq: return context.ge(a, b);
         }
 
-        assert(false && "unreachable");
+        throw std::invalid_argument("unreachable");
     }
 
 private:

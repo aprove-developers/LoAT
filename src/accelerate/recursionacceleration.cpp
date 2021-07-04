@@ -107,7 +107,7 @@ static Acceleration::Result meterAndIterate(ITSProblem &its, const Rule &r, Loca
         }
     }
 
-    assert(false && "unreachable");
+    throw std::logic_error("unreachable");
 }
 
 

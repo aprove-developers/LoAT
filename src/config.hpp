@@ -124,8 +124,16 @@ namespace Config {
 
     // Main algorithm
     namespace Analysis {
+
+        enum Mode { Complexity, Termination, Acceleration, RecurrentSet };
+        extern std::vector<Mode> modes;
         extern bool Pruning;
-        extern bool NonTermMode;
+        extern Mode mode;
+
+        std::string modeName(const Mode mode);
+        bool termination();
+        bool complexity();
+
     }
 
     /**

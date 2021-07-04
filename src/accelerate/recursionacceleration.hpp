@@ -49,6 +49,6 @@ namespace RecursionAcceleration {
      * The result is always a single accelerated rule (if acceleration was successful).
      */
     Acceleration::Result accelerateFast(ITSProblem &its, const Rule &rule, LocationIdx sink);
-};
+}
 
 #endif // FORWARD_H

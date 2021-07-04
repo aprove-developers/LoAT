@@ -145,7 +145,7 @@ namespace sexpressionparser {
             assert(!negate);
             return Rel::buildEq(fst, snd);
         }
-        assert(false);
+        throw std::invalid_argument("");
     }
 
     Expr Self::parseExpression(sexpresso::Sexp &sexp) {
@@ -175,8 +175,7 @@ namespace sexpressionparser {
             assert(op == "-");
             return -fst;
         }
-        std::cout << "unknown operator " << op << std::endl;
-        assert(false);
+        throw std::invalid_argument("unknown operator");
     }
 
 }

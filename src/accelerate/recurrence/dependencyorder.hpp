@@ -41,6 +41,6 @@ namespace DependencyOrder {
      */
     option<std::vector<Var>> findOrder(const Subs &update);
 
-};
+}
 
 #endif // DEPENDENCYORDER_H

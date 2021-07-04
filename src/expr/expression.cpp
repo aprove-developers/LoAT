@@ -381,7 +381,7 @@ bool Expr::isPow() const {
 
 bool Expr::isMul() const {
     return GiNaC::is_a<GiNaC::mul>(ex);
-};
+}
 
 bool Expr::isAdd() const {
     return GiNaC::is_a<GiNaC::add>(ex);

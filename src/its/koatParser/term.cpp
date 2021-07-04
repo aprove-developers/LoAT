@@ -24,7 +24,7 @@ Expr TermBinOp::toGinacExpression() const {
         case Division: return l / r;
         case Power: return l ^ r;
     }
-    assert(false && "unreachable");
+    throw std::invalid_argument("unreachable");
 }
 
 
@@ -55,5 +55,5 @@ Rel Relation::toGinacExpression() const {
     case RelationLess: return l < r;
     case RelationLessEqual: return l <= r;
     }
-    assert(false && "unreachable");
+    throw std::invalid_argument("unreachable");
 }

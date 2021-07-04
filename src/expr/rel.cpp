@@ -280,7 +280,7 @@ Rel operator!(const Rel &x) {
     case Rel::gt: return Rel(x.l, Rel::leq, x.r);
     case Rel::geq: return Rel(x.l, Rel::lt, x.r);
     }
-    assert(false && "unknown relation");
+    throw std::invalid_argument("unknown relation");
 }
 
 bool operator==(const Rel &x, const Rel &y) {

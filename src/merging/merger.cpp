@@ -29,7 +29,7 @@ void Merger::merge(LocationIdx from, LocationIdx to) {
                 const Rule ruleB = its.getRule(*it2);
                 if (ruleA.getRhss().size() != ruleB.getRhss().size()) continue;
                 bool costMatch;
-                if (Config::Analysis::NonTermMode) {
+                if (Config::Analysis::termination()) {
                     costMatch = ruleA.getCost().isNontermSymbol() == ruleB.getCost().isNontermSymbol();
                 } else {
                     costMatch = ruleA.getCost().expand().equals(ruleB.getCost().expand());

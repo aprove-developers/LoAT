@@ -42,7 +42,7 @@ void Timeout::setTimeouts(unsigned int seconds) {
 }
 
 bool Timeout::hard() {
-    if (!timeout_enable || Config::Analysis::NonTermMode) return false;
+    if (!timeout_enable || Config::Analysis::termination()) return false;
     return remainingHard().count() <= 0;
 }
 
