@@ -38,7 +38,7 @@ LoopAcceleration::LoopAcceleration(ITSProblem &its, const LinearRule &rule, Loca
         : its(its), rule(rule), sink(sink), cpx(cpx) {}
 
 bool LoopAcceleration::shouldAccelerate() const {
-    return !rule.getCost().isNontermSymbol() && rule.getCost().isPoly();
+    return !rule.getCost().isNontermSymbol() && (Config::Analysis::termination() || rule.getCost().isPoly());
 }
 
 vector<Rule> LoopAcceleration::replaceByUpperbounds(const Var &N, const Rule &rule) {

@@ -137,6 +137,8 @@ namespace Config {
                 break;
             case Acceleration: return "acceleration";
                 break;
+            case RecurrentSet: return "recurrent_set";
+                break;
             default:
                 throw std::invalid_argument("unknown mode");
             }

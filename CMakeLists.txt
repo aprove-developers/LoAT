@@ -66,6 +66,8 @@ add_executable(${EXECUTABLE}
         src/analysis/preprocess.hpp
         src/analysis/prune.cpp
         src/analysis/prune.hpp
+        src/analysis/recurrentsetfinder.cpp
+        src/analysis/recurrentsetfinder.hpp
         src/asymptotic/asymptoticbound.cpp
         src/asymptotic/asymptoticbound.hpp
         src/asymptotic/inftyexpression.cpp

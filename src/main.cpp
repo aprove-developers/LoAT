@@ -24,6 +24,7 @@
 #include "config.hpp"
 #include "util/timeout.hpp"
 #include "util/proof.hpp"
+#include "analysis/recurrentsetfinder.hpp"
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -150,6 +151,18 @@ int main(int argc, char *argv[]) {
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
-    Analysis::analyze(its);
+    switch (Config::Analysis::mode) {
+    case Config::Analysis::Termination:
+    case Config::Analysis::Complexity:
+        Analysis::analyze(its);
+        break;
+    case Config::Analysis::RecurrentSet:
+        RecurrentSetFinder::run(its);
+        break;
+    default:
+        throw std::invalid_argument("unsupported mode");
+    }
+
+
     return 0;
 }

@@ -63,6 +63,7 @@ public:
     };
 
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan);
+    static AccelerationProblem initForRecurrentSet(const LinearRule &r, VariableManager &varMan);
     std::vector<Result> computeRes();
     std::pair<BoolExpr, bool> buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;

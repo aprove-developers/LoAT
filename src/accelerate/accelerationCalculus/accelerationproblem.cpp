@@ -43,6 +43,18 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
     }
 }
 
+AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r, VariableManager &varMan) {
+    return AccelerationProblem(
+                r.getGuard()->toG(),
+                r.getUpdate(),
+                option<const Subs&>(),
+                r.getCost(),
+                r.getCost(),
+                varMan.addFreshTemporaryVariable("n"),
+                0,
+                varMan);
+}
+
 RelSet AccelerationProblem::findConsistentSubset(const BoolExpr e) const {
     solver->resetSolver();
     solver->add(e);
@@ -528,4 +540,3 @@ Var AccelerationProblem::getIterationCounter() const {
 unsigned int AccelerationProblem::getValidityBound() const {
     return validityBound;
 }
-
