@@ -52,6 +52,7 @@ private:
     void recurrence();
     void eventualWeakDecrease();
     void eventualWeakIncrease();
+    void fixpoint();
     RelSet findConsistentSubset(const BoolExpr e) const;
     option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 

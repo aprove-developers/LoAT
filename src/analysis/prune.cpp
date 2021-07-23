@@ -61,7 +61,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
                     Complexity cpx;
                     size_t inftyVars;
-                    if (Config::Analysis::termination()) {
+                    if (Config::Analysis::nonTermination()) {
                         cpx = Complexity::Unknown;
                         inftyVars = 0;
                     } else {

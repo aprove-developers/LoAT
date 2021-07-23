@@ -24,7 +24,9 @@
 #include "config.hpp"
 #include "util/timeout.hpp"
 #include "util/proof.hpp"
+#include "analysis/rankingfunctionfinder.hpp"
 #include "analysis/recurrentsetfinder.hpp"
+#include "its/smt2export.hpp"
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -152,12 +154,18 @@ int main(int argc, char *argv[]) {
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
     switch (Config::Analysis::mode) {
-    case Config::Analysis::Termination:
+    case Config::Analysis::NonTermination:
     case Config::Analysis::Complexity:
         Analysis::analyze(its);
         break;
     case Config::Analysis::RecurrentSet:
         RecurrentSetFinder::run(its);
+        break;
+    case Config::Analysis::Smt2Export:
+        smt2Export::doExport(its);
+        break;
+    case Config::Analysis::RankingFunction:
+        RankingFunctionFinder::run(its);
         break;
     default:
         throw std::invalid_argument("unsupported mode");

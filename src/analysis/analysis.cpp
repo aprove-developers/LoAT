@@ -401,7 +401,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 
 
 void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
-    if (Config::Analysis::termination()) {
+    if (Config::Analysis::nonTermination()) {
         for (TransIdx i: rules) {
             const Rule r = its.getRule(i);
             if (r.getCost().isNontermSymbol() && Smt::check(r.getGuard(), its) == Smt::Sat) {

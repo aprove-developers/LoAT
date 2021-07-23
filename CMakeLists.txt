@@ -56,6 +56,8 @@ add_executable(${EXECUTABLE}
         src/accelerate/iterationCounterElimination/vareliminator.hpp
         src/accelerate/accelerationCalculus/accelerationproblem.cpp
         src/accelerate/accelerationCalculus/accelerationproblem.hpp
+        src/accelerate/accelerationCalculus/rankingfunctionproblem.cpp
+        src/accelerate/accelerationCalculus/rankingfunctionproblem.hpp
         src/analysis/analysis.cpp
         src/analysis/analysis.hpp
         src/analysis/chain.cpp
@@ -66,6 +68,8 @@ add_executable(${EXECUTABLE}
         src/analysis/preprocess.hpp
         src/analysis/prune.cpp
         src/analysis/prune.hpp
+        src/analysis/rankingfunctionfinder.cpp
+        src/analysis/rankingfunctionfinder.hpp
         src/analysis/recurrentsetfinder.cpp
         src/analysis/recurrentsetfinder.hpp
         src/asymptotic/asymptoticbound.cpp
@@ -96,6 +100,8 @@ add_executable(${EXECUTABLE}
         src/its/koatParser/termparser.hpp
         src/its/export.cpp
         src/its/export.hpp
+        src/its/smt2export.cpp
+        src/its/smt2export.hpp
         src/its/hypergraph.hpp
         src/its/itsproblem.cpp
         src/its/itsproblem.hpp

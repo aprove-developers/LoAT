@@ -1,6 +1,7 @@
 #include "accelerationproblem.hpp"
 #include "../../accelerate/recurrence/recurrence.hpp"
 #include "../../smt/smtfactory.hpp"
+#include "../../util/relevantvariables.hpp"
 
 AccelerationProblem::AccelerationProblem(
         const BoolExpr guard,
@@ -314,6 +315,33 @@ void AccelerationProblem::eventualWeakIncrease() {
     }
 }
 
+void AccelerationProblem::fixpoint() {
+    for (const Rel &rel: todo) {
+        if (res.find(rel) != res.end()) {
+            continue;
+        }
+        RelSet eqs;
+        VarSet vars = util::RelevantVariables::find(rel.vars(), {up}, True);
+        for (const Var& var: vars) {
+            eqs.insert(Rel::buildEq(var, Expr(var).subs(up)));
+        }
+        solver->resetSolver();
+        BoolExpr allEq = buildAnd(eqs);
+        solver->add(rel);
+        solver->add(allEq);
+        if (solver->check() == Smt::Sat) {
+            BoolExpr newGuard = allEq & rel;
+            option<unsigned int> idx = store(rel, {}, newGuard, true);
+            if (idx) {
+                std::stringstream ss;
+                ss << rel << " [" << idx.get() << "]: fixpoint yields " << newGuard;
+                proof.newline();
+                proof.append(ss);
+            }
+        }
+    }
+}
+
 bool AccelerationProblem::checkCycle(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars) {
     RelSet done;
     const Model &m = solver->model();
@@ -354,6 +382,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     monotonicity();
     eventualWeakDecrease();
     eventualWeakIncrease();
+    fixpoint();
     using Edge = std::pair<Rel, Rel>;
     using Vars = std::vector<BoolExpr>;
     std::map<Edge, BoolExpr> edgeVars;

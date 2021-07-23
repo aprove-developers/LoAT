@@ -121,7 +121,7 @@ void Accelerator::nestRules(const NestingCandidate &fst, const NestingCandidate 
         proof.concat(accel.proof);
         bool success = false;
         for (const auto &accelRule: accel.rules) {
-            if (Config::Analysis::termination() && !accelRule.getCost().isNontermSymbol()) continue;
+            if (Config::Analysis::nonTermination() && !accelRule.getCost().isNontermSymbol()) continue;
             success = true;
             // Add the new rule
             addResultingRule(accelRule);
@@ -233,34 +233,22 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
-        bool universalNonterm = false;
-        Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
-        if (!accelRes.rules.empty()) {
-            res.status = accelRes.status;
-            res.proof.concat(accelRes.proof);
-            for (const auto &r: accelRes.rules) {
-                universalNonterm |= r.getCost().isNontermSymbol();
-                res.rules.emplace_back(r);
-            }
-        }
-       if (!universalNonterm) {
-           option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
-           if (p) {
-               universalNonterm = true;
-               const Rule &nontermRule = p.get().first;
-               const Proof &proof = p.get().second;
-               res.proof.concat(proof);
-               res.rules.emplace_back(nontermRule);
+        option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+        if (p) {
+            const Rule &nontermRule = p.get().first;
+            const Proof &proof = p.get().second;
+            res.proof.concat(proof);
+            res.rules.emplace_back(nontermRule);
+            res.status = Success;
+        } else {
+           Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
+           if (!accelRes.rules.empty()) {
+               res.status = accelRes.status;
+               res.proof.concat(accelRes.proof);
+               for (const auto &r: accelRes.rules) {
+                   res.rules.emplace_back(r);
+               }
            }
-       }
-        if (!universalNonterm) {
-            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
-            if (p) {
-                const Rule &nontermRule = p.get().first;
-                const Proof &proof = p.get().second;
-                res.proof.concat(proof);
-                res.rules.emplace_back(nontermRule);
-            }
         }
     }
     if (res.rules.empty()) {
@@ -359,7 +347,7 @@ option<Proof> Accelerator::run() {
         const Rule r = its.getRule(loop);
         if (r.isLinear()) {
             Complexity cpx =
-                    Config::Analysis::termination() ?
+                    Config::Analysis::nonTermination() ?
                         Complexity::Unknown :
                         AsymptoticBound::determineComplexityViaSMT(
                             its,
@@ -389,7 +377,7 @@ option<Proof> Accelerator::run() {
 
                 if (accel.isSimpleLoop() && added) {
                     Complexity cpx =
-                            Config::Analysis::termination() ?
+                            Config::Analysis::nonTermination() ?
                                 Complexity::Unknown :
                                 AsymptoticBound::determineComplexityViaSMT(
                                     its,
