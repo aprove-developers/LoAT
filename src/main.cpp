@@ -27,6 +27,7 @@
 #include "analysis/rankingfunctionfinder.hpp"
 #include "analysis/recurrentsetfinder.hpp"
 #include "its/smt2export.hpp"
+#include "its/cintegerexport.hpp"
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -166,6 +167,9 @@ int main(int argc, char *argv[]) {
         break;
     case Config::Analysis::RankingFunction:
         RankingFunctionFinder::run(its);
+        break;
+    case Config::Analysis::CIntExport:
+        c_integer_export::doExport(its);
         break;
     default:
         throw std::invalid_argument("unsupported mode");

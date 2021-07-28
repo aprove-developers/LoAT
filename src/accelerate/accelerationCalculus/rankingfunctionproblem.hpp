@@ -14,6 +14,7 @@ private:
 
     std::vector<Expr> solution;
     RelSet todo;
+    RelSet done;
     Subs up;
     RelSet guard;
     Proof proof;

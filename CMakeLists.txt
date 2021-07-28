@@ -92,6 +92,8 @@ add_executable(${EXECUTABLE}
         src/expr/guardtoolbox.hpp
         src/expr/boolexpr.cpp
         src/expr/boolexpr.hpp
+        src/its/cintegerexport.cpp
+        src/its/cintegerexport.hpp
         src/its/koatParser/itsparser.cpp
         src/its/koatParser/itsparser.hpp
         src/its/koatParser/term.cpp

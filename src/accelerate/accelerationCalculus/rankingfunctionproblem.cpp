@@ -59,16 +59,21 @@ bool RankingFunctionProblem::eventualDecrease() {
         solver->add(dec);
         solver->add(!(updated > updated.subs(up)));
         if (solver->check() == Smt::Unsat) {
-            solution.push_back(updated);
-            std::stringstream ss;
-            ss << rel << " is eventually decreasing and bounded";
-            proof.newline();
-            proof.append(ss);
             const Rel inc = updated - rel.lhs() >= 0;
-            guard.insert(inc);
-            todo.insert(inc);
-            todo.erase(it);
-            return true;
+            if (done.find(inc) != done.end()) {
+                solution.push_back(updated);
+                std::stringstream ss;
+                ss << rel << " is eventually decreasing and bounded";
+                proof.newline();
+                proof.append(ss);
+                guard.insert(inc);
+                todo.insert(inc);
+                done.insert(*it);
+                todo.erase(it);
+                return true;
+            } else {
+                ++it;
+            }
         } else {
             ++it;
         }

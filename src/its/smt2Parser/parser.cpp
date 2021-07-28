@@ -18,6 +18,7 @@
 #include "parser.hpp"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <ginac/ginac.h>
 
 namespace sexpressionparser {
 
@@ -152,7 +153,8 @@ namespace sexpressionparser {
         if (sexp.childCount() == 1) {
             const std::string &str = sexp.str();
             if (std::isdigit(str[0]) || str[0] == '-') {
-                return std::stoi(str);
+                GiNaC::parser parser;
+                return parser(str);
             } else {
                 if (vars.find(str) == vars.end()) {
                     vars[str] = res.addFreshTemporaryVariable(str);

@@ -117,6 +117,7 @@ void AccelerationProblem::monotonicity() {
                 BoolExprSet deps;
                 premise.erase(rel);
                 for (const Rel &p: premise) {
+                    if (p == rel || p == updated) continue;
                     const BoolExpr lit = buildLit(p);
                     assumptions.insert(lit);
                     deps.insert(lit);
@@ -166,6 +167,7 @@ void AccelerationProblem::recurrence() {
             BoolExprSet deps;
             BoolExprSet assumptions;
             for (const Rel &p: premise) {
+                if (p == rel || p == updated) continue;
                 const BoolExpr b = buildLit(p);
                 assumptions.insert(b);
                 deps.insert(b);
@@ -218,6 +220,7 @@ void AccelerationProblem::eventualWeakDecrease() {
                 BoolExprSet assumptions;
                 BoolExprSet deps;
                 for (const Rel &p: premise) {
+                    if (p == dec || p == !inc) continue;
                     const BoolExpr lit = buildLit(p);
                     assumptions.insert(lit);
                     deps.insert(lit);
@@ -276,6 +279,7 @@ void AccelerationProblem::eventualWeakIncrease() {
             BoolExprSet assumptions;
             BoolExprSet deps;
             for (const Rel &p: premise) {
+                if (p == inc || p == !dec) continue;
                 const BoolExpr lit = buildLit(p);
                 assumptions.insert(lit);
                 deps.insert(lit);
@@ -327,6 +331,7 @@ void AccelerationProblem::fixpoint() {
         }
         solver->resetSolver();
         BoolExpr allEq = buildAnd(eqs);
+        solver->add(guard);
         solver->add(rel);
         solver->add(allEq);
         if (solver->check() == Smt::Sat) {
