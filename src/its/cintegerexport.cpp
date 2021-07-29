@@ -10,7 +10,7 @@ void doExport(const ITSProblem& its) {
     res << "extern int __VERIFIER_nondet_int(void);\n";
     res << "int main() {\n";
     for (const auto &x: its.getVars()) {
-        assert(!its.isTempVar(x));
+        if (!its.isTempVar(x)) throw std::invalid_argument("");
         res << "    int " << x << ";\n";
     }
     for (const auto &x: its.getVars()) {
@@ -21,15 +21,15 @@ void doExport(const ITSProblem& its) {
     for (auto idx: its.getAllTransitions()) {
         const auto& rule = its.getRule(idx);
         if (rule.getLhsLoc() == its.getInitialLocation()) {
-            assert(rule.getGuard() == True);
+            if (rule.getGuard() != True) throw std::invalid_argument("");
             for (const auto& p: rule.getUpdate(0)) {
-                assert(p.second.equals(p.first));
+                if (!p.second.equals(p.first)) throw std::invalid_argument("");
             }
-            assert(!found_init);
+            if (found_init) throw std::invalid_argument("");
             found_init = true;
         } else {
-            assert(rule.isSimpleLoop());
-            assert(!found_loop);
+            if (rule.isSimpleLoop()) throw std::invalid_argument("");
+            if (!found_loop) throw std::invalid_argument("");
             found_loop = true;
             std::stringstream cond;
             cond << rule.getGuard();
