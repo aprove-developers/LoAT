@@ -4,41 +4,51 @@
 
 namespace c_integer_export {
 
-void doExport(const ITSProblem& its) {
+void doExport(ITSProblem its) {
     std::stringstream res;
     res << "typedef enum {false, true} bool;\n";
     res << "extern int __VERIFIER_nondet_int(void);\n";
     res << "int main() {\n";
+    Subs pre_vars;
+    VarMap<Var> post_vars;
     for (const auto &x: its.getVars()) {
-        if (!its.isTempVar(x)) throw std::invalid_argument("");
+        if (its.isTempVar(x)) throw std::invalid_argument("temp var");
+        std::string name = x.get_name();
+        boost::replace_all(name, "_", "");
+        pre_vars.compose(Subs(x, Var(name)));
+        post_vars[x] = its.addFreshTemporaryVariable(name);
         res << "    int " << x << ";\n";
+        res << "    int " << post_vars[x] << ";\n";
     }
-    for (const auto &x: its.getVars()) {
-        res << "    " << x << " = __VERIFIER_nondet_int();\n";
+    for (const auto &p: post_vars) {
+        res << "    " << p.first << " = __VERIFIER_nondet_int();\n";
     }
     bool found_loop = false;
     bool found_init = false;
     for (auto idx: its.getAllTransitions()) {
         const auto& rule = its.getRule(idx);
         if (rule.getLhsLoc() == its.getInitialLocation()) {
-            if (rule.getGuard() != True) throw std::invalid_argument("");
+            if (rule.getGuard() != True) throw std::invalid_argument("guard != True");
             for (const auto& p: rule.getUpdate(0)) {
-                if (!p.second.equals(p.first)) throw std::invalid_argument("");
+                if (!p.second.equals(p.first)) throw std::invalid_argument("non-trivial update");
             }
-            if (found_init) throw std::invalid_argument("");
+            if (found_init) throw std::invalid_argument("found_init");
             found_init = true;
         } else {
-            if (rule.isSimpleLoop()) throw std::invalid_argument("");
-            if (!found_loop) throw std::invalid_argument("");
+            if (!rule.isSimpleLoop()) throw std::invalid_argument("not a simple loop");
+            if (found_loop) throw std::invalid_argument("found_loop");
             found_loop = true;
             std::stringstream cond;
-            cond << rule.getGuard();
+            cond << rule.getGuard()->subs(pre_vars);
             std::string cond_str = cond.str();
             boost::replace_all(cond_str, "/\\", "&&");
             boost::replace_all(cond_str, "\\/", "||");
-            res << "    while " << cond_str << " {\n";
+            res << "    while (" << cond_str << ") {\n";
             for (const auto& p: rule.getUpdate(0)) {
-                res << "        " << p.first << " = " << p.second << ";\n";
+                res << "        " << post_vars[p.first] << " = " << p.second.subs(pre_vars) << ";\n";
+            }
+            for (const auto& p: rule.getUpdate(0)) {
+                res << "        " << Expr(p.first).subs(pre_vars) << " = " << post_vars[p.first] << ";\n";
             }
             res << "    }\n";
         }

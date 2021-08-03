@@ -116,8 +116,8 @@ void AccelerationProblem::monotonicity() {
                 BoolExprSet assumptions;
                 BoolExprSet deps;
                 premise.erase(rel);
+                premise.erase(updated);
                 for (const Rel &p: premise) {
-                    if (p == rel || p == updated) continue;
                     const BoolExpr lit = buildLit(p);
                     assumptions.insert(lit);
                     deps.insert(lit);
@@ -166,12 +166,14 @@ void AccelerationProblem::recurrence() {
         if (!premise.empty()) {
             BoolExprSet deps;
             BoolExprSet assumptions;
+            premise.erase(rel);
+            premise.erase(updated);
             for (const Rel &p: premise) {
-                if (p == rel || p == updated) continue;
                 const BoolExpr b = buildLit(p);
                 assumptions.insert(b);
                 deps.insert(b);
             }
+            assumptions.insert(buildLit(rel));
             assumptions.insert(buildLit(!updated));
             BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
             if (!unsatCore.empty()) {
@@ -216,11 +218,12 @@ void AccelerationProblem::eventualWeakDecrease() {
             const Rel &inc = updated < updated.subs(up);
             RelSet premise = findConsistentSubset(guard & dec & !inc);
             if (!premise.empty()) {
-                premise.erase(rel);
                 BoolExprSet assumptions;
                 BoolExprSet deps;
+                premise.erase(rel);
+                premise.erase(dec);
+                premise.erase(!inc);
                 for (const Rel &p: premise) {
-                    if (p == dec || p == !inc) continue;
                     const BoolExpr lit = buildLit(p);
                     assumptions.insert(lit);
                     deps.insert(lit);
@@ -275,11 +278,12 @@ void AccelerationProblem::eventualWeakIncrease() {
         const Rel &dec = updated > updated.subs(up);
         RelSet premise = findConsistentSubset(guard & inc & !dec);
         if (!premise.empty()) {
-            premise.erase(rel);
             BoolExprSet assumptions;
             BoolExprSet deps;
+            premise.erase(rel);
+            premise.erase(inc);
+            premise.erase(!dec);
             for (const Rel &p: premise) {
-                if (p == inc || p == !dec) continue;
                 const BoolExpr lit = buildLit(p);
                 assumptions.insert(lit);
                 deps.insert(lit);

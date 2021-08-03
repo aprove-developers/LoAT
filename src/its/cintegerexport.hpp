@@ -4,7 +4,7 @@
 #include "itsproblem.hpp"
 
 namespace c_integer_export {
-    void doExport(const ITSProblem& its);
+    void doExport(ITSProblem its);
 }
 
 #endif // CINTEGEREXPORT_HPP
