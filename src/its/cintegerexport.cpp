@@ -15,13 +15,14 @@ void doExport(ITSProblem its) {
         if (its.isTempVar(x)) throw std::invalid_argument("temp var");
         std::string name = x.get_name();
         boost::replace_all(name, "_", "");
-        pre_vars.compose(Subs(x, Var(name)));
-        post_vars[x] = its.addFreshTemporaryVariable(name);
-        res << "    int " << x << ";\n";
+        Var var = its.addFreshTemporaryVariable(name);
+        pre_vars = pre_vars.compose(Subs(x, var));
+        post_vars[x] = Var(var.get_name() + "post");
+        res << "    int " << var << ";\n";
         res << "    int " << post_vars[x] << ";\n";
     }
     for (const auto &p: post_vars) {
-        res << "    " << p.first << " = __VERIFIER_nondet_int();\n";
+        res << "    " << pre_vars.get(p.first) << " = __VERIFIER_nondet_int();\n";
     }
     bool found_loop = false;
     bool found_init = false;
@@ -48,7 +49,7 @@ void doExport(ITSProblem its) {
                 res << "        " << post_vars[p.first] << " = " << p.second.subs(pre_vars) << ";\n";
             }
             for (const auto& p: rule.getUpdate(0)) {
-                res << "        " << Expr(p.first).subs(pre_vars) << " = " << post_vars[p.first] << ";\n";
+                res << "        " << pre_vars.get(p.first) << " = " << post_vars[p.first] << ";\n";
             }
             res << "    }\n";
         }
