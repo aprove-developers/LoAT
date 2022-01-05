@@ -48,11 +48,11 @@ private:
             const unsigned int validityBound,
             VariableManager &varMan);
 
-    void monotonicity();
-    void recurrence();
-    void eventualWeakDecrease();
-    void eventualWeakIncrease();
-    void fixpoint();
+    bool monotonicity(const Rel &rel);
+    bool recurrence(const Rel &rel);
+    bool eventualWeakDecrease(const Rel &rel);
+    bool eventualWeakIncrease(const Rel &rel);
+    bool fixpoint(const Rel &rel);
     RelSet findConsistentSubset(const BoolExpr e) const;
     option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 
