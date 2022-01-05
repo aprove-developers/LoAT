@@ -241,14 +241,14 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
             res.rules.emplace_back(nontermRule);
             res.status = Success;
         } else {
-           Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
-           if (!accelRes.rules.empty()) {
-               res.status = accelRes.status;
-               res.proof.concat(accelRes.proof);
-               for (const auto &r: accelRes.rules) {
-                   res.rules.emplace_back(r);
-               }
-           }
+            Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
+            if (!accelRes.rules.empty()) {
+                res.status = accelRes.status;
+                res.proof.concat(accelRes.proof);
+                for (const auto &r: accelRes.rules) {
+                    res.rules.emplace_back(r);
+                }
+            }
         }
     }
     if (res.rules.empty()) {
