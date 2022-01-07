@@ -53,10 +53,16 @@ public:
         return res;
     }
 
+    void popAll();
+
 protected:
 
     virtual std::pair<Result, BoolExprSet> _unsatCore(const BoolExprSet &assumptions) = 0;
 
+
+private:
+
+    int pushCount = 0;
 };
 
 #endif // SMT_H

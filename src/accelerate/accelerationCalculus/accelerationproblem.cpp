@@ -11,16 +11,16 @@ AccelerationProblem::AccelerationProblem(
         const Expr &iteratedCost,
         const Var &n,
         const unsigned int validityBound,
-        VariableManager &varMan): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), varMan(varMan) {
+        ITSProblem &its): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {
     std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
-    this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
+    this->solver = SmtFactory::modelBuildingSolver(logic, its);
     this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << up);
 }
 
-option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, VariableManager &varMan) {
-    const Var &n = varMan.addFreshTemporaryVariable("n");
-    const option<Recurrence::Result> &res = Recurrence::iterateRule(varMan, r, n);
+option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSProblem &its) {
+    const Var &n = its.addFreshTemporaryVariable("n");
+    const option<Recurrence::Result> &res = Recurrence::iterateRule(its, r, n);
     if (res) {
         return {AccelerationProblem(
                         r.getGuard()->toG(),
@@ -30,7 +30,7 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
                         res->cost,
                         n,
                         res->validityBound,
-                        varMan)};
+                        its)};
     } else {
         return {AccelerationProblem(
                         r.getGuard()->toG(),
@@ -40,23 +40,26 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, Varia
                         r.getCost(),
                         n,
                         0,
-                        varMan)};
+                        its)};
     }
 }
 
-AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r, VariableManager &varMan) {
+AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r, ITSProblem &its) {
     return AccelerationProblem(
                 r.getGuard()->toG(),
                 r.getUpdate(),
                 option<const Subs&>(),
                 r.getCost(),
                 r.getCost(),
-                varMan.addFreshTemporaryVariable("n"),
+                its.addFreshTemporaryVariable("n"),
                 0,
-                varMan);
+                its);
 }
 
 RelSet AccelerationProblem::findConsistentSubset(const BoolExpr e) const {
+    if (e->isConjunction()) {
+        return todo;
+    }
     solver->resetSolver();
     solver->add(e);
     RelSet res;
@@ -123,7 +126,7 @@ bool AccelerationProblem::monotonicity(const Rel &rel) {
             }
             assumptions.insert(buildLit(updated));
             assumptions.insert(buildLit(!rel));
-            const BoolExprSet &unsatCore = Smt::unsatCore(assumptions, varMan);
+            const BoolExprSet &unsatCore = Smt::unsatCore(assumptions, its);
             if (!unsatCore.empty()) {
                 RelSet dependencies;
                 for (const BoolExpr &e: unsatCore) {
@@ -174,7 +177,7 @@ bool AccelerationProblem::recurrence(const Rel &rel) {
         }
         assumptions.insert(buildLit(rel));
         assumptions.insert(buildLit(!updated));
-        BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
+        BoolExprSet unsatCore = Smt::unsatCore(assumptions, its);
         if (!unsatCore.empty()) {
             RelSet dependencies;
             for (const BoolExpr &e: unsatCore) {
@@ -210,7 +213,7 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
         const auto it = res.find(rel);
         auto no_deps = [](auto const &e){return e.dependencies.empty();};
         if (it != res.end() && std::any_of(it->second.begin(), it->second.end(), no_deps)) {
-            return true;
+            return false;
         }
         const Expr &updated = rel.lhs().subs(up);
         const Rel &dec = rel.lhs() >= updated;
@@ -229,7 +232,7 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
             }
             assumptions.insert(buildLit(dec));
             assumptions.insert(buildLit(inc));
-            BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
+            BoolExprSet unsatCore = Smt::unsatCore(assumptions, its);
             if (!unsatCore.empty()) {
                 RelSet dependencies;
                 for (const BoolExpr &e: unsatCore) {
@@ -289,7 +292,7 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
         }
         assumptions.insert(buildLit(dec));
         assumptions.insert(buildLit(inc));
-        BoolExprSet unsatCore = Smt::unsatCore(assumptions, varMan);
+        BoolExprSet unsatCore = Smt::unsatCore(assumptions, its);
         if (!unsatCore.empty()) {
             RelSet dependencies;
             for (const BoolExpr &e: unsatCore) {
@@ -385,6 +388,68 @@ bool AccelerationProblem::checkCycle(const std::map<std::pair<Rel, Rel>, BoolExp
     return false;
 }
 
+using Vars = std::vector<BoolExpr>;
+using Edge = std::pair<Rel, Rel>;
+
+void AccelerationProblem::encodeAcyclicity(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars) {
+    // if a->b and b->c is enabled, then a->c needs to be enabled, too
+    for (const auto &p: edgeVars) {
+        const Edge &edge = p.first;
+        const Rel &start = edge.first;
+        const Rel &join = edge.second;
+        const BoolExpr var1 = p.second;
+        for (const Rel &target: todo) {
+            if (target == join) continue;
+            const BoolExpr var2 = edgeVars.at({join, target});
+            const BoolExpr var3 = edgeVars.at({start, target});
+            solver->add((!var1) | (!var2) | var3);
+        }
+    }
+}
+
+Model AccelerationProblem::enlargeSolution(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft) {
+    Model model = solver->model();
+    if (guard->isConjunction()) {
+        return model;
+    }
+    for (const BoolExpr &s: soft) {
+        solver->push();
+        solver->add(s);
+        Smt::Result satRes = solver->check();
+        if (satRes == Smt::Sat && !checkCycle(edgeVars)) {
+            model = solver->model();
+        } else {
+            solver->pop();
+        }
+    }
+    return model;
+}
+
+Smt::Result AccelerationProblem::checkSat(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const RelMap<BoolExpr> &boolAbstractionMap) {
+    BoolExpr boolNontermAbstraction = guard->replaceRels(boolAbstractionMap);
+    solver->add(boolNontermAbstraction);
+    Smt::Result satRes = solver->check();
+    std::vector<AccelerationProblem::Result> ret;
+    if (satRes == Smt::Sat && checkCycle(edgeVars)) {
+        encodeAcyclicity(edgeVars);
+        satRes = solver->check();
+    }
+    return satRes;
+}
+
+option<AccelerationProblem::Result> AccelerationProblem::enlargeSolutionAndGetRes(const std::map<Rel, Vars> &entryVars, const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft) {
+    Model model = enlargeSolution(edgeVars, soft);
+    const auto p = buildRes(model, entryVars);
+    const BoolExpr& newGuard = p.first;
+    bool nonterm = p.second;
+    // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
+    if (Smt::check(newGuard, its) == Smt::Sat) {
+        return {{newGuard, nonterm}};
+    } else {
+        return {};
+    }
+}
+
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     for (const Rel& rel: todo) {
         bool res = recurrence(rel);
@@ -392,23 +457,22 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         res |= eventualWeakDecrease(rel);
         res |= eventualWeakIncrease(rel);
         res |= fixpoint(rel);
-        if (!res) return {};
+        if (!res && guard->isConjunction()) return {};
     }
-    using Edge = std::pair<Rel, Rel>;
-    using Vars = std::vector<BoolExpr>;
     std::map<Edge, BoolExpr> edgeVars;
     std::map<Rel, Vars> entryVars;
-    Vars soft;
     for (const Rel &rel1: todo) {
         for (const Rel &rel2: todo) {
-            edgeVars[{rel1, rel2}] = varMan.freshBoolVar();
+            edgeVars[{rel1, rel2}] = its.freshBoolVar();
         }
     }
     // if an entry is enabled, then the edges corresponding to its dependencies have to be enabled.
-    // maps every constraint to it's 'boolean abstraction'
+    // maps every constraint to its 'boolean abstraction'
     // which states that one of the entries corresponding to the constraint needs to be enabled
     RelMap<BoolExpr> boolAbstractionMap;
     RelMap<BoolExpr> boolNontermAbstractionMap;
+    BoolExprSet soft;
+    BoolExprSet softNonterm;
     solver->resetSolver();
     for (const auto &rel: todo) {
         auto it = res.find(rel);
@@ -421,9 +485,8 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             BoolExprSet abstraction;
             BoolExprSet nontermAbstraction;
             for (const Entry &e: entries) {
-                BoolExpr entryVar = varMan.freshBoolVar();
+                BoolExpr entryVar = its.freshBoolVar();
                 eVars.push_back(entryVar);
-                soft.push_back(entryVar);
                 if (!e.active) continue;
                 abstraction.insert(entryVar);
                 if (e.nonterm) nontermAbstraction.insert(entryVar);
@@ -432,8 +495,12 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
                 }
             }
             entryVars[rel] = eVars;
-            boolAbstractionMap[rel] = buildOr(abstraction);
-            boolNontermAbstractionMap[rel] = buildOr(nontermAbstraction);
+            BoolExpr res = buildOr(abstraction);
+            boolAbstractionMap[rel] = res;
+            soft.insert(res);
+            BoolExpr ntRes = buildOr(nontermAbstraction);
+            boolNontermAbstractionMap[rel] = ntRes;
+            softNonterm.insert(ntRes);
         }
     }
     // forbids loops of length 2
@@ -443,78 +510,26 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
                 solver->add((!edgeVars.at({*it1, *it2})) | (!edgeVars.at({*it2, *it1})));
         }
     }
-    solver->push();
-    BoolExpr boolNontermAbstraction = guard->replaceRels(boolNontermAbstractionMap);
-    solver->add(boolNontermAbstraction);
-    Smt::Result satRes = solver->check();
     std::vector<AccelerationProblem::Result> ret;
-    if (satRes == Smt::Sat && checkCycle(edgeVars)) {
-        // if a->b and b->c is enabled, then a->c needs to be enabled, too
-        for (const auto &p: edgeVars) {
-            const Edge &edge = p.first;
-            const Rel &start = edge.first;
-            const Rel &join = edge.second;
-            const BoolExpr var1 = p.second;
-            for (const Rel &target: todo) {
-                if (target == join) continue;
-                const BoolExpr var2 = edgeVars.at({join, target});
-                const BoolExpr var3 = edgeVars.at({start, target});
-                solver->add((!var1) | (!var2) | var3);
-            }
-        }
-        satRes = solver->check();
-    }
-    bool provenNonterm = satRes == Smt::Sat && Smt::isImplication(guard, buildLit(cost > 0), varMan);
-    if (provenNonterm) {
-        const auto p = buildRes(solver->model(), entryVars);
-        const BoolExpr& newGuard = p.first;
-        assert(p.second); // p.second = true means we've proven non-termination
-        // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
-        if (Smt::check(newGuard, varMan) == Smt::Sat) {
-            ret.push_back({newGuard, true});
-        }
-    }
-    if (closed && !provenNonterm) {
-        if (satRes != Smt::Sat) {
-            solver->pop();
-            BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
-            solver->add(boolAbstraction);
-            satRes = solver->check();
-            if (satRes == Smt::Sat && checkCycle(edgeVars)) {
-                // if a->b and b->c is enabled, then a->c needs to be enabled, too
-                for (const auto &p: edgeVars) {
-                    const Edge &edge = p.first;
-                    const Rel &start = edge.first;
-                    const Rel &join = edge.second;
-                    const BoolExpr var1 = p.second;
-                    for (const Rel &target: todo) {
-                        if (target == join) continue;
-                        const BoolExpr var2 = edgeVars.at({join, target});
-                        const BoolExpr var3 = edgeVars.at({start, target});
-                        solver->add((!var1) | (!var2) | var3);
-                    }
-                }
-                satRes = solver->check();
-            }
-        }
+    bool positiveCost = its.justPositiveCosts() || Smt::isImplication(guard, buildLit(cost > 0), its);
+    if (positiveCost) {
+        solver->push();
+        Smt::Result satRes = checkSat(edgeVars, boolNontermAbstractionMap);
         if (satRes == Smt::Sat) {
-            Model model = solver->model();
-            for (const BoolExpr &s: soft) {
-                solver->push();
-                solver->add(s);
-                satRes = solver->check();
-                if (satRes == Smt::Sat) {
-                    model = solver->model();
-                } else {
-                    solver->pop();
-                }
+            option<AccelerationProblem::Result> res = enlargeSolutionAndGetRes(entryVars, edgeVars, softNonterm);
+            if (res) {
+                ret.push_back(*res);
             }
-            const auto p = buildRes(model, entryVars);
-            const BoolExpr& newGuard = p.first;
-            bool nonterm = p.second;
-            // TODO it would be better to encode satisfiability of the resulting guard in the constraint system
-            if (Smt::check(newGuard, varMan) == Smt::Sat) {
-                ret.push_back({newGuard, nonterm});
+        }
+    }
+    if (closed) {
+        solver->popAll();
+        Smt::Result satRes = checkSat(edgeVars, boolAbstractionMap);
+        if (satRes == Smt::Sat) {
+            option<AccelerationProblem::Result> res = enlargeSolutionAndGetRes(entryVars, edgeVars, soft);
+            if (res) {
+                res->witnessesNonterm &= positiveCost;
+                ret.push_back(*res);
             }
         }
     }

@@ -90,7 +90,7 @@ namespace sexpressionparser {
                                     subs.put(var, res.addFreshTemporaryVariable(var.get_name()));
                                 }
                             }
-                            res.addRule(rule.subs(subs));
+                            res.addInitialRule(rule.subs(subs));
                         }
                     }
                 }

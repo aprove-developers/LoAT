@@ -45,10 +45,10 @@ Sexp exprToSexp(const Expr &e) {
     }
 }
 
-std::optional<Sexp> boolExprToSexp(BoolExpr e) {
+option<Sexp> boolExprToSexp(BoolExpr e) {
     assert(e->isConjunction());
     if (e->isAnd()) {
-        std::optional<Sexp> res;
+        option<Sexp> res;
         for (BoolExpr c: e->getChildren()) {
             auto lit = boolExprToSexp(c);
             if (res && lit) {
@@ -180,7 +180,7 @@ void smt2Export::doExport(const ITSProblem& its) {
         Sexp src = Sexp("l" + std::to_string(rule.getLhs().getLoc()));
         Sexp dst = Sexp("l" + std::to_string(rule.getRhsLoc()));
         Sexp trans({Sexp("cfg_trans2"), Sexp("pc^0"), src, Sexp("pc^post"), dst});
-        std::optional<Sexp> cond;
+        option<Sexp> cond;
         const auto &up = rule.getUpdate();
         for (auto var: its.getVars()) {
             auto it = up.find(var);

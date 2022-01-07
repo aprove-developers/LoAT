@@ -168,6 +168,13 @@ option<TransIdx> ITSProblem::addRule(Rule rule) {
     return idx;
 }
 
+option<TransIdx> ITSProblem::addInitialRule(const Rule& rule) {
+    if (!rule.getCost().isGround() || rule.getCost().toNum() <= 0) {
+        positiveCosts = false;
+    }
+    return addRule(rule);
+}
+
 std::vector<TransIdx> ITSProblem::replaceRules(const std::vector<TransIdx> &toReplace, const std::vector<Rule> replacement) {
     std::vector<TransIdx> keep;
     std::vector<TransIdx> result;
@@ -257,4 +264,8 @@ std::set<TransIdx> ITSProblem::removeLocationAndRules(LocationIdx loc) {
 void ITSProblem::print(std::ostream &s) const {
     std::lock_guard guard(mutex);
     ITSExport::printDebug(*this, s);
+}
+
+bool ITSProblem::justPositiveCosts() const {
+    return positiveCosts;
 }

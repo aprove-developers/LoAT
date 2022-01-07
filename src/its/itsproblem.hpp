@@ -78,6 +78,7 @@ public:
     // Mutation of Rules
     void removeRule(TransIdx transition);
     option<TransIdx> addRule(Rule rule);
+    option<TransIdx> addInitialRule(const Rule& rule);
     std::vector<TransIdx> replaceRules(const std::vector<TransIdx> &toReplace, const std::vector<Rule> replacement);
 
     // Mutation for Locations
@@ -102,6 +103,8 @@ public:
     static void lock();
     static void unlock();
 
+    bool justPositiveCosts() const;
+
 protected:
 
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
@@ -125,6 +128,9 @@ protected:
     std::map<LocationIdx, std::string> locationNames;
 
     static std::recursive_mutex mutex;
+
+    bool positiveCosts = true;
+
 };
 
 

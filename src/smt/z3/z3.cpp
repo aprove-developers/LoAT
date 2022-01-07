@@ -17,10 +17,12 @@ void Z3::add(const BoolExpr e) {
 }
 
 void Z3::push() {
+    Smt::push();
     solver.push();
 }
 
 void Z3::pop() {
+    Smt::pop();
     solver.pop();
 }
 

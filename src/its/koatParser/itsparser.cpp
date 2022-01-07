@@ -459,7 +459,7 @@ void ITSParser::addParsedRule(const ParsedRule &rule) {
         }
     }
 
-    itsProblem.addRule(newRule);
+    itsProblem.addInitialRule(newRule);
 }
 
 

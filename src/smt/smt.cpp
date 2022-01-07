@@ -58,3 +58,17 @@ Smt::Logic Smt::chooseLogic(const BoolExprSet &xs) {
     }
     return res;
 }
+
+void Smt::popAll() {
+    while (pushCount > 0) {
+        pop();
+    }
+}
+
+void Smt::pop() {
+    pushCount--;
+}
+
+void Smt::push() {
+    pushCount++;
+}

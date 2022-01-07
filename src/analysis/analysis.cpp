@@ -93,6 +93,12 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
         proof.minorProofStep("Simplified rules", its);
     }
 
+    Proof mergingProof = Merger::mergeRules(its);
+    if (!mergingProof.empty()) {
+        proof.concat(mergingProof);
+        proof.majorProofStep("Merged rules", its);
+    }
+
     // We cannot prove any lower bound for an empty ITS
     if (its.isEmpty()) {
         return;

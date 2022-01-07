@@ -4,7 +4,7 @@
 #include "../../its/types.hpp"
 #include "../../its/rule.hpp"
 #include "../../util/option.hpp"
-#include "../../its/variablemanager.hpp"
+#include "../../its/itsproblem.hpp"
 #include "../../util/proof.hpp"
 #include "../../smt/smt.hpp"
 
@@ -36,7 +36,7 @@ private:
     unsigned int validityBound;
     Proof proof;
     std::unique_ptr<Smt> solver;
-    VariableManager &varMan;
+    ITSProblem &its;
 
     AccelerationProblem(
             const BoolExpr guard,
@@ -46,7 +46,7 @@ private:
             const Expr &iteratedCost,
             const Var &n,
             const unsigned int validityBound,
-            VariableManager &varMan);
+            ITSProblem &its);
 
     bool monotonicity(const Rel &rel);
     bool recurrence(const Rel &rel);
@@ -63,8 +63,8 @@ public:
         bool witnessesNonterm;
     };
 
-    static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan);
-    static AccelerationProblem initForRecurrentSet(const LinearRule &r, VariableManager &varMan);
+    static option<AccelerationProblem> init(const LinearRule &r, ITSProblem &its);
+    static AccelerationProblem initForRecurrentSet(const LinearRule &r, ITSProblem &its);
     std::vector<Result> computeRes();
     std::pair<BoolExpr, bool> buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
@@ -76,6 +76,11 @@ public:
 private:
 
     bool checkCycle(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars);
+    void encodeAcyclicity(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars);
+    using Vars = std::vector<BoolExpr>;
+    Model enlargeSolution(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft);
+    Smt::Result checkSat(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const RelMap<BoolExpr> &boolAbstractionMap);
+    option<AccelerationProblem::Result> enlargeSolutionAndGetRes(const std::map<Rel, Vars> &entryVars, const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft);
 
 };
 
