@@ -511,7 +511,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         }
     }
     std::vector<AccelerationProblem::Result> ret;
-    bool positiveCost = its.justPositiveCosts() || Smt::isImplication(guard, buildLit(cost > 0), its);
+    bool positiveCost = Smt::isImplication(guard, buildLit(cost > 0), its);
     if (positiveCost) {
         solver->push();
         Smt::Result satRes = checkSat(edgeVars, boolNontermAbstractionMap);
