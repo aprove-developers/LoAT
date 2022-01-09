@@ -12,6 +12,7 @@ AccelerationProblem::AccelerationProblem(
         const Var &n,
         const unsigned int validityBound,
         ITSProblem &its): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {
+    res = buildLit(n >= validityBound);
     std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
     this->solver = SmtFactory::modelBuildingSolver(logic, its);
@@ -222,6 +223,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             proof.append("done, trying nonterm");
             todo = guard->lits();
             done = True;
+            res = buildLit(n >= validityBound);
             solver->popAll();
             do {
                 changed = false;

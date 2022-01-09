@@ -12,7 +12,7 @@ class AccelerationProblem {
 
 private:
 
-    BoolExpr res = True;
+    BoolExpr res;
     RelSet todo;
     BoolExpr done = True;
     Subs up;
