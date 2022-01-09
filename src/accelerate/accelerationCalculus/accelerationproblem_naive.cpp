@@ -153,10 +153,11 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
         if (solver2->check() == Smt::Unsat) {
             solver->push();
             solver->add(inc);
+            solver->add(rel);
             if (solver->check() == Smt::Sat) {
-                res = res & inc;
+                res = res & inc & rel;
                 std::stringstream ss;
-                ss << "discharged " << rel << " with eventual increase, got " << inc;
+                ss << "discharged " << rel << " with eventual increase, got " << (buildLit(inc) & rel);
                 proof.newline();
                 proof.append(ss);
                 solver2->pop();
