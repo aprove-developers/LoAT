@@ -15,6 +15,8 @@ AccelerationProblem::AccelerationProblem(
     std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
     this->solver = SmtFactory::modelBuildingSolver(logic, its);
+    this->solver->add(guard);
+    solver->check();
     this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << up);
 }
 
@@ -56,22 +58,26 @@ AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r
                 its);
 }
 
-RelSet AccelerationProblem::findConsistentSubset(const BoolExpr e) const {
-    if (e->isConjunction()) {
-        return todo;
-    }
-    solver->resetSolver();
+RelSet AccelerationProblem::findConsistentSubset(BoolExpr e) const {
+    solver->push();
     solver->add(e);
-    RelSet res;
-    if (solver->check() == Smt::Sat) {
-        const Subs &model = solver->model().toSubs();
-        for (const Rel &rel: todo) {
-            if (rel.subs(model).isTriviallyTrue()) {
-                res.insert(rel);
+    Smt::Result sat = solver->check();
+    solver->pop();
+    if (sat == Smt::Sat) {
+        if (guard->isConjunction()) {
+            return todo;
+        } else {
+            RelSet res;
+            const Subs &model = solver->model().toSubs();
+            for (const Rel &rel: todo) {
+                if (rel.subs(model).isTriviallyTrue()) {
+                    res.insert(rel);
+                }
             }
+            return res;
         }
     }
-    return res;
+    return RelSet();
 }
 
 bool AccelerationProblem::Entry::subsumes(const Entry &that) const {
@@ -112,8 +118,9 @@ bool AccelerationProblem::monotonicity(const Rel &rel) {
         if (it != res.end() && std::any_of(it->second.begin(), it->second.end(), no_deps)) {
             return false;
         }
-        const Rel &updated = rel.subs(up);
-        RelSet premise = findConsistentSubset(guard & rel & updated);
+        const Rel updated = rel.subs(up);
+        const Rel newCond = rel.subs(closed.get()).subs(Subs(n, n-1));
+        RelSet premise = findConsistentSubset(guard & rel & updated & newCond & n >= validityBound);
         if (!premise.empty()) {
             BoolExprSet assumptions;
             BoolExprSet deps;
@@ -136,25 +143,20 @@ bool AccelerationProblem::monotonicity(const Rel &rel) {
                         dependencies.insert(*lit.begin());
                     }
                 }
-                const BoolExpr newGuard = buildAnd(dependencies) & rel.subs(closed.get()).subs(Subs(n, n-1));
-                solver->resetSolver();
-                solver->add(newGuard);
-                solver->add(n >= validityBound);
-                if (solver->check() == Smt::Sat) {
-                    option<unsigned int> idx = store(rel, dependencies, newGuard);
-                    if (idx) {
-                        std::stringstream ss;
-                        ss << rel << " [" << idx.get() << "]: montonic decrease yields " << newGuard;
-                        if (!dependencies.empty()) {
-                            ss << ", dependencies:";
-                            for (const Rel &rel: dependencies) {
-                                ss << " " << rel;
-                            }
+                const BoolExpr newGuard = buildAnd(dependencies) & newCond;
+                option<unsigned int> idx = store(rel, dependencies, newGuard);
+                if (idx) {
+                    std::stringstream ss;
+                    ss << rel << " [" << idx.get() << "]: montonic decrease yields " << newGuard;
+                    if (!dependencies.empty()) {
+                        ss << ", dependencies:";
+                        for (const Rel &rel: dependencies) {
+                            ss << " " << rel;
                         }
-                        proof.newline();
-                        proof.append(ss);
-                        return true;
                     }
+                    proof.newline();
+                    proof.append(ss);
+                    return true;
                 }
             }
         }
@@ -215,10 +217,11 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
         if (it != res.end() && std::any_of(it->second.begin(), it->second.end(), no_deps)) {
             return false;
         }
-        const Expr &updated = rel.lhs().subs(up);
-        const Rel &dec = rel.lhs() >= updated;
-        const Rel &inc = updated < updated.subs(up);
-        RelSet premise = findConsistentSubset(guard & dec & !inc);
+        const Expr updated = rel.lhs().subs(up);
+        const Rel dec = rel.lhs() >= updated;
+        const Rel inc = updated < updated.subs(up);
+        const Rel newCond = rel.subs(closed.get()).subs(Subs(n, n-1));
+        RelSet premise = findConsistentSubset(guard & dec & !inc & rel & newCond & n >= validityBound);
         if (!premise.empty()) {
             BoolExprSet assumptions;
             BoolExprSet deps;
@@ -242,26 +245,20 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
                         dependencies.insert(*lit.begin());
                     }
                 }
-                const Rel &newCond = rel.subs(closed.get()).subs(Subs(n, n-1));
                 const BoolExpr newGuard = buildAnd(dependencies) & rel & newCond;
-                solver->resetSolver();
-                solver->add(newGuard);
-                solver->add(n >= validityBound);
-                if (solver->check() == Smt::Sat) {
-                    option<unsigned int> idx = store(rel, dependencies, newGuard);
-                    if (idx) {
-                        std::stringstream ss;
-                        ss << rel << " [" << idx.get() << "]: eventual decrease yields " << newGuard;
-                        if (!dependencies.empty()) {
-                            ss << ", dependencies:";
-                            for (const Rel &rel: dependencies) {
-                                ss << " " << rel;
-                            }
+                option<unsigned int> idx = store(rel, dependencies, newGuard);
+                if (idx) {
+                    std::stringstream ss;
+                    ss << rel << " [" << idx.get() << "]: eventual decrease yields " << newGuard;
+                    if (!dependencies.empty()) {
+                        ss << ", dependencies:";
+                        for (const Rel &rel: dependencies) {
+                            ss << " " << rel;
                         }
-                        proof.newline();
-                        proof.append(ss);
-                        return true;
                     }
+                    proof.newline();
+                    proof.append(ss);
+                    return true;
                 }
             }
         }
@@ -278,7 +275,7 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
     const Expr &updated = rel.lhs().subs(up);
     const Rel &inc = rel.lhs() <= updated;
     const Rel &dec = updated > updated.subs(up);
-    RelSet premise = findConsistentSubset(guard & inc & !dec);
+    RelSet premise = findConsistentSubset(guard & inc & !dec & rel);
     if (!premise.empty()) {
         BoolExprSet assumptions;
         BoolExprSet deps;
@@ -303,23 +300,19 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
                 }
             }
             const BoolExpr newGuard = buildAnd(dependencies) & rel & inc;
-            solver->resetSolver();
-            solver->add(newGuard);
-            if (solver->check() == Smt::Sat) {
-                option<unsigned int> idx = store(rel, dependencies, newGuard, true);
-                if (idx) {
-                    std::stringstream ss;
-                    ss << rel << " [" << idx.get() << "]: eventual increase yields " << newGuard;
-                    if (!dependencies.empty()) {
-                        ss << ", dependencies:";
-                        for (const Rel &rel: dependencies) {
-                            ss << " " << rel;
-                        }
+            option<unsigned int> idx = store(rel, dependencies, newGuard, true);
+            if (idx) {
+                std::stringstream ss;
+                ss << rel << " [" << idx.get() << "]: eventual increase yields " << newGuard;
+                if (!dependencies.empty()) {
+                    ss << ", dependencies:";
+                    for (const Rel &rel: dependencies) {
+                        ss << " " << rel;
                     }
-                    proof.newline();
-                    proof.append(ss);
-                    return true;
                 }
+                proof.newline();
+                proof.append(ss);
+                return true;
             }
         }
     }
@@ -333,12 +326,13 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
         for (const Var& var: vars) {
             eqs.insert(Rel::buildEq(var, Expr(var).subs(up)));
         }
-        solver->resetSolver();
         BoolExpr allEq = buildAnd(eqs);
-        solver->add(guard);
+        solver->push();
         solver->add(rel);
         solver->add(allEq);
-        if (solver->check() == Smt::Sat) {
+        Smt::Result sat = solver->check();
+        solver->pop();
+        if (sat == Smt::Sat) {
             BoolExpr newGuard = allEq & rel;
             option<unsigned int> idx = store(rel, {}, newGuard, true);
             if (idx) {
@@ -426,8 +420,8 @@ Model AccelerationProblem::enlargeSolution(const std::map<std::pair<Rel, Rel>, B
 }
 
 Smt::Result AccelerationProblem::checkSat(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const RelMap<BoolExpr> &boolAbstractionMap) {
-    BoolExpr boolNontermAbstraction = guard->replaceRels(boolAbstractionMap);
-    solver->add(boolNontermAbstraction);
+    BoolExpr boolAbstraction = guard->replaceRels(boolAbstractionMap);
+    solver->add(boolAbstraction);
     Smt::Result satRes = solver->check();
     std::vector<AccelerationProblem::Result> ret;
     if (satRes == Smt::Sat && checkCycle(edgeVars)) {
