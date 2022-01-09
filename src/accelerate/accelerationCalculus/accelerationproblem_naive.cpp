@@ -182,9 +182,11 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
     if (Smt::check(guard & allEq, its) == Smt::Sat) {
         solver->push();
         solver->add(allEq);
+        solver->add(rel);
         if (solver->check() == Smt::Sat) {
+            res = res & allEq & rel;
             std::stringstream ss;
-            ss << rel << "discharged " << rel << " with fixpoint, got " << allEq;
+            ss << "discharged " << rel << " with fixpoint, got " << allEq;
             proof.newline();
             proof.append(ss);
             return true;
@@ -220,11 +222,13 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         }
         result.push_back({res, nonterm});
         if (!nonterm && closed && positiveCost) {
+            proof.newline();
             proof.append("done, trying nonterm");
             todo = guard->lits();
             done = True;
             res = buildLit(n >= validityBound);
             solver->popAll();
+            solver2->resetSolver();
             do {
                 changed = false;
                 auto it = todo.begin();
