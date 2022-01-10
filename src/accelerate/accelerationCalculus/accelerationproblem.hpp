@@ -81,6 +81,7 @@ private:
     Model enlargeSolution(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft);
     Smt::Result checkSat(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const RelMap<BoolExpr> &boolAbstractionMap);
     option<AccelerationProblem::Result> enlargeSolutionAndGetRes(const std::map<Rel, Vars> &entryVars, const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft);
+    bool depsWellFounded(const Rel& rel, bool nontermOnly, bool linearOnly, RelSet seen);
 
 };
 
