@@ -37,6 +37,7 @@ private:
     Proof proof;
     std::unique_ptr<Smt> solver;
     ITSProblem &its;
+    bool isConjunction;
 
     AccelerationProblem(
             const BoolExpr guard,
@@ -61,6 +62,12 @@ public:
     struct Result {
         BoolExpr newGuard;
         bool witnessesNonterm;
+
+        Result(const BoolExpr &newGuard, bool witnessesNonterm) {
+            this->newGuard = newGuard;
+            this->witnessesNonterm = witnessesNonterm;
+        }
+
     };
 
     static option<AccelerationProblem> init(const LinearRule &r, ITSProblem &its);
@@ -75,13 +82,7 @@ public:
 
 private:
 
-    bool checkCycle(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars);
-    void encodeAcyclicity(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars);
-    using Vars = std::vector<BoolExpr>;
-    Model enlargeSolution(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft);
-    Smt::Result checkSat(const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const RelMap<BoolExpr> &boolAbstractionMap);
-    option<AccelerationProblem::Result> enlargeSolutionAndGetRes(const std::map<Rel, Vars> &entryVars, const std::map<std::pair<Rel, Rel>, BoolExpr> &edgeVars, const BoolExprSet &soft);
-    bool depsWellFounded(const Rel& rel, bool nontermOnly, bool linearOnly, RelSet seen);
+    option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly, bool linearOnly, RelSet seen);
 
 };
 
