@@ -15,9 +15,7 @@ AccelerationProblem::AccelerationProblem(
     res = buildLit(n >= validityBound);
     std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
     Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
-    this->solver = SmtFactory::modelBuildingSolver(logic, its);
-    this->solver2 = SmtFactory::modelBuildingSolver(logic, its);
-}
+    this->solver = SmtFactory::modelBuildingSolver(logic, its);}
 
 option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSProblem &its) {
     const Var &n = its.addFreshTemporaryVariable("n");
@@ -59,55 +57,39 @@ AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r
 
 bool AccelerationProblem::monotonicity(const Rel &rel) {
     if (closed) {
-        solver2->push();
-        solver2->add(rel.subs(up));
-        if (solver2->check() == Smt::Sat) {
-            solver2->add(!buildLit(rel));
-            if (solver2->check() == Smt::Unsat) {
+        solver->resetSolver();
+        solver->add(done);
+        solver->add(rel.subs(up));
+        if (solver->check() == Smt::Sat) {
+            solver->add(!buildLit(rel));
+            if (solver->check() == Smt::Unsat) {
                 Rel newCond = rel.subs(closed.get()).subs(Subs(n, n-1));
-                solver->push();
-                solver->add(newCond);
-                if (solver->check() == Smt::Sat) {
-                    res = res & newCond;
-                    nonterm = false;
-                    std::stringstream ss;
-                    ss << "discharged " << rel << " with monotonic decrease, got " << newCond;
-                    proof.newline();
-                    proof.append(ss);
-                    solver2->pop();
-                    solver2->add(rel);
-                    return true;
-                }
-                solver->pop();
+                res = res & newCond;
+                nonterm = false;
+                std::stringstream ss;
+                ss << "discharged " << rel << " with monotonic decrease, got " << newCond;
+                proof.newline();
+                proof.append(ss);
+                return true;
             }
         }
-        solver2->pop();
     }
     return false;
 }
 
 bool AccelerationProblem::recurrence(const Rel &rel) {
-    solver2->push();
-    solver2->add(rel);
-    if (solver2->check() == Smt::Sat) {
-        solver2->add(!buildLit(rel.subs(up)));
-        if (solver2->check() == Smt::Unsat) {
-            solver->push();
-            solver->add(rel);
-            if (solver->check() == Smt::Sat) {
-                res = res & rel;
-                std::stringstream ss;
-                ss << "discharged " << rel << " with monotonic increase, got " << rel;
-                proof.newline();
-                proof.append(ss);
-                solver2->pop();
-                solver2->add(rel);
-                return true;
-            }
-            solver->pop();
-        }
+    solver->resetSolver();
+    solver->add(done);
+    solver->add(rel);
+    solver->add(!buildLit(rel.subs(up)));
+    if (solver->check() == Smt::Unsat) {
+        res = res & rel;
+        std::stringstream ss;
+        ss << "discharged " << rel << " with monotonic increase, got " << rel;
+        proof.newline();
+        proof.append(ss);
+        return true;
     }
-    solver2->pop();
     return false;
 }
 
@@ -115,30 +97,23 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
     if (closed) {
         const Expr &updated = rel.lhs().subs(up);
         const Rel &dec = rel.lhs() >= updated;
-        solver2->push();
-        solver2->add(dec);
-        if (solver2->check() == Smt::Sat) {
+        solver->resetSolver();
+        solver->add(done);
+        solver->add(dec);
+        if (solver->check() == Smt::Sat) {
             const Rel &dec_dec = updated >= updated.subs(up);
-            solver2->add(!dec_dec);
-            if (solver2->check() == Smt::Unsat) {
+            solver->add(!dec_dec);
+            if (solver->check() == Smt::Unsat) {
                 BoolExpr newCond = buildLit(rel) & rel.subs(closed.get()).subs(Subs(n, n-1));
-                solver->push();
-                solver->add(newCond);
-                if (solver->check() == Smt::Sat) {
-                    res = res & newCond;
-                    nonterm = false;
-                    std::stringstream ss;
-                    ss << "discharged " << rel << " with eventual decrease, got " << newCond;
-                    proof.newline();
-                    proof.append(ss);
-                    solver2->pop();
-                    solver2->add(rel);
-                    return true;
-                }
-                solver->pop();
+                res = res & newCond;
+                nonterm = false;
+                std::stringstream ss;
+                ss << "discharged " << rel << " with eventual decrease, got " << newCond;
+                proof.newline();
+                proof.append(ss);
+                return true;
             }
         }
-        solver2->pop();
     }
     return false;
 }
@@ -146,29 +121,21 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
 bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
     const Expr &updated = rel.lhs().subs(up);
     const Rel &inc = rel.lhs() <= updated;
-    solver2->push();
-    solver2->add(inc);
-    if (solver2->check() == Smt::Sat) {
+    solver->resetSolver();
+    solver->add(done);
+    solver->add(inc);
+    if (solver->check() == Smt::Sat) {
         const Rel &inc_inc = updated <= updated.subs(up);
-        solver2->add(!inc_inc);
-        if (solver2->check() == Smt::Unsat) {
-            solver->push();
-            solver->add(inc);
-            solver->add(rel);
-            if (solver->check() == Smt::Sat) {
-                res = res & inc & rel;
-                std::stringstream ss;
-                ss << "discharged " << rel << " with eventual increase, got " << (buildLit(inc) & rel);
-                proof.newline();
-                proof.append(ss);
-                solver2->pop();
-                solver2->add(rel);
-                return true;
-            }
-            solver->pop();
+        solver->add(!inc_inc);
+        if (solver->check() == Smt::Unsat) {
+            res = res & inc & rel;
+            std::stringstream ss;
+            ss << "discharged " << rel << " with eventual increase, got " << (buildLit(inc) & rel);
+            proof.newline();
+            proof.append(ss);
+            return true;
         }
     }
-    solver2->pop();
     return false;
 }
 
@@ -180,26 +147,18 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
     }
     BoolExpr allEq = buildAnd(eqs);
     if (Smt::check(guard & allEq, its) == Smt::Sat) {
-        solver->push();
-        solver->add(allEq);
-        solver->add(rel);
-        if (solver->check() == Smt::Sat) {
-            res = res & allEq & rel;
-            std::stringstream ss;
-            ss << "discharged " << rel << " with fixpoint, got " << allEq;
-            proof.newline();
-            proof.append(ss);
-            return true;
-        }
-        solver->pop();
+        res = res & allEq & rel;
+        std::stringstream ss;
+        ss << "discharged " << rel << " with fixpoint, got " << allEq;
+        proof.newline();
+        proof.append(ss);
+        return true;
     }
     return false;
 }
 
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << up);
-    solver->add(n >= validityBound);
-    solver->push();
     bool changed;
     do {
         changed = false;
@@ -216,19 +175,15 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     } while (changed);
     std::vector<Result> result;
     if (todo.empty()) {
-        bool positiveCost = Smt::isImplication(guard, buildLit(cost > 0), its);;
-        if (nonterm) {
-            nonterm = positiveCost;
+        if (Smt::check(res & (n >= validityBound), its) == Smt::Sat) {
+            result.push_back({res, nonterm});
         }
-        result.push_back({res, nonterm});
-        if (!nonterm && closed && positiveCost) {
+        if (!nonterm && closed) {
             proof.newline();
             proof.append("done, trying nonterm");
             todo = guard->lits();
             done = True;
-            res = buildLit(n >= validityBound);
-            solver->popAll();
-            solver2->resetSolver();
+            res = True;
             do {
                 changed = false;
                 auto it = todo.begin();
@@ -242,8 +197,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
                     }
                 }
             } while (changed);
-            if (todo.empty()) {
-                assert(nonterm);
+            if (todo.empty() && Smt::check(res, its) == Smt::Sat) {
                 result.push_back({res, true});
             }
         }

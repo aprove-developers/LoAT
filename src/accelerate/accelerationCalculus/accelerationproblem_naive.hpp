@@ -24,7 +24,6 @@ private:
     unsigned int validityBound;
     Proof proof;
     std::unique_ptr<Smt> solver;
-    std::unique_ptr<Smt> solver2;
     ITSProblem &its;
 
     AccelerationProblem(
