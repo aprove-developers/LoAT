@@ -21,21 +21,27 @@
 using namespace std;
 
 
+std::recursive_mutex VariableManager::mutex;
+
 bool VariableManager::isTempVar(const Var &var) const {
+    std::lock_guard guard(mutex);
     return temporaryVariables.count(var) > 0;
 }
 
 Var VariableManager::addFreshVariable(string basename) {
+    std::lock_guard guard(mutex);
     return addVariable(getFreshName(basename));
 }
 
 Var VariableManager::addFreshTemporaryVariable(string basename) {
+    std::lock_guard guard(mutex);
     Var x = addVariable(getFreshName(basename));
     temporaryVariables.insert(x);
     return x;
 }
 
 Var VariableManager::getFreshUntrackedSymbol(string basename, Expr::Type type) {
+    std::lock_guard guard(mutex);
     Var res(getFreshName(basename));
     variableNameLookup.emplace(res.get_name(), res);
     untrackedVariables[res] = type;
@@ -43,6 +49,7 @@ Var VariableManager::getFreshUntrackedSymbol(string basename, Expr::Type type) {
 }
 
 Var VariableManager::addVariable(string name) {
+    std::lock_guard guard(mutex);
     //convert to ginac
     auto sym = Var(name);
 
@@ -57,6 +64,7 @@ Var VariableManager::addVariable(string name) {
 }
 
 string VariableManager::getFreshName(string basename) {
+    std::lock_guard guard(mutex);
     if (basenameCount.count(basename) == 0) {
         basenameCount.emplace(basename, 0);
         return basename;
@@ -73,14 +81,17 @@ string VariableManager::getFreshName(string basename) {
 }
 
 const VarSet &VariableManager::getTempVars() const {
+    std::lock_guard guard(mutex);
     return temporaryVariables;
 }
 
 VarSet VariableManager::getVars() const {
+    std::lock_guard guard(mutex);
     return variables;
 }
 
 Expr::Type VariableManager::getType(const Var &x) const {
+    std::lock_guard guard(mutex);
     if (untrackedVariables.find(x) != untrackedVariables.end()) {
         return untrackedVariables.at(x);
     } else {
@@ -89,5 +100,6 @@ Expr::Type VariableManager::getType(const Var &x) const {
 }
 
 BoolExpr VariableManager::freshBoolVar() {
+    std::lock_guard guard(mutex);
     return buildConst(boolVarCount++);
 }
