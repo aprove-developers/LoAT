@@ -110,7 +110,7 @@ option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &de
     return res[rel].size() - 1;
 }
 
-option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Rel& rel, bool nontermOnly, bool linearOnly, RelSet seen) {
+option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Rel& rel, bool nontermOnly, RelSet seen) {
     if (seen.find(rel) != seen.end()) {
         return {};
     }
@@ -120,10 +120,10 @@ option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Re
         return {};
     }
     for (const Entry& e: it->second) {
-        if (!e.active || (nontermOnly && !e.nonterm) || (linearOnly && e.dependencies.size() > 1)) continue;
+        if (!e.active || (nontermOnly && !e.nonterm)) continue;
         bool success = true;
         for (const auto& dep: e.dependencies) {
-            if (!depsWellFounded(dep, nontermOnly, linearOnly, seen)) {
+            if (!depsWellFounded(dep, nontermOnly, seen)) {
                 success = false;
                 break;
             }
@@ -137,7 +137,7 @@ option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Re
 
 bool AccelerationProblem::monotonicity(const Rel &rel) {
     if (closed) {
-        if (depsWellFounded(rel, false, true, {})) {
+        if (depsWellFounded(rel)) {
             return false;
         }
         const Rel updated = rel.subs(up);
@@ -236,7 +236,7 @@ bool AccelerationProblem::recurrence(const Rel &rel) {
 
 bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
     if (closed) {
-        if (depsWellFounded(rel, false, true, {})) {
+        if (depsWellFounded(rel)) {
              return false;
         }
         const Expr updated = rel.lhs().subs(up);
@@ -291,7 +291,7 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
 }
 
 bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
-    if (depsWellFounded(rel, true, true, {})) {
+    if (depsWellFounded(rel, true)) {
         return false;
     }
     const Expr &updated = rel.lhs().subs(up);
@@ -351,12 +351,7 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
             eqs.insert(Rel::buildEq(var, Expr(var).subs(up)));
         }
         BoolExpr allEq = buildAnd(eqs);
-        solver->push();
-        solver->add(rel);
-        solver->add(allEq);
-        Smt::Result sat = solver->check();
-        solver->pop();
-        if (sat == Smt::Sat) {
+        if (Smt::check(guard & rel & allEq, its) == Smt::Sat) {
             BoolExpr newGuard = allEq & rel;
             option<unsigned int> idx = store(rel, {}, newGuard, true);
             if (idx) {
@@ -381,12 +376,11 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         if (!res && isConjunction) return {};
     }
     std::vector<AccelerationProblem::Result> ret;
-    bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
-    bool nonterm = positiveCost;
+    bool nonterm = true;
     RelMap<BoolExpr> map;
     bool all = true;
     for (const Rel& rel: todo) {
-        option<Entry> e = depsWellFounded(rel, false, false, {});
+        option<Entry> e = depsWellFounded(rel);
         if (e) {
             map[rel] = e.get().formula;
             nonterm &= e->nonterm;
@@ -397,15 +391,16 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         }
     }
     if (all || !isConjunction) {
+        bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
         BoolExpr newGuard = guard->replaceRels(map) & (n >= validityBound);
         if (Smt::check(newGuard, its) == Smt::Sat) {
-            ret.emplace_back(newGuard, nonterm);
+            ret.emplace_back(newGuard, nonterm && positiveCost);
         }
         if (closed && positiveCost && !nonterm) {
             RelMap<BoolExpr> map;
             all = true;
             for (const Rel& rel: todo) {
-                option<Entry> e = depsWellFounded(rel, true, false, {});
+                option<Entry> e = depsWellFounded(rel, true);
                 if (e) {
                     map[rel] = e.get().formula;
                 } else {

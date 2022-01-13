@@ -175,10 +175,11 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     } while (changed);
     std::vector<Result> result;
     if (todo.empty()) {
+        bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
         if (Smt::check(res & (n >= validityBound), its) == Smt::Sat) {
-            result.push_back({res, nonterm});
+            result.push_back({res, nonterm && positiveCost});
         }
-        if (!nonterm && closed) {
+        if (!nonterm && closed && positiveCost) {
             proof.newline();
             proof.append("done, trying nonterm");
             todo = guard->lits();

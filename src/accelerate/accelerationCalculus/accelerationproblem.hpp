@@ -82,7 +82,7 @@ public:
 
 private:
 
-    option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly, bool linearOnly, RelSet seen);
+    option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly = false, RelSet seen = {});
 
 };
 
