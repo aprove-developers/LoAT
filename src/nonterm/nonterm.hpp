@@ -24,11 +24,17 @@
 
 namespace nonterm {
 
+    struct Result {
+        const Rule rule;
+        const Proof proof;
+        bool exact;
+    };
+
     class NonTerm {
 
     public:
 
-        static option<std::pair<Rule, Proof>> universal(const Rule &r, ITSProblem &its, const LocationIdx &sink);
+        static option<Result> universal(const Rule &r, ITSProblem &its, const LocationIdx &sink);
 
     };
 

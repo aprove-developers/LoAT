@@ -80,6 +80,9 @@ RelSet AccelerationProblem::findConsistentSubset(BoolExpr e) const {
 }
 
 bool AccelerationProblem::Entry::subsumes(const Entry &that) const {
+    if (!this->exact) {
+        return false;
+    }
     if (that.nonterm && !this->nonterm) {
         return false;
     }
@@ -91,11 +94,11 @@ bool AccelerationProblem::Entry::subsumes(const Entry &that) const {
     return true;
 }
 
-option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm) {
+option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact, bool nonterm) {
     if (res.count(rel) == 0) {
         res[rel] = std::vector<Entry>();
     }
-    Entry newE{deps, formula, nonterm, true};
+    Entry newE{deps, formula, nonterm, exact, true};
     for (Entry &e: res[rel]) {
         if (e.active) {
             if (e.subsumes(newE)) {
@@ -215,7 +218,7 @@ bool AccelerationProblem::recurrence(const Rel &rel) {
             }
             dependencies.erase(rel);
             const BoolExpr newGuard = buildAnd(dependencies) & rel;
-            option<unsigned int> idx = store(rel, dependencies, newGuard, true);
+            option<unsigned int> idx = store(rel, dependencies, newGuard, true, true);
             if (idx) {
                 std::stringstream ss;
                 ss << rel << " [" << idx.get() << "]: monotonic increase yields " << newGuard;
@@ -323,7 +326,7 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
             }
             const BoolExpr newGuard = buildAnd(dependencies) & rel & inc;
             if (Smt::check(newGuard, its) == Smt::Sat) {
-                option<unsigned int> idx = store(rel, dependencies, newGuard, true);
+                option<unsigned int> idx = store(rel, dependencies, newGuard, false, true);
                 if (idx) {
                     std::stringstream ss;
                     ss << rel << " [" << idx.get() << "]: eventual increase yields " << newGuard;
@@ -353,7 +356,7 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
         BoolExpr allEq = buildAnd(eqs);
         if (Smt::check(guard & rel & allEq, its) == Smt::Sat) {
             BoolExpr newGuard = allEq & rel;
-            option<unsigned int> idx = store(rel, {}, newGuard, true);
+            option<unsigned int> idx = store(rel, {}, newGuard, false, true);
             if (idx) {
                 std::stringstream ss;
                 ss << rel << " [" << idx.get() << "]: fixpoint yields " << newGuard;
@@ -382,8 +385,9 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     for (const Rel& rel: todo) {
         option<Entry> e = depsWellFounded(rel);
         if (e) {
-            map[rel] = e.get().formula;
+            map[rel] = e->formula;
             nonterm &= e->nonterm;
+            all &= e->exact;
         } else {
             all = false;
             if (isConjunction) break;

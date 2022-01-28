@@ -16,6 +16,7 @@ private:
         RelSet dependencies;
         BoolExpr formula;
         bool nonterm;
+        bool exact;
         bool active;
 
         bool subsumes(const Entry &that) const;
@@ -55,7 +56,7 @@ private:
     bool eventualWeakIncrease(const Rel &rel);
     bool fixpoint(const Rel &rel);
     RelSet findConsistentSubset(const BoolExpr e) const;
-    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
+    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact = true, bool nonterm = false);
 
 public:
 

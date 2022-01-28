@@ -194,7 +194,6 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
         LinearRule chained = Chaining::chainRules(its, res, orig, false).get();
         unsigned int next = numNotInUpdate(chained.getUpdate());
         if (next != last) {
-            last = next;
             res = chained;
             changed = true;
             continue;
@@ -233,14 +232,15 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
     // only proceed if the guard is sat
     if (sat) {
         // try acceleration
-        option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+        option<nonterm::Result> p = nonterm::NonTerm::universal(r, its, sinkLoc);
         if (p) {
-            const Rule &nontermRule = p.get().first;
-            const Proof &proof = p.get().second;
+            const Rule &nontermRule = p->rule;
+            const Proof &proof = p->proof;
             res.proof.concat(proof);
             res.rules.emplace_back(nontermRule);
-            res.status = Success;
-        } else {
+            res.status = p->exact ? Success : PartialSuccess;
+        }
+        if (!p || !p->exact){
             Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
             if (!accelRes.rules.empty()) {
                 res.status = accelRes.status;

@@ -26,7 +26,7 @@
 
 namespace nonterm {
 
-    option<std::pair<Rule, Proof>> NonTerm::universal(const Rule &r, ITSProblem &its, const LocationIdx &sink) {
+    option<Result> NonTerm::universal(const Rule &r, ITSProblem &its, const LocationIdx &sink) {
         if (!Smt::isImplication(r.getGuard(), buildLit(r.getCost() > 0), its)) {
             return {};
         }
@@ -36,7 +36,7 @@ namespace nonterm {
                 Rule nontermRule(r.getLhsLoc(), r.getGuard(), Expr::NontermSymbol, sink, {});
                 Proof proof;
                 proof.ruleTransformationProof(r, "non-termination processor", nontermRule, its);
-                return {{nontermRule, proof}};
+                return {{nontermRule, proof, true}};
             }
         }
         if (r.isLinear()) {
@@ -47,7 +47,7 @@ namespace nonterm {
                 Proof proof;
                 proof.ruleTransformationProof(r, "unrolling", chained, its);
                 proof.ruleTransformationProof(chained, "non-termination processor", nontermRule, its);
-                return {{nontermRule, proof}};
+                return {{nontermRule, proof, false}};
             }
         }
         return {};
