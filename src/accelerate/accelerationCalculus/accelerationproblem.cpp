@@ -387,7 +387,6 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         if (e) {
             map[rel] = e->formula;
             nonterm &= e->nonterm;
-            all &= e->exact;
         } else {
             all = false;
             if (isConjunction) break;
