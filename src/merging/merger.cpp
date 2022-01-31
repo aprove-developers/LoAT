@@ -71,7 +71,8 @@ void Merger::merge(LocationIdx from, LocationIdx to) {
 }
 
 Proof Merger::mergeRules(ITSProblem &its) {
-    Merger merger(its);
-    merger.merge();
-    return merger.proof;
+    return Proof();
+//    Merger merger(its);
+//    merger.merge();
+//    return merger.proof;
 }
