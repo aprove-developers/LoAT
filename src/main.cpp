@@ -28,6 +28,7 @@
 #include "analysis/recurrentsetfinder.hpp"
 #include "its/smt2export.hpp"
 #include "its/cintegerexport.hpp"
+#include "version.hpp"
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -100,6 +101,8 @@ void parseFlags(int argc, char *argv[]) {
             if (!found) {
                 cerr << "Unknown mode " << str << ", defaulting to " << Config::Analysis::modeName(Config::Analysis::mode) << endl;
             }
+        } else if (strcmp("--version", argv[arg]) == 0) {
+            cout << "Build SHA: " << Version::GIT_SHA << (Version::GIT_DIRTY == "1" ? " (dirty)" : "") << endl;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;

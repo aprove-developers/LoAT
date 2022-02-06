@@ -34,6 +34,10 @@ message(STATUS "Compiler cxx release flags:" ${CMAKE_CXX_FLAGS_RELEASE})
 message(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
 message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
+
+# generate version.cc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp" @ONLY)
+
 add_executable(${EXECUTABLE}
         src/accelerate/meter/metering.cpp
         src/accelerate/meter/metering.hpp
@@ -135,8 +139,6 @@ add_executable(${EXECUTABLE}
         src/its/smt2Parser/sexpresso/sexpresso.hpp
         src/its/smt2Parser/parser.cpp
         src/its/smt2Parser/parser.hpp
-        src/nonterm/nonterm.cpp
-        src/nonterm/nonterm.hpp
         src/its/t2Parser/t2parser.cpp
         src/its/t2Parser/t2parser.hpp
         src/smt/smt.hpp
@@ -158,7 +160,9 @@ add_executable(${EXECUTABLE}
         src/smt/model.hpp
         src/smt/combined_solver.hpp
         src/merging/merger.cpp
-        src/merging/merger.hpp)
+        src/merging/merger.hpp
+        src/version.cpp
+        src/version.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

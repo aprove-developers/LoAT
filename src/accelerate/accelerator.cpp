@@ -33,7 +33,6 @@
 #include <queue>
 #include "../asymptotic/asymptoticbound.hpp"
 #include <stdexcept>
-#include "../nonterm/nonterm.hpp"
 #include "../smt/z3/z3.hpp"
 
 
@@ -231,23 +230,12 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
     bool sat = Smt::check(r.getGuard(), its) == Smt::Sat;
     // only proceed if the guard is sat
     if (sat) {
-        // try acceleration
-        option<nonterm::Result> p = nonterm::NonTerm::universal(r, its, sinkLoc);
-        if (p) {
-            const Rule &nontermRule = p->rule;
-            const Proof &proof = p->proof;
-            res.proof.concat(proof);
-            res.rules.emplace_back(nontermRule);
-            res.status = p->exact ? Success : PartialSuccess;
-        }
-        if (!p || !p->exact){
-            Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
-            if (!accelRes.rules.empty()) {
-                res.status = accelRes.status;
-                res.proof.concat(accelRes.proof);
-                for (const auto &r: accelRes.rules) {
-                    res.rules.emplace_back(r);
-                }
+        Acceleration::Result accelRes = LoopAcceleration::accelerate(its, r, sinkLoc, cpx);
+        if (!accelRes.rules.empty()) {
+            res.status = accelRes.status;
+            res.proof.concat(accelRes.proof);
+            for (const auto &r: accelRes.rules) {
+                res.rules.emplace_back(r);
             }
         }
     }
