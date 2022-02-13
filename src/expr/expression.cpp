@@ -395,7 +395,7 @@ GiNaC::numeric Expr::toNum() const {
     return GiNaC::ex_to<GiNaC::numeric>(ex);
 }
 
-Expr Expr::op(uint i) const {
+Expr Expr::op(unsigned int i) const {
     return ex.op(i);
 }
 
@@ -417,6 +417,10 @@ void Expr::traverse(GiNaC::visitor &v) const {
 
 int Expr::compare(const Expr &that) const {
     return ex.compare(that.ex);
+}
+
+unsigned Expr::hash() const {
+    return ex.gethash();
 }
 
 Expr Expr::numerator() const {
@@ -455,7 +459,7 @@ Expr operator^(const Expr &x, const Expr &y) {
     return GiNaC::pow(x.ex, y.ex);
 }
 
-Expr Expr::wildcard(uint label) {
+Expr Expr::wildcard(unsigned int label) {
     return GiNaC::wild(label);
 }
 
@@ -624,6 +628,15 @@ VarSet Subs::allVars() const {
     VarSet res;
     collectAllVars(res);
     return res;
+}
+
+unsigned Subs::hash() const {
+    unsigned hash = 7;
+    for (const auto& p: *this) {
+        hash = hash * 31 + p.first.gethash();
+        hash = hash * 31 + p.second.hash();
+    }
+    return hash;
 }
 
 ExprMap::ExprMap(): KeyToExprMap<Expr>() {}

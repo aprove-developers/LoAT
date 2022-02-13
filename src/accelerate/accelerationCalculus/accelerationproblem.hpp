@@ -28,12 +28,12 @@ private:
     option<RelMap<Entry>> solution;
     RelSet todo;
     Subs up;
-    Subs closed;
+    option<Subs> closed;
     Expr cost;
     Expr iteratedCost;
     Var n;
     BoolExpr guard;
-    uint validityBound;
+    unsigned int validityBound;
     Proof proof;
     std::unique_ptr<Smt> solver;
     VariableManager &varMan;
@@ -41,18 +41,19 @@ private:
     AccelerationProblem(
             const BoolExpr guard,
             const Subs &up,
-            const Subs &closed,
+            option<const Subs&> closed,
             const Expr &cost,
             const Expr &iteratedCost,
             const Var &n,
-            const uint validityBound,
+            const unsigned int validityBound,
             VariableManager &varMan);
 
     void monotonicity();
     void recurrence();
     void eventualWeakDecrease();
+    void eventualWeakIncrease();
     RelSet findConsistentSubset(const BoolExpr e) const;
-    option<uint> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
+    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 
 public:
 
@@ -63,12 +64,12 @@ public:
 
     static option<AccelerationProblem> init(const LinearRule &r, VariableManager &varMan);
     std::vector<Result> computeRes();
-    BoolExpr buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
+    std::pair<BoolExpr, bool> buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
     Expr getAcceleratedCost() const;
-    Subs getClosedForm() const;
+    option<Subs> getClosedForm() const;
     Var getIterationCounter() const;
-    uint getValidityBound() const;
+    unsigned int getValidityBound() const;
 
 private:
 

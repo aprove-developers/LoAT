@@ -18,7 +18,7 @@ using namespace std;
 
 
 AsymptoticBound::AsymptoticBound(VarMan &varMan, Guard guard,
-                                 Expr cost, bool finalCheck, uint timeout)
+                                 Expr cost, bool finalCheck, unsigned int timeout)
     : varMan(varMan), guard(guard), cost(cost), finalCheck(finalCheck), timeout(timeout),
       addition(DirectionSize), multiplication(DirectionSize), division(DirectionSize), currentLP(varMan) {
     assert(guard.isWellformed());
@@ -755,10 +755,11 @@ bool AsymptoticBound::trySubstitutingVariable() {
 bool AsymptoticBound::trySmtEncoding(Complexity currentRes) {
     auto optSubs = LimitSmtEncoding::applyEncoding(currentLP, cost, varMan, currentRes, timeout);
     if (!optSubs) return false;
-
-    substitutions.push_back(optSubs.get());
+    auto subs = optSubs.get();
+    auto idx = substitutions.size();
+    substitutions.push_back(subs);
     currentLP.removeAllConstraints();
-    currentLP.substitute(substitutions.back(), substitutions.size() - 1);
+    currentLP.substitute(subs, idx);
     return true;
 }
 
@@ -768,7 +769,7 @@ AsymptoticBound::Result AsymptoticBound::determineComplexity(VarMan &varMan,
                                                              const Expr &cost,
                                                              bool finalCheck,
                                                              const Complexity &currentRes,
-                                                             uint timeout) {
+                                                             unsigned int timeout) {
 
     // Expand the cost to make it easier to analyze
     Expr expandedCost = cost.expand();
@@ -838,7 +839,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
                                                                     const Expr &cost,
                                                                     bool finalCheck,
                                                                     Complexity currentRes,
-                                                                    uint timeout) {
+                                                                    unsigned int timeout) {
     Expr expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {
@@ -876,7 +877,7 @@ AsymptoticBound::Result AsymptoticBound:: determineComplexityViaSMT(VarMan &varM
                                                                     const Expr &cost,
                                                                     bool finalCheck,
                                                                     Complexity currentRes,
-                                                                    uint timeout) {
+                                                                    unsigned int timeout) {
     Expr expandedCost = cost.expand();
     // Handle nontermination. It suffices to check that the guard is satisfiable
     if (expandedCost.isNontermSymbol()) {

@@ -25,6 +25,7 @@
 #include "hypergraph.hpp"
 
 #include <mutex>
+#include <unordered_map>
 
 
 class ITSProblem : public VariableManager {
@@ -33,7 +34,7 @@ public:
     ITSProblem() = default;
 
     // Creates an empty ITS problem with the given variables
-    explicit ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {}
+    explicit ITSProblem(VariableManager &&varMan);
 
     // True iff there are no rules
     bool isEmpty() const;
@@ -48,13 +49,13 @@ public:
 
     // query the rule associated with a given transition
     bool hasRule(TransIdx transition) const;
-    const Rule& getRule(TransIdx transition) const;
+    const Rule getRule(TransIdx transition) const;
 
     // the rule associated with the given index must be linear!
     LinearRule getLinearRule(TransIdx transition) const;
 
     // returns the destinations of the given transition
-    const std::set<LocationIdx> &getTransitionTargets(TransIdx idx) const;
+    const std::set<LocationIdx> getTransitionTargets(TransIdx idx) const;
 
     // query transitions of the graph
     std::set<TransIdx> getTransitionsFrom(LocationIdx loc) const;
@@ -76,7 +77,8 @@ public:
 
     // Mutation of Rules
     void removeRule(TransIdx transition);
-    TransIdx addRule(Rule rule);
+    option<TransIdx> addRule(Rule rule);
+    std::vector<TransIdx> replaceRules(const std::vector<TransIdx> &toReplace, const std::vector<Rule> replacement);
 
     // Mutation for Locations
     LocationIdx addLocation();
@@ -101,12 +103,14 @@ public:
     static void unlock();
 
 protected:
+
     // Main structure is the graph, where (hyper-)transitions are annotated with a RuleIdx.
     HyperGraph<LocationIdx> graph;
 
     // Collection of all rules, identified by the corresponding transitions in the graph.
     // The map allows to efficiently add/delete rules.
     std::map<TransIdx, Rule> rules;
+    Rule::ApproxMap<TransIdx> rulesBwd;
 
     // the set of all locations (locations are just arbitrary numbers to allow simple addition/deletion)
     std::set<LocationIdx> locations;

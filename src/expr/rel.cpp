@@ -263,6 +263,14 @@ Rel Rel::makeRhsZero() const {
     return Rel(l - r, op, 0);
 }
 
+unsigned Rel::hash() const {
+    unsigned hash = 7;
+    hash = 31 * hash + l.hash();
+    hash = 31 * hash + op;
+    hash = 31 * hash + r.hash();
+    return hash;
+}
+
 Rel operator!(const Rel &x) {
     switch (x.op) {
     case Rel::eq: return Rel(x.l, Rel::neq, x.r);

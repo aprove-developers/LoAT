@@ -73,7 +73,7 @@ public:
     /**
      * @return A wildcard for constructing patterns.
      */
-    static Expr wildcard(uint label);
+    static Expr wildcard(unsigned int label);
 
     Expr() : Expr(GiNaC::ex()) {}
     Expr(const GiNaC::basic &other) : Expr(GiNaC::ex(other)) {}
@@ -295,7 +295,7 @@ public:
      * @return The i-th operand.
      * @note For function applications whose root symbol has at least arity i+1 only.
      */
-    Expr op(uint i) const;
+    Expr op(unsigned int i) const;
 
     /**
      * @return The arity of the root symbol.
@@ -315,6 +315,8 @@ public:
      * @brief Provides a total order for expressions.
      */
     int compare(const Expr &that) const;
+
+    unsigned hash() const;
 
     /**
      * @return The numerator.
@@ -407,7 +409,7 @@ public:
         return map.empty();
     }
 
-    uint size() const {
+    unsigned int size() const {
         return map.size();
     }
 
@@ -493,6 +495,8 @@ public:
     void collectCoDomainVars(VarSet &vars) const;
 
     void collectAllVars(VarSet &vars) const;
+
+    unsigned hash() const;
 
 private:
     void putGinac(const Var &key, const Expr &val) override;

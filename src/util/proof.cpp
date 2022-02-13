@@ -4,9 +4,9 @@
 #include <iostream>
 #include <string>
 
-uint Proof::defaultProofLevel = 2;
-uint Proof::maxProofLevel = 3;
-uint Proof::proofLevel = defaultProofLevel;
+unsigned int Proof::defaultProofLevel = 2;
+unsigned int Proof::maxProofLevel = 3;
+unsigned int Proof::proofLevel = defaultProofLevel;
 
 void Proof::writeToFile(const std::string &file) const {
     if (proofLevel > 0) {
@@ -96,7 +96,7 @@ void Proof::result(const std::ostream &s) {
     result(str.str());
 }
 
-void Proof::setProofLevel(uint proofLevel) {
+void Proof::setProofLevel(unsigned int proofLevel) {
     Proof::proofLevel = proofLevel;
 }
 

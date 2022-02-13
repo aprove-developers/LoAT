@@ -41,7 +41,7 @@ public:
         None
     };
 
-    static void setProofLevel(uint proofLevel);
+    static void setProofLevel(unsigned int proofLevel);
 
     void append(const std::string &s);
 
@@ -81,13 +81,13 @@ public:
 
     bool empty() const;
 
-    static uint defaultProofLevel;
+    static unsigned int defaultProofLevel;
 
-    static uint maxProofLevel;
+    static unsigned int maxProofLevel;
 
 private:
 
-    static uint proofLevel;
+    static unsigned int proofLevel;
 
     std::vector<std::pair<Style, std::string>> proof;
 

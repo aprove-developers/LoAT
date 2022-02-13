@@ -29,37 +29,6 @@
 
 using namespace std;
 
-
-bool Pruning::compareRules(const Rule &a, const Rule &b, bool compareRhss) {
-    // Some trivial syntactic checks
-    if (compareRhss && a.rhsCount() != b.rhsCount()) return false;
-
-    // Costs have to be equal up to a numeric constant
-    if (!(a.getCost() - b.getCost()).isRationalConstant()) return false;
-
-    // All right-hand sides have to match exactly
-    if (compareRhss) {
-        for (unsigned int i=0; i < a.rhsCount(); ++i) {
-            const Subs &updateA = a.getUpdate(i);
-            const Subs &updateB = b.getUpdate(i);
-
-            if (a.getRhsLoc(i) != b.getRhsLoc(i)) return false;
-            if (updateA.size() != updateB.size()) return false;
-
-            // update has to be fully equal (one inclusion suffices, since the size is equal)
-            for (const auto &itA : updateA) {
-                auto itB = updateB.find(itA.first);
-                if (itB == updateB.end()) return false;
-                if (!itB->second.equals(itA.second)) return false;
-            }
-        }
-    }
-
-    // Guard has to be fully equal (including the ordering)
-    if (a.getGuard() != b.getGuard()) return false;
-    return true;
-}
-
 bool Pruning::pruneParallelRules(ITSProblem &its) {
     // To compare rules, we store a tuple of the rule's index, its complexity and the number of inftyVars
     // (see ComplexityResult for the latter). We first compare the complexity, then the number of inftyVars.
@@ -87,7 +56,7 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
                     unsigned long idx = (i % 2 == 0) ? i/2 : parallel.size()-1-i/2;
 
                     TransIdx ruleIdx = parallel[idx];
-                    const Rule &rule = its.getRule(parallel[idx]);
+                    const Rule rule = its.getRule(parallel[idx]);
 
                     // compute the complexity (real check using asymptotic bounds) and store in priority queue
                     Complexity cpx;
@@ -123,20 +92,22 @@ bool Pruning::pruneParallelRules(ITSProblem &its) {
 
                 // Remove all rules except for the ones in keep, add a dummy rule if there was one before
                 // Note that for nonlinear rules, we only remove edges (so only single rhss), not the entire rule
+                std::vector<TransIdx> toRemove;
+                std::vector<Rule> toAdd;
                 for (TransIdx rule : parallel) {
-                    const Rule& r = its.getRule(rule);
+                    const Rule r = its.getRule(rule);
                     if ((!Config::Analysis::NonTermMode || !r.getCost().isNontermSymbol()) && keep.count(rule) == 0) {
+                        toRemove.push_back(rule);
                         auto optRule = r.stripRhsLocation(node);
                         if (optRule) {
-                            its.addRule(optRule.get());
+                            toAdd.push_back(optRule.get());
                         }
-
-                        its.removeRule(rule);
                     }
                 }
                 if (hasDummy) {
-                    its.addRule(LinearRule::dummyRule(pre, node));
+                    toAdd.push_back(LinearRule::dummyRule(pre, node));
                 }
+                its.replaceRules(toRemove, toAdd);
 
                 changed = true;
             }
@@ -166,7 +137,7 @@ static bool removeIrrelevantLeafs(ITSProblem &its, LocationIdx node, set<Locatio
         // If next is (now) a leaf, rules leading to next are candidates for removal
         if (isLeaf(next)) {
             for (TransIdx ruleIdx : its.getTransitionsFromTo(node, next)) {
-                const Rule &rule = its.getRule(ruleIdx);
+                const Rule rule = its.getRule(ruleIdx);
 
                 // only remove irrelevant rules
                 const Complexity &c = rule.getCost().toComplexity();
@@ -221,7 +192,7 @@ bool Pruning::removeLeafsAndUnreachable(ITSProblem &its) {
  * @return true iff the ITS was modified
  */
 static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) {
-    const Rule &rule = its.getRule(ruleIdx);
+    const Rule rule = its.getRule(ruleIdx);
     assert(its.getTransitionTargets(ruleIdx).count(loc) > 0); // should only call this if we can delete something
 
     // If the rule only has one rhs, we do not change it (this ensures termination of the overall algorithm)
@@ -229,11 +200,11 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
         return false;
     }
 
+    std::vector<Rule> toAdd;
     // Replace the rule by a stripped rule (without rhss leading to loc), if possible
     auto optRule = rule.stripRhsLocation(loc);
     if (optRule) {
-        TransIdx newIdx = its.addRule(optRule.get());
-        (void)newIdx; // suppress compiler warning if debugging is disabled
+        toAdd.push_back(optRule.get());
     }
 
     // If all rhss would be deleted, we still keep the rule if it has an interesting complexity.
@@ -242,13 +213,11 @@ static bool partialDeletion(ITSProblem &its, TransIdx ruleIdx, LocationIdx loc) 
             // Note that it is only sound to add a dummy transition to loc if loc is a sink location.
             // This should be the case when partialDeletion is called, at least for the current implementation.
             assert(!its.hasTransitionsFrom(loc));
-            TransIdx newIdx = its.addRule(rule.replaceRhssBySink(loc));
-            (void)newIdx; // suppress compiler warning if debugging is disabled
+            toAdd.push_back(rule.replaceRhssBySink(loc));
         }
     }
+    its.replaceRules({ruleIdx}, toAdd);
 
-    // Remove the original rule
-    its.removeRule(ruleIdx);
     return true;
 }
 

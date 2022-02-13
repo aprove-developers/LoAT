@@ -67,22 +67,37 @@ In this constellation, AProVE and LoAT won the following awards:
 
 ## Build
 
+So far, LoAT has only been tested on Linux.
+
 Unfortunately, building LoAT is rather complex, so please consider using our [pre-compiled releases](https://github.com/aprove-developers/LoAT/releases).
 If you need a different version, write an email to ffrohn [at] mpi-inf.mpg.de.
 
-To compile LoAT, you will need the following libraries (and their dependencies, including CLN, NTL, and giac):
+To compile LoAT, you will need the following libraries (and their dependencies, including [CLN](https://www.ginac.de/CLN), [NTL](https://libntl.org), and [Giac](http://www-fourier.ujf-grenoble.fr/~parisse/giac.html)):
 
 * [GiNaC](http://www.ginac.de)
 * a custom version of [PURRS](https://github.com/aprove-developers/LoAT-purrs)
 * [Yices](https://yices.csl.sri.com/)
 * [Z3](https://github.com/Z3Prover/z3)
 * [boost](https://www.boost.org)
+* [Yices2](https://yices.csl.sri.com)
 
 To install Z3, download and unpack the latest [Z3 release](https://github.com/Z3Prover/z3/releases) and add `/path/to/z3/bin` to your `PATH`.
+To install Yices2, you need to install its dependencies [LibPoly](https://github.com/SRI-CSL/libpoly), [CUDD](https://github.com/ivmai/cudd), and [GMP](https://gmplib.org).
 After installing all dependencies, run:
 
 ```
-mkdir build && cd build && cmake .. && make
+mkdir build && cd build && cmake .. && make -j
+```
+
+To build a statically linked binary, you need to build a statically linked version of Yices2.
+To do so, you need to build position independent versions of LibPoly, CUDD, and GMP (compiled with the option `-fPIC`).
+See [here](https://github.com/SRI-CSL/yices2/blob/master/doc/COMPILING) and [here](https://github.com/SRI-CSL/yices2/blob/master/doc/GMP) for detailed instructions.
+
+Once all dependencies are available, run:
+
+
+```
+mkdir build-static && cd build-static && cmake -DSTATIC=1 .. && make -j
 ```
 
 If you experience any problems, contact ffrohn [at] mpi-inf.mpg.de.

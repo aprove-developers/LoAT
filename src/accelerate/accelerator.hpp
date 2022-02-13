@@ -102,7 +102,7 @@ private:
      * Adds the given rule to the ITS problem and to resultingRules.
      * @return The index of the added rule.
      */
-    TransIdx addResultingRule(Rule rule);
+    option<TransIdx> addResultingRule(Rule rule);
 
     /**
      * Tries to nest the given nesting candidates (i.e., rules).

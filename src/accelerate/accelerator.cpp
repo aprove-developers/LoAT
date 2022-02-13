@@ -32,7 +32,6 @@
 
 #include <queue>
 #include "../asymptotic/asymptoticbound.hpp"
-#include "../nonterm/recurrentSet/strengthener.hpp"
 #include <stdexcept>
 #include "../nonterm/nonterm.hpp"
 #include "../smt/z3/z3.hpp"
@@ -49,9 +48,11 @@ Accelerator::Accelerator(ITSProblem &its, LocationIdx loc, std::set<TransIdx> &r
 }
 
 
-TransIdx Accelerator::addResultingRule(Rule rule) {
-    TransIdx idx = its.addRule(rule);
-    resultingRules.insert(idx);
+option<TransIdx> Accelerator::addResultingRule(Rule rule) {
+    option<TransIdx> idx = its.addRule(rule);
+    if (idx) {
+        resultingRules.insert(idx.get());
+    }
     return idx;
 }
 
@@ -68,25 +69,20 @@ bool Accelerator::simplifySimpleLoops() {
     // This is especially useful to eliminate temporary variables before metering.
     if (Config::Accel::SimplifyRulesBefore) {
         for (auto it = loops.begin(), end = loops.end(); it != end; ++it) {
-            const Rule &rule = its.getRule(*it);
+            const Rule rule = its.getRule(*it);
             option<Rule> simplified = Preprocess::simplifyRule(its, rule, false);
             if (simplified) {
                 this->proof.ruleTransformationProof(rule, "simplification", simplified.get(), its);
-                its.removeRule(*it);
-                *it = its.addRule(simplified.get());
-                res = true;
+                std::vector<TransIdx> newIdx = its.replaceRules({*it}, {simplified.get()});
+                for (TransIdx i: newIdx) {
+                    *it = i;
+                    res = true;
+                }
             }
         }
     }
     if (res) {
         this->proof.minorProofStep("Simplified simple loops", its);
-    }
-
-    // Remove duplicate rules (does not happen frequently, but the syntactical check should be cheap anyway)
-    std::set<TransIdx> removed = Pruning::removeDuplicateRules(its, loops);
-    if (!removed.empty()) {
-        res = true;
-        this->proof.deletionProof(removed);
     }
 
     return res;
@@ -172,16 +168,6 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
         }
     }
     this->proof.deletionProof(deleted);
-
-    // In some cases, two loops can yield similar accelerated rules, so we prune duplicates
-    // and have to remove rules that were removed from resultingRules.
-    std::set<TransIdx> removed = Pruning::removeDuplicateRules(its, resultingRules);
-    if (!removed.empty()) {
-        for (TransIdx r: removed) {
-            resultingRules.erase(r);
-        }
-        this->proof.deletionProof(removed);
-    }
 }
 
 const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
@@ -257,32 +243,16 @@ const Acceleration::Result Accelerator::strengthenAndAccelerate(const LinearRule
                 res.rules.emplace_back(r);
             }
         }
-        if (!universalNonterm) {
-            option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
-            if (p) {
-                universalNonterm = true;
-                const Rule &nontermRule = p.get().first;
-                const Proof &proof = p.get().second;
-                res.proof.concat(proof);
-                res.rules.emplace_back(nontermRule);
-            }
-        }
-        if (Config::Analysis::NonTermMode) {
-            if (!universalNonterm) {
-                option<LinearRule> strengthened = strengthening::Strengthener::apply(r, its);
-                if (strengthened) {
-                    bool sat = Smt::check(strengthened.get().getGuard(), its) == Smt::Sat;
-                    // only proceed if the guard is sat
-                    if (sat) {
-                        if (nonterm::NonTerm::universal(strengthened.get(), its, sinkLoc)) {
-                            const Rule &nontermRule = LinearRule(strengthened.get().getLhsLoc(), strengthened.get().getGuard(), Expr::NontermSymbol, sinkLoc, {});
-                            res.proof.ruleTransformationProof(r, "recurrent set", nontermRule, its);
-                            res.rules.emplace_back(nontermRule);
-                        }
-                    }
-                }
-            }
-        }
+       if (!universalNonterm) {
+           option<std::pair<Rule, Proof>> p = nonterm::NonTerm::universal(r, its, sinkLoc);
+           if (p) {
+               universalNonterm = true;
+               const Rule &nontermRule = p.get().first;
+               const Proof &proof = p.get().second;
+               res.proof.concat(proof);
+               res.rules.emplace_back(nontermRule);
+           }
+       }
         if (!universalNonterm) {
             option<std::pair<Rule, Proof>> p = nonterm::NonTerm::fixedPoint(r, its, sinkLoc);
             if (p) {
@@ -386,7 +356,7 @@ option<Proof> Accelerator::run() {
     std::unordered_map<TransIdx, NestingCandidate> origRules;
     vector<NestingCandidate> nestingCandidates;
     for (TransIdx loop : loops) {
-        const Rule &r = its.getRule(loop);
+        const Rule r = its.getRule(loop);
         if (r.isLinear()) {
             Complexity cpx =
                     Config::Analysis::NonTermMode ?
@@ -402,7 +372,7 @@ option<Proof> Accelerator::run() {
     // Try to accelerate all loops
     for (TransIdx loop : loops) {
         // Forward and backward accelerate (and partial deletion for nonlinear rules)
-        const Rule &r = its.getRule(loop);
+        const Rule r = its.getRule(loop);
         Complexity cpx = r.isLinear() ? origRules[loop].cpx : Complexity::Unknown;
         Acceleration::Result res = accelerateOrShorten(r, cpx);
 
@@ -415,9 +385,9 @@ option<Proof> Accelerator::run() {
             // Add accelerated rules, also mark them as inner nesting candidates
             this->proof.concat(res.proof);
             for (const auto &accel : res.rules) {
-                TransIdx added = addResultingRule(accel);
+                option<TransIdx> added = addResultingRule(accel);
 
-                if (accel.isSimpleLoop()) {
+                if (accel.isSimpleLoop() && added) {
                     Complexity cpx =
                             Config::Analysis::NonTermMode ?
                                 Complexity::Unknown :
@@ -426,7 +396,7 @@ option<Proof> Accelerator::run() {
                                     accel.getGuard(),
                                     accel.getCost()).cpx;
                     // accel.rule is a simple loop iff the original was linear and not non-terminating.
-                    nestingCandidates.push_back(NestingCandidate(loop, added, cpx));
+                    nestingCandidates.push_back(NestingCandidate(loop, added.get(), cpx));
                 }
             }
         }
@@ -448,13 +418,13 @@ option<Proof> Accelerator::run() {
     bool changed = false;
     std::set<TransIdx> toAdd;
     for (auto it = resultingRules.begin(); it != resultingRules.end();) {
-        const Rule &r = its.getRule(*it);
+        const Rule r = its.getRule(*it);
         const BoolExpr simplified = Z3::simplify(r.getGuard(), its);
         if (r.getGuard() != simplified) {
             const Rule &newR = r.withGuard(simplified);
             this->proof.ruleTransformationProof(r, "simplification", newR, its);
-            its.removeRule(*it);
-            toAdd.insert(its.addRule(newR));
+            std::vector<TransIdx> newIdx = its.replaceRules({*it}, {newR});
+            toAdd.insert(newIdx.begin(), newIdx.end());
             it = resultingRules.erase(it);
         } else {
             ++it;

@@ -25,8 +25,8 @@ void Merger::merge(LocationIdx from, LocationIdx to) {
         for (auto it1 = transitions.begin(), end = transitions.end(); !changed && it1 != end; ++it1) {
             for (auto it2 = it1; !changed && it2 != end; ++it2) {
                 if (it1 == it2) continue;
-                const Rule &ruleA = its.getRule(*it1);
-                const Rule &ruleB = its.getRule(*it2);
+                const Rule ruleA = its.getRule(*it1);
+                const Rule ruleB = its.getRule(*it2);
                 if (ruleA.getRhss().size() != ruleB.getRhss().size()) continue;
                 bool costMatch;
                 if (Config::Analysis::NonTermMode) {
@@ -63,9 +63,7 @@ void Merger::merge(LocationIdx from, LocationIdx to) {
                     ss << "\nnew rule:\n";
                     ITSExport::printRule(simplified ? simplified.get() : newRule, its, ss);
                     proof.append(ss);
-                    its.addRule(simplified ? simplified.get() : newRule);
-                    its.removeRule(*it1);
-                    its.removeRule(*it2);
+                    its.replaceRules({*it1, *it2}, {simplified ? simplified.get() : newRule});
                 }
             }
         }

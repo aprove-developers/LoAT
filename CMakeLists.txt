@@ -6,22 +6,26 @@ set(CMAKE_CXX_STANDARD 17)
 
 # non-static build by default
 option(STATIC "static" OFF)
+option(SANITIZE "sanitize" OFF)
 
 if(${STATIC})
     message(STATUS "Configuring static build")
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
     set(BUILD_SHARED_LIBS OFF)
-    set(LINKER_OPTIONS "-static -ldl")
+    add_link_options(-ldl -lpthread -static)
     set(EXECUTABLE loat-static)
 else()
     message(STATUS "Configuring non-static build")
-    set(LINKER_OPTIONS "")
     set(EXECUTABLE loat)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+if(${SANITIZE})
+    message(STATUS "Sanitizer enabled")
+    add_link_options(-fsanitize=undefined)
+    add_compile_options(-fsanitize=undefined)
+endif()
+
+add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter)
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
@@ -117,17 +121,6 @@ add_executable(${EXECUTABLE}
         src/config.hpp
         src/main.cpp
         src/main.hpp
-        src/nonterm/recurrentSet/constraintbuilder.cpp
-        src/nonterm/recurrentSet/constraintbuilder.hpp
-        src/nonterm/recurrentSet/strengthener.cpp
-        src/nonterm/recurrentSet/strengthener.hpp
-        src/nonterm/recurrentSet/types.hpp
-        src/nonterm/recurrentSet/templatebuilder.cpp
-        src/nonterm/recurrentSet/templatebuilder.hpp
-        src/nonterm/recurrentSet/constraintsolver.cpp
-        src/nonterm/recurrentSet/constraintsolver.hpp
-        src/nonterm/recurrentSet/guardcontextbuilder.cpp
-        src/nonterm/recurrentSet/guardcontextbuilder.hpp
         src/its/smt2Parser/sexpresso/sexpresso.cpp
         src/its/smt2Parser/sexpresso/sexpresso.hpp
         src/its/smt2Parser/parser.cpp
@@ -153,6 +146,7 @@ add_executable(${EXECUTABLE}
         src/smt/smtfactory.hpp
         src/smt/model.cpp
         src/smt/model.hpp
+        src/smt/combined_solver.hpp
         src/merging/merger.cpp
         src/merging/merger.hpp)
 
@@ -161,8 +155,6 @@ find_library(Z3 z3)
 message(STATUS "z3: ${Z3}")
 find_library(YICES yices)
 message(STATUS "yices: ${YICES}")
-find_library(CVC4 cvc4)
-message(STATUS "cvc4: ${CVC4}")
 find_library(PURRS purrs)
 message(STATUS "purrs: ${PURRS}")
 find_library(GINAC ginac)
@@ -171,25 +163,21 @@ find_library(CLN cln)
 message(STATUS "cln: ${CLN}")
 find_library(GMP gmp)
 message(STATUS "gmp: ${GMP}")
-find_library(GOMP gomp HINTS /usr/lib/gcc/x86_64-linux-gnu/*/)
-message(STATUS "gomp: ${GOMP}")
-find_library(PTHREAD pthread)
-message(STATUS "pthread: ${PTHREAD}")
+# find_library(GOMP gomp HINTS /usr/lib/gcc/x86_64-linux-gnu/*/)
+# message(STATUS "gomp: ${GOMP}")
 find_library(NTL ntl)
 message(STATUS "ntl: ${NTL}")
+find_library(POLY poly)
+message(STATUS "poly: ${POLY}")
+find_library(CUDD cudd)
+message(STATUS "cudd: ${CUDD}")
 
 if (NOT YICES)
     message(STATUS "Yices not found.")
     return()
 endif()
 
-find_library(POLY poly)
-message(STATUS "poly: ${POLY}")
-find_library(CUDD cudd)
-message(STATUS "cudd: ${CUDD}")
-if (POLY AND CUDD)
-    target_link_libraries(${EXECUTABLE} ${YICES} ${POLY} ${CUDD})
-else()
+if (NOT POLY OR NOT CUDD)
     message(STATUS "Yices has missing dependencies.")
     return()
 endif()
@@ -199,4 +187,11 @@ if (NOT Z3)
     return()
 endif()
 
-target_link_libraries(${EXECUTABLE} ${Z3} ${PURRS} ${GINAC} ${NTL} ${CLN} ${GMP} ${GOMP} ${PTHREAD} ${LINKER_OPTIONS})
+if (NOT ${STATIC})
+  find_library(PTHREAD pthread)
+  message(STATUS "pthread: ${PTHREAD}")
+  target_link_libraries(${EXECUTABLE} ${PTHREAD})
+endif()
+
+target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${LINKER_OPTIONS})
+

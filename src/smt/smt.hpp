@@ -55,7 +55,7 @@ public:
 
 protected:
 
-    virtual BoolExprSet _unsatCore(const BoolExprSet &assumptions) = 0;
+    virtual std::pair<Result, BoolExprSet> _unsatCore(const BoolExprSet &assumptions) = 0;
 
 };
 

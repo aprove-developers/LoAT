@@ -32,7 +32,7 @@ term_t YicesContext::buildVar(const std::string &name, Expr::Type type) {
     return res;
 }
 
-term_t YicesContext::buildConst(uint id) {
+term_t YicesContext::buildConst(unsigned int id) {
     term_t res = yices_new_uninterpreted_term(yices_bool_type());
     yices_set_term_name(res, ("x" + to_string(id)).c_str());
     return res;
@@ -258,7 +258,7 @@ std::vector<term_t> YicesContext::getChildren(const term_t &e) const {
             if (yices_product_component(e, i, &child, &exp) != 0) {
                 throw YicesError();
             }
-            for (uint j = 0; j < exp; ++j) {
+            for (unsigned int j = 0; j < exp; ++j) {
                 res.push_back(child);
             }
         }

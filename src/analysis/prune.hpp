@@ -28,15 +28,6 @@ class ITSProblem;
 
 namespace Pruning {
     /**
-     * A simple syntactic comparision. Returns true iff a and b are equal up to constants in the cost term.
-     * @note as this is a syntactic check, false has no guaranteed meaning
-     * @param compareRhss if false, the rhs locations and updates are not compared
-     * (i.e., rules with different update might be equal)
-     * @return true if the rules are equal up to constants in the cost term, false if they differ or we are unsure.
-     */
-    bool compareRules(const Rule &a, const Rule &b, bool compareRhss = true);
-
-    /**
      * Tries to identify and remove duplicate transitions within the given list/set of transitions
      * @param trans vector/set/... of transitions that are checked
      * @note does not catch all duplicates, as this is a purely syntactical check (no z3 calls)
@@ -55,7 +46,7 @@ namespace Pruning {
                 const Rule &ruleB = its.getRule(idxB);
 
                 // if rules are identical up to cost, keep the one with the higher cost
-                if (compareRules(ruleA, ruleB, compareRhss)) {
+                if (ruleA.approxEqual(ruleB, compareRhss)) {
                     if ((ruleA.getCost() - ruleB.getCost()).toNum().is_positive() > 0) {
                         toRemove.insert(idxB);
                     } else {

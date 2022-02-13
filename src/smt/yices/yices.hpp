@@ -27,9 +27,7 @@ public:
 
     std::ostream& print(std::ostream& os) const;
 
-protected:
-
-    BoolExprSet _unsatCore(const BoolExprSet &assumptions) override;
+    std::pair<Result, BoolExprSet> _unsatCore(const BoolExprSet &assumptions) override;
 
 private:
     unsigned int timeout = Config::Smt::DefaultTimeout;
@@ -38,7 +36,7 @@ private:
     ctx_config_t *config;
     context_t *solver;
 
-    static uint running;
+    static unsigned int running;
     static std::mutex mutex;
 
 

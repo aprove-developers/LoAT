@@ -20,6 +20,8 @@
 
 #include <map>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "types.hpp"
 #include "../util/option.hpp"
@@ -44,6 +46,15 @@ public:
         guard->collectVars(vars);
         cost.collectVars(vars);
     }
+
+    unsigned hash() const {
+        unsigned hash = 7;
+        hash = hash * 31 + loc;
+        hash = hash * 31 + guard->hash();
+        hash = hash * 31 + cost.hash();
+        return hash;
+    }
+
 };
 
 
@@ -59,6 +70,13 @@ public:
 
     void collectVars(VarSet &vars) const {
         update.collectAllVars(vars);
+    }
+
+    unsigned hash() const {
+        unsigned hash = 7;
+        hash = hash * 31 + loc;
+        hash = hash * 31 + update.hash();
+        return hash;
     }
 
 };
@@ -106,7 +124,7 @@ public:
     size_t rhsCount() const { return rhss.size(); }
 
     // special methods for nonlinear rules (idx is an index to rhss)
-    LocationIdx getRhsLoc(uint idx) const { return rhss[idx].getLoc(); }
+    LocationIdx getRhsLoc(unsigned int idx) const { return rhss[idx].getLoc(); }
     const std::vector<Subs> getUpdates() const {
         std::vector<Subs> res;
         for (const RuleRhs &rhs: rhss) {
@@ -114,7 +132,7 @@ public:
         }
         return res;
     }
-    const Subs& getUpdate(uint idx) const { return rhss[idx].getUpdate(); }
+    const Subs& getUpdate(unsigned int idx) const { return rhss[idx].getUpdate(); }
 
     // conversion to linear rule
     bool isLinear() const;
@@ -136,10 +154,31 @@ public:
 
     Rule withGuard(const BoolExpr guard) const;
     Rule withCost(const Expr &cost) const;
-    Rule withUpdate(uint i, const Subs &up) const;
+    Rule withUpdate(unsigned int i, const Subs &up) const;
 
     VarSet vars() const;
     void collectVars(VarSet &vars) const;
+
+    unsigned hash() const;
+    bool approxEqual(const Rule &that, bool compareRhss) const;
+
+    struct Hash {
+        std::size_t operator()(const Rule& r) const {
+            return r.hash();
+        }
+    };
+
+    struct ApproxEqual {
+        bool operator()(const Rule& fst, const Rule& snd) const {
+            return fst.approxEqual(snd, true);
+        }
+    };
+
+    using ApproxSet = std::unordered_set<Rule, Rule::Hash, Rule::ApproxEqual>;
+
+    template<class T>
+    using ApproxMap = std::unordered_map<Rule, T, Rule::Hash, Rule::ApproxEqual>;
+
 };
 
 

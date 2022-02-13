@@ -85,7 +85,6 @@ namespace Config {
     // Chaining and chaining strategies
     namespace Chain {
         extern const bool CheckSat;
-        extern const bool KeepIncomingInChainAccelerated;
     }
 
     // Pruning in case of too many rules

@@ -81,7 +81,7 @@ Acceleration::Result LoopAcceleration::run() {
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else if (Smt::check(ar.newGuard->subs({ap->getIterationCounter(), max(2u, ap->getValidityBound())}), its) == Smt::Sat) {
-                    LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm());
+                    LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm().get());
                     res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                     std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);

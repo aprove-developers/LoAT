@@ -26,6 +26,8 @@ public:
     bool isGZeroConstraint() const;
     bool isStrict() const;
 
+    unsigned hash() const;
+
     /**
      * @return Moves all addends containing variables to the lhs and all other addends to the rhs, where the given parameters are consiedered to be constants.
      */
