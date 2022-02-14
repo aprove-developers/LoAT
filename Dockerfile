@@ -72,11 +72,11 @@ RUN make install
 
 # ginac
 WORKDIR /src
-RUN wget https://www.ginac.de/ginac-1.8.0.tar.bz2
-RUN tar xf ginac-1.8.0.tar.bz2
-WORKDIR /src/ginac-1.8.0
+RUN wget https://www.ginac.de/ginac-1.8.2.tar.bz2
+RUN tar xf ginac-1.8.2.tar.bz2
+WORKDIR /src/ginac-1.8.2
 RUN mkdir build
-WORKDIR /src/ginac-1.8.0/build
+WORKDIR /src/ginac-1.8.2/build
 RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DCMAKE_C_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG" -DCMAKE_CXX_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG" ..
 RUN make -j
 RUN make install
