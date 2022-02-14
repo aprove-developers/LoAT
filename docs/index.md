@@ -1,3 +1,7 @@
+<head>
+    <title>LoAT</title>
+</head>
+
 LoAT (**Lo**op **A**cceleration **T**ool, formerly known as **Lo**wer Bounds **A**nalysis **T**ool) is a fully automated tool to analyze programs operating on integers.
 Currently, it supports the inference of **lower bounds** on the worst-case runtime complexity and **non-termination proving**.
 
@@ -61,9 +65,14 @@ Since 2016, [AProVE](http://aprove.informatik.rwth-aachen.de/) is using LoAT as 
 In this constellation, AProVE and LoAT won the following awards:
 
 * 1st place in the category *Complexity of Integer Transition Systems* at the [*Termination and Complexity Competition 2016*](https://termcomp.imn.htwk-leipzig.de/competitions/Y2016)
-* 1st place in the category *Complexity of Integer Transition Systems* at the *Termination and Complexity Competition 2017* (unfortunately, the results are no longer available online)
+* 1st place in the category *Complexity of Integer Transition Systems* at the [*Termination and Complexity Competition 2017*](https://termcomp.imn.htwk-leipzig.de/competitions/Y2017)
 * 1st place in the category *Complexity of Integer Transition Systems* at the [*Termination and Complexity Competition 2018*](http://group-mmm.org/termination/competitions/Y2018/)
 * 1st place in the category *Complexity of Integer Transition Systems* at the [*Termination and Complexity Competition 2019*](http://group-mmm.org/termination/competitions/Y2019/)
+
+Since 2021, [AProVE](http://aprove.informatik.rwth-aachen.de/) is using LoAT in its backend to prove non-termination of C programs (besides [T2](http://mmjb.github.io/T2/)).
+In this constellation AProVE, LoAT, and T2 won the following awards:
+
+* 2nd place in the Category Termination at the [*Competition on Software Verification 2022*](https://sv-comp.sosy-lab.org/2022/results/results-verified/)
 
 # Build
 

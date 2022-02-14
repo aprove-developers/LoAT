@@ -9,7 +9,7 @@ source "https://rubygems.org"
 # uncomment the line below. To upgrade, run `bundle update github-pages`.
 gem "github-pages", "~> 223", group: :jekyll_plugins
 
-gem "cayman", "~> 0.2.0"
+# gem "cayman", "~> 0.2.0"
 
 # Windows and JRuby does not include zoneinfo files, so bundle the tzinfo-data gem
 # and associated library.
