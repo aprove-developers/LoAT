@@ -9,6 +9,10 @@ LoAT uses a [calculus for modular loop acceleration](https://doi.org/10.1007/978
 
 The tool is based on the recurrence solver [PURRS](http://www.cs.unipr.it/purrs/) and the SMT solvers [Yices](https://yices.csl.sri.com/) and [Z3](https://github.com/Z3Prover/z3/).
 
+# Downloading LoAT
+
+[Here](https://github.com/aprove-developers/LoAT/releases) you can find the latests releases of LoAT.
+
 # Input Formats
 
 To analyze programs with LoAT, they need to be represented as *Integer Transition Systems*.
