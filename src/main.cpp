@@ -45,11 +45,9 @@ void printHelp(char *arg0) {
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
     cout << "  --proof-level <n>                                Detail level for proof output (0-" << Proof::maxProofLevel << ", default " << proofLevel << ")" << endl;
-    cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
-    cout << endl;
-    cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
-    cout << "  --nonterm                                        Just try to prove non-termination" << endl;
+    cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   Strategy for limit problems" << endl;
+    cout << "  --mode <complexity|non_termination>              Analysis mode" << endl;
 }
 
 
