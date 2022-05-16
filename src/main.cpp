@@ -160,7 +160,10 @@ int main(int argc, char *argv[]) {
         Analysis::analyze(its);
         break;
     case Config::Analysis::RecurrentSet:
-        RecurrentSetFinder::run(its);
+        RecurrentSetFinder::run(its, true);
+        break;
+    case Config::Analysis::RecurrentSetSimple:
+        RecurrentSetFinder::run(its, false);
         break;
     case Config::Analysis::Smt2Export:
         smt2Export::doExport(its);

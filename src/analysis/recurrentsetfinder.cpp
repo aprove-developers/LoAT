@@ -4,7 +4,7 @@
 #include "../accelerate/accelerationCalculus/accelerationproblem.hpp"
 #include "../analysis/preprocess.hpp"
 
-void RecurrentSetFinder::run(ITSProblem &its) {
+void RecurrentSetFinder::run(ITSProblem &its, bool evInc) {
     Yices::init();
 //    bool foundRecurrentSet = false;
     for (auto loc: its.getLocations()) {
@@ -17,7 +17,7 @@ void RecurrentSetFinder::run(ITSProblem &its) {
                 rule = newRule.get();
             }
             AccelerationProblem ap = AccelerationProblem::initForRecurrentSet(rule.toLinear(), its);
-            auto accelRes = ap.computeRes();
+            auto accelRes = ap.computeRes(evInc);
             if (!accelRes.empty()) {
                 Proof proof;
                 std::stringstream headline;

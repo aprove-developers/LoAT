@@ -450,12 +450,12 @@ option<AccelerationProblem::Result> AccelerationProblem::enlargeSolutionAndGetRe
     }
 }
 
-std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
+std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes(bool evInc) {
     for (const Rel& rel: todo) {
         bool res = recurrence(rel);
         res |= monotonicity(rel);
         res |= eventualWeakDecrease(rel);
-        res |= eventualWeakIncrease(rel);
+        res |= (evInc && eventualWeakIncrease(rel));
         res |= fixpoint(rel);
         if (!res && guard->isConjunction()) return {};
     }

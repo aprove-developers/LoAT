@@ -7,7 +7,7 @@
 class RecurrentSetFinder
 {
 public:
-    static void run(ITSProblem &its);
+    static void run(ITSProblem &its, bool evInc);
 };
 
 #endif // RECURRENTSETFINDER_HPP
