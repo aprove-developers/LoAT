@@ -65,7 +65,7 @@ public:
 
     static option<AccelerationProblem> init(const LinearRule &r, ITSProblem &its);
     static AccelerationProblem initForRecurrentSet(const LinearRule &r, ITSProblem &its);
-    std::vector<Result> computeRes(bool evInc = true);
+    std::vector<Result> computeRes();
     std::pair<BoolExpr, bool> buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
     Expr getAcceleratedCost() const;

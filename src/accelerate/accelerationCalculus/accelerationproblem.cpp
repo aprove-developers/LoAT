@@ -450,13 +450,16 @@ option<AccelerationProblem::Result> AccelerationProblem::enlargeSolutionAndGetRe
     }
 }
 
-std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes(bool evInc) {
+std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
+    bool evInc = Config::Analysis::mode != Config::Analysis::RecurrentSetNoEvInc && Config::Analysis::mode != Config::Analysis::RecurrentSetTrivial;
+    bool fp = Config::Analysis::mode != Config::Analysis::RecurrentSetNoFP && Config::Analysis::mode != Config::Analysis::RecurrentSetTrivial;
+    bool inc = Config::Analysis::mode != Config::Analysis::RecurrentSetNoInc;
     for (const Rel& rel: todo) {
-        bool res = recurrence(rel);
+        bool res = (inc && recurrence(rel));
         res |= monotonicity(rel);
         res |= eventualWeakDecrease(rel);
         res |= (evInc && eventualWeakIncrease(rel));
-        res |= fixpoint(rel);
+        res |= (fp && fixpoint(rel));
         if (!res && guard->isConjunction()) return {};
     }
     std::map<Edge, BoolExpr> edgeVars;
