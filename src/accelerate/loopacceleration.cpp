@@ -74,22 +74,29 @@ Acceleration::Result LoopAcceleration::run() {
         if (ap) {
             std::vector<AccelerationProblem::Result> ars = ap->computeRes();
             for (const AccelerationProblem::Result &ar: ars) {
-                res.status = ap->getValidityBound() > 1 ? PartialSuccess : Success;
+                unsigned vb = ap->getValidityBound();
+                res.status = vb > 1 ? PartialSuccess : Success;
                 if (ar.witnessesNonterm) {
-                    const Rule &nontermRule = buildNontermRule(ar.newGuard);
+                    Rule nontermRule = buildNontermRule(ar.newGuard);
                     res.rules.emplace_back(nontermRule);
                     res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else if (Smt::check(ar.newGuard->subs({ap->getIterationCounter(), max(2u, ap->getValidityBound())}), its) == Smt::Sat) {
-                    LinearRule accel(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm().get());
-                    res.proof.ruleTransformationProof(rule, "acceleration", accel, its);
+                    option<Rule> accel = Rule(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm().get());
+                    for (unsigned i = 0; i < vb; ++i) {
+                        accel = Chaining::chainRules(its, rule, accel.get(), i+1 == vb);
+                    }
+                    if (!accel) {
+                        continue;
+                    }
+                    res.proof.ruleTransformationProof(rule, "acceleration", accel.get(), its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
-                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel);
+                    std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel.get());
                     if (instantiated.empty()) {
-                        res.rules.emplace_back(accel);
+                        res.rules.emplace_back(accel.get());
                     } else {
                         for (const Rule &r: instantiated) {
-                            res.proof.ruleTransformationProof(accel, "instantiation", r, its);
+                            res.proof.ruleTransformationProof(accel.get(), "instantiation", r, its);
                             res.rules.emplace_back(r);
                         }
                     }

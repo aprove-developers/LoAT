@@ -171,7 +171,6 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 
 const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
     LinearRule res = rule;
-    bool changed = false;
     for (const auto &p: rule.getUpdate()) {
         const Var &var = p.first;
         const Expr &up = p.second.expand();
@@ -180,26 +179,12 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
             if (up.isPoly() && up.degree(var) == 1) {
                 const Expr &coeff = up.coeff(var);
                 if (coeff.isRationalConstant() && coeff.toNum().is_negative()) {
-                    res = Chaining::chainRules(its, res, res, false).get();
-                    changed = true;
-                    break;
+                    return Chaining::chainRules(its, res, res, false).get();
                 }
             }
         }
     }
-    const LinearRule &orig = res;
-    unsigned int last = numNotInUpdate(res.getUpdate());
-    do {
-        LinearRule chained = Chaining::chainRules(its, res, orig, false).get();
-        unsigned int next = numNotInUpdate(chained.getUpdate());
-        if (next != last) {
-            res = chained;
-            changed = true;
-            continue;
-        }
-    } while (false);
-    if (changed) return {res};
-    else return {};
+    return {};
 }
 
 unsigned int Accelerator::numNotInUpdate(const Subs &up) const {

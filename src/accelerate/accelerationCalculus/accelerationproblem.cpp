@@ -396,9 +396,11 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     }
     if (all || !isConjunction) {
         bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
-        BoolExpr newGuard = guard->replaceRels(map) & (n >= validityBound);
+        bool nt = nonterm && positiveCost;
+        BoolExpr newGuard = guard->replaceRels(map);
+        if (!nt) newGuard = newGuard & (n >= 0);
         if (Smt::check(newGuard, its) == Smt::Sat) {
-            ret.emplace_back(newGuard, nonterm && positiveCost);
+            ret.emplace_back(newGuard, nt);
         }
         if (closed && positiveCost && !nonterm) {
             RelMap<BoolExpr> map;
