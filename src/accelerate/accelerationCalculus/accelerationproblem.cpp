@@ -354,17 +354,44 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     }
     std::vector<AccelerationProblem::Result> ret;
     bool nonterm = true;
-    RelMap<BoolExpr> map;
+    RelMap<Entry> entryMap;
     bool all = true;
     for (const Rel& rel: todo) {
         option<Entry> e = depsWellFounded(rel);
         if (e) {
-            map[rel] = e->formula;
+            entryMap[rel] = e.get();
             nonterm &= e->nonterm;
         } else {
             all = false;
             if (isConjunction) break;
-            map[rel] = False;
+        }
+    }
+    RelMap<BoolExpr> map;
+    if (!isConjunction) {
+        bool changed;
+        do {
+            changed = false;
+            for (auto e: entryMap) {
+                if (map.find(e.first) != map.end()) continue;
+                BoolExpr closure = e.second.formula;
+                bool ready = true;
+                for (auto dep: e.second.dependencies) {
+                    if (map.find(dep) == map.end()) {
+                        ready = false;
+                        break;
+                    } else {
+                        closure = closure & map[dep];
+                    }
+                }
+                if (ready) {
+                    map[e.first] = closure;
+                    changed = true;
+                }
+            }
+        } while (changed);
+    } else {
+        for (auto e: entryMap) {
+            map[e.first] = e.second.formula;
         }
     }
     if (all || !isConjunction) {
