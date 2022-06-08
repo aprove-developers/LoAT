@@ -46,8 +46,6 @@ protected:
     EXPR convertBoolEx(const BoolExpr e) {
         if (e->getLit()) {
             return convertRelational(e->getLit().get());
-        } else if (e->getConst()) {
-            return context.bConst(e->getConst().get());
         }
         EXPR res = e->isAnd() ? context.bTrue() : context.bFalse();
         bool first = true;

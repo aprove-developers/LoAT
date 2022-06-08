@@ -49,8 +49,6 @@ public:
 
     Expr::Type getType(const Var &x) const;
 
-    BoolExpr freshBoolVar();
-
     static std::recursive_mutex mutex;
 
 private:

@@ -12,6 +12,8 @@
 class BoolLit;
 class BoolJunction;
 class BoolExpression;
+class Quantifier;
+class QuantifiedFormula;
 typedef std::shared_ptr<const BoolExpression> BoolExpr;
 
 struct boolexpr_compare {
@@ -28,7 +30,6 @@ class BoolExpression: public std::enable_shared_from_this<BoolExpression> {
 
 public:
     virtual option<Rel> getLit() const = 0;
-    virtual option<int> getConst() const = 0;
     virtual bool isAnd() const = 0;
     virtual bool isOr() const = 0;
     virtual BoolExprSet getChildren() const = 0;
@@ -46,45 +47,14 @@ public:
     virtual BoolExpr toLeq() const = 0;
     virtual void collectLits(RelSet &res) const = 0;
     virtual void collectVars(VarSet &res) const = 0;
+    virtual std::string toRedlog() const;
     virtual size_t size() const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
     virtual unsigned hash() const = 0;
+    QuantifiedFormula quantify(const std::vector<Quantifier> &prefix) const;
 
 protected:
     virtual void dnf(std::vector<Guard> &res) const = 0;
-};
-
-class BoolConst: public BoolExpression {
-
-private:
-
-    int id;
-
-public:
-
-    BoolConst(int id);
-    bool isAnd() const override;
-    bool isOr() const override;
-    option<Rel> getLit() const override;
-    option<int> getConst() const override;
-    BoolExprSet getChildren() const override;
-    const BoolExpr negation() const override;
-    bool isLinear() const override;
-    bool isPolynomial() const override;
-    ~BoolConst() override;
-    BoolExpr subs(const Subs &subs) const override;
-    bool isConjunction() const override;
-    BoolExpr toG() const override;
-    BoolExpr toLeq() const override;
-    void collectLits(RelSet &res) const override;
-    void collectVars(VarSet &res) const override;
-    size_t size() const override;
-    BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
-    unsigned hash() const override;
-
-protected:
-    void dnf(std::vector<Guard> &res) const override;
-
 };
 
 class BoolLit: public BoolExpression {
@@ -99,7 +69,6 @@ public:
     bool isAnd() const override;
     bool isOr() const override;
     option<Rel> getLit() const override;
-    option<int> getConst() const override;
     BoolExprSet getChildren() const override;
     const BoolExpr negation() const override;
     bool isLinear() const override;
@@ -112,6 +81,7 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
+    std::string toRedlog() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
 
@@ -135,7 +105,6 @@ public:
     bool isAnd() const override;
     bool isOr() const override;
     option<Rel> getLit() const override;
-    option<int> getConst() const override;
     BoolExprSet getChildren() const override;
     const BoolExpr negation() const override;
     bool isLinear() const override;
@@ -148,11 +117,53 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
+    std::string toRedlog() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
 
 protected:
     void dnf(std::vector<Guard> &res) const override;
+
+};
+
+class Quantifier {
+
+public:
+    enum class Type { Forall, Exists };
+
+private:
+    Type qType;
+    VarSet vars;
+
+public:
+    Quantifier(const Type &qType, const VarSet &vars);
+
+    Quantifier negation() const;
+    const VarSet& getVars() const;
+    Type getType() const;
+    std::string toRedlog() const;
+
+};
+
+class QuantifiedFormula {
+
+private:
+    std::vector<Quantifier> prefix;
+    BoolExpr matrix;
+
+public:
+
+    QuantifiedFormula(std::vector<Quantifier> prefix, const BoolExpr &matrix);
+    const QuantifiedFormula negation() const;
+    bool isLinear() const;
+    bool isPolynomial() const;
+    VarSet boundVars() const;
+    QuantifiedFormula subs(const Subs &subs) const;
+    QuantifiedFormula toG() const;
+    QuantifiedFormula toLeq() const;
+    void collectLits(RelSet &res) const;
+    VarSet freeVars() const;
+    std::string toRedlog() const;
 
 };
 
@@ -165,7 +176,6 @@ const BoolExpr buildAnd(const BoolExprSet &xs);
 const BoolExpr buildOr(const RelSet &xs);
 const BoolExpr buildOr(const BoolExprSet &xs);
 const BoolExpr buildLit(const Rel &lit);
-const BoolExpr buildConst(int id);
 const BoolExpr buildConjunctiveClause(const BoolExprSet &xs);
 
 extern const BoolExpr True;

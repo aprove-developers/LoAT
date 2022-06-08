@@ -1,10 +1,45 @@
-FROM voidlinux/voidlinux-musl as loat_build
+FROM voidlinux/voidlinux-musl:20191230 as loat_build
 LABEL author="Florian Frohn"
 
-RUN xbps-install -ySu
-RUN xbps-install -y gcc git automake autoconf make cmake lzip wget gperf libtool readline-devel cln-devel pkg-config boost-devel giac-devel python-devel
+RUN SSL_NO_VERIFY_PEER=1 xbps-install -ySu xbps
+RUN SSL_NO_VERIFY_PEER=1 xbps-install -ySu
+RUN xbps-install -y gcc
+RUN xbps-install -y git
+RUN xbps-install -y automake
+RUN xbps-install -y autoconf
+RUN xbps-install -y make
+RUN xbps-install -y cmake
+RUN xbps-install -y lzip
+RUN xbps-install -y wget
+RUN xbps-install -y gperf
+RUN xbps-install -y libtool
+RUN xbps-install -y readline-devel
+RUN xbps-install -y cln-devel
+RUN xbps-install -y pkg-config
+RUN xbps-install -y boost-devel
+RUN xbps-install -y giac-devel
+RUN xbps-install -y python-devel
+RUN xbps-install -y subversion
+RUN xbps-install -y ncurses-devel
+RUN xbps-install -y libX11-devel
+RUN xbps-install -y libXft-devel
+RUN xbps-install -y libXext-devel
+RUN xbps-install -y file libffi-devel
+RUN xbps-install -y libltdl-devel
 
 RUN mkdir /src/
+
+# reduce
+WORKDIR /src
+RUN svn co http://svn.code.sf.net/p/reduce-algebra/code/trunk reduce-algebra
+RUN xbps-install -y file libffi-devel
+RUN xbps-install -y libltdl-devel
+WORKDIR /src/reduce-algebra
+RUN ./configure --with-csl
+RUN cp /usr/include/unistd.h /usr/include/sys/
+RUN make
+WORKDIR /src/reduce-algebra/generic/libreduce
+RUN make
 
 # z3
 WORKDIR /src
@@ -72,11 +107,11 @@ RUN make install
 
 # ginac
 WORKDIR /src
-RUN wget https://www.ginac.de/ginac-1.8.2.tar.bz2
-RUN tar xf ginac-1.8.2.tar.bz2
-WORKDIR /src/ginac-1.8.2
+RUN wget https://www.ginac.de/ginac-1.8.3.tar.bz2
+RUN tar xf ginac-1.8.3.tar.bz2
+WORKDIR /src/ginac-1.8.3
 RUN mkdir build
-WORKDIR /src/ginac-1.8.2/build
+WORKDIR /src/ginac-1.8.3/build
 RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DCMAKE_C_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG" -DCMAKE_CXX_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG" ..
 RUN make -j
 RUN make install
@@ -108,6 +143,7 @@ RUN mkdir -p /home/ffrohn/repos/LoAT
 WORKDIR /home/ffrohn/repos/LoAT
 COPY CMakeLists.txt /home/ffrohn/repos/LoAT/
 COPY src /home/ffrohn/repos/LoAT/src/
+COPY include /home/ffrohn/repos/LoAT/include/
 RUN mkdir -p /home/ffrohn/repos/LoAT/build/static/release
 WORKDIR /home/ffrohn/repos/LoAT/build/static/release
 RUN cmake -DSTATIC=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DCMAKE_CXX_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DSHA=$SHA -DDIRTY=$DIRTY ../../../

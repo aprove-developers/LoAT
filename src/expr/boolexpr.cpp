@@ -29,78 +29,9 @@ std::vector<Guard> BoolExpression::dnf() const {
     return res;
 }
 
-BoolConst::BoolConst(int id): id(id) {}
-
-bool BoolConst::isAnd() const {
-    return false;
+QuantifiedFormula BoolExpression::quantify(const std::vector<Quantifier> &prefix) const {
+    return QuantifiedFormula(prefix, shared_from_this());
 }
-
-bool BoolConst::isOr() const {
-    return false;
-}
-
-option<Rel> BoolConst::getLit() const {
-    return {};
-}
-
-option<int> BoolConst::getConst() const {
-    return {id};
-}
-
-BoolExprSet BoolConst::getChildren() const {
-    return {};
-}
-
-const BoolExpr BoolConst::negation() const {
-    return buildConst(-id);
-}
-
-bool BoolConst::isLinear() const {
-    return false;
-}
-
-bool BoolConst::isPolynomial() const {
-    return false;
-}
-
-BoolConst::~BoolConst() {}
-
-BoolExpr BoolConst::subs(const Subs &subs) const {
-    return shared_from_this();
-}
-
-bool BoolConst::isConjunction() const {
-    return true;
-}
-
-BoolExpr BoolConst::toG() const {
-    return shared_from_this();
-}
-
-BoolExpr BoolConst::toLeq() const {
-    return shared_from_this();
-}
-
-void BoolConst::collectLits(RelSet &res) const {}
-
-void BoolConst::collectVars(VarSet &res) const {}
-
-size_t BoolConst::size() const {
-    return 1;
-}
-
-BoolExpr BoolConst::replaceRels(const RelMap<BoolExpr> map) const {
-    return shared_from_this();
-}
-
-void BoolConst::dnf(std::vector<Guard> &res) const {
-    assert(false && "not supported");
-}
-
-unsigned BoolConst::hash() const {
-    return id;
-}
-
 
 BoolLit::BoolLit(const Rel &lit): lit(lit.makeRhsZero()) { }
 
@@ -114,10 +45,6 @@ bool BoolLit::isOr() const {
 
 option<Rel> BoolLit::getLit() const {
     return {lit};
-}
-
-option<int> BoolLit::getConst() const {
-    return {};
 }
 
 BoolExprSet BoolLit::getChildren() const {
@@ -179,6 +106,10 @@ size_t BoolLit::size() const {
     return 1;
 }
 
+std::string BoolLit::toRedlog() const {
+    return lit.toString();
+}
+
 void BoolLit::collectLits(RelSet &res) const {
     res.insert(lit);
 }
@@ -224,10 +155,6 @@ bool BoolJunction::isOr() const {
 }
 
 option<Rel> BoolJunction::getLit() const {
-    return {};
-}
-
-option<int> BoolJunction::getConst() const {
     return {};
 }
 
@@ -303,6 +230,18 @@ size_t BoolJunction::size() const {
     return res;
 }
 
+std::string BoolJunction::toRedlog() const {
+    std::string infix = isAnd() ? " and " : " or ";
+    std::string res;
+    bool first = true;
+    for (auto it = children.begin(); it != children.end(); ++it) {
+        if (first) first = false;
+        else res += infix;
+        res += (*it)->toRedlog();
+    }
+    return res;
+}
+
 void BoolJunction::collectLits(RelSet &res) const {
     for (const BoolExpr &c: children) {
         c->collectLits(res);
@@ -353,6 +292,95 @@ unsigned BoolJunction::hash() const {
 
 BoolJunction::~BoolJunction() {}
 
+
+Quantifier::Quantifier(const Type &qType, const VarSet &vars): qType(qType), vars(vars) {}
+
+Quantifier Quantifier::negation() const {
+    auto _qType = qType == Type::Exists ? Type::Forall : Type::Exists;
+    return Quantifier(_qType, vars);
+}
+
+const VarSet& Quantifier::getVars() const {
+    return vars;
+}
+
+Quantifier::Type Quantifier::getType() const {
+    return qType;
+}
+
+std::string Quantifier::toRedlog() const {
+    std::string q = qType == Type::Exists ? "ex" : "all";
+    std::string res;
+    for (const auto& var: vars) {
+        res = q + "(" + var.get_name();
+    }
+    return res;
+}
+
+QuantifiedFormula::QuantifiedFormula(std::vector<Quantifier> prefix, const BoolExpr &matrix): prefix(prefix), matrix(matrix) {}
+
+const QuantifiedFormula QuantifiedFormula::negation() const {
+    std::vector<Quantifier> _prefix;
+    std::transform(prefix.begin(), prefix.end(), _prefix.begin(), [](const auto &q ){return q.negation();});
+    return QuantifiedFormula(_prefix, matrix->negation());
+}
+
+bool QuantifiedFormula::isLinear() const {
+    return matrix->isLinear();
+}
+
+bool QuantifiedFormula::isPolynomial() const {
+    return matrix->isPolynomial();
+}
+
+VarSet QuantifiedFormula::boundVars() const {
+    VarSet res;
+    for (const Quantifier &q: prefix) {
+        res.insert(q.getVars().begin(), q.getVars().end());
+    }
+    return res;
+}
+
+QuantifiedFormula QuantifiedFormula::subs(const Subs &subs) const {
+    auto dom = subs.domain();
+    Subs projected = subs.project(freeVars());
+    return QuantifiedFormula(prefix, matrix->subs(projected));
+}
+
+QuantifiedFormula QuantifiedFormula::toG() const {
+    return QuantifiedFormula(prefix, matrix->toG());
+}
+
+QuantifiedFormula QuantifiedFormula::toLeq() const {
+    return QuantifiedFormula(prefix, matrix->toLeq());
+}
+
+void QuantifiedFormula::collectLits(RelSet &res) const {
+    matrix->collectLits(res);
+}
+
+VarSet QuantifiedFormula::freeVars() const {
+    VarSet vars, res;
+    VarSet bv = boundVars();
+    matrix->collectVars(vars);
+    std::set_difference(vars.begin(), vars.end(), bv.begin(), bv.end(), std::inserter(res, res.begin()));
+    return res;
+}
+
+std::string QuantifiedFormula::toRedlog() const {
+    std::string res;
+    for (const auto &q: prefix) {
+        res += q.toRedlog();
+    }
+    res += matrix->toRedlog();
+    for (const auto &q: prefix) {
+        unsigned size = q.getVars().size();
+        for (unsigned i = 0; i < size; ++i) {
+            res += ")";
+        }
+    }
+    return res;
+}
 
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {
     std::stack<BoolExpr> todo;
@@ -427,10 +455,6 @@ const BoolExpr buildLit(const Rel &lit) {
     return BoolExpr(new BoolLit(lit));
 }
 
-const BoolExpr buildConst(int id) {
-    return BoolExpr(new BoolConst(id));
-}
-
 const BoolExpr True = buildAnd(std::vector<BoolExpr>());
 const BoolExpr False = buildOr(std::vector<BoolExpr>());
 
@@ -457,9 +481,6 @@ const BoolExpr operator !(const BoolExpr a) {
 }
 
 bool operator ==(const BoolExpr a, const BoolExpr b) {
-    if (a->getConst() != b->getConst()) {
-        return false;
-    }
     if (a->getLit() != b->getLit()) {
         return false;
     }
@@ -477,13 +498,6 @@ bool operator !=(const BoolExpr a, const BoolExpr b) {
 }
 
 bool boolexpr_compare::operator() (BoolExpr a, BoolExpr b) const {
-    if (a->getConst()) {
-        if (!b->getConst()) {
-            return true;
-        } else {
-            return a->getConst().get() < b->getConst().get();
-        }
-    }
     if (a->getLit()) {
         if (!b->getLit()) {
             return true;
@@ -501,9 +515,7 @@ bool boolexpr_compare::operator() (BoolExpr a, BoolExpr b) const {
 }
 
 std::ostream& operator<<(std::ostream &s, const BoolExpr e) {
-    if (e->getConst()) {
-        s << "x" << e->getConst().get();
-    } else if (e->getLit()) {
+    if (e->getLit()) {
         s << e->getLit().get();
     } else if (e->getChildren().empty()) {
         if (e->isAnd()) {

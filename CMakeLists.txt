@@ -14,9 +14,11 @@ if(${STATIC})
     set(BUILD_SHARED_LIBS OFF)
     add_link_options(-ldl -lpthread -static)
     set(EXECUTABLE loat-static)
+    set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.a)
 else()
     message(STATUS "Configuring non-static build")
     set(EXECUTABLE loat)
+    set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.so)
 endif()
 
 if(${SANITIZE})
@@ -162,7 +164,10 @@ add_executable(${EXECUTABLE}
         src/merging/merger.cpp
         src/merging/merger.hpp
         src/version.cpp
-        src/version.hpp)
+        src/version.hpp
+        src/qelim/redlog.cpp
+        src/qelim/redlog.hpp
+        include/reduce.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
@@ -177,8 +182,6 @@ find_library(CLN cln)
 message(STATUS "cln: ${CLN}")
 find_library(GMP gmp)
 message(STATUS "gmp: ${GMP}")
-# find_library(GOMP gomp HINTS /usr/lib/gcc/x86_64-linux-gnu/*/)
-# message(STATUS "gomp: ${GOMP}")
 find_library(NTL ntl)
 message(STATUS "ntl: ${NTL}")
 find_library(POLY poly)
@@ -207,5 +210,4 @@ if (NOT ${STATIC})
   target_link_libraries(${EXECUTABLE} ${PTHREAD})
 endif()
 
-target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${LINKER_OPTIONS})
-
+target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${REDUCE} ${LINKER_OPTIONS})

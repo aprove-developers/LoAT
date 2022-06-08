@@ -99,7 +99,3 @@ Expr::Type VariableManager::getType(const Var &x) const {
     }
 }
 
-BoolExpr VariableManager::freshBoolVar() {
-    std::lock_guard guard(mutex);
-    return buildConst(boolVarCount++);
-}
