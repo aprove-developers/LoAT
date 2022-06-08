@@ -48,7 +48,7 @@ void printHelp(char *arg0) {
     cout << "  --plain                                          Disable colored output" << endl;
     cout << endl;
     cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
-    cout << "  --nonterm                                        Just try to prove non-termination" << endl;
+    cout << "  --mode <recurrent_set | recurrent_set_no_ev_inc | recurrent_set_trivial | recurrent_set_no_inc | recurrent_set_no_fp>   try to find a recurrent set with the given technique" << endl;
 }
 
 
