@@ -86,7 +86,7 @@ option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &de
     return res[rel].size() - 1;
 }
 
-option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Rel& rel, bool nontermOnly, RelSet seen) {
+option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Rel& rel, bool nontermOnly, RelSet seen) const {
     if (seen.find(rel) != seen.end()) {
         return {};
     }
@@ -342,6 +342,52 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
     return false;
 }
 
+AccelerationProblem::ReplacementMap AccelerationProblem::computeReplacementMap(bool nontermOnly) const {
+    ReplacementMap res;
+    res.nonterm = true;
+    res.acceleratedAll = true;
+    RelMap<Entry> entryMap;
+    for (const Rel& rel: todo) {
+        option<Entry> e = depsWellFounded(rel, nontermOnly);
+        if (e) {
+            entryMap[rel] = e.get();
+            res.nonterm &= e->nonterm;
+        } else {
+            res.acceleratedAll = false;
+            res.map[rel] = False;
+            if (isConjunction) return res;
+        }
+    }
+    if (!isConjunction) {
+        bool changed;
+        do {
+            changed = false;
+            for (auto e: entryMap) {
+                if (res.map.find(e.first) != res.map.end()) continue;
+                BoolExpr closure = e.second.formula;
+                bool ready = true;
+                for (auto dep: e.second.dependencies) {
+                    if (res.map.find(dep) == res.map.end()) {
+                        ready = false;
+                        break;
+                    } else {
+                        closure = closure & res.map[dep];
+                    }
+                }
+                if (ready) {
+                    res.map[e.first] = closure;
+                    changed = true;
+                }
+            }
+        } while (changed);
+    } else {
+        for (auto e: entryMap) {
+            res.map[e.first] = e.second.formula;
+        }
+    }
+    return res;
+}
+
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     for (const Rel& rel: todo) {
         bool res = recurrence(rel);
@@ -352,70 +398,19 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         if (!res && isConjunction) return {};
     }
     std::vector<AccelerationProblem::Result> ret;
-    bool nonterm = true;
-    RelMap<Entry> entryMap;
-    bool all = true;
-    for (const Rel& rel: todo) {
-        option<Entry> e = depsWellFounded(rel);
-        if (e) {
-            entryMap[rel] = e.get();
-            nonterm &= e->nonterm;
-        } else {
-            all = false;
-            if (isConjunction) break;
-        }
-    }
-    RelMap<BoolExpr> map;
-    if (!isConjunction) {
-        bool changed;
-        do {
-            changed = false;
-            for (auto e: entryMap) {
-                if (map.find(e.first) != map.end()) continue;
-                BoolExpr closure = e.second.formula;
-                bool ready = true;
-                for (auto dep: e.second.dependencies) {
-                    if (map.find(dep) == map.end()) {
-                        ready = false;
-                        break;
-                    } else {
-                        closure = closure & map[dep];
-                    }
-                }
-                if (ready) {
-                    map[e.first] = closure;
-                    changed = true;
-                }
-            }
-        } while (changed);
-    } else {
-        for (auto e: entryMap) {
-            map[e.first] = e.second.formula;
-        }
-    }
-    if (all || !isConjunction) {
+    ReplacementMap map = computeReplacementMap(false);
+    if (map.acceleratedAll || !isConjunction) {
         bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
-        bool nt = nonterm && positiveCost;
-        BoolExpr newGuard = guard->replaceRels(map);
+        bool nt = map.nonterm && positiveCost;
+        BoolExpr newGuard = guard->replaceRels(map.map);
         if (!nt) newGuard = newGuard & (n >= 0);
         if (Smt::check(newGuard, its) == Smt::Sat) {
             ret.emplace_back(newGuard, nt);
         }
-        if (closed && positiveCost && !nonterm) {
-            RelMap<BoolExpr> map;
-            all = true;
-            for (const Rel& rel: todo) {
-                option<Entry> e = depsWellFounded(rel, true);
-                if (e) {
-                    map[rel] = e.get().formula;
-                } else {
-                    all = false;
-                    if (isConjunction) break;
-                    map[rel] = False;
-                }
-            }
-            if (all || !isConjunction) {
-                BoolExpr newGuard = guard->replaceRels(map);
+        if (closed && positiveCost && !map.nonterm) {
+            ReplacementMap map = computeReplacementMap(true);
+            if (map.acceleratedAll || !isConjunction) {
+                BoolExpr newGuard = guard->replaceRels(map.map);
                 if (Smt::check(newGuard, its) == Smt::Sat) {
                     ret.emplace_back(newGuard, true);
                 }
