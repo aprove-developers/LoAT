@@ -65,18 +65,17 @@ RelSet AccelerationProblem::findConsistentSubset(BoolExpr e) const {
     solver->push();
     solver->add(e);
     Smt::Result sat = solver->check();
-    solver->pop();
+    RelSet res;
     if (sat == Smt::Sat) {
-        RelSet res;
         const Subs &model = solver->model().toSubs();
         for (const Rel &rel: todo) {
             if (rel.subs(model).isTriviallyTrue()) {
                 res.insert(rel);
             }
         }
-        return res;
     }
-    return RelSet();
+    solver->pop();
+    return res;
 }
 
 option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm) {
