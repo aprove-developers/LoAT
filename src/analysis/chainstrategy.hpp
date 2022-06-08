@@ -84,6 +84,6 @@ namespace Chaining {
      */
     option<Proof> chainAcceleratedRules(ITSProblem &its, const std::set<TransIdx> &acceleratedRules);
 
-};
+}
 
 #endif // CHAINSTRATEGY_H

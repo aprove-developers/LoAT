@@ -31,10 +31,12 @@ void Yices::add(const BoolExpr e) {
 }
 
 void Yices::push() {
+    Smt::push();
     yices_push(solver);
 }
 
 void Yices::pop() {
+    Smt::pop();
     yices_pop(solver);
 }
 

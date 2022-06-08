@@ -18,6 +18,7 @@
 #include "parser.hpp"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <ginac/ginac.h>
 
 namespace sexpressionparser {
 
@@ -145,14 +146,15 @@ namespace sexpressionparser {
             assert(!negate);
             return Rel::buildEq(fst, snd);
         }
-        assert(false);
+        throw std::invalid_argument("");
     }
 
     Expr Self::parseExpression(sexpresso::Sexp &sexp) {
         if (sexp.childCount() == 1) {
             const std::string &str = sexp.str();
             if (std::isdigit(str[0]) || str[0] == '-') {
-                return std::stoi(str);
+                GiNaC::parser parser;
+                return parser(str);
             } else {
                 if (vars.find(str) == vars.end()) {
                     vars[str] = res.addFreshTemporaryVariable(str);
@@ -175,8 +177,7 @@ namespace sexpressionparser {
             assert(op == "-");
             return -fst;
         }
-        std::cout << "unknown operator " << op << std::endl;
-        assert(false);
+        throw std::invalid_argument("unknown operator");
     }
 
 }

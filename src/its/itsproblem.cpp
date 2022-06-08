@@ -20,8 +20,6 @@
 
 using namespace std;
 
-std::recursive_mutex ITSProblem::mutex;
-
 ITSProblem::ITSProblem(VariableManager &&varMan) : VariableManager(varMan) {}
 
 bool ITSProblem::isEmpty() const {
@@ -169,6 +167,7 @@ option<TransIdx> ITSProblem::addRule(Rule rule) {
 }
 
 std::vector<TransIdx> ITSProblem::replaceRules(const std::vector<TransIdx> &toReplace, const std::vector<Rule> replacement) {
+    std::lock_guard guard(mutex);
     std::vector<TransIdx> keep;
     std::vector<TransIdx> result;
     for (const Rule& r: replacement) {
@@ -258,3 +257,4 @@ void ITSProblem::print(std::ostream &s) const {
     std::lock_guard guard(mutex);
     ITSExport::printDebug(*this, s);
 }
+

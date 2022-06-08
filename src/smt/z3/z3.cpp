@@ -17,10 +17,12 @@ void Z3::add(const BoolExpr e) {
 }
 
 void Z3::push() {
+    Smt::push();
     solver.push();
 }
 
 void Z3::pop() {
+    Smt::pop();
     solver.pop();
 }
 
@@ -30,7 +32,7 @@ Smt::Result Z3::check() {
     case z3::unsat: return Unsat;
     case z3::unknown: return Unknown;
     }
-    assert(false && "unknown result");
+    throw std::logic_error("unknown result");
 }
 
 Model Z3::model() {

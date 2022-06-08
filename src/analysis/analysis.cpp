@@ -54,7 +54,7 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
 
     proof.majorProofStep("Initial ITS", its);
 
-    if (!Config::Analysis::NonTermMode) {
+    if (Config::Analysis::complexity()) {
         const option<Proof> &subProof = ensureNonnegativeCosts();
         if (subProof) {
             proof.concat(subProof.get());
@@ -71,7 +71,7 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
     bool nonlinearProblem = !its.isLinear(); // whether the ITS is (still) nonlinear
 
     // Check if we have at least constant complexity (i.e., at least one rule can be taken with cost >= 1)
-    if (!Config::Analysis::NonTermMode) {
+    if (Config::Analysis::complexity()) {
         checkConstantComplexity(res, proof);
     }
 
@@ -91,6 +91,12 @@ void Analysis::simplify(RuntimeResult &res, Proof &proof) {
     if (subProof) {
         proof.concat(subProof.get());
         proof.minorProofStep("Simplified rules", its);
+    }
+
+    Proof mergingProof = Merger::mergeRules(its);
+    if (!mergingProof.empty()) {
+        proof.concat(mergingProof);
+        proof.majorProofStep("Merged rules", its);
     }
 
     // We cannot prove any lower bound for an empty ITS
@@ -401,7 +407,7 @@ void Analysis::checkConstantComplexity(RuntimeResult &res, Proof &proof) const {
 
 
 void Analysis::getMaxRuntimeOf(const set<TransIdx> &rules, RuntimeResult &res) {
-    if (Config::Analysis::NonTermMode) {
+    if (Config::Analysis::nonTermination()) {
         for (TransIdx i: rules) {
             const Rule r = its.getRule(i);
             if (r.getCost().isNontermSymbol() && Smt::check(r.getGuard(), its) == Smt::Sat) {

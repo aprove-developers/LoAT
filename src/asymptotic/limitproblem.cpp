@@ -130,8 +130,7 @@ InftyExpressionSet::iterator LimitProblem::cend() const {
 void LimitProblem::applyLimitVector(const InftyExpressionSet::const_iterator &it,
                                     const Expr &l, const Expr &r,
                                     const LimitVector &lv) {
-    Direction dir = it->getDirection();
-    assert(lv.isApplicable(dir));
+    assert(lv.isApplicable(it->getDirection()));
 
     InftyExpression firstIE(l, lv.getFirst());
     InftyExpression secondIE(r, lv.getSecond());
@@ -151,9 +150,11 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
     assert(it->isInt());
 
     GiNaC::numeric num = it->toNum();
+#ifndef NDEBUG
     Direction dir = it->getDirection();
     assert((num.is_positive() && (dir == POS_CONS || dir == POS))
            || (num.is_negative() && dir == NEG_CONS));
+#endif
 
     (*log) << "applying transformation rule (B), deleting " << *it << std::endl;
 
@@ -164,9 +165,11 @@ void LimitProblem::removeConstant(const InftyExpressionSet::const_iterator &it) 
 
 
 void LimitProblem::substitute(const Subs &sub, int substitutionIndex) {
+#ifndef NDEBUG
     for (auto const &s : sub) {
         assert(!s.second.has(s.first));
     }
+#endif
 
     (*log) << "applying transformation rule (C) using substitution " << sub << std::endl;
 

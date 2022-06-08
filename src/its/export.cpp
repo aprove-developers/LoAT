@@ -119,3 +119,95 @@ void ITSExport::printForProof(const ITSProblem &its, std::ostream &s) {
         }
     }
 }
+
+void ITSExport::printKoAT(const ITSProblem &its, std::ostream &s) {
+    auto printNode = [&](LocationIdx n) {
+        auto optName = its.getLocationName(n);
+        if (optName) {
+            s << optName.get();
+        } else {
+            s << "loc" << n << "'";
+        }
+    };
+
+    s << "(GOAL COMPLEXITY)" << endl;
+    s << "(STARTTERM (FUNCTIONSYMBOLS "; printNode(its.getInitialLocation()); s << "))" << endl;
+    s << "(VAR";
+
+    // collect variables that actually appear in the rules
+    VarSet vars;
+    for (TransIdx rule : its.getAllTransitions()) {
+        VarSet rVars = its.getRule(rule).vars();
+        vars.insert(rVars.begin(), rVars.end());
+    }
+    for (const Var &var : vars) {
+        s << " " << var;
+    }
+
+    s << ")" << endl << "(RULES" << endl;
+
+    for (LocationIdx n : its.getLocations()) {
+        // figure out which variables appear on the lhs of the given location
+        VarSet relevantVars;
+        for (auto x: its.getVars()) {
+            if (!its.isTempVar(x)) {
+                relevantVars.insert(x);
+            }
+        }
+
+        //write transition in KoAT format (note that relevantVars is an ordered set)
+        for (TransIdx trans : its.getTransitionsFrom(n)) {
+            const Rule &rule = its.getRule(trans);
+            if (!rule.isSimpleLoop() || rule.getGuard()->size() < 30) continue;
+            //lhs
+            printNode(n);
+            bool first = true;
+            for (const Var &var : relevantVars) {
+                s << ((first) ? "(" : ",");
+                s << var;
+                first = false;
+            }
+
+            //cost
+            s << ") -{" << rule.getCost().expand() << "," << rule.getCost().expand() << "}> ";
+
+            //rhs updates
+            if (rule.rhsCount() > 1) {
+                s << "Com_" << rule.rhsCount() << "(";
+            }
+
+            for (auto rhs = rule.rhsBegin(); rhs != rule.rhsEnd(); ++rhs) {
+                if (rhs != rule.rhsBegin()) s << ",";
+                printNode(rhs->getLoc());
+
+                first = true;
+                for (const Var &var : relevantVars) {
+                    s << ((first) ? "(" : ",");
+                    auto it = rhs->getUpdate().find(var);
+                    if (it != rhs->getUpdate().end()) {
+                        s << it->second.expand();
+                    } else {
+                        s << var;
+                    }
+                    first = false;
+                }
+            }
+
+            if (rule.rhsCount() > 1) {
+                s << ")";
+            }
+
+            //guard
+            s << ") :|: ";
+            assert(rule.getGuard()->isConjunction());
+            first = true;
+            for (auto lit: rule.getGuard()->lits()) {
+                if (first) first = false;
+                else s << " && ";
+                s << lit;
+            }
+            s << endl;
+        }
+    }
+    s << ")" << endl;
+}

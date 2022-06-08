@@ -107,7 +107,7 @@ namespace t2parser {
             Expr rhs = parseExpression(str.substr(pos + 2, str.size() - 1));
             return lhs > rhs;
         } else {
-            assert(false);
+            throw std::invalid_argument("");
         }
     }
 

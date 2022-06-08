@@ -119,12 +119,45 @@ namespace Config {
     }
 
     namespace Analysis {
+
+        std::vector<Mode> modes { Complexity, RankingFunction, NonTermination, Acceleration, RecurrentSet, Smt2Export, CIntExport };
+
         // Whether to enable pruning to reduce the number of rules.
         // Pruning works by greedily keeping rules with a high complexity.
         // To be more accurate, this involves the asymptotic check (and can thus be expensive).
         bool Pruning = true;
 
-        bool NonTermMode = false;
+        Mode mode = Complexity;
+
+        std::string modeName(const Mode mode) {
+            switch (mode) {
+            case Complexity: return "complexity";
+                break;
+            case NonTermination: return "non_termination";
+                break;
+            case Acceleration: return "acceleration";
+                break;
+            case RecurrentSet: return "recurrent_set";
+                break;
+            case RankingFunction: return "ranking_function";
+                break;
+            case Smt2Export: return "smt2export";
+                break;
+            case CIntExport: return "c_int_export";
+                break;
+            default:
+                throw std::invalid_argument("unknown mode");
+            }
+        }
+
+        bool nonTermination() {
+            return mode == NonTermination;
+        }
+
+        bool complexity() {
+            return mode == Complexity;
+        }
+
     }
 
 }

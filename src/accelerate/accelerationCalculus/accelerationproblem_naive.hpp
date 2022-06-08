@@ -1,5 +1,5 @@
-#ifndef ACCELERATION_PROBLEM
-#define ACCELERATION_PROBLEM
+#ifndef ACCELERATION_PROBLEM_NAIVE
+#define ACCELERATION_PROBLEM_NAIVE
 
 #include "../../its/types.hpp"
 #include "../../its/rule.hpp"
@@ -12,17 +12,9 @@ class AccelerationProblem {
 
 private:
 
-    struct Entry {
-        RelSet dependencies;
-        BoolExpr formula;
-        bool nonterm;
-    };
-
-    using Res = RelMap<std::vector<Entry>>;
-
-    Res res;
-    option<RelMap<Entry>> solution;
+    BoolExpr res;
     RelSet todo;
+    BoolExpr done = True;
     Subs up;
     option<Subs> closed;
     Expr cost;
@@ -33,7 +25,6 @@ private:
     Proof proof;
     std::unique_ptr<Smt> solver;
     ITSProblem &its;
-    bool isConjunction;
 
     AccelerationProblem(
             const BoolExpr guard,
@@ -50,20 +41,12 @@ private:
     bool eventualWeakDecrease(const Rel &rel);
     bool eventualWeakIncrease(const Rel &rel);
     bool fixpoint(const Rel &rel);
-    RelSet findConsistentSubset(const BoolExpr e) const;
-    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 
 public:
 
     struct Result {
         BoolExpr newGuard;
         bool witnessesNonterm;
-
-        Result(const BoolExpr &newGuard, bool witnessesNonterm) {
-            this->newGuard = newGuard;
-            this->witnessesNonterm = witnessesNonterm;
-        }
-
     };
 
     static option<AccelerationProblem> init(const LinearRule &r, ITSProblem &its);
@@ -75,10 +58,7 @@ public:
     option<Subs> getClosedForm() const;
     Var getIterationCounter() const;
     unsigned int getValidityBound() const;
-
-private:
-
-    option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly = false, RelSet seen = {});
+    bool nonterm = true;
 
 };
 

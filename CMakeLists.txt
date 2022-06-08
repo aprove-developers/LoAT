@@ -34,6 +34,10 @@ message(STATUS "Compiler cxx release flags:" ${CMAKE_CXX_FLAGS_RELEASE})
 message(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
 message(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})
 
+
+# generate version.cc
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp" @ONLY)
+
 add_executable(${EXECUTABLE}
         src/accelerate/meter/metering.cpp
         src/accelerate/meter/metering.hpp
@@ -56,6 +60,8 @@ add_executable(${EXECUTABLE}
         src/accelerate/iterationCounterElimination/vareliminator.hpp
         src/accelerate/accelerationCalculus/accelerationproblem.cpp
         src/accelerate/accelerationCalculus/accelerationproblem.hpp
+        src/accelerate/accelerationCalculus/rankingfunctionproblem.cpp
+        src/accelerate/accelerationCalculus/rankingfunctionproblem.hpp
         src/analysis/analysis.cpp
         src/analysis/analysis.hpp
         src/analysis/chain.cpp
@@ -66,6 +72,10 @@ add_executable(${EXECUTABLE}
         src/analysis/preprocess.hpp
         src/analysis/prune.cpp
         src/analysis/prune.hpp
+        src/analysis/rankingfunctionfinder.cpp
+        src/analysis/rankingfunctionfinder.hpp
+        src/analysis/recurrentsetfinder.cpp
+        src/analysis/recurrentsetfinder.hpp
         src/asymptotic/asymptoticbound.cpp
         src/asymptotic/asymptoticbound.hpp
         src/asymptotic/inftyexpression.cpp
@@ -86,6 +96,8 @@ add_executable(${EXECUTABLE}
         src/expr/guardtoolbox.hpp
         src/expr/boolexpr.cpp
         src/expr/boolexpr.hpp
+        src/its/cintegerexport.cpp
+        src/its/cintegerexport.hpp
         src/its/koatParser/itsparser.cpp
         src/its/koatParser/itsparser.hpp
         src/its/koatParser/term.cpp
@@ -94,6 +106,8 @@ add_executable(${EXECUTABLE}
         src/its/koatParser/termparser.hpp
         src/its/export.cpp
         src/its/export.hpp
+        src/its/smt2export.cpp
+        src/its/smt2export.hpp
         src/its/hypergraph.hpp
         src/its/itsproblem.cpp
         src/its/itsproblem.hpp
@@ -125,8 +139,6 @@ add_executable(${EXECUTABLE}
         src/its/smt2Parser/sexpresso/sexpresso.hpp
         src/its/smt2Parser/parser.cpp
         src/its/smt2Parser/parser.hpp
-        src/nonterm/nonterm.cpp
-        src/nonterm/nonterm.hpp
         src/its/t2Parser/t2parser.cpp
         src/its/t2Parser/t2parser.hpp
         src/smt/smt.hpp
@@ -148,7 +160,9 @@ add_executable(${EXECUTABLE}
         src/smt/model.hpp
         src/smt/combined_solver.hpp
         src/merging/merger.cpp
-        src/merging/merger.hpp)
+        src/merging/merger.hpp
+        src/version.cpp
+        src/version.hpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)

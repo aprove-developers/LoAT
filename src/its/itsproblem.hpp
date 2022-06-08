@@ -24,7 +24,6 @@
 #include "variablemanager.hpp"
 #include "hypergraph.hpp"
 
-#include <mutex>
 #include <unordered_map>
 
 
@@ -124,7 +123,6 @@ protected:
     // only for output, remembers the original location names
     std::map<LocationIdx, std::string> locationNames;
 
-    static std::recursive_mutex mutex;
 };
 
 

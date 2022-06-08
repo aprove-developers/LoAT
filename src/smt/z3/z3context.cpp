@@ -195,7 +195,7 @@ Rel::RelOp Z3Context::relOp(const z3::expr &e) const {
     case Z3_OP_GE: return Rel::RelOp::geq;
     case Z3_OP_LT: return Rel::RelOp::lt;
     case Z3_OP_LE: return Rel::RelOp::leq;
-    default: assert(false && "unknown relation");
+    default: throw std::invalid_argument("unknown relation");
     }
 }
 

@@ -24,6 +24,11 @@
 #include "config.hpp"
 #include "util/timeout.hpp"
 #include "util/proof.hpp"
+#include "analysis/rankingfunctionfinder.hpp"
+#include "analysis/recurrentsetfinder.hpp"
+#include "its/smt2export.hpp"
+#include "its/cintegerexport.hpp"
+#include "version.hpp"
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -40,11 +45,9 @@ void printHelp(char *arg0) {
     cout << "Options:" << endl;
     cout << "  --timeout <sec>                                  Timeout (in seconds), minimum: 10" << endl;
     cout << "  --proof-level <n>                                Detail level for proof output (0-" << Proof::maxProofLevel << ", default " << proofLevel << ")" << endl;
-    cout << endl;
     cout << "  --plain                                          Disable colored output" << endl;
-    cout << endl;
-    cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   strategy for limit problems" << endl;
-    cout << "  --nonterm                                        Just try to prove non-termination" << endl;
+    cout << "  --limit-strategy <smt|calculus|smtAndCalculus>   Strategy for limit problems" << endl;
+    cout << "  --mode <complexity|non_termination>              Analysis mode" << endl;
 }
 
 
@@ -83,8 +86,21 @@ void parseFlags(int argc, char *argv[]) {
             if (!found) {
                 cerr << "Unknown strategy " << strategy << " for limit problems, defaulting to " << Config::Limit::PolyStrategy->name() << endl;
             }
-        } else if (strcmp("--nonterm",argv[arg]) == 0) {
-            Config::Analysis::NonTermMode = true;
+        } else if (strcmp("--mode",argv[arg]) == 0) {
+            bool found = false;
+            std::string str = getNext();
+            for (const Config::Analysis::Mode mode: Config::Analysis::modes) {
+                if (boost::iequals(str, Config::Analysis::modeName(mode))) {
+                    Config::Analysis::mode = mode;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                cerr << "Unknown mode " << str << ", defaulting to " << Config::Analysis::modeName(Config::Analysis::mode) << endl;
+            }
+        } else if (strcmp("--version", argv[arg]) == 0) {
+            cout << "Build SHA: " << Version::GIT_SHA << (Version::GIT_DIRTY == "1" ? " (dirty)" : "") << endl;
         } else {
             if (!filename.empty()) {
                 cout << "Error: additional argument " << argv[arg] << " (already got filename: " << filename << ")" << endl;
@@ -139,6 +155,27 @@ int main(int argc, char *argv[]) {
 
     // Start the analysis of the parsed ITS problem.
     // Skip ITS problems with nonlinear (i.e., recursive) rules.
-    Analysis::analyze(its);
+    switch (Config::Analysis::mode) {
+    case Config::Analysis::NonTermination:
+    case Config::Analysis::Complexity:
+        Analysis::analyze(its);
+        break;
+    case Config::Analysis::RecurrentSet:
+        RecurrentSetFinder::run(its);
+        break;
+    case Config::Analysis::Smt2Export:
+        smt2Export::doExport(its);
+        break;
+    case Config::Analysis::RankingFunction:
+        RankingFunctionFinder::run(its);
+        break;
+    case Config::Analysis::CIntExport:
+        c_integer_export::doExport(its);
+        break;
+    default:
+        throw std::invalid_argument("unsupported mode");
+    }
+
+
     return 0;
 }

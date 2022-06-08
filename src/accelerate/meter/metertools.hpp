@@ -116,6 +116,6 @@ namespace MeteringToolbox {
      */
     std::stack<Subs> findInstantiationsForTempVars(const VarMan &varMan, const Guard &guard);
 
-};
+}
 
 #endif // METERTOOLS_H

@@ -5,6 +5,7 @@
 #include "../expr/expression.hpp"
 #include "../expr/boolexpr.hpp"
 
+#include <mutex>
 
 // Abbreviation since the VariableManager is passed around quite a bit
 class VariableManager;
@@ -49,6 +50,8 @@ public:
     Expr::Type getType(const Var &x) const;
 
     BoolExpr freshBoolVar();
+
+    static std::recursive_mutex mutex;
 
 private:
     // Adds a variable with the given name to all relevant maps, returns the new index

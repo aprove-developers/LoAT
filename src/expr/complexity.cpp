@@ -92,7 +92,7 @@ std::string Complexity::toString() const {
         case CpxUnbounded: return "Unbounded";
         case CpxNonterm: return "Nonterm";
     }
-    assert(false && "unreachable");
+    throw std::invalid_argument("unreachable");
 }
 
 std::string Complexity::toWstString() const {

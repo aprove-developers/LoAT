@@ -244,7 +244,7 @@ const BoolExpr BoolJunction::negation() const {
     case ConcatOr: return buildAnd(newChildren);
     case ConcatAnd: return buildOr(newChildren);
     }
-    assert(false && "unknown junction");
+    throw std::invalid_argument("unknown junction");
 }
 
 bool BoolJunction::isLinear() const {

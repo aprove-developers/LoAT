@@ -41,6 +41,8 @@ namespace ITSExport {
      */
     void printForProof(const ITSProblem &its, std::ostream &s);
 
+    void printKoAT(const ITSProblem &its, std::ostream &s);
+
 }
 
 

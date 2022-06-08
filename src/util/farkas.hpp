@@ -93,6 +93,6 @@ namespace FarkasLemma {
             const VarSet &params,
             VariableManager &varMan);
 
-};
+}
 
 #endif // FARKAS_H
