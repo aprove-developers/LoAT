@@ -234,6 +234,8 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
                 if (it != up.end()) {
                     const auto newVars = it->second.vars();
                     varsTwoSteps.insert(newVars.begin(), newVars.end());
+                } else {
+                    varsTwoSteps.insert(var);
                 }
             }
             if (varsTwoSteps.size() < varsOneStep.size() && std::includes(varsOneStep.begin(), varsOneStep.end(), varsTwoSteps.begin(), varsTwoSteps.end())) {
