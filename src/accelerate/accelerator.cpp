@@ -33,6 +33,7 @@
 #include <queue>
 #include "../asymptotic/asymptoticbound.hpp"
 #include <stdexcept>
+#include <numeric>
 #include "../smt/z3/z3.hpp"
 
 
@@ -170,21 +171,84 @@ void Accelerator::removeOldLoops(const vector<TransIdx> &loops) {
 }
 
 const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
+    bool chained = false;
     LinearRule res = rule;
+    // chain if there are updates like x = -x + p
     for (const auto &p: rule.getUpdate()) {
-        const Var &var = p.first;
-        const Expr &up = p.second.expand();
-        const VarSet &upVars = up.vars();
+        const Var var = p.first;
+        const Expr up = p.second.expand();
+        const VarSet upVars = up.vars();
         if (upVars.find(var) != upVars.end()) {
             if (up.isPoly() && up.degree(var) == 1) {
-                const Expr &coeff = up.coeff(var);
+                const Expr coeff = up.coeff(var);
                 if (coeff.isRationalConstant() && coeff.toNum().is_negative()) {
-                    return Chaining::chainRules(its, res, res, false).get();
+                    res = Chaining::chainRules(its, res, res, false).get();
+                    chained = true;
+                    break;
                 }
             }
         }
     }
-    return {};
+    // chain if there are updates like x = y; y = x
+    VarMap<unsigned> cycleLength;
+    auto up = res.getUpdate();
+    for (const auto &p: up) {
+        VarSet vars = p.second.vars();
+        unsigned oldSize = 0;
+        unsigned count = 0;
+        while (oldSize != vars.size() && vars.find(p.first) == vars.end()) {
+            oldSize = vars.size();
+            count++;
+            for (const auto& var: vars) {
+                const auto it = up.find(var);
+                if (it != up.end()) {
+                    const auto newVars = it->second.vars();
+                    vars.insert(newVars.begin(), newVars.end());
+                }
+            }
+        }
+        if (vars.find(p.first) != vars.end() && count > 0) {
+            cycleLength[p.first] = count;
+        }
+    }
+    if (!cycleLength.empty()) {
+        chained = true;
+        unsigned lcm = 1;
+        for (const auto e: cycleLength) {
+            lcm = std::lcm(lcm, e.second);
+        }
+        for (unsigned i = 0; i < lcm; ++i) {
+            res = Chaining::chainRules(its, res, res, false).get();
+        }
+    }
+    // chain if it eliminates variables from an update
+    bool changed;
+    do {
+        changed = false;
+        up = res.getUpdate();
+        for (const auto &p: up) {
+            VarSet varsOneStep = p.second.vars();
+            VarSet varsTwoSteps;
+            for (const auto &var: varsOneStep) {
+                const auto it = up.find(var);
+                if (it != up.end()) {
+                    const auto newVars = it->second.vars();
+                    varsTwoSteps.insert(newVars.begin(), newVars.end());
+                }
+            }
+            if (varsTwoSteps.size() < varsOneStep.size() && std::includes(varsOneStep.begin(), varsOneStep.end(), varsTwoSteps.begin(), varsTwoSteps.end())) {
+                res = Chaining::chainRules(its, res, res, false).get();
+                chained = true;
+                changed = true;
+                break;
+            }
+        }
+    } while (changed);
+    if (chained) {
+        return res;
+    } else {
+        return {};
+    }
 }
 
 unsigned int Accelerator::numNotInUpdate(const Subs &up) const {
