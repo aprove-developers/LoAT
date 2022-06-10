@@ -25,6 +25,14 @@
 #include "../../config.hpp"
 #include "../../expr/rel.hpp"
 
+#include <fstream>
+#include <string>
+#include "antlr4-runtime.h"
+#include "KoatLexer.h"
+#include "KoatParser.h"
+#include "KoatBaseVisitor.h"
+
+using namespace antlr4;
 
 using namespace parser;
 
@@ -77,103 +85,115 @@ std::string ITSParser::escapeVariableName(const std::string &name) {
     return escapedName;
 }
 
+void ITSParser::parseFile(ifstream &file) {
+    string line;
+    ANTLRInputStream input(file);
+    KoatLexer lexer(&input);
+    CommonTokenStream tokens(&lexer);
+    KoatParser parser(&tokens);
+    parser.setBuildParseTree(true);
+    KoatBaseVisitor vis;
+    auto ctx = parser.main();
+    itsProblem = vis.visit(ctx);
+}
+
 /**
  * Initial parsing function, parses the given file into the intermediate representation (ParsedRule)
  */
-void ITSParser::parseFile(ifstream &file) {
-    bool has_vars, has_goal, has_start;
-    has_vars = has_goal = has_start = false;
+//void ITSParser::parseFile(ifstream &file) {
+//    bool has_vars, has_goal, has_start;
+//    has_vars = has_goal = has_start = false;
 
-    bool in_rules = false;
+//    bool in_rules = false;
 
-    string line;
-    while (getline(file, line)) {
-        trim(line);
-        if (line.length() == 0 || line[0] == '#') continue; // skip empty/comments
+//    string line;
+//    while (getline(file, line)) {
+//        trim(line);
+//        if (line.length() == 0 || line[0] == '#') continue; // skip empty/comments
 
-        if (in_rules) {
-            // parseRule requires the termParser to be initialized
-            assert(termParser);
+//        if (in_rules) {
+//            // parseRule requires the termParser to be initialized
+//            assert(termParser);
 
-            if (line == ")")
-                in_rules = false;
-            else {
-                ParsedRule rule = parseRule(line);
-                parsedRules.push_back(rule);
-            }
+//            if (line == ")")
+//                in_rules = false;
+//            else {
+//                ParsedRule rule = parseRule(line);
+//                parsedRules.push_back(rule);
+//            }
 
-        } else {
-            if (line[0] != '(') throw FileError("Malformed line: "+line);
+//        } else {
+//            if (line[0] != '(') throw FileError("Malformed line: "+line);
 
-            if (line == "(RULES") {
-                if (!has_goal || !has_vars || !has_start) {
-                    throw FileError("Missing declarations (GOAL/STARTTERM/VAR) before RULES-block");
-                }
+//            if (line == "(RULES") {
+//                if (!has_goal || !has_vars || !has_start) {
+//                    throw FileError("Missing declarations (GOAL/STARTTERM/VAR) before RULES-block");
+//                }
 
-                // At this point, we know all variables and can thus initialize the term parser
-                termParser = std::unique_ptr<TermParser>(new TermParser(knownVariables));
-                in_rules = true;
+//                // At this point, we know all variables and can thus initialize the term parser
+//                termParser = std::unique_ptr<TermParser>(new TermParser(knownVariables));
+//                in_rules = true;
 
-            } else if (line.back() != ')') {
-                throw FileError("Malformed line (missing closing paren): "+line);
+//            } else if (line.back() != ')') {
+//                throw FileError("Malformed line (missing closing paren): "+line);
 
-            } else if (line == "(GOAL COMPLEXITY)") {
-                has_goal = true;
+//            } else if (line == "(GOAL COMPLEXITY)") {
+//                has_goal = true;
 
-            } else if (line.substr(1,9) == "STARTTERM") {
-                if (has_start) throw FileError("Multiple STARTTERM declarations");
+//            } else if (line.substr(1,9) == "STARTTERM") {
+//                if (has_start) throw FileError("Multiple STARTTERM declarations");
 
-                if (line.find("CONSTRUCTOR-BASED") != string::npos) {
-                    // Support invalid format for benchmark, assume first rule defines start symbol.
-                    // Note that ITSProblem's initialLocation defaults to 0. Since we process the
-                    // first rule's lhs first, 0 will be mapped to the first rule's lhs location.
-                    initialLocation.clear();
+//                if (line.find("CONSTRUCTOR-BASED") != string::npos) {
+//                    // Support invalid format for benchmark, assume first rule defines start symbol.
+//                    // Note that ITSProblem's initialLocation defaults to 0. Since we process the
+//                    // first rule's lhs first, 0 will be mapped to the first rule's lhs location.
+//                    initialLocation.clear();
 
-                } else {
-                    string keyword = "FUNCTIONSYMBOLS ";
-                    auto pos = line.find(keyword);
-                    if (pos == string::npos) throw FileError("Invalid start term declaration: "+line);
-                    pos += keyword.length();
+//                } else {
+//                    string keyword = "FUNCTIONSYMBOLS ";
+//                    auto pos = line.find(keyword);
+//                    if (pos == string::npos) throw FileError("Invalid start term declaration: "+line);
+//                    pos += keyword.length();
 
-                    auto endpos = line.find(')',pos);
-                    if (endpos == string::npos) throw FileError("Missing ) in term declaration: "+line);
-                    initialLocation = line.substr(pos,endpos-pos);
-                }
-                has_start = true;
-            }
+//                    auto endpos = line.find(')',pos);
+//                    if (endpos == string::npos) throw FileError("Missing ) in term declaration: "+line);
+//                    initialLocation = line.substr(pos,endpos-pos);
+//                }
+//                has_start = true;
+//            }
 
-            else if (line.substr(1,3) == "VAR") {
-                if (has_vars) throw FileError("Multiple VAR declarations");
+//            else if (line.substr(1,3) == "VAR") {
+//                if (has_vars) throw FileError("Multiple VAR declarations");
 
-                stringstream ss(line.substr(4,line.length()-1-4));
-                string varname;
-                vector<string> varnames;
+//                stringstream ss(line.substr(4,line.length()-1-4));
+//                string varname;
+//                vector<string> varnames;
 
-                while (ss >> varname) {
-                    varnames.push_back(varname);
-                }
+//                while (ss >> varname) {
+//                    varnames.push_back(varname);
+//                }
 
-                // sort the variable names to make sure that the result of the analysis does not depend
-                // on the order in which the variables were declared (which happened in the past)
-                std::sort(varnames.begin(), varnames.end());
-                for (string varname: varnames) {
-                    Var var = itsProblem.addFreshVariable(escapeVariableName(varname));
-                    knownVariables.emplace(varname, var);
-                }
+//                // sort the variable names to make sure that the result of the analysis does not depend
+//                // on the order in which the variables were declared (which happened in the past)
+//                std::sort(varnames.begin(), varnames.end());
+//                for (string varname: varnames) {
+//                    Var var = itsProblem.addFreshVariable(escapeVariableName(varname));
+//                    knownVariables.emplace(varname, var);
+//                }
 
-                has_vars = true;
-            }
+//                has_vars = true;
+//            }
 
-            else {
-                throw FileError("Unexpected line: "+line);
-            }
-        }
-    }
+//            else {
+//                throw FileError("Unexpected line: "+line);
+//            }
+//        }
+//    }
 
-    // Ensure we have at least some rules
-    if (parsedRules.empty()) throw FileError("No rules defined");
+//    // Ensure we have at least some rules
+//    if (parsedRules.empty()) throw FileError("No rules defined");
 
-}
+//}
 
 
 

@@ -29,6 +29,8 @@ public:
     // Useful to iterate over all variables (for printing/debugging)
     VarSet getVars() const;
 
+    option<Var> getVar(std::string name) const;
+
     /**
      * Adds a new fresh variable based on the given name
      * (the given name is used if it is still available, otherwise it is modified)

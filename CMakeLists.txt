@@ -162,7 +162,17 @@ add_executable(${EXECUTABLE}
         src/merging/merger.cpp
         src/merging/merger.hpp
         src/version.cpp
-        src/version.hpp)
+        src/version.hpp
+        src/its/koatParser/KoatBaseListener.cpp
+        src/its/koatParser/KoatBaseListener.h
+        src/its/koatParser/KoatBaseVisitor.cpp
+        src/its/koatParser/KoatBaseVisitor.h
+        src/its/koatParser/KoatListener.cpp
+        src/its/koatParser/KoatListener.h
+        src/its/koatParser/KoatLexer.cpp
+        src/its/koatParser/KoatLexer.h
+        src/its/koatParser/KoatParser.cpp
+        src/its/koatParser/KoatParser.h)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
@@ -185,6 +195,8 @@ find_library(POLY poly)
 message(STATUS "poly: ${POLY}")
 find_library(CUDD cudd)
 message(STATUS "cudd: ${CUDD}")
+find_library(ANTLR4 antlr4-runtime)
+message(STATUS "antlr4: ${ANTLR4}")
 
 if (NOT YICES)
     message(STATUS "Yices not found.")
@@ -199,7 +211,7 @@ endif()
 if (NOT Z3)
     message(STATUS "Z3 not found.")
     return()
-endif()
+endif() 
 
 if (NOT ${STATIC})
   find_library(PTHREAD pthread)
@@ -207,5 +219,7 @@ if (NOT ${STATIC})
   target_link_libraries(${EXECUTABLE} ${PTHREAD})
 endif()
 
-target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${LINKER_OPTIONS})
+target_include_directories(${EXECUTABLE} PRIVATE /usr/include/antlr4-runtime)
+
+target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${ANTLR4} ${LINKER_OPTIONS})
 

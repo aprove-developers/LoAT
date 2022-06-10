@@ -214,7 +214,7 @@ const option<LinearRule> Accelerator::chain(const LinearRule &rule) const {
     if (!cycleLength.empty()) {
         chained = true;
         unsigned lcm = 1;
-        for (const auto e: cycleLength) {
+        for (const auto &e: cycleLength) {
             lcm = std::lcm(lcm, e.second);
         }
         for (unsigned i = 0; i < lcm; ++i) {
