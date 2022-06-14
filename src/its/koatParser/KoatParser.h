@@ -207,9 +207,9 @@ public:
     virtual size_t getRuleIndex() const override;
     FsContext *fs();
     antlr4::tree::TerminalNode *LPAR();
+    antlr4::tree::TerminalNode *RPAR();
     std::vector<VarContext *> var();
     VarContext* var(size_t i);
-    antlr4::tree::TerminalNode *RPAR();
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 
@@ -228,9 +228,9 @@ public:
     virtual size_t getRuleIndex() const override;
     FsContext *fs();
     antlr4::tree::TerminalNode *LPAR();
+    antlr4::tree::TerminalNode *RPAR();
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
-    antlr4::tree::TerminalNode *RPAR();
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 
