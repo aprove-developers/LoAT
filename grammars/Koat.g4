@@ -30,7 +30,7 @@ binop   :       EXP | TIMES | PLUS | MINUS;
 formula :       lit | formula boolop formula | LPAR formula RPAR;
 lit     :       expr relop expr;
 boolop  :       AND | OR;
-relop   :       LT | LEQ | EQ | GT | GEQ;
+relop   :       LT | LEQ | EQ | GT | GEQ | NEQ;
 
 // lexer stuff
 GOAL    :       'GOAL';
@@ -57,6 +57,7 @@ OR      :       '\\/' | '||';
 LT	:	'<';
 LEQ     :       '<=';
 EQ      :       '==';
+NEQ     :       '!=';
 GEQ     :       '>=';
 GT      :       '>' ;
 CONDSEP :       ':|:';

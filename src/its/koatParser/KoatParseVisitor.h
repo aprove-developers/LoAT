@@ -10,7 +10,7 @@
  * This class provides an empty implementation of KoatVisitor, which can be
  * extended to create a visitor which only needs to handle a subset of the available methods.
  */
-class  KoatBaseVisitor : public KoatVisitor {
+class  KoatParseVisitor : public KoatVisitor {
 
     ITSProblem its;
     std::map<std::string, LocationIdx> locations;
@@ -93,9 +93,12 @@ public:
 
     virtual antlrcpp::Any visitLhs(KoatParser::LhsContext *ctx) override {
         static bool initVars = true;
+        static std::vector<std::string> programVars;
         if (initVars) {
             for (const auto& c: ctx->var()) {
-                its.addFreshVariable(c->getText());
+                std::string name = c->getText();
+                programVars.push_back(name);
+                its.addFreshVariable(name);
             }
             for (const auto& name: vars) {
                 if (!its.getVar(name)) {
@@ -103,6 +106,12 @@ public:
                 }
             }
             initVars = false;
+        } else {
+            unsigned sz = programVars.size();
+            assert(sz == ctx->var().size());
+            for (unsigned i = 0; i < sz; ++i) {
+                assert(programVars[i] == ctx->var(i)->getText());
+            }
         }
         const auto vars = ctx->var();
         unsigned sz = vars.size();
@@ -166,7 +175,7 @@ public:
             case Plus: return arg1 + arg2;
             case Minus: return arg1 - arg2;
             case Times: return arg1 * arg2;
-            case Exp: assert(false); // TODO
+            case Exp: return arg1 ^ arg2;
             }
         }
         assert(false);
@@ -229,9 +238,11 @@ public:
             return Rel::eq;
         } else if (ctx->GEQ()) {
             return Rel::geq;
-        } else {
-            assert(ctx->GT());
+        } else if (ctx->GT()) {
             return Rel::gt;
+        } else {
+            assert(ctx->NEQ());
+            return Rel::neq;
         }
     }
 

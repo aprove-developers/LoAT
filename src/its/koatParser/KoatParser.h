@@ -15,8 +15,8 @@ public:
     GOAL = 1, CPX = 2, TERM = 3, START = 4, FS = 5, VAR = 6, RULES = 7, 
     PLUS = 8, MINUS = 9, TIMES = 10, EXP = 11, LPAR = 12, RPAR = 13, RBRACK = 14, 
     LBRACK = 15, LCURL = 16, RCURL = 17, TO = 18, COMMA = 19, AND = 20, 
-    OR = 21, LT = 22, LEQ = 23, EQ = 24, GEQ = 25, GT = 26, CONDSEP = 27, 
-    ID = 28, INT = 29, WS = 30, COMMENT = 31
+    OR = 21, LT = 22, LEQ = 23, EQ = 24, NEQ = 25, GEQ = 26, GT = 27, CONDSEP = 28, 
+    ID = 29, INT = 30, WS = 31, COMMENT = 32
   };
 
   enum {
@@ -415,6 +415,7 @@ public:
     antlr4::tree::TerminalNode *EQ();
     antlr4::tree::TerminalNode *GT();
     antlr4::tree::TerminalNode *GEQ();
+    antlr4::tree::TerminalNode *NEQ();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

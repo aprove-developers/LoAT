@@ -30,7 +30,7 @@
 #include "antlr4-runtime.h"
 #include "KoatLexer.h"
 #include "KoatParser.h"
-#include "KoatBaseVisitor.h"
+#include "KoatParseVisitor.h"
 
 using namespace antlr4;
 
@@ -92,9 +92,13 @@ void ITSParser::parseFile(ifstream &file) {
     CommonTokenStream tokens(&lexer);
     KoatParser parser(&tokens);
     parser.setBuildParseTree(true);
-    KoatBaseVisitor vis;
+    KoatParseVisitor vis;
     auto ctx = parser.main();
-    itsProblem = vis.visit(ctx);
+    if (parser.getNumberOfSyntaxErrors() > 0) {
+        throw FileError("parsing failed");
+    } else {
+        itsProblem = vis.visit(ctx);
+    }
 }
 
 /**
