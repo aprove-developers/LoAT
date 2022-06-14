@@ -95,7 +95,8 @@ public:
     }
 
     virtual antlrcpp::Any visitLhs(KoatParser::LhsContext *ctx) override {
-        if (its.getVars().empty()) {
+        static bool initVars = true;
+        if (initVars) {
             for (const auto& c: ctx->var()) {
                 its.addFreshVariable(c->getText());
             }
@@ -104,6 +105,7 @@ public:
                     its.addFreshTemporaryVariable(name);
                 }
             }
+            initVars = false;
         }
         const auto vars = ctx->var();
         unsigned sz = vars.size();
@@ -137,7 +139,7 @@ public:
     }
 
     virtual antlrcpp::Any visitLb(KoatParser::LbContext *ctx) override {
-        return ctx->expr();
+        return visit(ctx->expr());
     }
 
     virtual antlrcpp::Any visitUb(KoatParser::UbContext *ctx) override {

@@ -15,8 +15,8 @@ transs  :       LPAR RULES trans* RPAR;
 
 // transitions
 trans   :       lhs to rhs cond?;
-lhs     :       fs LPAR var (COMMA var)* RPAR;
-rhs     :       fs LPAR expr (COMMA expr)* RPAR;
+lhs     :       fs LPAR (var (COMMA var)*)? RPAR;
+rhs     :       fs LPAR (expr (COMMA expr)*)? RPAR;
 to      :       TO | MINUS LCURL lb COMMA ub RCURL GT | MINUS LCURL lb RCURL GT;
 lb      :       expr;
 ub      :       expr;
