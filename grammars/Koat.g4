@@ -14,8 +14,9 @@ vardecl :       LPAR VAR ID+ RPAR;
 transs  :       LPAR RULES trans* RPAR;
 
 // transitions
-trans   :       lhs to rhs cond?;
+trans   :       lhs to com cond?;
 lhs     :       fs LPAR (var (COMMA var)*)? RPAR;
+com     :       COM LPAR (rhs (COMMA rhs)*)? RPAR;
 rhs     :       fs LPAR (expr (COMMA expr)*)? RPAR;
 to      :       TO | MINUS LCURL lb COMMA ub RCURL GT | MINUS LCURL lb RCURL GT;
 lb      :       expr;
@@ -33,6 +34,7 @@ boolop  :       AND | OR;
 relop   :       LT | LEQ | EQ | GT | GEQ | NEQ;
 
 // lexer stuff
+COM     :       'Com_' '0'..'9'+;
 GOAL    :       'GOAL';
 CPX     :       'COMPLEXITY';
 TERM    :       'TERMINATION';

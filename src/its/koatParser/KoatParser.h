@@ -12,18 +12,19 @@
 class  KoatParser : public antlr4::Parser {
 public:
   enum {
-    GOAL = 1, CPX = 2, TERM = 3, START = 4, FS = 5, VAR = 6, RULES = 7, 
-    PLUS = 8, MINUS = 9, TIMES = 10, EXP = 11, LPAR = 12, RPAR = 13, RBRACK = 14, 
-    LBRACK = 15, LCURL = 16, RCURL = 17, TO = 18, COMMA = 19, AND = 20, 
-    OR = 21, LT = 22, LEQ = 23, EQ = 24, NEQ = 25, GEQ = 26, GT = 27, CONDSEP = 28, 
-    ID = 29, INT = 30, WS = 31, COMMENT = 32
+    COM = 1, GOAL = 2, CPX = 3, TERM = 4, START = 5, FS = 6, VAR = 7, RULES = 8, 
+    PLUS = 9, MINUS = 10, TIMES = 11, EXP = 12, LPAR = 13, RPAR = 14, RBRACK = 15, 
+    LBRACK = 16, LCURL = 17, RCURL = 18, TO = 19, COMMA = 20, AND = 21, 
+    OR = 22, LT = 23, LEQ = 24, EQ = 25, NEQ = 26, GEQ = 27, GT = 28, CONDSEP = 29, 
+    ID = 30, INT = 31, WS = 32, COMMENT = 33
   };
 
   enum {
     RuleMain = 0, RuleFs = 1, RuleVar = 2, RuleGoal = 3, RuleStart = 4, 
-    RuleVardecl = 5, RuleTranss = 6, RuleTrans = 7, RuleLhs = 8, RuleRhs = 9, 
-    RuleTo = 10, RuleLb = 11, RuleUb = 12, RuleCond = 13, RuleExpr = 14, 
-    RuleBinop = 15, RuleFormula = 16, RuleLit = 17, RuleBoolop = 18, RuleRelop = 19
+    RuleVardecl = 5, RuleTranss = 6, RuleTrans = 7, RuleLhs = 8, RuleCom = 9, 
+    RuleRhs = 10, RuleTo = 11, RuleLb = 12, RuleUb = 13, RuleCond = 14, 
+    RuleExpr = 15, RuleBinop = 16, RuleFormula = 17, RuleLit = 18, RuleBoolop = 19, 
+    RuleRelop = 20
   };
 
   KoatParser(antlr4::TokenStream *input);
@@ -45,6 +46,7 @@ public:
   class TranssContext;
   class TransContext;
   class LhsContext;
+  class ComContext;
   class RhsContext;
   class ToContext;
   class LbContext;
@@ -189,7 +191,7 @@ public:
     virtual size_t getRuleIndex() const override;
     LhsContext *lhs();
     ToContext *to();
-    RhsContext *rhs();
+    ComContext *com();
     CondContext *cond();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -221,6 +223,27 @@ public:
   };
 
   LhsContext* lhs();
+
+  class  ComContext : public antlr4::ParserRuleContext {
+  public:
+    ComContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *COM();
+    antlr4::tree::TerminalNode *LPAR();
+    antlr4::tree::TerminalNode *RPAR();
+    std::vector<RhsContext *> rhs();
+    RhsContext* rhs(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ComContext* com();
 
   class  RhsContext : public antlr4::ParserRuleContext {
   public:

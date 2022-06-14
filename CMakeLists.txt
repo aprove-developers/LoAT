@@ -163,7 +163,6 @@ add_executable(${EXECUTABLE}
         src/merging/merger.hpp
         src/version.cpp
         src/version.hpp
-        src/its/koatParser/KoatParseVisitor.cpp
         src/its/koatParser/KoatParseVisitor.h
         src/its/koatParser/KoatListener.cpp
         src/its/koatParser/KoatListener.h

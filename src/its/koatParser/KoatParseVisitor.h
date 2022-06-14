@@ -15,6 +15,7 @@ class  KoatParseVisitor : public KoatVisitor {
     ITSProblem its;
     std::map<std::string, LocationIdx> locations;
     std::set<std::string> vars;
+    std::vector<Var> programVars;
 
     enum ArithOp {
         Plus, Minus, Times, Exp
@@ -68,37 +69,23 @@ public:
     }
 
     virtual antlrcpp::Any visitTrans(KoatParser::TransContext *ctx) override {
-        std::pair<LocationIdx, std::vector<Var>> lhs = visit(ctx->lhs());
-        LocationIdx lhsLoc = lhs.first;
-        std::vector<Var> lhsArgs = lhs.second;
+        LocationIdx lhsLoc = visit(ctx->lhs());
         Expr cost = visit(ctx->to());
-        std::pair<LocationIdx, std::vector<Expr>> rhs = visit(ctx->rhs());
-        LocationIdx rhsLoc = rhs.first;
-        std::vector<Expr> rhsArgs = rhs.second;
-        assert(lhsArgs.size() == rhsArgs.size());
-        unsigned sz = lhsArgs.size();
-        Subs up;
-        for (unsigned i = 0; i < sz; ++i) {
-            if (!rhsArgs[i].equals(lhsArgs[i])) {
-                up.put(lhsArgs[i], rhsArgs[i]);
-            }
-        }
+        std::vector<RuleRhs> rhss = visit(ctx->com());
         BoolExpr cond = True;
         if (ctx->cond()) {
             cond = visit(ctx->cond());
         }
-        its.addRule(Rule(lhsLoc, cond, cost, rhsLoc, up));
+        RuleLhs lhs(lhsLoc, cond, cost);
+        its.addRule(Rule(lhs, rhss));
         return {};
     }
 
     virtual antlrcpp::Any visitLhs(KoatParser::LhsContext *ctx) override {
         static bool initVars = true;
-        static std::vector<std::string> programVars;
         if (initVars) {
             for (const auto& c: ctx->var()) {
-                std::string name = c->getText();
-                programVars.push_back(name);
-                its.addFreshVariable(name);
+                programVars.push_back(its.addFreshVariable(c->getText()));
             }
             for (const auto& name: vars) {
                 if (!its.getVar(name)) {
@@ -110,30 +97,29 @@ public:
             unsigned sz = programVars.size();
             assert(sz == ctx->var().size());
             for (unsigned i = 0; i < sz; ++i) {
-                assert(programVars[i] == ctx->var(i)->getText());
+                assert(programVars[i].get_name() == ctx->var(i)->getText());
             }
         }
-        const auto vars = ctx->var();
-        unsigned sz = vars.size();
-        std::vector<Var> args;
-        args.resize(sz);
-        for (unsigned i = 0; i < sz; ++i) {
-            args[i] = visit(vars[i]);
+        return visit(ctx->fs());
+    }
+
+    virtual antlrcpp::Any visitCom(KoatParser::ComContext *ctx) override {
+        std::vector<RuleRhs> rhss;
+        for (const auto &rhs: ctx->rhs()) {
+            rhss.push_back(visitRhs(rhs));
         }
-        LocationIdx loc = visit(ctx->fs());
-        return std::pair<LocationIdx, std::vector<Var>>(loc, args);
+        return rhss;
     }
 
     virtual antlrcpp::Any visitRhs(KoatParser::RhsContext *ctx) override {
         const auto expr = ctx->expr();
         unsigned sz = expr.size();
-        std::vector<Expr> args;
-        args.resize(sz);
+        Subs up;
         for (unsigned i = 0; i < sz; ++i) {
-            args[i] = visit(expr[i]);
+            up.put(programVars[i], visit(expr[i]));
         }
         LocationIdx loc = visit(ctx->fs());
-        return std::pair<LocationIdx, std::vector<Expr>>(loc, args);
+        return RuleRhs(loc, up);
     }
 
     virtual antlrcpp::Any visitTo(KoatParser::ToContext *ctx) override {

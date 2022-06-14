@@ -37,6 +37,8 @@ public:
 
     virtual antlrcpp::Any visitLhs(KoatParser::LhsContext *context) = 0;
 
+    virtual antlrcpp::Any visitCom(KoatParser::ComContext *context) = 0;
+
     virtual antlrcpp::Any visitRhs(KoatParser::RhsContext *context) = 0;
 
     virtual antlrcpp::Any visitTo(KoatParser::ToContext *context) = 0;
