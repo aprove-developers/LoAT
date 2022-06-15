@@ -116,14 +116,34 @@ RUN ./configure --with-cxxflags='-march=sandybridge -O3 -DNDEBUG'
 RUN make -j
 RUN make install
 
+RUN xbps-install -y apache-maven
+
+# antlr4
+WORKDIR /src
+RUN git clone https://github.com/antlr/antlr4.git
+# WORKDIR /src/antlr4
+# RUN export MAVEN_OPTS="-Xmx1G"
+# RUN rm -rf ~/.m2/repository/org/antlr*
+# RUN mvn clean || :
+# RUN mvn -DskipTests install
+# WORKDIR /src/antlr4/runtime/Cpp/
+RUN mkdir build
+WORKDIR /src/antlr4/runtime/Cpp/build
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release
+RUN make -j
+RUN make install
+
+
 ARG SHA
 ARG DIRTY
 
 # loat
+RUN mkdir /bla
 RUN mkdir -p /home/ffrohn/repos/LoAT
 WORKDIR /home/ffrohn/repos/LoAT
 COPY CMakeLists.txt /home/ffrohn/repos/LoAT/
 COPY src /home/ffrohn/repos/LoAT/src/
+COPY cmake /home/ffrohn/repos/LoAT/cmake/
 RUN mkdir -p /home/ffrohn/repos/LoAT/build/static/release
 WORKDIR /home/ffrohn/repos/LoAT/build/static/release
 RUN cmake -DSTATIC=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DCMAKE_CXX_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DSHA=$SHA -DDIRTY=$DIRTY ../../../
