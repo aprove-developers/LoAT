@@ -27,7 +27,13 @@ antlrcpp::Any KoatParseVisitor::visitTranss(KoatParser::TranssContext *ctx) {
 }
 
 antlrcpp::Any KoatParseVisitor::visitVar(KoatParser::VarContext *ctx) {
-    return its.getVar(ctx->getText()).get();
+    std::string name = ctx->getText();
+    auto res = its.getVar(name);
+    if (res) {
+        return res.get();
+    } else {
+        return its.addFreshTemporaryVariable(name);
+    }
 }
 
 antlrcpp::Any KoatParseVisitor::visitFs(KoatParser::FsContext *ctx) {
@@ -43,7 +49,16 @@ antlrcpp::Any KoatParseVisitor::visitTrans(KoatParser::TransContext *ctx) {
         cond = visit(ctx->cond());
     }
     RuleLhs lhs(lhsLoc, cond, cost);
-    its.addRule(Rule(lhs, rhss));
+    Rule rule(lhs, rhss);
+    VarSet vars;
+    rule.collectVars(vars);
+    Subs varRenaming;
+    for (const Var &x: vars) {
+        if (its.isTempVar(x)) {
+            varRenaming.put(x, its.addFreshTemporaryVariable(x.get_name()));
+        }
+    }
+    its.addRule(rule.subs(varRenaming));
     return {};
 }
 
@@ -52,11 +67,6 @@ antlrcpp::Any KoatParseVisitor::visitLhs(KoatParser::LhsContext *ctx) {
     if (initVars) {
         for (const auto& c: ctx->var()) {
             programVars.push_back(its.addFreshVariable(c->getText()));
-        }
-        for (const auto& name: vars) {
-            if (!its.getVar(name)) {
-                its.addFreshTemporaryVariable(name);
-            }
         }
         initVars = false;
     } else {
@@ -86,7 +96,10 @@ antlrcpp::Any KoatParseVisitor::visitRhs(KoatParser::RhsContext *ctx) {
     unsigned sz = expr.size();
     Subs up;
     for (unsigned i = 0; i < sz; ++i) {
-        up.put(programVars[i], visit(expr[i]));
+        Expr rhs = visit(expr[i]);
+        if (!rhs.equals(programVars[i])) {
+            up.put(programVars[i], rhs);
+        }
     }
     LocationIdx loc = visit(ctx->fs());
     return RuleRhs(loc, up);
