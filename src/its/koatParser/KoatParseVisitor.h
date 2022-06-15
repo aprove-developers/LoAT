@@ -5,12 +5,15 @@
 #include "KoatVisitor.h"
 #include "../itsproblem.hpp"
 #include "../../expr/boolexpr.hpp"
+#include "../../util/exceptions.hpp"
 
 /**
  * This class provides an empty implementation of KoatVisitor, which can be
  * extended to create a visitor which only needs to handle a subset of the available methods.
  */
 class  KoatParseVisitor : public KoatVisitor {
+
+    EXCEPTION(ParseError, CustomException);
 
     ITSProblem its;
     std::map<std::string, LocationIdx> locations;
@@ -95,9 +98,13 @@ public:
             initVars = false;
         } else {
             unsigned sz = programVars.size();
-            assert(sz == ctx->var().size());
+            if (sz != ctx->var().size()) {
+                throw ParseError("wrong arity: " + ctx->getText());
+            }
             for (unsigned i = 0; i < sz; ++i) {
-                assert(programVars[i].get_name() == ctx->var(i)->getText());
+                if (programVars[i].get_name() != ctx->var(i)->getText()) {
+                    throw ParseError("invalid arguments: " + ctx->getText());
+                }
             }
         }
         return visit(ctx->fs());
@@ -164,7 +171,7 @@ public:
             case Exp: return arg1 ^ arg2;
             }
         }
-        assert(false);
+        throw ParseError("failed to parse expression " + ctx->getText());
     }
 
     virtual antlrcpp::Any visitBinop(KoatParser::BinopContext *ctx) override {
@@ -174,9 +181,10 @@ public:
             return Times;
         } else if (ctx->PLUS()) {
             return Plus;
-        } else {
-            assert(ctx->MINUS());
+        } else if (ctx->MINUS()) {
             return Minus;
+        } else {
+            throw ParseError("unknown binary operator: " + ctx->getText());
         }
     }
 
@@ -194,21 +202,24 @@ public:
             case ConcatOr: return arg1 | arg2;
             }
         }
-        assert(false);
+        throw ParseError("failed to parse formula " + ctx->getText());
     }
 
     virtual antlrcpp::Any visitBoolop(KoatParser::BoolopContext *ctx) override {
         if (ctx->AND()) {
             return ConcatAnd;
-        } else {
-            assert(ctx->OR());
+        } else if (ctx->OR()) {
             return ConcatOr;
+        } else {
+            throw ParseError("unknown boolean operator: " + ctx->getText());
         }
     }
 
     virtual antlrcpp::Any visitLit(KoatParser::LitContext *ctx) override {
         const auto &children = ctx->children;
-        assert(children.size() == 3);
+        if (children.size() != 3) {
+            throw ParseError("expected relation: " + ctx->getText());
+        }
         Expr arg1 = visit(ctx->expr(0));
         Rel::RelOp op = visit(children[1]);
         Expr arg2 = visit(ctx->expr(1));
@@ -226,9 +237,10 @@ public:
             return Rel::geq;
         } else if (ctx->GT()) {
             return Rel::gt;
-        } else {
-            assert(ctx->NEQ());
+        } else if (ctx->NEQ()) {
             return Rel::neq;
+        } else {
+            throw ParseError("unknown relation: " + ctx->getText());
         }
     }
 
