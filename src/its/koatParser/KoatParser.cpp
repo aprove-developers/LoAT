@@ -1986,7 +1986,7 @@ std::vector<std::string> KoatParser::_ruleNames = {
 std::vector<std::string> KoatParser::_literalNames = {
   "", "", "'GOAL'", "'COMPLEXITY'", "'TERMINATION'", "'STARTTERM'", "'FUNCTIONSYMBOLS'", 
   "'VAR'", "'RULES'", "'+'", "'-'", "'*'", "", "'('", "')'", "']'", "'['", 
-  "'{'", "'}'", "'->'", "','", "", "", "'<'", "'<='", "'=='", "'!='", "'>='", 
+  "'{'", "'}'", "'->'", "','", "", "", "'<'", "'<='", "", "'!='", "'>='", 
   "'>'", "':|:'"
 };
 
