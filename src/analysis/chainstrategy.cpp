@@ -352,10 +352,12 @@ option<Proof> Chaining::chainAcceleratedRules(ITSProblem &its, const set<TransId
                 auto optRule = Chaining::chainRules(its, incomingRule, accelRule);
                 if (optRule) {
                     // Simplify the rule (can help to eliminate temporary variables of the metering function)
+                    proof.chainingProof(incomingRule, accelRule, optRule.get(), its);
                     option<Rule> simplified = Preprocess::simplifyRule(its, optRule.get(), true);
                     Rule newRule = simplified ? simplified.get() : optRule.get();
-
-                    proof.chainingProof(incomingRule, accelRule, newRule, its);
+                    if (simplified) {
+                        proof.ruleTransformationProof(optRule.get(), "simplification", newRule, its);
+                    }
 
                     // Add the chained rule
                     replacement.push_back(newRule);
