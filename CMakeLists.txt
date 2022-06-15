@@ -164,6 +164,7 @@ add_executable(${EXECUTABLE}
         src/version.cpp
         src/version.hpp
         src/its/koatParser/KoatParseVisitor.h
+        src/its/koatParser/KoatParseVisitor.cpp
         src/its/koatParser/KoatLexer.cpp
         src/its/koatParser/KoatLexer.h
         src/its/koatParser/KoatParser.cpp
