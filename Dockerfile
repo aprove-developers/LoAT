@@ -124,7 +124,7 @@ RUN git clone https://github.com/antlr/antlr4.git
 WORKDIR /src/antlr4
 RUN git checkout 4.7.2
 WORKDIR /src/antlr4/runtime/Cpp/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=Release
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG" -DCMAKE_CXX_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG"
 RUN make -j
 RUN make install
 
