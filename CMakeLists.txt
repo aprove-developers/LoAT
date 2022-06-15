@@ -164,8 +164,6 @@ add_executable(${EXECUTABLE}
         src/version.cpp
         src/version.hpp
         src/its/koatParser/KoatParseVisitor.h
-        src/its/koatParser/KoatListener.cpp
-        src/its/koatParser/KoatListener.h
         src/its/koatParser/KoatLexer.cpp
         src/its/koatParser/KoatLexer.h
         src/its/koatParser/KoatParser.cpp
@@ -193,13 +191,27 @@ message(STATUS "poly: ${POLY}")
 find_library(CUDD cudd)
 message(STATUS "cudd: ${CUDD}")
 
-set(ANTLR4_TAG 4.7.2)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-if (${STATIC})
-    add_definitions(-DANTLR4CPP_STATIC)
+if (DEFINED ENV{ANTLR4_INCLUDE_PATH})
+    # ANTLR4 is available and we know where to find the headers
+    find_library(ANTLR4 antlr4-runtime)
+    message(STATUS "antlr4: ${ANTLR4}")
+    target_include_directories(${EXECUTABLE} PRIVATE $ENV{ANTLR4_INCLUDE_PATH})
+    target_link_libraries(${EXECUTABLE} ${ANTLR4})
+else()
+    # ANTLR4 is not available, build it
+    set(ANTLR4_TAG 4.7.2)
+    LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+    if (${STATIC})
+        add_definitions(-DANTLR4CPP_STATIC)
+    endif()
+    include(ExternalAntlr4Cpp)
+    include_directories(${ANTLR4_INCLUDE_DIRS})
+    if (${STATIC})
+        target_link_libraries(${EXECUTABLE} antlr4_static)
+    else()
+        target_link_libraries(${EXECUTABLE} antlr4_shared)
+    endif()
 endif()
-include(ExternalAntlr4Cpp)
-include_directories(${ANTLR4_INCLUDE_DIRS})
 
 if (NOT YICES)
     message(STATUS "Yices not found.")
@@ -216,12 +228,10 @@ if (NOT Z3)
     return()
 endif() 
 
-if (${STATIC})
-    target_link_libraries(${EXECUTABLE} antlr4_static)
-else()
+if (NOT ${STATIC})
     find_library(PTHREAD pthread)
     message(STATUS "pthread: ${PTHREAD}")
-    target_link_libraries(${EXECUTABLE} ${PTHREAD} antlr4_shared)
+    target_link_libraries(${EXECUTABLE} ${PTHREAD})
 endif()
 
 target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${LINKER_OPTIONS})

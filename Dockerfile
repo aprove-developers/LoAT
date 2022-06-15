@@ -121,24 +121,18 @@ RUN xbps-install -y apache-maven
 # antlr4
 WORKDIR /src
 RUN git clone https://github.com/antlr/antlr4.git
-# WORKDIR /src/antlr4
-# RUN export MAVEN_OPTS="-Xmx1G"
-# RUN rm -rf ~/.m2/repository/org/antlr*
-# RUN mvn clean || :
-# RUN mvn -DskipTests install
-# WORKDIR /src/antlr4/runtime/Cpp/
-RUN mkdir build
+WORKDIR /src/antlr4
+RUN git checkout 4.7.2
 WORKDIR /src/antlr4/runtime/Cpp/build
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release
 RUN make -j
 RUN make install
 
-
+ARG ANTLR4_INCLUDE_PATH=/src/antlr4/runtime/Cpp/runtime/src
 ARG SHA
 ARG DIRTY
 
 # loat
-RUN mkdir /bla
 RUN mkdir -p /home/ffrohn/repos/LoAT
 WORKDIR /home/ffrohn/repos/LoAT
 COPY CMakeLists.txt /home/ffrohn/repos/LoAT/
