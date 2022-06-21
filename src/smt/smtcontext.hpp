@@ -63,6 +63,7 @@ public:
     virtual bool isVar(const EXPR &e) const = 0;
     virtual bool isRationalConstant(const EXPR &e) const = 0;
     virtual bool isInt(const EXPR &e) const = 0;
+    virtual bool isITE(const EXPR &e) const = 0;
     virtual long toInt(const EXPR &e) const = 0;
     virtual long numerator(const EXPR &e) const = 0;
     virtual long denominator(const EXPR &e) const = 0;

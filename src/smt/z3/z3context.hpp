@@ -72,6 +72,7 @@ public:
     bool isVar(const z3::expr &e) const override;
     bool isRationalConstant(const z3::expr &e) const override;
     bool isInt(const z3::expr &e) const override;
+    bool isITE(const z3::expr &e) const override;
     long toInt(const z3::expr &e) const override;
     long numerator(const z3::expr &e) const override;
     long denominator(const z3::expr &e) const override;

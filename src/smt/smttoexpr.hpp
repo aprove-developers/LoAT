@@ -30,18 +30,26 @@
 template<typename EXPR> class SmtToExpr {
 public:
 
-    static BoolExpr convert(const EXPR &e, SmtContext<EXPR> &ctx) {
+    static option<BoolExpr> convert(const EXPR &e, SmtContext<EXPR> &ctx) {
         if (ctx.isTrue(e)) return True;
         if (ctx.isFalse(e)) return False;
-        if (ctx.isNot(e)) return !convert(ctx.getChildren(e)[0], ctx);
+        if (ctx.isNot(e)) {
+            option<BoolExpr> child = convert(ctx.getChildren(e)[0], ctx);
+            if (!child) return {};
+            return !child.get();
+        }
         if (ctx.isLit(e)) {
             SmtToExpr<EXPR> converter(ctx);
-            BoolExpr res = buildLit(converter.convert_relational(e));
+            option<Rel> rel = converter.convert_relational(e);
+            if (!rel) return {};
+            BoolExpr res = buildLit(rel.get());
             return res;
         }
         BoolExprSet children;
         for (const EXPR &c: ctx.getChildren(e)) {
-            children.insert(convert(c, ctx));
+            option<BoolExpr> child = convert(c, ctx);
+            if (!child) return {};
+            children.insert(child.get());
         }
         return ctx.isAnd(e) ? buildAnd(children) : buildOr(children);
     }
@@ -49,7 +57,7 @@ public:
 protected:
     SmtToExpr<EXPR>(SmtContext<EXPR> &context): context(context) {}
 
-    Expr convert_ex(const EXPR &e){
+    option<Expr> convert_ex(const EXPR &e){
         if (context.isNoOp(e)) {
             const std::vector<EXPR> children = context.getChildren(e);
             assert(children.size() == 1);
@@ -65,13 +73,15 @@ protected:
         } else if (context.isRationalConstant(e)) {
             return convert_numeric(e);
         } else if (context.isVar(e)) {
-            return convert_symbol(e);
+            return Expr(convert_symbol(e));
+        } else if (context.isITE(e)) {
+            return {};
         }
         context.printStderr(e);
         throw std::invalid_argument("unknown operator");
     }
 
-    Expr convert_add(const EXPR &e){
+    option<Expr> convert_add(const EXPR &e){
         const std::vector<EXPR> &children = context.getChildren(e);
         assert(!children.empty());
         option<Expr> res;
@@ -79,14 +89,16 @@ protected:
             if (!res) {
                 res = convert_ex(c);
             } else {
-                res = res.get() + convert_ex(c);
+                option<Expr> child = convert_ex(c);
+                if (!child) return {};
+                res = res.get() + child.get();
             }
         }
 
-        return res.get();
+        return res;
     }
 
-    Expr convert_mul(const EXPR &e) {
+    option<Expr> convert_mul(const EXPR &e) {
         const std::vector<EXPR> &children = context.getChildren(e);
         assert(!children.empty());
         option<Expr> res;
@@ -94,11 +106,13 @@ protected:
             if (!res) {
                 res = convert_ex(c);
             } else {
-                res = res.get() * convert_ex(c);
+                option<Expr> child = convert_ex(c);
+                if (!child) return {};
+                res = res.get() * child.get();
             }
         }
 
-        return res.get();
+        return res;
     }
 
     Expr convert_div(const EXPR &e) {
@@ -111,10 +125,14 @@ protected:
         return x.toNum() / y.toNum();
     }
 
-    Expr convert_power(const EXPR &e) {
+    option<Expr> convert_power(const EXPR &e) {
         const std::vector<EXPR> &children = context.getChildren(e);
         assert(children.size() == 2);
-        return convert_ex(children[0]) ^ convert_ex(children[1]);
+        option<Expr> base = convert_ex(children[0]);
+        if (!base) return {};
+        option<Expr> exp = convert_ex(children[1]);
+        if (!exp) return {};
+        return base.get() ^ exp.get();
     }
 
     Expr convert_numeric(const EXPR &num) {
@@ -133,10 +151,12 @@ protected:
         throw std::invalid_argument("unknown variable");
     }
 
-    Rel convert_relational(const EXPR &rel) {
-        Expr a = convert_ex(context.lhs(rel));
-        Expr b = convert_ex(context.rhs(rel));
-        return Rel(a, context.relOp(rel), b);
+    option<Rel> convert_relational(const EXPR &rel) {
+        option<Expr> a = convert_ex(context.lhs(rel));
+        if (!a) return {};
+        option<Expr> b = convert_ex(context.rhs(rel));
+        if (!b) return {};
+        return Rel(a.get(), context.relOp(rel), b.get());
     }
 
 private:

@@ -122,7 +122,9 @@ BoolExpr Z3::simplify(const BoolExpr expr, const VariableManager &varMan, unsign
     s.check();
     std::vector<BoolExpr> simplified;
     for (const z3::expr &e: s.assertions()) {
-        simplified.push_back(SmtToExpr<z3::expr>::convert(e, ctx));
+        option<BoolExpr> simp = SmtToExpr<z3::expr>::convert(e, ctx);
+        if (!simp) return expr;
+        simplified.push_back(simp.get());
     }
     return buildAnd(simplified);
 }
