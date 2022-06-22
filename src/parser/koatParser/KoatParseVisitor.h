@@ -3,7 +3,7 @@
 
 #include "antlr4-runtime.h"
 #include "KoatVisitor.h"
-#include "../itsproblem.hpp"
+#include "../../its/itsproblem.hpp"
 #include "../../expr/boolexpr.hpp"
 #include "../../util/exceptions.hpp"
 

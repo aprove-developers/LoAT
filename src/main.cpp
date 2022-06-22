@@ -18,9 +18,9 @@
 #include "main.hpp"
 
 #include "analysis/analysis.hpp"
-#include "its/koatParser/itsparser.hpp"
-#include "its/smt2Parser/parser.hpp"
-#include "its/t2Parser/t2parser.hpp"
+#include "parser/koatParser/itsparser.hpp"
+#include "parser/smt2Parser/parser.hpp"
+#include "parser/t2Parser/t2parser.hpp"
 #include "config.hpp"
 #include "util/timeout.hpp"
 #include "util/proof.hpp"

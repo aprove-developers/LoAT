@@ -101,12 +101,8 @@ add_executable(${EXECUTABLE}
         src/expr/boolexpr.hpp
         src/its/cintegerexport.cpp
         src/its/cintegerexport.hpp
-        src/its/koatParser/itsparser.cpp
-        src/its/koatParser/itsparser.hpp
-        src/its/koatParser/term.cpp
-        src/its/koatParser/term.hpp
-        src/its/koatParser/termparser.cpp
-        src/its/koatParser/termparser.hpp
+        src/parser/koatParser/itsparser.cpp
+        src/parser/koatParser/itsparser.hpp
         src/its/export.cpp
         src/its/export.hpp
         src/its/smt2export.cpp
@@ -138,12 +134,12 @@ add_executable(${EXECUTABLE}
         src/config.hpp
         src/main.cpp
         src/main.hpp
-        src/its/smt2Parser/sexpresso/sexpresso.cpp
-        src/its/smt2Parser/sexpresso/sexpresso.hpp
-        src/its/smt2Parser/parser.cpp
-        src/its/smt2Parser/parser.hpp
-        src/its/t2Parser/t2parser.cpp
-        src/its/t2Parser/t2parser.hpp
+        src/parser/smt2Parser/sexpresso/sexpresso.cpp
+        src/parser/smt2Parser/sexpresso/sexpresso.hpp
+        src/parser/smt2Parser/parser.cpp
+        src/parser/smt2Parser/parser.hpp
+        src/parser/t2Parser/t2parser.cpp
+        src/parser/t2Parser/t2parser.hpp
         src/smt/smt.hpp
         src/smt/smt.cpp
         src/smt/smtcontext.hpp
@@ -166,12 +162,12 @@ add_executable(${EXECUTABLE}
         src/merging/merger.hpp
         src/version.cpp
         src/version.hpp
-        src/its/koatParser/KoatParseVisitor.h
-        src/its/koatParser/KoatParseVisitor.cpp
-        src/its/koatParser/KoatLexer.cpp
-        src/its/koatParser/KoatLexer.h
-        src/its/koatParser/KoatParser.cpp
-        src/its/koatParser/KoatParser.h
+        src/parser/koatParser/KoatParseVisitor.h
+        src/parser/koatParser/KoatParseVisitor.cpp
+        src/parser/koatParser/KoatLexer.cpp
+        src/parser/koatParser/KoatLexer.h
+        src/parser/koatParser/KoatParser.cpp
+        src/parser/koatParser/KoatParser.h
         src/qelim/redlog.cpp
         src/qelim/redlog.hpp
         include/reduce.h)
