@@ -1,27 +1,39 @@
 #include "redlog.hpp"
+#include "../parser/redlog/redlogparsevisitor.h"
+
+Redlog::Redlog() {}
+
+RedProc Redlog::process() {
+    static RedProc process = RedProc_new(REDUCE_BINARY);
+    return process;
+}
 
 void Redlog::init() {
-    process = RedProc_new(REDUCE_BINARY);
-    RedAns output = RedAns_new(process, "rlset r;");
-    assert(!output->error);
+    const char* cmd = "rlset r;";
+    RedAns output = RedAns_new(process(), cmd);
+    if (output->error) {
+        RedProc_error(process(), cmd, output);
+    }
     RedAns_delete(output);
 }
 
 void Redlog::exit() {
-    RedProc_delete(process);
+    RedProc_delete(process());
 }
 
-option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf) {
+option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan) {
     std::string command = "rlqe(" + qf.toRedlog() + ");";
-    RedAns output = RedAns_new(process, command.c_str());
+//    std::cout << "command: " << command << std::endl;
+    RedAns output = RedAns_new(process(), command.c_str());
     if (output->error) {
-        RedProc_error(process, command.c_str(), output);
+        RedProc_error(process(), command.c_str(), output);
         RedAns_delete(output);
-        return {};
     } else {
         std::string str = output->result;
-        BoolExpr res = BoolExpression::fromRedlog(str);
+//        std::cout << "redlog: " << output->result << std::endl;
+        BoolExpr res = RedlogParseVisitor::parse(str, varMan);
         RedAns_delete(output);
         return res;
     }
+    return {};
 }

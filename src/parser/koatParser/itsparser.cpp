@@ -17,16 +17,6 @@
 
 #include "itsparser.hpp"
 
-#include <fstream>
-#include <boost/algorithm/string.hpp>
-
-#include "../../its/itsproblem.hpp"
-#include "../../config.hpp"
-#include "../../expr/rel.hpp"
-
-#include <fstream>
-#include <string>
-#include "antlr4-runtime.h"
 #include "KoatLexer.h"
 #include "KoatParser.h"
 #include "KoatParseVisitor.h"

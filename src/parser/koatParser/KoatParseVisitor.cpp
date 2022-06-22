@@ -192,12 +192,8 @@ antlrcpp::Any KoatParseVisitor::visitBoolop(KoatParser::BoolopContext *ctx) {
 }
 
 antlrcpp::Any KoatParseVisitor::visitLit(KoatParser::LitContext *ctx) {
-    const auto &children = ctx->children;
-    if (children.size() != 3) {
-        throw ParseError("expected relation: " + ctx->getText());
-    }
     Expr arg1 = visit(ctx->expr(0));
-    Rel::RelOp op = visit(children[1]);
+    Rel::RelOp op = visit(ctx->relop());
     Expr arg2 = visit(ctx->expr(1));
     return Rel(arg1, op, arg2);
 }

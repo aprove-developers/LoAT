@@ -3,6 +3,8 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
+#include "../parser/redlog/redlogparsevisitor.h"
+
 
 BoolExpression::~BoolExpression() {}
 
@@ -239,7 +241,7 @@ std::string BoolJunction::toRedlog() const {
         else res += infix;
         res += (*it)->toRedlog();
     }
-    return res;
+    return "(" + res + ")";
 }
 
 void BoolJunction::collectLits(RelSet &res) const {
@@ -312,7 +314,7 @@ std::string Quantifier::toRedlog() const {
     std::string q = qType == Type::Exists ? "ex" : "all";
     std::string res;
     for (const auto& var: vars) {
-        res = q + "(" + var.get_name();
+        res = q + "(" + var.get_name() + ",";
     }
     return res;
 }

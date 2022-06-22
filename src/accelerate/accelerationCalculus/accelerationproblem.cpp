@@ -2,6 +2,7 @@
 #include "../../accelerate/recurrence/recurrence.hpp"
 #include "../../smt/smtfactory.hpp"
 #include "../../util/relevantvariables.hpp"
+#include "../../qelim/redlog.hpp"
 
 AccelerationProblem::AccelerationProblem(
         const BoolExpr guard,
@@ -389,35 +390,58 @@ AccelerationProblem::ReplacementMap AccelerationProblem::computeReplacementMap(b
 }
 
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
-    for (const Rel& rel: todo) {
-        bool res = recurrence(rel);
-        res |= monotonicity(rel);
-        res |= eventualWeakDecrease(rel);
-        res |= eventualWeakIncrease(rel);
-        res |= fixpoint(rel);
-        if (!res && isConjunction) return {};
-    }
     std::vector<AccelerationProblem::Result> ret;
-    ReplacementMap map = computeReplacementMap(false);
-    if (map.acceleratedAll || !isConjunction) {
-        bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
-        bool nt = map.nonterm && positiveCost;
-        BoolExpr newGuard = guard->replaceRels(map.map);
-        if (!nt) newGuard = newGuard & (n >= 0);
-        if (Smt::check(newGuard, its) == Smt::Sat) {
-            ret.emplace_back(newGuard, nt);
-        }
-        if (closed && positiveCost && !map.nonterm) {
-            ReplacementMap map = computeReplacementMap(true);
-            if (map.acceleratedAll || !isConjunction) {
-                BoolExpr newGuard = guard->replaceRels(map.map);
-                if (Smt::check(newGuard, its) == Smt::Sat) {
-                    ret.emplace_back(newGuard, true);
-                }
+    if (closed) {
+        Var m = its.getFreshUntrackedSymbol("m", Expr::Int);
+        BoolExpr matrix = guard->subs(closed.get())->subs({n, m}) | (m < 0);
+        QuantifiedFormula q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m})});
+        option<BoolExpr> res = Redlog::qe(q, its);
+        if (res && res.get() != False) {
+//            std::cout << "proved non-termination via quantifier elimination" << std::endl;
+            ret.push_back(Result(res.get(), true));
+            return ret;
+        } else {
+//            std::cout << "failed to prove non-termination via quantifier elimination" << std::endl;
+            matrix = (guard->subs(closed.get())->subs({n, m}) | (m < 0) | (m >= n)) & (n > 0);
+            q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m})});
+            res = Redlog::qe(q, its);
+            if (res && res.get() != False) {
+//                std::cout << "accelerated loop via quantifier elimination: " << res.get() << std::endl;
+                ret.push_back(Result(res.get(), false));
+            } else {
+//                std::cout << "failed to accelerate loop via quantifier elimination" << std::endl;
             }
         }
     }
     return ret;
+//    for (const Rel& rel: todo) {
+//        bool res = recurrence(rel);
+//        if (ret.empty()) res |= monotonicity(rel);
+//        if (ret.empty()) res |= eventualWeakDecrease(rel);
+//        res |= eventualWeakIncrease(rel);
+//        res |= fixpoint(rel);
+//        if (!res && isConjunction) return ret;
+//    }
+//    ReplacementMap map = computeReplacementMap(false);
+//    if (map.acceleratedAll || !isConjunction) {
+//        bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
+//        bool nt = map.nonterm && positiveCost;
+//        BoolExpr newGuard = guard->replaceRels(map.map);
+//        if (!nt) newGuard = newGuard & (n >= 0);
+//        if (Smt::check(newGuard, its) == Smt::Sat) {
+//            ret.emplace_back(newGuard, nt);
+//        }
+//        if (closed && positiveCost && !map.nonterm) {
+//            ReplacementMap map = computeReplacementMap(true);
+//            if (map.acceleratedAll || !isConjunction) {
+//                BoolExpr newGuard = guard->replaceRels(map.map);
+//                if (Smt::check(newGuard, its) == Smt::Sat) {
+//                    ret.emplace_back(newGuard, true);
+//                }
+//            }
+//        }
+//    }
+//    return ret;
 }
 
 Proof AccelerationProblem::getProof() const {

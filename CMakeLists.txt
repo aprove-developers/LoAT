@@ -14,11 +14,9 @@ if(${STATIC})
     set(BUILD_SHARED_LIBS OFF)
     add_link_options(-ldl -lpthread -static)
     set(EXECUTABLE loat-static)
-    set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.a)
 else()
     message(STATUS "Configuring non-static build")
     set(EXECUTABLE loat)
-    set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.so)
 endif()
 
 if(${SANITIZE})
@@ -164,13 +162,26 @@ add_executable(${EXECUTABLE}
         src/version.hpp
         src/parser/koatParser/KoatParseVisitor.h
         src/parser/koatParser/KoatParseVisitor.cpp
+        src/parser/koatParser/KoatVisitor.h
+        src/parser/koatParser/KoatVisitor.cpp
+        src/parser/koatParser/KoatListener.h
+        src/parser/koatParser/KoatListener.cpp
         src/parser/koatParser/KoatLexer.cpp
         src/parser/koatParser/KoatLexer.h
         src/parser/koatParser/KoatParser.cpp
         src/parser/koatParser/KoatParser.h
         src/qelim/redlog.cpp
         src/qelim/redlog.hpp
-        include/reduce.h)
+        src/parser/redlog/redlogVisitor.h
+        src/parser/redlog/redlogVisitor.cpp
+        src/parser/redlog/redlogListener.h
+        src/parser/redlog/redlogListener.cpp
+        src/parser/redlog/redlogparsevisitor.h
+        src/parser/redlog/redlogparsevisitor.cpp
+        src/parser/redlog/redlogLexer.h
+        src/parser/redlog/redlogLexer.cpp
+        src/parser/redlog/redlogParser.h
+        src/parser/redlog/redlogParser.cpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
@@ -191,6 +202,9 @@ find_library(POLY poly)
 message(STATUS "poly: ${POLY}")
 find_library(CUDD cudd)
 message(STATUS "cudd: ${CUDD}")
+
+set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.a)
+message(STATUS "reduce: ${REDUCE}")
 
 if (DEFINED ENV{ANTLR4_INCLUDE_PATH})
     # ANTLR4 is available and we know where to find the headers
@@ -235,4 +249,5 @@ if (NOT ${STATIC})
     target_link_libraries(${EXECUTABLE} ${PTHREAD})
 endif()
 
+target_include_directories(${EXECUTABLE} PRIVATE include)
 target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${REDUCE} ${LINKER_OPTIONS})

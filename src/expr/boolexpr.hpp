@@ -5,6 +5,7 @@
 #include "../util/option.hpp"
 #include "../expr/rel.hpp"
 #include "../its/guard.hpp"
+#include "../its/variablemanager.hpp"
 
 #include <memory>
 #include <set>

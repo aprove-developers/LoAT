@@ -1,16 +1,20 @@
 #ifndef REDLOG_HPP
 #define REDLOG_HPP
 
-#include "../../include/reduce.h"
+extern "C" {
+    #include <reduce.h>
+}
 #include "../expr/boolexpr.hpp"
+#include "../its/variablemanager.hpp"
 
 class Redlog {
 
-    static RedProc process;
+    Redlog();
+    static RedProc process();
 
 public:
 
-    option<BoolExpr> qe(const QuantifiedFormula &qf);
+    static option<BoolExpr> qe(const QuantifiedFormula &qf, VariableManager &varMan);
     static void init();
     static void exit();
 
