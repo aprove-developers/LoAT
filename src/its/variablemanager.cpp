@@ -48,8 +48,13 @@ Var VariableManager::getFreshUntrackedSymbol(string basename, Expr::Type type) {
     return res;
 }
 
+void toLower(string &str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+}
+
 Var VariableManager::addVariable(string name) {
     std::lock_guard guard(mutex);
+    toLower(name);
     //convert to ginac
     auto sym = Var(name);
 
@@ -65,6 +70,7 @@ Var VariableManager::addVariable(string name) {
 
 string VariableManager::getFreshName(string basename) {
     std::lock_guard guard(mutex);
+    toLower(basename);
     if (basenameCount.count(basename) == 0) {
         basenameCount.emplace(basename, 0);
         return basename;
@@ -92,6 +98,7 @@ VarSet VariableManager::getVars() const {
 
 option<Var> VariableManager::getVar(std::string name) const {
     std::lock_guard guard(mutex);
+    toLower(name);
     auto it = variableNameLookup.find(name);
     if (it == variableNameLookup.end()) {
         return {};
