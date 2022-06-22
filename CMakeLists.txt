@@ -28,6 +28,7 @@ if(${SANITIZE})
 endif()
 
 add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter)
+add_compile_definitions(REDUCE_BINARY="${CMAKE_CURRENT_SOURCE_DIR}/../reduce-algebra/bin/redcsl")
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})

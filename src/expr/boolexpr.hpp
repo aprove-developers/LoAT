@@ -47,7 +47,7 @@ public:
     virtual BoolExpr toLeq() const = 0;
     virtual void collectLits(RelSet &res) const = 0;
     virtual void collectVars(VarSet &res) const = 0;
-    virtual std::string toRedlog() const;
+    virtual std::string toRedlog() const = 0;
     virtual size_t size() const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
     virtual unsigned hash() const = 0;

@@ -24,7 +24,8 @@ RUN xbps-install -y ncurses-devel
 RUN xbps-install -y libX11-devel
 RUN xbps-install -y libXft-devel
 RUN xbps-install -y libXext-devel
-RUN xbps-install -y file libffi-devel
+RUN xbps-install -y file
+RUN xbps-install -y libffi-devel
 RUN xbps-install -y libltdl-devel
 
 RUN mkdir /src/
@@ -32,13 +33,13 @@ RUN mkdir /src/
 # reduce
 WORKDIR /src
 RUN svn co http://svn.code.sf.net/p/reduce-algebra/code/trunk reduce-algebra
-RUN xbps-install -y file libffi-devel
-RUN xbps-install -y libltdl-devel
 WORKDIR /src/reduce-algebra
 RUN ./configure --with-csl
 RUN cp /usr/include/unistd.h /usr/include/sys/
 RUN make
 WORKDIR /src/reduce-algebra/generic/libreduce
+RUN sed -i 's/AC_CONFIG_MACRO_DIRS/AC_CONFIG_MACRO_DIR/g' src/configure.ac
+RUN xbps-alternatives -g python -s python
 RUN make
 
 # z3
@@ -143,7 +144,10 @@ RUN mkdir -p /home/ffrohn/repos/LoAT
 WORKDIR /home/ffrohn/repos/LoAT
 COPY CMakeLists.txt /home/ffrohn/repos/LoAT/
 COPY src /home/ffrohn/repos/LoAT/src/
-COPY include /home/ffrohn/repos/LoAT/include/
+RUN mkdir /home/ffrohn/repos/LoAT/lib
+RUN cp /src/reduce-algebra/generic/libreduce/x86_64-pc-linux-musl/libreduce.* /home/ffrohn/repos/LoAT/lib
+RUN mkdir /home/ffrohn/repos/LoAT/include
+RUN cp /src/reduce-algebra/generic/libreduce/src/reduce.h /home/ffrohn/repos/LoAT/include
 RUN mkdir -p /home/ffrohn/repos/LoAT/build/static/release
 WORKDIR /home/ffrohn/repos/LoAT/build/static/release
 RUN cmake -DSTATIC=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DCMAKE_CXX_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DSHA=$SHA -DDIRTY=$DIRTY ../../../

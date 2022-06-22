@@ -4,8 +4,8 @@
 #include <iostream>
 #include <string>
 
-unsigned int Proof::defaultProofLevel = 2;
-unsigned int Proof::maxProofLevel = 3;
+unsigned int Proof::defaultProofLevel = 1;
+unsigned int Proof::maxProofLevel = 2;
 unsigned int Proof::proofLevel = defaultProofLevel;
 
 void Proof::writeToFile(const std::string &file) const {
@@ -157,12 +157,6 @@ void Proof::chainingProof(const Rule &fst, const Rule &snd, const Rule &newRule,
 void Proof::storeSubProof(const Proof &subProof, const std::string &technique) {
     switch (proofLevel) {
         case 2: {
-            const std::string &file = std::tmpnam(nullptr);
-            subProof.writeToFile(file + ".txt");
-            append("Sub-proof via " + technique + " written to file://" + file + ".txt");
-            break;
-        }
-        case 3: {
             append("Sub-proof via " + technique + ":");
             concat(subProof);
             break;
