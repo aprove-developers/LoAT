@@ -53,6 +53,14 @@ private:
     RelSet findConsistentSubset(const BoolExpr e) const;
     option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
 
+    struct ReplacementMap {
+        bool acceleratedAll;
+        bool nonterm;
+        RelMap<BoolExpr> map;
+    };
+
+    ReplacementMap computeReplacementMap(bool nontermOnly) const;
+
 public:
 
     struct Result {
@@ -78,7 +86,7 @@ public:
 
 private:
 
-    option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly = false, RelSet seen = {});
+    option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly = false, RelSet seen = {}) const;
 
 };
 

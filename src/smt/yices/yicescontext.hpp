@@ -66,6 +66,7 @@ public:
     bool isVar(const term_t &e) const override;
     bool isRationalConstant(const term_t &e) const override;
     bool isInt(const term_t &e) const override;
+    bool isITE(const term_t &e) const override;
     long toInt(const term_t &e) const override;
     long numerator(const term_t &e) const override;
     long denominator(const term_t &e) const override;

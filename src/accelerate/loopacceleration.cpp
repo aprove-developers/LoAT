@@ -97,7 +97,7 @@ Acceleration::Result LoopAcceleration::run() {
                     } else {
                         for (const Rule &r: instantiated) {
                             res.proof.ruleTransformationProof(accel.get(), "instantiation", r, its);
-                            res.rules.emplace_back(accel.get());
+                            res.rules.emplace_back(r);
                         }
                     }
                 }

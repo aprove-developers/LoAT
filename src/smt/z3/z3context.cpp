@@ -166,6 +166,10 @@ bool Z3Context::isInt(const z3::expr &e) const {
     return e.is_numeral() && e.is_int();
 }
 
+bool Z3Context::isITE(const z3::expr &e) const {
+    return e.is_ite();
+}
+
 long Z3Context::toInt(const z3::expr &e) const {
     return e.get_numeral_int64();
 }

@@ -145,6 +145,10 @@ bool YicesContext::isInt(const term_t &e) const {
     return yices_is_int_atom(e);
 }
 
+bool YicesContext::isITE(const term_t &e) const {
+    return yices_term_constructor(e) == YICES_ITE_TERM;
+}
+
 long YicesContext::toInt(const term_t &e) const {
     long res = numerator(e);
     assert(denominator(e) == 1);

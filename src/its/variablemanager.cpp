@@ -90,6 +90,17 @@ VarSet VariableManager::getVars() const {
     return variables;
 }
 
+option<Var> VariableManager::getVar(std::string name) const {
+    std::lock_guard guard(mutex);
+    auto it = variableNameLookup.find(name);
+    if (it == variableNameLookup.end()) {
+        return {};
+    } else {
+        return it->second;
+    }
+}
+
+
 Expr::Type VariableManager::getType(const Var &x) const {
     std::lock_guard guard(mutex);
     if (untrackedVariables.find(x) != untrackedVariables.end()) {

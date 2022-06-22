@@ -106,6 +106,13 @@ void ITSExport::printForProof(const ITSProblem &its, std::ostream &s) {
     s << "Start location: ";
     printLocation(its.getInitialLocation(), its, s, true);
     s << endl;
+    s << "Program variables:";
+    for (const Var &x: its.getVars()) {
+        if (!its.isTempVar(x)) {
+            s << " " << x;
+        }
+    }
+    s << endl;
 
     if (its.isEmpty()) {
         s << "  <empty>" << endl;

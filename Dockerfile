@@ -136,6 +136,19 @@ RUN ./configure --with-cxxflags='-march=sandybridge -O3 -DNDEBUG'
 RUN make -j
 RUN make install
 
+RUN xbps-install -y apache-maven
+
+# antlr4
+WORKDIR /src
+RUN git clone https://github.com/antlr/antlr4.git
+WORKDIR /src/antlr4
+RUN git checkout 4.7.2
+WORKDIR /src/antlr4/runtime/Cpp/build
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG" -DCMAKE_CXX_FLAGS_RELEASE="-march=sandybridge -O3 -DNDEBUG"
+RUN make -j
+RUN make install
+
+ARG ANTLR4_INCLUDE_PATH=/src/antlr4/runtime/Cpp/runtime/src
 ARG SHA
 ARG DIRTY
 
@@ -144,6 +157,7 @@ RUN mkdir -p /home/ffrohn/repos/LoAT
 WORKDIR /home/ffrohn/repos/LoAT
 COPY CMakeLists.txt /home/ffrohn/repos/LoAT/
 COPY src /home/ffrohn/repos/LoAT/src/
+COPY cmake /home/ffrohn/repos/LoAT/cmake/
 RUN mkdir /home/ffrohn/repos/LoAT/lib
 RUN cp /src/reduce-algebra/generic/libreduce/x86_64-pc-linux-musl/libreduce.* /home/ffrohn/repos/LoAT/lib
 RUN mkdir /home/ffrohn/repos/LoAT/include
