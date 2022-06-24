@@ -6,6 +6,7 @@ extern "C" {
 }
 #include "../expr/boolexpr.hpp"
 #include "../its/variablemanager.hpp"
+#include "../util/exceptions.hpp"
 
 class Redlog {
 
@@ -13,6 +14,8 @@ class Redlog {
     static RedProc process();
 
 public:
+
+    EXCEPTION(RedlogError, CustomException);
 
     static option<BoolExpr> qe(const QuantifiedFormula &qf, VariableManager &varMan);
     static void init();

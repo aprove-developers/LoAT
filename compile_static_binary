@@ -1,7 +1,6 @@
 #!/bin/bash
 #To be executed from the top directory of the repository
 #The static binary is compiled in a Dockerfile and then copied into the main file
-rm -f loat-static
 SHA=$(git rev-parse HEAD)
 git diff-index --quiet HEAD --
 DIRTY=$?

@@ -22,6 +22,7 @@
 
 #include "complexity.hpp"
 #include "../util/option.hpp"
+#include "../util/exceptions.hpp"
 
 class Expr;
 template<class Key> class KeyToExprMap;
@@ -39,6 +40,8 @@ using VarSet = std::set<Var, GiNaC::ex_is_less>;
 using ExprSet = std::set<Expr, Expr_is_less>;
 template <typename T>
 using VarMap = std::map<Var, T, GiNaC::ex_is_less>;
+
+EXCEPTION(QepcadError, CustomException);
 
 /**
  * Class for arithmetic expressions.
@@ -340,6 +343,8 @@ public:
     Expr toIntPoly() const;
 
     GiNaC::numeric denomLcm() const;
+
+    option<std::string> toQepcad() const;
 
     /**
      * @brief exponentiation

@@ -26,7 +26,7 @@ if(${SANITIZE})
 endif()
 
 add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter)
-add_compile_definitions(REDUCE_BINARY="${CMAKE_CURRENT_SOURCE_DIR}/../reduce-algebra/bin/redcsl")
+# add_compile_definitions(REDUCE_BINARY="${CMAKE_CURRENT_SOURCE_DIR}/../reduce-algebra/bin/redcsl")
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 message(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
@@ -170,18 +170,32 @@ add_executable(${EXECUTABLE}
         src/parser/koatParser/KoatLexer.h
         src/parser/koatParser/KoatParser.cpp
         src/parser/koatParser/KoatParser.h
-        src/qelim/redlog.cpp
-        src/qelim/redlog.hpp
-        src/parser/redlog/redlogVisitor.h
-        src/parser/redlog/redlogVisitor.cpp
-        src/parser/redlog/redlogListener.h
-        src/parser/redlog/redlogListener.cpp
-        src/parser/redlog/redlogparsevisitor.h
-        src/parser/redlog/redlogparsevisitor.cpp
-        src/parser/redlog/redlogLexer.h
-        src/parser/redlog/redlogLexer.cpp
-        src/parser/redlog/redlogParser.h
-        src/parser/redlog/redlogParser.cpp)
+        src/qelim/qepcad.hpp
+        src/qelim/qepcad.cpp
+#        src/qelim/redlog.cpp
+#        src/qelim/redlog.hpp
+        src/parser/qepcad/qepcadVisitor.h
+        src/parser/qepcad/qepcadVisitor.cpp
+        src/parser/qepcad/qepcadListener.h
+        src/parser/qepcad/qepcadListener.cpp
+        src/parser/qepcad/qepcadparsevisitor.h
+        src/parser/qepcad/qepcadparsevisitor.cpp
+        src/parser/qepcad/qepcadLexer.h
+        src/parser/qepcad/qepcadLexer.cpp
+        src/parser/qepcad/qepcadParser.h
+        src/parser/qepcad/qepcadParser.cpp)
+        # src/qelim/redlog.cpp
+        # src/qelim/redlog.hpp
+        # src/parser/redlog/redlogVisitor.h
+        # src/parser/redlog/redlogVisitor.cpp
+        # src/parser/redlog/redlogListener.h
+        # src/parser/redlog/redlogListener.cpp
+        # src/parser/redlog/redlogparsevisitor.h
+        # src/parser/redlog/redlogparsevisitor.cpp
+        # src/parser/redlog/redlogLexer.h
+        # src/parser/redlog/redlogLexer.cpp
+        # src/parser/redlog/redlogParser.h
+        # src/parser/redlog/redlogParser.cpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
@@ -202,9 +216,25 @@ find_library(POLY poly)
 message(STATUS "poly: ${POLY}")
 find_library(CUDD cudd)
 message(STATUS "cudd: ${CUDD}")
+find_library(QEPCAD qepcad)
+message(STATUS "qepcad: ${QEPCAD}")
+find_library(SACLIB saclib)
+message(STATUS "saclib: ${SACLIB}")
+find_library(ADJ2D adj2d)
+message(STATUS "adj2d: ${ADJ2D}")
+find_library(NEWADJ newadj)
+message(STATUS "newadj: ${NEWADJ}")
+find_library(LIFT2D lift2d)
+message(STATUS "lift2d: ${LIFT2D}")
+find_library(REND rend)
+message(STATUS "rend: ${REND}")
+find_library(SFEXT sfext)
+message(STATUS "sfext: ${SFEXT}")
+find_library(READLINE readline)
+message(STATUS "readline: ${READLINE}")
 
-set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.a)
-message(STATUS "reduce: ${REDUCE}")
+# set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.a)
+# message(STATUS "reduce: ${REDUCE}")
 
 if (DEFINED ENV{ANTLR4_INCLUDE_PATH})
     # ANTLR4 is available and we know where to find the headers
@@ -249,5 +279,19 @@ if (NOT ${STATIC})
     target_link_libraries(${EXECUTABLE} ${PTHREAD})
 endif()
 
-target_include_directories(${EXECUTABLE} PRIVATE include)
-target_link_libraries(${EXECUTABLE} ${PURRS} ${GINAC} ${Z3} ${NTL} ${CLN} ${YICES} ${POLY} ${CUDD} ${GMP} ${REDUCE} ${LINKER_OPTIONS})
+#target_include_directories(${EXECUTABLE} PRIVATE include)
+target_link_libraries(
+    ${EXECUTABLE}
+    ${PURRS}
+    ${GINAC}
+    ${Z3}
+    ${NTL}
+    ${CLN}
+    ${YICES}
+    ${POLY}
+    ${CUDD}
+    ${GMP}
+    ${QEPCAD}
+    ${SACLIB}
+    ${READLINE}
+    ${LINKER_OPTIONS})

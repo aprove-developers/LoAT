@@ -3,8 +3,6 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
-#include "../parser/redlog/redlogparsevisitor.h"
-
 
 BoolExpression::~BoolExpression() {}
 
@@ -108,8 +106,8 @@ size_t BoolLit::size() const {
     return 1;
 }
 
-std::string BoolLit::toRedlog() const {
-    return lit.toString();
+option<std::string> BoolLit::toQepcad() const {
+    return lit.toQepcad();
 }
 
 void BoolLit::collectLits(RelSet &res) const {
@@ -232,16 +230,22 @@ size_t BoolJunction::size() const {
     return res;
 }
 
-std::string BoolJunction::toRedlog() const {
-    std::string infix = isAnd() ? " and " : " or ";
-    std::string res;
-    bool first = true;
-    for (auto it = children.begin(); it != children.end(); ++it) {
-        if (first) first = false;
-        else res += infix;
-        res += (*it)->toRedlog();
+option<std::string> BoolJunction::toQepcad() const {
+    if (children.empty()) {
+        std::string res = isAnd() ? "1=1" : "1=0";
+        return res;
     }
-    return "(" + res + ")";
+    auto it = children.begin();
+    option<std::string> res = (*it)->toQepcad();
+    if (!res) return {};
+    ++it;
+    const std::string sep = isAnd() ? " /\\ " : " \\/ ";
+    for (; it != children.end(); ++it) {
+        option<std::string> arg = (*it)->toQepcad();
+        if (!arg) return {};
+        res = res.get() + sep + arg.get();
+    }
+    return "[" + res.get() + "]";
 }
 
 void BoolJunction::collectLits(RelSet &res) const {
@@ -310,11 +314,11 @@ Quantifier::Type Quantifier::getType() const {
     return qType;
 }
 
-std::string Quantifier::toRedlog() const {
-    std::string q = qType == Type::Exists ? "ex" : "all";
+std::string Quantifier::toQepcad() const {
     std::string res;
-    for (const auto& var: vars) {
-        res = q + "(" + var.get_name() + ",";
+    std::string t = getType() == Quantifier::Type::Forall ? "A" : "E";
+    for (const auto& x: this->getVars()) {
+        res += "(" + t + " " + x.get_name() + ")";
     }
     return res;
 }
@@ -369,19 +373,14 @@ VarSet QuantifiedFormula::freeVars() const {
     return res;
 }
 
-std::string QuantifiedFormula::toRedlog() const {
+option<std::string> QuantifiedFormula::toQepcad() const {
     std::string res;
-    for (const auto &q: prefix) {
-        res += q.toRedlog();
+    for (const auto& q: prefix) {
+        res += q.toQepcad();
     }
-    res += matrix->toRedlog();
-    for (const auto &q: prefix) {
-        unsigned size = q.getVars().size();
-        for (unsigned i = 0; i < size; ++i) {
-            res += ")";
-        }
-    }
-    return res;
+    option<std::string> m = matrix->toQepcad();
+    if (m) return res + "[" + m.get() + "]";
+    else return {};
 }
 
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {

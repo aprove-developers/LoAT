@@ -534,6 +534,32 @@ bool Expr::isIntegral() const {
     }
 }
 
+std::string toQepcadRec(const Expr& e) {
+    if (e.isInt() || e.isVar()) {
+        return e.toString();
+    } else if (e.isAdd() || e.isMul()) {
+        std::string sep = e.isAdd() ? " + " : " ";
+        std::string neutral = e.isAdd() ? "0" : "1";
+        unsigned arity = e.arity();
+        std::string res = arity == 0 ? neutral : toQepcadRec(e.op(0));
+        for (unsigned i = 1; i < arity; ++i) {
+            res = res + sep + toQepcadRec(e);
+        }
+        return "[" + res + "]";
+    } else if (e.isNaturalPow()) {
+        return toQepcadRec(e.op(0)) + "^" + toQepcadRec(e.op(0));
+    } else if (e.isRationalConstant()) {
+        return e.numerator().toString() + "/" + e.denominator().toString();
+    } else {
+        throw QepcadError("conversion to Qepcad failed for polynomial " + e.toString());
+    }
+}
+
+option<std::string> Expr::toQepcad() const {
+    if (!this->isPoly()) return {};
+    return toQepcadRec(this->expand());
+}
+
 Subs::Subs(): KeyToExprMap<Var>() {}
 
 Subs::Subs(const Var &key, const Expr &val) {

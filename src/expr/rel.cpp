@@ -1,5 +1,4 @@
 #include "rel.hpp"
-
 #include <sstream>
 
 Rel::Rel(const Expr &lhs, RelOp op, const Expr &rhs): l(lhs), r(rhs), op(op) { }
@@ -269,6 +268,15 @@ unsigned Rel::hash() const {
     hash = 31 * hash + op;
     hash = 31 * hash + r.hash();
     return hash;
+}
+
+option<std::string> Rel::toQepcad() const {
+    VarSet vars;
+    const Rel r = this->toGt();
+    collectVariables(vars);
+    option<std::string> arg1 = l.toQepcad();
+    if (!arg1) return {};
+    return arg1.get() + " > 0";
 }
 
 Rel operator!(const Rel &x) {

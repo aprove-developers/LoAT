@@ -48,7 +48,7 @@ public:
     virtual BoolExpr toLeq() const = 0;
     virtual void collectLits(RelSet &res) const = 0;
     virtual void collectVars(VarSet &res) const = 0;
-    virtual std::string toRedlog() const = 0;
+    virtual option<std::string> toQepcad() const = 0;
     virtual size_t size() const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
     virtual unsigned hash() const = 0;
@@ -82,7 +82,7 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    std::string toRedlog() const override;
+    option<std::string> toQepcad() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
 
@@ -118,7 +118,7 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    std::string toRedlog() const override;
+    option<std::string> toQepcad() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
 
@@ -142,7 +142,7 @@ public:
     Quantifier negation() const;
     const VarSet& getVars() const;
     Type getType() const;
-    std::string toRedlog() const;
+    std::string toQepcad() const;
 
 };
 
@@ -164,7 +164,7 @@ public:
     QuantifiedFormula toLeq() const;
     void collectLits(RelSet &res) const;
     VarSet freeVars() const;
-    std::string toRedlog() const;
+    option<std::string> toQepcad() const;
 
 };
 

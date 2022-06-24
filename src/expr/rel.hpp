@@ -68,6 +68,8 @@ public:
     friend bool operator<(const Rel &x, const Rel &y);
     friend std::ostream& operator<<(std::ostream &s, const Rel &e);
 
+    option<std::string> toQepcad() const;
+
 private:
 
     /**

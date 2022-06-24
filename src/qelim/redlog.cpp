@@ -1,10 +1,29 @@
 #include "redlog.hpp"
 #include "../parser/redlog/redlogparsevisitor.h"
+#include <qepcad/qepcad.h>
 
 Redlog::Redlog() {}
 
+RedProc initRedproc() {
+    std::string path = std::getenv("PATH");
+    std::replace(path.begin(), path.end(), ':', ' ');
+    std::vector<std::string> array;
+    std::stringstream ss(path);
+    std::string temp;
+    while (ss >> temp) array.push_back(temp);
+    for (const std::string &p: array) {
+        std::string redcsl = p + "/redcsl";
+        std::ifstream file(redcsl);
+        if (file.is_open()) {
+            return RedProc_new(redcsl.c_str());
+        }
+    }
+    throw Redlog::RedlogError("couldn't find redcsl binary");
+}
+
 RedProc Redlog::process() {
-    static RedProc process = RedProc_new(REDUCE_BINARY);
+    QEPCADContext Q;
+    static RedProc process = initRedproc();
     return process;
 }
 
