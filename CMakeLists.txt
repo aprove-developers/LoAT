@@ -220,18 +220,10 @@ find_library(QEPCAD qepcad)
 message(STATUS "qepcad: ${QEPCAD}")
 find_library(SACLIB saclib)
 message(STATUS "saclib: ${SACLIB}")
-find_library(ADJ2D adj2d)
-message(STATUS "adj2d: ${ADJ2D}")
-find_library(NEWADJ newadj)
-message(STATUS "newadj: ${NEWADJ}")
-find_library(LIFT2D lift2d)
-message(STATUS "lift2d: ${LIFT2D}")
-find_library(REND rend)
-message(STATUS "rend: ${REND}")
-find_library(SFEXT sfext)
-message(STATUS "sfext: ${SFEXT}")
 find_library(READLINE readline)
 message(STATUS "readline: ${READLINE}")
+find_library(NCURSES ncurses)
+message(STATUS "ncurses: ${NCURSES}")
 
 # set(REDUCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/libreduce.a)
 # message(STATUS "reduce: ${REDUCE}")
@@ -279,7 +271,10 @@ if (NOT ${STATIC})
     target_link_libraries(${EXECUTABLE} ${PTHREAD})
 endif()
 
-#target_include_directories(${EXECUTABLE} PRIVATE include)
+FIND_PATH(QEPCAD_INCLUDE_DIR qepcad/qepcad.h)
+message(STATUS "qepcad include dir: ${QEPCAD_INCLUDE_DIR}")
+target_include_directories(${EXECUTABLE} PRIVATE "${QEPCAD_INCLUDE_DIR}/qepcad")
+
 target_link_libraries(
     ${EXECUTABLE}
     ${PURRS}
@@ -294,4 +289,5 @@ target_link_libraries(
     ${QEPCAD}
     ${SACLIB}
     ${READLINE}
+    ${NCURSES}
     ${LINKER_OPTIONS})

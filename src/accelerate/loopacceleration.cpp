@@ -52,12 +52,9 @@ vector<Rule> LoopAcceleration::replaceByUpperbounds(const Var &N, const Rule &ru
 
     // create one rule for each upper bound, by instantiating N with this bound
     vector<Rule> res;
-    if (ve.getRes().empty()) {
-        res.push_back(rule);
-    } else {
-        for (const Subs &subs : ve.getRes()) {
-            res.push_back(rule.subs(subs));
-        }
+    for (const Subs &subs : ve.getRes()) {
+        if (subs.get(N).isRationalConstant()) continue;
+        res.push_back(rule.subs(subs));
     }
     return res;
 }

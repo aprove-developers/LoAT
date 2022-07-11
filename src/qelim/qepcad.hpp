@@ -10,6 +10,8 @@
 class Qepcad
 {
 public:
+    static void init();
+    static void exit();
     static option<BoolExpr> qe(const QuantifiedFormula &qf, VariableManager &varMan);
 };
 

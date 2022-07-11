@@ -9,7 +9,7 @@
 class QepcadParseVisitor: qepcadVisitor
 {
     enum BinOp {
-        Minus, Exp, Plus
+        Minus, Plus
     };
 
     EXCEPTION(ParseError, CustomException);

@@ -4,8 +4,8 @@ grammar qepcad;
 main    :       formula;
 
 // arithmetic expressions
-expr    :       VAR | INT | LPAR MINUS expr RPAR | MINUS expr | LPAR expr expr RPAR | expr expr | LPAR expr binop expr RPAR | expr binop expr;
-binop   :       EXP | PLUS | MINUS;
+expr    :       VAR | INT | LPAR expr EXP expr RPAR | expr EXP expr | LPAR expr expr RPAR | expr expr | LPAR expr binop expr RPAR | expr binop expr;
+binop   :       PLUS | MINUS;
 
 // formulas
 formula :       BTRUE | BFALSE | lit | LPAR formula boolop formula RPAR | formula boolop formula;

@@ -1,28 +1,46 @@
 #include "qepcad.hpp"
+#include <qepcad/db/CAPolicy.h>
+#include <qepcad/db/OriginalPolicy.h>
+
+void Qepcad::init() {
+    static Word ac;
+    static void* topOfTheStack = 0;
+    static char *a, *b;
+    static char **args = &a;
+    static char **av = &b;
+    ARGSACLIB(0,args,&ac,&av);
+    BEGINSACLIB((Word *)topOfTheStack);
+    BEGINQEPCADLIB();
+}
+
+void Qepcad::exit() {
+    ENDSACLIB(SAC_FREEMEM);
+}
 
 option<BoolExpr> Qepcad::qe(const QuantifiedFormula &qf, VariableManager &varMan) {
-    void* topOfTheStack = 0;
-    Word ac, Fs, V;
-    char **av;
-    ARGSACLIB(0,0,&ac,&av);
-    BEGINSACLIB((Word *)topOfTheStack);
-    BEGINQEPCAD(ac,av);
-    option<std::string> input = qf.toQepcad();
+    Word Fs, V, freeVars, t;
+    option<QuantifiedFormula::QepcadIn> input = qf.toQepcad();
+    std::string instr = input->variables + " " + std::to_string(input->freeVariables) + " " + input->formula;
+    option<BoolExpr> res;
     if (input) {
-        std::stringstream in(input.get());
+        std::stringstream in(instr);
         std::ostringstream out;
         PushInputContext(in);
         PushOutputContext(out);
-        INPUTRD(&Fs, &V);
+        VLREADR(&V,&t);
+        assert(t==1);
+        GREADR(&freeVars,&t);
+        assert(t==1);
+        FREADR(V,freeVars,&Fs,&t);
+        assert(t==1);
         QepcadCls cad(V, Fs);
         cad.CADautoConst();
-        cad.GETDEFININGFORMULA();
-        std::string res = out.str();
-        BoolExpr e = QepcadParseVisitor::parse(res, varMan);
-        ENDQEPCAD();
-        ENDSACLIB(SAC_FREEMEM);
-        free(av);
-        return e;
+        Word F = cad.GETDEFININGFORMULA();
+        QFFWR(V, F);
+        res = QepcadParseVisitor::parse(out.str(), varMan);
+        if (res) {
+            res = res.get()->simplify();
+        }
     }
-    return {};
+    return res;
 }

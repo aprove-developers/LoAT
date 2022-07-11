@@ -141,6 +141,16 @@ unsigned BoolLit::hash() const {
     return lit.hash();
 }
 
+BoolExpr BoolLit::simplify() const {
+    if (lit.isTriviallyTrue()) {
+        return True;
+    } else if (lit.isTriviallyFalse()) {
+        return False;
+    } else {
+        return shared_from_this();
+    }
+}
+
 BoolLit::~BoolLit() {}
 
 
@@ -287,6 +297,35 @@ void BoolJunction::dnf(std::vector<Guard> &res) const {
     }
 }
 
+BoolExpr BoolJunction::simplify() const {
+    if (isAnd()) {
+        bool allTrue = true;
+        for (const auto &c: children) {
+            const auto simp = c->simplify();
+            if (simp == False) {
+                return False;
+            }
+            allTrue &= simp == True;
+        }
+        if (allTrue) {
+            return True;
+        }
+    } else if (isOr()) {
+        bool allFalse = true;
+        for (const auto &c: children) {
+            const auto simp = c->simplify();
+            if (simp == True) {
+                return True;
+            }
+            allFalse &= simp == False;
+        }
+        if (allFalse) {
+            return False;
+        }
+    }
+    return shared_from_this();
+}
+
 unsigned BoolJunction::hash() const {
     unsigned hash = 7;
     for (const BoolExpr& c: children) {
@@ -366,21 +405,47 @@ void QuantifiedFormula::collectLits(RelSet &res) const {
 }
 
 VarSet QuantifiedFormula::freeVars() const {
-    VarSet vars, res;
+    VarSet vars, free;
     VarSet bv = boundVars();
     matrix->collectVars(vars);
-    std::set_difference(vars.begin(), vars.end(), bv.begin(), bv.end(), std::inserter(res, res.begin()));
-    return res;
+    for (const Var& x: vars) {
+        if (bv.find(x) == bv.end()) {
+            free.insert(x);
+        }
+    }
+    return free;
 }
 
-option<std::string> QuantifiedFormula::toQepcad() const {
-    std::string res;
-    for (const auto& q: prefix) {
-        res += q.toQepcad();
+option<QuantifiedFormula::QepcadIn> QuantifiedFormula::toQepcad() const {
+    QepcadIn res;
+    bool first = true;
+    const VarSet free = freeVars();
+    for (const auto& x: free) {
+        if (first) {
+            res.variables += "(" + x.get_name();
+            first = false;
+        } else {
+            res.variables += "," + x.get_name();
+        }
     }
+    res.freeVariables = free.size();
+    for (const auto& q: prefix) {
+        res.formula += q.toQepcad();
+        for (const auto &x: q.getVars()) {
+            if (first) {
+                res.variables += "(" + x.get_name();
+                first = false;
+            } else {
+                res.variables += "," + x.get_name();
+            }
+        }
+    }
+    res.variables += ")";
+
     option<std::string> m = matrix->toQepcad();
-    if (m) return res + "[" + m.get() + "]";
-    else return {};
+    if (!m) return {};
+    res.formula += "[" + m.get() + "].";
+    return res;
 }
 
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {
@@ -542,5 +607,24 @@ std::ostream& operator<<(std::ostream &s, const BoolExpr e) {
         }
         s << ")";
     }
+    return s;
+}
+
+std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f) {
+    for (const auto &q: f.prefix) {
+        switch (q.getType()) {
+        case Quantifier::Type::Exists:
+            s << "EX";
+            break;
+        case Quantifier::Type::Forall:
+            s << "ALL";
+            break;
+        }
+        for (const auto &x: q.getVars()) {
+            s << " " << x;
+        }
+        s << " . ";
+    }
+    s << f.matrix;
     return s;
 }

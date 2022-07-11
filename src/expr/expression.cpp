@@ -537,17 +537,62 @@ bool Expr::isIntegral() const {
 std::string toQepcadRec(const Expr& e) {
     if (e.isInt() || e.isVar()) {
         return e.toString();
-    } else if (e.isAdd() || e.isMul()) {
-        std::string sep = e.isAdd() ? " + " : " ";
-        std::string neutral = e.isAdd() ? "0" : "1";
+    } else if (e.isAdd()) {
         unsigned arity = e.arity();
-        std::string res = arity == 0 ? neutral : toQepcadRec(e.op(0));
-        for (unsigned i = 1; i < arity; ++i) {
-            res = res + sep + toQepcadRec(e);
+        if (arity == 0) {
+            return "0";
         }
-        return "[" + res + "]";
+        std::string res = toQepcadRec(e.op(0));
+        for (unsigned i = 1; i < arity; ++i) {
+            std::string subRes = toQepcadRec(e.op(i));
+            if (subRes[0] != '-') {
+                res += "+";
+            }
+            res += subRes;
+        }
+        return res;
+    } else if (e.isMul()) {
+        unsigned arity = e.arity();
+        if (arity == 0) {
+            return "1";
+        }
+        bool sign = true;
+        Expr constant = 1;
+        for (unsigned i = 0; i < arity; ++i) {
+            const auto op = e.op(i);
+            if (op.isRationalConstant()) {
+                constant = constant * op;
+                if (op.toNum().is_negative()) {
+                    sign = !sign;
+                    constant = -constant;
+                }
+            }
+        }
+        constant = constant.expand();
+        if (constant.toNum().is_zero()) {
+            return "0";
+        }
+        std::string res = sign ? "" : "-";
+        bool skip;
+        if (constant.toNum().is_equal(1)) {
+            skip = true;
+        } else {
+            res += constant.toString();
+            skip = false;
+        }
+        for (unsigned i = 0; i < arity; ++i) {
+            if (!e.op(i).isRationalConstant()) {
+                if (skip) {
+                    skip = false;
+                } else {
+                    res += " ";
+                }
+                res = res + toQepcadRec(e.op(i));
+            }
+        }
+        return res;
     } else if (e.isNaturalPow()) {
-        return toQepcadRec(e.op(0)) + "^" + toQepcadRec(e.op(0));
+        return toQepcadRec(e.op(0)) + "^" + toQepcadRec(e.op(1));
     } else if (e.isRationalConstant()) {
         return e.numerator().toString() + "/" + e.denominator().toString();
     } else {

@@ -13,15 +13,15 @@ antlrcpp::Any QepcadParseVisitor::visitExpr(qepcadParser::ExprContext *ctx) {
       return Expr(varMan.getVar(ctx->getText()).get());
   } else if (ctx->INT()) {
       return Expr(stoi(ctx->getText()));
-  } else if (ctx->MINUS()) {
-      const Expr child = visit(ctx->expr(0));
-      return -child;
+  } else if (ctx->EXP()) {
+      const Expr arg1 = visit(ctx->expr(0));
+      const Expr arg2 = visit(ctx->expr(1));
+      return arg1 ^ arg2;
   } else if (ctx->binop()) {
       const BinOp binop = visit(ctx->binop());
       const Expr arg1 = visit(ctx->expr(0));
       const Expr arg2 = visit(ctx->expr(1));
       switch (binop) {
-      case Exp: return arg1 ^ arg2;
       case Minus: return arg1 - arg2;
       case Plus: return arg1 + arg2;
       }
@@ -34,8 +34,8 @@ antlrcpp::Any QepcadParseVisitor::visitExpr(qepcadParser::ExprContext *ctx) {
 }
 
 antlrcpp::Any QepcadParseVisitor::visitBinop(qepcadParser::BinopContext *ctx) {
-    if (ctx->EXP()) return Exp;
-    else if (ctx->MINUS()) return Minus;
+    if (ctx->MINUS()) return Minus;
+    else if (ctx->PLUS()) return Plus;
     else throw ParseError("failed to parse qepcad operator: " + ctx->getText());
 }
 

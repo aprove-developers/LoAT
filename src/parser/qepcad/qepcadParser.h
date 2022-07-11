@@ -62,9 +62,9 @@ public:
     antlr4::tree::TerminalNode *VAR();
     antlr4::tree::TerminalNode *INT();
     antlr4::tree::TerminalNode *LPAR();
-    antlr4::tree::TerminalNode *MINUS();
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
+    antlr4::tree::TerminalNode *EXP();
     antlr4::tree::TerminalNode *RPAR();
     BinopContext *binop();
 
@@ -81,7 +81,6 @@ public:
   public:
     BinopContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *EXP();
     antlr4::tree::TerminalNode *PLUS();
     antlr4::tree::TerminalNode *MINUS();
 

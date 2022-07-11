@@ -53,6 +53,7 @@ public:
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
     virtual unsigned hash() const = 0;
     QuantifiedFormula quantify(const std::vector<Quantifier> &prefix) const;
+    virtual BoolExpr simplify() const = 0;
 
 protected:
     virtual void dnf(std::vector<Guard> &res) const = 0;
@@ -85,6 +86,7 @@ public:
     option<std::string> toQepcad() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
+    BoolExpr simplify() const override;
 
 protected:
     void dnf(std::vector<Guard> &res) const override;
@@ -121,6 +123,7 @@ public:
     option<std::string> toQepcad() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
+    BoolExpr simplify() const override;
 
 protected:
     void dnf(std::vector<Guard> &res) const override;
@@ -154,6 +157,12 @@ private:
 
 public:
 
+    struct QepcadIn {
+        unsigned freeVariables;
+        std::string variables;
+        std::string formula;
+    };
+
     QuantifiedFormula(std::vector<Quantifier> prefix, const BoolExpr &matrix);
     const QuantifiedFormula negation() const;
     bool isLinear() const;
@@ -164,7 +173,8 @@ public:
     QuantifiedFormula toLeq() const;
     void collectLits(RelSet &res) const;
     VarSet freeVars() const;
-    option<std::string> toQepcad() const;
+    option<QepcadIn> toQepcad() const;
+    friend std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f);
 
 };
 

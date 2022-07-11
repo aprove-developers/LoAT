@@ -271,12 +271,10 @@ unsigned Rel::hash() const {
 }
 
 option<std::string> Rel::toQepcad() const {
-    VarSet vars;
-    const Rel r = this->toGt();
-    collectVariables(vars);
-    option<std::string> arg1 = l.toQepcad();
-    if (!arg1) return {};
-    return arg1.get() + " > 0";
+    const Rel gt = this->toGt();
+    option<std::string> diff = (gt.l - gt.r).toQepcad();
+    if (!diff) return {};
+    return diff.get() + " > 0";
 }
 
 Rel operator!(const Rel &x) {
@@ -363,7 +361,7 @@ std::ostream& operator<<(std::ostream &s, const Rel &rel) {
     switch (rel.op) {
     case Rel::eq: s << " == ";
         break;
-    case Rel::neq: s << " 1= ";
+    case Rel::neq: s << " != ";
         break;
     case Rel::leq: s << " <= ";
         break;
