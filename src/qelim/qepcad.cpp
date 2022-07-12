@@ -19,7 +19,10 @@ void Qepcad::exit() {
 
 option<BoolExpr> Qepcad::qe(const QuantifiedFormula &qf, VariableManager &varMan) {
     Word Fs, V, freeVars, t;
-    option<QuantifiedFormula::QepcadIn> input = qf.toQepcad();
+    std::pair<QuantifiedFormula, Subs> p = qf.normalizeVariables(varMan);
+    const QuantifiedFormula normalized = p.first;
+    Subs denormalization = p.second;
+    option<QuantifiedFormula::QepcadIn> input = normalized.toQepcad();
     std::string instr = input->variables + " " + std::to_string(input->freeVariables) + " " + input->formula;
     option<BoolExpr> res;
     if (input) {
@@ -39,7 +42,7 @@ option<BoolExpr> Qepcad::qe(const QuantifiedFormula &qf, VariableManager &varMan
         QFFWR(V, F);
         res = QepcadParseVisitor::parse(out.str(), varMan);
         if (res) {
-            res = res.get()->simplify();
+            res = res.get()->simplify()->subs(denormalization);
         }
     }
     return res;

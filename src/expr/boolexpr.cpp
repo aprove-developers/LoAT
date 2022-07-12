@@ -448,6 +448,35 @@ option<QuantifiedFormula::QepcadIn> QuantifiedFormula::toQepcad() const {
     return res;
 }
 
+std::pair<QuantifiedFormula, Subs> QuantifiedFormula::normalizeVariables(VariableManager &varMan) const {
+    VarSet vars;
+    matrix->collectVars(vars);
+    Subs normalization, inverse;
+    unsigned count = 0;
+    for (Var x: vars) {
+        std::string varName = "x" + std::to_string(count);
+        option<Var> replacement = varMan.getVar(varName);
+        if (!replacement) replacement = varMan.addFreshTemporaryVariable(varName);
+        ++count;
+        normalization.put(x, replacement.get());
+        inverse.put(replacement.get(), x);
+    }
+    const auto newMatrix = matrix->subs(normalization);
+    std::vector<Quantifier> newPrefix;
+    for (const auto& q: prefix) {
+        VarSet newVars;
+        for (const auto& x: q.getVars()) {
+            if (vars.find(x) != vars.end()) {
+                newVars.insert(normalization.get(x).toVar());
+            }
+        }
+        if (!newVars.empty()) {
+            newPrefix.push_back(Quantifier(q.getType(), newVars));
+        }
+    }
+    return {QuantifiedFormula(newPrefix, newMatrix), inverse};
+}
+
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {
     std::stack<BoolExpr> todo;
     for (const BoolExpr &x: xs) {

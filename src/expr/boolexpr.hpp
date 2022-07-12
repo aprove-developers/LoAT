@@ -174,6 +174,7 @@ public:
     void collectLits(RelSet &res) const;
     VarSet freeVars() const;
     option<QepcadIn> toQepcad() const;
+    std::pair<QuantifiedFormula, Subs> normalizeVariables(VariableManager &varMan) const;
     friend std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f);
 
 };
