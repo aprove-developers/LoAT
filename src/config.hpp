@@ -73,6 +73,10 @@ namespace Config {
     // Loop acceleration technique
     namespace LoopAccel {
         extern const unsigned MaxUpperboundsForPropagation;
+        enum AccelerationTechnique {
+            Calculus, QE, Combined
+        };
+        extern const AccelerationTechnique accelerationTechnique;
     }
 
     // High level acceleration strategy

@@ -78,6 +78,7 @@ namespace Config {
         // If there are several upperbounds, several rules are created.
         // To avoid rule explosion, the propagation is only performed up to this number of upperbounds.
         const unsigned MaxUpperboundsForPropagation = 3;
+        const AccelerationTechnique accelerationTechnique = Calculus;
     }
 
     namespace Accel {

@@ -16,8 +16,6 @@ class RedlogParseVisitor: redlogVisitor
         Times, Plus
     };
 
-    EXCEPTION(ParseError, CustomException);
-
     VariableManager &varMan;
 
     RedlogParseVisitor(VariableManager &varMan);
@@ -32,6 +30,8 @@ class RedlogParseVisitor: redlogVisitor
     virtual antlrcpp::Any visitRelop(redlogParser::RelopContext *ctx) override;
 
 public:
+
+    EXCEPTION(ParseError, CustomException);
 
     static BoolExpr parse(std::string str, VariableManager &varMan);
 

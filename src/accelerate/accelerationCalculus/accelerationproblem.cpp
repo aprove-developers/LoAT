@@ -83,7 +83,7 @@ option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &de
     if (res.count(rel) == 0) {
         res[rel] = std::vector<Entry>();
     }
-    res[rel].push_back({deps, formula, nonterm, exact});
+    res[rel].push_back({deps, formula, exact, nonterm});
     return res[rel].size() - 1;
 }
 
@@ -448,27 +448,41 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeResViaCalcu
 }
 
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
-    if (guard->isConjunction()) {
-        std::vector<Result> res = computeResViaCalculus();
-        bool nonterm = false;
-        for (const auto &r: res) {
-            if (r.exact) return res;
-            if (r.witnessesNonterm) nonterm = true;
+    switch (Config::LoopAccel::accelerationTechnique) {
+    case Config::LoopAccel::QE:
+        if (closed) {
+            auto res = computeResViaQuantifierElimination();
+            if (res) return {res.get()};
+            else return {};
+        } else {
+            return {};
         }
-        option<Result> qeRes = computeResViaQuantifierElimination();
-        if (!qeRes) return res;
-        if (qeRes->witnessesNonterm || !nonterm) return {qeRes.get()};
-        std::vector<Result> combinedRes;
-        for (const auto &r: res) {
-            if (r.witnessesNonterm) combinedRes.push_back(r);
-        }
-        combinedRes.push_back(qeRes.get());
-        return combinedRes;
-    } else {
-        option<Result> qeRes = computeResViaQuantifierElimination();
-        if (qeRes) return {qeRes.get()};
+    case Config::LoopAccel::Calculus:
         return computeResViaCalculus();
-    }
+    case Config::LoopAccel::Combined:
+        if (!closed || !guard->isPolynomial() || !closed->isPoly()) {
+            return computeResViaCalculus();
+        } else if (guard->isConjunction()) {
+            std::vector<Result> res = computeResViaCalculus();
+            bool nonterm = false;
+            for (const auto &r: res) {
+                if (r.exact) return res;
+                if (r.witnessesNonterm) nonterm = true;
+            }
+            option<Result> qeRes = computeResViaQuantifierElimination();
+            if (!qeRes) return res;
+            if (qeRes->witnessesNonterm || !nonterm) return {qeRes.get()};
+            std::vector<Result> combinedRes;
+            for (const auto &r: res) {
+                if (r.witnessesNonterm) combinedRes.push_back(r);
+            }
+            combinedRes.push_back(qeRes.get());
+            return combinedRes;
+        } else {
+            option<Result> qeRes = computeResViaQuantifierElimination();
+            if (qeRes) return {qeRes.get()};
+            return computeResViaCalculus();
+        }
 }
 
 Proof AccelerationProblem::getProof() const {

@@ -74,27 +74,29 @@ Acceleration::Result LoopAcceleration::run() {
                 unsigned vb = ap->getValidityBound();
                 res.status = vb > 1 ? PartialSuccess : Success;
                 if (ar.witnessesNonterm) {
-                    Rule nontermRule = buildNontermRule(ar.newGuard);
-                    res.rules.emplace_back(nontermRule);
-                    res.proof.ruleTransformationProof(rule, "nonterm", nontermRule, its);
+                    option<Rule> nontermRule = buildNontermRule(ar.newGuard);
+                    for (unsigned i = 0; i < vb; ++i) {
+                        nontermRule = Chaining::chainRules(its, rule, nontermRule.get(), i+1 == vb);
+                    }
+                    if (!nontermRule) {
+                        continue;
+                    }
+                    res.rules.emplace_back(nontermRule.get());
+                    res.proof.ruleTransformationProof(rule, "nonterm", nontermRule.get(), its);
                     res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                 } else {
                     const BoolExpr toCheck = ar.newGuard->subs({ap->getIterationCounter(), max(2u, ap->getValidityBound())});
 //                    std::cout << "to check: " << toCheck << std::endl;
                     if (Smt::check(toCheck, its) == Smt::Sat) {
                         option<Rule> accel = Rule(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm().get());
-                        res.proof.ruleTransformationProof(rule, "acceleration", accel.get(), its);
-                        res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                         for (unsigned i = 0; i < vb; ++i) {
-                            option<Rule> chained = Chaining::chainRules(its, rule, accel.get(), i+1 == vb);
-                            if (chained) {
-                                res.proof.chainingProof(rule, accel.get(), chained.get(), its);
-                            }
-                            accel = chained;
+                            accel = Chaining::chainRules(its, rule, accel.get(), i+1 == vb);
                         }
                         if (!accel) {
                             continue;
                         }
+                        res.proof.ruleTransformationProof(rule, "acceleration", accel.get(), its);
+                        res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                         std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel.get());
                         if (instantiated.empty()) {
                             res.rules.emplace_back(accel.get());

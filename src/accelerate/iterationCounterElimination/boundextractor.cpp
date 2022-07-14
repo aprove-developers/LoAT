@@ -48,13 +48,14 @@ void BoundExtractor::extractBounds() {
                 lower.push_back(optSolved.get());
                 upper.push_back(optSolved.get());
             }
-        }
-        std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, N);
-        if (bounds.first) {
-            lower.push_back(bounds.first.get());
-        }
-        if (bounds.second) {
-            upper.push_back(bounds.second.get());
+        } else {
+            std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, N);
+            if (bounds.first) {
+                lower.push_back(bounds.first.get());
+            }
+            if (bounds.second) {
+                upper.push_back(bounds.second.get());
+            }
         }
     }
 }
