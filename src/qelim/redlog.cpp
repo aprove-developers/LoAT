@@ -1,6 +1,7 @@
+#include <future>
+
 #include "redlog.hpp"
 #include "../parser/redlog/redlogparsevisitor.h"
-#include <qepcad/qepcad.h>
 
 Redlog::Redlog() {}
 
@@ -22,7 +23,6 @@ RedProc initRedproc() {
 }
 
 RedProc Redlog::process() {
-    QEPCADContext Q;
     static RedProc process = initRedproc();
     return process;
 }
@@ -41,18 +41,31 @@ void Redlog::exit() {
 }
 
 option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan) {
-    std::string command = "rlqe(" + qf.toRedlog() + ");";
-//    std::cout << "command: " << command << std::endl;
-    RedAns output = RedAns_new(process(), command.c_str());
-    if (output->error) {
-        RedProc_error(process(), command.c_str(), output);
-        RedAns_delete(output);
+    const auto p = qf.simplify().normalizeVariables(varMan);
+    const QuantifiedFormula normalized = p.first;
+    const Subs denormalization = p.second;
+    if (normalized.isTiviallyTrue()) {
+        return True;
+    } else if (normalized.isTiviallyFalse()) {
+        return False;
+    }
+    std::string command = "rlqe(" + normalized.toRedlog() + ");";
+    std::cout << "command: " << command << std::endl;
+    auto qe = std::async([command]{return RedAns_new(process(), command.c_str());});
+    if (qe.wait_for(std::chrono::milliseconds(1000)) != std::future_status::timeout) {
+        RedAns output = qe.get();
+        if (output->error) {
+            RedProc_error(process(), command.c_str(), output);
+            RedAns_delete(output);
+        } else {
+            std::string str = output->result;
+            std::cout << "redlog: " << output->result << std::endl;
+            BoolExpr res = RedlogParseVisitor::parse(str, varMan);
+            RedAns_delete(output);
+            return res->simplify()->subs(denormalization);
+        }
     } else {
-        std::string str = output->result;
-//        std::cout << "redlog: " << output->result << std::endl;
-        BoolExpr res = RedlogParseVisitor::parse(str, varMan);
-        RedAns_delete(output);
-        return res;
+//        std::cout << "redlog timed out" << std::endl;
     }
     return {};
 }

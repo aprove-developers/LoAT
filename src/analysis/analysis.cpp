@@ -29,7 +29,7 @@
 #include "../accelerate/accelerator.hpp"
 #include "../its/export.hpp"
 #include "../smt/yices/yices.hpp"
-#include "../qelim/qepcad.hpp"
+#include "../qelim/redlog.hpp"
 
 #include <future>
 
@@ -211,7 +211,7 @@ void Analysis::finalize(RuntimeResult &res) {
 
 void Analysis::run() {
     Yices::init();
-    Qepcad::init();
+    Redlog::init();
 
     Proof *proof = new Proof();
     RuntimeResult *res = new RuntimeResult();
@@ -244,7 +244,7 @@ void Analysis::run() {
     delete res;
     delete proof;
 
-    Qepcad::exit();
+    Redlog::exit();
     Yices::exit();
 
     bool simpDone = simp.wait_for(std::chrono::seconds(0)) == std::future_status::ready;

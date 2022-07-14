@@ -25,21 +25,30 @@ const std::vector<Expr> BoundExtractor::getLowerAndUpper() const {
 }
 
 void BoundExtractor::extractBounds() {
-    // First check if there is an equality constraint (we can then ignore all other upper bounds)
-    for (const Rel &rel : guard->lits()) {
-        if (rel.isEq() && rel.has(N)) {
-            auto optSolved = GuardToolbox::solveTermFor(rel.lhs() - rel.rhs(), N, GuardToolbox::ResultMapsToInt);
-            if (optSolved) {
-                // One equality is enough, as all other bounds must also satisfy this equality
-                eq = optSolved.get();
+    if (guard->isConjunction()) {
+        // First check if there is an equality constraint (we can then ignore all other upper bounds)
+        for (const Rel &rel : guard->lits()) {
+            if (rel.isEq() && rel.has(N)) {
+                auto optSolved = GuardToolbox::solveTermFor(rel.lhs() - rel.rhs(), N, GuardToolbox::ResultMapsToInt);
+                if (optSolved) {
+                    // One equality is enough, as all other bounds must also satisfy this equality
+                    eq = optSolved.get();
+                }
+                return;
             }
-            return;
         }
     }
 
     // Otherwise, collect all bounds
     for (const Rel &rel : guard->lits()) {
-        if (rel.isEq() || !rel.has(N)) continue;
+        if (!rel.has(N)) continue;
+        if (rel.isEq()) {
+            auto optSolved = GuardToolbox::solveTermFor(rel.lhs() - rel.rhs(), N, GuardToolbox::ResultMapsToInt);
+            if (optSolved) {
+                lower.push_back(optSolved.get());
+                upper.push_back(optSolved.get());
+            }
+        }
         std::pair<option<Expr>, option<Expr>> bounds = GuardToolbox::getBoundFromIneq(rel, N);
         if (bounds.first) {
             lower.push_back(bounds.first.get());

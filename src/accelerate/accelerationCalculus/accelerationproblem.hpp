@@ -15,6 +15,7 @@ private:
     struct Entry {
         RelSet dependencies;
         BoolExpr formula;
+        bool exact;
         bool nonterm;
     };
 
@@ -51,11 +52,12 @@ private:
     bool eventualWeakIncrease(const Rel &rel);
     bool fixpoint(const Rel &rel);
     RelSet findConsistentSubset(const BoolExpr e) const;
-    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm = false);
+    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact = true, bool nonterm = false);
 
     struct ReplacementMap {
         bool acceleratedAll;
         bool nonterm;
+        bool exact;
         RelMap<BoolExpr> map;
     };
 
@@ -65,12 +67,10 @@ public:
 
     struct Result {
         BoolExpr newGuard;
+        bool exact;
         bool witnessesNonterm;
 
-        Result(const BoolExpr &newGuard, bool witnessesNonterm) {
-            this->newGuard = newGuard;
-            this->witnessesNonterm = witnessesNonterm;
-        }
+        Result(const BoolExpr &newGuard, bool exact, bool witnessesNonterm): newGuard(newGuard), exact(exact), witnessesNonterm(witnessesNonterm) {}
 
     };
 
@@ -86,6 +86,8 @@ public:
 
 private:
 
+    std::vector<Result> computeResViaCalculus();
+    option<Result> computeResViaQuantifierElimination();
     option<Entry> depsWellFounded(const Rel& rel, bool nontermOnly = false, RelSet seen = {}) const;
 
 };

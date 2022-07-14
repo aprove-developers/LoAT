@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
+#include "../parser/redlog/redlogparsevisitor.h"
 
 BoolExpression::~BoolExpression() {}
 
@@ -106,8 +107,8 @@ size_t BoolLit::size() const {
     return 1;
 }
 
-option<std::string> BoolLit::toQepcad() const {
-    return lit.toQepcad();
+std::string BoolLit::toRedlog() const {
+    return lit.toString();
 }
 
 void BoolLit::collectLits(RelSet &res) const {
@@ -240,22 +241,16 @@ size_t BoolJunction::size() const {
     return res;
 }
 
-option<std::string> BoolJunction::toQepcad() const {
-    if (children.empty()) {
-        std::string res = isAnd() ? "1=1" : "1=0";
-        return res;
+std::string BoolJunction::toRedlog() const {
+    std::string infix = isAnd() ? " and " : " or ";
+    std::string res;
+    bool first = true;
+    for (auto it = children.begin(); it != children.end(); ++it) {
+        if (first) first = false;
+        else res += infix;
+        res += (*it)->toRedlog();
     }
-    auto it = children.begin();
-    option<std::string> res = (*it)->toQepcad();
-    if (!res) return {};
-    ++it;
-    const std::string sep = isAnd() ? " /\\ " : " \\/ ";
-    for (; it != children.end(); ++it) {
-        option<std::string> arg = (*it)->toQepcad();
-        if (!arg) return {};
-        res = res.get() + sep + arg.get();
-    }
-    return "[" + res.get() + "]";
+    return "(" + res + ")";
 }
 
 void BoolJunction::collectLits(RelSet &res) const {
@@ -299,28 +294,38 @@ void BoolJunction::dnf(std::vector<Guard> &res) const {
 
 BoolExpr BoolJunction::simplify() const {
     if (isAnd()) {
-        bool allTrue = true;
+        BoolExprSet newChildren;
         for (const auto &c: children) {
             const auto simp = c->simplify();
             if (simp == False) {
                 return False;
+            } else if (simp != True) {
+                newChildren.insert(c);
             }
-            allTrue &= simp == True;
         }
-        if (allTrue) {
+        if (newChildren.empty()) {
             return True;
+        } else if (children.size() == newChildren.size()) {
+            return shared_from_this();
+        } else {
+            return buildAnd(newChildren);
         }
     } else if (isOr()) {
-        bool allFalse = true;
+        BoolExprSet newChildren;
         for (const auto &c: children) {
             const auto simp = c->simplify();
             if (simp == True) {
                 return True;
+            } else if (simp != False) {
+                newChildren.insert(c);
             }
-            allFalse &= simp == False;
         }
-        if (allFalse) {
+        if (newChildren.empty()) {
             return False;
+        } else if (children.size() == newChildren.size()) {
+            return shared_from_this();
+        } else {
+            return buildOr(newChildren);
         }
     }
     return shared_from_this();
@@ -353,11 +358,11 @@ Quantifier::Type Quantifier::getType() const {
     return qType;
 }
 
-std::string Quantifier::toQepcad() const {
+std::string Quantifier::toRedlog() const {
+    std::string q = qType == Type::Exists ? "ex" : "all";
     std::string res;
-    std::string t = getType() == Quantifier::Type::Forall ? "A" : "E";
-    for (const auto& x: this->getVars()) {
-        res += "(" + t + " " + x.get_name() + ")";
+    for (const auto& var: vars) {
+        res = q + "(" + var.get_name() + ",";
     }
     return res;
 }
@@ -416,35 +421,18 @@ VarSet QuantifiedFormula::freeVars() const {
     return free;
 }
 
-option<QuantifiedFormula::QepcadIn> QuantifiedFormula::toQepcad() const {
-    QepcadIn res;
-    bool first = true;
-    const VarSet free = freeVars();
-    for (const auto& x: free) {
-        if (first) {
-            res.variables += "(" + x.get_name();
-            first = false;
-        } else {
-            res.variables += "," + x.get_name();
+std::string QuantifiedFormula::toRedlog() const {
+    std::string res;
+    for (const auto &q: prefix) {
+        res += q.toRedlog();
+    }
+    res += matrix->toRedlog();
+    for (const auto &q: prefix) {
+        unsigned size = q.getVars().size();
+        for (unsigned i = 0; i < size; ++i) {
+            res += ")";
         }
     }
-    res.freeVariables = free.size();
-    for (const auto& q: prefix) {
-        res.formula += q.toQepcad();
-        for (const auto &x: q.getVars()) {
-            if (first) {
-                res.variables += "(" + x.get_name();
-                first = false;
-            } else {
-                res.variables += "," + x.get_name();
-            }
-        }
-    }
-    res.variables += ")";
-
-    option<std::string> m = matrix->toQepcad();
-    if (!m) return {};
-    res.formula += "[" + m.get() + "].";
     return res;
 }
 
@@ -475,6 +463,23 @@ std::pair<QuantifiedFormula, Subs> QuantifiedFormula::normalizeVariables(Variabl
         }
     }
     return {QuantifiedFormula(newPrefix, newMatrix), inverse};
+}
+
+QuantifiedFormula QuantifiedFormula::simplify() const {
+    BoolExpr newMatrix = matrix->simplify();
+    if (newMatrix == matrix) {
+        return *this;
+    } else {
+        return QuantifiedFormula(prefix, newMatrix);
+    }
+}
+
+bool QuantifiedFormula::isTiviallyTrue() const {
+    return matrix == True;
+}
+
+bool QuantifiedFormula::isTiviallyFalse() const {
+    return matrix == False;
 }
 
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {

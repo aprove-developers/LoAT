@@ -2,7 +2,7 @@
 #include "../../accelerate/recurrence/recurrence.hpp"
 #include "../../smt/smtfactory.hpp"
 #include "../../util/relevantvariables.hpp"
-#include "../../qelim/qepcad.hpp"
+#include "../../qelim/redlog.hpp"
 
 AccelerationProblem::AccelerationProblem(
         const BoolExpr guard,
@@ -79,11 +79,11 @@ RelSet AccelerationProblem::findConsistentSubset(BoolExpr e) const {
     return res;
 }
 
-option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool nonterm) {
+option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact, bool nonterm) {
     if (res.count(rel) == 0) {
         res[rel] = std::vector<Entry>();
     }
-    res[rel].push_back({deps, formula, nonterm});
+    res[rel].push_back({deps, formula, nonterm, exact});
     return res[rel].size() - 1;
 }
 
@@ -192,7 +192,7 @@ bool AccelerationProblem::recurrence(const Rel &rel) {
             }
             dependencies.erase(rel);
             const BoolExpr newGuard = buildAnd(dependencies) & rel;
-            option<unsigned int> idx = store(rel, dependencies, newGuard, true);
+            option<unsigned int> idx = store(rel, dependencies, newGuard, true, true);
             if (idx) {
                 std::stringstream ss;
                 ss << rel << " [" << idx.get() << "]: monotonic increase yields " << newGuard;
@@ -300,7 +300,7 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
             }
             const BoolExpr newGuard = buildAnd(dependencies) & rel & inc;
             if (Smt::check(newGuard, its) == Smt::Sat) {
-                option<unsigned int> idx = store(rel, dependencies, newGuard, true);
+                option<unsigned int> idx = store(rel, dependencies, newGuard, false, true);
                 if (idx) {
                     std::stringstream ss;
                     ss << rel << " [" << idx.get() << "]: eventual increase yields " << newGuard;
@@ -330,7 +330,7 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
         BoolExpr allEq = buildAnd(eqs);
         if (Smt::check(guard & rel & allEq, its) == Smt::Sat) {
             BoolExpr newGuard = allEq & rel;
-            option<unsigned int> idx = store(rel, {}, newGuard, true);
+            option<unsigned int> idx = store(rel, {}, newGuard, false, true);
             if (idx) {
                 std::stringstream ss;
                 ss << rel << " [" << idx.get() << "]: fixpoint yields " << newGuard;
@@ -347,15 +347,18 @@ AccelerationProblem::ReplacementMap AccelerationProblem::computeReplacementMap(b
     ReplacementMap res;
     res.nonterm = true;
     res.acceleratedAll = true;
+    res.exact = guard->isConjunction();
     RelMap<Entry> entryMap;
     for (const Rel& rel: todo) {
         option<Entry> e = depsWellFounded(rel, nontermOnly);
         if (e) {
             entryMap[rel] = e.get();
             res.nonterm &= e->nonterm;
+            res.exact &= e->exact;
         } else {
             res.acceleratedAll = false;
             res.map[rel] = False;
+            res.exact = false;
             if (isConjunction) return res;
         }
     }
@@ -389,59 +392,83 @@ AccelerationProblem::ReplacementMap AccelerationProblem::computeReplacementMap(b
     return res;
 }
 
-std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
-    std::vector<AccelerationProblem::Result> ret;
-    if (closed) {
-        Var m = its.getFreshUntrackedSymbol("m", Expr::Int);
-        BoolExpr matrix = guard->subs(closed.get())->subs({n, m}) | (m < 0);
-        QuantifiedFormula q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m})});
-        option<BoolExpr> res = Qepcad::qe(q, its);
-        if (res && res.get() != False) {
+option<AccelerationProblem::Result> AccelerationProblem::computeResViaQuantifierElimination() {
+    Var m = its.getFreshUntrackedSymbol("m", Expr::Int);
+    BoolExpr matrix = guard->subs(closed.get())->subs({n, m}) | (m < 0);
+    QuantifiedFormula q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m})});
+    option<BoolExpr> res = Redlog::qe(q, its);
+    if (res && res.get() != False) {
 //            std::cout << "proved non-termination via quantifier elimination" << std::endl;
-            ret.push_back(Result(res.get(), true));
-            return ret;
-        } else {
-//            std::cout << "failed to prove non-termination via quantifier elimination" << std::endl;
-            matrix = (guard->subs(closed.get())->subs({n, m}) | (m < 0) | (m >= n)) & (n > 0);
-            q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m})});
-            res = Qepcad::qe(q, its);
-            if (res && res.get() != False) {
-//                std::cout << "accelerated loop via quantifier elimination: " << res.get() << std::endl;
-                ret.push_back(Result(res.get(), false));
-            } else {
-//                std::cout << "failed to accelerate loop via quantifier elimination" << std::endl;
-            }
-        }
+        return Result(res.get(), false, true);
     } else {
-        for (const Rel& rel: todo) {
-            bool res = recurrence(rel);
-            if (ret.empty()) res |= monotonicity(rel);
-            if (ret.empty()) res |= eventualWeakDecrease(rel);
-            res |= eventualWeakIncrease(rel);
-            res |= fixpoint(rel);
-            if (!res && isConjunction) return ret;
+//            std::cout << "failed to prove non-termination via quantifier elimination" << std::endl;
+        matrix = (guard->subs(closed.get())->subs({n, m}) | (m < 0) | (m >= n)) & (n >= 0);
+        q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m})});
+        res = Redlog::qe(q, its);
+        if (res && res.get() != False) {
+//                std::cout << "accelerated loop via quantifier elimination: " << res.get() << std::endl;
+            return Result(res.get(), false, false);
+        } else {
+//                std::cout << "failed to accelerate loop via quantifier elimination" << std::endl;
         }
-        ReplacementMap map = computeReplacementMap(false);
-        if (map.acceleratedAll || !isConjunction) {
-            bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
-            bool nt = map.nonterm && positiveCost;
-            BoolExpr newGuard = guard->replaceRels(map.map);
-            if (!nt) newGuard = newGuard & (n >= 0);
-            if (Smt::check(newGuard, its) == Smt::Sat) {
-                ret.emplace_back(newGuard, nt);
-            }
-            if (closed && positiveCost && !map.nonterm) {
-                ReplacementMap map = computeReplacementMap(true);
-                if (map.acceleratedAll || !isConjunction) {
-                    BoolExpr newGuard = guard->replaceRels(map.map);
-                    if (Smt::check(newGuard, its) == Smt::Sat) {
-                        ret.emplace_back(newGuard, true);
-                    }
+    }
+    return {};
+}
+
+std::vector<AccelerationProblem::Result> AccelerationProblem::computeResViaCalculus() {
+    std::vector<AccelerationProblem::Result> ret;
+    for (const Rel& rel: todo) {
+        bool res = recurrence(rel);
+        res |= monotonicity(rel);
+        res |= eventualWeakDecrease(rel);
+        res |= eventualWeakIncrease(rel);
+        res |= fixpoint(rel);
+        if (!res && isConjunction) return ret;
+    }
+    ReplacementMap map = computeReplacementMap(false);
+    if (map.acceleratedAll || !isConjunction) {
+        bool positiveCost = Config::Analysis::mode != Config::Analysis::Mode::Complexity || Smt::isImplication(guard, buildLit(cost > 0), its);
+        bool nt = map.nonterm && positiveCost;
+        BoolExpr newGuard = guard->replaceRels(map.map);
+        if (!nt) newGuard = newGuard & (n >= 0);
+        if (Smt::check(newGuard, its) == Smt::Sat) {
+            ret.emplace_back(newGuard, map.exact, nt);
+        }
+        if (closed && positiveCost && !map.nonterm) {
+            ReplacementMap map = computeReplacementMap(true);
+            if (map.acceleratedAll || !isConjunction) {
+                BoolExpr newGuard = guard->replaceRels(map.map);
+                if (Smt::check(newGuard, its) == Smt::Sat) {
+                    ret.emplace_back(newGuard, map.exact, true);
                 }
             }
         }
     }
     return ret;
+}
+
+std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
+    if (guard->isConjunction()) {
+        std::vector<Result> res = computeResViaCalculus();
+        bool nonterm = false;
+        for (const auto &r: res) {
+            if (r.exact) return res;
+            if (r.witnessesNonterm) nonterm = true;
+        }
+        option<Result> qeRes = computeResViaQuantifierElimination();
+        if (!qeRes) return res;
+        if (qeRes->witnessesNonterm || !nonterm) return {qeRes.get()};
+        std::vector<Result> combinedRes;
+        for (const auto &r: res) {
+            if (r.witnessesNonterm) combinedRes.push_back(r);
+        }
+        combinedRes.push_back(qeRes.get());
+        return combinedRes;
+    } else {
+        option<Result> qeRes = computeResViaQuantifierElimination();
+        if (qeRes) return {qeRes.get()};
+        return computeResViaCalculus();
+    }
 }
 
 Proof AccelerationProblem::getProof() const {

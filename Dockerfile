@@ -1,8 +1,11 @@
-FROM voidlinux/voidlinux-musl:20191230 as loat_build
+FROM voidlinux/voidlinux-musl:latest as loat_build
 LABEL author="Florian Frohn"
 
-RUN SSL_NO_VERIFY_PEER=1 xbps-install -ySu xbps
-RUN SSL_NO_VERIFY_PEER=1 xbps-install -ySu
+ARG CACHEBUST=0
+
+RUN xbps-install -ySu xbps
+RUN xbps-install -yS
+RUN xbps-install -yu
 RUN xbps-install -y gcc
 RUN xbps-install -y git
 RUN xbps-install -y automake
@@ -23,24 +26,24 @@ RUN xbps-install -y python-devel
 RUN mkdir /src/
 
 # reduce
-# RUN xbps-install -y subversion
-# RUN xbps-install -y ncurses-devel
-# RUN xbps-install -y libX11-devel
-# RUN xbps-install -y libXft-devel
-# RUN xbps-install -y libXext-devel
-# RUN xbps-install -y file
-# RUN xbps-install -y libffi-devel
-# RUN xbps-install -y libltdl-devel
-# WORKDIR /src
-# RUN svn co http://svn.code.sf.net/p/reduce-algebra/code/trunk reduce-algebra
-# WORKDIR /src/reduce-algebra
-# RUN ./configure --with-csl
-# RUN cp /usr/include/unistd.h /usr/include/sys/
-# RUN make
-# WORKDIR /src/reduce-algebra/generic/libreduce
-# RUN sed -i 's/AC_CONFIG_MACRO_DIRS/AC_CONFIG_MACRO_DIR/g' src/configure.ac
-# RUN xbps-alternatives -g python -s python
-# RUN make
+RUN xbps-install -y subversion
+RUN xbps-install -y ncurses-devel
+RUN xbps-install -y libX11-devel
+RUN xbps-install -y libXft-devel
+RUN xbps-install -y libXext-devel
+RUN xbps-install -y file
+RUN xbps-install -y libffi-devel
+RUN xbps-install -y libltdl-devel
+WORKDIR /src
+RUN svn co http://svn.code.sf.net/p/reduce-algebra/code/trunk reduce-algebra
+WORKDIR /src/reduce-algebra
+RUN ./configure --with-csl
+RUN cp /usr/include/unistd.h /usr/include/sys/
+RUN make
+WORKDIR /src/reduce-algebra/generic/libreduce
+RUN sed -i 's/AC_CONFIG_MACRO_DIRS/AC_CONFIG_MACRO_DIR/g' src/configure.ac
+RUN xbps-alternatives -g python -s python
+RUN make
 
 # z3
 WORKDIR /src
@@ -138,32 +141,28 @@ RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE="-march=sandybri
 RUN make -j
 RUN make install
 
-ARG CACHEBUST=3
-
 # qepcad
-WORKDIR /src
-RUN git clone https://github.com/ffrohn/qepcad.git
-RUN mkdir -p /src/qepcad/build
-WORKDIR /src/qepcad/build
-RUN cmake ..
-RUN make -j
-RUN make install
+# WORKDIR /src
+# RUN git clone https://github.com/ffrohn/qepcad.git
+# RUN mkdir -p /src/qepcad/build
+# WORKDIR /src/qepcad/build
+# RUN cmake ..
+# RUN make -j
+# RUN make install
 
 ARG ANTLR4_INCLUDE_PATH=/src/antlr4/runtime/Cpp/runtime/src
 ARG SHA
 ARG DIRTY
 
 # loat
-RUN mkdir -p /home/ffrohn/repos/LoAT
-WORKDIR /home/ffrohn/repos/LoAT
-COPY CMakeLists.txt /home/ffrohn/repos/LoAT/
-COPY src /home/ffrohn/repos/LoAT/src/
+RUN mkdir -p /src/LoAT
+WORKDIR /src/LoAT
+COPY CMakeLists.txt /src/LoAT/
+COPY src /src/LoAT/src/
 COPY cmake /home/ffrohn/repos/LoAT/cmake/
-# RUN mkdir /home/ffrohn/repos/LoAT/lib
-# RUN cp /src/reduce-algebra/generic/libreduce/x86_64-pc-linux-musl/libreduce.* /home/ffrohn/repos/LoAT/lib
-# RUN mkdir /home/ffrohn/repos/LoAT/include
-# RUN cp /src/reduce-algebra/generic/libreduce/src/reduce.h /home/ffrohn/repos/LoAT/include
-RUN mkdir -p /home/ffrohn/repos/LoAT/build/static/release
-WORKDIR /home/ffrohn/repos/LoAT/build/static/release
+RUN mkdir /src/LoAT/lib
+RUN cp /src/reduce-algebra/generic/libreduce/x86_64-pc-linux-musl/libreduce.* /src/LoAT/lib
+RUN mkdir -p /src/LoAT/build/static/release
+WORKDIR /src/LoAT/build/static/release
 RUN cmake -DSTATIC=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DCMAKE_CXX_FLAGS_RELEASE='-march=sandybridge -O3 -DNDEBUG' -DSHA=$SHA -DDIRTY=$DIRTY ../../../
 RUN make -j

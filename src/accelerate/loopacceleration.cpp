@@ -83,14 +83,18 @@ Acceleration::Result LoopAcceleration::run() {
 //                    std::cout << "to check: " << toCheck << std::endl;
                     if (Smt::check(toCheck, its) == Smt::Sat) {
                         option<Rule> accel = Rule(rule.getLhsLoc(), ar.newGuard, ap->getAcceleratedCost(), rule.getRhsLoc(), ap->getClosedForm().get());
+                        res.proof.ruleTransformationProof(rule, "acceleration", accel.get(), its);
+                        res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                         for (unsigned i = 0; i < vb; ++i) {
-                            accel = Chaining::chainRules(its, rule, accel.get(), i+1 == vb);
+                            option<Rule> chained = Chaining::chainRules(its, rule, accel.get(), i+1 == vb);
+                            if (chained) {
+                                res.proof.chainingProof(rule, accel.get(), chained.get(), its);
+                            }
+                            accel = chained;
                         }
                         if (!accel) {
                             continue;
                         }
-                        res.proof.ruleTransformationProof(rule, "acceleration", accel.get(), its);
-                        res.proof.storeSubProof(ap->getProof(), "acceration calculus");
                         std::vector<Rule> instantiated = replaceByUpperbounds(ap->getIterationCounter(), accel.get());
                         if (instantiated.empty()) {
                             res.rules.emplace_back(accel.get());

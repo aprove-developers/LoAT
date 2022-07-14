@@ -48,7 +48,7 @@ public:
     virtual BoolExpr toLeq() const = 0;
     virtual void collectLits(RelSet &res) const = 0;
     virtual void collectVars(VarSet &res) const = 0;
-    virtual option<std::string> toQepcad() const = 0;
+    virtual std::string toRedlog() const = 0;
     virtual size_t size() const = 0;
     virtual BoolExpr replaceRels(const RelMap<BoolExpr> map) const = 0;
     virtual unsigned hash() const = 0;
@@ -83,7 +83,7 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    option<std::string> toQepcad() const override;
+    std::string toRedlog() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
     BoolExpr simplify() const override;
@@ -120,7 +120,7 @@ public:
     void collectLits(RelSet &res) const override;
     void collectVars(VarSet &res) const override;
     size_t size() const override;
-    option<std::string> toQepcad() const override;
+    std::string toRedlog() const override;
     BoolExpr replaceRels(const RelMap<BoolExpr> map) const override;
     unsigned hash() const override;
     BoolExpr simplify() const override;
@@ -145,7 +145,7 @@ public:
     Quantifier negation() const;
     const VarSet& getVars() const;
     Type getType() const;
-    std::string toQepcad() const;
+    std::string toRedlog() const;
 
 };
 
@@ -157,12 +157,6 @@ private:
 
 public:
 
-    struct QepcadIn {
-        unsigned freeVariables;
-        std::string variables;
-        std::string formula;
-    };
-
     QuantifiedFormula(std::vector<Quantifier> prefix, const BoolExpr &matrix);
     const QuantifiedFormula negation() const;
     bool isLinear() const;
@@ -173,8 +167,11 @@ public:
     QuantifiedFormula toLeq() const;
     void collectLits(RelSet &res) const;
     VarSet freeVars() const;
-    option<QepcadIn> toQepcad() const;
+    std::string toRedlog() const;
     std::pair<QuantifiedFormula, Subs> normalizeVariables(VariableManager &varMan) const;
+    QuantifiedFormula simplify() const;
+    bool isTiviallyTrue() const;
+    bool isTiviallyFalse() const;
     friend std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f);
 
 };
