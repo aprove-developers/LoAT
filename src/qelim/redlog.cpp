@@ -2,6 +2,7 @@
 
 #include "redlog.hpp"
 #include "../parser/redlog/redlogparsevisitor.h"
+#include "../config.hpp"
 
 Redlog::Redlog() {}
 
@@ -28,16 +29,20 @@ RedProc Redlog::process() {
 }
 
 void Redlog::init() {
-    const char* cmd = "rlset r;";
-    RedAns output = RedAns_new(process(), cmd);
-    if (output->error) {
-        RedProc_error(process(), cmd, output);
+    if (Config::LoopAccel::accelerationTechnique != Config::LoopAccel::Calculus) {
+        const char* cmd = "rlset r;";
+        RedAns output = RedAns_new(process(), cmd);
+        if (output->error) {
+            RedProc_error(process(), cmd, output);
+        }
+        RedAns_delete(output);
     }
-    RedAns_delete(output);
 }
 
 void Redlog::exit() {
-    RedProc_delete(process());
+    if (Config::LoopAccel::accelerationTechnique != Config::LoopAccel::Calculus) {
+        RedProc_delete(process());
+    }
 }
 
 option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan) {
@@ -65,7 +70,7 @@ option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan
                 BoolExpr res = RedlogParseVisitor::parse(str, varMan);
                 RedAns_delete(output);
                 return res->simplify()->subs(denormalization);
-            } catch (RedlogParseVisitor::ParseError e) {
+            } catch (const RedlogParseVisitor::ParseError &e) {
                 std::cerr << e.what() << std::endl;
             }
         }

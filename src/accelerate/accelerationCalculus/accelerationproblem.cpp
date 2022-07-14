@@ -483,6 +483,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             if (qeRes) return {qeRes.get()};
             return computeResViaCalculus();
         }
+    }
 }
 
 Proof AccelerationProblem::getProof() const {
