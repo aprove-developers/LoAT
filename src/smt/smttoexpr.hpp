@@ -82,7 +82,7 @@ protected:
     }
 
     option<Expr> convert_add(const EXPR &e){
-        const std::vector<EXPR> &children = context.getChildren(e);
+        const std::vector<EXPR> children = context.getChildren(e);
         assert(!children.empty());
         option<Expr> res;
         for (const EXPR &c: children) {
@@ -99,7 +99,7 @@ protected:
     }
 
     option<Expr> convert_mul(const EXPR &e) {
-        const std::vector<EXPR> &children = context.getChildren(e);
+        const std::vector<EXPR> children = context.getChildren(e);
         assert(!children.empty());
         option<Expr> res;
         for (const EXPR &c: children) {
@@ -116,17 +116,17 @@ protected:
     }
 
     Expr convert_div(const EXPR &e) {
-        const std::vector<EXPR> &children = context.getChildren(e);
+        const std::vector<EXPR> children = context.getChildren(e);
         assert(children.size() == 2);
         assert(context.isRationalConstant(children[0]));
         assert(context.isRationalConstant(children[1]));
-        const Expr &x = convert_numeric(context.isRationalConstant(children[0]));
-        const Expr &y = convert_numeric(context.isRationalConstant(children[1]));
+        const Expr x = convert_numeric(context.isRationalConstant(children[0]));
+        const Expr y = convert_numeric(context.isRationalConstant(children[1]));
         return x.toNum() / y.toNum();
     }
 
     option<Expr> convert_power(const EXPR &e) {
-        const std::vector<EXPR> &children = context.getChildren(e);
+        const std::vector<EXPR> children = context.getChildren(e);
         assert(children.size() == 2);
         option<Expr> base = convert_ex(children[0]);
         if (!base) return {};

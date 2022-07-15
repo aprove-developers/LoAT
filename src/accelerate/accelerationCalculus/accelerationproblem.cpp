@@ -484,6 +484,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             return computeResViaCalculus();
         }
     }
+    return {};
 }
 
 Proof AccelerationProblem::getProof() const {

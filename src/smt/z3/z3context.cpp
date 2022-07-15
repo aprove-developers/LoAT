@@ -128,7 +128,8 @@ bool Z3Context::isNot(const z3::expr &e) const {
 
 std::vector<z3::expr> Z3Context::getChildren(const z3::expr &e) const {
     std::vector<z3::expr> res;
-    for (unsigned int i = 0, arity = e.num_args(); i < arity; ++i) {
+    unsigned arity = e.num_args();
+    for (unsigned i = 0; i < arity; ++i) {
         res.push_back(e.arg(i));
     }
     return res;

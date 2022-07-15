@@ -79,7 +79,7 @@ public:
         if (it != varMap.end()) {
             return it->second;
         }
-        return {};
+        return option<EXPR>{};
     }
 
     option<Var> getVariable(const std::string &name) const {
@@ -112,7 +112,7 @@ public:
         if (negated) {
             id = -id;
         }
-        const auto &it = constMap.find(id);
+        const auto it = constMap.find(id);
         option<EXPR> res;
         if (it == constMap.end()) {
             res = buildConst(id);

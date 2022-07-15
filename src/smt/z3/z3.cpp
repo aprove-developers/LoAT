@@ -117,7 +117,7 @@ BoolExpr Z3::simplify(const BoolExpr expr, const VariableManager &varMan, unsign
     z3::params params(z3Ctx);
     params.set(":timeout", timeout);
     s.set(params);
-    const z3::expr &converted = ExprToSmt<z3::expr>::convert(expr, ctx, varMan);
+    const z3::expr converted = ExprToSmt<z3::expr>::convert(expr, ctx, varMan);
     s.add(converted);
     s.check();
     std::vector<BoolExpr> simplified;
