@@ -341,9 +341,9 @@ public:
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
     antlr4::tree::TerminalNode *RPAR();
+    antlr4::tree::TerminalNode *MINUS();
     VarContext *var();
     antlr4::tree::TerminalNode *INT();
-    antlr4::tree::TerminalNode *MINUS();
     antlr4::tree::TerminalNode *EXP();
     antlr4::tree::TerminalNode *TIMES();
     antlr4::tree::TerminalNode *PLUS();
