@@ -24,13 +24,11 @@ ub      :       expr;
 cond    :       CONDSEP formula | LBRACK formula RBRACK;
 
 // arithmetic expressions
-expr    :       var | INT | MINUS expr | expr binop expr | LPAR expr RPAR;
-binop   :       EXP | TIMES | PLUS | MINUS;
+expr    :       LPAR expr RPAR | expr EXP expr | expr TIMES expr | expr PLUS expr | expr MINUS expr | var | INT | MINUS expr;
 
 // formulas
-formula :       lit | formula boolop formula | LPAR formula RPAR;
+formula :       LPAR formula RPAR | formula AND formula | formula OR formula | lit;
 lit     :       expr relop expr;
-boolop  :       AND | OR;
 relop   :       LT | LEQ | EQ | GT | GEQ | NEQ;
 
 // lexer stuff

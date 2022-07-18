@@ -53,9 +53,7 @@ public:
     virtual antlrcpp::Any visitUb(KoatParser::UbContext *ctx) override;
     virtual antlrcpp::Any visitCond(KoatParser::CondContext *ctx) override;
     virtual antlrcpp::Any visitExpr(KoatParser::ExprContext *ctx) override;
-    virtual antlrcpp::Any visitBinop(KoatParser::BinopContext *ctx) override;
     virtual antlrcpp::Any visitFormula(KoatParser::FormulaContext *ctx) override;
-    virtual antlrcpp::Any visitBoolop(KoatParser::BoolopContext *ctx) override;
     virtual antlrcpp::Any visitLit(KoatParser::LitContext *ctx) override;
     virtual antlrcpp::Any visitRelop(KoatParser::RelopContext *ctx) override;
 

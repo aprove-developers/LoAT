@@ -62,17 +62,11 @@ public:
   virtual void enterExpr(KoatParser::ExprContext *ctx) = 0;
   virtual void exitExpr(KoatParser::ExprContext *ctx) = 0;
 
-  virtual void enterBinop(KoatParser::BinopContext *ctx) = 0;
-  virtual void exitBinop(KoatParser::BinopContext *ctx) = 0;
-
   virtual void enterFormula(KoatParser::FormulaContext *ctx) = 0;
   virtual void exitFormula(KoatParser::FormulaContext *ctx) = 0;
 
   virtual void enterLit(KoatParser::LitContext *ctx) = 0;
   virtual void exitLit(KoatParser::LitContext *ctx) = 0;
-
-  virtual void enterBoolop(KoatParser::BoolopContext *ctx) = 0;
-  virtual void exitBoolop(KoatParser::BoolopContext *ctx) = 0;
 
   virtual void enterRelop(KoatParser::RelopContext *ctx) = 0;
   virtual void exitRelop(KoatParser::RelopContext *ctx) = 0;

@@ -51,13 +51,9 @@ public:
 
     virtual antlrcpp::Any visitExpr(KoatParser::ExprContext *context) = 0;
 
-    virtual antlrcpp::Any visitBinop(KoatParser::BinopContext *context) = 0;
-
     virtual antlrcpp::Any visitFormula(KoatParser::FormulaContext *context) = 0;
 
     virtual antlrcpp::Any visitLit(KoatParser::LitContext *context) = 0;
-
-    virtual antlrcpp::Any visitBoolop(KoatParser::BoolopContext *context) = 0;
 
     virtual antlrcpp::Any visitRelop(KoatParser::RelopContext *context) = 0;
 
