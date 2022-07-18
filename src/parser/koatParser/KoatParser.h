@@ -23,8 +23,7 @@ public:
     RuleMain = 0, RuleFs = 1, RuleVar = 2, RuleGoal = 3, RuleStart = 4, 
     RuleVardecl = 5, RuleTranss = 6, RuleTrans = 7, RuleLhs = 8, RuleCom = 9, 
     RuleRhs = 10, RuleTo = 11, RuleLb = 12, RuleUb = 13, RuleCond = 14, 
-    RuleExpr = 15, RuleBinop = 16, RuleFormula = 17, RuleLit = 18, RuleBoolop = 19, 
-    RuleRelop = 20
+    RuleExpr = 15, RuleFormula = 16, RuleLit = 17, RuleRelop = 18
   };
 
   KoatParser(antlr4::TokenStream *input);
@@ -53,10 +52,8 @@ public:
   class UbContext;
   class CondContext;
   class ExprContext;
-  class BinopContext;
   class FormulaContext;
   class LitContext;
-  class BoolopContext;
   class RelopContext; 
 
   class  MainContext : public antlr4::ParserRuleContext {
@@ -340,14 +337,16 @@ public:
   public:
     ExprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *LPAR();
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    antlr4::tree::TerminalNode *RPAR();
     VarContext *var();
     antlr4::tree::TerminalNode *INT();
     antlr4::tree::TerminalNode *MINUS();
-    std::vector<ExprContext *> expr();
-    ExprContext* expr(size_t i);
-    antlr4::tree::TerminalNode *LPAR();
-    antlr4::tree::TerminalNode *RPAR();
-    BinopContext *binop();
+    antlr4::tree::TerminalNode *EXP();
+    antlr4::tree::TerminalNode *TIMES();
+    antlr4::tree::TerminalNode *PLUS();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -358,34 +357,17 @@ public:
 
   ExprContext* expr();
   ExprContext* expr(int precedence);
-  class  BinopContext : public antlr4::ParserRuleContext {
-  public:
-    BinopContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *EXP();
-    antlr4::tree::TerminalNode *TIMES();
-    antlr4::tree::TerminalNode *PLUS();
-    antlr4::tree::TerminalNode *MINUS();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  BinopContext* binop();
-
   class  FormulaContext : public antlr4::ParserRuleContext {
   public:
     FormulaContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    LitContext *lit();
     antlr4::tree::TerminalNode *LPAR();
     std::vector<FormulaContext *> formula();
     FormulaContext* formula(size_t i);
     antlr4::tree::TerminalNode *RPAR();
-    BoolopContext *boolop();
+    LitContext *lit();
+    antlr4::tree::TerminalNode *AND();
+    antlr4::tree::TerminalNode *OR();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -412,22 +394,6 @@ public:
   };
 
   LitContext* lit();
-
-  class  BoolopContext : public antlr4::ParserRuleContext {
-  public:
-    BoolopContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *AND();
-    antlr4::tree::TerminalNode *OR();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  BoolopContext* boolop();
 
   class  RelopContext : public antlr4::ParserRuleContext {
   public:

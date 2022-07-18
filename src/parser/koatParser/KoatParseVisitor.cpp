@@ -134,34 +134,26 @@ antlrcpp::Any KoatParseVisitor::visitExpr(KoatParser::ExprContext *ctx) {
     } else if (ctx->LPAR()) {
         return visit(ctx->expr(0));
     } else if (ctx->MINUS()) {
-        Expr res = visit(ctx->expr(0));
-        return -res;
+        if (ctx->expr().size() == 2) {
+            Expr arg1 = visit(ctx->expr(0));
+            Expr arg2 = visit(ctx->expr(1));
+            return arg1 - arg2;
+        } else {
+            Expr res = visit(ctx->expr(0));
+            return -res;
+        }
     } else {
         Expr arg1 = visit(ctx->expr(0));
-        ArithOp op = visit(ctx->binop());
         Expr arg2 = visit(ctx->expr(1));
-        switch (op) {
-        case Plus: return arg1 + arg2;
-        case Minus: return arg1 - arg2;
-        case Times: return arg1 * arg2;
-        case Exp: return arg1 ^ arg2;
+        if (ctx->EXP()) {
+            return arg1 ^ arg2;
+        } else if (ctx->TIMES()) {
+            return arg1 * arg2;
+        } else if (ctx->PLUS()) {
+            return arg1 + arg2;
         }
     }
     throw ParseError("failed to parse expression " + ctx->getText());
-}
-
-antlrcpp::Any KoatParseVisitor::visitBinop(KoatParser::BinopContext *ctx) {
-    if (ctx->EXP()) {
-        return Exp;
-    } else if (ctx->TIMES()) {
-        return Times;
-    } else if (ctx->PLUS()) {
-        return Plus;
-    } else if (ctx->MINUS()) {
-        return Minus;
-    } else {
-        throw ParseError("unknown binary operator: " + ctx->getText());
-    }
 }
 
 antlrcpp::Any KoatParseVisitor::visitFormula(KoatParser::FormulaContext *ctx) {
@@ -171,29 +163,23 @@ antlrcpp::Any KoatParseVisitor::visitFormula(KoatParser::FormulaContext *ctx) {
         return visit(ctx->formula(0));
     } else {
         BoolExpr arg1 = visit(ctx->formula(0));
-        ConcatOperator op = visit(ctx->boolop());
         BoolExpr arg2 = visit(ctx->formula(1));
-        switch (op) {
-        case ConcatAnd: return arg1 & arg2;
-        case ConcatOr: return arg1 | arg2;
+        if (ctx->AND()) {
+            return arg1 & arg2;
+        } else if (ctx->OR()) {
+            return arg1 | arg2;
         }
     }
     throw ParseError("failed to parse formula " + ctx->getText());
 }
 
-antlrcpp::Any KoatParseVisitor::visitBoolop(KoatParser::BoolopContext *ctx) {
-    if (ctx->AND()) {
-        return ConcatAnd;
-    } else if (ctx->OR()) {
-        return ConcatOr;
-    } else {
-        throw ParseError("unknown boolean operator: " + ctx->getText());
-    }
-}
-
 antlrcpp::Any KoatParseVisitor::visitLit(KoatParser::LitContext *ctx) {
+    const auto &children = ctx->children;
+    if (children.size() != 3) {
+        throw ParseError("expected relation: " + ctx->getText());
+    }
     Expr arg1 = visit(ctx->expr(0));
-    Rel::RelOp op = visit(ctx->relop());
+    Rel::RelOp op = visit(children[1]);
     Expr arg2 = visit(ctx->expr(1));
     return Rel(arg1, op, arg2);
 }
