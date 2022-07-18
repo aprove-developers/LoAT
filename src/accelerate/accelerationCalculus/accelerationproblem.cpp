@@ -142,7 +142,7 @@ bool AccelerationProblem::monotonicity(const Rel &rel) {
                         dependencies.insert(*lit.begin());
                     }
                 }
-                const BoolExpr newGuard = buildAnd(dependencies) & newCond;
+                const BoolExpr newGuard = buildLit(newCond);
                 if (Smt::check(newGuard & (n >= validityBound), its) == Smt::Sat) {
                     option<unsigned int> idx = store(rel, dependencies, newGuard);
                     if (idx) {
@@ -191,7 +191,7 @@ bool AccelerationProblem::recurrence(const Rel &rel) {
                 }
             }
             dependencies.erase(rel);
-            const BoolExpr newGuard = buildAnd(dependencies) & rel;
+            const BoolExpr newGuard = buildLit(rel);
             option<unsigned int> idx = store(rel, dependencies, newGuard, true, true);
             if (idx) {
                 std::stringstream ss;
@@ -244,7 +244,7 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
                         dependencies.insert(*lit.begin());
                     }
                 }
-                const BoolExpr newGuard = buildAnd(dependencies) & rel & newCond;
+                const BoolExpr newGuard = buildLit(rel) & newCond;
                 if (Smt::check(newGuard & (n >= validityBound), its) == Smt::Sat) {
                     option<unsigned int> idx = store(rel, dependencies, newGuard);
                     if (idx) {
@@ -298,7 +298,7 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
                     dependencies.insert(*lit.begin());
                 }
             }
-            const BoolExpr newGuard = buildAnd(dependencies) & rel & inc;
+            const BoolExpr newGuard = buildLit(rel) & inc;
             if (Smt::check(newGuard, its) == Smt::Sat) {
                 option<unsigned int> idx = store(rel, dependencies, newGuard, false, true);
                 if (idx) {
