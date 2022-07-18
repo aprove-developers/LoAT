@@ -24,7 +24,7 @@ ub      :       expr;
 cond    :       CONDSEP formula | LBRACK formula RBRACK;
 
 // arithmetic expressions
-expr    :       LPAR expr RPAR | expr EXP expr | expr TIMES expr | expr PLUS expr | expr MINUS expr | var | INT | MINUS expr;
+expr    :       LPAR expr RPAR | MINUS expr | expr EXP expr | expr TIMES expr | expr PLUS expr | expr MINUS expr | var | INT;
 
 // formulas
 formula :       LPAR formula RPAR | formula AND formula | formula OR formula | lit;
