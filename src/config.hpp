@@ -70,6 +70,10 @@ namespace Config {
         extern const unsigned SimpTimeout;
     }
 
+    namespace Qelim {
+        extern const bool useRedlog;
+    }
+
     // Loop acceleration technique
     namespace LoopAccel {
         extern const unsigned MaxUpperboundsForPropagation;

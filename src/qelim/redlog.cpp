@@ -4,8 +4,6 @@
 #include "../parser/redlog/redlogparsevisitor.h"
 #include "../config.hpp"
 
-Redlog::Redlog() {}
-
 RedProc initRedproc() {
     std::string path = std::getenv("PATH");
     std::replace(path.begin(), path.end(), ':', ' ');
@@ -29,7 +27,7 @@ RedProc Redlog::process() {
 }
 
 void Redlog::init() {
-    if (Config::LoopAccel::accelerationTechnique != Config::LoopAccel::Calculus) {
+    if (Config::Qelim::useRedlog) {
         const char* cmd = "rlset r;";
         RedAns output = RedAns_new(process(), cmd);
         if (output->error) {
@@ -40,7 +38,7 @@ void Redlog::init() {
 }
 
 void Redlog::exit() {
-    if (Config::LoopAccel::accelerationTechnique != Config::LoopAccel::Calculus) {
+    if (Config::Qelim::useRedlog) {
         RedProc_delete(process());
     }
 }
@@ -50,13 +48,11 @@ option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan
     const QuantifiedFormula normalized = p.first;
     const Subs denormalization = p.second;
     if (normalized.isTiviallyTrue()) {
-//        std::cout << qf << " is trivially true" << std::endl;
         return True;
     } else if (normalized.isTiviallyFalse()) {
         return False;
     }
     std::string command = "rlqe(" + normalized.toRedlog() + ");";
-//    std::cout << "command: " << command << std::endl;
     auto qe = std::async([command]{return RedAns_new(process(), command.c_str());});
     if (qe.wait_for(std::chrono::milliseconds(1000)) != std::future_status::timeout) {
         RedAns output = qe.get();
@@ -65,7 +61,6 @@ option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan
             RedAns_delete(output);
         } else {
             std::string str = output->result;
-//            std::cout << "redlog: " << output->result << std::endl;
             try {
                 BoolExpr res = RedlogParseVisitor::parse(str, varMan);
                 RedAns_delete(output);
@@ -74,8 +69,6 @@ option<BoolExpr> Redlog::qe(const QuantifiedFormula &qf, VariableManager &varMan
                 std::cerr << e.what() << std::endl;
             }
         }
-    } else {
-//        std::cout << "redlog timed out" << std::endl;
     }
     return {};
 }

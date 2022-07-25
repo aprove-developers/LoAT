@@ -146,6 +146,8 @@ public:
     const VarSet& getVars() const;
     Type getType() const;
     std::string toRedlog() const;
+    VarMap<Expr> lowerBounds() const;
+    VarMap<Expr> upperBounds() const;
 
 };
 
@@ -173,6 +175,8 @@ public:
     bool isTiviallyTrue() const;
     bool isTiviallyFalse() const;
     friend std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f);
+    std::vector<Quantifier> getPrefix() const;
+    BoolExpr getMatrix() const;
 
 };
 

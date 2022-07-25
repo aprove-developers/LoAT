@@ -1,65 +1,15 @@
-#include "accelerationproblem.hpp"
+#include "qecalculus.hpp"
+
 #include "../../accelerate/recurrence/recurrence.hpp"
 #include "../../smt/smtfactory.hpp"
 #include "../../util/relevantvariables.hpp"
 #include "../../qelim/redlog.hpp"
 
-AccelerationProblem::AccelerationProblem(
-        const BoolExpr guard,
-        const Subs &up,
-        option<const Subs&> closed,
-        const Expr &cost,
-        const Expr &iteratedCost,
-        const Var &n,
-        const unsigned int validityBound,
-        ITSProblem &its): todo(guard->lits()), up(up), closed(closed), cost(cost), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {
-    std::vector<Subs> subs = closed.map([&up](auto const &closed){return std::vector<Subs>{up, closed};}).get_value_or({up});
-    Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({todo}, subs);
-    this->solver = SmtFactory::modelBuildingSolver(logic, its);
-    this->solver->add(guard);
-    this->isConjunction = guard->isConjunction();
-    this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << up);
+Quantifier QeProblem::getQuantifier() const {
+    return formula->getPrefix()[0];
 }
 
-option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSProblem &its) {
-    const Var &n = its.addFreshTemporaryVariable("n");
-    const option<Recurrence::Result> &res = Recurrence::iterateRule(its, r, n);
-    if (res) {
-        return {AccelerationProblem(
-                        r.getGuard()->toG(),
-                        r.getUpdate(),
-                        option<const Subs&>(res->update),
-                        r.getCost(),
-                        res->cost,
-                        n,
-                        res->validityBound,
-                        its)};
-    } else {
-        return {AccelerationProblem(
-                        r.getGuard()->toG(),
-                        r.getUpdate(),
-                        option<const Subs&>(),
-                        r.getCost(),
-                        r.getCost(),
-                        n,
-                        0,
-                        its)};
-    }
-}
-
-AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r, ITSProblem &its) {
-    return AccelerationProblem(
-                r.getGuard()->toG(),
-                r.getUpdate(),
-                option<const Subs&>(),
-                r.getCost(),
-                r.getCost(),
-                its.addFreshTemporaryVariable("n"),
-                0,
-                its);
-}
-
-RelSet AccelerationProblem::findConsistentSubset(BoolExpr e) const {
+RelSet QeProblem::findConsistentSubset(BoolExpr e) const {
     if (isConjunction) {
         return todo;
     }
@@ -79,47 +29,22 @@ RelSet AccelerationProblem::findConsistentSubset(BoolExpr e) const {
     return res;
 }
 
-option<unsigned int> AccelerationProblem::store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact, bool nonterm) {
+option<unsigned int> QeProblem::store(const Rel &rel, const BoolExpr formula, bool exact) {
     if (res.count(rel) == 0) {
         res[rel] = std::vector<Entry>();
     }
-    res[rel].push_back({deps, formula, exact, nonterm});
+    res[rel].push_back({formula, exact});
     return res[rel].size() - 1;
 }
 
-option<AccelerationProblem::Entry> AccelerationProblem::depsWellFounded(const Rel& rel, bool nontermOnly, RelSet seen) const {
-    if (seen.find(rel) != seen.end()) {
-        return {};
-    }
-    seen.insert(rel);
-    const auto& it = res.find(rel);
-    if (it == res.end()) {
-        return {};
-    }
-    for (const Entry& e: it->second) {
-        if (nontermOnly && !e.nonterm) continue;
-        bool success = true;
-        for (const auto& dep: e.dependencies) {
-            if (!depsWellFounded(dep, nontermOnly, seen)) {
-                success = false;
-                break;
-            }
-        }
-        if (success) {
-            return {e};
-        }
-    }
-    return {};
-}
-
-bool AccelerationProblem::monotonicity(const Rel &rel) {
-    if (closed) {
-        if (depsWellFounded(rel)) {
-            return false;
-        }
-        const Rel updated = rel.subs(up);
-        const Rel newCond = rel.subs(closed.get()).subs(Subs(n, n-1));
-        RelSet premise = findConsistentSubset(guard & rel & updated & newCond & (n >= validityBound));
+bool QeProblem::monotonicity(const Rel &rel, const Var& n) {
+    Quantifier q = getQuantifier();
+    const auto bounds = q.upperBounds();
+    const auto upper = bounds.find(n);
+    if (upper != bounds.end()) {
+        const Rel updated = rel.subs({n,n+1});
+        const Rel newCond = rel.subs({n, upper->second - 1});
+        RelSet premise = findConsistentSubset(boundedFormula & rel & updated & newCond);
         if (!premise.empty()) {
             BoolExprSet assumptions;
             BoolExprSet deps;
@@ -165,7 +90,7 @@ bool AccelerationProblem::monotonicity(const Rel &rel) {
     return false;
 }
 
-bool AccelerationProblem::recurrence(const Rel &rel) {
+bool QeProblem::recurrence(const Rel &rel) {
     const Rel updated = rel.subs(up);
     RelSet premise = findConsistentSubset(guard & rel & updated);
     if (!premise.empty()) {
@@ -211,7 +136,7 @@ bool AccelerationProblem::recurrence(const Rel &rel) {
     return false;
 }
 
-bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
+bool QeProblem::eventualWeakDecrease(const Rel &rel) {
     if (closed) {
         if (depsWellFounded(rel)) {
              return false;
@@ -267,7 +192,7 @@ bool AccelerationProblem::eventualWeakDecrease(const Rel &rel) {
     return false;
 }
 
-bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
+bool QeProblem::eventualWeakIncrease(const Rel &rel) {
     if (depsWellFounded(rel, true)) {
         return false;
     }
@@ -320,7 +245,7 @@ bool AccelerationProblem::eventualWeakIncrease(const Rel &rel) {
     return false;
 }
 
-bool AccelerationProblem::fixpoint(const Rel &rel) {
+bool QeProblem::fixpoint(const Rel &rel) {
     if (res.find(rel) == res.end()) {
         RelSet eqs;
         VarSet vars = util::RelevantVariables::find(rel.vars(), {up}, True);
@@ -343,7 +268,7 @@ bool AccelerationProblem::fixpoint(const Rel &rel) {
     return false;
 }
 
-AccelerationProblem::ReplacementMap AccelerationProblem::computeReplacementMap(bool nontermOnly) const {
+QeProblem::ReplacementMap QeProblem::computeReplacementMap(bool nontermOnly) const {
     ReplacementMap res;
     res.nonterm = true;
     res.acceleratedAll = true;
@@ -392,7 +317,7 @@ AccelerationProblem::ReplacementMap AccelerationProblem::computeReplacementMap(b
     return res;
 }
 
-option<AccelerationProblem::Result> AccelerationProblem::computeResViaQuantifierElimination() {
+option<QeProblem::Result> QeProblem::computeResViaQuantifierElimination() {
     Var m = its.getFreshUntrackedSymbol("m", Expr::Int);
     BoolExpr matrix = guard->subs(closed.get())->subs({n, m}) | (m < 0);
     auto qelim = Qelim::solver();
@@ -411,8 +336,8 @@ option<AccelerationProblem::Result> AccelerationProblem::computeResViaQuantifier
     return {};
 }
 
-std::vector<AccelerationProblem::Result> AccelerationProblem::computeResViaCalculus() {
-    std::vector<AccelerationProblem::Result> ret;
+std::vector<QeProblem::Result> QeProblem::computeResViaCalculus() {
+    std::vector<QeProblem::Result> ret;
     for (const Rel& rel: todo) {
         bool res = recurrence(rel);
         res |= monotonicity(rel);
@@ -443,7 +368,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeResViaCalcu
     return ret;
 }
 
-std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
+std::vector<QeProblem::Result> QeProblem::computeRes() {
     switch (Config::LoopAccel::accelerationTechnique) {
     case Config::LoopAccel::QE:
         if (closed) {
@@ -483,22 +408,22 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     return {};
 }
 
-Proof AccelerationProblem::getProof() const {
+Proof QeProblem::getProof() const {
     return proof;
 }
 
-Expr AccelerationProblem::getAcceleratedCost() const {
+Expr QeProblem::getAcceleratedCost() const {
     return iteratedCost;
 }
 
-option<Subs> AccelerationProblem::getClosedForm() const {
+option<Subs> QeProblem::getClosedForm() const {
     return closed;
 }
 
-Var AccelerationProblem::getIterationCounter() const {
+Var QeProblem::getIterationCounter() const {
     return n;
 }
 
-unsigned int AccelerationProblem::getValidityBound() const {
+unsigned int QeProblem::getValidityBound() const {
     return validityBound;
 }

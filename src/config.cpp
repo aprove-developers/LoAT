@@ -72,6 +72,10 @@ namespace Config {
         const unsigned MaxExponentWithoutPow = 5;
     }
 
+    namespace Qelim {
+        const bool useRedlog = false;
+    }
+
     // Loop acceleration technique
     namespace LoopAccel {
         // If KeepTempVarForIterationCount is false, then "k" is instantiated by its upper bounds.

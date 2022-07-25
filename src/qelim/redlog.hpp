@@ -7,17 +7,20 @@ extern "C" {
 #include "../expr/boolexpr.hpp"
 #include "../its/variablemanager.hpp"
 #include "../util/exceptions.hpp"
+#include "qelim.hpp"
 
-class Redlog {
+class Redlog: Qelim {
 
-    Redlog();
     static RedProc process();
+    VariableManager &varMan;
 
 public:
 
     EXCEPTION(RedlogError, CustomException);
 
-    static option<BoolExpr> qe(const QuantifiedFormula &qf, VariableManager &varMan);
+    Redlog(VariableManager &varMan): varMan(varMan){}
+
+    option<BoolExpr> qe(const QuantifiedFormula &qf) override;
     static void init();
     static void exit();
 

@@ -182,7 +182,10 @@ add_executable(${EXECUTABLE}
         src/parser/redlog/redlogLexer.h
         src/parser/redlog/redlogLexer.cpp
         src/parser/redlog/redlogParser.h
-        src/parser/redlog/redlogParser.cpp)
+        src/parser/redlog/redlogParser.cpp
+        src/qelim/qelim.hpp
+        src/qelim/qeCalculus/qecalculus.hpp
+        src/qelim/qeCalculus/qecalculus.cpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
