@@ -22,7 +22,7 @@ var meter_ex2 = view("meter-ex2").set_scale(1.4);
 var gen = view("gen");
 var qe = view("qe");
 var qe_cad = view("qe-cad").set_scale(1.4);
-var future = view("future").set_scale(1.6);
+var future = view("future").set_scale(1.8);
  
 var slides = [
     [
@@ -147,6 +147,7 @@ var slides = [
     [fade_in(["meter-con3"])],
     [change_view(meter_ex2), fade_in(["meter-ex2"])],
     [fade_in(["meter-ex2-arrow", "meter-ex2-mf"])],
+    [change_view(meter)],
     [change_view(svg)],
 
     [change_view(gen), fade_in(["gen"])],
@@ -162,11 +163,11 @@ var slides = [
     [change_view(qe), fade_in(["qe"])],
     [fade_in(["qe1"])],
     [fade_in(["qe3"])],
-    [fade_in(["qe4"])],
     [change_view(qe_cad), fade_in(["qe-cad"])],
     [fade_in(["qe-cad1"])],
     [fade_in(["qe-cad2"])],
     [change_view(qe)],
+    [fade_in(["qe4"])],
     [fade_in(["qe5"])],
     [change_view(svg)],
 
