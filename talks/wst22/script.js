@@ -64,6 +64,7 @@ var slides = [
             "accel-accelerated",
             "meter",
             "meter-def",
+            "rank-def",
             "meter-pros",
             "meter-pro1",
             "meter-pro2",
@@ -134,6 +135,7 @@ var slides = [
 
     [change_view(meter), fade_in(["meter"])],
     [fade_in(["meter-def"])],
+    [fade_in(["rank-def"])],
     [fade_in(["meter-pros"])],
     [fade_in(["meter-pro1"])],
     [fade_in(["meter-pro2"])],
