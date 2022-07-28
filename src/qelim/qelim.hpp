@@ -9,9 +9,16 @@ class Qelim {
 
 public:
 
-    virtual option<BoolExpr> qe(const QuantifiedFormula &qf) = 0;
+    struct Result {
+        BoolExpr qf;
+        bool exact;
+        Result(const BoolExpr &qf, bool exact): qf(qf), exact(exact) {}
 
-    static std::unique_ptr<Qelim> solver();
+    };
+
+    virtual option<Result> qe(const QuantifiedFormula &qf) = 0;
+
+    static std::unique_ptr<Qelim> solver(VarMan& varMan);
 
 };
 

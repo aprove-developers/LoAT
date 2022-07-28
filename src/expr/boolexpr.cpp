@@ -343,11 +343,29 @@ unsigned BoolJunction::hash() const {
 BoolJunction::~BoolJunction() {}
 
 
-Quantifier::Quantifier(const Type &qType, const VarSet &vars): qType(qType), vars(vars) {}
+Quantifier::Quantifier(const Type &qType, const VarSet &vars, const VarMap<Expr> &lowerBounds, const VarMap<Expr> &upperBounds): qType(qType), vars(vars), lowerBounds(lowerBounds), upperBounds(upperBounds) {}
+
+option<Expr> Quantifier::lowerBound(const Var &x) const {
+    const auto it = lowerBounds.find(x);
+    if (it == lowerBounds.end()) {
+        return {};
+    } else {
+        return it->second;
+    }
+}
+
+option<Expr> Quantifier::upperBound(const Var &x) const {
+    const auto it = upperBounds.find(x);
+    if (it == upperBounds.end()) {
+        return {};
+    } else {
+        return it->second;
+    }
+}
 
 Quantifier Quantifier::negation() const {
     auto _qType = qType == Type::Exists ? Type::Forall : Type::Exists;
-    return Quantifier(_qType, vars);
+    return Quantifier(_qType, vars, lowerBounds, upperBounds);
 }
 
 const VarSet& Quantifier::getVars() const {
@@ -453,13 +471,23 @@ std::pair<QuantifiedFormula, Subs> QuantifiedFormula::normalizeVariables(Variabl
     std::vector<Quantifier> newPrefix;
     for (const auto& q: prefix) {
         VarSet newVars;
+        VarMap<Expr> newLowerBounds;
+        VarMap<Expr> newUpperBounds;
         for (const auto& x: q.getVars()) {
             if (vars.find(x) != vars.end()) {
                 newVars.insert(normalization.get(x).toVar());
+                auto lb = q.lowerBound(x);
+                auto ub = q.upperBound(x);
+                if (lb) {
+                    newLowerBounds[x] = lb.get();
+                }
+                if (ub) {
+                    newUpperBounds[x] = ub.get();
+                }
             }
         }
         if (!newVars.empty()) {
-            newPrefix.push_back(Quantifier(q.getType(), newVars));
+            newPrefix.push_back(Quantifier(q.getType(), newVars, newLowerBounds, newUpperBounds));
         }
     }
     return {QuantifiedFormula(newPrefix, newMatrix), inverse};
@@ -480,6 +508,14 @@ bool QuantifiedFormula::isTiviallyTrue() const {
 
 bool QuantifiedFormula::isTiviallyFalse() const {
     return matrix == False;
+}
+
+std::vector<Quantifier> QuantifiedFormula::getPrefix() const {
+    return prefix;
+}
+
+BoolExpr QuantifiedFormula::getMatrix() const {
+    return matrix;
 }
 
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {

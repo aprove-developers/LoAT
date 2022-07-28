@@ -184,6 +184,7 @@ add_executable(${EXECUTABLE}
         src/parser/redlog/redlogParser.h
         src/parser/redlog/redlogParser.cpp
         src/qelim/qelim.hpp
+        src/qelim/qelim.cpp
         src/qelim/qeCalculus/qecalculus.hpp
         src/qelim/qeCalculus/qecalculus.cpp)
 

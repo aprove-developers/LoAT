@@ -34,15 +34,17 @@ private:
     bool eventualWeakIncrease(const Rel &rel, const Var &n);
     bool fixpoint(const Rel &rel, const Var &x);
     RelSet findConsistentSubset(const BoolExpr e) const;
-    option<unsigned int> store(const Rel &rel, const BoolExpr formula, bool exact = true);
+    option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact = true);
 
     struct ReplacementMap {
         bool exact;
         RelMap<BoolExpr> map;
     };
 
-    ReplacementMap computeReplacementMap(bool nontermOnly) const;
+    ReplacementMap computeReplacementMap() const;
     Quantifier getQuantifier() const;
+
+    option<Entry> depsWellFounded(const Rel& rel, RelSet seen = {}) const;
 
 public:
 
@@ -60,7 +62,7 @@ public:
     std::pair<BoolExpr, bool> buildRes(const Model &model, const std::map<Rel, std::vector<BoolExpr>> &entryVars);
     Proof getProof() const;
 
-    option<BoolExpr> qe(const QuantifiedFormula &qf) override;
+    option<Qelim::Result> qe(const QuantifiedFormula &qf) override;
 
 };
 

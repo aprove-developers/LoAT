@@ -138,16 +138,18 @@ public:
 private:
     Type qType;
     VarSet vars;
+    VarMap<Expr> lowerBounds;
+    VarMap<Expr> upperBounds;
 
 public:
-    Quantifier(const Type &qType, const VarSet &vars);
+    Quantifier(const Type &qType, const VarSet &vars, const VarMap<Expr> &lowerBounds, const VarMap<Expr> &upperBounds);
 
     Quantifier negation() const;
     const VarSet& getVars() const;
     Type getType() const;
     std::string toRedlog() const;
-    VarMap<Expr> lowerBounds() const;
-    VarMap<Expr> upperBounds() const;
+    option<Expr> lowerBound(const Var &x) const;
+    option<Expr> upperBound(const Var &x) const;
 
 };
 

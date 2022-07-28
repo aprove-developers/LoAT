@@ -20,7 +20,7 @@ public:
 
     Redlog(VariableManager &varMan): varMan(varMan){}
 
-    option<BoolExpr> qe(const QuantifiedFormula &qf) override;
+    option<Qelim::Result> qe(const QuantifiedFormula &qf) override;
     static void init();
     static void exit();
 
