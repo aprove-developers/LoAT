@@ -25,7 +25,7 @@
 #include "../util/exceptions.hpp"
 
 class Expr;
-template<class Key> class KeyToExprMap;
+template<class Key, class Key_is_less> class KeyToExprMap;
 class Recurrence;
 class Rel;
 class Subs;
@@ -379,10 +379,10 @@ private:
 
 };
 
-template<class Key>
+template<class Key, class Key_is_less>
 class KeyToExprMap {
     friend class Expr;
-    using It = typename std::map<Key, Expr, Expr_is_less>::const_iterator;
+    using It = typename std::map<Key, Expr, Key_is_less>::const_iterator;
 
 public:
 
@@ -434,11 +434,11 @@ protected:
     void virtual eraseGinac(const Key &key) = 0;
 
 private:
-    std::map<Key, Expr, Expr_is_less> map;
+    std::map<Key, Expr, Key_is_less> map;
 
 };
 
-template<class T> bool operator<(const KeyToExprMap<T> &x, const KeyToExprMap<T> &y) {
+template<class S, class T> bool operator<(const KeyToExprMap<S, T> &x, const KeyToExprMap<S, T> &y) {
     auto it1 = x.begin();
     auto it2 = y.begin();
     while (it1 != x.end() && it2 != y.end()) {
@@ -456,7 +456,7 @@ template<class T> bool operator<(const KeyToExprMap<T> &x, const KeyToExprMap<T>
     return it1 == x.end() && it2 != y.end();
 }
 
-template<class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<T> &map) {
+template<class S, class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<S, T> &map) {
     if (map.empty()) {
         s << "{}";
     } else {
@@ -474,7 +474,7 @@ template<class T> std::ostream& operator<<(std::ostream &s, const KeyToExprMap<T
     return s << "}";
 }
 
-class Subs: public KeyToExprMap<Var> {
+class Subs: public KeyToExprMap<Var, Var_is_less> {
 
 public:
 
@@ -514,7 +514,7 @@ private:
 
 };
 
-class ExprMap: public KeyToExprMap<Expr> {
+class ExprMap: public KeyToExprMap<Expr, Expr_is_less> {
 
 public:
     ExprMap();

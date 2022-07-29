@@ -609,7 +609,7 @@ option<std::string> Expr::toQepcad() const {
     return toQepcadRec(this->expand());
 }
 
-Subs::Subs(): KeyToExprMap<Var>() {}
+Subs::Subs(): KeyToExprMap<Var, Var_is_less>() {}
 
 Subs::Subs(const Var &key, const Expr &val) {
     put(key, val);
@@ -714,7 +714,7 @@ unsigned Subs::hash() const {
     return hash;
 }
 
-ExprMap::ExprMap(): KeyToExprMap<Expr>() {}
+ExprMap::ExprMap(): KeyToExprMap<Expr, Expr_is_less>() {}
 
 ExprMap::ExprMap(const Expr &key, const Expr &val) {
     put(key, val);
