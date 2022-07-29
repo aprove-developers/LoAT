@@ -4,6 +4,7 @@
 #include "../expr/boolexpr.hpp"
 #include "../its/variablemanager.hpp"
 #include "../util/exceptions.hpp"
+#include "../util/proof.hpp"
 
 class Qelim {
 
@@ -11,9 +12,9 @@ public:
 
     struct Result {
         BoolExpr qf;
+        Proof proof;
         bool exact;
-        Result(const BoolExpr &qf, bool exact): qf(qf), exact(exact) {}
-
+        Result(const BoolExpr &qf, const Proof &proof, bool exact): qf(qf), proof(proof), exact(exact) {}
     };
 
     virtual option<Result> qe(const QuantifiedFormula &qf) = 0;

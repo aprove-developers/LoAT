@@ -384,7 +384,7 @@ option<Qelim::Result> QeProblem::qe(const QuantifiedFormula &qf) {
         }
         exact &= map.exact;
     }
-    return Qelim::Result(matrix, exact);
+    return Qelim::Result(matrix, proof, exact);
 }
 
 Proof QeProblem::getProof() const {

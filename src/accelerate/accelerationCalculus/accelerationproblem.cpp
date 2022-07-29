@@ -13,10 +13,8 @@ AccelerationProblem::AccelerationProblem(
         ITSProblem &its): closed(closed), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {
     Smt::Logic logic;
     if (closed) {
-        this->proof.append(std::stringstream() << "accelerating " << guard << " wrt. " << closed);
         logic = Smt::chooseLogic<RelSet, Subs>({guard->lits()}, {closed.get()});
     } else {
-        this->proof.append(std::stringstream() << "accelerating " << guard);
         logic = Smt::chooseLogic<RelSet, Subs>({guard->lits()}, {});
     }
     this->solver = SmtFactory::modelBuildingSolver(logic, its);
@@ -63,6 +61,11 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
     option<Qelim::Result> res = qelim->qe(q);
     std::vector<AccelerationProblem::Result> ret;
     if (res && res->exact) {
+        this->proof.append(std::stringstream() << "proved non-termination of " << guard << " via quantifier elimination");
+        this->proof.append(std::stringstream() << "quantified formula: " << q);
+        this->proof.append(std::stringstream() << "quantifier-free formula: " << res->qf);
+        this->proof.append(std::stringstream() << "QE proof:");
+        this->proof.concat(res->proof);
         ret.push_back(Result(res->qf, true, true));
     } else {
         if (res && res->qf != False) {
@@ -72,6 +75,10 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
         q = matrix->quantify({Quantifier(Quantifier::Type::Forall, {m}, {{m, validityBound}}, {{m, n-1}})});
         res = qelim->qe(q);
         if (res && res->qf != False) {
+            this->proof.append(std::stringstream() << "accelerated " << guard << " w.r.t. " << closed << " via quantifier elimination");
+            this->proof.append(std::stringstream() << "quantified formula: " << q);
+            this->proof.append(std::stringstream() << "quantifier-free formula: " << res->qf);
+            this->proof.concat(res->proof);
             ret.push_back(Result(res->qf, res->exact, false));
         }
     }
