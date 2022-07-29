@@ -3,14 +3,17 @@
 #include "../../smt/smtfactory.hpp"
 #include "../../util/relevantvariables.hpp"
 #include "../../qelim/redlog.hpp"
+#include "../../nonterm/nontermproblem.hpp"
 
 AccelerationProblem::AccelerationProblem(
-        const BoolExpr guard,
+        const BoolExpr &guard,
+        const Subs &up,
+        const Expr &cost,
         option<const Subs&> closed,
         const Expr &iteratedCost,
         const Var &n,
         const unsigned int validityBound,
-        ITSProblem &its): closed(closed), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {}
+        ITSProblem &its): closed(closed), iteratedCost(iteratedCost), n(n), guard(guard), up(up), cost(cost), validityBound(validityBound), its(its) {}
 
 option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSProblem &its) {
     const Var &n = its.addFreshTemporaryVariable("n");
@@ -18,6 +21,8 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSPr
     if (res) {
         return {AccelerationProblem(
                         r.getGuard()->toG(),
+                        r.getUpdate(),
+                        r.getCost(),
                         option<const Subs&>(res->update),
                         res->cost,
                         n,
@@ -26,6 +31,8 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSPr
     } else {
         return {AccelerationProblem(
                         r.getGuard()->toG(),
+                        r.getUpdate(),
+                        r.getCost(),
                         option<const Subs&>(),
                         r.getCost(),
                         n,
@@ -37,6 +44,8 @@ option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSPr
 AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r, ITSProblem &its) {
     return AccelerationProblem(
                 r.getGuard()->toG(),
+                r.getUpdate(),
+                r.getCost(),
                 option<const Subs&>(),
                 r.getCost(),
                 its.addFreshTemporaryVariable("n"),
@@ -45,7 +54,15 @@ AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r
 }
 
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
-    if (!closed) return {};
+    if (!closed) {
+        auto nt = NontermProblem::init(guard, up, cost, its);
+        const auto res = nt.computeRes();
+        if (res) {
+            return {Result(res->newGuard, res->exact, true)};
+        } else {
+            return {};
+        }
+    }
     Var m = its.getFreshUntrackedSymbol("m", Expr::Int);
     BoolExpr matrix = guard->subs(closed.get());
     auto qelim = Qelim::solver(its);
@@ -71,7 +88,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             this->proof.append(std::stringstream() << "quantified formula: " << q);
             this->proof.append(std::stringstream() << "quantifier-free formula: " << res->qf);
             this->proof.concat(res->proof);
-            ret.push_back(Result(res->qf & n >= validityBound, res->exact, false));
+            ret.push_back(Result(res->qf & (n >= validityBound), res->exact, false));
         }
     }
     return ret;

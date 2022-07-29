@@ -16,12 +16,16 @@ private:
     Expr iteratedCost;
     Var n;
     BoolExpr guard;
+    const Subs up;
+    const Expr cost;
     unsigned int validityBound;
     Proof proof;
     ITSProblem &its;
 
     AccelerationProblem(
-            const BoolExpr guard,
+            const BoolExpr &guard,
+            const Subs &up,
+            const Expr &cost,
             option<const Subs&> closed,
             const Expr &iteratedCost,
             const Var &n,

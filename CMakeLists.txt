@@ -186,7 +186,9 @@ add_executable(${EXECUTABLE}
         src/qelim/qelim.hpp
         src/qelim/qelim.cpp
         src/qelim/qeCalculus/qecalculus.hpp
-        src/qelim/qeCalculus/qecalculus.cpp)
+        src/qelim/qeCalculus/qecalculus.cpp
+        src/nonterm/nontermproblem.hpp
+        src/nonterm/nontermproblem.cpp)
 
 message(STATUS "Searching libraries")
 find_library(Z3 z3)
