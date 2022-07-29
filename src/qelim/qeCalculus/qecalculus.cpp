@@ -9,9 +9,23 @@ Quantifier QeProblem::getQuantifier() const {
     return formula->getPrefix()[0];
 }
 
-RelSet QeProblem::findConsistentSubset(BoolExpr e) const {
-    if (isConjunction) {
-        return todo;
+BoolExpr QeProblem::boundedFormula(const Var &var) const {
+    BoolExpr res = formula->getMatrix();
+    const Quantifier quantifier = getQuantifier();
+    const auto lowerBound = quantifier.lowerBound(var);
+    if (lowerBound) {
+        res = res & (lowerBound.get() <= var);
+    }
+    const auto upperBound = quantifier.upperBound(var);
+    if (upperBound) {
+        res = res & (var <= upperBound.get());
+    }
+    return res;
+}
+
+RelSet QeProblem::findConsistentSubset(BoolExpr e, const Var &var) const {
+    if (formula->isConjunction()) {
+        return boundedFormula(var)->lits();
     }
     solver->push();
     solver->add(e);
@@ -19,7 +33,7 @@ RelSet QeProblem::findConsistentSubset(BoolExpr e) const {
     RelSet res;
     if (sat == Smt::Sat) {
         const Subs &model = solver->model().toSubs();
-        for (const Rel &rel: todo) {
+        for (const Rel &rel: formula->getMatrix()->lits()) {
             if (rel.subs(model).isTriviallyTrue()) {
                 res.insert(rel);
             }
@@ -66,7 +80,7 @@ bool QeProblem::monotonicity(const Rel &rel, const Var& n) {
     if (bound) {
         const Rel updated = rel.subs({n,n+1});
         const Rel newCond = rel.subs({n, bound.get()});
-        RelSet premise = findConsistentSubset(boundedFormula & rel & updated & newCond);
+        RelSet premise = findConsistentSubset(boundedFormula(n) & rel & updated & newCond, n);
         if (!premise.empty()) {
             BoolExprSet assumptions;
             BoolExprSet deps;
@@ -115,7 +129,7 @@ bool QeProblem::recurrence(const Rel &rel, const Var& n) {
     if (bound) {
         const Rel updated = rel.subs({n, n+1});
         const Rel newCond = rel.subs({n, bound.get()});
-        RelSet premise = findConsistentSubset(boundedFormula & rel & updated & newCond);
+        RelSet premise = findConsistentSubset(boundedFormula(n) & rel & updated & newCond, n);
         if (!premise.empty()) {
             BoolExprSet deps;
             BoolExprSet assumptions;
@@ -171,7 +185,7 @@ bool QeProblem::eventualWeakDecrease(const Rel &rel, const Var& n) {
         const Rel dec = rel.lhs() >= updated;
         const Rel inc = updated < updated.subs({n, n+1});
         const BoolExpr newGuard = buildLit(rel.subs({n, lowerBound.get()})) & rel.subs({n, upperBound.get()});
-        RelSet premise = findConsistentSubset(boundedFormula & dec & !inc & newGuard);
+        RelSet premise = findConsistentSubset(boundedFormula(n) & dec & !inc & newGuard, n);
         if (!premise.empty()) {
             BoolExprSet assumptions;
             BoolExprSet deps;
@@ -225,7 +239,7 @@ bool QeProblem::eventualWeakIncrease(const Rel &rel, const Var& n) {
         const Rel inc = rel.lhs() <= updated;
         const Rel dec = updated > updated.subs({n, n+1});
         const Rel newCond = rel.subs({n, bound.get()});
-        RelSet premise = findConsistentSubset(boundedFormula & inc & !dec & newCond);
+        RelSet premise = findConsistentSubset(boundedFormula(n) & inc & !dec & newCond, n);
         if (!premise.empty()) {
             BoolExprSet assumptions;
             BoolExprSet deps;
@@ -272,6 +286,33 @@ bool QeProblem::eventualWeakIncrease(const Rel &rel, const Var& n) {
     return false;
 }
 
+option<BoolExpr> QeProblem::strengthen(const Rel &rel, const Var &n) {
+    if (res.find(rel) == res.end() && rel.isPoly()) {
+        const auto lhs = rel.lhs().expand();
+        unsigned degree = lhs.degree(n);
+        for (unsigned d = degree; d > 0; --d) {
+            const Expr coeff = lhs.coeff(n, d);
+            if (!coeff.isGround()) {
+                const auto bf = boundedFormula(n);
+                if (Smt::check(bf & (coeff < 0), varMan) == Smt::Sat && Smt::check(bf & (coeff >= 0), varMan) == Smt::Sat) {
+                    std::stringstream ss;
+                    ss << rel << ": strengthend formula with " << (coeff >= 0);
+                    proof.newline();
+                    proof.append(ss);
+                    return buildLit(coeff >= 0);
+                } else if (Smt::check(bf & (coeff > 0), varMan) == Smt::Sat && Smt::check(bf & (coeff <= 0), varMan) == Smt::Sat) {
+                    std::stringstream ss;
+                    ss << rel << ": strengthend formula with " << (coeff <= 0);
+                    proof.newline();
+                    proof.append(ss);
+                    return buildLit(coeff <= 0);
+                }
+            }
+        }
+    }
+    return {};
+}
+
 bool QeProblem::fixpoint(const Rel &rel, const Var& n) {
     if (res.find(rel) == res.end() && rel.isPoly()) {
         const auto lhs = rel.lhs().expand();
@@ -282,7 +323,7 @@ bool QeProblem::fixpoint(const Rel &rel, const Var& n) {
             vanish = vanish & (Rel::buildEq(lhs.coeff(n, d), 0));
         }
         const auto constant = lhs.subs({n, 0}) > 0;
-        if (Smt::check(boundedFormula & constant & vanish, varMan) == Smt::Sat) {
+        if (Smt::check(boundedFormula(n) & constant & vanish, varMan) == Smt::Sat) {
             BoolExpr newGuard = buildLit(constant) & vanish;
             option<unsigned int> idx = store(rel, {}, newGuard, false);
             if (idx) {
@@ -299,9 +340,9 @@ bool QeProblem::fixpoint(const Rel &rel, const Var& n) {
 
 QeProblem::ReplacementMap QeProblem::computeReplacementMap() const {
     ReplacementMap res;
-    res.exact = boundedFormula->isConjunction();
+    res.exact = formula->isConjunction();
     RelMap<Entry> entryMap;
-    for (const Rel& rel: todo) {
+    for (const Rel& rel: formula->getMatrix()->lits()) {
         option<Entry> e = depsWellFounded(rel);
         if (e) {
             entryMap[rel] = e.get();
@@ -309,10 +350,10 @@ QeProblem::ReplacementMap QeProblem::computeReplacementMap() const {
         } else {
             res.map[rel] = False;
             res.exact = false;
-            if (isConjunction) return res;
+            if (formula->isConjunction()) return res;
         }
     }
-    if (!isConjunction) {
+    if (!formula->isConjunction()) {
         bool changed;
         do {
             changed = false;
@@ -344,8 +385,7 @@ QeProblem::ReplacementMap QeProblem::computeReplacementMap() const {
 
 option<Qelim::Result> QeProblem::qe(const QuantifiedFormula &qf) {
     formula = qf;
-    Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({formula->getMatrix()->lits()}, {});
-    this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
+    proof = Proof();
     const auto quantifiers = formula->getPrefix();
     if (quantifiers.size() > 1) {
         return {};
@@ -354,39 +394,55 @@ option<Qelim::Result> QeProblem::qe(const QuantifiedFormula &qf) {
     if (quantifier.getType() != Quantifier::Type::Forall) {
         return {};
     }
+    Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({formula->getMatrix()->lits()}, {});
+    this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
     const auto vars = quantifier.getVars();
-    auto matrix = formula->getMatrix();
-    isConjunction = matrix->isConjunction();
     bool exact = true;
     for (const auto& var: vars) {
         res = {};
         solution = {};
-        todo = matrix->lits();
-        boundedFormula = matrix;
-        const auto lowerBound = quantifier.lowerBound(var);
-        if (lowerBound) {
-            boundedFormula = boundedFormula & (lowerBound.get() <= var);
-        }
-        const auto upperBound = quantifier.upperBound(var);
-        if (upperBound) {
-            boundedFormula = boundedFormula & (var <= upperBound.get());
-        }
-        for (const Rel& rel: todo) {
-            bool res = recurrence(rel, var);
-            res |= monotonicity(rel, var);
-            res |= eventualWeakDecrease(rel, var);
-            res |= eventualWeakIncrease(rel, var);
-            res |= fixpoint(rel, var);
-            if (!res && isConjunction) return {};
-        }
+        todo = boundedFormula(var)->lits();
+        bool goOn;
+        do {
+            goOn = false;
+            auto it = todo.begin();
+            while (it != todo.end()) {
+                const Rel rel = *it;
+                bool res = recurrence(rel, var);
+                res |= monotonicity(rel, var);
+                res |= eventualWeakDecrease(rel, var);
+                res |= eventualWeakIncrease(rel, var);
+                if (res) {
+                    it = todo.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+            for (const Rel &rel: todo) {
+                const option<BoolExpr> str = strengthen(rel, var);
+                if (str) {
+                    const auto lits = (*str)->lits();
+                    todo.insert(lits.begin(), lits.end());
+                    solver->add(*str);
+                    formula = (formula->getMatrix() & *str)->quantify(quantifiers);
+                    goOn = true;
+                }
+            }
+            if (!goOn) {
+                for (const Rel &rel: todo) {
+                    fixpoint(rel, var);
+                }
+            }
+        } while (goOn);
         ReplacementMap map = computeReplacementMap();
-        matrix = matrix->replaceRels(map.map);
+        const BoolExpr matrix = formula->getMatrix()->replaceRels(map.map);
         if (Smt::check(matrix, varMan) != Smt::Sat) {
             return {};
         }
+        formula = matrix->quantify({quantifier.remove(var)});
         exact &= map.exact;
     }
-    return Qelim::Result(matrix, proof, exact);
+    return Qelim::Result(formula->getMatrix(), proof, exact);
 }
 
 Proof QeProblem::getProof() const {

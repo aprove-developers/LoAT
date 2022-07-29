@@ -24,17 +24,17 @@ private:
     Proof proof;
     std::unique_ptr<Smt> solver;
     option<QuantifiedFormula> formula;
-    BoolExpr boundedFormula;
     VariableManager &varMan;
-    bool isConjunction;
 
     bool monotonicity(const Rel &rel, const Var &n);
     bool recurrence(const Rel &rel, const Var &n);
     bool eventualWeakDecrease(const Rel &rel, const Var &n);
     bool eventualWeakIncrease(const Rel &rel, const Var &n);
+    option<BoolExpr> strengthen(const Rel &rel, const Var &n);
     bool fixpoint(const Rel &rel, const Var &x);
-    RelSet findConsistentSubset(const BoolExpr e) const;
+    RelSet findConsistentSubset(const BoolExpr e, const Var &var) const;
     option<unsigned int> store(const Rel &rel, const RelSet &deps, const BoolExpr formula, bool exact = true);
+    BoolExpr boundedFormula(const Var &var) const;
 
     struct ReplacementMap {
         bool exact;

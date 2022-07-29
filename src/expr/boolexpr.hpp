@@ -150,6 +150,7 @@ public:
     std::string toRedlog() const;
     option<Expr> lowerBound(const Var &x) const;
     option<Expr> upperBound(const Var &x) const;
+    Quantifier remove(const Var &x) const;
 
 };
 
@@ -179,6 +180,7 @@ public:
     friend std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f);
     std::vector<Quantifier> getPrefix() const;
     BoolExpr getMatrix() const;
+    bool isConjunction() const;
 
 };
 

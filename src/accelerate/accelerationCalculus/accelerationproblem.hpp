@@ -19,7 +19,6 @@ private:
     const Subs up;
     const Expr cost;
     unsigned int validityBound;
-    Proof proof;
     ITSProblem &its;
 
     AccelerationProblem(
@@ -36,17 +35,17 @@ public:
 
     struct Result {
         BoolExpr newGuard;
+        Proof proof;
         bool exact;
         bool witnessesNonterm;
 
-        Result(const BoolExpr &newGuard, bool exact, bool witnessesNonterm): newGuard(newGuard), exact(exact), witnessesNonterm(witnessesNonterm) {}
+        Result(const BoolExpr &newGuard, const Proof &proof, bool exact, bool witnessesNonterm): newGuard(newGuard), proof(proof), exact(exact), witnessesNonterm(witnessesNonterm) {}
 
     };
 
     static option<AccelerationProblem> init(const LinearRule &r, ITSProblem &its);
     static AccelerationProblem initForRecurrentSet(const LinearRule &r, ITSProblem &its);
     std::vector<Result> computeRes();
-    Proof getProof() const;
     Expr getAcceleratedCost() const;
     option<Subs> getClosedForm() const;
     Var getIterationCounter() const;

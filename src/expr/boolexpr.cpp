@@ -385,6 +385,16 @@ std::string Quantifier::toRedlog() const {
     return res;
 }
 
+Quantifier Quantifier::remove(const Var &x) const {
+    VarSet newVars(vars);
+    VarMap<Expr> newLowerBounds(lowerBounds);
+    VarMap<Expr> newUpperBounds(upperBounds);
+    newVars.erase(x);
+    newLowerBounds.erase(x);
+    newUpperBounds.erase(x);
+    return Quantifier(qType, newVars, newLowerBounds, newUpperBounds);
+}
+
 QuantifiedFormula::QuantifiedFormula(std::vector<Quantifier> prefix, const BoolExpr &matrix): prefix(prefix), matrix(matrix) {}
 
 const QuantifiedFormula QuantifiedFormula::negation() const {
@@ -516,6 +526,10 @@ std::vector<Quantifier> QuantifiedFormula::getPrefix() const {
 
 BoolExpr QuantifiedFormula::getMatrix() const {
     return matrix;
+}
+
+bool QuantifiedFormula::isConjunction() const {
+    return matrix->isConjunction();
 }
 
 BoolExpr build(BoolExprSet xs, ConcatOperator op) {
@@ -692,6 +706,23 @@ std::ostream& operator<<(std::ostream &s, const QuantifiedFormula f) {
         }
         for (const auto &x: q.getVars()) {
             s << " " << x;
+            const auto lb = q.lowerBound(x);
+            const auto ub = q.upperBound(x);
+            if (lb || ub) {
+                s << " in [";
+                if (lb) {
+                    s << *lb;
+                } else {
+                    s << "-oo";
+                }
+                s << ",";
+                if (ub) {
+                    s << *ub;
+                } else {
+                    s << "oo";
+                }
+                s << "] ";
+            }
         }
         s << " . ";
     }
