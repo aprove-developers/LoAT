@@ -10,16 +10,7 @@ AccelerationProblem::AccelerationProblem(
         const Expr &iteratedCost,
         const Var &n,
         const unsigned int validityBound,
-        ITSProblem &its): closed(closed), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {
-    Smt::Logic logic;
-    if (closed) {
-        logic = Smt::chooseLogic<RelSet, Subs>({guard->lits()}, {closed.get()});
-    } else {
-        logic = Smt::chooseLogic<RelSet, Subs>({guard->lits()}, {});
-    }
-    this->solver = SmtFactory::modelBuildingSolver(logic, its);
-    this->solver->add(guard);
-}
+        ITSProblem &its): closed(closed), iteratedCost(iteratedCost), n(n), guard(guard), validityBound(validityBound), its(its) {}
 
 option<AccelerationProblem> AccelerationProblem::init(const LinearRule &r, ITSProblem &its) {
     const Var &n = its.addFreshTemporaryVariable("n");
@@ -54,6 +45,7 @@ AccelerationProblem AccelerationProblem::initForRecurrentSet(const LinearRule &r
 }
 
 std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
+    if (!closed) return {};
     Var m = its.getFreshUntrackedSymbol("m", Expr::Int);
     BoolExpr matrix = guard->subs(closed.get());
     auto qelim = Qelim::solver(its);
@@ -79,7 +71,7 @@ std::vector<AccelerationProblem::Result> AccelerationProblem::computeRes() {
             this->proof.append(std::stringstream() << "quantified formula: " << q);
             this->proof.append(std::stringstream() << "quantifier-free formula: " << res->qf);
             this->proof.concat(res->proof);
-            ret.push_back(Result(res->qf, res->exact, false));
+            ret.push_back(Result(res->qf & n >= validityBound, res->exact, false));
         }
     }
     return ret;

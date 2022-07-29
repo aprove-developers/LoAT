@@ -18,7 +18,6 @@ private:
     BoolExpr guard;
     unsigned int validityBound;
     Proof proof;
-    std::unique_ptr<Smt> solver;
     ITSProblem &its;
 
     AccelerationProblem(

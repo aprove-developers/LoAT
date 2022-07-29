@@ -344,6 +344,8 @@ QeProblem::ReplacementMap QeProblem::computeReplacementMap() const {
 
 option<Qelim::Result> QeProblem::qe(const QuantifiedFormula &qf) {
     formula = qf;
+    Smt::Logic logic = Smt::chooseLogic<RelSet, Subs>({formula->getMatrix()->lits()}, {});
+    this->solver = SmtFactory::modelBuildingSolver(logic, varMan);
     const auto quantifiers = formula->getPrefix();
     if (quantifiers.size() > 1) {
         return {};
