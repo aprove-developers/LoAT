@@ -25,6 +25,10 @@ bool Expr_is_less::operator()(const Expr &lh, const Expr &rh) const {
      return lh.compare(rh) < 0;
 }
 
+bool Var_is_less::operator()(const Var &lh, const Var &rh) const {
+     return lh.get_name().compare(rh.get_name()) < 0;
+}
+
 const Var Expr::NontermSymbol = GiNaC::symbol("NONTERM");
 
 void Expr::applySubs(const Subs &subs) {

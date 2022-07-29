@@ -36,10 +36,15 @@ struct Expr_is_less {
 };
 
 using Var = GiNaC::symbol;
-using VarSet = std::set<Var, GiNaC::ex_is_less>;
+
+struct Var_is_less {
+    bool operator() (const Var &lh, const Var &rh) const;
+};
+
+using VarSet = std::set<Var, Var_is_less>;
 using ExprSet = std::set<Expr, Expr_is_less>;
 template <typename T>
-using VarMap = std::map<Var, T, GiNaC::ex_is_less>;
+using VarMap = std::map<Var, T, Var_is_less>;
 
 EXCEPTION(QepcadError, CustomException);
 
