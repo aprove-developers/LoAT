@@ -1,5 +1,6 @@
 <head>
     <title>LoAT</title>
+    <meta http-equiv="Refresh" content="0; url='https://loat-developers.github.io/LoAT/'">
 </head>
 
 LoAT (**Lo**op **A**cceleration **T**ool, formerly known as **Lo**wer Bounds **A**nalysis **T**ool) is a fully automated tool to analyze programs operating on integers.
